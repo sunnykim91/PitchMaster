@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0a0c10"/>
+  <circle cx="256" cy="230" r="130" fill="none" stroke="#22c55e" stroke-width="8"/>
+  <!-- Soccer ball pentagon pattern -->
+  <polygon points="256,140 290,168 278,208 234,208 222,168" fill="#22c55e"/>
+  <polygon points="290,168 330,168 338,208 308,228 278,208" fill="none" stroke="#22c55e" stroke-width="4"/>
+  <polygon points="222,168 182,168 174,208 204,228 234,208" fill="none" stroke="#22c55e" stroke-width="4"/>
+  <polygon points="234,208 204,228 216,268 296,268 308,228 278,208" fill="none" stroke="#22c55e" stroke-width="4"/>
+  <polygon points="216,268 196,308 256,330 316,308 296,268" fill="none" stroke="#22c55e" stroke-width="4"/>
+  <!-- Text -->
+  <text x="256" y="410" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="800" font-size="56" fill="#22c55e" letter-spacing="4">PITCH</text>
+  <text x="256" y="460" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="400" font-size="32" fill="#94a3b8" letter-spacing="8">MASTER</text>
+</svg>

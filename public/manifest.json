@@ -1,0 +1,39 @@
+{
+  "name": "PitchMaster - 조기축구 팀 관리",
+  "short_name": "PitchMaster",
+  "description": "조기축구 팀을 위한 스마트 운영 허브",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0a0c10",
+  "theme_color": "#22c55e",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "ko",
+  "categories": ["sports", "utilities"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

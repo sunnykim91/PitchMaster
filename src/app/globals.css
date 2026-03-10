@@ -1,0 +1,250 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: "Pretendard Variable", var(--font-geist), system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-geist), "Pretendard Variable", system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+}
+
+/*  ── Dark-only: soccer pitch green accent theme ──  */
+:root {
+  --radius: 0.625rem;
+
+  /* Dark theme as default (soccer pitch green) */
+  --background: 220 20% 4%;
+  --foreground: 210 20% 95%;
+  --card: 220 18% 8%;
+  --card-foreground: 210 20% 95%;
+  --popover: 220 18% 10%;
+  --popover-foreground: 210 20% 95%;
+  --primary: 142 71% 45%;
+  --primary-foreground: 220 20% 4%;
+  --secondary: 215 14% 15%;
+  --secondary-foreground: 210 20% 92%;
+  --muted: 215 14% 15%;
+  --muted-foreground: 215 12% 68%;
+  --accent: 215 14% 15%;
+  --accent-foreground: 210 20% 92%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 215 14% 20%;
+  --input: 215 14% 20%;
+  --ring: 142 71% 45%;
+
+  /* ── Semantic accent colors for variety ── */
+  --pm-amber: 43 96% 56%;
+  --pm-sky: 199 89% 48%;
+  --pm-violet: 263 70% 58%;
+  --pm-rose: 347 77% 56%;
+  --pm-teal: 173 80% 40%;
+  --pm-orange: 25 95% 53%;
+
+  --chart-1: 142 71% 45%;
+  --chart-2: 199 89% 48%;
+  --chart-3: 263 70% 58%;
+  --chart-4: 43 96% 56%;
+  --chart-5: 347 77% 56%;
+  --sidebar: 220 18% 6%;
+  --sidebar-foreground: 210 20% 95%;
+  --sidebar-primary: 142 71% 45%;
+  --sidebar-primary-foreground: 220 20% 4%;
+  --sidebar-accent: 215 14% 15%;
+  --sidebar-accent-foreground: 210 20% 92%;
+  --sidebar-border: 215 14% 20%;
+  --sidebar-ring: 142 71% 45%;
+}
+
+body {
+  background-color: hsl(var(--background));
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, hsl(142 71% 45% / 0.04), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%, hsl(215 50% 30% / 0.03), transparent);
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: hsl(142 71% 45%);
+  color: hsl(220 20% 4%);
+}
+
+/* ── Native Select (dark mode) ── */
+select option,
+select optgroup {
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: hsl(215 14% 20%);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+::-webkit-scrollbar-thumb:hover { background: hsl(215 14% 28%); }
+
+/* ── Keyframe Animations ── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 1000px;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(142 71% 45% / 0); }
+  50% { box-shadow: 0 0 12px 2px hsl(142 71% 45% / 0.15); }
+}
+
+/* ── Animation Utilities ── */
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out both;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--muted) / 0.5) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Staggered children animation */
+.stagger-children > * {
+  animation: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 350ms; }

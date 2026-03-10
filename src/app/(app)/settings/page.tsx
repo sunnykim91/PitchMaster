@@ -1,0 +1,31 @@
+import { auth } from "@/lib/auth";
+import SettingsClient from "@/app/(app)/settings/SettingsClient";
+
+export default async function SettingsPage() {
+  const session = await auth();
+
+  if (!session) {
+    return null;
+  }
+
+  return (
+    <SettingsClient
+      sessionProfile={{
+        name: session.user.name ?? "",
+        phone: session.user.phone ?? "",
+        preferredPositions: session.user.preferredPositions ?? [],
+        preferredFoot: session.user.preferredFoot ?? "RIGHT",
+        profileImageUrl: session.user.profileImageUrl ?? "",
+      }}
+      sessionTeam={{
+        teamName: session.user.teamName ?? "",
+        logoUrl: "",
+        inviteCode: session.user.inviteCode ?? "",
+        uniformPrimary: "#2563eb",
+        uniformSecondary: "#f97316",
+        uniformPattern: "SOLID",
+      }}
+      userRole={session.user.teamRole}
+    />
+  );
+}

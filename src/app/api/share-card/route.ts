@@ -1,0 +1,116 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getApiContext, apiError } from "@/lib/api-helpers";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
+
+export async function GET(request: NextRequest) {
+  const ctx = await getApiContext();
+  if (ctx instanceof NextResponse) return ctx;
+
+  const matchId = request.nextUrl.searchParams.get("matchId");
+  if (!matchId) return apiError("matchId required");
+
+  const db = getSupabaseAdmin();
+
+  let matchDate = "2026-02-01";
+  let matchTime = "18:00";
+  let location = "경기장";
+  let opponent = "상대팀";
+  let ourGoals = 0;
+  let oppGoals = 0;
+  let scorers: string[] = [];
+  let mvpName = "-";
+  let teamName = "PitchMaster";
+
+  if (db) {
+    const { data: match } = await db
+      .from("matches")
+      .select("*")
+      .eq("id", matchId)
+      .single();
+    if (match) {
+      matchDate = match.match_date;
+      matchTime = match.match_time || "";
+      location = match.location || "";
+      opponent = match.opponent_name || "상대팀";
+    }
+
+    const { data: goals } = await db
+      .from("match_goals")
+      .select("scorer_id")
+      .eq("match_id", matchId);
+    if (goals) {
+      ourGoals = goals.filter(
+        (g: { scorer_id: string }) => g.scorer_id !== "OPPONENT"
+      ).length;
+      oppGoals = goals.filter(
+        (g: { scorer_id: string }) => g.scorer_id === "OPPONENT"
+      ).length;
+    }
+
+    // Get scorers names
+    const scorerIds =
+      goals
+        ?.filter((g: { scorer_id: string }) => g.scorer_id !== "OPPONENT")
+        .map((g: { scorer_id: string }) => g.scorer_id) ?? [];
+    if (scorerIds.length > 0) {
+      const { data: users } = await db
+        .from("users")
+        .select("name")
+        .in("id", scorerIds);
+      scorers = users?.map((u: { name: string }) => u.name) ?? [];
+    }
+
+    // Get MVP
+    const { data: mvpVotes } = await db
+      .from("match_mvp_votes")
+      .select("candidate_id")
+      .eq("match_id", matchId);
+
+    if (mvpVotes && mvpVotes.length > 0) {
+      const counts: Record<string, number> = {};
+      mvpVotes.forEach((v: { candidate_id: string }) => {
+        counts[v.candidate_id] = (counts[v.candidate_id] ?? 0) + 1;
+      });
+      const topId = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
+      if (topId) {
+        const { data: mvpUser } = await db
+          .from("users")
+          .select("name")
+          .eq("id", topId)
+          .single();
+        if (mvpUser) mvpName = mvpUser.name;
+      }
+    }
+
+    const { data: team } = await db
+      .from("teams")
+      .select("name")
+      .eq("id", ctx.teamId)
+      .single();
+    if (team) teamName = team.name;
+  }
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#0b0f1a"/>
+        <stop offset="100%" stop-color="#1a1230"/>
+      </linearGradient>
+    </defs>
+    <rect width="600" height="400" fill="url(#bg)" rx="24"/>
+    <text x="300" y="40" text-anchor="middle" fill="#94a3b8" font-size="12" font-family="sans-serif">PITCHMASTER</text>
+    <text x="300" y="80" text-anchor="middle" fill="#f8fafc" font-size="22" font-weight="bold" font-family="sans-serif">${teamName} vs ${opponent}</text>
+    <text x="300" y="160" text-anchor="middle" fill="#ff7a45" font-size="64" font-weight="bold" font-family="sans-serif">${ourGoals} : ${oppGoals}</text>
+    <text x="300" y="220" text-anchor="middle" fill="#c7d2fe" font-size="14" font-family="sans-serif">${matchDate} ${matchTime} · ${location}</text>
+    <text x="300" y="270" text-anchor="middle" fill="#94a3b8" font-size="12" font-family="sans-serif">득점: ${scorers.length > 0 ? scorers.join(", ") : "-"}</text>
+    <text x="300" y="310" text-anchor="middle" fill="#2bd3b5" font-size="16" font-weight="bold" font-family="sans-serif">MVP: ${mvpName}</text>
+    <text x="300" y="375" text-anchor="middle" fill="#64748b" font-size="10" font-family="sans-serif">pitchmaster.app</text>
+  </svg>`;
+
+  return new NextResponse(svg, {
+    headers: {
+      "Content-Type": "image/svg+xml",
+      "Cache-Control": "public, max-age=3600",
+    },
+  });
+}
