@@ -8,6 +8,23 @@ import {
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
 
+export async function GET() {
+  const ctx = await getApiContext();
+  if (ctx instanceof NextResponse) return ctx;
+
+  const db = getSupabaseAdmin();
+  if (!db) return apiError("Database not available", 503);
+
+  const { data: team, error } = await db
+    .from("teams")
+    .select("id, name, logo_url, invite_code, invite_expires_at, join_mode, uniform_primary, uniform_secondary, uniform_pattern")
+    .eq("id", ctx.teamId)
+    .single();
+
+  if (error || !team) return apiError("Team not found", 404);
+  return apiSuccess({ team });
+}
+
 export async function PUT(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
