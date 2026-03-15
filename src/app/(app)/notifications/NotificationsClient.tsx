@@ -69,8 +69,8 @@ export default function NotificationsClient() {
   /* ── Mutations ─────────────────────────────────────────── */
 
   const toggleRead = useCallback(
-    async (id: string) => {
-      await apiMutate("/api/notifications", "PUT", { id });
+    async (id: string, currentlyRead: boolean) => {
+      await apiMutate("/api/notifications", "PUT", { id, isRead: !currentlyRead });
       await refetchNotifs();
     },
     [refetchNotifs]
@@ -194,7 +194,7 @@ export default function NotificationsClient() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => toggleRead(notification.id)}
+                    onClick={() => toggleRead(notification.id, notification.isRead)}
                   >
                     {notification.isRead ? "미확인" : "읽음"}
                   </Button>

@@ -7,15 +7,28 @@ export async function GET(request: NextRequest) {
   if (ctx instanceof NextResponse) return ctx;
 
   const matchId = request.nextUrl.searchParams.get("matchId");
-  if (!matchId) return apiError("matchId required");
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  const { data, error } = await db
+  let query = db
     .from("match_attendance")
-    .select("*, users(id, name)")
-    .eq("match_id", matchId);
+    .select("*, users(id, name, preferred_positions)");
+
+  if (matchId) {
+    query = query.eq("match_id", matchId);
+  } else {
+    // 팀의 모든 경기 출석 데이터 조회
+    const { data: matches } = await db
+      .from("matches")
+      .select("id")
+      .eq("team_id", ctx.teamId);
+    const matchIds = matches?.map((m) => m.id) ?? [];
+    if (matchIds.length === 0) return apiSuccess({ attendance: [] });
+    query = query.in("match_id", matchIds);
+  }
+
+  const { data, error } = await query;
 
   if (error) return apiError(error.message);
   return apiSuccess({ attendance: data });

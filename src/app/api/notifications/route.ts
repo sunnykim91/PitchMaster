@@ -28,7 +28,7 @@ export async function PUT(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  if (body.markAllRead) {
+  if (body.markAllRead || body.all) {
     const { error } = await db
       .from("notifications")
       .update({ is_read: true })

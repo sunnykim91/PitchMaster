@@ -24,7 +24,16 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await query;
   if (error) return apiError(error.message);
-  return apiSuccess({ posts: data });
+
+  // Supabase returns aggregated counts as [{ count: N }] — flatten
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const posts = (data ?? []).map((row: any) => ({
+    ...row,
+    likes_count: row.post_likes?.[0]?.count ?? 0,
+    comments_count: row.post_comments?.[0]?.count ?? 0,
+  }));
+
+  return apiSuccess({ posts });
 }
 
 export async function POST(request: NextRequest) {

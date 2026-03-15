@@ -47,13 +47,15 @@ function mapSeason(raw: Record<string, unknown>): Season {
 
 function mapRecord(raw: Record<string, unknown>): RecordStat {
   return {
-    memberId: String(raw.member_id),
-    memberName: String(raw.member_name),
+    memberId: String(raw.memberId ?? raw.member_id ?? ""),
+    memberName: String(raw.name ?? raw.member_name ?? ""),
     goals: Number(raw.goals ?? 0),
     assists: Number(raw.assists ?? 0),
     mvp: Number(raw.mvp ?? 0),
-    attendanceRate: Number(raw.attendance_rate ?? 0),
-    preferredPositions: Array.isArray(raw.preferred_positions) ? raw.preferred_positions as string[] : [],
+    attendanceRate: Number(raw.attendanceRate ?? raw.attendance_rate ?? 0),
+    preferredPositions: Array.isArray(raw.preferredPositions ?? raw.preferred_positions)
+      ? (raw.preferredPositions ?? raw.preferred_positions) as string[]
+      : [],
   };
 }
 

@@ -426,7 +426,12 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
                   <Label className="font-semibold text-muted-foreground">
                     입금자/지출자
                   </Label>
-                  <Input name="memberName" placeholder="예: 김태훈" />
+                  <NativeSelect name="memberName">
+                    <option value="">선택 안 함</option>
+                    {members.map((m) => (
+                      <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                  </NativeSelect>
                 </div>
               </div>
 
