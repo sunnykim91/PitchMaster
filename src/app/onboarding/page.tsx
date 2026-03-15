@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
+import { BirthDateSelect } from "@/components/ui/birth-date-select";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
   const params = await searchParams;
@@ -37,12 +39,12 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
                   <Input id="name" name="name" required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="birthDate">생년월일</Label>
-                  <Input id="birthDate" name="birthDate" type="date" required />
+                  <Label>생년월일</Label>
+                  <BirthDateSelect name="birthDate" defaultValue="1998-01-01" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">연락처</Label>
-                  <Input id="phone" name="phone" required placeholder="010-0000-0000" />
+                  <PhoneInput id="phone" name="phone" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="preferredFoot">주발</Label>

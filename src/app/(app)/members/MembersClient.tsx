@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { cn, formatPhone } from "@/lib/utils";
 
 type Member = {
   id: string;
@@ -179,7 +179,7 @@ export default function MembersClient({
                   <p className="text-sm font-semibold">{member.name}</p>
                   {canViewAll ? (
                     <p className="text-xs text-muted-foreground">
-                      {member.phone} · {member.birthDate}
+                      {formatPhone(member.phone)} · {member.birthDate}
                     </p>
                   ) : null}
                   <p className="text-xs text-muted-foreground">

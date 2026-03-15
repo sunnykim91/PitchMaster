@@ -94,6 +94,8 @@ export default function MatchesClient({ userId, userRole }: { userId: string; us
 
   const [isOpen, setIsOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [matchDate, setMatchDate] = useState("");
+  const [voteDeadline, setVoteDeadline] = useState("");
 
   const matches: Match[] = useMemo(
     () => (matchesData.matches ?? []).map(mapDbMatchToMatch),
@@ -187,6 +189,19 @@ export default function MatchesClient({ userId, userRole }: { userId: string; us
                     name="date"
                     type="date"
                     required
+                    value={matchDate}
+                    onChange={(e) => {
+                      const d = e.target.value;
+                      setMatchDate(d);
+                      if (d) {
+                        const prev = new Date(d);
+                        prev.setDate(prev.getDate() - 1);
+                        const yyyy = prev.getFullYear();
+                        const mm = String(prev.getMonth() + 1).padStart(2, "0");
+                        const dd = String(prev.getDate()).padStart(2, "0");
+                        setVoteDeadline(`${yyyy}-${mm}-${dd}T17:00`);
+                      }
+                    }}
                   />
                 </div>
                 <div className="space-y-2">
@@ -255,6 +270,8 @@ export default function MatchesClient({ userId, userRole }: { userId: string; us
                   id="voteDeadline"
                   name="voteDeadline"
                   type="datetime-local"
+                  value={voteDeadline}
+                  onChange={(e) => setVoteDeadline(e.target.value)}
                 />
               </div>
               <Button type="submit" variant="default" disabled={submitting}>

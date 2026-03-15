@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { cn, formatPhone, stripPhone } from "@/lib/utils";
 
 type Profile = {
   name: string;
@@ -288,8 +288,10 @@ export default function SettingsClient({
               <div className="space-y-2">
                 <Label className="font-semibold">연락처</Label>
                 <Input
-                  value={profile.phone}
-                  onChange={(event) => setProfile({ ...profile, phone: event.target.value })}
+                  type="tel"
+                  inputMode="numeric"
+                  value={formatPhone(profile.phone)}
+                  onChange={(event) => setProfile({ ...profile, phone: stripPhone(event.target.value) })}
                 />
               </div>
             </div>

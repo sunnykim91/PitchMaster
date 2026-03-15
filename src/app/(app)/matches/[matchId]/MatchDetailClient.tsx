@@ -15,7 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
-import { cn } from "@/lib/utils";
+import { cn, formatPhone } from "@/lib/utils";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 /* ── API response row types (snake_case from DB) ── */
 
@@ -599,7 +600,7 @@ export default function MatchDetailClient({
                       <Label className="text-xs font-semibold text-muted-foreground">
                         연락처
                       </Label>
-                      <Input name="guestPhone" placeholder="010-0000-0000" />
+                      <PhoneInput name="guestPhone" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-semibold text-muted-foreground">
@@ -638,7 +639,7 @@ export default function MatchDetailClient({
                         )}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {[guest.phone, guest.note].filter(Boolean).join(" · ") || "용병"}
+                        {[guest.phone ? formatPhone(guest.phone) : "", guest.note].filter(Boolean).join(" · ") || "용병"}
                       </p>
                     </div>
                     <button
