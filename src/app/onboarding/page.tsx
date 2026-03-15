@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
+  const params = await searchParams;
   const session = await auth();
 
   if (!session) {
@@ -29,6 +30,7 @@ export default async function OnboardingPage() {
           </CardHeader>
           <CardContent>
             <form action={completeOnboarding} className="space-y-6">
+              {params.code && <input type="hidden" name="inviteCode" value={params.code} />}
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name">이름</Label>

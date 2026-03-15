@@ -12,6 +12,7 @@ export default function TeamClient() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
   const pending = searchParams.get("pending");
+  const codeFromUrl = searchParams.get("code") ?? "";
 
   const [teamName, setTeamName] = useState("");
   const [nameStatus, setNameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
@@ -120,7 +121,7 @@ export default function TeamClient() {
               <form action={joinTeam} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="inviteCode">초대 코드</Label>
-                  <Input id="inviteCode" name="inviteCode" required placeholder="예: PITCH42" />
+                  <Input id="inviteCode" name="inviteCode" required placeholder="예: PITCH42" defaultValue={codeFromUrl} />
                 </div>
                 <Button type="submit" variant="secondary" className="w-full">팀 가입하기</Button>
               </form>

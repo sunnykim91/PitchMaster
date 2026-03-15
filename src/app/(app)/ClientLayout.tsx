@@ -107,7 +107,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             size="sm"
             className="mt-3 w-full gap-2 border-amber-500/30 text-amber-300 hover:bg-amber-500/10"
             onClick={() => {
-              const inviteUrl = `${window.location.origin}/onboarding?code=${session.user.inviteCode}`;
+              const inviteUrl = `${window.location.origin}/team?code=${session.user.inviteCode}`;
               navigator.clipboard.writeText(inviteUrl).then(() => {
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000);

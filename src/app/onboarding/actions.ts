@@ -39,5 +39,6 @@ export async function completeOnboarding(formData: FormData) {
     isProfileComplete: true,
   });
 
-  redirect("/team");
+  const inviteCode = String(formData.get("inviteCode") || "").trim();
+  redirect(inviteCode ? `/team?code=${encodeURIComponent(inviteCode)}` : "/team");
 }
