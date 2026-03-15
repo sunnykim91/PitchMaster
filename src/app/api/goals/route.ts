@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   if (!matchId) return apiError("matchId required");
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ goals: [], demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("match_goals")
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ id: "demo", demo: true }, 201);
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("match_goals")
@@ -57,7 +57,7 @@ export async function PUT(request: NextRequest) {
   if (!body.id) return apiError("id required");
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ ok: true, demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("match_goals")
@@ -84,7 +84,7 @@ export async function DELETE(request: NextRequest) {
   if (!id) return apiError("id required");
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ ok: true, demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const { error } = await db.from("match_goals").delete().eq("id", id);
   if (error) return apiError(error.message);

@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   const memberId = request.nextUrl.searchParams.get("memberId");
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ records: [], demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   let query = db
     .from("dues_records")
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ id: "demo", demo: true }, 201);
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("dues_records")

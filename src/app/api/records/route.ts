@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const seasonId = request.nextUrl.searchParams.get("seasonId");
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ records: [], demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   // Get team members
   const { data: members } = await db

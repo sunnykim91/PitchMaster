@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   if (!postId) return apiError("postId required");
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ liked: true, demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   // Check if already liked
   const { data: existing } = await db

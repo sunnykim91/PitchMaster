@@ -9,7 +9,6 @@ export type ApiContext = {
   userId: string;
   teamId: string;
   teamRole: Role;
-  isDemo: boolean;
 };
 
 /** Extract and validate session for API routes */
@@ -31,7 +30,6 @@ export async function getApiContext(): Promise<ApiContext | NextResponse> {
     userId,
     teamId,
     teamRole,
-    isDemo: !!session.user.isDemo,
   };
 }
 

@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   if (ctx instanceof NextResponse) return ctx;
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ url: "/placeholder.jpg", demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const formData = await request.formData();
   const file = formData.get("file") as File | null;

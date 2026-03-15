@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import { nanoid } from "nanoid";
 import type { Session, SessionUser } from "@/lib/types";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
@@ -20,17 +19,6 @@ export async function auth(): Promise<Session | null> {
   const cookieStore = await cookies();
   const cookie = cookieStore.get(SESSION_COOKIE)?.value ?? null;
   return parseSession(cookie);
-}
-
-export function createDemoSession(): Session {
-  return {
-    user: {
-      id: nanoid(),
-      name: "Demo User",
-      isProfileComplete: false,
-      isDemo: true,
-    },
-  };
 }
 
 export async function setSession(session: Session) {
@@ -80,7 +68,7 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
   profileImage?: string;
 }): Promise<Session> {
   const db = getSupabaseAdmin();
-  if (!db) return createDemoSession();
+  if (!db) throw new Error("Supabase is not configured");
 
   // Check existing user
   const { data: existing } = await db
@@ -114,7 +102,6 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
         teamName: team?.name,
         teamRole: membership?.role,
         inviteCode: team?.invite_code,
-        isDemo: false,
       },
     };
   }
@@ -131,7 +118,7 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
     .select()
     .single();
 
-  if (error || !newUser) return createDemoSession();
+  if (error || !newUser) throw new Error("Failed to create user");
 
   return {
     user: {
@@ -139,7 +126,6 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
       name: newUser.name,
       profileImageUrl: newUser.profile_image_url,
       isProfileComplete: false,
-      isDemo: false,
     },
   };
 }

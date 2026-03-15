@@ -7,15 +7,7 @@ export async function GET() {
   if (ctx instanceof NextResponse) return ctx;
 
   const db = getSupabaseAdmin();
-  if (!db) {
-    return apiSuccess({
-      upcomingMatch: null,
-      recentResult: null,
-      activeVotes: [],
-      tasks: [],
-      demo: true,
-    });
-  }
+  if (!db) return apiError("Database not available", 503);
 
   const now = new Date().toISOString();
 

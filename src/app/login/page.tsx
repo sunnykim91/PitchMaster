@@ -1,8 +1,6 @@
-import Link from "next/link";
-import { startDemo } from "@/app/login/actions";
 import { isKakaoConfigured } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function LoginPage() {
   const kakaoEnabled = isKakaoConfigured();
@@ -31,9 +29,6 @@ export default function LoginPage() {
                   카카오로 시작하기 (환경변수 필요)
                 </Button>
               )}
-              <form action={startDemo}>
-                <Button type="submit">데모로 둘러보기</Button>
-              </form>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
               {[
@@ -52,29 +47,19 @@ export default function LoginPage() {
             </div>
           </section>
 
-          <Card>
-            <CardHeader>
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">데모 계정 안내</p>
-              <CardTitle className="font-heading text-2xl font-bold uppercase">바로 체험 가능한 샘플 팀</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ul className="space-y-3 text-sm text-muted-foreground">
-                {["팀 생성/가입 흐름 미리보기", "경기 일정 등록과 참석 투표 체험", "회비, 기록, 회칙까지 샘플 데이터 제공"].map((text) => (
+          <Card className="flex items-center justify-center">
+            <CardContent className="p-8 text-center space-y-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">PitchMaster</p>
+              <h2 className="font-heading text-2xl font-bold uppercase">조기축구 팀 관리 플랫폼</h2>
+              <ul className="space-y-3 text-sm text-muted-foreground text-left">
+                {["경기 일정 등록과 참석 투표", "전술판으로 포메이션 편성", "회비 수납/지출 투명 관리", "골·어시스트·MVP 기록 관리"].map((text) => (
                   <li key={text} className="flex items-center gap-2">
                     <span className="h-1 w-1 rounded-full bg-primary" />
                     {text}
                   </li>
                 ))}
               </ul>
-              <Card className="border-primary/20 bg-primary/5">
-                <CardContent className="p-4 text-sm">
-                  <p className="font-bold">실계정 연결 준비</p>
-                  <p className="mt-1 text-muted-foreground">카카오 OAuth, Supabase 연결은 환경변수 등록 후 활성화됩니다.</p>
-                </CardContent>
-              </Card>
-              <Link href="/" className="text-xs text-muted-foreground underline underline-offset-4 hover:text-primary">
-                루트로 돌아가기
-              </Link>
+              <p className="text-xs text-muted-foreground">카카오 로그인으로 간편하게 시작하세요.</p>
             </CardContent>
           </Card>
         </div>

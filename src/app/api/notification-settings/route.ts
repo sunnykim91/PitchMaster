@@ -7,7 +7,7 @@ export async function GET() {
   if (ctx instanceof NextResponse) return ctx;
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ settings: { email: true, push: true }, demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("notification_settings")
@@ -24,7 +24,7 @@ export async function PUT(request: NextRequest) {
 
   const body = await request.json();
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("notification_settings")

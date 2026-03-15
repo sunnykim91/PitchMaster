@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   if (!postId) return apiError("postId required");
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ comments: [], demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("post_comments")
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     return apiError("postId and content required");
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ id: "demo", demo: true }, 201);
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("post_comments")

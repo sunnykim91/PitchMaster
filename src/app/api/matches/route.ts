@@ -8,7 +8,7 @@ export async function GET() {
   if (ctx instanceof NextResponse) return ctx;
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ matches: [], demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("matches")
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ id: "demo", demo: true }, 201);
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("matches")

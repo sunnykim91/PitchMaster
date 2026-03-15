@@ -8,7 +8,7 @@ export async function GET() {
   if (ctx instanceof NextResponse) return ctx;
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ profile: null, demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("users")
@@ -25,7 +25,7 @@ export async function PUT(request: NextRequest) {
 
   const body = await request.json();
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const updates: Record<string, unknown> = {};
   if (body.name !== undefined) updates.name = body.name;

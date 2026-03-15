@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
 
   const category = request.nextUrl.searchParams.get("category");
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ posts: [], demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   let query = db
     .from("posts")
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ id: "demo", demo: true }, 201);
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("posts")

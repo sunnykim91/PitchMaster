@@ -13,7 +13,7 @@ export async function GET() {
   if (ctx instanceof NextResponse) return ctx;
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ rules: [], demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("rules")
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ id: "demo", demo: true }, 201);
+  if (!db) return apiError("Database not available", 503);
 
   const now = new Date().toISOString();
   const { data, error } = await db
@@ -66,7 +66,7 @@ export async function PUT(request: NextRequest) {
   if (!body.id) return apiError("id required");
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ ok: true, demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("rules")

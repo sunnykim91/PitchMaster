@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   if (!matchId) return apiError("matchId required");
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ votes: [], demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("match_mvp_votes")
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     return apiError("matchId and candidateId required");
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ ok: true, demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   // Verify voter attended the match
   const { data: attendance } = await db

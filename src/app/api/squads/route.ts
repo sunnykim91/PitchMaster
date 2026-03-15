@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   if (!matchId) return apiError("matchId required");
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ squads: [], demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("match_squads")
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ ok: true, demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const { data, error } = await db
     .from("match_squads")

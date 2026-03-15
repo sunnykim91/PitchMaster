@@ -17,7 +17,7 @@ export async function PUT(request: NextRequest) {
 
   const body = await request.json();
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ ok: true, demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const updates: Record<string, unknown> = {};
   if (body.name) updates.name = body.name;
@@ -39,7 +39,7 @@ export async function DELETE() {
   if (roleCheck) return roleCheck;
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ ok: true, demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const { error } = await db.from("teams").delete().eq("id", ctx.teamId);
   if (error) return apiError(error.message);

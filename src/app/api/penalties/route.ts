@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
   const type = request.nextUrl.searchParams.get("type"); // "rules" or "records"
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ rules: [], records: [], demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   if (type === "records") {
     const { data, error } = await db
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ id: "demo", demo: true }, 201);
+  if (!db) return apiError("Database not available", 503);
 
   // Determine if creating a rule or a record
   if (body.action === "record") {
@@ -87,7 +87,7 @@ export async function PUT(request: NextRequest) {
 
   const body = await request.json();
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   // Toggle penalty paid status
   const { data, error } = await db
@@ -111,7 +111,7 @@ export async function DELETE(request: NextRequest) {
   const id = request.nextUrl.searchParams.get("id");
   const type = request.nextUrl.searchParams.get("type"); // "rule" or "record"
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const table = type === "rule" ? "penalty_rules" : "penalty_records";
   const { error } = await db

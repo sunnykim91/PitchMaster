@@ -88,7 +88,6 @@ export type SessionUser = {
   teamName?: string;
   teamRole?: Role;
   inviteCode?: string;
-  isDemo?: boolean;
 };
 
 export type Session = {

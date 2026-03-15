@@ -14,13 +14,26 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PitchMaster",
-  description: "조기축구 팀을 위한 스마트 운영 허브",
+  title: "PitchMaster — 조기축구 팀 관리 플랫폼",
+  description: "경기 일정, 참석 투표, 전술판, 회비 관리, MVP 기록까지. 조기축구 팀 운영을 한 화면에.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "PitchMaster",
+  },
+  openGraph: {
+    title: "PitchMaster — 조기축구 팀 관리 플랫폼",
+    description: "경기 일정, 참석 투표, 전술판, 회비 관리, MVP 기록까지. 조기축구 팀 운영을 한 화면에.",
+    url: "https://pitch-master-eight.vercel.app",
+    siteName: "PitchMaster",
+    locale: "ko_KR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PitchMaster — 조기축구 팀 관리 플랫폼",
+    description: "경기 일정, 참석 투표, 전술판, 회비 관리, MVP 기록까지.",
   },
 };
 

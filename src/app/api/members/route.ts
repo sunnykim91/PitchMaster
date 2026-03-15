@@ -13,7 +13,7 @@ export async function GET() {
   if (ctx instanceof NextResponse) return ctx;
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ members: [], demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const isStaff = hasMinRole(ctx.teamRole, "STAFF");
 
@@ -44,7 +44,7 @@ export async function PUT(request: NextRequest) {
     return apiError("memberId and role required");
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ ok: true, demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const { error } = await db
     .from("team_members")
@@ -67,7 +67,7 @@ export async function DELETE(request: NextRequest) {
   if (!memberId) return apiError("memberId required");
 
   const db = getSupabaseAdmin();
-  if (!db) return apiSuccess({ ok: true, demo: true });
+  if (!db) return apiError("Database not available", 503);
 
   const { error } = await db
     .from("team_members")
