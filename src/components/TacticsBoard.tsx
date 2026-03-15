@@ -428,10 +428,50 @@ export default function TacticsBoard({ matchId, roster, quarterCount, teamSettin
 
   function handleFormationChange(nextId: string) {
     const nextFormation = formationTemplates.find((item) => item.id === nextId) ?? defaultFormation;
+
+    // 기존 배치된 선수들을 새 포메이션 슬롯에 포지션 유사도 기반으로 재배치
+    const posCategory = (role: DetailedPosition): "GK" | "DF" | "MF" | "FW" => {
+      if (role === "GK") return "GK";
+      if (["RB", "RCB", "CB", "LCB", "LB", "RWB", "LWB"].includes(role)) return "DF";
+      if (["RDM", "LDM", "CDM", "RCM", "CM", "LCM", "CAM", "RAM", "LAM", "RM", "LM"].includes(role)) return "MF";
+      return "FW"; // RW, LW, CF, ST, RS, LS
+    };
+
+    // 기존 배치에서 선수 정보 수집 (slotRole → player)
+    const oldPlayers: { playerId: string; secondPlayerId?: string; category: "GK" | "DF" | "MF" | "FW" }[] = [];
+    formation.slots.forEach((slot) => {
+      const p = placements[slot.id];
+      if (p) {
+        oldPlayers.push({ playerId: p.playerId, secondPlayerId: p.secondPlayerId, category: posCategory(slot.role) });
+      }
+    });
+
+    // 새 슬롯에 카테고리별로 매칭
     const nextPlacements: Record<string, Placement | null> = {};
+    const usedPlayerIds = new Set<string>();
     nextFormation.slots.forEach((slot) => {
       nextPlacements[slot.id] = null;
     });
+
+    // 1차: 같은 카테고리 매칭
+    nextFormation.slots.forEach((slot) => {
+      const cat = posCategory(slot.role);
+      const match = oldPlayers.find((p) => p.category === cat && !usedPlayerIds.has(p.playerId));
+      if (match) {
+        usedPlayerIds.add(match.playerId);
+        nextPlacements[slot.id] = { playerId: match.playerId, x: slot.x, y: slot.y, secondPlayerId: match.secondPlayerId };
+      }
+    });
+
+    // 2차: 남은 선수를 빈 슬롯에 배치
+    const remaining = oldPlayers.filter((p) => !usedPlayerIds.has(p.playerId));
+    nextFormation.slots.forEach((slot) => {
+      if (!nextPlacements[slot.id] && remaining.length > 0) {
+        const player = remaining.shift()!;
+        nextPlacements[slot.id] = { playerId: player.playerId, x: slot.x, y: slot.y, secondPlayerId: player.secondPlayerId };
+      }
+    });
+
     updateBoardState({ formationId: nextFormation.id, placements: nextPlacements });
     setActiveSlotId(null);
   }
