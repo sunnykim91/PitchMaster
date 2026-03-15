@@ -6,6 +6,7 @@ import AutoFormationBuilder from "@/components/AutoFormationBuilder";
 import type { AttendingPlayer, GeneratedSquad } from "@/components/AutoFormationBuilder";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
+import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role, DetailedPosition } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -341,8 +342,10 @@ export default function MatchDetailClient({
   const formRef = useRef<HTMLFormElement>(null);
   const diaryFormRef = useRef<HTMLFormElement>(null);
 
-  const canManageAttendance = isStaffOrAbove(userRole);
-  const canManage = isStaffOrAbove(userRole); // 회장/운영진: 전체 관리 가능
+  const { effectiveRole } = useViewAsRole();
+  const role = effectiveRole(userRole);
+  const canManageAttendance = isStaffOrAbove(role);
+  const canManage = isStaffOrAbove(role);
 
   const baseRoster = useMemo(
     () =>

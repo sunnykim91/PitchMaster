@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
+import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,6 +61,9 @@ function mapRecord(raw: Record<string, unknown>): RecordStat {
 }
 
 export default function RecordsClient({ userId, userRole }: { userId: string; userRole?: Role }) {
+  const { effectiveRole } = useViewAsRole();
+  const role = effectiveRole(userRole);
+
   // ── Fetch seasons ──
   const {
     data: seasonsPayload,
@@ -335,7 +339,7 @@ export default function RecordsClient({ userId, userRole }: { userId: string; us
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {isStaffOrAbove(userRole) && (
+          {isStaffOrAbove(role) && (
             <form
               onSubmit={handleAddSeason}
               className="mb-4 grid gap-4 rounded-xl bg-secondary p-5"
@@ -396,7 +400,7 @@ export default function RecordsClient({ userId, userRole }: { userId: string; us
                     {item.startDate} ~ {item.endDate}
                   </p>
                 </div>
-                {isStaffOrAbove(userRole) ? (
+                {isStaffOrAbove(role) ? (
                   <Button
                     type="button"
                     size="sm"

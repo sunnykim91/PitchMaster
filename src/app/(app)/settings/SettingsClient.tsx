@@ -7,6 +7,7 @@ import { useApi, apiMutate } from "@/lib/useApi";
 import type { PreferredPosition, PreferredFoot, Role } from "@/lib/types";
 import { POSITION_GROUPS, PREF_POSITION_LABEL, PREF_POSITION_SHORT } from "@/lib/types";
 import { isPresident } from "@/lib/permissions";
+import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -87,6 +88,8 @@ export default function SettingsClient({
   userRole?: Role;
 }) {
   const router = useRouter();
+  const { effectiveRole } = useViewAsRole();
+  const role = effectiveRole(userRole);
   const defaultProfile = useMemo(() => sessionProfile, [sessionProfile]);
   const defaultTeam = useMemo(() => sessionTeam, [sessionTeam]);
 
@@ -152,7 +155,7 @@ export default function SettingsClient({
   const uniformPattern = team.uniformPattern ?? "SOLID";
 
   const ready = !profileLoading && !teamLoading;
-  const canEditTeam = isPresident(userRole);
+  const canEditTeam = isPresident(role);
 
   async function handleProfileSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

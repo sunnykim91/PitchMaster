@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
+import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role } from "@/lib/types";
 
 import { Button } from "@/components/ui/button";
@@ -105,6 +106,9 @@ type PenaltyRecord = {
 type RecordFilter = "ALL" | "INCOME" | "EXPENSE";
 
 export default function DuesClient({ userRole }: { userRole?: Role }) {
+  const { effectiveRole } = useViewAsRole();
+  const role = effectiveRole(userRole);
+
   /* ── API data fetching ── */
   const {
     data: duesData,
@@ -349,7 +353,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
               회비 현황
             </h2>
           </div>
-          {isStaffOrAbove(userRole) && (
+          {isStaffOrAbove(role) && (
             <Button
               type="button"
               size="sm"
@@ -562,7 +566,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
               회비 기준 설정
             </h3>
           </div>
-          {isStaffOrAbove(userRole) && (
+          {isStaffOrAbove(role) && (
             <Button
               type="button"
               variant="outline"
@@ -653,7 +657,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
               벌금 관리
             </h3>
           </div>
-          {isStaffOrAbove(userRole) && (
+          {isStaffOrAbove(role) && (
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -830,7 +834,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
                   >
                     {record.isPaid ? "납부" : "미납"} {record.amount.toLocaleString()}원
                   </Badge>
-                  {isStaffOrAbove(userRole) && (
+                  {isStaffOrAbove(role) && (
                     <>
                       <Button
                         type="button"

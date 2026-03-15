@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import type { DetailedPosition, Role } from "@/lib/types";
 import { isPresident, isStaffOrAbove } from "@/lib/permissions";
+import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -67,10 +68,12 @@ export default function MembersClient({
   );
   const members = useMemo(() => mapApiMembers(data.members), [data.members]);
   const [confirmKick, setConfirmKick] = useState<string | null>(null);
+  const { effectiveRole } = useViewAsRole();
+  const role = effectiveRole(currentRole);
 
-  const canChangeRole = isPresident(currentRole);
-  const canKick = isPresident(currentRole);
-  const canViewAll = isStaffOrAbove(currentRole);
+  const canChangeRole = isPresident(role);
+  const canKick = isPresident(role);
+  const canViewAll = isStaffOrAbove(role);
 
   const stats = useMemo(() => {
     const counts = { PRESIDENT: 0, STAFF: 0, MEMBER: 0 } as Record<Role, number>;

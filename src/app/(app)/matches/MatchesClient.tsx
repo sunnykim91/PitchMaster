@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
+import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -75,6 +76,9 @@ function mapDbMatchToMatch(db: DbMatch): Match {
 }
 
 export default function MatchesClient({ userId, userRole }: { userId: string; userRole?: Role }) {
+  const { effectiveRole } = useViewAsRole();
+  const role = effectiveRole(userRole);
+
   const {
     data: matchesData,
     loading: matchesLoading,
@@ -156,7 +160,7 @@ export default function MatchesClient({ userId, userRole }: { userId: string; us
                 경기 일정 관리
               </CardTitle>
             </div>
-            {isStaffOrAbove(userRole) && (
+            {isStaffOrAbove(role) && (
               <Button
                 type="button"
                 variant="default"

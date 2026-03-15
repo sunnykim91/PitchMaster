@@ -4,13 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SidebarNav from "@/components/SidebarNav";
+import { ViewAsRoleProvider, useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Menu } from "lucide-react";
-import type { Session } from "@/lib/types";
+import type { Session, Role } from "@/lib/types";
 
 type ClientLayoutProps = {
   session: Session;
@@ -18,8 +19,20 @@ type ClientLayoutProps = {
 };
 
 export default function ClientLayout({ session, children }: ClientLayoutProps) {
+  const isPresident = session.user.teamRole === "PRESIDENT";
+
+  return (
+    <ViewAsRoleProvider isPresident={isPresident}>
+      <ClientLayoutInner session={session}>{children}</ClientLayoutInner>
+    </ViewAsRoleProvider>
+  );
+}
+
+function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const { viewAsRole, setViewAsRole } = useViewAsRole();
+  const isPresident = session.user.teamRole === "PRESIDENT";
 
   useEffect(() => {
     setIsOpen(false);
@@ -38,10 +51,11 @@ export default function ClientLayout({ session, children }: ClientLayoutProps) {
     []
   );
 
+  const displayRole = viewAsRole ?? session.user.teamRole;
   const roleLabel =
-    session.user.teamRole === "PRESIDENT"
+    displayRole === "PRESIDENT"
       ? "회장"
-      : session.user.teamRole === "STAFF"
+      : displayRole === "STAFF"
       ? "운영진"
       : "평회원";
 
@@ -50,8 +64,35 @@ export default function ClientLayout({ session, children }: ClientLayoutProps) {
       <div className="space-y-1">
         <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">PitchMaster</p>
         <h1 className="font-heading text-xl font-bold uppercase">{session.user.teamName}</h1>
-        <p className="text-xs text-muted-foreground">{roleLabel} · {session.user.name}</p>
+        <p className="text-xs text-muted-foreground">
+          {viewAsRole ? (
+            <span className="text-amber-400">{roleLabel} 시점 체험 중</span>
+          ) : (
+            <>{roleLabel}</>
+          )}
+          {" · "}{session.user.name}
+        </p>
       </div>
+      {isPresident && (
+        <div className="mt-2 flex gap-1">
+          {(["PRESIDENT", "STAFF", "MEMBER"] as Role[]).map((role) => {
+            const label = role === "PRESIDENT" ? "회장" : role === "STAFF" ? "운영진" : "평회원";
+            const isActive = viewAsRole ? viewAsRole === role : role === "PRESIDENT";
+            return (
+              <Button
+                key={role}
+                type="button"
+                variant={isActive ? "default" : "outline"}
+                size="sm"
+                className="rounded-lg px-2 py-1 text-[11px]"
+                onClick={() => setViewAsRole(role === "PRESIDENT" ? null : role)}
+              >
+                {label}
+              </Button>
+            );
+          })}
+        </div>
+      )}
       <Separator className="my-4" />
       <SidebarNav items={navItems} />
       <Separator className="my-4" />

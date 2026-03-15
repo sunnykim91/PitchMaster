@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
+import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,6 +51,9 @@ function mapRule(apiRule: ApiRule): Rule {
 const categories: RuleCategory[] = ["일반", "회비", "경조사", "기타"];
 
 export default function RulesClient({ userRole }: { userRole?: Role }) {
+  const { effectiveRole } = useViewAsRole();
+  const role = effectiveRole(userRole);
+
   const { data, loading, refetch } = useApi<{ rules: ApiRule[] }>("/api/rules", { rules: [] });
   const rules = useMemo(() => data.rules.map(mapRule), [data.rules]);
 
@@ -139,7 +143,7 @@ export default function RulesClient({ userRole }: { userRole?: Role }) {
       </Card>
 
       {/* Editor (staff only) */}
-      {isStaffOrAbove(userRole) && (
+      {isStaffOrAbove(role) && (
         <Card>
           <CardHeader className="pb-2">
             <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-foreground/80">Editor</p>
@@ -226,7 +230,7 @@ export default function RulesClient({ userRole }: { userRole?: Role }) {
                         등록: {rule.createdAt} · 수정: {rule.updatedAt}
                       </p>
                     </div>
-                    {isStaffOrAbove(userRole) && (
+                    {isStaffOrAbove(role) && (
                       <Button type="button" variant="outline" size="sm" onClick={() => handleEdit(rule)}>
                         수정
                       </Button>
