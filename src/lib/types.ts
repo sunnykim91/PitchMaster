@@ -1,6 +1,66 @@
 export type Role = "PRESIDENT" | "STAFF" | "MEMBER";
 export type PreferredFoot = "RIGHT" | "LEFT" | "BOTH";
 export type Position = "GK" | "DF" | "MF" | "FW";
+
+/** 세분화된 선호 포지션 (9개) */
+export type PreferredPosition =
+  | "GK"   // 골키퍼
+  | "CB"   // 센터백 (Centre Back)
+  | "LB"   // 좌측 윙백 (Left Back)
+  | "RB"   // 우측 윙백 (Right Back)
+  | "CDM"  // 수비형 미드필더 (Central Defensive Midfielder)
+  | "CAM"  // 공격형 미드필더 (Central Attacking Midfielder)
+  | "LW"   // 좌측 윙어 (Left Winger)
+  | "RW"   // 우측 윙어 (Right Winger)
+  | "ST";  // 스트라이커 (Striker)
+
+/** PreferredPosition → Position 매핑 */
+export const PREF_TO_POSITION: Record<PreferredPosition, Position> = {
+  GK: "GK",
+  CB: "DF",
+  LB: "DF",
+  RB: "DF",
+  CDM: "MF",
+  CAM: "MF",
+  LW: "FW",
+  RW: "FW",
+  ST: "FW",
+};
+
+/** PreferredPosition 한국어 라벨 */
+export const PREF_POSITION_LABEL: Record<PreferredPosition, string> = {
+  GK: "골키퍼",
+  CB: "센터백",
+  LB: "좌측 윙백",
+  RB: "우측 윙백",
+  CDM: "수비형 미드필더",
+  CAM: "공격형 미드필더",
+  LW: "좌측 윙어",
+  RW: "우측 윙어",
+  ST: "스트라이커",
+};
+
+/** PreferredPosition 짧은 라벨 */
+export const PREF_POSITION_SHORT: Record<PreferredPosition, string> = {
+  GK: "GK",
+  CB: "CB",
+  LB: "LB",
+  RB: "RB",
+  CDM: "CDM",
+  CAM: "CAM",
+  LW: "LW",
+  RW: "RW",
+  ST: "ST",
+};
+
+/** 포지션 그룹 (UI 표시용) */
+export const POSITION_GROUPS: { group: string; positions: PreferredPosition[] }[] = [
+  { group: "골키퍼", positions: ["GK"] },
+  { group: "수비", positions: ["CB", "LB", "RB"] },
+  { group: "미드필더", positions: ["CDM", "CAM"] },
+  { group: "공격", positions: ["LW", "RW", "ST"] },
+];
+
 export type DetailedPosition =
   | "GK" | "RB" | "RCB" | "CB" | "LCB" | "LB"
   | "RWB" | "LWB" | "RDM" | "LDM" | "CDM"
@@ -20,7 +80,7 @@ export type SessionUser = {
   name?: string;
   birthDate?: string;
   phone?: string;
-  preferredPositions?: Position[];
+  preferredPositions?: PreferredPosition[];
   preferredFoot?: PreferredFoot;
   profileImageUrl?: string;
   isProfileComplete?: boolean;

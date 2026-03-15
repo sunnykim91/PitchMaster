@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { auth, updateSession, isSupabaseConfigured } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import type { Position, PreferredFoot } from "@/lib/types";
+import type { PreferredPosition, PreferredFoot } from "@/lib/types";
 
 export async function completeOnboarding(formData: FormData) {
   const session = await auth();
@@ -13,7 +13,7 @@ export async function completeOnboarding(formData: FormData) {
   const birthDate = String(formData.get("birthDate") || "");
   const phone = String(formData.get("phone") || "").trim();
   const preferredFoot = String(formData.get("preferredFoot") || "RIGHT") as PreferredFoot;
-  const preferredPositions = formData.getAll("preferredPositions").map((value) => String(value)) as Position[];
+  const preferredPositions = formData.getAll("preferredPositions").map((value) => String(value)) as PreferredPosition[];
 
   // Save to Supabase if configured
   if (isSupabaseConfigured() && !session.user.isDemo) {

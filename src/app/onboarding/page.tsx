@@ -53,13 +53,63 @@ export default async function OnboardingPage() {
               </div>
               <div className="space-y-3">
                 <Label>선호 포지션 (복수 선택)</Label>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {["GK", "DF", "MF", "FW"].map((pos) => (
-                    <label key={pos} className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
-                      <input type="checkbox" name="preferredPositions" value={pos} className="h-4 w-4 accent-primary" />
-                      {pos}
-                    </label>
-                  ))}
+                <div className="space-y-4">
+                  <div>
+                    <p className="mb-2 text-xs font-semibold text-muted-foreground">골키퍼</p>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
+                        <input type="checkbox" name="preferredPositions" value="GK" className="h-4 w-4 accent-primary" />
+                        GK · 골키퍼
+                      </label>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="mb-2 text-xs font-semibold text-muted-foreground">수비</p>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
+                        <input type="checkbox" name="preferredPositions" value="CB" className="h-4 w-4 accent-primary" />
+                        CB · 센터백
+                      </label>
+                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
+                        <input type="checkbox" name="preferredPositions" value="LB" className="h-4 w-4 accent-primary" />
+                        LB · 좌측 윙백
+                      </label>
+                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
+                        <input type="checkbox" name="preferredPositions" value="RB" className="h-4 w-4 accent-primary" />
+                        RB · 우측 윙백
+                      </label>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="mb-2 text-xs font-semibold text-muted-foreground">미드필더</p>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
+                        <input type="checkbox" name="preferredPositions" value="CDM" className="h-4 w-4 accent-primary" />
+                        CDM · 수비형 미드필더
+                      </label>
+                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
+                        <input type="checkbox" name="preferredPositions" value="CAM" className="h-4 w-4 accent-primary" />
+                        CAM · 공격형 미드필더
+                      </label>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="mb-2 text-xs font-semibold text-muted-foreground">공격</p>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
+                        <input type="checkbox" name="preferredPositions" value="LW" className="h-4 w-4 accent-primary" />
+                        LW · 좌측 윙어
+                      </label>
+                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
+                        <input type="checkbox" name="preferredPositions" value="RW" className="h-4 w-4 accent-primary" />
+                        RW · 우측 윙어
+                      </label>
+                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
+                        <input type="checkbox" name="preferredPositions" value="ST" className="h-4 w-4 accent-primary" />
+                        ST · 스트라이커
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
               <Button type="submit" className="w-full">다음 단계로</Button>

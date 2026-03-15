@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toPng } from "html-to-image";
 import { formationTemplates } from "@/lib/formations";
 import { useApi, apiMutate } from "@/lib/useApi";
 import type { DetailedPosition } from "@/lib/types";
@@ -21,12 +22,15 @@ type TacticsBoardProps = {
   roster: Player[];
   quarterCount: number;
   teamSettings?: TeamSettings;
+  initialSquads?: SquadRow[]; // 외부에서 주입 시 API fetch skip
+  readOnly?: boolean; // MEMBER: 조회만 가능
 };
 
 type Placement = {
   playerId: string;
   x: number;
   y: number;
+  secondPlayerId?: string; // 0.5Q 후반 선수
 };
 
 type BoardState = {
@@ -67,7 +71,7 @@ const SAVE_DEBOUNCE_MS = 800;
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
-export default function TacticsBoard({ matchId, roster, quarterCount, teamSettings: teamSettingsProp }: TacticsBoardProps) {
+export default function TacticsBoard({ matchId, roster, quarterCount, teamSettings: teamSettingsProp, initialSquads, readOnly = false }: TacticsBoardProps) {
   const defaultFormation = formationTemplates[0];
   const quarters = useMemo(
     () => Array.from({ length: Math.max(1, quarterCount) }, (_, index) => index + 1),
@@ -75,14 +79,20 @@ export default function TacticsBoard({ matchId, roster, quarterCount, teamSettin
   );
   const [activeQuarter, setActiveQuarter] = useState(quarters[0]);
 
-  // ── Fetch squads from API ──
+  // ── Fetch squads from API (skip if initialSquads provided) ──
   const {
-    data: squadsData,
-    loading: squadsLoading,
+    data: squadsApiData,
+    loading: squadsApiLoading,
   } = useApi<SquadsApiResponse>(
     `/api/squads?matchId=${matchId}`,
-    { squads: [] }
+    { squads: [] },
+    { skip: Boolean(initialSquads) }
   );
+  const squadsData = useMemo(
+    () => initialSquads ? { squads: initialSquads } : squadsApiData,
+    [initialSquads, squadsApiData],
+  );
+  const squadsLoading = initialSquads ? false : squadsApiLoading;
 
   // ── Fetch team settings from API (only if not passed as prop) ──
   const {
@@ -194,7 +204,10 @@ export default function TacticsBoard({ matchId, roster, quarterCount, teamSettin
 
   const [uniformMode, setUniformMode] = useState<"HOME" | "AWAY">("HOME");
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
+  const [shareMsg, setShareMsg] = useState<string | null>(null);
+  const sharingRef = useRef(false);
   const boardRef = useRef<HTMLDivElement | null>(null);
+  const allQuartersRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<{ slotId: string } | null>(null);
 
   const formation = useMemo(
@@ -232,6 +245,102 @@ export default function TacticsBoard({ matchId, roster, quarterCount, teamSettin
     });
     return [...unassigned, ...assigned];
   }, [assignedPlayers, roster]);
+
+  // 현재 쿼터 쉬는 인원
+  const restingPlayers = useMemo(() => {
+    return roster.filter((p) => !assignedPlayers.has(p.id));
+  }, [roster, assignedPlayers]);
+
+  const captureRef = useRef<HTMLDivElement | null>(null);
+
+  /** 공통 캡처 → 클립보드 복사 / Web Share / 다운로드 */
+  async function captureAndShare(target: HTMLElement, filename: string) {
+    // 동시 실행 방지 (더블 클릭 등)
+    if (sharingRef.current) return;
+    sharingRef.current = true;
+    setShareMsg("캡처 중...");
+
+    // 오프스크린 요소면 임시로 화면에 표시
+    const wasOffScreen = target.style.left === "-9999px";
+    if (wasOffScreen) {
+      target.style.left = "0";
+      target.style.position = "fixed";
+      target.style.top = "0";
+      target.style.zIndex = "9999";
+      target.style.opacity = "1";
+      // 레이아웃 계산 대기
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    }
+
+    try {
+      const dataUrl = await toPng(target, {
+        backgroundColor: "#0a0e14",
+        pixelRatio: 2,
+        cacheBust: true,
+      });
+
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], filename, { type: "image/png" });
+
+      // 1순위: Web Share API (모바일 카톡 등)
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ title: filename.replace(".png", ""), files: [file] });
+          setShareMsg("공유 완료!");
+        } catch {
+          setShareMsg(null);
+          return;
+        }
+      }
+      // 2순위: 클립보드 복사
+      else if (navigator.clipboard?.write) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ "image/png": blob }),
+          ]);
+          setShareMsg("클립보드에 복사됨! 붙여넣기하세요");
+        } catch {
+          // 클립보드 실패 시 다운로드 폴백
+          const a = document.createElement("a");
+          a.href = dataUrl;
+          a.download = filename;
+          a.click();
+          setShareMsg("이미지가 저장되었습니다!");
+        }
+      }
+      // 3순위: 다운로드
+      else {
+        const a = document.createElement("a");
+        a.href = dataUrl;
+        a.download = filename;
+        a.click();
+        setShareMsg("이미지가 저장되었습니다!");
+      }
+      setTimeout(() => setShareMsg(null), 3000);
+    } catch (err) {
+      console.error("캡처 실패:", err);
+      setShareMsg("캡처 실패");
+      setTimeout(() => setShareMsg(null), 2000);
+    } finally {
+      if (wasOffScreen) {
+        target.style.left = "-9999px";
+        target.style.position = "absolute";
+        target.style.top = "0";
+        target.style.zIndex = "";
+        target.style.opacity = "";
+      }
+      sharingRef.current = false;
+    }
+  }
+
+  function handleShareFormation() {
+    if (captureRef.current) captureAndShare(captureRef.current, `lineup-Q${activeQuarter}.png`);
+  }
+
+  function handleShareAll() {
+    if (allQuartersRef.current) captureAndShare(allQuartersRef.current, "lineup-all.png");
+  }
 
   function parseHexColor(hexColor: string) {
     const color = hexColor.replace("#", "");
@@ -328,6 +437,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, teamSettin
   }
 
   function handleSelectSlot(slotId: string) {
+    if (readOnly) return;
     setActiveSlotId(slotId);
   }
 
@@ -368,6 +478,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, teamSettin
   }
 
   return (
+    <>
     <Card className="p-6">
       <CardContent className="p-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -393,18 +504,25 @@ export default function TacticsBoard({ matchId, roster, quarterCount, teamSettin
                 </Button>
               ))}
             </div>
-            <Select value={formation.id} onValueChange={handleFormationChange}>
-              <SelectTrigger className="w-auto min-w-[140px] rounded-xl text-xs font-semibold">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {formationTemplates.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {item.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {!readOnly && (
+              <Select value={formation.id} onValueChange={handleFormationChange}>
+                <SelectTrigger className="w-auto min-w-[140px] rounded-xl text-xs font-semibold">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {formationTemplates.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {readOnly && (
+              <Badge variant="secondary" className="rounded-xl px-3 py-1 text-xs font-semibold">
+                {formation.name}
+              </Badge>
+            )}
             <Badge variant="secondary" className="flex items-center gap-1 rounded-xl px-1 py-1">
               <Button
                 type="button"
@@ -425,38 +543,95 @@ export default function TacticsBoard({ matchId, roster, quarterCount, teamSettin
                 원정
               </Button>
             </Badge>
+            {!readOnly && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={clearBoard}
+                className="rounded-xl"
+              >
+                초기화
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={clearBoard}
+              onClick={handleShareFormation}
               className="rounded-xl"
             >
-              초기화
+              공유
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleShareAll}
+              className="rounded-xl"
+            >
+              전체 공유
             </Button>
             {saving && (
               <span className="text-xs text-muted-foreground animate-pulse">저장 중...</span>
             )}
+            {shareMsg && (
+              <span className="text-xs text-primary animate-pulse">{shareMsg}</span>
+            )}
           </div>
         </div>
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-          {/* Soccer pitch */}
+        <div className={cn("mt-5 grid gap-5", !readOnly && "lg:grid-cols-[1.2fr_0.8fr]")}>
+          {/* Soccer pitch + resting (capture area) */}
+          <div ref={captureRef} className="space-y-3" style={{ backgroundColor: "#0a0e14" }}>
+          {/* 쿼터 표시 (캡처 이미지에 포함) */}
+          <div className="flex items-center justify-between px-1">
+            <span className="text-sm font-bold text-white">
+              {activeQuarter}쿼터 · {formation.name}
+            </span>
+            <span className="text-xs text-white/50">PitchMaster</span>
+          </div>
           <div
             ref={boardRef}
-            className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-primary/20"
+            className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border-2 border-white/10 shadow-xl shadow-black/30"
             style={{
               touchAction: "none",
-              background: "linear-gradient(180deg, #14532d 0%, #166534 30%, #15803d 60%, #166534 100%)",
-              backgroundImage:
-                "linear-gradient(90deg, rgba(255,255,255,0.03) 0%, transparent 50%, rgba(255,255,255,0.03) 100%), repeating-linear-gradient(180deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 48px)"
+              background: "#1a6b32",
+              backgroundImage: [
+                // 진한/연한 잔디 가로 줄무늬 (실제 축구장 느낌)
+                "repeating-linear-gradient(180deg, rgba(255,255,255,0) 0px, rgba(255,255,255,0) 38px, rgba(255,255,255,0.06) 38px, rgba(255,255,255,0.06) 76px)",
+                // 잔디 텍스처 노이즈 느낌
+                "repeating-linear-gradient(90deg, rgba(0,0,0,0.02) 0px, transparent 2px, transparent 4px)",
+                // 전체 그라데이션 (가장자리 살짝 어둡게)
+                "radial-gradient(ellipse at 50% 50%, rgba(34,197,94,0.15) 0%, transparent 70%)",
+              ].join(", "),
             }}
           >
-            <div className="absolute inset-4 rounded-xl border border-white/20"></div>
-            <div className="absolute inset-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20"></div>
-            <div className="absolute inset-x-8 top-6 h-16 rounded-lg border border-white/20"></div>
-            <div className="absolute inset-x-8 bottom-6 h-16 rounded-lg border border-white/20"></div>
-            <div className="absolute inset-x-0 top-1/2 h-px bg-white/15"></div>
+            {/* 경기장 외곽선 */}
+            <div className="absolute inset-3 rounded-sm border-2 border-white/30" />
+            {/* 센터라인 */}
+            <div className="absolute inset-x-3 top-1/2 h-0.5 -translate-y-px bg-white/30" />
+            {/* 센터서클 */}
+            <div className="absolute left-1/2 top-1/2 h-[18%] w-[28%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/30" />
+            {/* 센터스팟 */}
+            <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/40" />
+            {/* 상단 페널티 박스 */}
+            <div className="absolute inset-x-[20%] top-3 h-[16%] border-2 border-t-0 border-white/30" />
+            {/* 상단 골 에어리어 */}
+            <div className="absolute inset-x-[32%] top-3 h-[8%] border-2 border-t-0 border-white/30" />
+            {/* 상단 페널티 아크 */}
+            <div className="absolute left-1/2 top-[18.5%] h-[6%] w-[16%] -translate-x-1/2 rounded-b-full border-2 border-t-0 border-white/30" />
+            {/* 하단 페널티 박스 */}
+            <div className="absolute inset-x-[20%] bottom-3 h-[16%] border-2 border-b-0 border-white/30" />
+            {/* 하단 골 에어리어 */}
+            <div className="absolute inset-x-[32%] bottom-3 h-[8%] border-2 border-b-0 border-white/30" />
+            {/* 하단 페널티 아크 */}
+            <div className="absolute left-1/2 bottom-[18.5%] h-[6%] w-[16%] -translate-x-1/2 rounded-t-full border-2 border-b-0 border-white/30" />
+            {/* 코너 아크 (4개) */}
+            <div className="absolute left-3 top-3 h-4 w-4 rounded-br-full border-b-2 border-r-2 border-white/30" />
+            <div className="absolute right-3 top-3 h-4 w-4 rounded-bl-full border-b-2 border-l-2 border-white/30" />
+            <div className="absolute bottom-3 left-3 h-4 w-4 rounded-tr-full border-r-2 border-t-2 border-white/30" />
+            <div className="absolute bottom-3 right-3 h-4 w-4 rounded-tl-full border-l-2 border-t-2 border-white/30" />
 
             {formation.slots.map((slot) => {
               const placement = placements[slot.id];
@@ -480,41 +655,78 @@ export default function TacticsBoard({ matchId, roster, quarterCount, teamSettin
               }
 
               const player = roster.find((item) => item.id === placement.playerId);
+              const secondPlayer = placement.secondPlayerId
+                ? roster.find((item) => item.id === placement.secondPlayerId)
+                : null;
               const homePrimary = resolvedTeamSettings.uniformPrimary || "#2563eb";
               const homeSecondary = resolvedTeamSettings.uniformSecondary || "#f97316";
               const badgePrimary = uniformMode === "HOME" ? homePrimary : homeSecondary;
               const badgeSecondary = uniformMode === "HOME" ? homeSecondary : homePrimary;
               const badgePattern = resolvedTeamSettings.uniformPattern || "SOLID";
-              const textColor = getTextColor(badgePrimary, badgeSecondary);
               const uniformStyle = getJerseyStyle(badgePrimary, badgeSecondary, badgePattern);
+              const displayName = secondPlayer
+                ? `${player?.name ?? "선수"}/${secondPlayer.name}`
+                : (player?.name ?? "선수");
               return (
                 <button
                   key={slot.id}
                   type="button"
                   onPointerDown={(event) => {
+                    if (readOnly) return;
                     event.preventDefault();
                     event.currentTarget.setPointerCapture(event.pointerId);
                     dragRef.current = { slotId: slot.id };
                   }}
                   onClick={() => handleSelectSlot(slot.id)}
-                  className="absolute -translate-x-1/2 -translate-y-1/2 rounded-xl px-2 py-2 text-[11px] font-bold shadow-lg shadow-black/40 transition"
+                  className="absolute -translate-x-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-[11px] font-bold transition"
                   style={{ left: `${placement.x}%`, top: `${placement.y}%`, touchAction: "none" }}
                 >
-                  <span className="flex flex-col items-center gap-1">
-                    <span className="block h-10 w-10 border border-white/20" style={uniformStyle} />
-                    <span
-                      className="block max-w-[96px] truncate whitespace-nowrap text-[11px]"
-                      style={{ color: textColor }}
-                    >
-                      {player?.name ?? "선수"}
-                    </span>
+                  <span className="flex flex-col items-center gap-0.5">
+                    <span className="block h-10 w-10 rounded-sm border border-white/25 shadow-md shadow-black/30" style={uniformStyle} />
+                    {secondPlayer ? (
+                      <span className="flex flex-col items-center rounded-md bg-black/70 px-1.5 py-0.5 shadow-sm">
+                        <span className="flex items-center gap-0.5 text-[9px] font-bold text-sky-300">
+                          <span className="rounded bg-sky-500/30 px-0.5">전</span>
+                          {player?.name ?? "선수"}
+                        </span>
+                        <span className="flex items-center gap-0.5 text-[9px] font-bold text-violet-300">
+                          <span className="rounded bg-violet-500/30 px-0.5">후</span>
+                          {secondPlayer.name}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="block max-w-[96px] truncate whitespace-nowrap rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                        {displayName}
+                      </span>
+                    )}
                   </span>
                 </button>
               );
             })}
           </div>
 
-          {/* Roster panel */}
+          {/* 쉬는 인원 (캡처 영역 내) */}
+          {restingPlayers.length > 0 && (
+            <div className="rounded-xl bg-amber-500/10 px-4 py-3">
+              <p className="text-sm font-bold text-amber-400">
+                쉬는 선수 ({restingPlayers.length}명)
+              </p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {restingPlayers.map((player) => (
+                  <span
+                    key={player.id}
+                    className="inline-block rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-400"
+                  >
+                    {player.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          </div>{/* end captureRef */}
+
+          {/* Roster panel (편집 모드에서만 표시) */}
+          {!readOnly && (
           <div className="space-y-4">
             <Card className="border-0 bg-secondary">
               <CardContent className="p-4">
@@ -580,8 +792,116 @@ export default function TacticsBoard({ matchId, roster, quarterCount, teamSettin
               포지션을 클릭해 선수를 배치하고, 배치된 선수는 드래그해서 위치를 조정하세요.
             </p>
           </div>
+          )}
         </div>
       </CardContent>
     </Card>
+
+    {/* 전체 쿼터 캡처용 (오프스크린) */}
+    <div
+      ref={allQuartersRef}
+      style={{ position: "absolute", left: "-9999px", top: 0, width: 800, backgroundColor: "#0a0e14", padding: 16 }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>
+          전체 라인업 · {formation.name}
+        </span>
+        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>PitchMaster</span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        {quarters.map((q) => {
+          const row = squadsData.squads.find((s) => s.quarter_number === q);
+          const qFormation = row
+            ? formationTemplates.find((f) => f.id === row.formation) ?? defaultFormation
+            : defaultFormation;
+          const qPlacements: Record<string, Placement | null> = {};
+          qFormation.slots.forEach((slot) => {
+            qPlacements[slot.id] = row?.positions?.[slot.id] ?? null;
+          });
+
+          const homePrimary = resolvedTeamSettings.uniformPrimary || "#2563eb";
+          const homeSecondary = resolvedTeamSettings.uniformSecondary || "#f97316";
+          const badgePrimary = uniformMode === "HOME" ? homePrimary : homeSecondary;
+          const badgeSecondary = uniformMode === "HOME" ? homeSecondary : homePrimary;
+          const badgePattern = resolvedTeamSettings.uniformPattern || "SOLID";
+          const uStyle = getJerseyStyle(badgePrimary, badgeSecondary, badgePattern);
+
+          // 쉬는 선수 계산
+          const assignedIds = new Set<string>();
+          Object.values(qPlacements).forEach((p) => {
+            if (p) {
+              assignedIds.add(p.playerId);
+              if (p.secondPlayerId) assignedIds.add(p.secondPlayerId);
+            }
+          });
+          const qResting = roster.filter((r) => !assignedIds.has(r.id));
+
+          return (
+            <div key={q} style={{ backgroundColor: "#111827", borderRadius: 12, overflow: "hidden" }}>
+              <div style={{ padding: "8px 12px", fontSize: 13, fontWeight: 700, color: "#fff" }}>
+                {q}쿼터
+              </div>
+              <div
+                style={{
+                  position: "relative",
+                  aspectRatio: "4/5",
+                  width: "100%",
+                  background: "#1a6b32",
+                  backgroundImage: [
+                    "repeating-linear-gradient(180deg, rgba(255,255,255,0) 0px, rgba(255,255,255,0) 38px, rgba(255,255,255,0.06) 38px, rgba(255,255,255,0.06) 76px)",
+                    "radial-gradient(ellipse at 50% 50%, rgba(34,197,94,0.15) 0%, transparent 70%)",
+                  ].join(", "),
+                }}
+              >
+                {/* 하프라인 */}
+                <div style={{ position: "absolute", top: "50%", left: "5%", right: "5%", height: 2, backgroundColor: "rgba(255,255,255,0.35)" }} />
+                <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 60, height: 60, border: "2px solid rgba(255,255,255,0.35)", borderRadius: "50%" }} />
+                {/* 선수 배치 */}
+                {qFormation.slots.map((slot) => {
+                  const pl = qPlacements[slot.id];
+                  if (!pl) return null;
+                  const player = roster.find((r) => r.id === pl.playerId);
+                  const secondPlayer = pl.secondPlayerId ? roster.find((r) => r.id === pl.secondPlayerId) : null;
+                  return (
+                    <div
+                      key={slot.id}
+                      style={{
+                        position: "absolute",
+                        left: `${pl.x}%`,
+                        top: `${pl.y}%`,
+                        transform: "translate(-50%,-50%)",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 2,
+                      }}
+                    >
+                      <div style={{ ...uStyle, width: 28, height: 28, borderRadius: 4 }} />
+                      {secondPlayer ? (
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", backgroundColor: "rgba(0,0,0,0.7)", borderRadius: 4, padding: "1px 4px" }}>
+                          <span style={{ fontSize: 7, fontWeight: 700, color: "#7dd3fc" }}>전 {player?.name ?? ""}</span>
+                          <span style={{ fontSize: 7, fontWeight: 700, color: "#c4b5fd" }}>후 {secondPlayer.name}</span>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: 8, fontWeight: 700, color: "#fff", backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 4, padding: "1px 4px", whiteSpace: "nowrap" }}>
+                          {player?.name ?? ""}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              {/* 쉬는 선수 */}
+              {qResting.length > 0 && (
+                <div style={{ padding: "6px 10px", fontSize: 10, color: "#fbbf24" }}>
+                  쉬는 선수: {qResting.map((r) => r.name).join(", ")}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+    </>
   );
 }

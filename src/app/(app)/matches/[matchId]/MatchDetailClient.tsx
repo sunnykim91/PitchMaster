@@ -2,6 +2,8 @@
 
 import { useMemo, useRef, useState } from "react";
 import TacticsBoard from "@/components/TacticsBoard";
+import AutoFormationBuilder from "@/components/AutoFormationBuilder";
+import type { AttendingPlayer, GeneratedSquad } from "@/components/AutoFormationBuilder";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import type { Role, DetailedPosition } from "@/lib/types";
@@ -57,6 +59,14 @@ type GuestRow = {
   position: string | null;
   phone: string | null;
   note: string | null;
+};
+
+type AttendanceVoteRow = {
+  id: string;
+  match_id: string;
+  user_id: string;
+  vote: "ATTEND" | "ABSENT" | "MAYBE";
+  users: { id: string; name: string; preferred_positions?: string[] };
 };
 
 type DiaryRow = {
@@ -257,6 +267,14 @@ export default function MatchDetailClient({
     loading: membersLoading,
   } = useApi<{ members: MemberRow[] }>("/api/members", { members: [] });
 
+  const {
+    data: voteData,
+    loading: voteLoading,
+  } = useApi<{ attendance: AttendanceVoteRow[] }>(
+    `/api/attendance?matchId=${matchId}`,
+    { attendance: [] },
+  );
+
   /* ── Map API data to client types ── */
   const match = useMemo(() => {
     const row = matchesData.matches.find((m) => m.id === matchId);
@@ -288,6 +306,33 @@ export default function MatchDetailClient({
     [diaryData.diary],
   );
 
+  /* ── Attending players for auto formation ── */
+  const attendingPlayers = useMemo<AttendingPlayer[]>(() => {
+    const attendIds = new Set(
+      voteData.attendance
+        .filter((a) => a.vote === "ATTEND")
+        .map((a) => a.user_id),
+    );
+    // 팀 멤버 중 참석 투표한 선수
+    const members: AttendingPlayer[] = voteData.attendance
+      .filter((a) => a.vote === "ATTEND")
+      .map((a) => ({
+        id: a.user_id,
+        name: a.users.name,
+        preferredPosition: (a.users.preferred_positions?.[0] ?? "CAM") as AttendingPlayer["preferredPosition"],
+      }));
+    // 용병 추가
+    const guestPlayers: AttendingPlayer[] = guests.map((g) => ({
+      id: g.id,
+      name: g.name,
+      preferredPosition: (g.position ?? "CAM") as AttendingPlayer["preferredPosition"],
+    }));
+    return [...members, ...guestPlayers];
+  }, [voteData.attendance, guests]);
+
+  const [tacticsKey, setTacticsKey] = useState(0);
+  const [generatedSquads, setGeneratedSquads] = useState<GeneratedSquad[]>([]);
+
   /* ── Local UI state ── */
   const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
@@ -297,6 +342,7 @@ export default function MatchDetailClient({
   const diaryFormRef = useRef<HTMLFormElement>(null);
 
   const canManageAttendance = isStaffOrAbove(userRole);
+  const canManage = isStaffOrAbove(userRole); // 회장/운영진: 전체 관리 가능
 
   const baseRoster = useMemo(
     () =>
@@ -309,17 +355,14 @@ export default function MatchDetailClient({
   );
 
   /** 팀 멤버 + 용병 합친 전체 로스터 */
-  const roster = useMemo(
-    () => [
-      ...baseRoster,
-      ...guests.map((g) => ({
-        id: g.id,
-        name: `${g.name} (용병)`,
-        role: (g.position ?? "MF") as DetailedPosition,
-      })),
-    ],
-    [baseRoster, guests],
-  );
+  const roster = useMemo(() => {
+    const guestRoster = guests.map((g) => ({
+      id: g.id,
+      name: g.name,
+      role: (g.position ?? "MF") as DetailedPosition,
+    }));
+    return [...baseRoster, ...guestRoster];
+  }, [baseRoster, guests]);
 
   const score = useMemo(() => {
     const ourGoals = goals.filter(
@@ -481,7 +524,7 @@ export default function MatchDetailClient({
   }
 
   /* ── Loading state ── */
-  const isLoading = matchesLoading || membersLoading || goalsLoading || guestsLoading || mvpLoading || attendanceLoading || diaryLoading;
+  const isLoading = matchesLoading || membersLoading || goalsLoading || guestsLoading || mvpLoading || attendanceLoading || diaryLoading || voteLoading;
 
   if (isLoading) {
     return (
@@ -496,7 +539,8 @@ export default function MatchDetailClient({
 
   return (
     <div className="grid gap-5">
-      {/* ── 용병(게스트) 관리 ── */}
+      {/* ── 용병(게스트) 관리 (운영진 이상) ── */}
+      {canManage && (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
@@ -537,10 +581,15 @@ export default function MatchDetailClient({
                       </Label>
                       <NativeSelect name="guestPosition">
                         <option value="">미정</option>
-                        <option value="GK">GK</option>
-                        <option value="DF">DF</option>
-                        <option value="MF">MF</option>
-                        <option value="FW">FW</option>
+                        <option value="GK">GK · 골키퍼</option>
+                        <option value="CB">CB · 센터백</option>
+                        <option value="LB">LB · 좌측 윙백</option>
+                        <option value="RB">RB · 우측 윙백</option>
+                        <option value="CDM">CDM · 수비형 미드필더</option>
+                        <option value="CAM">CAM · 공격형 미드필더</option>
+                        <option value="LW">LW · 좌측 윙어</option>
+                        <option value="RW">RW · 우측 윙어</option>
+                        <option value="ST">ST · 스트라이커</option>
                       </NativeSelect>
                     </div>
                     <div className="space-y-2">
@@ -606,11 +655,33 @@ export default function MatchDetailClient({
           )}
         </CardContent>
       </Card>
+      )}
+
+      {canManage && (
+        <AutoFormationBuilder
+          matchId={matchId}
+          quarterCount={match.quarterCount}
+          attendingPlayers={attendingPlayers}
+          onGenerated={(squads) => {
+            setGeneratedSquads(squads);
+            setTacticsKey((k) => k + 1);
+          }}
+        />
+      )}
 
       <TacticsBoard
+        key={tacticsKey}
         matchId={matchId}
         roster={roster}
         quarterCount={match.quarterCount}
+        readOnly={!canManage}
+        initialSquads={generatedSquads.length > 0 ? generatedSquads.map((sq) => ({
+          id: `gen-${sq.quarter_number}`,
+          match_id: matchId,
+          quarter_number: sq.quarter_number,
+          formation: sq.formation,
+          positions: sq.positions,
+        })) : undefined}
       />
 
       <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
@@ -1001,7 +1072,7 @@ export default function MatchDetailClient({
               경기 일지
             </CardTitle>
           </div>
-          {!isDiaryEditing && (
+          {canManage && !isDiaryEditing && (
             <Button
               type="button"
               size="sm"

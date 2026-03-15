@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useApi, apiMutate } from "@/lib/useApi";
-import type { Position, PreferredFoot, Role } from "@/lib/types";
+import type { PreferredPosition, PreferredFoot, Role } from "@/lib/types";
+import { POSITION_GROUPS, PREF_POSITION_LABEL, PREF_POSITION_SHORT } from "@/lib/types";
 import { isPresident } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +18,7 @@ import { cn } from "@/lib/utils";
 type Profile = {
   name: string;
   phone: string;
-  preferredPositions: Position[];
+  preferredPositions: PreferredPosition[];
   preferredFoot: PreferredFoot;
   profileImageUrl: string;
 };
@@ -36,7 +37,7 @@ type ProfileApiResponse = {
     id: string;
     name: string;
     phone: string;
-    preferred_positions: Position[];
+    preferred_positions: PreferredPosition[];
     preferred_foot: PreferredFoot;
     profile_image_url: string;
   };
@@ -313,26 +314,33 @@ export default function SettingsClient({
               </div>
               <div className="space-y-2">
                 <Label className="font-semibold">선호 포지션</Label>
-                <div className="flex flex-wrap gap-2">
-                  {(["GK", "DF", "MF", "FW"] as Position[]).map((pos) => (
-                    <button
-                      key={pos}
-                      type="button"
-                      onClick={() => {
-                        const next = profile.preferredPositions.includes(pos)
-                          ? profile.preferredPositions.filter((p) => p !== pos)
-                          : [...profile.preferredPositions, pos];
-                        setProfile({ ...profile, preferredPositions: next });
-                      }}
-                      className={cn(
-                        "rounded-md border px-3 py-1.5 text-sm font-medium transition-all",
-                        profile.preferredPositions.includes(pos)
-                          ? "border-primary bg-primary/15 text-primary"
-                          : "border-input bg-transparent text-muted-foreground hover:border-primary/30 hover:text-foreground"
-                      )}
-                    >
-                      {pos}
-                    </button>
+                <div className="space-y-3">
+                  {POSITION_GROUPS.map((group) => (
+                    <div key={group.group}>
+                      <p className="mb-1.5 text-xs font-semibold text-muted-foreground">{group.group}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {group.positions.map((pos) => (
+                          <button
+                            key={pos}
+                            type="button"
+                            onClick={() => {
+                              const next = profile.preferredPositions.includes(pos)
+                                ? profile.preferredPositions.filter((p) => p !== pos)
+                                : [...profile.preferredPositions, pos];
+                              setProfile({ ...profile, preferredPositions: next });
+                            }}
+                            className={cn(
+                              "rounded-md border px-3 py-1.5 text-sm font-medium transition-all",
+                              profile.preferredPositions.includes(pos)
+                                ? "border-primary bg-primary/15 text-primary"
+                                : "border-input bg-transparent text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                            )}
+                          >
+                            {PREF_POSITION_SHORT[pos]} · {PREF_POSITION_LABEL[pos]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
