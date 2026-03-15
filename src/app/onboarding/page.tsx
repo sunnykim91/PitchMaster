@@ -9,7 +9,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { BirthDateSelect } from "@/components/ui/birth-date-select";
 import { PhoneInput } from "@/components/ui/phone-input";
 
-export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ code?: string; error?: string }> }) {
   const params = await searchParams;
   const session = await auth();
 
@@ -21,9 +21,18 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
     redirect("/team");
   }
 
+  const errorMsg = params.error;
+
   return (
     <main className="min-h-screen px-6 py-16">
       <div className="mx-auto max-w-3xl">
+        {errorMsg && (
+          <Card className="mb-6 border-destructive/30 bg-destructive/5">
+            <CardContent className="p-4 text-sm font-semibold text-destructive">
+              {decodeURIComponent(errorMsg)}
+            </CardContent>
+          </Card>
+        )}
         <Card>
           <CardHeader>
             <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">가입 정보</p>
