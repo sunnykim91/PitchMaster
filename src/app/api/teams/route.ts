@@ -42,6 +42,9 @@ export async function PUT(request: NextRequest) {
   if (body.inviteExpiresAt !== undefined)
     updates.invite_expires_at = body.inviteExpiresAt;
   if (body.joinMode) updates.join_mode = body.joinMode;
+  if (body.uniformPrimary !== undefined) updates.uniform_primary = body.uniformPrimary;
+  if (body.uniformSecondary !== undefined) updates.uniform_secondary = body.uniformSecondary;
+  if (body.uniformPattern !== undefined) updates.uniform_pattern = body.uniformPattern;
 
   const { error } = await db.from("teams").update(updates).eq("id", ctx.teamId);
   if (error) return apiError(error.message);
