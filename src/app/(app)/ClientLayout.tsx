@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { Menu } from "lucide-react";
+import { Check, Copy, Link2, Menu } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
 
 type ClientLayoutProps = {
@@ -19,10 +19,10 @@ type ClientLayoutProps = {
 };
 
 export default function ClientLayout({ session, children }: ClientLayoutProps) {
-  const isPresident = session.user.teamRole === "PRESIDENT";
+  const canSwitchRole = session.user.name === "김선휘";
 
   return (
-    <ViewAsRoleProvider isPresident={isPresident}>
+    <ViewAsRoleProvider isPresident={canSwitchRole}>
       <ClientLayoutInner session={session}>{children}</ClientLayoutInner>
     </ViewAsRoleProvider>
   );
@@ -32,7 +32,8 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const { viewAsRole, setViewAsRole } = useViewAsRole();
-  const isPresident = session.user.teamRole === "PRESIDENT";
+  const canSwitchRole = session.user.name === "김선휘";
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setIsOpen(false);
@@ -73,7 +74,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           {" · "}{session.user.name}
         </p>
       </div>
-      {isPresident && (
+      {canSwitchRole && (
         <div className="mt-2 flex gap-1">
           {(["PRESIDENT", "STAFF", "MEMBER"] as Role[]).map((role) => {
             const label = role === "PRESIDENT" ? "회장" : role === "STAFF" ? "운영진" : "평회원";
@@ -101,6 +102,21 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-400">초대 코드</p>
           <p className="mt-1 font-mono text-lg font-bold tracking-[0.2em] text-amber-300">{session.user.inviteCode}</p>
           <p className="mt-2 text-xs text-muted-foreground">멤버에게 공유해 팀에 초대하세요.</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3 w-full gap-2 border-amber-500/30 text-amber-300 hover:bg-amber-500/10"
+            onClick={() => {
+              const inviteUrl = `${window.location.origin}/onboarding?code=${session.user.inviteCode}`;
+              navigator.clipboard.writeText(inviteUrl).then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              });
+            }}
+          >
+            {copied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
+            {copied ? "복사됨!" : "초대 링크 복사"}
+          </Button>
         </CardContent>
       </Card>
       <div className="mt-4 flex gap-2">
