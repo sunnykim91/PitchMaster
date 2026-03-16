@@ -68,44 +68,48 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           </div>
         </div>
 
-        {/* 오른쪽 미리보기 */}
-        <div className="w-full max-w-sm flex-shrink-0">
-          <Card className="border-border/30 bg-card/40 backdrop-blur-md">
-            <CardContent className="p-6">
-              <div className="space-y-3">
-                <div className="rounded-xl bg-blue-500/10 p-4 text-center">
-                  <p className="text-xs text-blue-400/80">통장 잔고</p>
-                  <p className="mt-1 font-heading text-2xl font-bold text-blue-300">1,202,592원</p>
-                  <p className="mt-1 text-[10px] text-blue-400/50">2026.03.16 기준</p>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-lg bg-emerald-500/10 p-3 text-center">
-                    <p className="text-[10px] text-emerald-400/80">이번 달 수입</p>
-                    <p className="font-bold text-emerald-400">93,000원</p>
-                  </div>
-                  <div className="rounded-lg bg-rose-500/10 p-3 text-center">
-                    <p className="text-[10px] text-rose-400/80">이번 달 지출</p>
-                    <p className="font-bold text-rose-400">119,730원</p>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  {[
-                    { name: "이성규", amount: "-36,000", type: "out" },
-                    { name: "양문주", amount: "-79,230", type: "out" },
-                    { name: "셀로스FC", amount: "+73,000", type: "in" },
-                  ].map((t) => (
-                    <div key={t.name} className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2">
-                      <span className="text-xs font-medium">{t.name}</span>
-                      <span className={`text-xs font-bold ${t.type === "in" ? "text-emerald-400" : "text-rose-400"}`}>
-                        {t.amount}원
-                      </span>
+        {/* 오른쪽: 카카오뱅크 모임통장 → PitchMaster 변환 시연 */}
+        <div className="w-full max-w-sm flex-shrink-0 space-y-3">
+          {/* 모임통장 캡쳐 모형 */}
+          <Card className="overflow-hidden border-border/30 bg-[#1A1A1A]">
+            <CardContent className="p-0">
+              <div className="bg-[#1A1A1A] px-5 py-4">
+                <p className="text-center text-xs text-white/50">모임통장</p>
+                <p className="mt-2 text-center font-heading text-2xl font-bold text-white">1,202,592원</p>
+              </div>
+              <div className="space-y-0 bg-[#222]">
+                {[
+                  { date: "03.16", name: "김OO", time: "15:54", amount: "-36,000원", balance: "1,202,592원", color: "text-white" },
+                  { date: "03.12", name: "박OO", time: "10:05", amount: "-79,230원", balance: "1,238,592원", color: "text-white" },
+                  { date: "03.11", name: "상대팀FC", time: "11:23", amount: "+73,000원", balance: "1,317,822원", color: "text-[#4A9DFF]" },
+                  { date: "03.10", name: "이OO", time: "22:30", amount: "+10,000원", balance: "1,244,822원", color: "text-[#4A9DFF]" },
+                ].map((t, i) => (
+                  <div key={i} className="border-t border-white/5 px-5 py-3">
+                    <p className="text-[10px] text-white/30">{t.date}</p>
+                    <div className="mt-1 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-white/80">{t.name}</p>
+                        <p className="text-[10px] text-white/30">{t.time}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-xs font-bold ${t.color}`}>{t.amount}</p>
+                        <p className="text-[10px] text-white/30">{t.balance}</p>
+                      </div>
                     </div>
-                  ))}
-                </div>
-                <p className="text-center text-[10px] text-muted-foreground">통장 캡쳐 한 장이면 자동 입력</p>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
+
+          {/* 화살표 + 변환 설명 */}
+          <div className="flex items-center justify-center gap-3">
+            <div className="h-px flex-1 bg-primary/20" />
+            <div className="rounded-full bg-primary/10 px-4 py-1.5">
+              <p className="text-xs font-bold text-primary">캡쳐 한 장 → 자동 입력</p>
+            </div>
+            <div className="h-px flex-1 bg-primary/20" />
+          </div>
         </div>
       </section>
 
