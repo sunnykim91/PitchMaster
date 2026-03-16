@@ -340,9 +340,28 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
         await apiMutate("/api/dues/balance", "POST", { balance: latestBalance });
         await refetchBalance();
       }
-      if (parsed.length > 0) {
-        setBulkRows(parsed);
-        setOcrStatus(`${parsed.length}건의 거래를 인식했습니다.${latestBalance !== null ? ` 잔고: ${latestBalance.toLocaleString()}원` : ""} 확인 후 저장하세요.`);
+
+      // 기존 DB 레코드와 비교하여 중복 제거
+      const newRows = parsed.filter((row) => {
+        return !records.some(
+          (r) =>
+            r.recordedAt.startsWith(row.date) &&
+            r.amount === Number(row.amount) &&
+            r.description === row.description &&
+            r.type === row.type
+        );
+      });
+      const duplicateCount = parsed.length - newRows.length;
+
+      if (newRows.length > 0) {
+        setBulkRows(newRows);
+        const msg = [`${newRows.length}건의 새 거래를 인식했습니다.`];
+        if (duplicateCount > 0) msg.push(`(${duplicateCount}건 중복 제외)`);
+        if (latestBalance !== null) msg.push(`잔고: ${latestBalance.toLocaleString()}원`);
+        msg.push("확인 후 저장하세요.");
+        setOcrStatus(msg.join(" "));
+      } else if (parsed.length > 0) {
+        setOcrStatus(`${parsed.length}건 모두 이미 등록된 내역입니다.`);
       } else {
         setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
       }
@@ -467,29 +486,22 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
     if (validRows.length === 0) return;
     setBulkSaving(true);
 
-    // 중복 체크: 기존 레코드와 날짜+금액+설명이 같으면 스킵
     let saved = 0;
     let skipped = 0;
     for (const row of validRows) {
-      const isDuplicate = records.some(
-        (r) =>
-          r.recordedAt.startsWith(row.date) &&
-          r.amount === Number(row.amount) &&
-          r.description === row.description &&
-          r.type === row.type
-      );
-      if (isDuplicate) {
-        skipped++;
-        continue;
-      }
-      await apiMutate("/api/dues", "POST", {
+      const { data } = await apiMutate<{ duplicate?: boolean }>("/api/dues", "POST", {
         type: row.type,
         amount: Number(row.amount),
         description: row.description,
         userId: row.memberName || undefined,
         recordedAt: row.date || undefined,
+        recordedTime: row.time || undefined,
       });
-      saved++;
+      if (data?.duplicate) {
+        skipped++;
+      } else {
+        saved++;
+      }
     }
     setBulkSaving(false);
     await refetchDues();
@@ -497,7 +509,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
     setBulkRows([{ date: "", time: "", type: "INCOME", amount: "", description: "", memberName: "" }]);
     setBulkImage(null);
     if (skipped > 0) {
-      alert(`${saved}건 저장, ${skipped}건 중복으로 스킵되었습니다.`);
+      alert(`${saved}건 저장, ${skipped}건 중복 스킵`);
     }
   }
 
