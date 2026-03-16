@@ -42,7 +42,11 @@ export async function GET(request: NextRequest) {
     });
 
     await setSession(session);
-    return NextResponse.redirect(new URL("/", request.url));
+    const inviteCode = request.nextUrl.searchParams.get("state") ?? "";
+    const redirectUrl = inviteCode
+      ? `/?inviteCode=${encodeURIComponent(decodeURIComponent(inviteCode))}`
+      : "/";
+    return NextResponse.redirect(new URL(redirectUrl, request.url));
   } catch {
     return NextResponse.redirect(new URL("/login?error=auth_fail", request.url));
   }

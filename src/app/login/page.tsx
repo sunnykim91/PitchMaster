@@ -2,8 +2,12 @@ import { isKakaoConfigured } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
+  const { code: inviteCode } = await searchParams;
   const kakaoEnabled = isKakaoConfigured();
+  const kakaoHref = inviteCode
+    ? `/api/auth/kakao?inviteCode=${encodeURIComponent(inviteCode)}`
+    : "/api/auth/kakao";
 
   return (
     <main className="relative min-h-screen overflow-hidden">
@@ -44,7 +48,7 @@ export default function LoginPage() {
                 className="h-14 rounded-2xl bg-[#FEE500] px-10 text-base font-bold text-[#1E1E1E] shadow-lg shadow-[#FEE500]/25 transition-all hover:bg-[#FEE500]/90 hover:shadow-xl hover:shadow-[#FEE500]/30"
                 asChild
               >
-                <a href="/api/auth/kakao">
+                <a href={kakaoHref}>
                   <svg
                     className="mr-2 h-5 w-5"
                     viewBox="0 0 24 24"
