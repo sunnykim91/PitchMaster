@@ -126,16 +126,16 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <div className="mt-12 grid gap-4 md:grid-cols-3">
             {[
               {
-                pain: '"이번 주 참석 ㅋㅋ"',
-                detail: "카톡에 1/2 달아도 안 읽는 사람, 결국 총무가 한 명씩 연락",
+                pain: "참석 인원 파악",
+                detail: "카톡에 투표 올려도 읽씹 속출. 결국 총무가 한 명씩 전화해서 확인.",
               },
               {
-                pain: '"회비 얼마 남았지?"',
-                detail: "엑셀 파일 찾아서 열고, 통장 캡쳐 대조하고... 매달 반복",
+                pain: "회비 정산",
+                detail: "통장 캡쳐하고, 엑셀 열어서 대조하고, 밴드에 올리고... 매달 반복.",
               },
               {
-                pain: '"누가 어디서 뛰지?"',
-                detail: "머릿속으로 포메이션 짜다가 빠진 사람 발견. 경기 10분 전 대혼란",
+                pain: "포메이션 편성",
+                detail: "참석자 몇 명인지도 불확실한데, 포지션 배분은 경기장 가서야 시작.",
               },
             ].map((item) => (
               <Card key={item.pain} className="border-border/30 bg-card/50">
