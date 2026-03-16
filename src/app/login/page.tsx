@@ -26,11 +26,16 @@ export default function LoginPage() {
             <span className="text-primary">이제 톡방 말고 여기서.</span>
           </h1>
 
-          <p className="mx-auto max-w-md text-lg text-muted-foreground lg:mx-0">
-            일정관리, 투표, 회비자동정리, 경기기록, 자동 스쿼드 짜주는 기능까지
-            <br className="hidden md:block" />
-            조기축구 운영에 관한 모든 것.
-          </p>
+          <div className="mx-auto max-w-md space-y-2 lg:mx-0">
+            <p className="text-lg text-muted-foreground">
+              일정관리 · 투표 · 회비자동정리 · 경기기록
+              <br />
+              자동으로 스쿼드 짜주는 기능까지
+            </p>
+            <p className="text-lg font-semibold text-foreground">
+              조기축구 운영에 관한 모든 것.
+            </p>
+          </div>
 
           {/* 카카오 로그인 버튼 */}
           <div className="flex flex-col items-center gap-3 lg:items-start">
@@ -40,14 +45,21 @@ export default function LoginPage() {
                 asChild
               >
                 <a href="/api/auth/kakao">
-                  <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                  <svg
+                    className="mr-2 h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
                     <path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.724 1.8 5.113 4.508 6.459-.2.732-.722 2.654-.828 3.065-.13.507.186.5.39.364.16-.107 2.554-1.74 3.59-2.448.768.112 1.562.17 2.34.17 5.523 0 10-3.463 10-7.691S17.523 3 12 3" />
                   </svg>
                   카카오로 3초 만에 시작
                 </a>
               </Button>
             ) : (
-              <Button className="h-14 rounded-2xl bg-[#FEE500] px-10 text-base font-bold text-[#1E1E1E]" disabled>
+              <Button
+                className="h-14 rounded-2xl bg-[#FEE500] px-10 text-base font-bold text-[#1E1E1E]"
+                disabled
+              >
                 카카오로 시작하기 (환경변수 필요)
               </Button>
             )}
@@ -99,14 +111,18 @@ export default function LoginPage() {
                 <span className="mt-0.5 text-2xl">{item.emoji}</span>
                 <div>
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-bold text-foreground">{item.title}</p>
+                    <p className="text-sm font-bold text-foreground">
+                      {item.title}
+                    </p>
                     {"tag" in item && item.tag && (
                       <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
                         {item.tag}
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{item.desc}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    {item.desc}
+                  </p>
                 </div>
               </CardContent>
             </Card>
