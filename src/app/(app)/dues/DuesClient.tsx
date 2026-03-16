@@ -282,22 +282,53 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
     const imageUrl = URL.createObjectURL(file);
     setBulkImage(imageUrl);
 
-    // 파일을 base64로 변환 (Tesseract 파일 읽기 오류 방지)
-    const toBase64 = (f: File): Promise<string> =>
-      new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(f);
-      });
-
-    // OCR 자동 실행
+    // Clova OCR API 호출
     setOcrLoading(true);
-    setOcrStatus("이미지 분석 중...");
+    setOcrStatus("Naver Clova OCR로 분석 중...");
     try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch("/api/ocr", { method: "POST", body: formData });
+      const json = await res.json();
+
+      if (!res.ok || !json.text) {
+        // Clova OCR 실패 시 Tesseract 폴백
+        setOcrStatus("서버 OCR 실패, 브라우저 OCR로 전환 중...");
+        await fallbackTesseract(file);
+        return;
+      }
+
+      setOcrRawText(json.text);
+      const parsed = parseTransactions(json.text);
+      if (parsed.length > 0) {
+        setBulkRows(parsed);
+        setOcrStatus(`Clova OCR: ${parsed.length}건의 거래를 인식했습니다. 확인 후 저장하세요.`);
+      } else {
+        setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
+      }
+    } catch {
+      // 네트워크 오류 등 → Tesseract 폴백
+      setOcrStatus("서버 연결 실패, 브라우저 OCR로 전환 중...");
+      await fallbackTesseract(file);
+    } finally {
+      setOcrLoading(false);
+    }
+  }
+
+  /** Clova OCR 실패 시 Tesseract.js 폴백 */
+  async function fallbackTesseract(file: File) {
+    try {
+      const toBase64 = (f: File): Promise<string> =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(f);
+        });
       const base64 = await toBase64(file);
       const Tesseract = await import("tesseract.js");
-      setOcrStatus("한국어 언어팩 로딩 중...");
+      setOcrStatus("브라우저 OCR 처리 중...");
       const worker = await Tesseract.createWorker("kor", 1, {
         logger: (m) => {
           if (m.status === "recognizing text") {
@@ -305,23 +336,18 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
           }
         },
       });
-      await worker.setParameters({
-        preserve_interword_spaces: "1",
-      });
       const { data } = await worker.recognize(base64);
       await worker.terminate();
       setOcrRawText(data.text);
       const parsed = parseTransactions(data.text);
       if (parsed.length > 0) {
         setBulkRows(parsed);
-        setOcrStatus(`${parsed.length}건의 거래를 인식했습니다. 확인 후 저장하세요.`);
+        setOcrStatus(`브라우저 OCR: ${parsed.length}건 인식. 정확도가 낮을 수 있으니 확인해주세요.`);
       } else {
-        setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
+        setOcrStatus("인식 실패. 수동으로 입력해주세요.");
       }
     } catch {
-      setOcrStatus("OCR 처리 중 오류가 발생했습니다. 수동으로 입력해주세요.");
-    } finally {
-      setOcrLoading(false);
+      setOcrStatus("OCR 처리 실패. 수동으로 입력해주세요.");
     }
   }
 
