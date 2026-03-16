@@ -47,9 +47,10 @@ type DbMatch = {
 
 type DbAttendance = {
   match_id: string;
-  user_id: string;
+  user_id: string | null;
+  member_id: string | null;
   vote: AttendanceVote;
-  users: { name: string };
+  users: { name: string } | null;
 };
 
 type AttendanceState = Record<string, Record<string, AttendanceVote>>;
@@ -106,7 +107,9 @@ export default function MatchesClient({ userId, userRole }: { userId: string; us
     const state: AttendanceState = {};
     for (const row of attendanceData.attendance ?? []) {
       if (!state[row.match_id]) state[row.match_id] = {};
-      state[row.match_id][row.user_id] = row.vote;
+      // 연동 멤버는 user_id, 미연동 멤버는 member_id로 키 설정
+      const key = row.user_id ?? row.member_id;
+      if (key) state[row.match_id][key] = row.vote;
     }
     return state;
   }, [attendanceData.attendance]);
@@ -301,6 +304,10 @@ export default function MatchesClient({ userId, userRole }: { userId: string; us
         )}
         {sortedMatches.map((match) => {
           const vote = attendance[match.id]?.[userId];
+          const matchVotes = Object.values(attendance[match.id] ?? {});
+          const attendCount = matchVotes.filter((v) => v === "ATTEND").length;
+          const absentCount = matchVotes.filter((v) => v === "ABSENT").length;
+          const maybeCount = matchVotes.filter((v) => v === "MAYBE").length;
           return (
             <Card key={match.id} className="rounded-md">
               <CardHeader>
@@ -354,9 +361,22 @@ export default function MatchesClient({ userId, userRole }: { userId: string; us
                         </Button>
                       ))}
                     </div>
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      내 투표: {vote ? attendanceLabels[vote] : "미선택"}
-                    </p>
+                    <div className="mt-2 flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">
+                        내 투표: {vote ? attendanceLabels[vote] : "미선택"}
+                      </p>
+                      <div className="flex gap-2 text-xs">
+                        <span className="text-green-500 font-semibold">참석 {attendCount}</span>
+                        <span className="text-muted-foreground">·</span>
+                        <span className="text-red-500 font-semibold">불참 {absentCount}</span>
+                        {maybeCount > 0 && (
+                          <>
+                            <span className="text-muted-foreground">·</span>
+                            <span className="text-yellow-500 font-semibold">미정 {maybeCount}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>

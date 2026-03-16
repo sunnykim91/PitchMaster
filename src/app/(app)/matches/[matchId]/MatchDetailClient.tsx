@@ -416,7 +416,8 @@ export default function MatchDetailClient({
     if (playerId === "OPPONENT") return "상대팀 득점";
     const special = SPECIAL_PLAYERS.find((s) => s.id === playerId);
     if (special) return special.name;
-    return roster.find((p) => p.id === playerId)?.name ?? playerId;
+    // fullRoster: 전체 멤버 + 용병 (참석 여부 무관)
+    return fullRoster.find((p) => p.id === playerId)?.name ?? "모름";
   }
 
   /* ── Goal handlers ── */
