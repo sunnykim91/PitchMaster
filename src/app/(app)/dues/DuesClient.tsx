@@ -219,7 +219,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
       membersRaw.members
         .filter((m: ApiMemberRow) => m.users?.name || m.pre_name)
         .map((m: ApiMemberRow) => ({
-          id: m.users?.id ?? m.id,
+          id: m.users?.id ?? `unlinked_${m.id}`,
           name: m.users?.name ?? m.pre_name ?? "",
         })),
     [membersRaw.members],

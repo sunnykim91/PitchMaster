@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     .from("dues_records")
     .insert({
       team_id: ctx.teamId,
-      user_id: body.userId || null,
+      user_id: (body.userId && !body.userId.startsWith("unlinked_")) ? body.userId : null,
       type: body.type,
       amount: body.amount,
       description: body.description || null,
@@ -96,7 +96,7 @@ export async function PUT(request: NextRequest) {
   if (type) updates.type = type;
   if (amount !== undefined) updates.amount = amount;
   if (description !== undefined) updates.description = description;
-  if (userId !== undefined) updates.user_id = userId || null;
+  if (userId !== undefined) updates.user_id = (userId && !userId.startsWith("unlinked_")) ? userId : null;
   if (recordedAt) {
     updates.recorded_at = `${recordedAt}T${recordedTime || "00:00"}:00`;
   }
