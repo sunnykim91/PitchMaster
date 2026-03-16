@@ -133,6 +133,12 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
   } = useApi<{ records: ApiDuesRecord[] }>("/api/dues", { records: [] });
 
   const {
+    data: balanceData,
+    loading: loadingBalance,
+    refetch: refetchBalance,
+  } = useApi<{ balance: number | null; updatedAt: string | null }>("/api/dues/balance", { balance: null, updatedAt: null });
+
+  const {
     data: settingsData,
     loading: loadingSettings,
     refetch: refetchSettings,
@@ -235,24 +241,32 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
   const [bulkSaving, setBulkSaving] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrStatus, setOcrStatus] = useState("");
-  const [actualBalance, setActualBalance] = useState<number | null>(null);
-  const [balanceUpdatedAt, setBalanceUpdatedAt] = useState("");
+  const [monthFilter, setMonthFilter] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
 
-  const loading = loadingDues || loadingSettings || loadingRules || loadingPenRecords || loadingMembers;
+  const loading = loadingDues || loadingSettings || loadingRules || loadingPenRecords || loadingMembers || loadingBalance;
+
+  /** 월별 필터 적용된 레코드 */
+  const monthRecords = useMemo(() => {
+    if (!monthFilter) return records;
+    return records.filter((r) => r.recordedAt.startsWith(monthFilter));
+  }, [records, monthFilter]);
 
   const totals = useMemo(() => {
-    const income = records.filter((item) => item.type === "INCOME").reduce((sum, item) => sum + item.amount, 0);
-    const expense = records.filter((item) => item.type === "EXPENSE").reduce((sum, item) => sum + item.amount, 0);
+    const income = monthRecords.filter((item) => item.type === "INCOME").reduce((sum, item) => sum + item.amount, 0);
+    const expense = monthRecords.filter((item) => item.type === "EXPENSE").reduce((sum, item) => sum + item.amount, 0);
     return { income, expense, balance: income - expense };
-  }, [records]);
+  }, [monthRecords]);
 
   const filteredRecords = useMemo(() => {
-    let list = filter === "ALL" ? records : records.filter((item) => item.type === filter);
+    let list = filter === "ALL" ? monthRecords : monthRecords.filter((item) => item.type === filter);
     if (memberFilter.trim()) {
       list = list.filter((item) => item.memberName?.includes(memberFilter.trim()));
     }
     return [...list].sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
-  }, [filter, records, memberFilter]);
+  }, [filter, monthRecords, memberFilter]);
 
   async function handleAddRecord(formData: FormData) {
     const type = String(formData.get("type"));
@@ -323,8 +337,8 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
       const { rows: parsed, latestBalance } = parseTransactions(json.text);
       console.log("Parsed transactions:", parsed, "Balance:", latestBalance);
       if (latestBalance !== null) {
-        setActualBalance(latestBalance);
-        setBalanceUpdatedAt(new Date().toLocaleString("ko-KR"));
+        await apiMutate("/api/dues/balance", "POST", { balance: latestBalance });
+        await refetchBalance();
       }
       if (parsed.length > 0) {
         setBulkRows(parsed);
@@ -586,16 +600,20 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
           )}
         </div>
 
-        {actualBalance !== null && (
+        {balanceData.balance !== null && (
           <Card className="mt-5 border-blue-500/20 bg-blue-500/10 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-blue-400/80">실제 통장 잔고</p>
                 <p className="mt-1 font-heading text-2xl font-bold text-blue-300">
-                  {actualBalance.toLocaleString()}원
+                  {balanceData.balance.toLocaleString()}원
                 </p>
               </div>
-              <p className="text-[10px] text-blue-400/50">{balanceUpdatedAt} 기준</p>
+              {balanceData.updatedAt && (
+                <p className="text-[10px] text-blue-400/50">
+                  {new Date(balanceData.updatedAt).toLocaleString("ko-KR")} 기준
+                </p>
+              )}
             </div>
           </Card>
         )}
@@ -850,6 +868,12 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <Input
+              type="month"
+              value={monthFilter}
+              onChange={(e) => setMonthFilter(e.target.value)}
+              className="w-36 text-xs"
+            />
             <Input
               type="text"
               value={memberFilter}
