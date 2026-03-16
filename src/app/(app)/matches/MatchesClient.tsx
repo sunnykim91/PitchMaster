@@ -111,10 +111,19 @@ export default function MatchesClient({ userId, userRole }: { userId: string; us
     return state;
   }, [attendanceData.attendance]);
 
-  const sortedMatches = useMemo(
-    () => [...matches].sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)),
-    [matches]
-  );
+  const sortedMatches = useMemo(() => {
+    const today = new Date().toISOString().split("T")[0];
+    return [...matches].sort((a, b) => {
+      const aIsPast = a.date < today || a.status === "COMPLETED";
+      const bIsPast = b.date < today || b.status === "COMPLETED";
+      // 다가오는 경기 먼저, 지난 경기는 뒤로
+      if (aIsPast !== bIsPast) return aIsPast ? 1 : -1;
+      // 다가오는 경기: 가까운 날짜 먼저
+      if (!aIsPast) return (a.date + a.time).localeCompare(b.date + b.time);
+      // 지난 경기: 최근 날짜 먼저
+      return (b.date + b.time).localeCompare(a.date + a.time);
+    });
+  }, [matches]);
 
   async function handleCreate(formData: FormData) {
     setSubmitting(true);
