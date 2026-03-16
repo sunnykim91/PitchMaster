@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
   let query = db
     .from("match_attendance")
-    .select("*, users(id, name, preferred_positions)");
+    .select("*, users(id, name, preferred_positions), member:member_id(id, pre_name, pre_phone, user_id, users(id, name, preferred_positions))");
 
   if (matchId) {
     query = query.eq("match_id", matchId);
@@ -39,25 +39,24 @@ export async function POST(request: NextRequest) {
   if (ctx instanceof NextResponse) return ctx;
 
   const body = await request.json();
-  const { matchId, vote, targetUserId } = body;
+  const { matchId, vote, targetUserId, memberId } = body;
   if (!matchId || !vote) return apiError("matchId and vote required");
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  // 대리 투표: 운영진 이상만 가능
-  let voteUserId = ctx.userId;
-  if (targetUserId && targetUserId !== ctx.userId) {
-    const { data: member } = await db
+  // 대리 투표 또는 미연동 멤버 투표: 운영진 이상만 가능
+  const isProxy = (targetUserId && targetUserId !== ctx.userId) || memberId;
+  if (isProxy) {
+    const { data: callerMember } = await db
       .from("team_members")
       .select("role")
       .eq("team_id", ctx.teamId)
       .eq("user_id", ctx.userId)
       .single();
-    if (!member || (member.role !== "PRESIDENT" && member.role !== "STAFF")) {
+    if (!callerMember || (callerMember.role !== "PRESIDENT" && callerMember.role !== "STAFF")) {
       return apiError("권한이 없습니다", 403);
     }
-    voteUserId = targetUserId;
   } else {
     // 본인 투표: 마감시간 체크
     const { data: match } = await db
@@ -70,6 +69,49 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // memberId가 있으면 team_members.id 기반 (미연동 멤버 포함)
+  if (memberId) {
+    // member_id 기반 upsert
+    const { data: existing } = await db
+      .from("match_attendance")
+      .select("id")
+      .eq("match_id", matchId)
+      .eq("member_id", memberId)
+      .maybeSingle();
+
+    let data, error;
+    if (existing) {
+      ({ data, error } = await db
+        .from("match_attendance")
+        .update({ vote, voted_at: new Date().toISOString() })
+        .eq("id", existing.id)
+        .select()
+        .single());
+    } else {
+      // member의 user_id 조회
+      const { data: memberRow } = await db
+        .from("team_members")
+        .select("user_id")
+        .eq("id", memberId)
+        .single();
+      ({ data, error } = await db
+        .from("match_attendance")
+        .insert({
+          match_id: matchId,
+          user_id: memberRow?.user_id || null,
+          member_id: memberId,
+          vote,
+          voted_at: new Date().toISOString(),
+        })
+        .select()
+        .single());
+    }
+    if (error) return apiError(error.message);
+    return apiSuccess(data);
+  }
+
+  // user_id 기반 (기존 로직)
+  const voteUserId = targetUserId || ctx.userId;
   const { data, error } = await db
     .from("match_attendance")
     .upsert(

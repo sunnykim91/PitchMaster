@@ -66,9 +66,11 @@ type GuestRow = {
 type AttendanceVoteRow = {
   id: string;
   match_id: string;
-  user_id: string;
+  user_id: string | null;
+  member_id: string | null;
   vote: "ATTEND" | "ABSENT" | "MAYBE";
-  users: { id: string; name: string; preferred_positions?: string[] };
+  users: { id: string; name: string; preferred_positions?: string[] } | null;
+  member: { id: string; pre_name: string | null; user_id: string | null; users: { id: string; name: string; preferred_positions?: string[] } | null } | null;
 };
 
 type DiaryRow = {
@@ -313,14 +315,18 @@ export default function MatchDetailClient({
 
   /* ── Attending players for auto formation ── */
   const attendingPlayers = useMemo<AttendingPlayer[]>(() => {
-    // 팀 멤버 중 참석 투표한 선수
+    // 참석 투표한 선수 (연동 + 미연동 모두)
     const members: AttendingPlayer[] = voteData.attendance
-      .filter((a) => a.vote === "ATTEND" && a.users != null)
-      .map((a) => ({
-        id: a.user_id,
-        name: a.users.name,
-        preferredPosition: (a.users.preferred_positions?.[0] ?? "CAM") as AttendingPlayer["preferredPosition"],
-      }));
+      .filter((a) => a.vote === "ATTEND")
+      .map((a) => {
+        // member_id 기반이면 member에서 이름/포지션 가져옴
+        const memberData = a.member;
+        const userData = a.users ?? memberData?.users;
+        const name = userData?.name ?? memberData?.pre_name ?? "멤버";
+        const pos = userData?.preferred_positions?.[0] ?? "CAM";
+        const id = a.user_id ?? a.member_id ?? a.id;
+        return { id, name, preferredPosition: pos as AttendingPlayer["preferredPosition"] };
+      });
     // 용병 추가
     const guestPlayers: AttendingPlayer[] = guests.map((g) => ({
       id: g.id,
@@ -350,6 +356,7 @@ export default function MatchDetailClient({
     () =>
       membersData.members.map((m) => ({
         id: m.users?.id ?? m.id,
+        memberId: m.id,
         name: m.users?.name ?? m.pre_name ?? "미연동 멤버",
         role: (m.users?.preferred_positions?.[0] ?? "MF") as DetailedPosition,
         isLinked: m.users != null,
@@ -357,11 +364,20 @@ export default function MatchDetailClient({
     [membersData.members],
   );
 
-  /** 참석 투표한 멤버 ID 셋 */
-  const attendingIds = useMemo(
-    () => new Set(voteData.attendance.filter((a) => a.vote === "ATTEND").map((a) => a.user_id)),
-    [voteData.attendance],
-  );
+  /** 참석 투표한 멤버 ID 셋 (baseRoster의 id 기준) */
+  const attendingIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const a of voteData.attendance.filter((v) => v.vote === "ATTEND")) {
+      if (a.member_id) {
+        // member_id → baseRoster의 id (user_id 또는 team_members.id)
+        const member = membersData.members.find((m) => m.id === a.member_id);
+        if (member) ids.add(member.users?.id ?? member.id);
+      } else if (a.user_id) {
+        ids.add(a.user_id);
+      }
+    }
+    return ids;
+  }, [voteData.attendance, membersData.members]);
 
   /** 전술판 roster: 참석 멤버 + 용병 */
   const roster = useMemo(() => {
@@ -469,19 +485,25 @@ export default function MatchDetailClient({
 
   /* ── 참석투표 대리 관리 (운영진 이상) ── */
 
-  async function handleProxyVote(targetUserId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
-    await apiMutate("/api/attendance", "POST", { matchId, vote, targetUserId });
+  async function handleProxyVote(memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
+    await apiMutate("/api/attendance", "POST", { matchId, vote, memberId });
     await refetchVote();
   }
 
-  /** 멤버별 현재 참석투표 상태 */
+  /** 멤버별 현재 참석투표 상태 (member_id 기반) */
   const memberVoteMap = useMemo(() => {
     const map: Record<string, "ATTEND" | "ABSENT" | "MAYBE"> = {};
     for (const a of voteData.attendance) {
-      map[a.user_id] = a.vote;
+      if (a.member_id) {
+        map[a.member_id] = a.vote;
+      } else if (a.user_id) {
+        // member_id가 없는 기존 데이터는 user_id로 baseRoster에서 매칭
+        const member = membersData.members.find((m) => m.users?.id === a.user_id);
+        if (member) map[member.id] = a.vote;
+      }
     }
     return map;
-  }, [voteData.attendance]);
+  }, [voteData.attendance, membersData.members]);
 
   /* ── Attendance handler ── */
 
@@ -600,28 +622,24 @@ export default function MatchDetailClient({
                         <Badge variant="outline" className="text-[10px] text-muted-foreground">미연동</Badge>
                       )}
                     </div>
-                    {member.isLinked ? (
-                      <div className="flex gap-1">
-                        {([
-                          { value: "ATTEND" as const, label: "참석", variant: "success" as const },
-                          { value: "MAYBE" as const, label: "미정", variant: "warning" as const },
-                          { value: "ABSENT" as const, label: "불참", variant: "destructive" as const },
-                        ]).map((opt) => (
-                          <Button
-                            key={opt.value}
-                            type="button"
-                            variant={currentVote === opt.value ? opt.variant : "outline"}
-                            size="sm"
-                            className="text-xs"
-                            onClick={() => handleProxyVote(member.id, opt.value)}
-                          >
-                            {opt.label}
-                          </Button>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">가입 후 투표 가능</span>
-                    )}
+                    <div className="flex gap-1">
+                      {([
+                        { value: "ATTEND" as const, label: "참석", variant: "success" as const },
+                        { value: "MAYBE" as const, label: "미정", variant: "warning" as const },
+                        { value: "ABSENT" as const, label: "불참", variant: "destructive" as const },
+                      ]).map((opt) => (
+                        <Button
+                          key={opt.value}
+                          type="button"
+                          variant={currentVote === opt.value ? opt.variant : "outline"}
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => handleProxyVote(member.memberId, opt.value)}
+                        >
+                          {opt.label}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
                 );
               })}
