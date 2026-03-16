@@ -17,3 +17,19 @@ export function formatPhone(value: string): string {
 export function stripPhone(value: string): string {
   return value.replace(/\D/g, "");
 }
+
+/** 시간 문자열에서 HH:MM만 추출 (초 제거) */
+export function formatTime(value: string): string {
+  if (!value) return "";
+  // "HH:MM:SS" → "HH:MM", "2025-03-16T17:00:00" → "17:00", "2025-03-16T17:00" → "17:00"
+  const match = value.match(/(\d{2}:\d{2})/);
+  return match ? match[1] : value;
+}
+
+/** datetime 문자열에서 "YYYY-MM-DD HH:MM" 형태로 포맷 */
+export function formatDateTime(value: string): string {
+  if (!value) return "";
+  const date = value.slice(0, 10);
+  const time = formatTime(value);
+  return time ? `${date} ${time}` : date;
+}

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useApi } from "@/lib/useApi";
+import { formatTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -128,7 +129,7 @@ export default function DashboardClient({ userId }: { userId: string }) {
                 <CardContent className="p-4">
                   <p className="text-xs text-muted-foreground">{formatDate(upcomingMatch.match_date)}</p>
                   <p className="mt-1 text-lg font-bold">
-                    {upcomingMatch.match_time ?? "시간 미정"} · {upcomingMatch.location ?? "장소 미정"}
+                    {upcomingMatch.match_time ? formatTime(upcomingMatch.match_time) : "시간 미정"} · {upcomingMatch.location ?? "장소 미정"}
                   </p>
                   <p className="mt-1 text-sm text-foreground/70">
                     상대팀:{" "}

@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
-import { cn, formatPhone } from "@/lib/utils";
+import { cn, formatPhone, formatTime } from "@/lib/utils";
 import { PhoneInput } from "@/components/ui/phone-input";
 
 /* ── API response row types (snake_case from DB) ── */
@@ -514,7 +514,7 @@ export default function MatchDetailClient({
   }, [votes]);
 
   async function handleShare() {
-    const message = `PitchMaster 경기 결과\n${match.date} ${match.time}\n${match.location}\n스코어 ${score}`;
+    const message = `PitchMaster 경기 결과\n${match.date} ${formatTime(match.time)}\n${match.location}\n스코어 ${score}`;
     await navigator.clipboard.writeText(message);
     setShareMessage("경기 결과 요약이 클립보드에 복사되었습니다.");
     setTimeout(() => setShareMessage(null), 2000);
@@ -1033,7 +1033,7 @@ export default function MatchDetailClient({
                     {match.opponent ? `vs ${match.opponent}` : "친선 경기"}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {match.date} {match.time}
+                    {match.date} {formatTime(match.time)}
                   </p>
                 </CardContent>
               </Card>

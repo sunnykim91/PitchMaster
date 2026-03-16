@@ -6,7 +6,7 @@ import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, formatTime, formatDateTime } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -301,14 +301,14 @@ export default function MatchesClient({ userId, userRole }: { userId: string; us
                       {match.status === "COMPLETED" ? "완료" : "예정"}
                     </Badge>
                     <CardTitle className="mt-2 font-heading text-xl font-bold uppercase">
-                      {match.date} · {match.time}
+                      {match.date} · {formatTime(match.time)}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
                       {match.location} {match.opponent ? `· ${match.opponent}` : ""}
                     </p>
                     {match.voteDeadline && (
                       <p className="mt-1 text-xs text-muted-foreground">
-                        투표 마감: {match.voteDeadline}
+                        투표 마감: {formatDateTime(match.voteDeadline ?? "")}
                       </p>
                     )}
                   </div>
