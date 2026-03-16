@@ -235,6 +235,8 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
   const [bulkSaving, setBulkSaving] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrStatus, setOcrStatus] = useState("");
+  const [actualBalance, setActualBalance] = useState<number | null>(null);
+  const [balanceUpdatedAt, setBalanceUpdatedAt] = useState("");
 
   const loading = loadingDues || loadingSettings || loadingRules || loadingPenRecords || loadingMembers;
 
@@ -318,11 +320,15 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
         return;
       }
 
-      const parsed = parseTransactions(json.text);
-      console.log("Parsed transactions:", parsed);
+      const { rows: parsed, latestBalance } = parseTransactions(json.text);
+      console.log("Parsed transactions:", parsed, "Balance:", latestBalance);
+      if (latestBalance !== null) {
+        setActualBalance(latestBalance);
+        setBalanceUpdatedAt(new Date().toLocaleString("ko-KR"));
+      }
       if (parsed.length > 0) {
         setBulkRows(parsed);
-        setOcrStatus(`${parsed.length}건의 거래를 인식했습니다. 확인 후 저장하세요.`);
+        setOcrStatus(`${parsed.length}건의 거래를 인식했습니다.${latestBalance !== null ? ` 잔고: ${latestBalance.toLocaleString()}원` : ""} 확인 후 저장하세요.`);
       } else {
         setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
       }
@@ -350,12 +356,16 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
    * 2. "시간 잔액원" 패턴의 줄 = 잔액줄 (시간만 추출)
    * 3. "MM.DD" 패턴의 줄 = 날짜줄
    */
-  function parseTransactions(ocrText: string): BulkRow[] {
+  type ParseResult = { rows: BulkRow[]; latestBalance: number | null };
+
+  function parseTransactions(ocrText: string): ParseResult {
     const rows: BulkRow[] = [];
     const lines = ocrText.split("\n").map((l) => l.trim()).filter(Boolean);
     const year = new Date().getFullYear();
 
     let currentDate = "";
+    let latestBalance: number | null = null;
+    let isFirstBalance = true;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -368,29 +378,35 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
       }
 
       // 거래 줄: "양문주 -79,230원", "젤로스FC 73,000원"
-      // 이름(한글/영문) + 금액(원) 이 같은 줄에 있는 패턴
       const txMatch = line.match(/^(.+?)\s+([+-]?[\d,]+)원$/);
       if (!txMatch) continue;
 
       const name = txMatch[1].trim();
       const amountStr = txMatch[2];
 
-      // 이름이 시간 패턴(HH:MM)이면 잔액줄이므로 스킵
-      if (name.match(/^\d{1,2}:\d{2}$/)) continue;
+      // 잔액줄: "10:05 1,238,592원" → 시간 + 잔액
+      if (name.match(/^\d{1,2}:\d{2}$/)) {
+        // 가장 첫 번째 잔액 = 가장 최근 거래의 잔액
+        const balanceAmount = parseInt(amountStr.replace(/[^0-9]/g, ""), 10);
+        if (isFirstBalance && balanceAmount > 0) {
+          latestBalance = balanceAmount;
+          isFirstBalance = false;
+        }
+        continue;
+      }
 
-      // 이름에 한글이나 영문이 없으면 스킵 (숫자만 있는 줄 = 헤더/잔액)
+      // 이름에 한글이나 영문이 없으면 스킵
       if (!name.match(/[\p{L}]/u)) continue;
 
-      // 부호 추출
       const isExpense = amountStr.startsWith("-");
       const rawAmount = amountStr.replace(/[^0-9]/g, "");
       const num = parseInt(rawAmount, 10);
       if (!num) continue;
 
-      // 잔액 판별: 50만원 이상이면 잔액줄로 간주
+      // 잔액 판별: 50만원 이상이면 스킵
       if (num >= 500000) continue;
 
-      // 다음 줄에서 시간 추출: "10:05 1,238,592원" → "10:05"
+      // 다음 줄에서 시간 추출
       let time = "";
       if (i + 1 < lines.length) {
         const nextLine = lines[i + 1];
@@ -400,7 +416,6 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
         }
       }
 
-      // 멤버 매칭
       const matchedMember = members.find(
         (m) => m.name && (name.includes(m.name) || m.name.includes(name))
       );
@@ -415,7 +430,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
       });
     }
 
-    return rows;
+    return { rows, latestBalance };
   }
 
   function updateBulkRow(index: number, field: keyof BulkRow, value: string) {
@@ -570,6 +585,20 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
             </div>
           )}
         </div>
+
+        {actualBalance !== null && (
+          <Card className="mt-5 border-blue-500/20 bg-blue-500/10 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-blue-400/80">실제 통장 잔고</p>
+                <p className="mt-1 font-heading text-2xl font-bold text-blue-300">
+                  {actualBalance.toLocaleString()}원
+                </p>
+              </div>
+              <p className="text-[10px] text-blue-400/50">{balanceUpdatedAt} 기준</p>
+            </div>
+          </Card>
+        )}
 
         <div className="mt-5 grid gap-3 md:grid-cols-3">
           <Card className="border-0 bg-emerald-500/10 p-4">
