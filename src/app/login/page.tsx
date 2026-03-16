@@ -306,69 +306,86 @@ export default async function LoginPage({
           </div>
 
           <div className="mt-12 grid items-center gap-10 lg:grid-cols-2">
-            {/* 전술판 모형 */}
-            <Card className="mx-auto w-full max-w-sm overflow-hidden border-border/30 bg-emerald-950/80">
-              <CardContent className="p-0">
-                <div className="relative aspect-[3/4] bg-gradient-to-b from-emerald-900/60 to-emerald-950/80 p-4">
-                  {/* 필드 라인 */}
-                  <div className="absolute inset-4 rounded-lg border border-white/10" />
-                  <div className="absolute left-4 right-4 top-1/2 h-px bg-white/10" />
-                  <div className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10" />
+            {/* 전술판 — 실제 TacticsBoard 동일 스타일 */}
+            <div className="mx-auto w-full max-w-sm rounded-2xl p-3" style={{ backgroundColor: "#0a0e14" }}>
+              <div className="flex items-center justify-between px-1">
+                <span className="text-sm font-bold text-white">1쿼터 · 4-3-3</span>
+                <span className="text-xs text-white/50">PitchMaster</span>
+              </div>
+              <div
+                className="relative mt-3 aspect-4/5 w-full overflow-hidden rounded-2xl border-2 border-white/10 shadow-xl shadow-black/30"
+                style={{
+                  background: "#1a6b32",
+                  backgroundImage: [
+                    "repeating-linear-gradient(180deg, rgba(255,255,255,0) 0px, rgba(255,255,255,0) 38px, rgba(255,255,255,0.06) 38px, rgba(255,255,255,0.06) 76px)",
+                    "repeating-linear-gradient(90deg, rgba(0,0,0,0.02) 0px, transparent 2px, transparent 4px)",
+                    "radial-gradient(ellipse at 50% 50%, rgba(34,197,94,0.15) 0%, transparent 70%)",
+                  ].join(", "),
+                }}
+              >
+                {/* 경기장 라인 */}
+                <div className="absolute inset-3 rounded-sm border-2 border-white/30" />
+                <div className="absolute inset-x-3 top-1/2 h-0.5 -translate-y-px bg-white/30" />
+                <div className="absolute left-1/2 top-1/2 h-[18%] w-[28%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/30" />
+                <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/40" />
+                <div className="absolute inset-x-[20%] top-3 h-[16%] border-2 border-t-0 border-white/30" />
+                <div className="absolute inset-x-[32%] top-3 h-[8%] border-2 border-t-0 border-white/30" />
+                <div className="absolute left-1/2 top-[18.5%] h-[6%] w-[16%] -translate-x-1/2 rounded-b-full border-2 border-t-0 border-white/30" />
+                <div className="absolute inset-x-[20%] bottom-3 h-[16%] border-2 border-b-0 border-white/30" />
+                <div className="absolute inset-x-[32%] bottom-3 h-[8%] border-2 border-b-0 border-white/30" />
+                <div className="absolute left-1/2 bottom-[18.5%] h-[6%] w-[16%] -translate-x-1/2 rounded-t-full border-2 border-b-0 border-white/30" />
+                <div className="absolute left-3 top-3 h-4 w-4 rounded-br-full border-b-2 border-r-2 border-white/30" />
+                <div className="absolute right-3 top-3 h-4 w-4 rounded-bl-full border-b-2 border-l-2 border-white/30" />
+                <div className="absolute bottom-3 left-3 h-4 w-4 rounded-tr-full border-r-2 border-t-2 border-white/30" />
+                <div className="absolute bottom-3 right-3 h-4 w-4 rounded-tl-full border-l-2 border-t-2 border-white/30" />
 
-                  {/* 선수 배치 (4-3-3) */}
-                  {[
-                    { name: "GK", x: "50%", y: "88%", color: "bg-amber-500" },
-                    { name: "LB", x: "15%", y: "70%", color: "bg-blue-500" },
-                    { name: "CB", x: "38%", y: "72%", color: "bg-blue-500" },
-                    { name: "CB", x: "62%", y: "72%", color: "bg-blue-500" },
-                    { name: "RB", x: "85%", y: "70%", color: "bg-blue-500" },
-                    { name: "CM", x: "30%", y: "48%", color: "bg-emerald-400" },
-                    { name: "CM", x: "50%", y: "45%", color: "bg-emerald-400" },
-                    { name: "CM", x: "70%", y: "48%", color: "bg-emerald-400" },
-                    { name: "LW", x: "18%", y: "22%", color: "bg-rose-500" },
-                    { name: "ST", x: "50%", y: "18%", color: "bg-rose-500" },
-                    { name: "RW", x: "82%", y: "22%", color: "bg-rose-500" },
-                  ].map((p, i) => (
+                {/* 4-3-3 선수 배치 (formations.ts 실제 좌표) */}
+                {[
+                  { label: "GK", x: 50, y: 92 },
+                  { label: "김OO", x: 16, y: 74 },
+                  { label: "박OO", x: 38, y: 76 },
+                  { label: "이OO", x: 62, y: 76 },
+                  { label: "최OO", x: 84, y: 74 },
+                  { label: "정OO", x: 35, y: 54 },
+                  { label: "한OO", x: 50, y: 50 },
+                  { label: "윤OO", x: 65, y: 54 },
+                  { label: "서OO", x: 22, y: 26 },
+                  { label: "장OO", x: 50, y: 22 },
+                  { label: "조OO", x: 78, y: 26 },
+                ].map((p, i) => (
+                  <div
+                    key={i}
+                    className="absolute -translate-x-1/2 -translate-y-1/2"
+                    style={{ left: `${p.x}%`, top: `${p.y}%` }}
+                  >
                     <div
-                      key={i}
-                      className="absolute -translate-x-1/2 -translate-y-1/2"
-                      style={{ left: p.x, top: p.y }}
+                      className="flex h-11 w-11 items-center justify-center rounded-full text-[9px] font-bold text-white shadow-lg"
+                      style={{ backgroundColor: "#2563eb" }}
                     >
-                      <div
-                        className={`flex h-8 w-8 items-center justify-center rounded-full ${p.color} text-[9px] font-bold text-white shadow-lg`}
-                      >
-                        {p.name}
-                      </div>
+                      {p.label}
                     </div>
-                  ))}
-
-                  {/* 포메이션 표시 */}
-                  <div className="absolute left-4 top-4 rounded-md bg-black/40 px-2 py-1">
-                    <p className="text-[10px] font-bold text-white/70">
-                      4-3-3 · Q1
-                    </p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                ))}
+              </div>
+            </div>
 
             {/* 설명 */}
             <div className="space-y-6">
               <div className="inline-block rounded-full bg-purple-500/10 px-3 py-1 text-xs font-bold text-purple-400">
-                AI 자동 편성
+                AI 자동 편성 + 드래그 전술판
               </div>
               <h3 className="font-heading text-2xl font-bold">
-                참석 버튼 누르면
-                <br />
-                라인업이 자동으로 완성.
+                자동으로 짜고,<br />
+                손가락으로 자유롭게 조정.
               </h3>
               <div className="space-y-3">
                 {[
-                  "선호 포지션 기반 최적 배치 — GK, DF, MF, FW 자동 분류",
+                  "참석자 선호 포지션 기반 자동 편성 — 버튼 하나로 라인업 완성",
+                  "선수를 드래그해서 자유롭게 이동 — 원하는 위치에 직접 배치",
                   "쿼터별 출전 시간 공평 배분 — 한 명만 계속 뛰는 일 없음",
-                  "포메이션 변경해도 선수 배치 유지 — 4-3-3 → 4-4-2 전환 시 재배치",
-                  "전술판을 이미지로 저장 — 카톡으로 바로 공유 가능",
-                  "용병도 복수 포지션 등록 — 유연한 포지션 배정",
+                  "포메이션 변경해도 선수 배치 유지 — 4-3-3 → 4-4-2 자동 재배치",
+                  "완성된 전술판을 이미지로 저장 — 카톡으로 바로 공유",
+                  "용병도 복수 포지션 등록 가능",
                 ].map((text) => (
                   <div key={text} className="flex items-start gap-2">
                     <span className="mt-0.5 text-sm text-purple-400">✓</span>
