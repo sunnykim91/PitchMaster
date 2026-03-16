@@ -82,11 +82,13 @@ type DiaryRow = {
 type MemberRow = {
   id: string;
   role: string;
+  user_id: string | null;
+  pre_name: string | null;
   users: {
     id: string;
     name: string;
     preferred_positions?: string[];
-  };
+  } | null;
 };
 
 /* ── Client-side types (camelCase) ── */
@@ -346,13 +348,12 @@ export default function MatchDetailClient({
 
   const baseRoster = useMemo(
     () =>
-      membersData.members
-        .filter((m) => m.users != null)
-        .map((m) => ({
-          id: m.users.id,
-          name: m.users.name,
-          role: (m.users.preferred_positions?.[0] ?? "MF") as DetailedPosition,
-        })),
+      membersData.members.map((m) => ({
+        id: m.users?.id ?? m.id,
+        name: m.users?.name ?? m.pre_name ?? "미연동 멤버",
+        role: (m.users?.preferred_positions?.[0] ?? "MF") as DetailedPosition,
+        isLinked: m.users != null,
+      })),
     [membersData.members],
   );
 
@@ -593,25 +594,34 @@ export default function MatchDetailClient({
                 const currentVote = memberVoteMap[member.id];
                 return (
                   <div key={member.id} className="flex items-center justify-between rounded-lg bg-secondary px-4 py-3">
-                    <span className="text-sm font-semibold">{member.name}</span>
-                    <div className="flex gap-1">
-                      {([
-                        { value: "ATTEND" as const, label: "참석", variant: "success" as const },
-                        { value: "MAYBE" as const, label: "미정", variant: "warning" as const },
-                        { value: "ABSENT" as const, label: "불참", variant: "destructive" as const },
-                      ]).map((opt) => (
-                        <Button
-                          key={opt.value}
-                          type="button"
-                          variant={currentVote === opt.value ? opt.variant : "outline"}
-                          size="sm"
-                          className="text-xs"
-                          onClick={() => handleProxyVote(member.id, opt.value)}
-                        >
-                          {opt.label}
-                        </Button>
-                      ))}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">{member.name}</span>
+                      {!member.isLinked && (
+                        <Badge variant="outline" className="text-[10px] text-muted-foreground">미연동</Badge>
+                      )}
                     </div>
+                    {member.isLinked ? (
+                      <div className="flex gap-1">
+                        {([
+                          { value: "ATTEND" as const, label: "참석", variant: "success" as const },
+                          { value: "MAYBE" as const, label: "미정", variant: "warning" as const },
+                          { value: "ABSENT" as const, label: "불참", variant: "destructive" as const },
+                        ]).map((opt) => (
+                          <Button
+                            key={opt.value}
+                            type="button"
+                            variant={currentVote === opt.value ? opt.variant : "outline"}
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => handleProxyVote(member.id, opt.value)}
+                          >
+                            {opt.label}
+                          </Button>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">가입 후 투표 가능</span>
+                    )}
                   </div>
                 );
               })}
