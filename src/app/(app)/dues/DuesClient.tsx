@@ -414,9 +414,9 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
       const name = txMatch[1].trim();
       const amountStr = txMatch[2];
 
-      // 잔액줄: "10:05 1,238,592원" → 시간 + 잔액
-      if (name.match(/^\d{1,2}:\d{2}$/)) {
-        // 가장 첫 번째 잔액 = 가장 최근 거래의 잔액
+      // 잔액줄: "10:05 1,238,592원" 또는 "15:54 굿데이fc 1,202,592원"
+      // 이름이 시간(HH:MM)으로 시작하면 잔액줄
+      if (name.match(/^\d{1,2}:\d{2}/)) {
         const balanceAmount = parseInt(amountStr.replace(/[^0-9]/g, ""), 10);
         if (isFirstBalance && balanceAmount > 0) {
           latestBalance = balanceAmount;
@@ -992,9 +992,8 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
                     {record.description}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {record.recordedAt}
+                    {record.recordedAt.split("T")[0]}
                     {record.memberName ? ` · ${record.memberName}` : ""}
-                    {record.method ? ` · ${record.method}` : ""}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
