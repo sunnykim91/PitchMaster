@@ -2,7 +2,11 @@ import { isKakaoConfigured } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string }>;
+}) {
   const { code: inviteCode } = await searchParams;
   const kakaoEnabled = isKakaoConfigured();
   const kakaoHref = inviteCode
@@ -22,7 +26,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       </a>
     </Button>
   ) : (
-    <Button className="h-14 rounded-2xl bg-[#FEE500] px-10 text-base font-bold text-[#1E1E1E]" disabled>
+    <Button
+      className="h-14 rounded-2xl bg-[#FEE500] px-10 text-base font-bold text-[#1E1E1E]"
+      disabled
+    >
       카카오로 시작하기 (환경변수 필요)
     </Button>
   );
@@ -68,48 +75,61 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           </div>
         </div>
 
-        {/* 오른쪽: 카카오뱅크 모임통장 → PitchMaster 변환 시연 */}
+        {/* 오른쪽: 주요 기능 미리보기 카드 */}
         <div className="w-full max-w-sm flex-shrink-0 space-y-3">
-          {/* 모임통장 캡쳐 모형 */}
-          <Card className="overflow-hidden border-border/30 bg-[#1A1A1A]">
-            <CardContent className="p-0">
-              <div className="bg-[#1A1A1A] px-5 py-4">
-                <p className="text-center text-xs text-white/50">모임통장</p>
-                <p className="mt-2 text-center font-heading text-2xl font-bold text-white">1,202,592원</p>
-              </div>
-              <div className="space-y-0 bg-[#222]">
-                {[
-                  { date: "03.16", name: "김OO", time: "15:54", amount: "-36,000원", balance: "1,202,592원", color: "text-white" },
-                  { date: "03.12", name: "박OO", time: "10:05", amount: "-79,230원", balance: "1,238,592원", color: "text-white" },
-                  { date: "03.11", name: "상대팀FC", time: "11:23", amount: "+73,000원", balance: "1,317,822원", color: "text-[#4A9DFF]" },
-                  { date: "03.10", name: "이OO", time: "22:30", amount: "+10,000원", balance: "1,244,822원", color: "text-[#4A9DFF]" },
-                ].map((t, i) => (
-                  <div key={i} className="border-t border-white/5 px-5 py-3">
-                    <p className="text-[10px] text-white/30">{t.date}</p>
-                    <div className="mt-1 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-medium text-white/80">{t.name}</p>
-                        <p className="text-[10px] text-white/30">{t.time}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className={`text-xs font-bold ${t.color}`}>{t.amount}</p>
-                        <p className="text-[10px] text-white/30">{t.balance}</p>
-                      </div>
-                    </div>
+          {[
+            {
+              emoji: "📸",
+              title: "통장 캡쳐 → 회비 자동 정리",
+              desc: "모임통장 스크린샷 한 장이면 입출금 내역이 자동으로 등록돼요.",
+              tag: "OCR",
+            },
+            {
+              emoji: "🧠",
+              title: "버튼 하나로 자동 스쿼드 편성",
+              desc: "선호 포지션 기반 쿼터별 라인업 자동 생성. 출전 시간도 공평하게.",
+              tag: "핵심 기능",
+            },
+            {
+              emoji: "📋",
+              title: "일정 등록하면 바로 출석 투표",
+              desc: "마감 시간 자동 설정. 운영진이 대리 투표도 가능해요.",
+            },
+            {
+              emoji: "⚽",
+              title: "전술판에서 드래그로 배치",
+              desc: "포메이션 바꿔도 선수 배치 유지. 라인업 이미지로 카톡 공유.",
+            },
+            {
+              emoji: "🏆",
+              title: "골·어시스트·MVP 자동 집계",
+              desc: "경기 끝나면 기록 남기고 MVP 투표. 시즌 랭킹이 자동으로.",
+            },
+          ].map((item) => (
+            <Card
+              key={item.title}
+              className="group border-border/50 bg-card/60 backdrop-blur-sm transition-all hover:border-primary/30 hover:bg-card/80"
+            >
+              <CardContent className="flex items-start gap-4 p-4">
+                <span className="mt-0.5 text-xl">{item.emoji}</span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-bold text-foreground">
+                      {item.title}
+                    </p>
+                    {item.tag && (
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                        {item.tag}
+                      </span>
+                    )}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 화살표 + 변환 설명 */}
-          <div className="flex items-center justify-center gap-3">
-            <div className="h-px flex-1 bg-primary/20" />
-            <div className="rounded-full bg-primary/10 px-4 py-1.5">
-              <p className="text-xs font-bold text-primary">캡쳐 한 장 → 자동 입력</p>
-            </div>
-            <div className="h-px flex-1 bg-primary/20" />
-          </div>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    {item.desc}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </section>
 
@@ -120,28 +140,37 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             이런 경험 있으시죠?
           </p>
           <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
-            조기축구 운영,<br />생각보다 일이 많습니다.
+            조기축구 운영,
+            <br />
+            생각보다 일이 많습니다.
           </h2>
 
           <div className="mt-12 grid gap-4 md:grid-cols-3">
             {[
               {
                 pain: "참석 인원 파악",
-                detail: "카톡에 투표 올려도 읽씹 속출. 결국 총무가 한 명씩 전화해서 확인.",
+                detail:
+                  "카톡에 투표 올려도 읽씹 속출. 결국 총무가 한 명씩 전화해서 확인.",
               },
               {
                 pain: "회비 정산",
-                detail: "통장 캡쳐하고, 엑셀 열어서 대조하고, 밴드에 올리고... 매달 반복.",
+                detail:
+                  "통장 캡쳐하고, 엑셀 열어서 대조하고, 밴드에 올리고... 매달 반복.",
               },
               {
                 pain: "포메이션 편성",
-                detail: "참석자 몇 명인지도 불확실한데, 포지션 배분은 경기장 가서야 시작.",
+                detail:
+                  "참석자 몇 명인지도 불확실한데, 포지션 배분은 경기장 가서야 시작.",
               },
             ].map((item) => (
               <Card key={item.pain} className="border-border/30 bg-card/50">
                 <CardContent className="p-6">
-                  <p className="text-lg font-bold text-foreground">{item.pain}</p>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.detail}</p>
+                  <p className="text-lg font-bold text-foreground">
+                    {item.pain}
+                  </p>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                    {item.detail}
+                  </p>
                 </CardContent>
               </Card>
             ))}
@@ -149,75 +178,274 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         </div>
       </section>
 
-      {/* ── Section 3: 핵심 기능 ── */}
+      {/* ── Section 3: 회비 관리 (모임통장 OCR) ── */}
+      <section className="relative border-t border-border/30">
+        <div className="mx-auto max-w-5xl px-6 py-20">
+          <div className="text-center">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-400">
+              Smart Finance
+            </p>
+            <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
+              모임통장 캡쳐 한 장이면 끝.
+            </h2>
+            <p className="mt-3 text-muted-foreground">
+              더 이상 엑셀에 한 줄씩 옮겨 적지 않아도 돼요.
+            </p>
+          </div>
+
+          <div className="mt-12 grid items-center gap-10 lg:grid-cols-2">
+            {/* 왼쪽: 모임통장 캡쳐 모형 */}
+            <Card className="mx-auto w-full max-w-xs overflow-hidden border-border/30 bg-[#1A1A1A]">
+              <CardContent className="p-0">
+                <div className="bg-[#1A1A1A] px-5 py-4">
+                  <p className="text-center text-xs text-white/50">모임통장</p>
+                  <p className="mt-2 text-center font-heading text-2xl font-bold text-white">
+                    1,202,592원
+                  </p>
+                </div>
+                <div className="space-y-0 bg-[#222]">
+                  {[
+                    {
+                      date: "03.16",
+                      name: "김OO",
+                      time: "15:54",
+                      amount: "-36,000원",
+                      balance: "1,202,592원",
+                      color: "text-white",
+                    },
+                    {
+                      date: "03.12",
+                      name: "박OO",
+                      time: "10:05",
+                      amount: "-79,230원",
+                      balance: "1,238,592원",
+                      color: "text-white",
+                    },
+                    {
+                      date: "03.11",
+                      name: "상대팀FC",
+                      time: "11:23",
+                      amount: "+73,000원",
+                      balance: "1,317,822원",
+                      color: "text-[#4A9DFF]",
+                    },
+                    {
+                      date: "03.10",
+                      name: "이OO",
+                      time: "22:30",
+                      amount: "+10,000원",
+                      balance: "1,244,822원",
+                      color: "text-[#4A9DFF]",
+                    },
+                  ].map((t, i) => (
+                    <div key={i} className="border-t border-white/5 px-5 py-3">
+                      <p className="text-[10px] text-white/30">{t.date}</p>
+                      <div className="mt-1 flex items-center justify-between">
+                        <div>
+                          <p className="text-xs font-medium text-white/80">
+                            {t.name}
+                          </p>
+                          <p className="text-[10px] text-white/30">{t.time}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-xs font-bold ${t.color}`}>
+                            {t.amount}
+                          </p>
+                          <p className="text-[10px] text-white/30">
+                            {t.balance}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 오른쪽: 설명 */}
+            <div className="space-y-6">
+              <div className="inline-block rounded-full bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-400">
+                OCR 자동 인식
+              </div>
+              <h3 className="font-heading text-2xl font-bold">
+                스크린샷 업로드 한 번이면
+                <br />
+                날짜, 이름, 금액, 잔고까지.
+              </h3>
+              <div className="space-y-3">
+                {[
+                  "카카오뱅크, 토스 등 모임통장 캡쳐 지원",
+                  "날짜 · 입금자 · 금액 · 잔고 자동 추출",
+                  "중복 내역 자동 감지 — 같은 캡쳐 올려도 중복 등록 없음",
+                  "팀원 이름 자동 매칭 — 누가 입금했는지 바로 연결",
+                ].map((text) => (
+                  <div key={text} className="flex items-start gap-2">
+                    <span className="mt-0.5 text-sm text-blue-400">✓</span>
+                    <p className="text-sm text-muted-foreground">{text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Section 4: 자동 스쿼드 편성 ── */}
+      <section className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
+        <div className="mx-auto max-w-5xl px-6 py-20">
+          <div className="text-center">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-purple-400">
+              Auto Squad
+            </p>
+            <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
+              포메이션, 더 이상 머리 아프지 마세요.
+            </h2>
+            <p className="mt-3 text-muted-foreground">
+              참석 인원과 선호 포지션만 있으면, 나머지는 자동입니다.
+            </p>
+          </div>
+
+          <div className="mt-12 grid items-center gap-10 lg:grid-cols-2">
+            {/* 전술판 모형 */}
+            <Card className="mx-auto w-full max-w-sm overflow-hidden border-border/30 bg-emerald-950/80">
+              <CardContent className="p-0">
+                <div className="relative aspect-[3/4] bg-gradient-to-b from-emerald-900/60 to-emerald-950/80 p-4">
+                  {/* 필드 라인 */}
+                  <div className="absolute inset-4 rounded-lg border border-white/10" />
+                  <div className="absolute left-4 right-4 top-1/2 h-px bg-white/10" />
+                  <div className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10" />
+
+                  {/* 선수 배치 (4-3-3) */}
+                  {[
+                    { name: "GK", x: "50%", y: "88%", color: "bg-amber-500" },
+                    { name: "LB", x: "15%", y: "70%", color: "bg-blue-500" },
+                    { name: "CB", x: "38%", y: "72%", color: "bg-blue-500" },
+                    { name: "CB", x: "62%", y: "72%", color: "bg-blue-500" },
+                    { name: "RB", x: "85%", y: "70%", color: "bg-blue-500" },
+                    { name: "CM", x: "30%", y: "48%", color: "bg-emerald-400" },
+                    { name: "CM", x: "50%", y: "45%", color: "bg-emerald-400" },
+                    { name: "CM", x: "70%", y: "48%", color: "bg-emerald-400" },
+                    { name: "LW", x: "18%", y: "22%", color: "bg-rose-500" },
+                    { name: "ST", x: "50%", y: "18%", color: "bg-rose-500" },
+                    { name: "RW", x: "82%", y: "22%", color: "bg-rose-500" },
+                  ].map((p, i) => (
+                    <div
+                      key={i}
+                      className="absolute -translate-x-1/2 -translate-y-1/2"
+                      style={{ left: p.x, top: p.y }}
+                    >
+                      <div
+                        className={`flex h-8 w-8 items-center justify-center rounded-full ${p.color} text-[9px] font-bold text-white shadow-lg`}
+                      >
+                        {p.name}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* 포메이션 표시 */}
+                  <div className="absolute left-4 top-4 rounded-md bg-black/40 px-2 py-1">
+                    <p className="text-[10px] font-bold text-white/70">
+                      4-3-3 · Q1
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 설명 */}
+            <div className="space-y-6">
+              <div className="inline-block rounded-full bg-purple-500/10 px-3 py-1 text-xs font-bold text-purple-400">
+                AI 자동 편성
+              </div>
+              <h3 className="font-heading text-2xl font-bold">
+                참석 버튼 누르면
+                <br />
+                라인업이 자동으로 완성.
+              </h3>
+              <div className="space-y-3">
+                {[
+                  "선호 포지션 기반 최적 배치 — GK, DF, MF, FW 자동 분류",
+                  "쿼터별 출전 시간 공평 배분 — 한 명만 계속 뛰는 일 없음",
+                  "포메이션 변경해도 선수 배치 유지 — 4-3-3 → 4-4-2 전환 시 재배치",
+                  "전술판을 이미지로 저장 — 카톡으로 바로 공유 가능",
+                  "용병도 복수 포지션 등록 — 유연한 포지션 배정",
+                ].map((text) => (
+                  <div key={text} className="flex items-start gap-2">
+                    <span className="mt-0.5 text-sm text-purple-400">✓</span>
+                    <p className="text-sm text-muted-foreground">{text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Section 5: 기타 기능 ── */}
       <section className="relative border-t border-border/30">
         <div className="mx-auto max-w-5xl px-6 py-20">
           <div className="text-center">
             <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
-              Core Features
+              And More
             </p>
             <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
-              이 모든 걸 한 곳에서.
+              그 밖에도 다 돼요.
             </h2>
           </div>
 
-          <div className="mt-14 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[
-              {
-                icon: "📸",
-                title: "통장 캡쳐 → 자동 입력",
-                desc: "은행 앱 스크린샷만 올리면 AI가 입출금 내역을 자동으로 인식. 날짜, 이름, 금액, 잔고까지 한 번에.",
-                tag: "OCR",
-                color: "text-blue-400",
-              },
-              {
-                icon: "🧠",
-                title: "자동 스쿼드 편성",
-                desc: "참석 인원의 선호 포지션을 분석해서 쿼터별 라인업을 자동 생성. 출전 시간도 공평하게 배분.",
-                tag: "AI",
-                color: "text-purple-400",
-              },
               {
                 icon: "📋",
                 title: "참석 투표 & 마감",
-                desc: "일정 등록하면 투표가 자동 오픈. 마감 시간 지나면 참석 확정. 운영진이 대리 투표도 가능.",
+                desc: "일정 등록하면 투표 자동 오픈. 마감 시간 설정, 운영진 대리 투표 가능.",
                 color: "text-emerald-400",
-              },
-              {
-                icon: "⚽",
-                title: "전술판 & 포메이션",
-                desc: "드래그로 선수 배치. 포메이션 변경해도 배치 유지. 완성된 라인업을 이미지로 공유.",
-                color: "text-amber-400",
               },
               {
                 icon: "🏆",
                 title: "경기 기록 & MVP",
-                desc: "골, 어시스트, 출석 자동 집계. 경기 끝나면 MVP 투표. 시즌 랭킹이 자동으로 쌓여요.",
+                desc: "골, 어시스트, 출석 자동 집계. MVP 투표로 시즌 랭킹이 쌓여요.",
                 color: "text-rose-400",
               },
               {
                 icon: "👥",
                 title: "팀원 사전등록 & 연동",
-                desc: "아직 가입 안 한 팀원도 미리 등록. 나중에 카카오로 가입하면 자동으로 연동.",
+                desc: "가입 전 팀원도 미리 등록. 카카오 가입 시 자동 연동.",
                 color: "text-cyan-400",
               },
+              {
+                icon: "🔄",
+                title: "멀티팀 지원",
+                desc: "한 계정으로 여러 팀 운영. A팀 회장이면서 B팀 평회원도 가능.",
+                color: "text-amber-400",
+              },
+              {
+                icon: "💰",
+                title: "벌금 관리",
+                desc: "벌금 규칙 등록, 부과, 납부 확인까지. 미납 현황도 한눈에.",
+                color: "text-orange-400",
+              },
+              {
+                icon: "📱",
+                title: "초대 링크 한 줄",
+                desc: "링크 하나로 팀원 초대. 가입부터 팀 합류까지 원스텝.",
+                color: "text-indigo-400",
+              },
             ].map((item) => (
-              <Card key={item.title} className="group border-border/30 bg-card/50 transition-all hover:border-primary/20">
-                <CardContent className="p-6">
+              <Card
+                key={item.title}
+                className="group border-border/30 bg-card/50 transition-all hover:border-primary/20"
+              >
+                <CardContent className="p-5">
                   <div className="flex items-center gap-3">
-                    <span className="text-3xl">{item.icon}</span>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className={`text-sm font-bold ${item.color}`}>{item.title}</p>
-                        {item.tag && (
-                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold text-primary">
-                            {item.tag}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <span className="text-2xl">{item.icon}</span>
+                    <p className={`text-sm font-bold ${item.color}`}>
+                      {item.title}
+                    </p>
                   </div>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.desc}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    {item.desc}
+                  </p>
                 </CardContent>
               </Card>
             ))}
@@ -241,26 +469,72 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border/30">
-                  <th className="pb-4 text-left text-muted-foreground font-medium">기능</th>
-                  <th className="pb-4 text-center text-muted-foreground font-medium">카톡 단체방</th>
-                  <th className="pb-4 text-center text-muted-foreground font-medium">네이버 밴드</th>
-                  <th className="pb-4 text-center font-bold text-primary">PitchMaster</th>
+                  <th className="pb-4 text-left text-muted-foreground font-medium">
+                    기능
+                  </th>
+                  <th className="pb-4 text-center text-muted-foreground font-medium">
+                    카톡 단체방
+                  </th>
+                  <th className="pb-4 text-center text-muted-foreground font-medium">
+                    네이버 밴드
+                  </th>
+                  <th className="pb-4 text-center font-bold text-primary">
+                    PitchMaster
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/20">
                 {[
-                  { feature: "참석 투표", kakao: "1/2 수동 집계", band: "투표 기능", pm: "자동 집계 + 마감" },
-                  { feature: "회비 관리", kakao: "엑셀 / 메모", band: "없음", pm: "OCR 자동 입력" },
-                  { feature: "포메이션", kakao: "없음", band: "없음", pm: "자동 편성 + 전술판" },
-                  { feature: "경기 기록", kakao: "없음", band: "없음", pm: "골/어시/MVP 자동 집계" },
-                  { feature: "팀원 관리", kakao: "채팅방 = 팀원?", band: "멤버 관리", pm: "사전등록 + 자동연동" },
-                  { feature: "멀티팀", kakao: "방 여러 개", band: "밴드 여러 개", pm: "한 계정으로 팀 전환" },
+                  {
+                    feature: "참석 투표",
+                    kakao: "1/2 수동 집계",
+                    band: "투표 기능",
+                    pm: "자동 집계 + 마감",
+                  },
+                  {
+                    feature: "회비 관리",
+                    kakao: "엑셀 / 메모",
+                    band: "없음",
+                    pm: "OCR 자동 입력",
+                  },
+                  {
+                    feature: "포메이션",
+                    kakao: "없음",
+                    band: "없음",
+                    pm: "자동 편성 + 전술판",
+                  },
+                  {
+                    feature: "경기 기록",
+                    kakao: "없음",
+                    band: "없음",
+                    pm: "골/어시/MVP 자동 집계",
+                  },
+                  {
+                    feature: "팀원 관리",
+                    kakao: "채팅방 = 팀원?",
+                    band: "멤버 관리",
+                    pm: "사전등록 + 자동연동",
+                  },
+                  {
+                    feature: "멀티팀",
+                    kakao: "방 여러 개",
+                    band: "밴드 여러 개",
+                    pm: "한 계정으로 팀 전환",
+                  },
                 ].map((row) => (
                   <tr key={row.feature}>
-                    <td className="py-3 font-medium text-foreground">{row.feature}</td>
-                    <td className="py-3 text-center text-muted-foreground">{row.kakao}</td>
-                    <td className="py-3 text-center text-muted-foreground">{row.band}</td>
-                    <td className="py-3 text-center font-semibold text-primary">{row.pm}</td>
+                    <td className="py-3 font-medium text-foreground">
+                      {row.feature}
+                    </td>
+                    <td className="py-3 text-center text-muted-foreground">
+                      {row.kakao}
+                    </td>
+                    <td className="py-3 text-center text-muted-foreground">
+                      {row.band}
+                    </td>
+                    <td className="py-3 text-center font-semibold text-primary">
+                      {row.pm}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -301,10 +575,16 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             ].map((item) => (
               <div key={item.step} className="text-center">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-                  <span className="font-heading text-xl font-bold text-primary">{item.step}</span>
+                  <span className="font-heading text-xl font-bold text-primary">
+                    {item.step}
+                  </span>
                 </div>
-                <p className="mt-4 text-base font-bold text-foreground">{item.title}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{item.desc}</p>
+                <p className="mt-4 text-base font-bold text-foreground">
+                  {item.title}
+                </p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {item.desc}
+                </p>
               </div>
             ))}
           </div>
@@ -315,7 +595,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <section className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
         <div className="mx-auto max-w-3xl px-6 py-24 text-center">
           <h2 className="font-heading text-3xl font-bold md:text-4xl">
-            이번 주말 경기,<br />
+            이번 주 경기,
+            <br />
             <span className="text-primary">PitchMaster로 준비해보세요.</span>
           </h2>
           <p className="mt-4 text-muted-foreground">
