@@ -27,9 +27,9 @@ export default function LoginPage() {
           </h1>
 
           <p className="mx-auto max-w-md text-lg text-muted-foreground lg:mx-0">
-            경기 잡고, 출석 받고, 회비 정리하고, 누가 골 넣었는지까지.
+            일정관리, 투표, 회비자동정리, 경기기록, 자동 스쿼드 짜주는 기능까지
             <br className="hidden md:block" />
-            조기축구 팀 운영에 필요한 모든 것, 한곳에서 끝.
+            조기축구 운영에 관한 모든 것.
           </p>
 
           {/* 카카오 로그인 버튼 - 크게 강조 */}
