@@ -86,15 +86,14 @@ export default function RecordsClient({ userId, userRole }: { userId: string; us
     }
   }, [seasons, seasonId, activeSeason]);
 
-  // ── Fetch records for the selected season ──
+  // ── Fetch records for the selected season (시즌 없으면 전체) ──
   const {
     data: recordsPayload,
     loading: loadingRecords,
     refetch: refetchRecords,
   } = useApi<{ records: Record<string, unknown>[] }>(
-    `/api/records?seasonId=${seasonId}`,
+    seasonId ? `/api/records?seasonId=${seasonId}` : "/api/records",
     { records: [] },
-    { skip: !seasonId }
   );
 
   const stats: RecordStat[] = useMemo(
