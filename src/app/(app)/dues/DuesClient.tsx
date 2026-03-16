@@ -386,7 +386,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
 
       // 멤버 매칭
       const matchedMember = members.find(
-        (m) => name.includes(m.name) || m.name.includes(name)
+        (m) => m.name && (name.includes(m.name) || m.name.includes(name))
       );
 
       rows.push({
