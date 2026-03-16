@@ -310,14 +310,9 @@ export default function MatchDetailClient({
 
   /* ── Attending players for auto formation ── */
   const attendingPlayers = useMemo<AttendingPlayer[]>(() => {
-    const attendIds = new Set(
-      voteData.attendance
-        .filter((a) => a.vote === "ATTEND")
-        .map((a) => a.user_id),
-    );
     // 팀 멤버 중 참석 투표한 선수
     const members: AttendingPlayer[] = voteData.attendance
-      .filter((a) => a.vote === "ATTEND")
+      .filter((a) => a.vote === "ATTEND" && a.users != null)
       .map((a) => ({
         id: a.user_id,
         name: a.users.name,
@@ -350,11 +345,13 @@ export default function MatchDetailClient({
 
   const baseRoster = useMemo(
     () =>
-      membersData.members.map((m) => ({
-        id: m.users.id,
-        name: m.users.name,
-        role: (m.users.preferred_positions?.[0] ?? "MF") as DetailedPosition,
-      })),
+      membersData.members
+        .filter((m) => m.users != null)
+        .map((m) => ({
+          id: m.users.id,
+          name: m.users.name,
+          role: (m.users.preferred_positions?.[0] ?? "MF") as DetailedPosition,
+        })),
     [membersData.members],
   );
 
