@@ -219,7 +219,6 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
   const [bulkSaving, setBulkSaving] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrStatus, setOcrStatus] = useState("");
-  const [ocrRawText, setOcrRawText] = useState("");
 
   const loading = loadingDues || loadingSettings || loadingRules || loadingPenRecords || loadingMembers;
 
@@ -299,7 +298,6 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
         return;
       }
 
-      setOcrRawText(json.text);
       const parsed = parseTransactions(json.text);
       if (parsed.length > 0) {
         setBulkRows(parsed);
@@ -338,7 +336,6 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
       });
       const { data } = await worker.recognize(base64);
       await worker.terminate();
-      setOcrRawText(data.text);
       const parsed = parseTransactions(data.text);
       if (parsed.length > 0) {
         setBulkRows(parsed);
@@ -744,14 +741,6 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
                 <div className="max-h-[500px] overflow-auto rounded-lg border">
                   <img src={bulkImage} alt="거래내역 스크린샷" className="w-full" />
                 </div>
-              )}
-              {ocrRawText && (
-                <details className="text-xs">
-                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground">OCR 인식 원문 보기</summary>
-                  <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap rounded bg-secondary p-2 text-[10px] text-muted-foreground">
-                    {ocrRawText}
-                  </pre>
-                </details>
               )}
             </div>
 
