@@ -92,10 +92,10 @@ export async function joinTeam(formData: FormData) {
     return;
   }
 
-  // Check if already a member
+  // Check if already a member (with user_id linked)
   const { data: existing } = await db
     .from("team_members")
-    .select("id")
+    .select("id, role")
     .eq("team_id", team.id)
     .eq("user_id", session.user.id)
     .single();
@@ -104,14 +104,68 @@ export async function joinTeam(formData: FormData) {
     await updateSession({
       teamId: team.id,
       teamName: team.name,
-      teamRole: "MEMBER",
+      teamRole: existing.role ?? "MEMBER",
       inviteCode: team.invite_code,
     });
     redirect("/dashboard");
     return;
   }
 
-  // Determine status based on join mode
+  // 사전 등록 멤버 자동 연동: 전화번호 → 이름 순으로 매칭
+  const userPhone = session.user.phone?.replace(/\D/g, "") ?? "";
+  const userName = session.user.name ?? "";
+  let linkedMemberId: string | null = null;
+  let linkedRole: string = "MEMBER";
+
+  if (userPhone) {
+    const { data: phoneMatch } = await db
+      .from("team_members")
+      .select("id, role")
+      .eq("team_id", team.id)
+      .is("user_id", null)
+      .eq("pre_phone", userPhone)
+      .limit(1)
+      .single();
+
+    if (phoneMatch) {
+      linkedMemberId = phoneMatch.id;
+      linkedRole = phoneMatch.role;
+    }
+  }
+
+  if (!linkedMemberId && userName) {
+    const { data: nameMatches } = await db
+      .from("team_members")
+      .select("id, role")
+      .eq("team_id", team.id)
+      .is("user_id", null)
+      .eq("pre_name", userName);
+
+    if (nameMatches && nameMatches.length === 1) {
+      linkedMemberId = nameMatches[0].id;
+      linkedRole = nameMatches[0].role;
+    }
+    // 이름 중복(2명+)이면 자동 연동 안 함 → 회장이 수동 연동
+  }
+
+  if (linkedMemberId) {
+    // 사전 등록 row에 user_id 연결
+    await db
+      .from("team_members")
+      .update({ user_id: session.user.id, pre_name: null, pre_phone: null })
+      .eq("id", linkedMemberId);
+
+    await updateSession({
+      teamId: team.id,
+      teamName: team.name,
+      teamRole: linkedRole as "PRESIDENT" | "STAFF" | "MEMBER",
+      inviteCode: team.invite_code,
+    });
+    redirect("/dashboard");
+    return;
+  }
+
+  // 매칭 없으면 새 row 생성
   const status = team.join_mode === "MANUAL" ? "PENDING" : "ACTIVE";
 
   await db.from("team_members").insert({
