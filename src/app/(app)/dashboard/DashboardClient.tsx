@@ -94,8 +94,8 @@ function formatDue(iso: string) {
   }
 }
 
-export default function DashboardClient({ userId }: { userId: string }) {
-  const { data, loading } = useApi<DashboardData>("/api/dashboard", emptyData);
+export default function DashboardClient({ userId, initialData }: { userId: string; initialData?: DashboardData }) {
+  const { data, loading } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
 
   if (loading) {
     return (

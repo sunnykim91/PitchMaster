@@ -4,6 +4,7 @@ import { useRef, useMemo, useState } from "react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
+import { useToast } from "@/lib/ToastContext";
 import type { Role } from "@/lib/types";
 
 import { Button } from "@/components/ui/button";
@@ -124,37 +125,29 @@ type BulkRow = {
 export default function DuesClient({ userRole }: { userRole?: Role }) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
+  const { showToast } = useToast();
 
   /* ── API data fetching ── */
+  type DuesSummary = {
+    records: ApiDuesRecord[];
+    balance: number | null;
+    balanceUpdatedAt: string | null;
+    settings: ApiDuesSetting[];
+    penaltyRules: ApiPenaltyRule[];
+    penaltyRecords: ApiPenaltyRecord[];
+  };
   const {
-    data: duesData,
-    loading: loadingDues,
-    refetch: refetchDues,
-  } = useApi<{ records: ApiDuesRecord[] }>("/api/dues", { records: [] });
-
-  const {
-    data: balanceData,
-    loading: loadingBalance,
-    refetch: refetchBalance,
-  } = useApi<{ balance: number | null; updatedAt: string | null }>("/api/dues/balance", { balance: null, updatedAt: null });
-
-  const {
-    data: settingsData,
-    loading: loadingSettings,
-    refetch: refetchSettings,
-  } = useApi<{ settings: ApiDuesSetting[] }>("/api/dues-settings", { settings: [] });
-
-  const {
-    data: rulesData,
-    loading: loadingRules,
-    refetch: refetchRules,
-  } = useApi<{ rules: ApiPenaltyRule[] }>("/api/penalties?type=rules", { rules: [] });
-
-  const {
-    data: penRecordsData,
-    loading: loadingPenRecords,
-    refetch: refetchPenRecords,
-  } = useApi<{ records: ApiPenaltyRecord[] }>("/api/penalties?type=records", { records: [] });
+    data: summaryData,
+    loading: loadingSummary,
+    refetch: refetchSummary,
+  } = useApi<DuesSummary>("/api/dues/summary", {
+    records: [],
+    balance: null,
+    balanceUpdatedAt: null,
+    settings: [],
+    penaltyRules: [],
+    penaltyRecords: [],
+  });
 
   const {
     data: membersRaw,
@@ -164,7 +157,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
   /* ── Map API snake_case → camelCase ── */
   const records: DuesRecord[] = useMemo(
     () =>
-      duesData.records.map((r) => ({
+      summaryData.records.map((r) => ({
         id: r.id,
         type: r.type,
         amount: r.amount,
@@ -173,34 +166,34 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
         memberName: r.users?.name ?? undefined,
         method: undefined,
       })),
-    [duesData.records]
+    [summaryData.records]
   );
 
   const settings: DuesSetting[] = useMemo(
     () =>
-      settingsData.settings.map((s) => ({
+      summaryData.settings.map((s) => ({
         id: s.id,
         memberType: s.member_type,
         monthlyAmount: s.monthly_amount,
         description: s.description ?? "",
       })),
-    [settingsData.settings]
+    [summaryData.settings]
   );
 
   const penaltyRules: PenaltyRule[] = useMemo(
     () =>
-      rulesData.rules.map((r) => ({
+      summaryData.penaltyRules.map((r) => ({
         id: r.id,
         name: r.name,
         amount: r.amount,
         description: r.description ?? undefined,
       })),
-    [rulesData.rules]
+    [summaryData.penaltyRules]
   );
 
   const penaltyRecords: PenaltyRecord[] = useMemo(
     () =>
-      penRecordsData.records.map((r) => ({
+      summaryData.penaltyRecords.map((r) => ({
         id: r.id,
         ruleId: r.rule_id,
         ruleName: r.rule.name,
@@ -211,7 +204,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
         isPaid: r.is_paid,
         note: r.note ?? undefined,
       })),
-    [penRecordsData.records]
+    [summaryData.penaltyRecords]
   );
 
   const members: ApiMember[] = useMemo(
@@ -249,7 +242,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
   const [editingRecord, setEditingRecord] = useState<DuesRecord | null>(null);
   const bulkSectionRef = useRef<HTMLDivElement>(null);
 
-  const loading = loadingDues || loadingSettings || loadingRules || loadingPenRecords || loadingMembers || loadingBalance;
+  const loading = loadingSummary || loadingMembers;
 
   /** 월별 필터 적용된 레코드 */
   const monthRecords = useMemo(() => {
@@ -280,7 +273,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
       screenshotUrl: screenshotUrlValue,
     });
     if (!error) {
-      await refetchDues();
+      await refetchSummary();
       setIsFormOpen(false);
       setScreenshotUrl("");
     }
@@ -297,7 +290,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
       description,
     });
     if (!error) {
-      await refetchSettings();
+      await refetchSummary();
       setIsSettingOpen(false);
     }
   }
@@ -335,7 +328,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
       console.log("Parsed transactions:", parsed, "Balance:", latestBalance);
       if (latestBalance !== null) {
         await apiMutate("/api/dues/balance", "POST", { balance: latestBalance });
-        await refetchBalance();
+        await refetchSummary();
       }
 
       // 기존 DB 레코드와 비교하여 중복 제거
@@ -513,19 +506,21 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
       }
     }
     setBulkSaving(false);
-    await refetchDues();
+    await refetchSummary();
     setIsBulkMode(false);
     setBulkRows([{ date: "", time: "", type: "INCOME", amount: "", description: "", memberName: "" }]);
     setBulkImage(null);
     if (skipped > 0) {
-      alert(`${saved}건 저장, ${skipped}건 중복 스킵`);
+      showToast(`${saved}건 저장, ${skipped}건 중복 스킵`, "info");
+    } else {
+      showToast(`${saved}건 저장되었습니다.`);
     }
   }
 
   async function handleDeleteRecord(id: string) {
     if (!confirm("이 입출금 내역을 삭제하시겠습니까?")) return;
     const { error } = await apiMutate(`/api/dues?id=${id}`, "DELETE");
-    if (!error) await refetchDues();
+    if (!error) await refetchSummary();
   }
 
   async function handleUpdateRecord(formData: FormData) {
@@ -547,7 +542,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
       recordedTime: recordedTime || undefined,
     });
     if (!error) {
-      await refetchDues();
+      await refetchSummary();
       setEditingRecord(null);
     }
   }
@@ -572,7 +567,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
       description,
     });
     if (!error) {
-      await refetchRules();
+      await refetchSummary();
       setIsPenaltyRuleOpen(false);
     }
   }
@@ -580,7 +575,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
   async function handleDeletePenaltyRule(ruleId: string) {
     const { error } = await apiMutate(`/api/penalties?id=${ruleId}&type=rule`, "DELETE");
     if (!error) {
-      await refetchRules();
+      await refetchSummary();
     }
   }
 
@@ -600,7 +595,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
       note: String(formData.get("penaltyNote") || "") || undefined,
     });
     if (!error) {
-      await refetchPenRecords();
+      await refetchSummary();
       setIsPenaltyFormOpen(false);
     }
   }
@@ -614,14 +609,14 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
       isPaid: !record.isPaid,
     });
     if (!error) {
-      await refetchPenRecords();
+      await refetchSummary();
     }
   }
 
   async function handleDeletePenaltyRecord(recordId: string) {
     const { error } = await apiMutate(`/api/penalties?id=${recordId}&type=record`, "DELETE");
     if (!error) {
-      await refetchPenRecords();
+      await refetchSummary();
     }
   }
 
@@ -681,14 +676,14 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
             <div>
               <p className="text-xs text-blue-400/80">통장 잔고</p>
               <p className="mt-1 font-heading text-3xl font-bold text-blue-300">
-                {balanceData.balance !== null
-                  ? `${balanceData.balance.toLocaleString()}원`
+                {summaryData.balance !== null
+                  ? `${summaryData.balance.toLocaleString()}원`
                   : "스크린샷을 업로드하면 자동 반영됩니다"}
               </p>
             </div>
-            {balanceData.updatedAt && (
+            {summaryData.balanceUpdatedAt && (
               <p className="text-[10px] text-blue-400/50">
-                {new Date(balanceData.updatedAt).toLocaleString("ko-KR")} 기준
+                {new Date(summaryData.balanceUpdatedAt).toLocaleString("ko-KR")} 기준
               </p>
             )}
           </div>
@@ -809,12 +804,22 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
           <p className="mt-1 text-xs text-muted-foreground">
             은행 앱 캡쳐를 올리면 자동으로 거래 내역을 인식합니다. 인식 결과를 확인 후 저장하세요.
           </p>
-          {ocrStatus && (
+          {ocrLoading && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+              <div className="flex flex-col items-center gap-3 rounded-2xl bg-background p-8 shadow-2xl">
+                <span className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-blue-400" />
+                <p className="text-base font-semibold text-foreground">OCR 분석 중...</p>
+                <p className="text-sm text-muted-foreground">은행 앱 스크린샷을 인식하고 있습니다.</p>
+              </div>
+            </div>
+          )}
+          {!ocrLoading && ocrStatus && (
             <div className={cn(
               "mt-2 rounded-lg px-3 py-2 text-xs font-medium",
-              ocrLoading ? "bg-blue-500/10 text-blue-400" : "bg-amber-500/10 text-amber-400"
+              ocrStatus.includes("오류") || ocrStatus.includes("못했") || ocrStatus.includes("실패")
+                ? "bg-destructive/10 text-destructive"
+                : "bg-emerald-500/10 text-emerald-400"
             )}>
-              {ocrLoading && <span className="mr-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />}
               {ocrStatus}
             </div>
           )}

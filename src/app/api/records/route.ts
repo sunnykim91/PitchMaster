@@ -42,60 +42,62 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Get goals, assists, mvp for each member (연동 + 미연동)
-  const stats = await Promise.all(
-    members.map(async (m: any) => {
-      const userId = m.user_id;
-      const memberId = m.id; // team_members.id
-      const user = Array.isArray(m.users) ? m.users[0] : m.users;
-      const name = user?.name ?? m.pre_name ?? "";
+  // Bulk 쿼리 4개로 전체 데이터 한번에 조회 (N+1 → 6회 고정)
+  const [goalsRes, assistsRes, mvpRes, attendanceRes] = await Promise.all([
+    db.from("match_goals").select("scorer_id").in("match_id", matchIds).eq("is_own_goal", false),
+    db.from("match_goals").select("assist_id").in("match_id", matchIds).not("assist_id", "is", null),
+    db.from("match_mvp_votes").select("candidate_id").in("match_id", matchIds),
+    db.from("match_attendance").select("user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
+  ]);
 
-      // scorer_id는 user_id 또는 team_members.id일 수 있음
-      const lookupIds = userId ? [userId, memberId] : [memberId];
+  // 카운트 맵 빌드
+  const goalMap = new Map<string, number>();
+  for (const row of goalsRes.data ?? []) {
+    if (row.scorer_id) goalMap.set(row.scorer_id, (goalMap.get(row.scorer_id) ?? 0) + 1);
+  }
 
-      const { count: goals } = await db
-        .from("match_goals")
-        .select("*", { count: "exact", head: true })
-        .in("match_id", matchIds)
-        .in("scorer_id", lookupIds)
-        .eq("is_own_goal", false);
+  const assistMap = new Map<string, number>();
+  for (const row of assistsRes.data ?? []) {
+    if (row.assist_id) assistMap.set(row.assist_id, (assistMap.get(row.assist_id) ?? 0) + 1);
+  }
 
-      const { count: assists } = await db
-        .from("match_goals")
-        .select("*", { count: "exact", head: true })
-        .in("match_id", matchIds)
-        .in("assist_id", lookupIds);
+  const mvpMap = new Map<string, number>();
+  for (const row of mvpRes.data ?? []) {
+    if (row.candidate_id) mvpMap.set(row.candidate_id, (mvpMap.get(row.candidate_id) ?? 0) + 1);
+  }
 
-      const { count: mvp } = await db
-        .from("match_mvp_votes")
-        .select("*", { count: "exact", head: true })
-        .in("match_id", matchIds)
-        .in("candidate_id", lookupIds);
+  const attendByUserId = new Map<string, number>();
+  const attendByMemberId = new Map<string, number>();
+  for (const row of attendanceRes.data ?? []) {
+    if (row.user_id) attendByUserId.set(row.user_id, (attendByUserId.get(row.user_id) ?? 0) + 1);
+    if (row.member_id) attendByMemberId.set(row.member_id, (attendByMemberId.get(row.member_id) ?? 0) + 1);
+  }
 
-      // 참석: user_id 또는 member_id로 조회
-      let attended = 0;
-      if (userId) {
-        const { count } = await db.from("match_attendance").select("*", { count: "exact", head: true })
-          .in("match_id", matchIds).eq("user_id", userId).eq("vote", "ATTEND");
-        attended = count ?? 0;
-      }
-      if (attended === 0) {
-        const { count } = await db.from("match_attendance").select("*", { count: "exact", head: true })
-          .in("match_id", matchIds).eq("member_id", memberId).eq("vote", "ATTEND");
-        attended = count ?? 0;
-      }
+  // 멤버별 집계 (동기, O(1) 맵 조회)
+  const stats = members.map((m: any) => {
+    const userId = m.user_id;
+    const memberId = m.id;
+    const user = Array.isArray(m.users) ? m.users[0] : m.users;
+    const name = user?.name ?? m.pre_name ?? "";
+    const lookupIds = userId ? [userId, memberId] : [memberId];
 
-      return {
-        memberId: userId ?? memberId,
-        name,
-        goals: goals ?? 0,
-        assists: assists ?? 0,
-        mvp: mvp ?? 0,
-        attendanceRate: matchIds.length > 0 ? attended / matchIds.length : 0,
-        preferredPositions: user?.preferred_positions ?? [],
-      };
-    })
-  );
+    const goals = lookupIds.reduce((sum, id) => sum + (goalMap.get(id) ?? 0), 0);
+    const assists = lookupIds.reduce((sum, id) => sum + (assistMap.get(id) ?? 0), 0);
+    const mvp = lookupIds.reduce((sum, id) => sum + (mvpMap.get(id) ?? 0), 0);
+    const attended = userId
+      ? (attendByUserId.get(userId) ?? 0) || (attendByMemberId.get(memberId) ?? 0)
+      : (attendByMemberId.get(memberId) ?? 0);
+
+    return {
+      memberId: userId ?? memberId,
+      name,
+      goals,
+      assists,
+      mvp,
+      attendanceRate: matchIds.length > 0 ? attended / matchIds.length : 0,
+      preferredPositions: user?.preferred_positions ?? [],
+    };
+  });
 
   return apiSuccess({ records: stats });
 }

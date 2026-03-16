@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
+import { useToast } from "@/lib/ToastContext";
 import type { Role } from "@/lib/types";
 import { cn, formatTime, formatDateTime } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
 type AttendanceVote = "ATTEND" | "ABSENT" | "MAYBE";
@@ -76,16 +78,17 @@ function mapDbMatchToMatch(db: DbMatch): Match {
   };
 }
 
-export default function MatchesClient({ userId, userRole }: { userId: string; userRole?: Role }) {
+export default function MatchesClient({ userId, userRole, initialMatches }: { userId: string; userRole?: Role; initialMatches?: { matches: DbMatch[] } }) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
+  const { showToast } = useToast();
 
   const {
     data: matchesData,
     loading: matchesLoading,
     error: matchesError,
     refetch: refetchMatches,
-  } = useApi<{ matches: DbMatch[] }>("/api/matches", { matches: [] });
+  } = useApi<{ matches: DbMatch[] }>("/api/matches", initialMatches ?? { matches: [] }, { skip: !!initialMatches });
 
   const {
     data: attendanceData,
@@ -145,6 +148,9 @@ export default function MatchesClient({ userId, userRole }: { userId: string; us
     if (!error) {
       await refetchMatches();
       setIsOpen(false);
+      showToast("경기 일정이 등록되었습니다.");
+    } else {
+      showToast(error, "error");
     }
   }
 
@@ -152,14 +158,44 @@ export default function MatchesClient({ userId, userRole }: { userId: string; us
     const { error } = await apiMutate("/api/attendance", "POST", { matchId, vote });
     if (!error) {
       await refetchAttendance();
+      showToast("참석 의사를 저장했습니다.");
+    } else {
+      showToast(error, "error");
     }
   }
 
   if (matchesLoading || attendanceLoading) {
     return (
-      <Card className="rounded-md p-6">
-        <CardContent className="p-0">불러오는 중...</CardContent>
-      </Card>
+      <div className="grid gap-5">
+        <Card className="rounded-md">
+          <CardHeader>
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="mt-1 h-7 w-32" />
+          </CardHeader>
+        </Card>
+        <div className="grid gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i} className="rounded-md">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-10 rounded-full" />
+                    <Skeleton className="h-6 w-44" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <Skeleton className="h-8 w-20 rounded-md" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3 md:grid-cols-[1.2fr_1fr]">
+                  <Skeleton className="h-16 rounded-md" />
+                  <Skeleton className="h-16 rounded-md" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
     );
   }
 
