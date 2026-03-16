@@ -10,11 +10,9 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
 
   if (!session) redirect(`/login${codeParam}`);
   if (!session.user.isProfileComplete) redirect(`/onboarding${codeParam}`);
-  if (session.user.teamId) redirect("/dashboard");
-
   return (
     <Suspense>
-      <TeamClient />
+      <TeamClient hasExistingTeam={!!session.user.teamId} />
     </Suspense>
   );
 }

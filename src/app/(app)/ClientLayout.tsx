@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import SidebarNav from "@/components/SidebarNav";
 import { ViewAsRoleProvider, useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { Check, Copy, Link2, Menu } from "lucide-react";
+import { Check, Copy, Link2, Menu, ChevronDown, Plus } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
 
 type ClientLayoutProps = {
@@ -28,12 +28,57 @@ export default function ClientLayout({ session, children }: ClientLayoutProps) {
   );
 }
 
+type TeamInfo = {
+  id: string;
+  name: string;
+  inviteCode: string;
+  role: Role;
+  isCurrent: boolean;
+};
+
 function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const { viewAsRole, setViewAsRole } = useViewAsRole();
   const canSwitchRole = session.user.name === "김선휘";
   const [copied, setCopied] = useState(false);
+
+  // 팀 스위처
+  const [teams, setTeams] = useState<TeamInfo[]>([]);
+  const [teamMenuOpen, setTeamMenuOpen] = useState(false);
+  const [switching, setSwitching] = useState(false);
+
+  const fetchTeams = useCallback(async () => {
+    try {
+      const res = await fetch("/api/teams/my-teams");
+      const data = await res.json();
+      if (data.teams) setTeams(data.teams);
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    fetchTeams();
+  }, [fetchTeams]);
+
+  async function handleSwitchTeam(teamId: string) {
+    if (switching) return;
+    setSwitching(true);
+    try {
+      const res = await fetch("/api/teams/my-teams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamId }),
+      });
+      if (res.ok) {
+        setTeamMenuOpen(false);
+        router.refresh();
+        window.location.href = "/dashboard";
+      }
+    } finally {
+      setSwitching(false);
+    }
+  }
 
   useEffect(() => {
     setIsOpen(false);
@@ -64,7 +109,43 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
     <>
       <div className="space-y-1">
         <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">PitchMaster</p>
-        <h1 className="font-heading text-xl font-bold uppercase">{session.user.teamName}</h1>
+        <div className="relative">
+          <button
+            type="button"
+            className="flex items-center gap-1 font-heading text-xl font-bold uppercase hover:text-primary transition-colors"
+            onClick={() => teams.length > 1 ? setTeamMenuOpen(!teamMenuOpen) : undefined}
+          >
+            {session.user.teamName}
+            {teams.length > 1 && <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+          </button>
+          {teamMenuOpen && teams.length > 1 && (
+            <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-lg border bg-popover p-1 shadow-lg">
+              {teams.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  disabled={t.isCurrent || switching}
+                  className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-accent disabled:opacity-50 transition-colors"
+                  onClick={() => handleSwitchTeam(t.id)}
+                >
+                  <span className={t.isCurrent ? "font-bold text-primary" : ""}>{t.name}</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {t.role === "PRESIDENT" ? "회장" : t.role === "STAFF" ? "운영진" : "평회원"}
+                  </span>
+                </button>
+              ))}
+              <Separator className="my-1" />
+              <Link
+                href="/team"
+                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
+                onClick={() => setTeamMenuOpen(false)}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                새 팀 추가
+              </Link>
+            </div>
+          )}
+        </div>
         <p className="text-xs text-muted-foreground">
           {viewAsRole ? (
             <span className="text-amber-400">{roleLabel} 시점 체험 중</span>
@@ -139,7 +220,14 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             <CardContent className="flex items-center justify-between p-4">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">PitchMaster</p>
-                <p className="text-lg font-bold">{session.user.teamName}</p>
+                <p className="text-lg font-bold flex items-center gap-1">
+                  {session.user.teamName}
+                  {teams.length > 1 && (
+                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0">
+                      {teams.length}팀
+                    </Badge>
+                  )}
+                </p>
               </div>
               <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>

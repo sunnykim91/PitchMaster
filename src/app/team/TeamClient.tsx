@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createTeam, joinTeam } from "@/app/team/actions";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function TeamClient() {
+export default function TeamClient({ hasExistingTeam = false }: { hasExistingTeam?: boolean }) {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
   const pending = searchParams.get("pending");
@@ -55,6 +56,17 @@ export default function TeamClient() {
   return (
     <main className="min-h-screen px-6 py-16">
       <div className="mx-auto max-w-5xl">
+        {hasExistingTeam && (
+          <Card className="mb-6 border-primary/20 bg-primary/5">
+            <CardContent className="flex items-center justify-between p-4">
+              <p className="text-sm text-muted-foreground">이미 소속된 팀이 있습니다. 추가로 팀을 만들거나 다른 팀에 가입할 수 있습니다.</p>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/dashboard">대시보드로 돌아가기</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {errorMessage && (
           <Card className="mb-6 border-destructive/30 bg-destructive/5">
             <CardContent className="p-4 text-sm font-semibold text-destructive">
