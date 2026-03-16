@@ -513,6 +513,12 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
     }
   }
 
+  async function handleDeleteRecord(id: string) {
+    if (!confirm("이 입출금 내역을 삭제하시겠습니까?")) return;
+    const { error } = await apiMutate(`/api/dues?id=${id}`, "DELETE");
+    if (!error) await refetchDues();
+  }
+
   function handleScreenshotChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (file) {
@@ -932,7 +938,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
               key={record.id}
               className="flex flex-wrap items-center justify-between gap-3 border-0 bg-secondary px-4 py-3"
             >
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground">
                   {record.description}
                 </p>
@@ -942,18 +948,29 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
                   {record.method ? ` · ${record.method}` : ""}
                 </p>
               </div>
-              <Badge
-                variant="secondary"
-                className={cn(
-                  "rounded-lg px-3 py-1 text-xs font-bold",
-                  record.type === "INCOME"
-                    ? "bg-emerald-500/15 text-emerald-400"
-                    : "bg-rose-500/15 text-rose-400"
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="secondary"
+                  className={cn(
+                    "rounded-lg px-3 py-1 text-xs font-bold",
+                    record.type === "INCOME"
+                      ? "bg-emerald-500/15 text-emerald-400"
+                      : "bg-rose-500/15 text-rose-400"
+                  )}
+                >
+                  {record.type === "INCOME" ? "+" : "-"}
+                  {record.amount.toLocaleString()}원
+                </Badge>
+                {isStaffOrAbove(role) && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteRecord(record.id)}
+                    className="text-xs text-destructive/70 hover:text-destructive transition"
+                  >
+                    삭제
+                  </button>
                 )}
-              >
-                {record.type === "INCOME" ? "+" : "-"}
-                {record.amount.toLocaleString()}원
-              </Badge>
+              </div>
             </Card>
           ))}
         </div>

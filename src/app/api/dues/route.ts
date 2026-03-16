@@ -77,3 +77,61 @@ export async function POST(request: NextRequest) {
   if (error) return apiError(error.message);
   return apiSuccess(data, 201);
 }
+
+export async function PUT(request: NextRequest) {
+  const ctx = await getApiContext();
+  if (ctx instanceof NextResponse) return ctx;
+
+  const roleCheck = requireRole(ctx, PERMISSIONS.DUES_RECORD_ADD);
+  if (roleCheck) return roleCheck;
+
+  const body = await request.json();
+  const { id, type, amount, description, userId, recordedAt, recordedTime } = body;
+  if (!id) return apiError("id required", 400);
+
+  const db = getSupabaseAdmin();
+  if (!db) return apiError("Database not available", 503);
+
+  const updates: Record<string, unknown> = {};
+  if (type) updates.type = type;
+  if (amount !== undefined) updates.amount = amount;
+  if (description !== undefined) updates.description = description;
+  if (userId !== undefined) updates.user_id = userId || null;
+  if (recordedAt) {
+    updates.recorded_at = `${recordedAt}T${recordedTime || "00:00"}:00`;
+  }
+
+  const { data, error } = await db
+    .from("dues_records")
+    .update(updates)
+    .eq("id", id)
+    .eq("team_id", ctx.teamId)
+    .select()
+    .single();
+
+  if (error) return apiError(error.message);
+  return apiSuccess(data);
+}
+
+export async function DELETE(request: NextRequest) {
+  const ctx = await getApiContext();
+  if (ctx instanceof NextResponse) return ctx;
+
+  const roleCheck = requireRole(ctx, PERMISSIONS.DUES_RECORD_ADD);
+  if (roleCheck) return roleCheck;
+
+  const id = request.nextUrl.searchParams.get("id");
+  if (!id) return apiError("id required", 400);
+
+  const db = getSupabaseAdmin();
+  if (!db) return apiError("Database not available", 503);
+
+  const { error } = await db
+    .from("dues_records")
+    .delete()
+    .eq("id", id)
+    .eq("team_id", ctx.teamId);
+
+  if (error) return apiError(error.message);
+  return apiSuccess({ deleted: true });
+}
