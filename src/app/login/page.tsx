@@ -34,7 +34,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             <p className="text-lg text-muted-foreground">
               일정관리 · 투표 · 회비자동정리 · 경기기록
               <br />
-              자동으로 스쿼드 짜주는 기능까지
+              자동으로 스쿼드 짜주는 기능까지ㅇ
             </p>
             <p className="text-lg font-semibold text-foreground">
               조기축구 운영에 관한 모든 것.

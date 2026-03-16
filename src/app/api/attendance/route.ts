@@ -39,20 +39,35 @@ export async function POST(request: NextRequest) {
   if (ctx instanceof NextResponse) return ctx;
 
   const body = await request.json();
-  const { matchId, vote } = body;
+  const { matchId, vote, targetUserId } = body;
   if (!matchId || !vote) return apiError("matchId and vote required");
 
-  // Check vote deadline
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  const { data: match } = await db
-    .from("matches")
-    .select("vote_deadline")
-    .eq("id", matchId)
-    .single();
-  if (match?.vote_deadline && new Date(match.vote_deadline) < new Date()) {
-    return apiError("투표 마감 시간이 지났습니다", 400);
+  // 대리 투표: 운영진 이상만 가능
+  let voteUserId = ctx.userId;
+  if (targetUserId && targetUserId !== ctx.userId) {
+    const { data: member } = await db
+      .from("team_members")
+      .select("role")
+      .eq("team_id", ctx.teamId)
+      .eq("user_id", ctx.userId)
+      .single();
+    if (!member || (member.role !== "PRESIDENT" && member.role !== "STAFF")) {
+      return apiError("권한이 없습니다", 403);
+    }
+    voteUserId = targetUserId;
+  } else {
+    // 본인 투표: 마감시간 체크
+    const { data: match } = await db
+      .from("matches")
+      .select("vote_deadline")
+      .eq("id", matchId)
+      .single();
+    if (match?.vote_deadline && new Date(match.vote_deadline) < new Date()) {
+      return apiError("투표 마감 시간이 지났습니다", 400);
+    }
   }
 
   const { data, error } = await db
@@ -60,7 +75,7 @@ export async function POST(request: NextRequest) {
     .upsert(
       {
         match_id: matchId,
-        user_id: ctx.userId,
+        user_id: voteUserId,
         vote,
         voted_at: new Date().toISOString(),
       },

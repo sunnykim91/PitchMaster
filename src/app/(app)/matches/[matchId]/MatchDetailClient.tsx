@@ -272,6 +272,7 @@ export default function MatchDetailClient({
   const {
     data: voteData,
     loading: voteLoading,
+    refetch: refetchVote,
   } = useApi<{ attendance: AttendanceVoteRow[] }>(
     `/api/attendance?matchId=${matchId}`,
     { attendance: [] },
@@ -322,7 +323,7 @@ export default function MatchDetailClient({
     const guestPlayers: AttendingPlayer[] = guests.map((g) => ({
       id: g.id,
       name: g.name,
-      preferredPosition: (g.position ?? "CAM") as AttendingPlayer["preferredPosition"],
+      preferredPosition: ((g.position?.split(",")[0]) || "CAM") as AttendingPlayer["preferredPosition"],
     }));
     return [...members, ...guestPlayers];
   }, [voteData.attendance, guests]);
@@ -355,12 +356,29 @@ export default function MatchDetailClient({
     [membersData.members],
   );
 
-  /** 팀 멤버 + 용병 합친 전체 로스터 */
+  /** 참석 투표한 멤버 ID 셋 */
+  const attendingIds = useMemo(
+    () => new Set(voteData.attendance.filter((a) => a.vote === "ATTEND").map((a) => a.user_id)),
+    [voteData.attendance],
+  );
+
+  /** 전술판 roster: 참석 멤버 + 용병 */
   const roster = useMemo(() => {
+    const attendingMembers = baseRoster.filter((m) => attendingIds.has(m.id));
     const guestRoster = guests.map((g) => ({
       id: g.id,
       name: g.name,
-      role: (g.position ?? "MF") as DetailedPosition,
+      role: ((g.position?.split(",")[0]) || "MF") as DetailedPosition,
+    }));
+    return [...attendingMembers, ...guestRoster];
+  }, [baseRoster, attendingIds, guests]);
+
+  /** 전체 로스터 (MVP 투표, 출석 체크용) */
+  const fullRoster = useMemo(() => {
+    const guestRoster = guests.map((g) => ({
+      id: g.id,
+      name: g.name,
+      role: ((g.position?.split(",")[0]) || "MF") as DetailedPosition,
     }));
     return [...baseRoster, ...guestRoster];
   }, [baseRoster, guests]);
@@ -448,6 +466,22 @@ export default function MatchDetailClient({
     await refetchMvp();
   }
 
+  /* ── 참석투표 대리 관리 (운영진 이상) ── */
+
+  async function handleProxyVote(targetUserId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
+    await apiMutate("/api/attendance", "POST", { matchId, vote, targetUserId });
+    await refetchVote();
+  }
+
+  /** 멤버별 현재 참석투표 상태 */
+  const memberVoteMap = useMemo(() => {
+    const map: Record<string, "ATTEND" | "ABSENT" | "MAYBE"> = {};
+    for (const a of voteData.attendance) {
+      map[a.user_id] = a.vote;
+    }
+    return map;
+  }, [voteData.attendance]);
+
   /* ── Attendance handler ── */
 
   async function handleAttendance(playerId: string, status: "PRESENT" | "ABSENT" | "LATE") {
@@ -465,7 +499,8 @@ export default function MatchDetailClient({
   async function handleAddGuest(formData: FormData) {
     const name = String(formData.get("guestName") || "").trim();
     if (!name) return;
-    const position = String(formData.get("guestPosition") || "") || undefined;
+    const positions = formData.getAll("guestPositions").map(String).filter(Boolean);
+    const position = positions.length > 0 ? positions.join(",") : undefined;
     const phone = String(formData.get("guestPhone") || "") || undefined;
     const note = String(formData.get("guestNote") || "") || undefined;
 
@@ -540,6 +575,51 @@ export default function MatchDetailClient({
 
   return (
     <div className="grid gap-5">
+      {/* ── 참석투표 관리 (운영진 이상) ── */}
+      {canManage && (
+        <Card>
+          <CardHeader>
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-400">
+              Attendance
+            </p>
+            <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+              참석 투표 관리
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">멤버별 참석/불참/미정을 대리 설정할 수 있습니다.</p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {baseRoster.map((member) => {
+                const currentVote = memberVoteMap[member.id];
+                return (
+                  <div key={member.id} className="flex items-center justify-between rounded-lg bg-secondary px-4 py-3">
+                    <span className="text-sm font-semibold">{member.name}</span>
+                    <div className="flex gap-1">
+                      {([
+                        { value: "ATTEND" as const, label: "참석", variant: "success" as const },
+                        { value: "MAYBE" as const, label: "미정", variant: "warning" as const },
+                        { value: "ABSENT" as const, label: "불참", variant: "destructive" as const },
+                      ]).map((opt) => (
+                        <Button
+                          key={opt.value}
+                          type="button"
+                          variant={currentVote === opt.value ? opt.variant : "outline"}
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => handleProxyVote(member.id, opt.value)}
+                        >
+                          {opt.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* ── 용병(게스트) 관리 (운영진 이상) ── */}
       {canManage && (
       <Card>
@@ -576,22 +656,18 @@ export default function MatchDetailClient({
                       </Label>
                       <Input name="guestName" required placeholder="홍길동" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 md:col-span-2">
                       <Label className="text-xs font-semibold text-muted-foreground">
-                        포지션
+                        선호 포지션 (복수 선택)
                       </Label>
-                      <NativeSelect name="guestPosition">
-                        <option value="">미정</option>
-                        <option value="GK">GK · 골키퍼</option>
-                        <option value="CB">CB · 센터백</option>
-                        <option value="LB">LB · 좌측 윙백</option>
-                        <option value="RB">RB · 우측 윙백</option>
-                        <option value="CDM">CDM · 수비형 미드필더</option>
-                        <option value="CAM">CAM · 공격형 미드필더</option>
-                        <option value="LW">LW · 좌측 윙어</option>
-                        <option value="RW">RW · 우측 윙어</option>
-                        <option value="ST">ST · 스트라이커</option>
-                      </NativeSelect>
+                      <div className="flex flex-wrap gap-2">
+                        {(["GK","CB","LB","RB","CDM","CAM","LW","RW","ST"] as const).map((pos) => (
+                          <label key={pos} className="flex items-center gap-1 text-xs">
+                            <input type="checkbox" name="guestPositions" value={pos} className="rounded" />
+                            {pos}
+                          </label>
+                        ))}
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-semibold text-muted-foreground">
@@ -905,7 +981,7 @@ export default function MatchDetailClient({
 
             <CardContent>
               <div className="space-y-2">
-                {roster.map((player) => (
+                {fullRoster.map((player) => (
                   <Button
                     key={player.id}
                     type="button"
@@ -945,7 +1021,7 @@ export default function MatchDetailClient({
 
               <CardContent>
                 <div className="space-y-2">
-                  {roster.map((player) => {
+                  {fullRoster.map((player) => {
                     const status = attendance[player.id];
                     return (
                       <Card
