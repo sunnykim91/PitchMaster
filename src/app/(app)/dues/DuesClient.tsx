@@ -257,12 +257,6 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
     return records.filter((r) => r.recordedAt.startsWith(monthFilter));
   }, [records, monthFilter]);
 
-  const totals = useMemo(() => {
-    const income = monthRecords.filter((item) => item.type === "INCOME").reduce((sum, item) => sum + item.amount, 0);
-    const expense = monthRecords.filter((item) => item.type === "EXPENSE").reduce((sum, item) => sum + item.amount, 0);
-    return { income, expense, balance: income - expense };
-  }, [monthRecords]);
-
   const filteredRecords = useMemo(() => {
     let list = filter === "ALL" ? monthRecords : monthRecords.filter((item) => item.type === filter);
     if (memberFilter.trim()) {
@@ -682,44 +676,23 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
           )}
         </div>
 
-        {balanceData.balance !== null && (
-          <Card className="mt-5 border-blue-500/20 bg-blue-500/10 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-blue-400/80">실제 통장 잔고</p>
-                <p className="mt-1 font-heading text-2xl font-bold text-blue-300">
-                  {balanceData.balance.toLocaleString()}원
-                </p>
-              </div>
-              {balanceData.updatedAt && (
-                <p className="text-[10px] text-blue-400/50">
-                  {new Date(balanceData.updatedAt).toLocaleString("ko-KR")} 기준
-                </p>
-              )}
+        <Card className="mt-5 border-blue-500/20 bg-blue-500/10 p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-blue-400/80">통장 잔고</p>
+              <p className="mt-1 font-heading text-3xl font-bold text-blue-300">
+                {balanceData.balance !== null
+                  ? `${balanceData.balance.toLocaleString()}원`
+                  : "스크린샷을 업로드하면 자동 반영됩니다"}
+              </p>
             </div>
-          </Card>
-        )}
-
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
-          <Card className="border-0 bg-emerald-500/10 p-4">
-            <p className="text-xs text-emerald-400/80">총 수입</p>
-            <p className="mt-1 font-heading text-2xl font-bold text-emerald-400">
-              {totals.income.toLocaleString()}원
-            </p>
-          </Card>
-          <Card className="border-0 bg-rose-500/10 p-4">
-            <p className="text-xs text-rose-400/80">총 지출</p>
-            <p className="mt-1 font-heading text-2xl font-bold text-rose-400">
-              {totals.expense.toLocaleString()}원
-            </p>
-          </Card>
-          <Card className="border-amber-500/20 bg-amber-500/10 p-4">
-            <p className="text-xs text-amber-400/80">잔액</p>
-            <p className="mt-1 font-heading text-2xl font-bold text-amber-300">
-              {totals.balance.toLocaleString()}원
-            </p>
-          </Card>
-        </div>
+            {balanceData.updatedAt && (
+              <p className="text-[10px] text-blue-400/50">
+                {new Date(balanceData.updatedAt).toLocaleString("ko-KR")} 기준
+              </p>
+            )}
+          </div>
+        </Card>
       </Card>
 
       {/* ── Section 2: 입출금 기록 입력 (collapsible, staff only) ── */}
