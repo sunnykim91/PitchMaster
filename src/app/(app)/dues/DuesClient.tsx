@@ -389,17 +389,20 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
       const name = txMatch[1].trim();
       const amountStr = txMatch[2];
 
+      // 이름이 시간 패턴(HH:MM)이면 잔액줄이므로 스킵
+      if (name.match(/^\d{1,2}:\d{2}$/)) continue;
+
+      // 이름에 한글이나 영문이 없으면 스킵 (숫자만 있는 줄 = 헤더/잔액)
+      if (!name.match(/[\p{L}]/u)) continue;
+
       // 부호 추출
       const isExpense = amountStr.startsWith("-");
       const rawAmount = amountStr.replace(/[^0-9]/g, "");
       const num = parseInt(rawAmount, 10);
       if (!num) continue;
 
-      // 잔액 판별: 50만원 이상이면 잔액줄로 간주 (시간+잔액)
+      // 잔액 판별: 50만원 이상이면 잔액줄로 간주
       if (num >= 500000) continue;
-
-      // 이름이 시간 패턴(HH:MM)이면 잔액줄이므로 스킵
-      if (name.match(/^\d{1,2}:\d{2}$/)) continue;
 
       // 다음 줄에서 시간 추출: "10:05 1,238,592원" → "10:05"
       let time = "";
