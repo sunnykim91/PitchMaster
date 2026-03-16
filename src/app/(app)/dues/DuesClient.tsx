@@ -105,6 +105,15 @@ type PenaltyRecord = {
 
 type RecordFilter = "ALL" | "INCOME" | "EXPENSE";
 
+type BulkRow = {
+  date: string;
+  time: string;
+  type: "INCOME" | "EXPENSE";
+  amount: string;
+  description: string;
+  memberName: string;
+};
+
 export default function DuesClient({ userRole }: { userRole?: Role }) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
@@ -202,6 +211,12 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
   const [isPenaltyFormOpen, setIsPenaltyFormOpen] = useState(false);
   const [memberFilter, setMemberFilter] = useState("");
   const [screenshotUrl, setScreenshotUrl] = useState("");
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [bulkImage, setBulkImage] = useState<string | null>(null);
+  const [bulkRows, setBulkRows] = useState<BulkRow[]>([
+    { date: "", time: "", type: "INCOME", amount: "", description: "", memberName: "" },
+  ]);
+  const [bulkSaving, setBulkSaving] = useState(false);
 
   const loading = loadingDues || loadingSettings || loadingRules || loadingPenRecords || loadingMembers;
 
@@ -254,6 +269,50 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
       await refetchSettings();
       setIsSettingOpen(false);
     }
+  }
+
+  /* ── 일괄 등록 핸들러 ── */
+
+  function handleBulkImageChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) {
+      setBulkImage(URL.createObjectURL(file));
+    }
+  }
+
+  function updateBulkRow(index: number, field: keyof BulkRow, value: string) {
+    setBulkRows((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
+  }
+
+  function addBulkRow() {
+    setBulkRows((prev) => [
+      ...prev,
+      { date: prev[prev.length - 1]?.date || "", time: "", type: "INCOME", amount: "", description: "", memberName: "" },
+    ]);
+  }
+
+  function removeBulkRow(index: number) {
+    setBulkRows((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function handleBulkSave() {
+    const validRows = bulkRows.filter((r) => r.amount && r.description);
+    if (validRows.length === 0) return;
+    setBulkSaving(true);
+    for (const row of validRows) {
+      await apiMutate("/api/dues", "POST", {
+        type: row.type,
+        amount: Number(row.amount),
+        description: row.description,
+        userId: row.memberName || undefined,
+        recordedAt: row.date || undefined,
+      });
+    }
+    setBulkSaving(false);
+    await refetchDues();
+    setIsBulkMode(false);
+    setBulkRows([{ date: "", time: "", type: "INCOME", amount: "", description: "", memberName: "" }]);
+    setBulkImage(null);
   }
 
   function handleScreenshotChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -354,13 +413,23 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
             </h2>
           </div>
           {isStaffOrAbove(role) && (
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => setIsFormOpen((prev) => !prev)}
-            >
-              입출금 기록 추가
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => { setIsBulkMode((prev) => !prev); setIsFormOpen(false); }}
+              >
+                스크린샷 일괄 등록
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => { setIsFormOpen((prev) => !prev); setIsBulkMode(false); }}
+              >
+                입출금 기록 추가
+              </Button>
+            </div>
           )}
         </div>
 
@@ -487,6 +556,110 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
           </form>
         </Card>
       ) : null}
+
+      {/* ── Section 2.5: 스크린샷 일괄 등록 ── */}
+      {isBulkMode && (
+        <Card className="p-6">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-400">
+            Bulk Import
+          </p>
+          <h3 className="mt-1 font-heading text-lg font-bold uppercase text-foreground">
+            스크린샷 보고 일괄 등록
+          </h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            은행 앱 캡쳐를 올려두고, 내역을 보면서 빠르게 입력하세요.
+          </p>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-[300px_1fr]">
+            {/* 이미지 업로드 & 미리보기 */}
+            <div className="space-y-3">
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleBulkImageChange}
+                className="text-xs"
+              />
+              {bulkImage && (
+                <div className="max-h-[500px] overflow-auto rounded-lg border">
+                  <img src={bulkImage} alt="거래내역 스크린샷" className="w-full" />
+                </div>
+              )}
+            </div>
+
+            {/* 일괄 입력 테이블 */}
+            <div className="space-y-3">
+              <div className="space-y-2">
+                {bulkRows.map((row, index) => (
+                  <Card key={index} className="border-0 bg-secondary p-3">
+                    <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                      <Input
+                        type="date"
+                        value={row.date}
+                        onChange={(e) => updateBulkRow(index, "date", e.target.value)}
+                        className="text-xs"
+                        placeholder="날짜"
+                      />
+                      <NativeSelect
+                        value={row.type}
+                        onChange={(e) => updateBulkRow(index, "type", e.target.value as "INCOME" | "EXPENSE")}
+                        className="text-xs"
+                      >
+                        <option value="INCOME">입금</option>
+                        <option value="EXPENSE">출금</option>
+                      </NativeSelect>
+                      <Input
+                        type="number"
+                        value={row.amount}
+                        onChange={(e) => updateBulkRow(index, "amount", e.target.value)}
+                        className="text-xs"
+                        placeholder="금액"
+                        min={0}
+                      />
+                      <Input
+                        value={row.description}
+                        onChange={(e) => updateBulkRow(index, "description", e.target.value)}
+                        className="text-xs"
+                        placeholder="내용 (예: 3월 회비)"
+                      />
+                      <NativeSelect
+                        value={row.memberName}
+                        onChange={(e) => updateBulkRow(index, "memberName", e.target.value)}
+                        className="text-xs"
+                      >
+                        <option value="">입금자/지출자</option>
+                        {members.map((m) => (
+                          <option key={m.id} value={m.id}>{m.name}</option>
+                        ))}
+                      </NativeSelect>
+                      <button
+                        type="button"
+                        onClick={() => removeBulkRow(index)}
+                        className="text-xs text-destructive/70 hover:text-destructive transition self-center"
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={addBulkRow}>
+                  + 행 추가
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleBulkSave}
+                  disabled={bulkSaving || bulkRows.every((r) => !r.amount || !r.description)}
+                >
+                  {bulkSaving ? "저장 중..." : `${bulkRows.filter((r) => r.amount && r.description).length}건 일괄 저장`}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* ── Section 3: 입출금 내역 ── */}
       <Card className="p-6">
