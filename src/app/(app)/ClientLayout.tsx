@@ -113,12 +113,12 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           <button
             type="button"
             className="flex items-center gap-1 font-heading text-xl font-bold uppercase hover:text-primary transition-colors"
-            onClick={() => teams.length > 1 ? setTeamMenuOpen(!teamMenuOpen) : undefined}
+            onClick={() => setTeamMenuOpen(!teamMenuOpen)}
           >
             {session.user.teamName}
-            {teams.length > 1 && <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </button>
-          {teamMenuOpen && teams.length > 1 && (
+          {teamMenuOpen && (
             <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-lg border bg-popover p-1 shadow-lg">
               {teams.map((t) => (
                 <button
@@ -200,12 +200,15 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           </Button>
         </CardContent>
       </Card>
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 flex flex-wrap gap-2">
         <Button variant="outline" size="sm" asChild>
           <Link href="/board">게시판</Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
           <Link href="/notifications">알림</Link>
+        </Button>
+        <Button variant="outline" size="sm" className="gap-1" asChild>
+          <Link href="/team"><Plus className="h-3.5 w-3.5" />새 팀</Link>
         </Button>
       </div>
     </>
