@@ -12,6 +12,7 @@ import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from 
 import { Separator } from "@/components/ui/separator";
 import { Check, Copy, Link2, Menu, ChevronDown, Plus } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
+import { isStaffOrAbove } from "@/lib/permissions";
 
 type ClientLayoutProps = {
   session: Session;
@@ -260,22 +261,24 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
         {/* Main Content */}
         <div className="min-w-0 space-y-4">
-          <Card className="hidden lg:block">
-            <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-sky-400">팀 운영 현황</p>
-                <h2 className="font-heading text-xl font-bold uppercase">오늘의 팀 운영 현황</h2>
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" asChild>
-                  <Link href="/matches">경기 일정 등록</Link>
-                </Button>
-                <Button variant="success" size="sm" asChild>
-                  <Link href="/dues">회비 기록 입력</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {isStaffOrAbove(displayRole) && (
+            <Card className="hidden lg:block">
+              <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-sky-400">팀 운영 현황</p>
+                  <h2 className="font-heading text-xl font-bold uppercase">오늘의 팀 운영 현황</h2>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" asChild>
+                    <Link href="/matches">경기 일정 등록</Link>
+                  </Button>
+                  <Button variant="success" size="sm" asChild>
+                    <Link href="/dues">회비 기록 입력</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           <div className="animate-fade-in-up">{children}</div>
         </div>
       </div>

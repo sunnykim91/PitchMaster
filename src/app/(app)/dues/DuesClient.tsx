@@ -466,7 +466,22 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
     const validRows = bulkRows.filter((r) => r.amount && r.description);
     if (validRows.length === 0) return;
     setBulkSaving(true);
+
+    // 중복 체크: 기존 레코드와 날짜+금액+설명이 같으면 스킵
+    let saved = 0;
+    let skipped = 0;
     for (const row of validRows) {
+      const isDuplicate = records.some(
+        (r) =>
+          r.recordedAt.startsWith(row.date) &&
+          r.amount === Number(row.amount) &&
+          r.description === row.description &&
+          r.type === row.type
+      );
+      if (isDuplicate) {
+        skipped++;
+        continue;
+      }
       await apiMutate("/api/dues", "POST", {
         type: row.type,
         amount: Number(row.amount),
@@ -474,12 +489,16 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
         userId: row.memberName || undefined,
         recordedAt: row.date || undefined,
       });
+      saved++;
     }
     setBulkSaving(false);
     await refetchDues();
     setIsBulkMode(false);
     setBulkRows([{ date: "", time: "", type: "INCOME", amount: "", description: "", memberName: "" }]);
     setBulkImage(null);
+    if (skipped > 0) {
+      alert(`${saved}건 저장, ${skipped}건 중복으로 스킵되었습니다.`);
+    }
   }
 
   function handleScreenshotChange(event: React.ChangeEvent<HTMLInputElement>) {
