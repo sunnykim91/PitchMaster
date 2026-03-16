@@ -219,6 +219,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
   const [bulkSaving, setBulkSaving] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrStatus, setOcrStatus] = useState("");
+  const [ocrRawText, setOcrRawText] = useState("");
 
   const loading = loadingDues || loadingSettings || loadingRules || loadingPenRecords || loadingMembers;
 
@@ -286,13 +287,21 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
     setOcrStatus("이미지 분석 중...");
     try {
       const Tesseract = await import("tesseract.js");
-      const { data } = await Tesseract.recognize(file, "kor+eng", {
+      setOcrStatus("한국어 언어팩 로딩 중...");
+      const worker = await Tesseract.createWorker("kor", 1, {
         logger: (m) => {
           if (m.status === "recognizing text") {
             setOcrStatus(`텍스트 인식 중... ${Math.round((m.progress ?? 0) * 100)}%`);
           }
         },
       });
+      await worker.setParameters({
+        tessedit_char_whitelist: "",
+        preserve_interword_spaces: "1",
+      });
+      const { data } = await worker.recognize(file);
+      await worker.terminate();
+      setOcrRawText(data.text);
       const parsed = parseTransactions(data.text);
       if (parsed.length > 0) {
         setBulkRows(parsed);
@@ -308,76 +317,87 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
   }
 
   /** 은행 앱 스크린샷 텍스트에서 거래 내역 파싱 */
-  function parseTransactions(text: string): BulkRow[] {
+  function parseTransactions(ocrText: string): BulkRow[] {
     const rows: BulkRow[] = [];
-    const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+    const year = new Date().getFullYear();
 
-    let currentDate = "";
-    let currentTime = "";
+    // 전체 텍스트를 하나의 문자열로 합침 (줄바꿈 → 공백)
+    const text = ocrText.replace(/\n/g, " ").replace(/\s+/g, " ");
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
+    // 금액 패턴: "-79,230원", "73,000원", "+10,000원", "一79,230원" (OCR 오인식 대시)
+    // 잔액은 보통 금액 뒤에 바로 붙는 큰 금액 (1,238,592원 등) → 6자리 이상 무시
+    const amountRegex = /([+-\u2212\u2013\u2014\uFF0D一])?[\s]?([\d,.]{1,10})\s*원/g;
 
-      // 날짜 패턴: "03.12", "2024.03.12", "03/12" 등
-      const dateMatch = line.match(/^(\d{2,4})[.\/-](\d{1,2})[.\/-]?(\d{1,2})?$/);
-      if (dateMatch) {
-        const year = dateMatch[1].length === 4 ? dateMatch[1] : new Date().getFullYear().toString();
-        const month = dateMatch[2].padStart(2, "0");
-        const day = dateMatch[3]?.padStart(2, "0") || "";
-        if (day) {
-          currentDate = `${year}-${month}-${day}`;
-        } else {
-          // MM.DD 형태
-          currentDate = `${year}-${month}-${dateMatch[1].length === 2 ? dateMatch[1] : "01"}`;
-          if (dateMatch[1].length === 2) {
-            currentDate = `${new Date().getFullYear()}-${dateMatch[1].padStart(2, "0")}-${month}`;
-          }
-        }
-        continue;
+    // 날짜 패턴: "03.12", "03. 12", "2024.03.12"
+    const dateRegex = /(\d{2,4})\s*[.\/-]\s*(\d{1,2})(?:\s*[.\/-]\s*(\d{1,2}))?/g;
+
+    // 시간 패턴: "10:05", "22:30"
+    const timeRegex = /(\d{1,2})\s*:\s*(\d{2})/g;
+
+    // 1단계: 모든 금액 위치 찾기 (잔액 제외)
+    const amounts: { index: number; amount: string; type: "INCOME" | "EXPENSE" }[] = [];
+    let amountMatch;
+    while ((amountMatch = amountRegex.exec(text)) !== null) {
+      const digits = amountMatch[2].replace(/[,.]/g, "");
+      const num = parseInt(digits, 10);
+      // 100만원 이상은 잔액으로 간주하여 스킵 (필요시 조정)
+      if (num >= 1000000 || num === 0) continue;
+      const sign = amountMatch[1];
+      const isExpense = sign === "-" || sign === "\u2212" || sign === "\u2013" || sign === "\u2014" || sign === "\uFF0D" || sign === "一";
+      amounts.push({
+        index: amountMatch.index,
+        amount: digits,
+        type: isExpense ? "EXPENSE" : "INCOME",
+      });
+    }
+
+    // 2단계: 각 금액 앞부분에서 날짜, 시간, 이름 추출
+    for (const entry of amounts) {
+      // 금액 앞 80자 범위에서 정보 추출
+      const before = text.slice(Math.max(0, entry.index - 80), entry.index);
+
+      // 날짜 찾기
+      let date = "";
+      const dates = [...before.matchAll(new RegExp(dateRegex.source, "g"))];
+      if (dates.length > 0) {
+        const d = dates[dates.length - 1]; // 가장 가까운 날짜
+        const m = d[1].length <= 2 ? d[1].padStart(2, "0") : d[1].slice(2);
+        const dd = (d[2] || "01").padStart(2, "0");
+        date = `${d[1].length === 4 ? d[1] : year}-${m}-${dd}`;
       }
 
-      // 시간 패턴: "10:05", "22:30"
-      const timeMatch = line.match(/^(\d{1,2}):(\d{2})$/);
-      if (timeMatch) {
-        currentTime = line;
-        continue;
+      // 시간 찾기
+      let time = "";
+      const times = [...before.matchAll(new RegExp(timeRegex.source, "g"))];
+      if (times.length > 0) {
+        const t = times[times.length - 1];
+        time = `${t[1].padStart(2, "0")}:${t[2]}`;
       }
 
-      // 금액 패턴: "-79,230원", "73,000원", "+10,000원", "-4,500원"
-      const amountMatch = line.match(/^([+-])?[\s]*([\d,]+)\s*원$/);
-      if (amountMatch) {
-        const sign = amountMatch[1];
-        const amount = amountMatch[2].replace(/,/g, "");
-        const type: "INCOME" | "EXPENSE" = sign === "-" ? "EXPENSE" : "INCOME";
+      // 이름/설명 찾기: 날짜와 시간, 숫자, "원" 제거 후 남은 한글/영문
+      let desc = before
+        .replace(/\d{2,4}\s*[.\/-]\s*\d{1,2}(\s*[.\/-]\s*\d{1,2})?/g, "")
+        .replace(/\d{1,2}\s*:\s*\d{2}/g, "")
+        .replace(/[+-\u2212\u2013\u2014\uFF0D一]?\s?[\d,.]+\s*원/g, "")
+        .replace(/[\d,]+/g, "")
+        .replace(/[·\s]+/g, " ")
+        .trim();
 
-        // 이전 줄에서 설명(이름) 가져오기
-        let description = "";
-        for (let j = i - 1; j >= 0; j--) {
-          const prev = lines[j];
-          if (prev.match(/^\d/) || prev.match(/원$/) || prev.match(/^\d{1,2}:\d{2}$/)) continue;
-          description = prev;
-          break;
-        }
+      // 마지막 유의미한 단어 추출 (가장 가까운 이름)
+      const words = desc.split(/\s+/).filter((w) => w.length > 0);
+      const name = words.length > 0 ? words[words.length - 1] : "";
 
-        // 멤버 이름 매칭 시도
-        const matchedMember = members.find((m) => description.includes(m.name));
+      // 멤버 매칭
+      const matchedMember = name ? members.find((m) => name.includes(m.name) || m.name.includes(name)) : undefined;
 
-        rows.push({
-          date: currentDate,
-          time: currentTime,
-          type,
-          amount,
-          description: description || "거래",
-          memberName: matchedMember?.id || "",
-        });
-        continue;
-      }
-
-      // "10,000원" 형태 (부호 없음, 줄 중간)
-      const inlineAmount = line.match(/([\d,]+)\s*원/);
-      if (inlineAmount && !line.match(/잔액|잔고|balance/i)) {
-        // 이건 이미 위에서 처리되므로 스킵
-      }
+      rows.push({
+        date,
+        time,
+        type: entry.type,
+        amount: entry.amount,
+        description: name || "거래",
+        memberName: matchedMember?.id || "",
+      });
     }
 
     return rows;
@@ -695,6 +715,14 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
                 <div className="max-h-[500px] overflow-auto rounded-lg border">
                   <img src={bulkImage} alt="거래내역 스크린샷" className="w-full" />
                 </div>
+              )}
+              {ocrRawText && (
+                <details className="text-xs">
+                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground">OCR 인식 원문 보기</summary>
+                  <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap rounded bg-secondary p-2 text-[10px] text-muted-foreground">
+                    {ocrRawText}
+                  </pre>
+                </details>
               )}
             </div>
 
