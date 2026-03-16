@@ -60,6 +60,13 @@ type ApiPenaltyRecord = {
   member: { name: string };
 };
 
+type ApiMemberRow = {
+  id: string;
+  user_id: string | null;
+  pre_name: string | null;
+  users: { id: string; name: string } | null;
+};
+
 type ApiMember = {
   id: string;
   name: string;
@@ -144,9 +151,9 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
   } = useApi<{ records: ApiPenaltyRecord[] }>("/api/penalties?type=records", { records: [] });
 
   const {
-    data: membersData,
+    data: membersRaw,
     loading: loadingMembers,
-  } = useApi<{ members: ApiMember[] }>("/api/members", { members: [] });
+  } = useApi<{ members: ApiMemberRow[] }>("/api/members", { members: [] });
 
   /* ── Map API snake_case → camelCase ── */
   const records: DuesRecord[] = useMemo(
@@ -201,7 +208,16 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
     [penRecordsData.records]
   );
 
-  const members = membersData.members;
+  const members: ApiMember[] = useMemo(
+    () =>
+      membersRaw.members
+        .filter((m: ApiMemberRow) => m.users?.name || m.pre_name)
+        .map((m: ApiMemberRow) => ({
+          id: m.users?.id ?? m.id,
+          name: m.users?.name ?? m.pre_name ?? "",
+        })),
+    [membersRaw.members],
+  );
 
   /* ── Local UI state ── */
   const [filter, setFilter] = useState<RecordFilter>("ALL");
