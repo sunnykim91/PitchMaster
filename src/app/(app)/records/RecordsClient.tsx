@@ -117,6 +117,16 @@ export default function RecordsClient({ userId, userRole }: { userId: string; us
   const topAssists = [...stats].sort((a, b) => b.assists - a.assists).slice(0, 3);
   const topMvp = [...stats].sort((a, b) => b.mvp - a.mvp).slice(0, 3);
 
+  const [sortKey, setSortKey] = useState<"points" | "goals" | "assists" | "mvp" | "attendanceRate">("points");
+  const allStats = useMemo(() => {
+    const withPoints = stats.map((s) => ({ ...s, points: s.goals + s.assists }));
+    return [...withPoints].sort((a, b) => {
+      if (sortKey === "points") return b.points - a.points;
+      if (sortKey === "attendanceRate") return b.attendanceRate - a.attendanceRate;
+      return (b[sortKey] as number) - (a[sortKey] as number);
+    });
+  }, [stats, sortKey]);
+
   const teamAttendance = stats.length
     ? stats.reduce((sum, item) => sum + item.attendanceRate, 0) / stats.length
     : 0;
@@ -271,6 +281,63 @@ export default function RecordsClient({ userId, userRole }: { userId: string; us
                   </div>
                 </Card>
               ))
+            )}
+          </CardContent>
+        </Card>
+
+        {/* 전체 회원 기록 */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-400">All Stats</p>
+            <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+              전체 회원 기록
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loadingRecords ? (
+              <p className="text-sm text-muted-foreground">불러오는 중...</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border/30">
+                      <th className="pb-3 text-left font-medium text-muted-foreground">#</th>
+                      <th className="pb-3 text-left font-medium text-muted-foreground">이름</th>
+                      {([
+                        { key: "points" as const, label: "공격P" },
+                        { key: "goals" as const, label: "골" },
+                        { key: "assists" as const, label: "어시" },
+                        { key: "mvp" as const, label: "MVP" },
+                        { key: "attendanceRate" as const, label: "출석률" },
+                      ]).map((col) => (
+                        <th
+                          key={col.key}
+                          className={cn(
+                            "cursor-pointer pb-3 text-center font-medium transition hover:text-foreground",
+                            sortKey === col.key ? "text-primary" : "text-muted-foreground"
+                          )}
+                          onClick={() => setSortKey(col.key)}
+                        >
+                          {col.label}{sortKey === col.key ? " ▼" : ""}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/20">
+                    {allStats.filter((s) => s.points > 0 || s.goals > 0 || s.assists > 0 || s.mvp > 0 || s.attendanceRate > 0).map((s, i) => (
+                      <tr key={s.memberId} className={cn(s.memberId === userId && "bg-primary/5")}>
+                        <td className="py-2.5 text-muted-foreground">{i + 1}</td>
+                        <td className="py-2.5 font-semibold">{s.memberName || "-"}</td>
+                        <td className="py-2.5 text-center font-bold text-primary">{s.points}</td>
+                        <td className="py-2.5 text-center text-emerald-400">{s.goals}</td>
+                        <td className="py-2.5 text-center text-sky-400">{s.assists}</td>
+                        <td className="py-2.5 text-center text-amber-400">{s.mvp}</td>
+                        <td className="py-2.5 text-center text-violet-400">{Math.round(s.attendanceRate * 100)}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </CardContent>
         </Card>
