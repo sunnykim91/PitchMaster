@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useRef, useMemo, useState } from "react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
@@ -239,12 +239,15 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
     { date: "", time: "", type: "INCOME", amount: "", description: "", memberName: "" },
   ]);
   const [bulkSaving, setBulkSaving] = useState(false);
+  const [bulkErrors, setBulkErrors] = useState<Record<number, string[]>>({});
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrStatus, setOcrStatus] = useState("");
   const [monthFilter, setMonthFilter] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
+  const [editingRecord, setEditingRecord] = useState<DuesRecord | null>(null);
+  const bulkSectionRef = useRef<HTMLDivElement>(null);
 
   const loading = loadingDues || loadingSettings || loadingRules || loadingPenRecords || loadingMembers || loadingBalance;
 
@@ -482,7 +485,19 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
   }
 
   async function handleBulkSave() {
-    const validRows = bulkRows.filter((r) => r.amount && r.description);
+    // 필수값 검증
+    const errors: Record<number, string[]> = {};
+    bulkRows.forEach((row, i) => {
+      const missing: string[] = [];
+      if (!row.date) missing.push("date");
+      if (!row.amount) missing.push("amount");
+      if (!row.description) missing.push("description");
+      if (missing.length > 0) errors[i] = missing;
+    });
+    setBulkErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    const validRows = bulkRows.filter((r) => r.amount && r.description && r.date);
     if (validRows.length === 0) return;
     setBulkSaving(true);
 
@@ -517,6 +532,30 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
     if (!confirm("이 입출금 내역을 삭제하시겠습니까?")) return;
     const { error } = await apiMutate(`/api/dues?id=${id}`, "DELETE");
     if (!error) await refetchDues();
+  }
+
+  async function handleUpdateRecord(formData: FormData) {
+    if (!editingRecord) return;
+    const type = String(formData.get("editType")) as "INCOME" | "EXPENSE";
+    const amount = Number(formData.get("editAmount"));
+    const description = String(formData.get("editDescription"));
+    const recordedAt = String(formData.get("editDate") || "");
+    const recordedTime = String(formData.get("editTime") || "");
+    const userId = String(formData.get("editMember") || "") || undefined;
+
+    const { error } = await apiMutate("/api/dues", "PUT", {
+      id: editingRecord.id,
+      type,
+      amount,
+      description,
+      userId,
+      recordedAt: recordedAt || undefined,
+      recordedTime: recordedTime || undefined,
+    });
+    if (!error) {
+      await refetchDues();
+      setEditingRecord(null);
+    }
   }
 
   function handleScreenshotChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -622,7 +661,13 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
                 type="button"
                 size="sm"
                 variant="outline"
-                onClick={() => { setIsBulkMode((prev) => !prev); setIsFormOpen(false); }}
+                onClick={() => {
+                  setIsBulkMode((prev) => {
+                    if (!prev) setTimeout(() => bulkSectionRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+                    return !prev;
+                  });
+                  setIsFormOpen(false);
+                }}
               >
                 스크린샷 일괄 등록
               </Button>
@@ -781,7 +826,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
 
       {/* ── Section 2.5: 스크린샷 일괄 등록 ── */}
       {isBulkMode && (
-        <Card className="p-6">
+        <Card className="p-6" ref={bulkSectionRef}>
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-400">
             Bulk Import
           </p>
@@ -820,14 +865,16 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
             {/* 일괄 입력 테이블 */}
             <div className="space-y-3">
               <div className="space-y-2">
-                {bulkRows.map((row, index) => (
+                {bulkRows.map((row, index) => {
+                  const errs = bulkErrors[index] ?? [];
+                  return (
                   <Card key={index} className="border-0 bg-secondary p-3">
                     <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
                       <Input
                         type="date"
                         value={row.date}
-                        onChange={(e) => updateBulkRow(index, "date", e.target.value)}
-                        className="text-xs"
+                        onChange={(e) => { updateBulkRow(index, "date", e.target.value); setBulkErrors((p) => { const n = { ...p }; delete n[index]; return n; }); }}
+                        className={cn("text-xs", errs.includes("date") && "border-destructive")}
                         placeholder="날짜"
                       />
                       <NativeSelect
@@ -841,15 +888,15 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
                       <Input
                         type="number"
                         value={row.amount}
-                        onChange={(e) => updateBulkRow(index, "amount", e.target.value)}
-                        className="text-xs"
+                        onChange={(e) => { updateBulkRow(index, "amount", e.target.value); setBulkErrors((p) => { const n = { ...p }; delete n[index]; return n; }); }}
+                        className={cn("text-xs", errs.includes("amount") && "border-destructive")}
                         placeholder="금액"
                         min={0}
                       />
                       <Input
                         value={row.description}
-                        onChange={(e) => updateBulkRow(index, "description", e.target.value)}
-                        className="text-xs"
+                        onChange={(e) => { updateBulkRow(index, "description", e.target.value); setBulkErrors((p) => { const n = { ...p }; delete n[index]; return n; }); }}
+                        className={cn("text-xs", errs.includes("description") && "border-destructive")}
                         placeholder="내용 (예: 3월 회비)"
                       />
                       <NativeSelect
@@ -871,7 +918,8 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
                       </button>
                     </div>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="flex gap-2">
@@ -933,46 +981,84 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
         </div>
 
         <div className="mt-4 space-y-2">
-          {filteredRecords.map((record) => (
-            <Card
-              key={record.id}
-              className="flex flex-wrap items-center justify-between gap-3 border-0 bg-secondary px-4 py-3"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">
-                  {record.description}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {record.recordedAt}
-                  {record.memberName ? ` · ${record.memberName}` : ""}
-                  {record.method ? ` · ${record.method}` : ""}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant="secondary"
-                  className={cn(
-                    "rounded-lg px-3 py-1 text-xs font-bold",
-                    record.type === "INCOME"
-                      ? "bg-emerald-500/15 text-emerald-400"
-                      : "bg-rose-500/15 text-rose-400"
-                  )}
-                >
-                  {record.type === "INCOME" ? "+" : "-"}
-                  {record.amount.toLocaleString()}원
-                </Badge>
-                {isStaffOrAbove(role) && (
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteRecord(record.id)}
-                    className="text-xs text-destructive/70 hover:text-destructive transition"
+          {filteredRecords.map((record) =>
+            editingRecord?.id === record.id ? (
+              <Card key={record.id} className="border-0 bg-secondary p-4">
+                <form className="grid gap-3" action={(fd) => handleUpdateRecord(fd)}>
+                  <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                    <NativeSelect name="editType" defaultValue={record.type}>
+                      <option value="INCOME">입금</option>
+                      <option value="EXPENSE">출금</option>
+                    </NativeSelect>
+                    <Input name="editAmount" type="number" defaultValue={record.amount} min={0} required placeholder="금액" />
+                    <Input name="editDate" type="date" defaultValue={record.recordedAt.split("T")[0]} />
+                    <Input name="editTime" type="time" defaultValue={record.recordedAt.includes("T") ? record.recordedAt.split("T")[1]?.slice(0, 5) : ""} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input name="editDescription" defaultValue={record.description} required placeholder="내용" />
+                    <NativeSelect name="editMember" defaultValue="">
+                      <option value="">입금자/지출자</option>
+                      {members.map((m) => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </NativeSelect>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="submit" size="sm">저장</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setEditingRecord(null)}>취소</Button>
+                  </div>
+                </form>
+              </Card>
+            ) : (
+              <Card
+                key={record.id}
+                className="flex flex-wrap items-center justify-between gap-3 border-0 bg-secondary px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">
+                    {record.description}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {record.recordedAt}
+                    {record.memberName ? ` · ${record.memberName}` : ""}
+                    {record.method ? ` · ${record.method}` : ""}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="secondary"
+                    className={cn(
+                      "rounded-lg px-3 py-1 text-xs font-bold",
+                      record.type === "INCOME"
+                        ? "bg-emerald-500/15 text-emerald-400"
+                        : "bg-rose-500/15 text-rose-400"
+                    )}
                   >
-                    삭제
-                  </button>
-                )}
-              </div>
-            </Card>
-          ))}
+                    {record.type === "INCOME" ? "+" : "-"}
+                    {record.amount.toLocaleString()}원
+                  </Badge>
+                  {isStaffOrAbove(role) && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setEditingRecord(record)}
+                        className="text-xs text-muted-foreground hover:text-foreground transition"
+                      >
+                        수정
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteRecord(record.id)}
+                        className="text-xs text-destructive/70 hover:text-destructive transition"
+                      >
+                        삭제
+                      </button>
+                    </>
+                  )}
+                </div>
+              </Card>
+            )
+          )}
         </div>
       </Card>
 
