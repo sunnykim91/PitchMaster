@@ -217,6 +217,8 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
     { date: "", time: "", type: "INCOME", amount: "", description: "", memberName: "" },
   ]);
   const [bulkSaving, setBulkSaving] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrStatus, setOcrStatus] = useState("");
 
   const loading = loadingDues || loadingSettings || loadingRules || loadingPenRecords || loadingMembers;
 
@@ -273,11 +275,112 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
 
   /* ── 일괄 등록 핸들러 ── */
 
-  function handleBulkImageChange(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleBulkImageChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (file) {
-      setBulkImage(URL.createObjectURL(file));
+    if (!file) return;
+    const imageUrl = URL.createObjectURL(file);
+    setBulkImage(imageUrl);
+
+    // OCR 자동 실행
+    setOcrLoading(true);
+    setOcrStatus("이미지 분석 중...");
+    try {
+      const Tesseract = await import("tesseract.js");
+      const { data } = await Tesseract.recognize(file, "kor+eng", {
+        logger: (m) => {
+          if (m.status === "recognizing text") {
+            setOcrStatus(`텍스트 인식 중... ${Math.round((m.progress ?? 0) * 100)}%`);
+          }
+        },
+      });
+      const parsed = parseTransactions(data.text);
+      if (parsed.length > 0) {
+        setBulkRows(parsed);
+        setOcrStatus(`${parsed.length}건의 거래를 인식했습니다. 확인 후 저장하세요.`);
+      } else {
+        setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
+      }
+    } catch {
+      setOcrStatus("OCR 처리 중 오류가 발생했습니다. 수동으로 입력해주세요.");
+    } finally {
+      setOcrLoading(false);
     }
+  }
+
+  /** 은행 앱 스크린샷 텍스트에서 거래 내역 파싱 */
+  function parseTransactions(text: string): BulkRow[] {
+    const rows: BulkRow[] = [];
+    const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+
+    let currentDate = "";
+    let currentTime = "";
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // 날짜 패턴: "03.12", "2024.03.12", "03/12" 등
+      const dateMatch = line.match(/^(\d{2,4})[.\/-](\d{1,2})[.\/-]?(\d{1,2})?$/);
+      if (dateMatch) {
+        const year = dateMatch[1].length === 4 ? dateMatch[1] : new Date().getFullYear().toString();
+        const month = dateMatch[2].padStart(2, "0");
+        const day = dateMatch[3]?.padStart(2, "0") || "";
+        if (day) {
+          currentDate = `${year}-${month}-${day}`;
+        } else {
+          // MM.DD 형태
+          currentDate = `${year}-${month}-${dateMatch[1].length === 2 ? dateMatch[1] : "01"}`;
+          if (dateMatch[1].length === 2) {
+            currentDate = `${new Date().getFullYear()}-${dateMatch[1].padStart(2, "0")}-${month}`;
+          }
+        }
+        continue;
+      }
+
+      // 시간 패턴: "10:05", "22:30"
+      const timeMatch = line.match(/^(\d{1,2}):(\d{2})$/);
+      if (timeMatch) {
+        currentTime = line;
+        continue;
+      }
+
+      // 금액 패턴: "-79,230원", "73,000원", "+10,000원", "-4,500원"
+      const amountMatch = line.match(/^([+-])?[\s]*([\d,]+)\s*원$/);
+      if (amountMatch) {
+        const sign = amountMatch[1];
+        const amount = amountMatch[2].replace(/,/g, "");
+        const type: "INCOME" | "EXPENSE" = sign === "-" ? "EXPENSE" : "INCOME";
+
+        // 이전 줄에서 설명(이름) 가져오기
+        let description = "";
+        for (let j = i - 1; j >= 0; j--) {
+          const prev = lines[j];
+          if (prev.match(/^\d/) || prev.match(/원$/) || prev.match(/^\d{1,2}:\d{2}$/)) continue;
+          description = prev;
+          break;
+        }
+
+        // 멤버 이름 매칭 시도
+        const matchedMember = members.find((m) => description.includes(m.name));
+
+        rows.push({
+          date: currentDate,
+          time: currentTime,
+          type,
+          amount,
+          description: description || "거래",
+          memberName: matchedMember?.id || "",
+        });
+        continue;
+      }
+
+      // "10,000원" 형태 (부호 없음, 줄 중간)
+      const inlineAmount = line.match(/([\d,]+)\s*원/);
+      if (inlineAmount && !line.match(/잔액|잔고|balance/i)) {
+        // 이건 이미 위에서 처리되므로 스킵
+      }
+    }
+
+    return rows;
   }
 
   function updateBulkRow(index: number, field: keyof BulkRow, value: string) {
@@ -567,8 +670,17 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
             스크린샷 보고 일괄 등록
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            은행 앱 캡쳐를 올려두고, 내역을 보면서 빠르게 입력하세요.
+            은행 앱 캡쳐를 올리면 자동으로 거래 내역을 인식합니다. 인식 결과를 확인 후 저장하세요.
           </p>
+          {ocrStatus && (
+            <div className={cn(
+              "mt-2 rounded-lg px-3 py-2 text-xs font-medium",
+              ocrLoading ? "bg-blue-500/10 text-blue-400" : "bg-amber-500/10 text-amber-400"
+            )}>
+              {ocrLoading && <span className="mr-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />}
+              {ocrStatus}
+            </div>
+          )}
 
           <div className="mt-4 grid gap-4 lg:grid-cols-[300px_1fr]">
             {/* 이미지 업로드 & 미리보기 */}
