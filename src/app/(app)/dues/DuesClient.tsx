@@ -290,61 +290,31 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
 
       const res = await fetch("/api/ocr", { method: "POST", body: formData });
       const json = await res.json();
+      console.log("OCR response:", res.status, json);
 
-      if (!res.ok || !json.text) {
-        // Clova OCR 실패 시 Tesseract 폴백
-        setOcrStatus("서버 OCR 실패, 브라우저 OCR로 전환 중...");
-        await fallbackTesseract(file);
+      if (!res.ok) {
+        setOcrStatus(`OCR 서버 오류 (${res.status}): ${json.error || "알 수 없는 오류"}. 수동으로 입력해주세요.`);
+        return;
+      }
+
+      if (!json.text) {
+        setOcrStatus("OCR 응답에 텍스트가 없습니다. 수동으로 입력해주세요.");
         return;
       }
 
       const parsed = parseTransactions(json.text);
+      console.log("Parsed transactions:", parsed);
       if (parsed.length > 0) {
         setBulkRows(parsed);
-        setOcrStatus(`Clova OCR: ${parsed.length}건의 거래를 인식했습니다. 확인 후 저장하세요.`);
+        setOcrStatus(`${parsed.length}건의 거래를 인식했습니다. 확인 후 저장하세요.`);
       } else {
         setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
       }
-    } catch {
-      // 네트워크 오류 등 → Tesseract 폴백
-      setOcrStatus("서버 연결 실패, 브라우저 OCR로 전환 중...");
-      await fallbackTesseract(file);
+    } catch (err) {
+      console.error("OCR error:", err);
+      setOcrStatus("OCR 처리 중 오류가 발생했습니다. 수동으로 입력해주세요.");
     } finally {
       setOcrLoading(false);
-    }
-  }
-
-  /** Clova OCR 실패 시 Tesseract.js 폴백 */
-  async function fallbackTesseract(file: File) {
-    try {
-      const toBase64 = (f: File): Promise<string> =>
-        new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(f);
-        });
-      const base64 = await toBase64(file);
-      const Tesseract = await import("tesseract.js");
-      setOcrStatus("브라우저 OCR 처리 중...");
-      const worker = await Tesseract.createWorker("kor", 1, {
-        logger: (m) => {
-          if (m.status === "recognizing text") {
-            setOcrStatus(`텍스트 인식 중... ${Math.round((m.progress ?? 0) * 100)}%`);
-          }
-        },
-      });
-      const { data } = await worker.recognize(base64);
-      await worker.terminate();
-      const parsed = parseTransactions(data.text);
-      if (parsed.length > 0) {
-        setBulkRows(parsed);
-        setOcrStatus(`브라우저 OCR: ${parsed.length}건 인식. 정확도가 낮을 수 있으니 확인해주세요.`);
-      } else {
-        setOcrStatus("인식 실패. 수동으로 입력해주세요.");
-      }
-    } catch {
-      setOcrStatus("OCR 처리 실패. 수동으로 입력해주세요.");
     }
   }
 
