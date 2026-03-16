@@ -32,7 +32,7 @@ export default function LoginPage() {
             조기축구 운영에 관한 모든 것.
           </p>
 
-          {/* 카카오 로그인 버튼 - 크게 강조 */}
+          {/* 카카오 로그인 버튼 */}
           <div className="flex flex-col items-center gap-3 lg:items-start">
             {kakaoEnabled ? (
               <Button
@@ -57,28 +57,38 @@ export default function LoginPage() {
           </div>
         </section>
 
-        {/* 오른쪽: 기능 카드 */}
+        {/* 오른쪽: 차별점 카드 */}
         <div className="w-full max-w-sm flex-shrink-0 space-y-4">
+          <p className="text-center text-[11px] font-bold uppercase tracking-[0.2em] text-primary lg:text-left">
+            왜 PitchMaster인가요?
+          </p>
+
           {[
             {
-              emoji: "\u26BD",
-              title: "경기 일정 & 출석",
-              desc: "경기 잡으면 자동 투표 오픈. 누가 오는지 한눈에 확인.",
+              emoji: "\uD83E\uDDE0",
+              title: "버튼 하나로 자동 스쿼드 편성",
+              desc: "선호 포지션 기반으로 쿼터별 라인업을 자동 생성. 출전 시간도 공평하게 배분해줘요.",
+              tag: "핵심 기능",
             },
             {
-              emoji: "\uD83E\uDDE0",
-              title: "전술판 & 포메이션",
-              desc: "드래그로 포지션 배치. 쿼터별 라인업도 한 번에.",
+              emoji: "\uD83D\uDCCB",
+              title: "경기 잡으면 바로 출석 투표",
+              desc: "일정 등록과 동시에 참석 투표 오픈. 마감 시간 자동 설정으로 번거로움 없이.",
             },
             {
               emoji: "\uD83D\uDCB0",
-              title: "회비 투명 관리",
-              desc: "얼마 걷고, 어디 썼는지. 팀원 모두가 바로 확인.",
+              title: "회비, 이제 엑셀 말고 여기서",
+              desc: "수입/지출 한눈에 정리. 팀원 누구나 실시간으로 확인할 수 있어 투명해요.",
+            },
+            {
+              emoji: "\u26BD",
+              title: "전술판에서 드래그로 배치",
+              desc: "포메이션 변경해도 선수 배치가 유지돼요. 라인업 이미지를 카톡으로 바로 공유도.",
             },
             {
               emoji: "\uD83C\uDFC6",
-              title: "기록 & MVP",
-              desc: "골, 어시스트, MVP 투표까지. 시즌 통계도 자동 정리.",
+              title: "골·어시스트·MVP 자동 집계",
+              desc: "경기 끝나면 기록 남기고 MVP 투표. 시즌 랭킹이 알아서 쌓여요.",
             },
           ].map((item) => (
             <Card
@@ -88,16 +98,19 @@ export default function LoginPage() {
               <CardContent className="flex items-start gap-4 p-5">
                 <span className="mt-0.5 text-2xl">{item.emoji}</span>
                 <div>
-                  <p className="text-sm font-bold text-foreground">{item.title}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{item.desc}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-bold text-foreground">{item.title}</p>
+                    {"tag" in item && item.tag && (
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                        {item.tag}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{item.desc}</p>
                 </div>
               </CardContent>
             </Card>
           ))}
-
-          <p className="text-center text-xs text-muted-foreground">
-            이미 100+ 팀이 사용 중
-          </p>
         </div>
       </div>
     </main>
