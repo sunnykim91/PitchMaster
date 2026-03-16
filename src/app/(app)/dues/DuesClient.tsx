@@ -282,10 +282,20 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
     const imageUrl = URL.createObjectURL(file);
     setBulkImage(imageUrl);
 
+    // 파일을 base64로 변환 (Tesseract 파일 읽기 오류 방지)
+    const toBase64 = (f: File): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(f);
+      });
+
     // OCR 자동 실행
     setOcrLoading(true);
     setOcrStatus("이미지 분석 중...");
     try {
+      const base64 = await toBase64(file);
       const Tesseract = await import("tesseract.js");
       setOcrStatus("한국어 언어팩 로딩 중...");
       const worker = await Tesseract.createWorker("kor", 1, {
@@ -296,10 +306,9 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
         },
       });
       await worker.setParameters({
-        tessedit_char_whitelist: "",
         preserve_interword_spaces: "1",
       });
-      const { data } = await worker.recognize(file);
+      const { data } = await worker.recognize(base64);
       await worker.terminate();
       setOcrRawText(data.text);
       const parsed = parseTransactions(data.text);
@@ -316,85 +325,84 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
     }
   }
 
-  /** 은행 앱 스크린샷 텍스트에서 거래 내역 파싱 */
+  /**
+   * 은행 앱 스크린샷 OCR 텍스트에서 거래 내역 파싱
+   *
+   * 실제 OCR 출력 패턴 (카카오뱅크 등):
+   *   양문주                -79,230원
+   *   1005                  1,238,592원    ← 잔액
+   *   겔로샤ㄷ              73,000원
+   *   1123                  1.317.822원    ← 잔액 (점/콤마 혼용)
+   *
+   * 전략: 줄 단위로 금액(원) 포함 줄을 찾고, 같은 줄의 한글/영문을 이름으로,
+   *        금액이 없는 순수 숫자 줄은 잔액줄(시간+잔액)로 판단하여 스킵.
+   */
   function parseTransactions(ocrText: string): BulkRow[] {
     const rows: BulkRow[] = [];
-    const year = new Date().getFullYear();
+    const lines = ocrText.split("\n").map((l) => l.trim()).filter(Boolean);
 
-    // 전체 텍스트를 하나의 문자열로 합침 (줄바꿈 → 공백)
-    const text = ocrText.replace(/\n/g, " ").replace(/\s+/g, " ");
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
 
-    // 금액 패턴: "-79,230원", "73,000원", "+10,000원", "一79,230원" (OCR 오인식 대시)
-    // 잔액은 보통 금액 뒤에 바로 붙는 큰 금액 (1,238,592원 등) → 6자리 이상 무시
-    const amountRegex = /([+-\u2212\u2013\u2014\uFF0D一])?[\s]?([\d,.]{1,10})\s*원/g;
+      // 금액 패턴: "-79,230원", "73,000원", "10.000원", "-4.500원"
+      // 점(.)과 콤마(,) 모두 천단위 구분자로 처리
+      const amountMatch = line.match(/([+-\u2212\u2013\u2014一])\s*([\d.,]+)\s*원|([\d.,]+)\s*원/);
+      if (!amountMatch) continue;
 
-    // 날짜 패턴: "03.12", "03. 12", "2024.03.12"
-    const dateRegex = /(\d{2,4})\s*[.\/-]\s*(\d{1,2})(?:\s*[.\/-]\s*(\d{1,2}))?/g;
+      // 금액 추출
+      const signChar = amountMatch[1] || "";
+      const rawAmount = (amountMatch[2] || amountMatch[3] || "").replace(/[.,]/g, "");
+      const num = parseInt(rawAmount, 10);
+      if (!num || num === 0) continue;
 
-    // 시간 패턴: "10:05", "22:30"
-    const timeRegex = /(\d{1,2})\s*:\s*(\d{2})/g;
+      // 잔액 판별: 100만원 이상이면 잔액으로 간주
+      if (num >= 500000) continue;
 
-    // 1단계: 모든 금액 위치 찾기 (잔액 제외)
-    const amounts: { index: number; amount: string; type: "INCOME" | "EXPENSE" }[] = [];
-    let amountMatch;
-    while ((amountMatch = amountRegex.exec(text)) !== null) {
-      const digits = amountMatch[2].replace(/[,.]/g, "");
-      const num = parseInt(digits, 10);
-      // 100만원 이상은 잔액으로 간주하여 스킵 (필요시 조정)
-      if (num >= 1000000 || num === 0) continue;
-      const sign = amountMatch[1];
-      const isExpense = sign === "-" || sign === "\u2212" || sign === "\u2013" || sign === "\u2014" || sign === "\uFF0D" || sign === "一";
-      amounts.push({
-        index: amountMatch.index,
-        amount: digits,
-        type: isExpense ? "EXPENSE" : "INCOME",
-      });
-    }
+      // 입출금 판별
+      const isExpense = signChar === "-" || signChar === "\u2212" || signChar === "\u2013" || signChar === "\u2014" || signChar === "一";
 
-    // 2단계: 각 금액 앞부분에서 날짜, 시간, 이름 추출
-    for (const entry of amounts) {
-      // 금액 앞 80자 범위에서 정보 추출
-      const before = text.slice(Math.max(0, entry.index - 80), entry.index);
-
-      // 날짜 찾기
-      let date = "";
-      const dates = [...before.matchAll(new RegExp(dateRegex.source, "g"))];
-      if (dates.length > 0) {
-        const d = dates[dates.length - 1]; // 가장 가까운 날짜
-        const m = d[1].length <= 2 ? d[1].padStart(2, "0") : d[1].slice(2);
-        const dd = (d[2] || "01").padStart(2, "0");
-        date = `${d[1].length === 4 ? d[1] : year}-${m}-${dd}`;
-      }
-
-      // 시간 찾기
-      let time = "";
-      const times = [...before.matchAll(new RegExp(timeRegex.source, "g"))];
-      if (times.length > 0) {
-        const t = times[times.length - 1];
-        time = `${t[1].padStart(2, "0")}:${t[2]}`;
-      }
-
-      // 이름/설명 찾기: 날짜와 시간, 숫자, "원" 제거 후 남은 한글/영문
-      let desc = before
-        .replace(/\d{2,4}\s*[.\/-]\s*\d{1,2}(\s*[.\/-]\s*\d{1,2})?/g, "")
-        .replace(/\d{1,2}\s*:\s*\d{2}/g, "")
-        .replace(/[+-\u2212\u2013\u2014\uFF0D一]?\s?[\d,.]+\s*원/g, "")
-        .replace(/[\d,]+/g, "")
-        .replace(/[·\s]+/g, " ")
+      // 같은 줄에서 이름 추출: 금액 부분 제거 후 남은 한글/영문 텍스트
+      let name = line
+        .replace(/[+-\u2212\u2013\u2014一]?\s*[\d.,]+\s*원/g, "")  // 금액 제거
+        .replace(/[\d]+/g, "")       // 남은 숫자 제거
+        .replace(/[^\p{L}\s]/gu, "") // 한글/영문만 남김
         .trim();
 
-      // 마지막 유의미한 단어 추출 (가장 가까운 이름)
-      const words = desc.split(/\s+/).filter((w) => w.length > 0);
-      const name = words.length > 0 ? words[words.length - 1] : "";
+      // 같은 줄에 이름이 없으면 이전 줄에서 찾기
+      if (!name) {
+        for (let j = i - 1; j >= Math.max(0, i - 3); j--) {
+          const prev = lines[j];
+          // 금액이 있는 줄은 스킵 (이전 거래)
+          if (prev.match(/[\d.,]+\s*원/)) break;
+          const candidate = prev.replace(/[\d]+/g, "").replace(/[^\p{L}\s]/gu, "").trim();
+          if (candidate.length >= 1) {
+            name = candidate;
+            break;
+          }
+        }
+      }
+
+      // 다음 줄에서 시간 추출 시도 (4자리 숫자 = HHMM)
+      let time = "";
+      if (i + 1 < lines.length) {
+        const nextLine = lines[i + 1];
+        const timeMatch = nextLine.match(/^0?(\d{3,5})\b/);
+        if (timeMatch) {
+          const t = timeMatch[1].padStart(4, "0");
+          time = `${t.slice(0, 2)}:${t.slice(2, 4)}`;
+        }
+      }
 
       // 멤버 매칭
-      const matchedMember = name ? members.find((m) => name.includes(m.name) || m.name.includes(name)) : undefined;
+      const matchedMember = name
+        ? members.find((m) => name.includes(m.name) || m.name.includes(name))
+        : undefined;
 
       rows.push({
-        date,
+        date: "",  // OCR에서 날짜 인식이 어려움 → 수동 입력
         time,
-        type: entry.type,
-        amount: entry.amount,
+        type: isExpense ? "EXPENSE" : "INCOME",
+        amount: rawAmount,
         description: name || "거래",
         memberName: matchedMember?.id || "",
       });
