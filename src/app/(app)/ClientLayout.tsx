@@ -211,6 +211,9 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           <Link href="/team"><Plus className="h-3.5 w-3.5" />새 팀</Link>
         </Button>
       </div>
+      <p className="mt-4 text-[10px] text-muted-foreground/50">
+        v{process.env.NEXT_PUBLIC_COMMIT_HASH}
+      </p>
     </>
   );
 
