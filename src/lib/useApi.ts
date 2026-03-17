@@ -27,8 +27,13 @@ export function useApi<T>(
   const [error, setError] = useState<string | null>(null);
   const mountedRef = useRef(true);
 
+  const hasFetchedRef = useRef(false);
+
   const fetchData = useCallback(async () => {
-    setLoading(true);
+    // 초기 로딩만 loading=true, refetch 시에는 기존 데이터 유지 (깜빡임 방지)
+    if (!hasFetchedRef.current) {
+      setLoading(true);
+    }
     setError(null);
     try {
       const res = await fetch(url);
@@ -46,6 +51,7 @@ export function useApi<T>(
       }
     } finally {
       if (mountedRef.current) {
+        hasFetchedRef.current = true;
         setLoading(false);
       }
     }
