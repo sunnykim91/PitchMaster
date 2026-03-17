@@ -387,7 +387,7 @@ export default function RecordsClient({
                 <Skeleton key={i} className="h-10 w-full" />
               ))}
             </div>
-          ) : allStats.filter((s) => s.points > 0 || s.goals > 0 || s.assists > 0 || s.mvp > 0 || s.attendanceRate > 0).length === 0 ? (
+          ) : allStats.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <p className="text-sm text-muted-foreground">아직 기록이 없습니다. 경기를 진행해보세요.</p>
             </div>
@@ -419,7 +419,7 @@ export default function RecordsClient({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/20">
-                  {allStats.filter((s) => s.points > 0 || s.goals > 0 || s.assists > 0 || s.mvp > 0 || s.attendanceRate > 0).map((s, i) => (
+                  {allStats.map((s, i) => (
                     <tr key={s.memberId} className={cn(s.memberId === userId && "bg-primary/5")}>
                       <td className="py-2.5 text-muted-foreground">{i + 1}</td>
                       <td className="py-2.5 font-semibold">{s.memberName || "-"}</td>
