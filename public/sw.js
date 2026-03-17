@@ -21,6 +21,37 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+/* ── Push Notifications ── */
+self.addEventListener("push", (event) => {
+  let data = { title: "PitchMaster", body: "새로운 알림이 있습니다.", url: "/notifications" };
+  try {
+    if (event.data) data = { ...data, ...event.data.json() };
+  } catch {
+    // fallback to defaults
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      data: { url: data.url },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/dashboard";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window" }).then((clients) => {
+      for (const client of clients) {
+        if (client.url.includes(url) && "focus" in client) return client.focus();
+      }
+      return self.clients.openWindow(url);
+    })
+  );
+});
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
