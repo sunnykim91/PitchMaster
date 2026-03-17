@@ -66,28 +66,34 @@ function mapRecord(raw: Record<string, unknown>): RecordStat {
   };
 }
 
+type InitialData = {
+  seasons: any[];
+  activeSeasonId?: string | null;
+  records?: any[];
+};
+
 export default function RecordsClient({
   userId,
   userRole,
-  initialSeasons,
+  initialData,
 }: {
   userId: string;
   userRole?: Role;
-  initialSeasons?: { seasons: any[] };
+  initialData?: InitialData;
 }) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
   const { showToast } = useToast();
 
-  // ── Fetch seasons ──
+  // ── Seasons (SSR 데이터 사용) ──
   const {
     data: seasonsPayload,
     loading: loadingSeasons,
     refetch: refetchSeasons,
   } = useApi<{ seasons: Record<string, unknown>[] }>(
     "/api/seasons",
-    initialSeasons ?? { seasons: [] },
-    { skip: !!initialSeasons }
+    { seasons: initialData?.seasons ?? [] },
+    { skip: !!initialData }
   );
 
   const seasons: Season[] = useMemo(
@@ -96,29 +102,39 @@ export default function RecordsClient({
   );
 
   const activeSeason = seasons.find((s) => s.isActive) ?? seasons[0];
-  const [seasonId, setSeasonId] = useState<string>("");
+  const [seasonId, setSeasonId] = useState<string>(initialData?.activeSeasonId ?? "");
 
-  // Sync seasonId when seasons load for the first time
+  // Sync seasonId when seasons load (SSR 없는 경우)
   useEffect(() => {
     if (seasons.length > 0 && !seasonId) {
       setSeasonId(activeSeason?.id ?? seasons[0].id);
     }
   }, [seasons, seasonId, activeSeason]);
 
-  // ── Fetch records for the selected season (시즌 선택 전에는 skip) ──
+  // ── Records (SSR 데이터 사용, 시즌 변경 시 클라이언트 fetch) ──
+  const isInitialSeason = seasonId === (initialData?.activeSeasonId ?? "");
   const {
     data: recordsPayload,
     loading: loadingRecords,
-    // refetch handled automatically by useApi when URL (seasonId) changes
   } = useApi<{ records: Record<string, unknown>[] }>(
     seasonId ? `/api/records?seasonId=${seasonId}` : "/api/records",
-    { records: [] },
-    { skip: !seasonId },
+    { records: (isInitialSeason && initialData?.records) ? initialData.records : [] },
+    { skip: !seasonId || (isInitialSeason && !!initialData?.records?.length) },
   );
 
+  // SSR 초기 데이터 → 시즌 변경 시 API fetch로 전환
+  const [initialRecordsUsed, setInitialRecordsUsed] = useState(false);
+  const effectiveRecords = useMemo(() => {
+    // SSR 데이터가 있고 아직 초기 시즌이면 SSR 데이터 사용
+    if (isInitialSeason && initialData?.records?.length && !initialRecordsUsed) {
+      return initialData.records;
+    }
+    return recordsPayload.records;
+  }, [isInitialSeason, initialData, initialRecordsUsed, recordsPayload]);
+
   const stats: RecordStat[] = useMemo(
-    () => recordsPayload.records.map(mapRecord),
-    [recordsPayload]
+    () => (effectiveRecords ?? []).map(mapRecord),
+    [effectiveRecords]
   );
 
   const season = seasons.find((s) => s.id === seasonId) ?? activeSeason;
@@ -193,6 +209,7 @@ export default function RecordsClient({
 
   function handleSeasonChange(value: string) {
     setSeasonId(value);
+    setInitialRecordsUsed(true); // SSR 데이터 대신 API fetch 사용
   }
 
   // useApi already refetches when URL changes (seasonId in URL),
