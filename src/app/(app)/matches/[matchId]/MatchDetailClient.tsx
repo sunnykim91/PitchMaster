@@ -19,6 +19,7 @@ import { cn, formatPhone, formatTime } from "@/lib/utils";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
 import { shareMatchResult } from "@/lib/kakaoShare";
+import { recommendFormation, type PlayerInput } from "@/lib/formationAI";
 
 /* ── API response row types (snake_case from DB) ── */
 
@@ -794,6 +795,72 @@ export default function MatchDetailClient({
         </CardContent>
       </Card>
       )}
+
+      {/* ── AI 포메이션 추천 ── */}
+      {canManage && attendingPlayers.length >= 5 && (() => {
+        const aiPlayers: PlayerInput[] = attendingPlayers.map((p) => ({
+          id: p.id,
+          name: p.name,
+          preferredPosition: p.preferredPosition,
+        }));
+        const rec = recommendFormation(aiPlayers, Math.min(attendingPlayers.length, 11));
+        if (!rec) return null;
+        return (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader>
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
+                AI Recommendation
+              </p>
+              <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+                AI 포메이션 추천
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-foreground/80">{rec.reason}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {rec.formation.slots.map((slot) => {
+                  const playerId = rec.assignments[slot.id];
+                  const player = aiPlayers.find((p) => p.id === playerId);
+                  return (
+                    <Badge key={slot.id} variant={player ? "default" : "secondary"} className="text-xs">
+                      {slot.label}: {player?.name ?? "미배정"}
+                    </Badge>
+                  );
+                })}
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                className="mt-4"
+                onClick={() => {
+                  // Convert AI recommendation to GeneratedSquad for all quarters
+                  const squads: GeneratedSquad[] = Array.from(
+                    { length: match.quarterCount },
+                    (_, i) => ({
+                      quarter_number: i + 1,
+                      formation: rec.formation.id,
+                      positions: Object.fromEntries(
+                        rec.formation.slots.map((slot) => [
+                          slot.id,
+                          {
+                            playerId: rec.assignments[slot.id] ?? "",
+                            x: slot.x,
+                            y: slot.y,
+                          },
+                        ])
+                      ),
+                    })
+                  );
+                  setGeneratedSquads(squads);
+                  setTacticsKey((k) => k + 1);
+                }}
+              >
+                AI 추천 적용하기
+              </Button>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {canManage && (
         <AutoFormationBuilder
