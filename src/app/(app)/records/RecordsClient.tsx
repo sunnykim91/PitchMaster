@@ -15,6 +15,10 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
+
+const PlayerRadarChart = dynamic(() => import("@/components/charts/PlayerRadarChart"), { ssr: false });
+const BarRankingChart = dynamic(() => import("@/components/charts/BarRankingChart"), { ssr: false });
 
 type Season = {
   id: string;
@@ -285,6 +289,19 @@ export default function RecordsClient({
                   </Card>
                 ))}
               </div>
+              {(myStats.goals > 0 || myStats.assists > 0 || myStats.mvp > 0) && (
+                <div className="mt-4">
+                  <PlayerRadarChart
+                    goals={myStats.goals}
+                    assists={myStats.assists}
+                    mvp={myStats.mvp}
+                    attendanceRate={myStats.attendanceRate}
+                    maxGoals={Math.max(...stats.map((s) => s.goals), 1)}
+                    maxAssists={Math.max(...stats.map((s) => s.assists), 1)}
+                    maxMvp={Math.max(...stats.map((s) => s.mvp), 1)}
+                  />
+                </div>
+              )}
               <p className="mt-3 text-sm text-muted-foreground">
                 {season?.name} 기준으로 {myStats.memberName || "나"}님의 기록을 보여줍니다.
               </p>
@@ -326,11 +343,11 @@ export default function RecordsClient({
               </div>
             ) : (
               [{
-                title: "득점왕", list: topGoals, key: "goals" as const,
+                title: "득점왕", list: topGoals, key: "goals" as const, color: "#22c55e",
               }, {
-                title: "어시스트왕", list: topAssists, key: "assists" as const,
+                title: "어시스트왕", list: topAssists, key: "assists" as const, color: "#38bdf8",
               }, {
-                title: "MVP왕", list: topMvp, key: "mvp" as const,
+                title: "MVP왕", list: topMvp, key: "mvp" as const, color: "#f59e0b",
               }].map((group) => (
                 <Card key={group.title} className="bg-secondary border-0 p-4">
                   <p className="text-sm font-bold">{group.title}</p>
@@ -358,6 +375,16 @@ export default function RecordsClient({
                       </div>
                     ))}
                   </div>
+                  {group.list.some((item) => item[group.key] > 0) && (
+                    <div className="mt-3">
+                      <BarRankingChart
+                        data={group.list
+                          .filter((item) => item[group.key] > 0)
+                          .map((item) => ({ name: item.memberName ?? "-", value: item[group.key] }))}
+                        color={group.color}
+                      />
+                    </div>
+                  )}
                 </Card>
               ))
             )}
