@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { isStaffOrAbove } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -45,4 +46,30 @@ export async function POST(request: NextRequest) {
 
   if (error) return apiError(error.message);
   return apiSuccess(data, 201);
+}
+
+export async function DELETE(request: NextRequest) {
+  const ctx = await getApiContext();
+  if (ctx instanceof NextResponse) return ctx;
+  const db = getSupabaseAdmin();
+  if (!db) return apiError("DB unavailable", 503);
+
+  const { id } = await request.json();
+  if (!id) return apiError("Missing id", 400);
+
+  const { data: comment } = await db
+    .from("post_comments")
+    .select("author_id")
+    .eq("id", id)
+    .single();
+  if (!comment) return apiError("Comment not found", 404);
+
+  const isAuthor = comment.author_id === ctx.userId;
+  const isStaff = isStaffOrAbove(ctx.teamRole);
+  if (!isAuthor && !isStaff) return apiError("Forbidden", 403);
+
+  const { error } = await db.from("post_comments").delete().eq("id", id);
+  if (error) return apiError(error.message, 500);
+
+  return apiSuccess({ ok: true });
 }

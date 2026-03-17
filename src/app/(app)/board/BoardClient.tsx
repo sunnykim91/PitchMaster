@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useRef, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
+import { isStaffOrAbove } from "@/lib/permissions";
+import type { Role } from "@/lib/types";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +21,7 @@ type Post = {
   title: string;
   content: string;
   category: "FREE" | "GALLERY";
+  authorId: string;
   author: string;
   createdAt: string;
   likes: number;
@@ -29,6 +32,7 @@ type Post = {
 type Comment = {
   id: string;
   postId: string;
+  authorId: string;
   authorName: string;
   content: string;
   createdAt: string;
@@ -43,6 +47,7 @@ function mapPost(raw: Record<string, unknown>): Post {
     title: raw.title as string,
     content: raw.content as string,
     category: raw.category as "FREE" | "GALLERY",
+    authorId: raw.author_id as string,
     author: (raw.author as { name: string })?.name ?? "",
     createdAt: (raw.created_at as string)?.slice(0, 10) ?? "",
     likes: (raw.likes_count as number) ?? 0,
@@ -56,15 +61,27 @@ function mapComment(raw: Record<string, unknown>): Comment {
   return {
     id: raw.id as string,
     postId: raw.post_id as string,
+    authorId: raw.author_id as string,
     authorName: (raw.author as { name: string })?.name ?? "",
     content: raw.content as string,
     createdAt: (raw.created_at as string)?.slice(0, 10) ?? "",
   };
 }
 
+type FormState = {
+  title: string;
+  content: string;
+  category: Post["category"];
+  imageUrl: string;
+};
+
+const EMPTY_FORM: FormState = { title: "", content: "", category: "FREE", imageUrl: "" };
+
 type InitialData = { posts: Record<string, unknown>[] };
 
 export default function BoardClient({
+  userId,
+  userRole,
   initialData,
 }: {
   userId: string;
@@ -72,6 +89,7 @@ export default function BoardClient({
   initialData?: InitialData;
 }) {
   const { showToast } = useToast();
+  const isStaff = isStaffOrAbove(userRole as Role | undefined);
 
   /* ── Data fetching ── */
   const {
@@ -91,11 +109,19 @@ export default function BoardClient({
 
   /* ── Local UI state ── */
   const [filter, setFilter] = useState<CategoryFilter>("ALL");
-  const [form, setForm] = useState({ title: "", content: "", category: "FREE" as Post["category"], imageUrl: "" });
+  const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [likingPostIds, setLikingPostIds] = useState<Set<string>>(new Set());
   const [commentingPostId, setCommentingPostId] = useState<string | null>(null);
+  const [deletingPostIds, setDeletingPostIds] = useState<Set<string>>(new Set());
+  const [deletingCommentIds, setDeletingCommentIds] = useState<Set<string>>(new Set());
+
+  /* ── Image upload state ── */
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   /* ── Per-post comments ── */
   const [expandedPostIds, setExpandedPostIds] = useState<Set<string>>(new Set());
@@ -127,7 +153,6 @@ export default function BoardClient({
         next.delete(postId);
       } else {
         next.add(postId);
-        // Fetch comments if we haven't yet
         if (!commentsByPost[postId]) {
           fetchComments(postId);
         }
@@ -142,24 +167,111 @@ export default function BoardClient({
     return [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }, [filter, posts]);
 
-  /* ── Handlers ── */
+  /* ── Image upload handler ── */
+  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error((json as { error?: string }).error ?? "업로드 실패");
+      }
+      const json = await res.json();
+      setForm((prev) => ({ ...prev, imageUrl: (json as { url: string }).url }));
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "업로드 실패");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  /* ── Submit (create or update) ── */
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!form.title.trim() || !form.content.trim()) return;
     setSubmitting(true);
     try {
       const imageUrls = form.imageUrl.trim() ? [form.imageUrl.trim()] : [];
-      await apiMutate("/api/posts", "POST", {
-        title: form.title,
-        content: form.content,
-        category: form.category,
-        imageUrls,
-      });
-      setForm({ title: "", content: "", category: "FREE", imageUrl: "" });
+      if (editingPostId) {
+        await apiMutate("/api/posts", "PUT", {
+          id: editingPostId,
+          title: form.title,
+          content: form.content,
+          category: form.category,
+          imageUrls,
+        });
+        showToast("게시글이 수정되었습니다.");
+        setEditingPostId(null);
+      } else {
+        await apiMutate("/api/posts", "POST", {
+          title: form.title,
+          content: form.content,
+          category: form.category,
+          imageUrls,
+        });
+        showToast("게시글이 등록되었습니다.");
+      }
+      setForm(EMPTY_FORM);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       await refetchPosts();
-      showToast("게시글이 등록되었습니다.");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  function handleEditPost(post: Post) {
+    setEditingPostId(post.id);
+    setForm({
+      title: post.title,
+      content: post.content,
+      category: post.category,
+      imageUrl: post.imageUrls?.[0] ?? "",
+    });
+    // Scroll form into view
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleCancelEdit() {
+    setEditingPostId(null);
+    setForm(EMPTY_FORM);
+    setUploadError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function handleDeletePost(postId: string) {
+    if (!confirm("게시글을 삭제하시겠습니까?")) return;
+    setDeletingPostIds((prev) => new Set(prev).add(postId));
+    try {
+      await apiMutate("/api/posts", "DELETE", { id: postId });
+      await refetchPosts();
+      showToast("게시글이 삭제되었습니다.");
+    } finally {
+      setDeletingPostIds((prev) => {
+        const next = new Set(prev);
+        next.delete(postId);
+        return next;
+      });
+    }
+  }
+
+  async function handleDeleteComment(commentId: string, postId: string) {
+    if (!confirm("댓글을 삭제하시겠습니까?")) return;
+    setDeletingCommentIds((prev) => new Set(prev).add(commentId));
+    try {
+      await apiMutate("/api/comments", "DELETE", { id: commentId });
+      await Promise.all([refetchPosts(), fetchComments(postId)]);
+      showToast("댓글이 삭제되었습니다.");
+    } finally {
+      setDeletingCommentIds((prev) => {
+        const next = new Set(prev);
+        next.delete(commentId);
+        return next;
+      });
     }
   }
 
@@ -184,7 +296,6 @@ export default function BoardClient({
     try {
       await apiMutate("/api/comments", "POST", { postId, content });
       setCommentInputs({ ...commentInputs, [postId]: "" });
-      // Refresh both posts (for comment count) and this post's comments
       await Promise.all([refetchPosts(), fetchComments(postId)]);
       showToast("댓글이 등록되었습니다.");
     } finally {
@@ -196,7 +307,6 @@ export default function BoardClient({
   if (postsLoading && posts.length === 0) {
     return (
       <div className="grid gap-5">
-        {/* Header skeleton */}
         <Card>
           <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4 pb-0">
             <div className="space-y-2">
@@ -210,7 +320,6 @@ export default function BoardClient({
             </div>
           </CardHeader>
         </Card>
-        {/* Post card skeletons */}
         {[1, 2, 3].map((i) => (
           <Card key={i} className="border-0 bg-secondary">
             <CardContent className="p-4 space-y-3">
@@ -253,12 +362,14 @@ export default function BoardClient({
         </CardHeader>
       </Card>
 
-      {/* New Post Form */}
+      {/* New / Edit Post Form */}
       <Card>
         <CardHeader>
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">New Post</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
+            {editingPostId ? "Edit Post" : "New Post"}
+          </p>
           <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
-            게시글 작성
+            {editingPostId ? "게시글 수정" : "게시글 작성"}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -300,14 +411,23 @@ export default function BoardClient({
                 </div>
                 {form.category === "GALLERY" && (
                   <div className="space-y-2">
-                    <Label htmlFor="post-image-url">이미지 URL</Label>
-                    <Input
-                      id="post-image-url"
-                      value={form.imageUrl}
-                      onChange={(event) => setForm({ ...form, imageUrl: event.target.value })}
-                      placeholder="https://example.com/image.jpg"
+                    <Label htmlFor="post-image-file">이미지 업로드</Label>
+                    <input
+                      ref={fileInputRef}
+                      id="post-image-file"
+                      type="file"
+                      accept="image/*"
+                      className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90 disabled:opacity-50"
+                      disabled={uploading}
+                      onChange={handleFileChange}
                     />
-                    {form.imageUrl && (
+                    {uploading && (
+                      <p className="text-xs text-muted-foreground">업로드 중...</p>
+                    )}
+                    {uploadError && (
+                      <p className="text-xs text-destructive">{uploadError}</p>
+                    )}
+                    {form.imageUrl && !uploading && (
                       <img
                         src={form.imageUrl}
                         alt="미리보기"
@@ -316,9 +436,16 @@ export default function BoardClient({
                     )}
                   </div>
                 )}
-                <Button type="submit" className="w-fit" disabled={submitting}>
-                  {submitting ? "등록 중..." : "게시글 등록"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button type="submit" className="w-fit" disabled={submitting || uploading}>
+                    {submitting ? (editingPostId ? "수정 중..." : "등록 중...") : (editingPostId ? "게시글 수정" : "게시글 등록")}
+                  </Button>
+                  {editingPostId && (
+                    <Button type="button" variant="outline" className="w-fit" onClick={handleCancelEdit}>
+                      취소
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </form>
@@ -343,29 +470,62 @@ export default function BoardClient({
               const postComments = commentsByPost[post.id] ?? [];
               const isExpanded = expandedPostIds.has(post.id);
               const isLoadingComments = loadingComments.has(post.id);
+              const canModifyPost = post.authorId === userId || isStaff;
               return (
                 <Card key={post.id} className="border-0 bg-secondary">
                   <CardContent className="p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <Badge variant="default">
                           {post.category === "FREE" ? "자유" : "사진"}
                         </Badge>
                         <h4 className="mt-2 text-lg font-bold">{post.title}</h4>
                         <p className="mt-2 text-sm text-muted-foreground">{post.content}</p>
+                        {post.imageUrls && post.imageUrls.length > 0 && (
+                          <img
+                            src={post.imageUrls[0]}
+                            alt={post.title}
+                            className="mt-3 max-h-48 rounded-xl object-contain"
+                          />
+                        )}
                         <p className="mt-3 text-xs text-muted-foreground">
                           {post.author} · {post.createdAt}
                         </p>
                       </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleLike(post.id)}
-                        disabled={likingPostIds.has(post.id)}
-                      >
-                        좋아요 {post.likes}
-                      </Button>
+                      <div className="flex flex-col gap-2 items-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleLike(post.id)}
+                          disabled={likingPostIds.has(post.id)}
+                        >
+                          좋아요 {post.likes}
+                        </Button>
+                        {canModifyPost && (
+                          <div className="flex gap-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs h-7 px-2"
+                              onClick={() => handleEditPost(post)}
+                            >
+                              수정
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs h-7 px-2 text-destructive hover:text-destructive"
+                              onClick={() => handleDeletePost(post.id)}
+                              disabled={deletingPostIds.has(post.id)}
+                            >
+                              {deletingPostIds.has(post.id) ? "삭제 중..." : "삭제"}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <button
@@ -384,15 +544,34 @@ export default function BoardClient({
 
                         {postComments.length > 0 && (
                           <div className="mt-3 space-y-2 border-t border-border pt-3">
-                            {postComments.map((comment) => (
-                              <Card key={comment.id} className="border-0 bg-muted/50">
-                                <CardContent className="px-3 py-2">
-                                  <p className="text-xs font-bold">{comment.authorName}</p>
-                                  <p className="text-sm text-muted-foreground">{comment.content}</p>
-                                  <p className="mt-1 text-xs text-muted-foreground">{comment.createdAt}</p>
-                                </CardContent>
-                              </Card>
-                            ))}
+                            {postComments.map((comment) => {
+                              const canDeleteComment = comment.authorId === userId || isStaff;
+                              return (
+                                <Card key={comment.id} className="border-0 bg-muted/50">
+                                  <CardContent className="px-3 py-2">
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold">{comment.authorName}</p>
+                                        <p className="text-sm text-muted-foreground">{comment.content}</p>
+                                        <p className="mt-1 text-xs text-muted-foreground">{comment.createdAt}</p>
+                                      </div>
+                                      {canDeleteComment && (
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          className="text-xs h-6 px-2 text-destructive hover:text-destructive shrink-0"
+                                          onClick={() => handleDeleteComment(comment.id, post.id)}
+                                          disabled={deletingCommentIds.has(comment.id)}
+                                        >
+                                          {deletingCommentIds.has(comment.id) ? "..." : "삭제"}
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              );
+                            })}
                           </div>
                         )}
 

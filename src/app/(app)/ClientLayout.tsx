@@ -283,6 +283,15 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             </Card>
           )}
           <div className="animate-fade-in-up">{children}</div>
+
+          {/* Footer */}
+          <footer className="mt-12 border-t border-border/20 pb-6 pt-4 text-center">
+            <div className="flex justify-center gap-3 text-xs text-muted-foreground/50">
+              <Link href="/privacy" className="transition hover:text-foreground">개인정보처리방침</Link>
+              <span>·</span>
+              <Link href="/terms" className="transition hover:text-foreground">이용약관</Link>
+            </div>
+          </footer>
         </div>
       </div>
     </div>
