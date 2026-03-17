@@ -598,7 +598,7 @@ export default function MatchDetailClient({
   }
 
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-5 stagger-children">
       {/* ── 참석투표 관리 (운영진 이상, 진행 전 경기만) ── */}
       {canManage && match.status !== "COMPLETED" && (
         <Card>

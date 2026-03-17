@@ -5,6 +5,7 @@ import { useApi, apiMutate } from "@/lib/useApi";
 import type { DetailedPosition, Role } from "@/lib/types";
 import { isPresident, isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
+import { useToast } from "@/lib/ToastContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn, formatPhone } from "@/lib/utils";
 
 type Member = {
@@ -67,20 +69,24 @@ const roleLabels: Record<Role, string> = {
 };
 
 export default function MembersClient({
-  currentRole,
-  currentUserId,
+  userRole,
+  userId,
+  initialData,
 }: {
-  currentRole?: Role;
-  currentUserId?: string;
+  userRole?: Role;
+  userId: string;
+  initialData?: { members: any[]; isStaff: boolean };
 }) {
-  const { data, loading, error, refetch } = useApi<{ members: ApiMemberRow[] }>(
+  const { data: membersData, loading, error, refetch } = useApi<{ members: ApiMemberRow[]; isStaff: boolean }>(
     "/api/members",
-    { members: [] },
+    initialData ?? { members: [], isStaff: false },
+    { skip: !!initialData },
   );
-  const members = useMemo(() => mapApiMembers(data.members), [data.members]);
+  const members = useMemo(() => mapApiMembers(membersData.members), [membersData.members]);
   const [confirmKick, setConfirmKick] = useState<string | null>(null);
   const { effectiveRole } = useViewAsRole();
-  const role = effectiveRole(currentRole);
+  const role = effectiveRole(userRole);
+  const { showToast } = useToast();
 
   const canChangeRole = isPresident(role);
   const canKick = isPresident(role);
@@ -96,6 +102,11 @@ export default function MembersClient({
   // 수동 연동
   const [linkingMemberId, setLinkingMemberId] = useState<string | null>(null);
 
+  // 버튼 로딩 상태
+  const [changingRoleId, setChangingRoleId] = useState<string | null>(null);
+  const [kickingId, setKickingId] = useState<string | null>(null);
+  const [linkingId, setLinkingId] = useState<string | null>(null);
+
   const linkedMembers = useMemo(() => members.filter((m) => m.isLinked), [members]);
   const unlinkedMembers = useMemo(() => members.filter((m) => !m.isLinked), [members]);
 
@@ -109,15 +120,33 @@ export default function MembersClient({
 
   async function handleRoleChange(memberId: string, newRole: Role) {
     if (!canChangeRole) return;
-    const { error: err } = await apiMutate("/api/members", "PUT", { memberId, role: newRole });
-    if (!err) await refetch();
+    setChangingRoleId(memberId);
+    try {
+      const { error: err } = await apiMutate("/api/members", "PUT", { memberId, role: newRole });
+      if (!err) {
+        showToast("역할이 변경되었습니다.");
+        await refetch();
+      } else {
+        showToast("역할 변경에 실패했습니다.", "error");
+      }
+    } finally {
+      setChangingRoleId(null);
+    }
   }
 
   async function handleKick(memberId: string) {
     if (!canKick) return;
-    const { error: err } = await apiMutate(`/api/members?memberId=${memberId}`, "DELETE");
-    if (!err) await refetch();
-    setConfirmKick(null);
+    setKickingId(memberId);
+    try {
+      const { error: err } = await apiMutate(`/api/members?memberId=${memberId}`, "DELETE");
+      if (!err) {
+        showToast("멤버가 제거되었습니다.");
+        await refetch();
+      }
+    } finally {
+      setKickingId(null);
+      setConfirmKick(null);
+    }
   }
 
   async function handlePreRegister() {
@@ -130,6 +159,7 @@ export default function MembersClient({
     });
     setRegSubmitting(false);
     if (!err) {
+      showToast("팀원이 사전 등록되었습니다.");
       setRegName("");
       setRegPhone("");
       setShowRegForm(false);
@@ -138,19 +168,36 @@ export default function MembersClient({
   }
 
   async function handleLink(memberId: string, userId: string) {
-    const { error: err } = await apiMutate("/api/members", "POST", {
-      action: "link",
-      memberId,
-      userId,
-    });
-    if (!err) {
-      setLinkingMemberId(null);
-      await refetch();
+    setLinkingId(memberId);
+    try {
+      const { error: err } = await apiMutate("/api/members", "POST", {
+        action: "link",
+        memberId,
+        userId,
+      });
+      if (!err) {
+        showToast("멤버가 연동되었습니다.");
+        setLinkingMemberId(null);
+        await refetch();
+      }
+    } finally {
+      setLinkingId(null);
     }
   }
 
   if (loading) {
-    return <Card className="p-6"><span>불러오는 중...</span></Card>;
+    return (
+      <div className="grid gap-5 stagger-children">
+        <Card><CardHeader><Skeleton className="h-3 w-20"/><Skeleton className="mt-1 h-7 w-40"/></CardHeader>
+          <CardContent><div className="grid gap-3 sm:grid-cols-3">
+            {[1,2,3].map(i => <div key={i} className="rounded-lg bg-secondary p-4 space-y-2"><Skeleton className="h-3 w-16"/><Skeleton className="h-6 w-12"/></div>)}
+          </div></CardContent>
+        </Card>
+        <Card><CardContent className="p-4 space-y-2">
+          {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-14 w-full rounded-lg"/>)}
+        </CardContent></Card>
+      </div>
+    );
   }
 
   if (error) {
@@ -158,7 +205,7 @@ export default function MembersClient({
   }
 
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-5 stagger-children">
       {/* ── Section 1: 회원 관리 ── */}
       <Card>
         <CardHeader>
@@ -169,7 +216,7 @@ export default function MembersClient({
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="px-4 py-2 text-xs font-bold">
-                현재 권한: {currentRole ? roleLabels[currentRole] : "확인 중"}
+                현재 권한: {userRole ? roleLabels[userRole] : "확인 중"}
               </Badge>
               {canPreRegister && (
                 <Button
@@ -274,26 +321,38 @@ export default function MembersClient({
                       <>
                         {linkingMemberId === member.id ? (
                           <div className="flex flex-wrap items-center gap-2">
-                            <Select onValueChange={(userId) => handleLink(member.id, userId)}>
+                            <Select
+                              onValueChange={(userId) => handleLink(member.id, userId)}
+                              disabled={linkingId === member.id}
+                            >
                               <SelectTrigger className="w-auto min-w-[140px] text-xs">
-                                <SelectValue placeholder="가입된 유저 선택" />
+                                <SelectValue placeholder={linkingId === member.id ? "연동 중..." : "가입된 유저 선택"} />
                               </SelectTrigger>
                               <SelectContent>
                                 {linkedMembers
                                   .filter((m) => m.id !== member.id)
                                   .map((m) => (
-                                    <SelectItem key={m.id} value={data.members.find((r) => r.id === m.id)?.user_id ?? ""}>
+                                    <SelectItem key={m.id} value={membersData.members.find((r) => r.id === m.id)?.user_id ?? ""}>
                                       {m.name} {m.phone ? `(${formatPhone(m.phone)})` : ""}
                                     </SelectItem>
                                   ))}
                               </SelectContent>
                             </Select>
-                            <Button variant="outline" size="sm" onClick={() => setLinkingMemberId(null)}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setLinkingMemberId(null)}
+                              disabled={linkingId === member.id}
+                            >
                               취소
                             </Button>
                           </div>
                         ) : (
-                          <Button variant="outline" size="sm" onClick={() => setLinkingMemberId(member.id)}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setLinkingMemberId(member.id)}
+                          >
                             수동 연동
                           </Button>
                         )}
@@ -302,11 +361,31 @@ export default function MembersClient({
                     {canKick && (
                       confirmKick === member.id ? (
                         <div className="flex gap-1">
-                          <Button variant="destructive" size="sm" onClick={() => handleKick(member.id)}>확인</Button>
-                          <Button variant="outline" size="sm" onClick={() => setConfirmKick(null)}>취소</Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleKick(member.id)}
+                            disabled={kickingId === member.id}
+                          >
+                            {kickingId === member.id ? "처리 중..." : "확인"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setConfirmKick(null)}
+                            disabled={kickingId === member.id}
+                          >
+                            취소
+                          </Button>
                         </div>
                       ) : (
-                        <Button variant="outline" size="sm" onClick={() => setConfirmKick(member.id)}>삭제</Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setConfirmKick(member.id)}
+                        >
+                          삭제
+                        </Button>
                       )
                     )}
                   </div>
@@ -357,7 +436,11 @@ export default function MembersClient({
                       : "양발"}
                   </Badge>
                   {canChangeRole ? (
-                    <Select value={member.role} onValueChange={(value) => handleRoleChange(member.id, value as Role)}>
+                    <Select
+                      value={member.role}
+                      onValueChange={(value) => handleRoleChange(member.id, value as Role)}
+                      disabled={changingRoleId === member.id}
+                    >
                       <SelectTrigger className="w-auto min-w-[100px]">
                         <SelectValue />
                       </SelectTrigger>
@@ -372,11 +455,25 @@ export default function MembersClient({
                       {roleLabels[member.role]}
                     </Badge>
                   )}
-                  {canKick && member.id !== currentUserId ? (
+                  {canKick && member.id !== userId ? (
                     confirmKick === member.id ? (
                       <div className="flex gap-1">
-                        <Button variant="destructive" size="sm" onClick={() => handleKick(member.id)}>확인</Button>
-                        <Button variant="outline" size="sm" onClick={() => setConfirmKick(null)}>취소</Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleKick(member.id)}
+                          disabled={kickingId === member.id}
+                        >
+                          {kickingId === member.id ? "처리 중..." : "확인"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setConfirmKick(null)}
+                          disabled={kickingId === member.id}
+                        >
+                          취소
+                        </Button>
                       </div>
                     ) : (
                       <Button variant="outline" size="sm" onClick={() => setConfirmKick(member.id)}>탈퇴</Button>

@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import SettingsClient from "@/app/(app)/settings/SettingsClient";
+import { getSettingsData } from "@/lib/server/getSettingsData";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -7,6 +8,8 @@ export default async function SettingsPage() {
   if (!session) {
     return null;
   }
+
+  const initialData = await getSettingsData(session.user.id, session.user.teamId ?? "");
 
   return (
     <SettingsClient
@@ -26,6 +29,7 @@ export default async function SettingsPage() {
         uniformPattern: "SOLID",
       }}
       userRole={session.user.teamRole}
+      initialData={initialData}
     />
   );
 }

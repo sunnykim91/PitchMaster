@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 
@@ -122,7 +123,8 @@ type BulkRow = {
   memberName: string;
 };
 
-export default function DuesClient({ userRole }: { userRole?: Role }) {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export default function DuesClient({ userId: _userId, userRole, initialData }: { userId?: string; userRole?: Role; initialData?: any }) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
   const { showToast } = useToast();
@@ -140,19 +142,29 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
     data: summaryData,
     loading: loadingSummary,
     refetch: refetchSummary,
-  } = useApi<DuesSummary>("/api/dues/summary", {
-    records: [],
-    balance: null,
-    balanceUpdatedAt: null,
-    settings: [],
-    penaltyRules: [],
-    penaltyRecords: [],
-  });
+  } = useApi<DuesSummary>(
+    "/api/dues/summary",
+    initialData
+      ? {
+          records: initialData.records,
+          balance: initialData.balance,
+          balanceUpdatedAt: initialData.balanceUpdatedAt,
+          settings: initialData.settings,
+          penaltyRules: initialData.penaltyRules,
+          penaltyRecords: initialData.penaltyRecords,
+        }
+      : { records: [], balance: null, balanceUpdatedAt: null, settings: [], penaltyRules: [], penaltyRecords: [] },
+    { skip: !!initialData }
+  );
 
   const {
     data: membersRaw,
     loading: loadingMembers,
-  } = useApi<{ members: ApiMemberRow[] }>("/api/members", { members: [] });
+  } = useApi<{ members: ApiMemberRow[] }>(
+    "/api/members",
+    initialData ? { members: initialData.members } : { members: [] },
+    { skip: !!initialData }
+  );
 
   /* ── Map API snake_case → camelCase ── */
   const records: DuesRecord[] = useMemo(
@@ -628,11 +640,23 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
   }, [penaltyRecords]);
 
   if (loading) {
-    return <Card className="p-6">불러오는 중...</Card>;
+    return (
+      <div className="grid gap-5 stagger-children">
+        <Card className="p-6"><div className="space-y-4">
+          <div className="flex items-center justify-between"><Skeleton className="h-5 w-32"/><Skeleton className="h-8 w-24"/></div>
+          <Skeleton className="h-10 w-48"/>
+          <Skeleton className="h-3 w-40"/>
+        </div></Card>
+        <Card className="p-6"><div className="space-y-3">
+          <Skeleton className="h-5 w-24"/>
+          {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-12 w-full"/>)}
+        </div></Card>
+      </div>
+    );
   }
 
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-5 stagger-children">
       {/* ── Section 1: 회비 현황 ── */}
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -959,7 +983,11 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
         </div>
 
         <div className="mt-4 space-y-2">
-          {filteredRecords.map((record) =>
+          {filteredRecords.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <p className="text-sm text-muted-foreground">아직 회비 기록이 없습니다.</p>
+            </div>
+          ) : filteredRecords.map((record) =>
             editingRecord?.id === record.id ? (
               <Card key={record.id} className="border-0 bg-secondary p-4">
                 <form className="grid gap-3" action={(fd) => handleUpdateRecord(fd)}>

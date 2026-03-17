@@ -1,8 +1,10 @@
 import { auth } from "@/lib/auth";
-import DuesClient from "@/app/(app)/dues/DuesClient";
+import DuesClient from "./DuesClient";
+import { getDuesData } from "@/lib/server/getDuesData";
 
 export default async function DuesPage() {
   const session = await auth();
   if (!session) return null;
-  return <DuesClient userRole={session.user.teamRole} />;
+  const initialData = await getDuesData(session.user.teamId!);
+  return <DuesClient userId={session.user.id} userRole={session.user.teamRole} initialData={initialData} />;
 }

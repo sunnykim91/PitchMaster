@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useApi, apiMutate } from "@/lib/useApi";
+import { useToast } from "@/lib/ToastContext";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Post = {
   id: string;
@@ -61,13 +62,27 @@ function mapComment(raw: Record<string, unknown>): Comment {
   };
 }
 
-export default function BoardClient({ userId, userName }: { userId: string; userName?: string }) {
+type InitialData = { posts: Record<string, unknown>[] };
+
+export default function BoardClient({
+  initialData,
+}: {
+  userId: string;
+  userRole?: string;
+  initialData?: InitialData;
+}) {
+  const { showToast } = useToast();
+
   /* ── Data fetching ── */
   const {
     data: postsPayload,
     loading: postsLoading,
     refetch: refetchPosts,
-  } = useApi<{ posts: Record<string, unknown>[] }>("/api/posts", { posts: [] });
+  } = useApi<{ posts: Record<string, unknown>[] }>(
+    "/api/posts",
+    initialData ?? { posts: [] },
+    { skip: !!initialData },
+  );
 
   const posts: Post[] = useMemo(
     () => postsPayload.posts.map(mapPost),
@@ -80,6 +95,7 @@ export default function BoardClient({ userId, userName }: { userId: string; user
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [likingPostIds, setLikingPostIds] = useState<Set<string>>(new Set());
+  const [commentingPostId, setCommentingPostId] = useState<string | null>(null);
 
   /* ── Per-post comments ── */
   const [expandedPostIds, setExpandedPostIds] = useState<Set<string>>(new Set());
@@ -141,6 +157,7 @@ export default function BoardClient({ userId, userName }: { userId: string; user
       });
       setForm({ title: "", content: "", category: "FREE", imageUrl: "" });
       await refetchPosts();
+      showToast("게시글이 등록되었습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -163,23 +180,54 @@ export default function BoardClient({ userId, userName }: { userId: string; user
   async function handleAddComment(postId: string) {
     const content = commentInputs[postId]?.trim();
     if (!content) return;
-    await apiMutate("/api/comments", "POST", { postId, content });
-    setCommentInputs({ ...commentInputs, [postId]: "" });
-    // Refresh both posts (for comment count) and this post's comments
-    await Promise.all([refetchPosts(), fetchComments(postId)]);
+    setCommentingPostId(postId);
+    try {
+      await apiMutate("/api/comments", "POST", { postId, content });
+      setCommentInputs({ ...commentInputs, [postId]: "" });
+      // Refresh both posts (for comment count) and this post's comments
+      await Promise.all([refetchPosts(), fetchComments(postId)]);
+      showToast("댓글이 등록되었습니다.");
+    } finally {
+      setCommentingPostId(null);
+    }
   }
 
   /* ── Loading state ── */
   if (postsLoading && posts.length === 0) {
     return (
-      <Card className="p-6">
-        <span className="text-muted-foreground">불러오는 중...</span>
-      </Card>
+      <div className="grid gap-5">
+        {/* Header skeleton */}
+        <Card>
+          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4 pb-0">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-7 w-32" />
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-8 w-12" />
+              <Skeleton className="h-8 w-12" />
+              <Skeleton className="h-8 w-12" />
+            </div>
+          </CardHeader>
+        </Card>
+        {/* Post card skeletons */}
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="border-0 bg-secondary">
+            <CardContent className="p-4 space-y-3">
+              <Skeleton className="h-4 w-12" />
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-24" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     );
   }
 
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-5 stagger-children">
       {/* Header + Filter */}
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4 pb-0">
@@ -286,93 +334,100 @@ export default function BoardClient({ userId, userName }: { userId: string; user
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {filteredPosts.map((post) => {
-            const postComments = commentsByPost[post.id] ?? [];
-            const isExpanded = expandedPostIds.has(post.id);
-            const isLoadingComments = loadingComments.has(post.id);
-            return (
-              <Card key={post.id} className="border-0 bg-secondary">
-                <CardContent className="p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <Badge variant="default">
-                        {post.category === "FREE" ? "자유" : "사진"}
-                      </Badge>
-                      <h4 className="mt-2 text-lg font-bold">{post.title}</h4>
-                      <p className="mt-2 text-sm text-muted-foreground">{post.content}</p>
-                      <p className="mt-3 text-xs text-muted-foreground">
-                        {post.author} · {post.createdAt}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleLike(post.id)}
-                      disabled={likingPostIds.has(post.id)}
-                    >
-                      좋아요 {post.likes}
-                    </Button>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="mt-3 text-xs text-muted-foreground hover:underline"
-                    onClick={() => toggleExpand(post.id)}
-                  >
-                    댓글 {post.comments}개 {isExpanded ? "접기" : "보기"}
-                  </button>
-
-                  {isExpanded && (
-                    <>
-                      {isLoadingComments && (
-                        <p className="mt-2 text-xs text-muted-foreground">댓글 불러오는 중...</p>
-                      )}
-
-                      {postComments.length > 0 && (
-                        <div className="mt-3 space-y-2 border-t border-border pt-3">
-                          {postComments.map((comment) => (
-                            <Card key={comment.id} className="border-0 bg-muted/50">
-                              <CardContent className="px-3 py-2">
-                                <p className="text-xs font-bold">{comment.authorName}</p>
-                                <p className="text-sm text-muted-foreground">{comment.content}</p>
-                                <p className="mt-1 text-xs text-muted-foreground">{comment.createdAt}</p>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="mt-3 flex gap-2">
-                        <Input
-                          type="text"
-                          value={commentInputs[post.id] ?? ""}
-                          onChange={(event) =>
-                            setCommentInputs({ ...commentInputs, [post.id]: event.target.value })
-                          }
-                          placeholder="댓글을 입력하세요..."
-                          className="flex-1 text-xs"
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter") {
-                              event.preventDefault();
-                              handleAddComment(post.id);
-                            }
-                          }}
-                        />
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={() => handleAddComment(post.id)}
-                        >
-                          등록
-                        </Button>
+          {filteredPosts.length === 0 ? (
+            <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+              해당 카테고리에 게시글이 없습니다.
+            </div>
+          ) : (
+            filteredPosts.map((post) => {
+              const postComments = commentsByPost[post.id] ?? [];
+              const isExpanded = expandedPostIds.has(post.id);
+              const isLoadingComments = loadingComments.has(post.id);
+              return (
+                <Card key={post.id} className="border-0 bg-secondary">
+                  <CardContent className="p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <Badge variant="default">
+                          {post.category === "FREE" ? "자유" : "사진"}
+                        </Badge>
+                        <h4 className="mt-2 text-lg font-bold">{post.title}</h4>
+                        <p className="mt-2 text-sm text-muted-foreground">{post.content}</p>
+                        <p className="mt-3 text-xs text-muted-foreground">
+                          {post.author} · {post.createdAt}
+                        </p>
                       </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleLike(post.id)}
+                        disabled={likingPostIds.has(post.id)}
+                      >
+                        좋아요 {post.likes}
+                      </Button>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="mt-3 text-xs text-muted-foreground hover:underline"
+                      onClick={() => toggleExpand(post.id)}
+                    >
+                      댓글 {post.comments}개 {isExpanded ? "접기" : "보기"}
+                    </button>
+
+                    {isExpanded && (
+                      <>
+                        {isLoadingComments && (
+                          <p className="mt-2 text-xs text-muted-foreground">댓글 불러오는 중...</p>
+                        )}
+
+                        {postComments.length > 0 && (
+                          <div className="mt-3 space-y-2 border-t border-border pt-3">
+                            {postComments.map((comment) => (
+                              <Card key={comment.id} className="border-0 bg-muted/50">
+                                <CardContent className="px-3 py-2">
+                                  <p className="text-xs font-bold">{comment.authorName}</p>
+                                  <p className="text-sm text-muted-foreground">{comment.content}</p>
+                                  <p className="mt-1 text-xs text-muted-foreground">{comment.createdAt}</p>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="mt-3 flex gap-2">
+                          <Input
+                            type="text"
+                            value={commentInputs[post.id] ?? ""}
+                            onChange={(event) =>
+                              setCommentInputs({ ...commentInputs, [post.id]: event.target.value })
+                            }
+                            placeholder="댓글을 입력하세요..."
+                            className="flex-1 text-xs"
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.preventDefault();
+                                handleAddComment(post.id);
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => handleAddComment(post.id)}
+                            disabled={commentingPostId === post.id}
+                          >
+                            등록
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
         </CardContent>
       </Card>
     </div>

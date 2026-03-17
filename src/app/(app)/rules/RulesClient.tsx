@@ -5,6 +5,7 @@ import type { FormEvent } from "react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
+import { useToast } from "@/lib/ToastContext";
 import type { Role } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type RuleCategory = "일반" | "회비" | "경조사" | "기타";
 
@@ -50,11 +52,18 @@ function mapRule(apiRule: ApiRule): Rule {
 
 const categories: RuleCategory[] = ["일반", "회비", "경조사", "기타"];
 
-export default function RulesClient({ userRole }: { userRole?: Role }) {
+type InitialData = { rules: ApiRule[] };
+
+export default function RulesClient({ userRole, initialData }: { userRole?: Role; initialData?: InitialData }) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
+  const { showToast } = useToast();
 
-  const { data, loading, refetch } = useApi<{ rules: ApiRule[] }>("/api/rules", { rules: [] });
+  const { data, loading, refetch } = useApi<{ rules: ApiRule[] }>(
+    "/api/rules",
+    initialData ?? { rules: [] },
+    { skip: !!initialData },
+  );
   const rules = useMemo(() => data.rules.map(mapRule), [data.rules]);
 
   const [selectedCategory, setSelectedCategory] = useState<RuleCategory | "ALL">("ALL");
@@ -74,19 +83,29 @@ export default function RulesClient({ userRole }: { userRole?: Role }) {
     setSubmitting(true);
     try {
       if (editingId) {
-        await apiMutate("/api/rules", "PUT", {
+        const { error } = await apiMutate("/api/rules", "PUT", {
           id: editingId,
           title: formState.title,
           content: formState.content,
           category: formState.category,
         });
+        if (error) {
+          showToast(error, "error");
+          return;
+        }
         setEditingId(null);
+        showToast("회칙이 수정되었습니다.");
       } else {
-        await apiMutate("/api/rules", "POST", {
+        const { error } = await apiMutate("/api/rules", "POST", {
           title: formState.title,
           content: formState.content,
           category: formState.category,
         });
+        if (error) {
+          showToast(error, "error");
+          return;
+        }
+        showToast("회칙이 등록되었습니다.");
       }
 
       setFormState({ title: "", content: "", category: "일반" });
@@ -106,16 +125,43 @@ export default function RulesClient({ userRole }: { userRole?: Role }) {
     setFormState({ title: "", content: "", category: "일반" });
   }
 
-  if (loading) {
+  if (loading && rules.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-6">불러오는 중...</CardContent>
-      </Card>
+      <div className="grid gap-5">
+        {/* Header skeleton */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-7 w-32" />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-8 w-14" />
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        {/* Rule card skeletons */}
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="border-0 bg-secondary">
+            <CardContent className="p-4 space-y-3">
+              <Skeleton className="h-4 w-12" />
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-40" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     );
   }
 
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-5 stagger-children">
       {/* Header & Filter */}
       <Card>
         <CardContent className="p-6">
@@ -216,29 +262,35 @@ export default function RulesClient({ userRole }: { userRole?: Role }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {filteredRules.map((rule) => (
-              <Card key={rule.id} className="border-0 bg-secondary">
-                <CardContent className="p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <Badge variant="default" className="text-[11px] uppercase tracking-[0.2em]">
-                        {rule.category}
-                      </Badge>
-                      <h4 className="mt-2 text-lg font-bold text-foreground">{rule.title}</h4>
-                      <p className="mt-2 text-sm text-foreground/80">{rule.content}</p>
-                      <p className="mt-3 text-xs text-muted-foreground">
-                        등록: {rule.createdAt} · 수정: {rule.updatedAt}
-                      </p>
+            {filteredRules.length === 0 ? (
+              <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+                등록된 회칙이 없습니다.
+              </div>
+            ) : (
+              filteredRules.map((rule) => (
+                <Card key={rule.id} className="border-0 bg-secondary">
+                  <CardContent className="p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <Badge variant="default" className="text-[11px] uppercase tracking-[0.2em]">
+                          {rule.category}
+                        </Badge>
+                        <h4 className="mt-2 text-lg font-bold text-foreground">{rule.title}</h4>
+                        <p className="mt-2 text-sm text-foreground/80">{rule.content}</p>
+                        <p className="mt-3 text-xs text-muted-foreground">
+                          등록: {rule.createdAt} · 수정: {rule.updatedAt}
+                        </p>
+                      </div>
+                      {isStaffOrAbove(role) && (
+                        <Button type="button" variant="outline" size="sm" onClick={() => handleEdit(rule)}>
+                          수정
+                        </Button>
+                      )}
                     </div>
-                    {isStaffOrAbove(role) && (
-                      <Button type="button" variant="outline" size="sm" onClick={() => handleEdit(rule)}>
-                        수정
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>

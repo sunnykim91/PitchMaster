@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn, formatPhone, stripPhone } from "@/lib/utils";
 
@@ -78,20 +79,57 @@ function mapTeamResponse(res: TeamApiResponse, fallback: TeamSettings): TeamSett
   };
 }
 
+type InitialData = {
+  profile: Record<string, unknown> | null;
+  team: Record<string, unknown> | null;
+};
+
 export default function SettingsClient({
   sessionProfile,
   sessionTeam,
   userRole,
+  initialData,
 }: {
   sessionProfile: Profile;
   sessionTeam: TeamSettings;
   userRole?: Role;
+  initialData?: InitialData;
 }) {
   const router = useRouter();
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
-  const defaultProfile = useMemo(() => sessionProfile, [sessionProfile]);
-  const defaultTeam = useMemo(() => sessionTeam, [sessionTeam]);
+
+  // Merge SSR initialData with session fallback for defaults
+  const defaultProfile = useMemo((): Profile => {
+    const p = initialData?.profile;
+    if (p) {
+      return {
+        name: (p.name as string) ?? sessionProfile.name,
+        phone: (p.phone as string) ?? sessionProfile.phone,
+        preferredPositions: (p.preferred_positions as PreferredPosition[]) ?? sessionProfile.preferredPositions,
+        preferredFoot: (p.preferred_foot as PreferredFoot) ?? sessionProfile.preferredFoot,
+        profileImageUrl: (p.profile_image_url as string) ?? sessionProfile.profileImageUrl,
+      };
+    }
+    return sessionProfile;
+  }, [initialData, sessionProfile]);
+
+  const defaultTeam = useMemo((): TeamSettings => {
+    const t = initialData?.team;
+    if (t) {
+      return {
+        teamName: (t.name as string) ?? sessionTeam.teamName,
+        logoUrl: (t.logo_url as string) ?? sessionTeam.logoUrl,
+        inviteCode: (t.invite_code as string) ?? sessionTeam.inviteCode,
+        uniformPrimary: (t.uniform_primary as string) ?? sessionTeam.uniformPrimary,
+        uniformSecondary: (t.uniform_secondary as string) ?? sessionTeam.uniformSecondary,
+        uniformPattern: (t.uniform_pattern as TeamSettings["uniformPattern"]) ?? sessionTeam.uniformPattern,
+      };
+    }
+    return sessionTeam;
+  }, [initialData, sessionTeam]);
+
+  const hasInitialData = Boolean(initialData?.profile && initialData?.team);
 
   // --- Fetch profile from API ---
   const {
@@ -107,7 +145,7 @@ export default function SettingsClient({
       preferred_foot: defaultProfile.preferredFoot,
       profile_image_url: defaultProfile.profileImageUrl,
     },
-  });
+  }, { skip: hasInitialData });
 
   // --- Fetch team from API ---
   const {
@@ -123,7 +161,7 @@ export default function SettingsClient({
       uniform_secondary: defaultTeam.uniformSecondary,
       uniform_pattern: defaultTeam.uniformPattern,
     },
-  });
+  }, { skip: hasInitialData });
 
   // --- Local form state (editable) ---
   const [profile, setProfile] = useState<Profile>(defaultProfile);
@@ -251,11 +289,26 @@ export default function SettingsClient({
   }
 
   if (!ready) {
-    return <Card className="p-6">불러오는 중...</Card>;
+    return (
+      <div className="grid gap-5 stagger-children">
+        {[1, 2].map((i) => (
+          <Card key={i}>
+            <CardContent className="p-6 space-y-4">
+              <Skeleton className="h-5 w-32" />
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[1, 2, 3, 4].map((j) => (
+                  <Skeleton key={j} className="h-10 w-full" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
   }
 
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-5 stagger-children">
       {message ? (
         <Card className="border-primary/20 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary">
           {message}

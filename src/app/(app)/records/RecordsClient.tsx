@@ -5,12 +5,14 @@ import type { FormEvent } from "react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
+import { useToast } from "@/lib/ToastContext";
 import type { Role } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
@@ -60,16 +62,29 @@ function mapRecord(raw: Record<string, unknown>): RecordStat {
   };
 }
 
-export default function RecordsClient({ userId, userRole }: { userId: string; userRole?: Role }) {
+export default function RecordsClient({
+  userId,
+  userRole,
+  initialSeasons,
+}: {
+  userId: string;
+  userRole?: Role;
+  initialSeasons?: { seasons: any[] };
+}) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
+  const { showToast } = useToast();
 
   // ── Fetch seasons ──
   const {
     data: seasonsPayload,
     loading: loadingSeasons,
     refetch: refetchSeasons,
-  } = useApi<{ seasons: Record<string, unknown>[] }>("/api/seasons", { seasons: [] });
+  } = useApi<{ seasons: Record<string, unknown>[] }>(
+    "/api/seasons",
+    initialSeasons ?? { seasons: [] },
+    { skip: !!initialSeasons }
+  );
 
   const seasons: Season[] = useMemo(
     () => seasonsPayload.seasons.map(mapSeason),
@@ -113,9 +128,9 @@ export default function RecordsClient({ userId, userRole }: { userId: string; us
     preferredPositions: [],
   };
 
-  const topGoals = [...stats].sort((a, b) => b.goals - a.goals).slice(0, 3);
-  const topAssists = [...stats].sort((a, b) => b.assists - a.assists).slice(0, 3);
-  const topMvp = [...stats].sort((a, b) => b.mvp - a.mvp).slice(0, 3);
+  const topGoals = useMemo(() => [...stats].sort((a, b) => b.goals - a.goals).slice(0, 3), [stats]);
+  const topAssists = useMemo(() => [...stats].sort((a, b) => b.assists - a.assists).slice(0, 3), [stats]);
+  const topMvp = useMemo(() => [...stats].sort((a, b) => b.mvp - a.mvp).slice(0, 3), [stats]);
 
   const [sortKey, setSortKey] = useState<"points" | "goals" | "assists" | "mvp" | "attendanceRate">("points");
   const allStats = useMemo(() => {
@@ -131,29 +146,43 @@ export default function RecordsClient({ userId, userRole }: { userId: string; us
     ? stats.reduce((sum, item) => sum + item.attendanceRate, 0) / stats.length
     : 0;
 
+  // ── Button loading states ──
+  const [addingSeason, setAddingSeason] = useState(false);
+  const [activatingId, setActivatingId] = useState<string | null>(null);
+
   async function handleAddSeason(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    setAddingSeason(true);
     const { error } = await apiMutate("/api/seasons", "POST", {
       name: String(formData.get("name")),
       startDate: String(formData.get("startDate")),
       endDate: String(formData.get("endDate")),
       isActive: Boolean(formData.get("isActive")),
     });
+    setAddingSeason(false);
     if (!error) {
       await refetchSeasons();
       event.currentTarget.reset();
+      showToast("시즌이 추가되었습니다.");
+    } else {
+      showToast("시즌 추가에 실패했습니다.", "error");
     }
   }
 
   async function handleActivateSeason(id: string) {
+    setActivatingId(id);
     const { error } = await apiMutate("/api/seasons", "PUT", {
       id,
       isActive: true,
     });
+    setActivatingId(null);
     if (!error) {
       await refetchSeasons();
       setSeasonId(id);
+      showToast("시즌이 활성화되었습니다.");
+    } else {
+      showToast("시즌 활성화에 실패했습니다.", "error");
     }
   }
 
@@ -171,14 +200,40 @@ export default function RecordsClient({ userId, userRole }: { userId: string; us
 
   if (loadingSeasons) {
     return (
-      <Card className="p-6">
-        <span className="text-muted-foreground">불러오는 중...</span>
-      </Card>
+      <div className="grid gap-5 stagger-children">
+        <Card>
+          <CardContent className="p-6">
+            <div className="space-y-3">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-7 w-48" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+          </CardContent>
+        </Card>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-4 space-y-3">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-4 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Card>
+          <CardContent className="p-4 space-y-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-5 stagger-children">
       {/* ── 내 기록 (My Stats) ── */}
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
@@ -206,7 +261,17 @@ export default function RecordsClient({ userId, userRole }: { userId: string; us
         </CardHeader>
         <CardContent>
           {loadingRecords ? (
-            <p className="text-sm text-muted-foreground">기록 불러오는 중...</p>
+            <div className="space-y-3">
+              <div className="grid gap-3 md:grid-cols-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <Card key={i} className="border-0 p-4">
+                    <Skeleton className="h-3 w-16 mb-2" />
+                    <Skeleton className="h-8 w-12" />
+                  </Card>
+                ))}
+              </div>
+              <Skeleton className="h-4 w-56" />
+            </div>
           ) : (
             <>
               <div className="grid gap-3 md:grid-cols-4">
@@ -244,7 +309,25 @@ export default function RecordsClient({ userId, userRole }: { userId: string; us
           </CardHeader>
           <CardContent className="grid gap-3">
             {loadingRecords ? (
-              <p className="text-sm text-muted-foreground">랭킹 불러오는 중...</p>
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="bg-secondary border-0 p-4">
+                    <Skeleton className="h-4 w-20 mb-3" />
+                    <div className="space-y-2">
+                      {[1, 2, 3].map((j) => (
+                        <div key={j} className="flex justify-between">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-4 w-8" />
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : stats.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-sm text-muted-foreground">아직 기록이 없습니다. 경기를 진행해보세요.</p>
+              </div>
             ) : (
               [{
                 title: "득점왕", list: topGoals, key: "goals" as const,
@@ -295,7 +378,15 @@ export default function RecordsClient({ userId, userRole }: { userId: string; us
           </CardHeader>
           <CardContent>
             {loadingRecords ? (
-              <p className="text-sm text-muted-foreground">불러오는 중...</p>
+              <div className="space-y-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
+              </div>
+            ) : allStats.filter((s) => s.points > 0 || s.goals > 0 || s.assists > 0 || s.mvp > 0 || s.attendanceRate > 0).length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-sm text-muted-foreground">아직 기록이 없습니다. 경기를 진행해보세요.</p>
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -372,7 +463,15 @@ export default function RecordsClient({ userId, userRole }: { userId: string; us
             </CardHeader>
             <CardContent className="space-y-2">
               {loadingRecords ? (
-                <p className="text-sm text-muted-foreground">포지션 불러오는 중...</p>
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-14 w-full" />
+                  ))}
+                </div>
+              ) : stats.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <p className="text-sm text-muted-foreground">아직 기록이 없습니다. 경기를 진행해보세요.</p>
+                </div>
               ) : (
                 stats.map((member) => (
                   <Card
@@ -449,8 +548,8 @@ export default function RecordsClient({ userId, userRole }: { userId: string; us
                 <input name="isActive" type="checkbox" className="h-4 w-4 accent-primary" />
                 새 시즌을 활성화
               </Label>
-              <Button type="submit" size="sm">
-                시즌 추가
+              <Button type="submit" size="sm" disabled={addingSeason}>
+                {addingSeason ? "추가 중..." : "시즌 추가"}
               </Button>
             </form>
           )}
@@ -472,8 +571,9 @@ export default function RecordsClient({ userId, userRole }: { userId: string; us
                     size="sm"
                     variant={item.isActive ? "default" : "outline"}
                     onClick={() => handleActivateSeason(item.id)}
+                    disabled={activatingId === item.id}
                   >
-                    {item.isActive ? "활성" : "활성화"}
+                    {activatingId === item.id ? "처리 중..." : item.isActive ? "활성" : "활성화"}
                   </Button>
                 ) : (
                   <Badge variant={item.isActive ? "default" : "secondary"}>
