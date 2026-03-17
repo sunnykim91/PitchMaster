@@ -119,9 +119,14 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
       <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         {/* Next Match - Sky blue accent */}
         <Card>
-          <CardHeader className="pb-3">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-sky-400">Next Match</p>
-            <CardTitle className="font-heading text-2xl font-bold uppercase">다가오는 경기</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-sky-400">Next Match</p>
+              <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">다가오는 경기</CardTitle>
+            </div>
+            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
+              <Link href="/matches">전체 일정 &rarr;</Link>
+            </Button>
           </CardHeader>
           <CardContent>
             {upcomingMatch ? (
@@ -148,20 +153,28 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
                 </CardContent>
               </Card>
             ) : (
-              <Card className="border-0 bg-secondary">
-                <CardContent className="p-4 text-sm text-muted-foreground">
-                  예정된 경기가 없습니다.
-                </CardContent>
-              </Card>
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/50 py-10 text-center">
+                <span className="text-3xl">&#9917;</span>
+                <p className="mt-3 text-sm font-semibold text-foreground/70">예정된 경기가 없어요</p>
+                <p className="mt-1 text-xs text-muted-foreground">새 경기를 등록해보세요.</p>
+                <Button size="sm" className="mt-4" asChild>
+                  <Link href="/matches">경기 등록하기</Link>
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>
 
         {/* Votes - Violet accent */}
         <Card>
-          <CardHeader className="pb-3">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-400">Votes</p>
-            <CardTitle className="font-heading text-2xl font-bold uppercase">진행 중인 투표</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-400">Votes</p>
+              <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">진행 중인 투표</CardTitle>
+            </div>
+            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
+              <Link href="/matches">투표하기 &rarr;</Link>
+            </Button>
           </CardHeader>
           <CardContent className="space-y-2">
             {activeVotes.length > 0 ? (
@@ -182,14 +195,32 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
                 </Card>
               ))
             ) : (
-              <Card className="border-0 bg-secondary">
-                <CardContent className="p-3 text-sm text-muted-foreground">
-                  진행 중인 투표가 없습니다.
-                </CardContent>
-              </Card>
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/50 py-8 text-center">
+                <span className="text-2xl">&#9989;</span>
+                <p className="mt-2 text-sm text-muted-foreground">진행 중인 투표가 없습니다.</p>
+              </div>
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Quick Navigation */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {[
+          { label: "경기 일정", href: "/matches", color: "text-sky-400", bg: "hover:bg-sky-500/5" },
+          { label: "내 기록", href: "/records", color: "text-violet-400", bg: "hover:bg-violet-500/5" },
+          { label: "회비 관리", href: "/dues", color: "text-blue-400", bg: "hover:bg-blue-500/5" },
+          { label: "팀원 관리", href: "/members", color: "text-emerald-400", bg: "hover:bg-emerald-500/5" },
+        ].map((nav) => (
+          <Link
+            key={nav.href}
+            href={nav.href}
+            className={`flex items-center justify-center gap-2 rounded-xl border border-border/30 bg-card py-3 text-sm font-semibold transition-colors ${nav.bg}`}
+          >
+            <span className={nav.color}>{nav.label}</span>
+            <span className="text-muted-foreground">&rarr;</span>
+          </Link>
+        ))}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
@@ -210,21 +241,24 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
                 </Card>
               ))
             ) : (
-              <Card className="border-0 bg-secondary">
-                <CardContent className="flex items-center gap-3 p-3 text-sm text-muted-foreground">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-                  모든 할 일을 완료했습니다!
-                </CardContent>
-              </Card>
+              <div className="flex items-center gap-3 rounded-lg bg-emerald-500/5 px-4 py-3">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                <p className="text-sm text-emerald-400/80">모든 할 일을 완료했습니다!</p>
+              </div>
             )}
           </CardContent>
         </Card>
 
         {/* Result - Green accent (primary) */}
         <Card>
-          <CardHeader className="pb-3">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-emerald-400">Result</p>
-            <CardTitle className="font-heading text-2xl font-bold uppercase">최근 경기 요약</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-emerald-400">Result</p>
+              <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">최근 경기 요약</CardTitle>
+            </div>
+            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
+              <Link href="/records">전체 기록 &rarr;</Link>
+            </Button>
           </CardHeader>
           <CardContent>
             {recentResult ? (
@@ -258,11 +292,11 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
                 </CardContent>
               </Card>
             ) : (
-              <Card className="border-0 bg-secondary">
-                <CardContent className="p-4 text-sm text-muted-foreground">
-                  최근 경기 결과가 없습니다.
-                </CardContent>
-              </Card>
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/50 py-10 text-center">
+                <span className="text-3xl">&#127942;</span>
+                <p className="mt-3 text-sm font-semibold text-foreground/70">아직 완료된 경기가 없어요</p>
+                <p className="mt-1 text-xs text-muted-foreground">경기를 진행하면 결과가 여기에 표시됩니다.</p>
+              </div>
             )}
           </CardContent>
         </Card>
