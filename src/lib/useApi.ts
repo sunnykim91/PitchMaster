@@ -23,7 +23,7 @@ export function useApi<T>(
   refetch: () => Promise<void>;
 } {
   const [data, setData] = useState<T>(initialData);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!options?.skip);
   const [error, setError] = useState<string | null>(null);
 
   // Abort controller로 stale fetch 정리
