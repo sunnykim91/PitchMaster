@@ -28,8 +28,11 @@ export function useApi<T>(
   const mountedRef = useRef(true);
 
   const hasFetchedRef = useRef(false);
+  const fetchIdRef = useRef(0);
 
   const fetchData = useCallback(async () => {
+    // 각 fetch에 고유 ID를 부여해서 stale response 무시
+    const id = ++fetchIdRef.current;
     // 초기 로딩만 loading=true, refetch 시에는 기존 데이터 유지 (깜빡임 방지)
     if (!hasFetchedRef.current) {
       setLoading(true);
@@ -42,15 +45,16 @@ export function useApi<T>(
         throw new Error(body.error || `HTTP ${res.status}`);
       }
       const json = await res.json();
-      if (mountedRef.current) {
+      // stale response인 경우 무시 (URL 변경 후 이전 fetch 결과)
+      if (mountedRef.current && id === fetchIdRef.current) {
         setData(json);
       }
     } catch (err) {
-      if (mountedRef.current) {
+      if (mountedRef.current && id === fetchIdRef.current) {
         setError(err instanceof Error ? err.message : "Unknown error");
       }
     } finally {
-      if (mountedRef.current) {
+      if (mountedRef.current && id === fetchIdRef.current) {
         hasFetchedRef.current = true;
         setLoading(false);
       }

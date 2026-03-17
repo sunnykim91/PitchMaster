@@ -101,14 +101,15 @@ export default function RecordsClient({
     }
   }, [seasons, seasonId, activeSeason]);
 
-  // ── Fetch records for the selected season (시즌 없으면 전체) ──
+  // ── Fetch records for the selected season (시즌 선택 전에는 skip) ──
   const {
     data: recordsPayload,
     loading: loadingRecords,
-    refetch: refetchRecords,
+    // refetch handled automatically by useApi when URL (seasonId) changes
   } = useApi<{ records: Record<string, unknown>[] }>(
     seasonId ? `/api/records?seasonId=${seasonId}` : "/api/records",
     { records: [] },
+    { skip: !seasonId },
   );
 
   const stats: RecordStat[] = useMemo(
@@ -190,13 +191,8 @@ export default function RecordsClient({
     setSeasonId(value);
   }
 
-  // Refetch records whenever seasonId changes
-  useEffect(() => {
-    if (seasonId) {
-      refetchRecords();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seasonId]);
+  // useApi already refetches when URL changes (seasonId in URL),
+  // so no explicit refetch useEffect needed.
 
   if (loadingSeasons) {
     return (
