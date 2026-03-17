@@ -50,7 +50,7 @@ describe("useApi", () => {
       expect(result.current.loading).toBe(false);
     });
 
-    expect(mockFetch).toHaveBeenCalledWith("/api/matches");
+    expect(mockFetch).toHaveBeenCalledWith("/api/matches", expect.objectContaining({ signal: expect.any(AbortSignal) }));
     expect(result.current.data).toEqual(responseData);
     expect(result.current.error).toBeNull();
   });

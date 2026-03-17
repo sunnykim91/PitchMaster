@@ -23,52 +23,54 @@ export function useApi<T>(
   refetch: () => Promise<void>;
 } {
   const [data, setData] = useState<T>(initialData);
-  const [loading, setLoading] = useState(!options?.skip);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const mountedRef = useRef(true);
-  const fetchIdRef = useRef(0);
-  const lastUrlRef = useRef(url);
-  const hasDataRef = useRef(!!options?.skip); // skip인 경우 initialData가 있는 것으로 간주
+
+  // Abort controller로 stale fetch 정리
+  const abortRef = useRef<AbortController | null>(null);
+  const hasFetchedUrlRef = useRef<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    const id = ++fetchIdRef.current;
-    const isNewUrl = lastUrlRef.current !== url;
-    lastUrlRef.current = url;
+    // 이전 fetch 취소
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-    // 새 URL이거나 아직 데이터가 없으면 loading 표시
-    if (!hasDataRef.current || isNewUrl) {
+    // 같은 URL로 이미 fetch한 경우 loading 표시하지 않음 (refetch 시 깜빡임 방지)
+    if (hasFetchedUrlRef.current !== url) {
       setLoading(true);
     }
     setError(null);
+
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: controller.signal });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `HTTP ${res.status}`);
       }
       const json = await res.json();
-      if (mountedRef.current && id === fetchIdRef.current) {
+      if (!controller.signal.aborted) {
         setData(json);
-        hasDataRef.current = true;
+        hasFetchedUrlRef.current = url;
       }
     } catch (err) {
-      if (mountedRef.current && id === fetchIdRef.current) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      if (!controller.signal.aborted) {
         setError(err instanceof Error ? err.message : "Unknown error");
       }
     } finally {
-      if (mountedRef.current && id === fetchIdRef.current) {
+      if (!controller.signal.aborted) {
         setLoading(false);
       }
     }
   }, [url]);
 
   useEffect(() => {
-    mountedRef.current = true;
     if (!options?.skip) {
       fetchData();
     }
     return () => {
-      mountedRef.current = false;
+      abortRef.current?.abort();
     };
   }, [fetchData, options?.skip]);
 
