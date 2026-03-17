@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn, formatPhone, formatTime } from "@/lib/utils";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
 
 /* ── API response row types (snake_case from DB) ── */
 
@@ -261,6 +262,26 @@ export default function MatchDetailClient({
     loading: guestsLoading,
     refetch: refetchGuests,
   } = useApi<{ guests: GuestRow[] }>(`/api/guests?matchId=${matchId}`, { guests: [] });
+
+  // 실시간 동기화: 참석투표, 골 기록, MVP 투표
+  useRealtimeSubscription({
+    table: "match_attendance",
+    filter: `match_id=eq.${matchId}`,
+    events: ["INSERT", "UPDATE"],
+    onchange: () => refetchAttendance(),
+  });
+  useRealtimeSubscription({
+    table: "match_goals",
+    filter: `match_id=eq.${matchId}`,
+    events: ["INSERT", "UPDATE", "DELETE"],
+    onchange: () => refetchGoals(),
+  });
+  useRealtimeSubscription({
+    table: "match_mvp_votes",
+    filter: `match_id=eq.${matchId}`,
+    events: ["INSERT", "DELETE"],
+    onchange: () => refetchMvp(),
+  });
 
   const {
     data: diaryData,

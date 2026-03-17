@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
 
 type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
 type AttendanceVote = "ATTEND" | "ABSENT" | "MAYBE";
@@ -95,6 +96,13 @@ export default function MatchesClient({ userId, userRole, initialMatches }: { us
     loading: attendanceLoading,
     refetch: refetchAttendance,
   } = useApi<{ attendance: DbAttendance[] }>("/api/attendance", { attendance: [] });
+
+  // 실시간 참석 투표 동기화
+  useRealtimeSubscription({
+    table: "match_attendance",
+    events: ["INSERT", "UPDATE"],
+    onchange: () => refetchAttendance(),
+  });
 
   const [isOpen, setIsOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
