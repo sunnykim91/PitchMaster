@@ -59,7 +59,7 @@ export default async function LoginPage({
 
           <div className="mx-auto max-w-md space-y-2 lg:mx-0">
             <p className="text-lg text-muted-foreground">
-              실시간 참석투표 · AI 포메이션 · 회비 OCR · 데이터 분석
+              실시간 참석투표 · AI 라인업 · 회비 자동정리 · 기록 분석
               <br />
               카카오톡 공유까지 한 곳에서.
             </p>
@@ -107,9 +107,9 @@ export default async function LoginPage({
                   "통장 캡쳐하고, 엑셀 열어서 대조하고, 밴드에 올리고... 매달 반복.",
               },
               {
-                pain: "포메이션 편성",
+                pain: "선수 배치",
                 detail:
-                  "참석자 몇 명인지도 불확실한데, 포지션 배분은 경기장 가서야 시작.",
+                  "참석자 몇 명인지도 불확실한데, 누가 어디서 뛸지는 경기장 가서야 정해짐.",
               },
             ].map((item) => (
               <Card key={item.pain} className="border-border/30 bg-card/50">
@@ -138,7 +138,7 @@ export default async function LoginPage({
               실제 이렇게 사용해요.
             </h2>
             <p className="mt-3 text-muted-foreground">
-              대시보드부터 AI 포메이션까지, 모든 기능을 한 앱에서.
+              대시보드부터 AI 라인업까지, 모든 기능을 한 앱에서.
             </p>
           </div>
 
@@ -148,8 +148,8 @@ export default async function LoginPage({
               { label: "대시보드", desc: "다음 경기, 투표 현황, 할 일을 한눈에", color: "border-sky-500/30", bg: "bg-sky-500/5" },
               { label: "경기 일정", desc: "실시간 참석 투표 + 자동 카운트", color: "border-emerald-500/30", bg: "bg-emerald-500/5" },
               { label: "내 기록", desc: "레이더 차트 + 시즌 랭킹 시각화", color: "border-violet-500/30", bg: "bg-violet-500/5" },
-              { label: "AI 포메이션", desc: "선호 포지션 분석 → 최적 배치 추천", color: "border-purple-500/30", bg: "bg-purple-500/5" },
-              { label: "회비 관리", desc: "통장 OCR + 자동 입출금 정리", color: "border-blue-500/30", bg: "bg-blue-500/5" },
+              { label: "AI 라인업", desc: "선호 포지션 분석해서 누가 어디서 뛸지 자동 추천", color: "border-purple-500/30", bg: "bg-purple-500/5" },
+              { label: "회비 관리", desc: "통장 캡쳐 한 장이면 입출금 자동 정리", color: "border-blue-500/30", bg: "bg-blue-500/5" },
               { label: "카카오 공유", desc: "경기 결과 · 투표 링크 카드 공유", color: "border-amber-500/30", bg: "bg-amber-500/5" },
             ].map((item) => (
               <Card
@@ -253,7 +253,7 @@ export default async function LoginPage({
             {/* 오른쪽: 설명 */}
             <div className="space-y-6">
               <div className="inline-block rounded-full bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-400">
-                OCR 자동 인식
+                캡쳐 한 장이면 끝
               </div>
               <h3 className="font-heading text-2xl font-bold">
                 스크린샷 업로드 한 번이면
@@ -278,15 +278,15 @@ export default async function LoginPage({
         </div>
       </section>
 
-      {/* ── Section 4: 자동 스쿼드 편성 ── */}
+      {/* ── Section 4: AI 선수 배치 ── */}
       <section className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
         <div className="mx-auto max-w-5xl px-6 py-20">
           <div className="text-center">
             <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-purple-400">
-              Auto Squad
+              Auto Lineup
             </p>
             <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
-              포메이션, 더 이상 머리 아프지 마세요.
+              누가 어디서 뛸지, 더 이상 고민하지 마세요.
             </h2>
             <p className="mt-3 text-muted-foreground">
               참석 인원과 선호 포지션만 있으면, 나머지는 자동입니다.
@@ -360,18 +360,18 @@ export default async function LoginPage({
             {/* 설명 */}
             <div className="space-y-6">
               <div className="inline-block rounded-full bg-purple-500/10 px-3 py-1 text-xs font-bold text-purple-400">
-                AI 포메이션 추천 + 드래그 전술판
+                AI 자동 배치 + 드래그 전술판
               </div>
               <h3 className="font-heading text-2xl font-bold">
-                AI가 추천하고,<br />
+                AI가 배치하고,<br />
                 손가락으로 미세 조정.
               </h3>
               <div className="space-y-3">
                 {[
-                  "AI가 선수 선호 포지션 분석 → 최적 포메이션 자동 추천",
+                  "AI가 선호 포지션 분석해서 누가 어디서 뛸지 자동 추천",
                   "추천 결과를 전술판에 원클릭 적용 — 바로 수정도 가능",
                   "쿼터별 출전 시간 공평 배분 — 한 명만 계속 뛰는 일 없음",
-                  "포메이션 변경해도 선수 배치 유지 — 4-3-3 → 4-4-2 자동 재배치",
+                  "배치 구조 바꿔도 선수 위치 유지 — 4-3-3 → 4-4-2 자동 재배치",
                   "완성된 전술판을 이미지로 저장 — 카톡으로 바로 공유",
                 ].map((text) => (
                   <div key={text} className="flex items-start gap-2">
@@ -449,8 +449,8 @@ export default async function LoginPage({
               },
               {
                 icon: "📱",
-                title: "PWA 오프라인 지원",
-                desc: "홈 화면에 설치 가능. 오프라인에서도 기본 기능 사용.",
+                title: "앱처럼 설치 가능",
+                desc: "홈 화면에 추가하면 앱처럼 사용. 인터넷 없어도 기본 기능 OK.",
                 color: "text-indigo-400",
               },
             ].map((item) => (
@@ -517,13 +517,13 @@ export default async function LoginPage({
                     feature: "회비 관리",
                     kakao: "엑셀 / 메모",
                     band: "없음",
-                    pm: "OCR 자동 입력",
+                    pm: "캡쳐 한 장이면 자동 입력",
                   },
                   {
-                    feature: "포메이션",
+                    feature: "선수 배치",
                     kakao: "없음",
                     band: "없음",
-                    pm: "자동 편성 + 전술판",
+                    pm: "AI 자동 배치 + 전술판",
                   },
                   {
                     feature: "경기 기록",
@@ -610,7 +610,7 @@ export default async function LoginPage({
               {
                 step: "03",
                 title: "운영 시작",
-                desc: "경기 일정 잡고, 투표 받고, 포메이션 짜고, 회비 관리까지",
+                desc: "경기 일정 잡고, 투표 받고, 선수 배치하고, 회비 관리까지",
               },
             ].map((item) => (
               <div key={item.step} className="text-center">

@@ -35,7 +35,7 @@ const screens = [
   },
   {
     title: "실시간 참석 투표",
-    tag: "Realtime",
+    tag: "실시간",
     color: "text-emerald-400",
     content: (
       <div className="space-y-2">
@@ -122,14 +122,14 @@ const screens = [
     ),
   },
   {
-    title: "AI 포메이션 추천",
+    title: "AI 라인업 추천",
     tag: "AI",
     color: "text-purple-400",
     content: (
       <div className="space-y-3">
         <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
-          <p className="text-[10px] font-bold text-emerald-400">AI RECOMMENDATION</p>
-          <p className="mt-1 text-xs font-bold text-white">4-3-3 추천</p>
+          <p className="text-[10px] font-bold text-emerald-400">AI 추천</p>
+          <p className="mt-1 text-xs font-bold text-white">4-3-3 배치 추천</p>
           <p className="text-[10px] text-white/50">선호 포지션 일치 8/10명</p>
         </div>
         {/* Mini tactics board */}
@@ -145,13 +145,13 @@ const screens = [
             <div key={i} className="absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500 shadow-md shadow-blue-500/30" style={{ left: `${p.x}%`, top: `${p.y}%` }} />
           ))}
         </div>
-        <button className="w-full rounded-lg bg-emerald-500 py-2 text-xs font-bold text-white">AI 추천 적용하기</button>
+        <button className="w-full rounded-lg bg-emerald-500 py-2 text-xs font-bold text-white">추천 배치 적용하기</button>
       </div>
     ),
   },
   {
-    title: "회비 OCR 자동 입력",
-    tag: "OCR",
+    title: "회비 자동 정리",
+    tag: "캡쳐 인식",
     color: "text-blue-400",
     content: (
       <div className="space-y-3">
