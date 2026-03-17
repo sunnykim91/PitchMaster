@@ -1,0 +1,154 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+declare global {
+  interface Window {
+    Kakao?: any;
+  }
+}
+
+const APP_URL = "https://pitch-master-eight.vercel.app";
+
+function ensureInit(): boolean {
+  if (typeof window === "undefined" || !window.Kakao) return false;
+  if (!window.Kakao.isInitialized()) {
+    const key = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
+    if (!key) return false;
+    window.Kakao.init(key);
+  }
+  return true;
+}
+
+/** 경기 결과 공유 */
+export function shareMatchResult({
+  matchId,
+  date,
+  score,
+  opponent,
+  mvp,
+}: {
+  matchId: string;
+  date: string;
+  score: string;
+  opponent?: string;
+  mvp?: string;
+}) {
+  if (!ensureInit()) {
+    // Fallback: Web Share API or clipboard
+    fallbackShare(`${APP_URL}/matches/${matchId}`, `경기 결과: ${score} vs ${opponent ?? "상대팀"}`);
+    return;
+  }
+
+  window.Kakao.Share.sendDefault({
+    objectType: "feed",
+    content: {
+      title: `⚽ ${score} vs ${opponent ?? "상대팀"}`,
+      description: `${date} 경기 결과${mvp ? ` | MVP: ${mvp}` : ""}`,
+      imageUrl: `${APP_URL}/icons/icon-512.png`,
+      link: {
+        mobileWebUrl: `${APP_URL}/matches/${matchId}`,
+        webUrl: `${APP_URL}/matches/${matchId}`,
+      },
+    },
+    buttons: [
+      {
+        title: "상세 기록 보기",
+        link: {
+          mobileWebUrl: `${APP_URL}/matches/${matchId}`,
+          webUrl: `${APP_URL}/matches/${matchId}`,
+        },
+      },
+    ],
+  });
+}
+
+/** 참석 투표 공유 */
+export function shareVoteLink({
+  matchId,
+  date,
+  time,
+  location,
+  opponent,
+}: {
+  matchId: string;
+  date: string;
+  time?: string;
+  location?: string;
+  opponent?: string;
+}) {
+  if (!ensureInit()) {
+    fallbackShare(`${APP_URL}/matches`, `${date} 경기 참석 투표에 참여하세요!`);
+    return;
+  }
+
+  window.Kakao.Share.sendDefault({
+    objectType: "feed",
+    content: {
+      title: `📋 ${date} 경기 참석 투표`,
+      description: [
+        opponent && `vs ${opponent}`,
+        time,
+        location,
+      ].filter(Boolean).join(" · "),
+      imageUrl: `${APP_URL}/icons/icon-512.png`,
+      link: {
+        mobileWebUrl: `${APP_URL}/matches`,
+        webUrl: `${APP_URL}/matches`,
+      },
+    },
+    buttons: [
+      {
+        title: "투표 참여하기",
+        link: {
+          mobileWebUrl: `${APP_URL}/matches`,
+          webUrl: `${APP_URL}/matches`,
+        },
+      },
+    ],
+  });
+}
+
+/** 팀 초대 공유 */
+export function shareTeamInvite({
+  teamName,
+  inviteCode,
+}: {
+  teamName: string;
+  inviteCode: string;
+}) {
+  if (!ensureInit()) {
+    fallbackShare(`${APP_URL}/team?code=${inviteCode}`, `${teamName}에 합류하세요!`);
+    return;
+  }
+
+  window.Kakao.Share.sendDefault({
+    objectType: "feed",
+    content: {
+      title: `⚽ ${teamName}에 합류하세요!`,
+      description: `PitchMaster에서 팀을 관리하고 경기에 참여하세요.\n초대 코드: ${inviteCode}`,
+      imageUrl: `${APP_URL}/icons/icon-512.png`,
+      link: {
+        mobileWebUrl: `${APP_URL}/team?code=${inviteCode}`,
+        webUrl: `${APP_URL}/team?code=${inviteCode}`,
+      },
+    },
+    buttons: [
+      {
+        title: "팀 합류하기",
+        link: {
+          mobileWebUrl: `${APP_URL}/team?code=${inviteCode}`,
+          webUrl: `${APP_URL}/team?code=${inviteCode}`,
+        },
+      },
+    ],
+  });
+}
+
+/** Kakao SDK 없을 때 Web Share API / 클립보드 fallback */
+function fallbackShare(url: string, text: string) {
+  if (typeof navigator !== "undefined" && navigator.share) {
+    navigator.share({ title: "PitchMaster", text, url }).catch(() => {});
+  } else if (typeof navigator !== "undefined" && navigator.clipboard) {
+    navigator.clipboard.writeText(url).catch(() => {});
+    alert("링크가 클립보드에 복사되었습니다.");
+  }
+}

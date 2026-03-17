@@ -18,6 +18,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { cn, formatPhone, formatTime } from "@/lib/utils";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
+import { shareMatchResult } from "@/lib/kakaoShare";
 
 /* ── API response row types (snake_case from DB) ── */
 
@@ -597,6 +598,16 @@ export default function MatchDetailClient({
     setTimeout(() => setShareMessage(null), 2000);
   }
 
+  function handleKakaoShare() {
+    shareMatchResult({
+      matchId,
+      date: match.date,
+      score,
+      opponent: match.opponent,
+      mvp: mvpWinnerName ?? undefined,
+    });
+  }
+
   function handleShareCardDownload() {
     const link = document.createElement("a");
     link.href = `/api/matches/${matchId}/share-card`;
@@ -1161,10 +1172,18 @@ export default function MatchDetailClient({
                 </CardContent>
               </Card>
 
-              <div className="mt-4 flex gap-2">
+              <div className="mt-4 flex flex-wrap gap-2">
                 <Button
                   type="button"
-                  className="flex-1"
+                  size="sm"
+                  className="bg-[#FEE500] text-[#191919] hover:bg-[#FDD835]"
+                  onClick={handleKakaoShare}
+                >
+                  카카오톡 공유
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
                   size="sm"
                   onClick={handleShare}
                 >

@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
+import { shareVoteLink } from "@/lib/kakaoShare";
 
 type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
 type AttendanceVote = "ATTEND" | "ABSENT" | "MAYBE";
@@ -372,11 +373,29 @@ export default function MatchesClient({ userId, userRole, initialMatches }: { us
                       </p>
                     )}
                   </div>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/matches/${match.id}`}>
-                      상세 보기
-                    </Link>
-                  </Button>
+                  <div className="flex gap-2">
+                    {match.status !== "COMPLETED" && match.voteDeadline && new Date(match.voteDeadline) > new Date() && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="bg-[#FEE500] text-[#191919] hover:bg-[#FDD835] text-xs"
+                        onClick={() => shareVoteLink({
+                          matchId: match.id,
+                          date: match.date,
+                          time: match.time,
+                          location: match.location,
+                          opponent: match.opponent,
+                        })}
+                      >
+                        투표 공유
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/matches/${match.id}`}>
+                        상세 보기
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
