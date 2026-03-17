@@ -1,6 +1,7 @@
 import { isKakaoConfigured } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import AppScreenSlider from "./AppScreenSlider";
 
 export default async function LoginPage({
   searchParams,
@@ -75,62 +76,9 @@ export default async function LoginPage({
           </div>
         </div>
 
-        {/* 오른쪽: 주요 기능 미리보기 카드 */}
-        <div className="w-full max-w-sm flex-shrink-0 space-y-3">
-          {[
-            {
-              emoji: "🤖",
-              title: "AI가 포메이션을 추천해줘요",
-              desc: "출석 인원 + 선호 포지션 분석 → 최적 포메이션 자동 추천. 버튼 하나로 적용.",
-              tag: "AI",
-            },
-            {
-              emoji: "📡",
-              title: "실시간 참석 투표",
-              desc: "다른 사람이 투표하면 새로고침 없이 바로 반영. 실시간 카운트 확인.",
-              tag: "Realtime",
-            },
-            {
-              emoji: "📸",
-              title: "통장 캡쳐 → 회비 자동 정리",
-              desc: "모임통장 스크린샷 한 장이면 OCR로 입출금 내역이 자동 등록돼요.",
-              tag: "OCR",
-            },
-            {
-              emoji: "📊",
-              title: "레이더 차트로 보는 내 기록",
-              desc: "득점·어시·MVP·출석률을 시각화. 시즌별 랭킹과 추이를 한눈에.",
-            },
-            {
-              emoji: "💬",
-              title: "카카오톡으로 바로 공유",
-              desc: "경기 결과, 투표 링크, 팀 초대를 카카오톡 카드로 공유.",
-            },
-          ].map((item) => (
-            <Card
-              key={item.title}
-              className="group border-border/50 bg-card/60 backdrop-blur-sm transition-all hover:border-primary/30 hover:bg-card/80"
-            >
-              <CardContent className="flex items-start gap-4 p-4">
-                <span className="mt-0.5 text-xl">{item.emoji}</span>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-bold text-foreground">
-                      {item.title}
-                    </p>
-                    {item.tag && (
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                        {item.tag}
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    {item.desc}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        {/* 오른쪽: 앱 화면 미리보기 슬라이더 */}
+        <div className="w-full max-w-sm flex-shrink-0">
+          <AppScreenSlider />
         </div>
       </section>
 
@@ -172,6 +120,45 @@ export default async function LoginPage({
                   <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                     {item.detail}
                   </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Section 2.5: 실제 화면 미리보기 ── */}
+      <section className="relative border-t border-border/30">
+        <div className="mx-auto max-w-5xl px-6 py-20">
+          <div className="text-center">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
+              App Preview
+            </p>
+            <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
+              실제 이렇게 사용해요.
+            </h2>
+            <p className="mt-3 text-muted-foreground">
+              대시보드부터 AI 포메이션까지, 모든 기능을 한 앱에서.
+            </p>
+          </div>
+
+          {/* Horizontal scroll preview */}
+          <div className="mt-12 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+            {[
+              { label: "대시보드", desc: "다음 경기, 투표 현황, 할 일을 한눈에", color: "border-sky-500/30", bg: "bg-sky-500/5" },
+              { label: "경기 일정", desc: "실시간 참석 투표 + 자동 카운트", color: "border-emerald-500/30", bg: "bg-emerald-500/5" },
+              { label: "내 기록", desc: "레이더 차트 + 시즌 랭킹 시각화", color: "border-violet-500/30", bg: "bg-violet-500/5" },
+              { label: "AI 포메이션", desc: "선호 포지션 분석 → 최적 배치 추천", color: "border-purple-500/30", bg: "bg-purple-500/5" },
+              { label: "회비 관리", desc: "통장 OCR + 자동 입출금 정리", color: "border-blue-500/30", bg: "bg-blue-500/5" },
+              { label: "카카오 공유", desc: "경기 결과 · 투표 링크 카드 공유", color: "border-amber-500/30", bg: "bg-amber-500/5" },
+            ].map((item) => (
+              <Card
+                key={item.label}
+                className={`min-w-[220px] snap-center border ${item.color} ${item.bg} flex-shrink-0 transition-transform hover:scale-[1.02]`}
+              >
+                <CardContent className="p-5">
+                  <p className="text-sm font-bold text-foreground">{item.label}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{item.desc}</p>
                 </CardContent>
               </Card>
             ))}
