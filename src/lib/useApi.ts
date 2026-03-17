@@ -26,15 +26,17 @@ export function useApi<T>(
   const [loading, setLoading] = useState(!options?.skip);
   const [error, setError] = useState<string | null>(null);
   const mountedRef = useRef(true);
-
-  const hasFetchedRef = useRef(false);
   const fetchIdRef = useRef(0);
+  const lastUrlRef = useRef(url);
+  const hasDataRef = useRef(!!options?.skip); // skip인 경우 initialData가 있는 것으로 간주
 
   const fetchData = useCallback(async () => {
-    // 각 fetch에 고유 ID를 부여해서 stale response 무시
     const id = ++fetchIdRef.current;
-    // 초기 로딩만 loading=true, refetch 시에는 기존 데이터 유지 (깜빡임 방지)
-    if (!hasFetchedRef.current) {
+    const isNewUrl = lastUrlRef.current !== url;
+    lastUrlRef.current = url;
+
+    // 새 URL이거나 아직 데이터가 없으면 loading 표시
+    if (!hasDataRef.current || isNewUrl) {
       setLoading(true);
     }
     setError(null);
@@ -45,9 +47,9 @@ export function useApi<T>(
         throw new Error(body.error || `HTTP ${res.status}`);
       }
       const json = await res.json();
-      // stale response인 경우 무시 (URL 변경 후 이전 fetch 결과)
       if (mountedRef.current && id === fetchIdRef.current) {
         setData(json);
+        hasDataRef.current = true;
       }
     } catch (err) {
       if (mountedRef.current && id === fetchIdRef.current) {
@@ -55,7 +57,6 @@ export function useApi<T>(
       }
     } finally {
       if (mountedRef.current && id === fetchIdRef.current) {
-        hasFetchedRef.current = true;
         setLoading(false);
       }
     }

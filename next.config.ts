@@ -20,7 +20,8 @@ const nextConfig: NextConfig = {
 export default withSentryConfig(nextConfig, {
   // Suppress source map upload warnings when SENTRY_AUTH_TOKEN is not set
   silent: true,
-  // Disable source map upload in CI/dev (enable in production with SENTRY_AUTH_TOKEN)
-  disableServerWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
-  disableClientWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+  // Only upload source maps when SENTRY_AUTH_TOKEN is set
+  sourcemaps: {
+    disable: !process.env.SENTRY_AUTH_TOKEN,
+  },
 });

@@ -23,7 +23,7 @@ export async function subscribeToPush(): Promise<PushSubscription | null> {
   // Create new subscription
   subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(vapidKey),
+    applicationServerKey: urlBase64ToUint8Array(vapidKey) as BufferSource,
   });
 
   // Send subscription to server

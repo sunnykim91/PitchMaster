@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   // Only staff+ can send push notifications
-  if (!isStaffOrAbove(session.user.role)) {
+  if (!isStaffOrAbove(session.user.teamRole)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

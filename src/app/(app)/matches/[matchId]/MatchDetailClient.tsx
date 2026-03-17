@@ -605,7 +605,10 @@ export default function MatchDetailClient({
       date: match.date,
       score,
       opponent: match.opponent,
-      mvp: mvpWinnerName ?? undefined,
+      mvp: (() => {
+        const topId = Object.entries(voteCounts).sort(([, a], [, b]) => b - a)[0]?.[0];
+        return topId ? fullRoster.find((p) => p.id === topId)?.name : undefined;
+      })(),
     });
   }
 
