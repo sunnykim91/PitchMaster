@@ -58,9 +58,9 @@ export default async function LoginPage({
 
           <div className="mx-auto max-w-md space-y-2 lg:mx-0">
             <p className="text-lg text-muted-foreground">
-              일정관리 · 투표 · 회비자동정리 · 경기기록
+              실시간 참석투표 · AI 포메이션 · 회비 OCR · 데이터 분석
               <br />
-              자동으로 스쿼드 짜주는 기능까지
+              카카오톡 공유까지 한 곳에서.
             </p>
             <p className="text-lg font-semibold text-foreground">
               조기축구 운영에 관한 모든 것.
@@ -79,31 +79,32 @@ export default async function LoginPage({
         <div className="w-full max-w-sm flex-shrink-0 space-y-3">
           {[
             {
+              emoji: "🤖",
+              title: "AI가 포메이션을 추천해줘요",
+              desc: "출석 인원 + 선호 포지션 분석 → 최적 포메이션 자동 추천. 버튼 하나로 적용.",
+              tag: "AI",
+            },
+            {
+              emoji: "📡",
+              title: "실시간 참석 투표",
+              desc: "다른 사람이 투표하면 새로고침 없이 바로 반영. 실시간 카운트 확인.",
+              tag: "Realtime",
+            },
+            {
               emoji: "📸",
               title: "통장 캡쳐 → 회비 자동 정리",
-              desc: "모임통장 스크린샷 한 장이면 입출금 내역이 자동으로 등록돼요.",
+              desc: "모임통장 스크린샷 한 장이면 OCR로 입출금 내역이 자동 등록돼요.",
               tag: "OCR",
             },
             {
-              emoji: "🧠",
-              title: "버튼 하나로 자동 스쿼드 편성",
-              desc: "선호 포지션 기반 쿼터별 라인업 자동 생성. 출전 시간도 공평하게.",
-              tag: "핵심 기능",
+              emoji: "📊",
+              title: "레이더 차트로 보는 내 기록",
+              desc: "득점·어시·MVP·출석률을 시각화. 시즌별 랭킹과 추이를 한눈에.",
             },
             {
-              emoji: "📋",
-              title: "일정 등록하면 바로 출석 투표",
-              desc: "마감 시간 자동 설정. 운영진이 대리 투표도 가능해요.",
-            },
-            {
-              emoji: "⚽",
-              title: "전술판에서 드래그로 배치",
-              desc: "포메이션 바꿔도 선수 배치 유지. 라인업 이미지로 카톡 공유.",
-            },
-            {
-              emoji: "🏆",
-              title: "골·어시스트·MVP 자동 집계",
-              desc: "경기 끝나면 기록 남기고 MVP 투표. 시즌 랭킹이 자동으로.",
+              emoji: "💬",
+              title: "카카오톡으로 바로 공유",
+              desc: "경기 결과, 투표 링크, 팀 초대를 카카오톡 카드로 공유.",
             },
           ].map((item) => (
             <Card
@@ -372,20 +373,19 @@ export default async function LoginPage({
             {/* 설명 */}
             <div className="space-y-6">
               <div className="inline-block rounded-full bg-purple-500/10 px-3 py-1 text-xs font-bold text-purple-400">
-                AI 자동 편성 + 드래그 전술판
+                AI 포메이션 추천 + 드래그 전술판
               </div>
               <h3 className="font-heading text-2xl font-bold">
-                자동으로 짜고,<br />
-                손가락으로 자유롭게 조정.
+                AI가 추천하고,<br />
+                손가락으로 미세 조정.
               </h3>
               <div className="space-y-3">
                 {[
-                  "참석자 선호 포지션 기반 자동 편성 — 버튼 하나로 라인업 완성",
-                  "선수를 드래그해서 자유롭게 이동 — 원하는 위치에 직접 배치",
+                  "AI가 선수 선호 포지션 분석 → 최적 포메이션 자동 추천",
+                  "추천 결과를 전술판에 원클릭 적용 — 바로 수정도 가능",
                   "쿼터별 출전 시간 공평 배분 — 한 명만 계속 뛰는 일 없음",
                   "포메이션 변경해도 선수 배치 유지 — 4-3-3 → 4-4-2 자동 재배치",
                   "완성된 전술판을 이미지로 저장 — 카톡으로 바로 공유",
-                  "용병도 복수 포지션 등록 가능",
                 ].map((text) => (
                   <div key={text} className="flex items-start gap-2">
                     <span className="mt-0.5 text-sm text-purple-400">✓</span>
@@ -413,10 +413,16 @@ export default async function LoginPage({
           <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[
               {
-                icon: "📋",
-                title: "참석 투표 & 마감",
-                desc: "일정 등록하면 투표 자동 오픈. 마감 시간 설정, 운영진 대리 투표 가능.",
+                icon: "📡",
+                title: "실시간 동기화",
+                desc: "참석 투표, 골 기록, MVP 투표가 실시간으로 반영. 새로고침 불필요.",
                 color: "text-emerald-400",
+              },
+              {
+                icon: "📊",
+                title: "데이터 시각화",
+                desc: "레이더 차트로 개인 능력치 분석. 랭킹 바 차트로 팀 내 순위 확인.",
+                color: "text-sky-400",
               },
               {
                 icon: "🏆",
@@ -425,16 +431,22 @@ export default async function LoginPage({
                 color: "text-rose-400",
               },
               {
+                icon: "💬",
+                title: "카카오톡 공유",
+                desc: "경기 결과, 투표 링크, 팀 초대를 카카오톡 피드 카드로 공유.",
+                color: "text-amber-400",
+              },
+              {
+                icon: "🔔",
+                title: "푸시 알림",
+                desc: "투표 마감 임박, 새 경기 등록 시 브라우저 푸시 알림으로 안내.",
+                color: "text-violet-400",
+              },
+              {
                 icon: "👥",
                 title: "팀원 사전등록 & 연동",
                 desc: "가입 전 팀원도 미리 등록. 카카오 가입 시 자동 연동.",
                 color: "text-cyan-400",
-              },
-              {
-                icon: "🔄",
-                title: "멀티팀 지원",
-                desc: "한 계정으로 여러 팀 운영. A팀 회장이면서 B팀 평회원도 가능.",
-                color: "text-amber-400",
               },
               {
                 icon: "💰",
@@ -443,9 +455,15 @@ export default async function LoginPage({
                 color: "text-orange-400",
               },
               {
+                icon: "🔄",
+                title: "멀티팀 지원",
+                desc: "한 계정으로 여러 팀 운영. A팀 회장이면서 B팀 평회원도 가능.",
+                color: "text-teal-400",
+              },
+              {
                 icon: "📱",
-                title: "초대 링크 한 줄",
-                desc: "링크 하나로 팀원 초대. 가입부터 팀 합류까지 원스텝.",
+                title: "PWA 오프라인 지원",
+                desc: "홈 화면에 설치 가능. 오프라인에서도 기본 기능 사용.",
                 color: "text-indigo-400",
               },
             ].map((item) => (
@@ -531,6 +549,24 @@ export default async function LoginPage({
                     kakao: "채팅방 = 팀원?",
                     band: "멤버 관리",
                     pm: "사전등록 + 자동연동",
+                  },
+                  {
+                    feature: "실시간 동기화",
+                    kakao: "없음",
+                    band: "없음",
+                    pm: "실시간 투표/기록 반영",
+                  },
+                  {
+                    feature: "데이터 분석",
+                    kakao: "없음",
+                    band: "없음",
+                    pm: "레이더/바 차트 시각화",
+                  },
+                  {
+                    feature: "카톡 공유",
+                    kakao: "텍스트만",
+                    band: "없음",
+                    pm: "피드 카드 공유",
                   },
                   {
                     feature: "멀티팀",
