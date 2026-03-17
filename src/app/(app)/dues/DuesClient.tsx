@@ -711,8 +711,8 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
                     구분
                   </Label>
                   <NativeSelect name="type">
-                    <option value="INCOME">수입</option>
-                    <option value="EXPENSE">지출</option>
+                    <option value="INCOME">입금</option>
+                    <option value="EXPENSE">출금</option>
                   </NativeSelect>
                 </div>
 
@@ -732,7 +732,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
 
                 <div className="space-y-2">
                   <Label className="font-semibold text-muted-foreground">
-                    입금자/지출자
+                    입금자/출금자
                   </Label>
                   <NativeSelect name="memberName">
                     <option value="">선택 안 함</option>
@@ -882,7 +882,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
                         onChange={(e) => updateBulkRow(index, "memberName", e.target.value)}
                         className="text-xs"
                       >
-                        <option value="">입금자/지출자</option>
+                        <option value="">입금자/출금자</option>
                         {members.map((m) => (
                           <option key={m.id} value={m.id}>{m.name}</option>
                         ))}
@@ -952,7 +952,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
                 variant={filter === value ? "default" : "outline"}
                 onClick={() => setFilter(value)}
               >
-                {value === "ALL" ? "전체" : value === "INCOME" ? "수입" : "지출"}
+                {value === "ALL" ? "전체" : value === "INCOME" ? "입금" : "출금"}
               </Button>
             ))}
           </div>
@@ -975,7 +975,7 @@ export default function DuesClient({ userRole }: { userRole?: Role }) {
                   <div className="grid grid-cols-2 gap-2">
                     <Input name="editDescription" defaultValue={record.description} required placeholder="내용" />
                     <NativeSelect name="editMember" defaultValue="">
-                      <option value="">입금자/지출자</option>
+                      <option value="">입금자/출금자</option>
                       {members.map((m) => (
                         <option key={m.id} value={m.id}>{m.name}</option>
                       ))}
