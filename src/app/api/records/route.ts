@@ -22,9 +22,14 @@ export async function GET(request: NextRequest) {
 
   if (!members) return apiSuccess({ records: [] });
 
-  // Get matches for the season (시즌 없으면 전체)
+  // Get matches: 시즌 날짜 범위로 필터 (season_id FK 의존 안 함)
   let matchQuery = db.from("matches").select("id").eq("team_id", ctx.teamId).eq("status", "COMPLETED");
-  if (seasonId) matchQuery = matchQuery.eq("season_id", seasonId);
+  if (seasonId) {
+    const { data: season } = await db.from("seasons").select("start_date, end_date").eq("id", seasonId).single();
+    if (season) {
+      matchQuery = matchQuery.gte("match_date", season.start_date).lte("match_date", season.end_date);
+    }
+  }
   const { data: matches } = await matchQuery;
   const matchIds = matches?.map((m: any) => m.id) ?? [];
 

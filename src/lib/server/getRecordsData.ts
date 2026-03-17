@@ -19,8 +19,11 @@ export async function getRecordsData(teamId: string) {
   // Records도 SSR에서 한번에 가져옴
   if (!activeSeasonId) return { seasons: seasonList, activeSeasonId: null, records: [] };
 
+  // 시즌 날짜 범위로 경기 필터 (season_id FK 의존 안 함)
   let matchQuery = db.from("matches").select("id").eq("team_id", teamId).eq("status", "COMPLETED");
-  matchQuery = matchQuery.eq("season_id", activeSeasonId);
+  if (activeSeason?.start_date && activeSeason?.end_date) {
+    matchQuery = matchQuery.gte("match_date", activeSeason.start_date).lte("match_date", activeSeason.end_date);
+  }
   const { data: matches } = await matchQuery;
   const matchIds = (matches ?? []).map((m: any) => m.id);
 
