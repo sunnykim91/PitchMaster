@@ -652,8 +652,17 @@ export default async function LoginPage({
       </section>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-border/30 py-8 text-center text-xs text-muted-foreground/50">
-        PitchMaster &copy; {new Date().getFullYear()}
+      <footer className="border-t border-border/30 py-8">
+        <div className="mx-auto flex max-w-4xl flex-col items-center gap-3 px-6">
+          <div className="flex gap-4 text-xs text-muted-foreground/60">
+            <a href="/privacy" className="transition hover:text-foreground">개인정보처리방침</a>
+            <span>·</span>
+            <a href="/terms" className="transition hover:text-foreground">이용약관</a>
+          </div>
+          <p className="text-xs text-muted-foreground/40">
+            PitchMaster &copy; {new Date().getFullYear()}
+          </p>
+        </div>
       </footer>
     </main>
   );
