@@ -172,7 +172,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     loading: loadingMembers,
   } = useApi<{ members: ApiMemberRow[] }>(
     "/api/members",
-    initialData ? { members: initialData.members } : { members: [] },
+    initialData?.members ? { members: initialData.members } : { members: [] },
     { skip: !!initialData }
   );
 
