@@ -18,7 +18,39 @@ function parseSession(value?: string | null): Session | null {
 export async function auth(): Promise<Session | null> {
   const cookieStore = await cookies();
   const cookie = cookieStore.get(SESSION_COOKIE)?.value ?? null;
-  return parseSession(cookie);
+  const session = parseSession(cookie);
+  if (!session) return null;
+
+  // DB에서 최신 역할을 확인하여 세션과 동기화
+  if (session.user.teamId) {
+    const db = getSupabaseAdmin();
+    if (db) {
+      const { data: membership } = await db
+        .from("team_members")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .eq("team_id", session.user.teamId)
+        .eq("status", "ACTIVE")
+        .single();
+
+      if (membership && membership.role !== session.user.teamRole) {
+        session.user.teamRole = membership.role;
+        // 쿠키도 업데이트 (다음 요청부터 DB 조회 불필요)
+        try {
+          cookieStore.set(SESSION_COOKIE, JSON.stringify(session), {
+            httpOnly: true,
+            sameSite: "lax",
+            path: "/",
+            maxAge: 60 * 60 * 24 * 30,
+          });
+        } catch {
+          // API Route에서는 쿠키 설정 불가할 수 있음 — 무시
+        }
+      }
+    }
+  }
+
+  return session;
 }
 
 export async function setSession(session: Session) {
