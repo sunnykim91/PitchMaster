@@ -1,7 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 export type TeamRecord = {
   wins: number;
   draws: number;
@@ -40,7 +38,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
 
   const [upcomingRes, recentRes, activeVotesRes] = await Promise.all([
     db.from("matches")
-      .select("*")
+      .select("id, match_date, match_time, vote_deadline, opponent_name, status, location")
       .eq("team_id", teamId)
       .eq("status", "SCHEDULED")
       .gte("match_date", new Date().toISOString().split("T")[0])
@@ -48,7 +46,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
       .limit(1)
       .maybeSingle(),
     db.from("matches")
-      .select("*")
+      .select("id, match_date, opponent_name, status")
       .eq("team_id", teamId)
       .eq("status", "COMPLETED")
       .order("match_date", { ascending: false })
@@ -72,12 +70,14 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
       db.from("match_goals").select("scorer_id, is_own_goal").eq("match_id", recentMatch.id),
       db.from("match_mvp_votes").select("candidate_id, users:candidate_id(name)").eq("match_id", recentMatch.id),
     ]);
-    const goalRows = (goalsRes.data || []) as any[];
+    type GoalRow = { scorer_id: string; is_own_goal: boolean };
+    const goalRows = (goalsRes.data || []) as GoalRow[];
     const ourGoals = goalRows.filter((g) => g.scorer_id !== "OPPONENT" && !g.is_own_goal).length;
     const oppGoals = goalRows.filter((g) => g.scorer_id === "OPPONENT" || g.is_own_goal).length;
 
     const mvpCounts: Record<string, { count: number; name: string }> = {};
-    const voteRows = (mvpRes.data || []) as any[];
+    type MvpVoteRow = { candidate_id: string; users: { name: string } | { name: string }[] | null };
+    const voteRows = (mvpRes.data || []) as MvpVoteRow[];
     voteRows.forEach((v) => {
       const id = v.candidate_id;
       const name = Array.isArray(v.users) ? v.users[0]?.name : v.users?.name;
@@ -95,7 +95,8 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
     };
   }
 
-  const activeVotes = ((activeVotesRes.data || []) as any[]).map((m) => ({
+  type VoteMatchRow = { id: string; match_date: string; vote_deadline: string };
+  const activeVotes = ((activeVotesRes.data || []) as VoteMatchRow[]).map((m) => ({
     id: m.id,
     title: `${m.match_date} 경기 참석 투표`,
     due: m.vote_deadline,
@@ -122,7 +123,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
     .eq("status", "COMPLETED")
     .order("match_date", { ascending: false });
 
-  const completedIds = (completedMatches ?? []).map((m: any) => m.id);
+  const completedIds = (completedMatches ?? []).map((m) => m.id);
   let teamRecord = emptyRecord;
 
   if (completedIds.length > 0) {

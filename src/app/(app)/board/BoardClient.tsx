@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useMemo, useState } from "react";
+import Image from "next/image";
 import type { FormEvent } from "react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
@@ -85,11 +86,11 @@ export default function BoardClient({
   initialData,
 }: {
   userId: string;
-  userRole?: string;
+  userRole?: Role;
   initialData?: InitialData;
 }) {
   const { showToast } = useToast();
-  const isStaff = isStaffOrAbove(userRole as Role | undefined);
+  const isStaff = isStaffOrAbove(userRole);
 
   /* ── Data fetching ── */
   const {
@@ -118,6 +119,8 @@ export default function BoardClient({
   const [commentingPostId, setCommentingPostId] = useState<string | null>(null);
   const [deletingPostIds, setDeletingPostIds] = useState<Set<string>>(new Set());
   const [deletingCommentIds, setDeletingCommentIds] = useState<Set<string>>(new Set());
+  const [confirmDeletePostId, setConfirmDeletePostId] = useState<string | null>(null);
+  const [confirmDeleteCommentId, setConfirmDeleteCommentId] = useState<string | null>(null);
 
   /* ── Image upload state ── */
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -245,7 +248,7 @@ export default function BoardClient({
   }
 
   async function handleDeletePost(postId: string) {
-    if (!confirm("게시글을 삭제하시겠습니까?")) return;
+    setConfirmDeletePostId(null);
     setDeletingPostIds((prev) => new Set(prev).add(postId));
     try {
       await apiMutate("/api/posts", "DELETE", { id: postId });
@@ -261,7 +264,7 @@ export default function BoardClient({
   }
 
   async function handleDeleteComment(commentId: string, postId: string) {
-    if (!confirm("댓글을 삭제하시겠습니까?")) return;
+    setConfirmDeleteCommentId(null);
     setDeletingCommentIds((prev) => new Set(prev).add(commentId));
     try {
       await apiMutate("/api/comments", "DELETE", { id: commentId });
@@ -434,10 +437,13 @@ export default function BoardClient({
                       <p className="text-xs text-destructive">{uploadError}</p>
                     )}
                     {form.imageUrl && !uploading && (
-                      <img
+                      <Image
                         src={form.imageUrl}
                         alt="미리보기"
+                        width={320}
+                        height={160}
                         className="mt-2 max-h-40 rounded-xl object-contain"
+                        unoptimized
                       />
                     )}
                   </div>
@@ -488,10 +494,13 @@ export default function BoardClient({
                         <h4 className="mt-2 text-lg font-bold">{post.title}</h4>
                         <p className="mt-2 text-sm text-muted-foreground">{post.content}</p>
                         {post.imageUrls && post.imageUrls.length > 0 && (
-                          <img
+                          <Image
                             src={post.imageUrls[0]}
                             alt={post.title}
+                            width={480}
+                            height={192}
                             className="mt-3 max-h-48 rounded-xl object-contain"
+                            unoptimized
                           />
                         )}
                         <p className="mt-3 text-xs text-muted-foreground">
@@ -519,16 +528,40 @@ export default function BoardClient({
                             >
                               수정
                             </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="text-xs h-7 px-2 text-destructive hover:text-destructive"
-                              onClick={() => handleDeletePost(post.id)}
-                              disabled={deletingPostIds.has(post.id)}
-                            >
-                              {deletingPostIds.has(post.id) ? "삭제 중..." : "삭제"}
-                            </Button>
+                            {confirmDeletePostId === post.id ? (
+                              <div className="flex gap-1">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="destructive"
+                                  className="text-xs h-7 px-2"
+                                  onClick={() => handleDeletePost(post.id)}
+                                  disabled={deletingPostIds.has(post.id)}
+                                >
+                                  삭제
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs h-7 px-2"
+                                  onClick={() => setConfirmDeletePostId(null)}
+                                >
+                                  취소
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="text-xs h-7 px-2 text-destructive hover:text-destructive"
+                                onClick={() => setConfirmDeletePostId(post.id)}
+                                disabled={deletingPostIds.has(post.id)}
+                              >
+                                {deletingPostIds.has(post.id) ? "삭제 중..." : "삭제"}
+                              </Button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -562,16 +595,40 @@ export default function BoardClient({
                                         <p className="mt-1 text-xs text-muted-foreground">{comment.createdAt}</p>
                                       </div>
                                       {canDeleteComment && (
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="sm"
-                                          className="text-xs h-6 px-2 text-destructive hover:text-destructive shrink-0"
-                                          onClick={() => handleDeleteComment(comment.id, post.id)}
-                                          disabled={deletingCommentIds.has(comment.id)}
-                                        >
-                                          {deletingCommentIds.has(comment.id) ? "..." : "삭제"}
-                                        </Button>
+                                        confirmDeleteCommentId === comment.id ? (
+                                          <div className="flex gap-1 shrink-0">
+                                            <Button
+                                              type="button"
+                                              size="sm"
+                                              variant="destructive"
+                                              className="text-xs h-6 px-2"
+                                              onClick={() => handleDeleteComment(comment.id, post.id)}
+                                              disabled={deletingCommentIds.has(comment.id)}
+                                            >
+                                              삭제
+                                            </Button>
+                                            <Button
+                                              type="button"
+                                              size="sm"
+                                              variant="outline"
+                                              className="text-xs h-6 px-2"
+                                              onClick={() => setConfirmDeleteCommentId(null)}
+                                            >
+                                              취소
+                                            </Button>
+                                          </div>
+                                        ) : (
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-xs h-6 px-2 text-destructive hover:text-destructive shrink-0"
+                                            onClick={() => setConfirmDeleteCommentId(comment.id)}
+                                            disabled={deletingCommentIds.has(comment.id)}
+                                          >
+                                            {deletingCommentIds.has(comment.id) ? "..." : "삭제"}
+                                          </Button>
+                                        )
                                       )}
                                     </div>
                                   </CardContent>

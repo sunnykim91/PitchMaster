@@ -10,6 +10,7 @@ export async function GET() {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  // select("*") intentional: all match columns are spread and returned to the client via ...m
   const { data, error } = await db
     .from("matches")
     .select("*")
@@ -19,8 +20,9 @@ export async function GET() {
   if (error) return apiError(error.message);
 
   // 완료된 경기의 스코어 계산
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  const completedIds = (data ?? []).filter((m: any) => m.status === "COMPLETED").map((m: any) => m.id);
+  type MatchRow = { id: string; status: string; [key: string]: unknown };
+  const rows = (data ?? []) as MatchRow[];
+  const completedIds = rows.filter((m) => m.status === "COMPLETED").map((m) => m.id);
   let scoreMap: Record<string, { our: number; opp: number }> = {};
   if (completedIds.length > 0) {
     const { data: goals } = await db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", completedIds);
@@ -33,7 +35,7 @@ export async function GET() {
     scoreMap = map;
   }
 
-  const matches = (data ?? []).map((m: any) => ({
+  const matches = rows.map((m) => ({
     ...m,
     score: scoreMap[m.id] ? `${scoreMap[m.id].our} : ${scoreMap[m.id].opp}` : null,
   }));

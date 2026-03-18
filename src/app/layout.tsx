@@ -65,17 +65,13 @@ export default function RootLayout({
   return (
     <html lang="ko" className="dark">
       <head>
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
-          as="style"
           crossOrigin="anonymous"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
         />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-        <script
-          src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"
-          async
-        />
       </head>
       <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
         {children}

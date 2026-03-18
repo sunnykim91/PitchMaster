@@ -8,6 +8,25 @@ declare global {
 
 const APP_URL = "https://pitch-master-eight.vercel.app";
 
+let sdkLoading: Promise<boolean> | null = null;
+
+/** 카카오 SDK를 필요할 때만 로드 (lazy) */
+function loadKakaoSdk(): Promise<boolean> {
+  if (typeof window === "undefined") return Promise.resolve(false);
+  if (window.Kakao) return Promise.resolve(true);
+  if (sdkLoading) return sdkLoading;
+
+  sdkLoading = new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.head.appendChild(script);
+  });
+  return sdkLoading;
+}
+
 function ensureInit(): boolean {
   if (typeof window === "undefined" || !window.Kakao) return false;
   if (!window.Kakao.isInitialized()) {
@@ -18,8 +37,14 @@ function ensureInit(): boolean {
   return true;
 }
 
+/** SDK 로드 + 초기화 (비동기) */
+async function ensureKakao(): Promise<boolean> {
+  await loadKakaoSdk();
+  return ensureInit();
+}
+
 /** 경기 결과 공유 */
-export function shareMatchResult({
+export async function shareMatchResult({
   matchId,
   date,
   score,
@@ -32,7 +57,7 @@ export function shareMatchResult({
   opponent?: string;
   mvp?: string;
 }) {
-  if (!ensureInit()) {
+  if (!(await ensureKakao())) {
     // Fallback: Web Share API or clipboard
     fallbackShare(`${APP_URL}/matches/${matchId}`, `경기 결과: ${score} vs ${opponent ?? "상대팀"}`);
     return;
@@ -62,7 +87,7 @@ export function shareMatchResult({
 }
 
 /** 참석 투표 공유 */
-export function shareVoteLink({
+export async function shareVoteLink({
   matchId,
   date,
   time,
@@ -75,7 +100,7 @@ export function shareVoteLink({
   location?: string;
   opponent?: string;
 }) {
-  if (!ensureInit()) {
+  if (!(await ensureKakao())) {
     fallbackShare(`${APP_URL}/matches`, `${date} 경기 참석 투표에 참여하세요!`);
     return;
   }
@@ -108,14 +133,14 @@ export function shareVoteLink({
 }
 
 /** 팀 초대 공유 */
-export function shareTeamInvite({
+export async function shareTeamInvite({
   teamName,
   inviteCode,
 }: {
   teamName: string;
   inviteCode: string;
 }) {
-  if (!ensureInit()) {
+  if (!(await ensureKakao())) {
     fallbackShare(`${APP_URL}/team?code=${inviteCode}`, `${teamName}에 합류하세요!`);
     return;
   }

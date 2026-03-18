@@ -70,6 +70,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formState, setFormState] = useState({ title: "", content: "", category: "일반" as RuleCategory });
   const [submitting, setSubmitting] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const filteredRules = useMemo(() => {
     const list = selectedCategory === "ALL" ? rules : rules.filter((rule) => rule.category === selectedCategory);
@@ -126,7 +127,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("이 회칙을 삭제하시겠습니까?")) return;
+    setConfirmDeleteId(null);
     const { error } = await apiMutate("/api/rules", "DELETE", { id });
     if (error) {
       showToast(error, "error");
@@ -301,15 +302,36 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
                           <Button type="button" variant="outline" size="sm" onClick={() => handleEdit(rule)}>
                             수정
                           </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => handleDelete(rule.id)}
-                          >
-                            삭제
-                          </Button>
+                          {confirmDeleteId === rule.id ? (
+                            <div className="flex gap-1">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(rule.id)}
+                              >
+                                삭제
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setConfirmDeleteId(null)}
+                              >
+                                취소
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => setConfirmDeleteId(rule.id)}
+                            >
+                              삭제
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>

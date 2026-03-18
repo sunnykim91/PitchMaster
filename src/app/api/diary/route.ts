@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  // select("*") intentional: all diary columns (weather, condition, memo, photos) returned to client
   const { data, error } = await db
     .from("match_diaries")
     .select("*")

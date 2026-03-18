@@ -21,10 +21,12 @@ export async function GET() {
       .select("actual_balance, balance_updated_at")
       .eq("id", ctx.teamId)
       .single(),
+    // select("*") intentional: all settings columns returned to client
     db
       .from("dues_settings")
       .select("*")
       .eq("team_id", ctx.teamId),
+    // select("*") intentional: all penalty rule columns returned to client
     db
       .from("penalty_rules")
       .select("*")

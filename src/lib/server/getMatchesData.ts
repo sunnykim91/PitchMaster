@@ -1,7 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 export type DbMatchRow = {
   id: string;
   team_id: string;
@@ -23,13 +21,14 @@ export async function getMatchesData(teamId: string): Promise<{ matches: DbMatch
   const db = getSupabaseAdmin();
   if (!db) return { matches: [] };
 
+  // select("*") intentional: all columns are spread and returned to the client via ...m
   const { data } = await db
     .from("matches")
     .select("*")
     .eq("team_id", teamId)
     .order("match_date", { ascending: false });
 
-  const matches = (data ?? []) as any[];
+  const matches = (data ?? []) as DbMatchRow[];
 
   // 완료된 경기의 스코어 계산
   const completedIds = matches.filter((m) => m.status === "COMPLETED").map((m) => m.id);

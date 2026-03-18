@@ -10,6 +10,7 @@ export async function GET() {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  // select("*") intentional: full profile is returned to client and used for session update
   const { data, error } = await db
     .from("users")
     .select("*")

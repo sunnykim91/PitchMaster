@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_COMMIT_HASH: commitHash,
     NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),
   },
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "*.supabase.co" },
+    ],
+  },
 };
 
 export default withSentryConfig(nextConfig, {

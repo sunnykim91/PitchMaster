@@ -1,6 +1,12 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+type SeasonRow = { id: string; is_active: boolean; start_date: string; end_date: string; [key: string]: unknown };
+type MemberRow = {
+  id: string;
+  user_id: string | null;
+  pre_name: string | null;
+  users: { id: string; name: string; preferred_positions: string[] } | { id: string; name: string; preferred_positions: string[] }[] | null;
+};
 
 export async function getRecordsData(teamId: string) {
   const db = getSupabaseAdmin();
@@ -12,8 +18,8 @@ export async function getRecordsData(teamId: string) {
     .eq("team_id", teamId)
     .order("start_date", { ascending: false });
 
-  const seasonList = seasons ?? [];
-  const activeSeason = seasonList.find((s: any) => s.is_active) ?? seasonList[0];
+  const seasonList = (seasons ?? []) as SeasonRow[];
+  const activeSeason = seasonList.find((s) => s.is_active) ?? seasonList[0];
   const activeSeasonId: string | null = activeSeason?.id ?? null;
 
   // Records도 SSR에서 한번에 가져옴
@@ -26,7 +32,7 @@ export async function getRecordsData(teamId: string) {
   }
   matchQuery = matchQuery.order("match_date", { ascending: false });
   const { data: matches } = await matchQuery;
-  const matchIds = (matches ?? []).map((m: any) => m.id);
+  const matchIds = (matches ?? []).map((m) => m.id);
 
   const { data: members } = await db
     .from("team_members")
@@ -36,11 +42,13 @@ export async function getRecordsData(teamId: string) {
 
   if (!members) return { seasons: seasonList, activeSeasonId, records: [] };
 
+  const typedMembers = members as MemberRow[];
+
   if (matchIds.length === 0) {
     return {
       seasons: seasonList,
       activeSeasonId,
-      records: members.map((m: any) => {
+      records: typedMembers.map((m) => {
         const user = Array.isArray(m.users) ? m.users[0] : m.users;
         return {
           memberId: m.user_id ?? m.id, name: user?.name ?? m.pre_name ?? "",
@@ -70,7 +78,7 @@ export async function getRecordsData(teamId: string) {
     if (row.member_id) attendByMember.set(row.member_id, (attendByMember.get(row.member_id) ?? 0) + 1);
   }
 
-  const records = members.map((m: any) => {
+  const records = typedMembers.map((m) => {
     const userId = m.user_id;
     const memberId = m.id;
     const user = Array.isArray(m.users) ? m.users[0] : m.users;

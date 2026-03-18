@@ -37,8 +37,8 @@ describe("shareMatchResult()", () => {
     mvp: "김철수",
   };
 
-  it("Kakao SDK 사용 가능 시 Kakao.Share.sendDefault 호출", () => {
-    shareMatchResult(baseArgs);
+  it("Kakao SDK 사용 가능 시 Kakao.Share.sendDefault 호출", async () => {
+    await shareMatchResult(baseArgs);
     expect(mockKakao.Share.sendDefault).toHaveBeenCalledTimes(1);
     expect(mockKakao.Share.sendDefault).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -53,17 +53,17 @@ describe("shareMatchResult()", () => {
     );
   });
 
-  it("Kakao 미초기화 시 isInitialized false → init 호출됨", () => {
+  it("Kakao 미초기화 시 isInitialized false → init 호출됨", async () => {
     mockKakao.isInitialized.mockReturnValueOnce(false);
     vi.stubEnv("NEXT_PUBLIC_KAKAO_JS_KEY", "test-js-key");
 
-    shareMatchResult(baseArgs);
+    await shareMatchResult(baseArgs);
 
     expect(mockKakao.init).toHaveBeenCalledWith("test-js-key");
     expect(mockKakao.Share.sendDefault).toHaveBeenCalled();
   });
 
-  it("Kakao JS Key 없을 때 fallback으로 navigator.share 사용", () => {
+  it("Kakao JS Key 없을 때 fallback으로 navigator.share 사용", async () => {
     mockKakao.isInitialized.mockReturnValueOnce(false);
     vi.stubEnv("NEXT_PUBLIC_KAKAO_JS_KEY", "");
 
@@ -74,7 +74,7 @@ describe("shareMatchResult()", () => {
       configurable: true,
     });
 
-    shareMatchResult(baseArgs);
+    await shareMatchResult(baseArgs);
 
     expect(mockKakao.Share.sendDefault).not.toHaveBeenCalled();
     expect(mockShare).toHaveBeenCalledWith(
@@ -84,7 +84,7 @@ describe("shareMatchResult()", () => {
     );
   });
 
-  it("Kakao 미사용 시 navigator.share fallback 호출", () => {
+  it("Kakao 미사용 시 navigator.share fallback 호출", async () => {
     setKakaoUnavailable();
 
     const mockShare = vi.fn().mockResolvedValue(undefined);
@@ -94,7 +94,7 @@ describe("shareMatchResult()", () => {
       configurable: true,
     });
 
-    shareMatchResult(baseArgs);
+    await shareMatchResult(baseArgs);
 
     expect(mockShare).toHaveBeenCalledTimes(1);
     expect(mockShare).toHaveBeenCalledWith(
@@ -104,7 +104,7 @@ describe("shareMatchResult()", () => {
     );
   });
 
-  it("navigator.share도 없을 때 clipboard.writeText 호출", () => {
+  it("navigator.share도 없을 때 clipboard.writeText 호출", async () => {
     setKakaoUnavailable();
 
     Object.defineProperty(navigator, "share", {
@@ -122,7 +122,7 @@ describe("shareMatchResult()", () => {
     // alert 모킹
     const mockAlert = vi.spyOn(window, "alert").mockImplementation(() => {});
 
-    shareMatchResult(baseArgs);
+    await shareMatchResult(baseArgs);
 
     expect(mockWriteText).toHaveBeenCalledWith(`${APP_URL}/matches/match-001`);
     mockAlert.mockRestore();
@@ -148,8 +148,8 @@ describe("shareVoteLink()", () => {
     opponent: "FC 서울",
   };
 
-  it("올바른 content title 생성 (날짜 포함)", () => {
-    shareVoteLink(baseArgs);
+  it("올바른 content title 생성 (날짜 포함)", async () => {
+    await shareVoteLink(baseArgs);
     expect(mockKakao.Share.sendDefault).toHaveBeenCalledWith(
       expect.objectContaining({
         content: expect.objectContaining({
@@ -159,8 +159,8 @@ describe("shareVoteLink()", () => {
     );
   });
 
-  it("content description에 상대팀/시간/장소 포함", () => {
-    shareVoteLink(baseArgs);
+  it("content description에 상대팀/시간/장소 포함", async () => {
+    await shareVoteLink(baseArgs);
     const call = mockKakao.Share.sendDefault.mock.calls[0][0];
     const description = call.content.description;
 
@@ -169,7 +169,7 @@ describe("shareVoteLink()", () => {
     expect(description).toContain("서울 월드컵경기장");
   });
 
-  it("Kakao 미사용 시 navigator.share fallback", () => {
+  it("Kakao 미사용 시 navigator.share fallback", async () => {
     setKakaoUnavailable();
 
     const mockShare = vi.fn().mockResolvedValue(undefined);
@@ -179,7 +179,7 @@ describe("shareVoteLink()", () => {
       configurable: true,
     });
 
-    shareVoteLink(baseArgs);
+    await shareVoteLink(baseArgs);
 
     expect(mockKakao.Share.sendDefault).not.toHaveBeenCalled();
     expect(mockShare).toHaveBeenCalledTimes(1);
@@ -202,8 +202,8 @@ describe("shareTeamInvite()", () => {
     inviteCode: "INVITE123",
   };
 
-  it("초대 코드가 URL에 포함됨", () => {
-    shareTeamInvite(baseArgs);
+  it("초대 코드가 URL에 포함됨", async () => {
+    await shareTeamInvite(baseArgs);
     const call = mockKakao.Share.sendDefault.mock.calls[0][0];
     const webUrl = call.content.link.webUrl;
 
@@ -211,8 +211,8 @@ describe("shareTeamInvite()", () => {
     expect(webUrl).toBe(`${APP_URL}/team?code=INVITE123`);
   });
 
-  it("content title에 팀명 포함", () => {
-    shareTeamInvite(baseArgs);
+  it("content title에 팀명 포함", async () => {
+    await shareTeamInvite(baseArgs);
     expect(mockKakao.Share.sendDefault).toHaveBeenCalledWith(
       expect.objectContaining({
         content: expect.objectContaining({
@@ -222,13 +222,13 @@ describe("shareTeamInvite()", () => {
     );
   });
 
-  it("content description에 초대 코드 포함", () => {
-    shareTeamInvite(baseArgs);
+  it("content description에 초대 코드 포함", async () => {
+    await shareTeamInvite(baseArgs);
     const call = mockKakao.Share.sendDefault.mock.calls[0][0];
     expect(call.content.description).toContain("INVITE123");
   });
 
-  it("Kakao 미사용 시 navigator.share fallback (초대 코드 URL)", () => {
+  it("Kakao 미사용 시 navigator.share fallback (초대 코드 URL)", async () => {
     setKakaoUnavailable();
 
     const mockShare = vi.fn().mockResolvedValue(undefined);
@@ -238,7 +238,7 @@ describe("shareTeamInvite()", () => {
       configurable: true,
     });
 
-    shareTeamInvite(baseArgs);
+    await shareTeamInvite(baseArgs);
 
     expect(mockShare).toHaveBeenCalledWith(
       expect.objectContaining({

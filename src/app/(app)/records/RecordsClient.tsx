@@ -70,9 +70,9 @@ type TeamRecord = {
 };
 
 type InitialData = {
-  seasons: any[];
+  seasons: Record<string, unknown>[];
   activeSeasonId?: string | null;
-  records?: any[];
+  records?: Record<string, unknown>[];
   teamRecord?: TeamRecord;
 };
 

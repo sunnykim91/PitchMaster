@@ -75,7 +75,7 @@ export default function MembersClient({
 }: {
   userRole?: Role;
   userId: string;
-  initialData?: { members: any[]; isStaff: boolean };
+  initialData?: { members: ApiMemberRow[]; isStaff: boolean };
 }) {
   const { data: membersData, loading, error, refetch } = useApi<{ members: ApiMemberRow[]; isStaff: boolean }>(
     "/api/members",

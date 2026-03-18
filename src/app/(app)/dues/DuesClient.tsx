@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useMemo, useState } from "react";
+import Image from "next/image";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
@@ -123,8 +124,17 @@ type BulkRow = {
   memberName: string;
 };
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export default function DuesClient({ userId: _userId, userRole, initialData }: { userId?: string; userRole?: Role; initialData?: any }) {
+type DuesInitialData = {
+  records: ApiDuesRecord[];
+  balance: number | null;
+  balanceUpdatedAt: string | null;
+  settings: ApiDuesSetting[];
+  penaltyRules: ApiPenaltyRule[];
+  penaltyRecords: ApiPenaltyRecord[];
+  members?: ApiMemberRow[];
+};
+
+export default function DuesClient({ userId: _userId, userRole, initialData }: { userId?: string; userRole?: Role; initialData?: DuesInitialData }) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
   const { showToast } = useToast();
@@ -254,6 +264,8 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   const [editingRecord, setEditingRecord] = useState<DuesRecord | null>(null);
   const [editingSetting, setEditingSetting] = useState<DuesSetting | null>(null);
   const [settingFormState, setSettingFormState] = useState({ memberType: "", monthlyAmount: "", description: "" });
+  const [confirmDeleteRecordId, setConfirmDeleteRecordId] = useState<string | null>(null);
+  const [confirmDeleteSettingId, setConfirmDeleteSettingId] = useState<string | null>(null);
   const bulkSectionRef = useRef<HTMLDivElement>(null);
 
   const loading = loadingSummary || loadingMembers;
@@ -343,7 +355,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   }
 
   async function handleDeleteSetting(id: string) {
-    if (!confirm("이 회비 기준을 삭제하시겠습니까?")) return;
+    setConfirmDeleteSettingId(null);
     const { error } = await apiMutate("/api/dues-settings", "DELETE", { id });
     if (error) {
       showToast(error, "error");
@@ -574,7 +586,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   }
 
   async function handleDeleteRecord(id: string) {
-    if (!confirm("이 입출금 내역을 삭제하시겠습니까?")) return;
+    setConfirmDeleteRecordId(null);
     const { error } = await apiMutate(`/api/dues?id=${id}`, "DELETE");
     if (!error) await refetchSummary();
   }
@@ -903,7 +915,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
               />
               {bulkImage && (
                 <div className="max-h-[500px] overflow-auto rounded-lg border">
-                  <img src={bulkImage} alt="거래내역 스크린샷" className="w-full" />
+                  <Image src={bulkImage} alt="거래내역 스크린샷" width={600} height={800} className="w-full" unoptimized />
                 </div>
               )}
             </div>
@@ -1095,13 +1107,32 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                       >
                         수정
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteRecord(record.id)}
-                        className="text-xs text-destructive/70 hover:text-destructive transition"
-                      >
-                        삭제
-                      </button>
+                      {confirmDeleteRecordId === record.id ? (
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteRecord(record.id)}
+                            className="text-xs text-destructive font-semibold transition"
+                          >
+                            삭제
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteRecordId(null)}
+                            className="text-xs text-muted-foreground hover:text-foreground transition"
+                          >
+                            취소
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteRecordId(record.id)}
+                          className="text-xs text-destructive/70 hover:text-destructive transition"
+                        >
+                          삭제
+                        </button>
+                      )}
                     </>
                   )}
                 </div>
@@ -1244,13 +1275,32 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                     >
                       수정
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteSetting(setting.id)}
-                      className="text-xs text-destructive/70 hover:text-destructive transition"
-                    >
-                      삭제
-                    </button>
+                    {confirmDeleteSettingId === setting.id ? (
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSetting(setting.id)}
+                          className="text-xs text-destructive font-semibold transition"
+                        >
+                          삭제
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteSettingId(null)}
+                          className="text-xs text-muted-foreground hover:text-foreground transition"
+                        >
+                          취소
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteSettingId(setting.id)}
+                        className="text-xs text-destructive/70 hover:text-destructive transition"
+                      >
+                        삭제
+                      </button>
+                    )}
                   </div>
                 )}
               </Card>

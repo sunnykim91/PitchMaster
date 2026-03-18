@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     return apiSuccess({ records: data });
   }
 
-  // Default: return rules
+  // Default: return rules — select("*") intentional: all rule columns returned to client
   const { data, error } = await db
     .from("penalty_rules")
     .select("*")

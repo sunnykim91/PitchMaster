@@ -19,7 +19,7 @@ export async function GET() {
   ] = await Promise.all([
     db
       .from("matches")
-      .select("*")
+      .select("id, match_date, match_time, vote_deadline, opponent_name, status, location")
       .eq("team_id", ctx.teamId)
       .eq("status", "SCHEDULED")
       .gte("match_date", new Date().toISOString().split("T")[0])
@@ -28,7 +28,7 @@ export async function GET() {
       .maybeSingle(),
     db
       .from("matches")
-      .select("*")
+      .select("id, match_date, opponent_name, status")
       .eq("team_id", ctx.teamId)
       .eq("status", "COMPLETED")
       .order("match_date", { ascending: false })
@@ -44,18 +44,17 @@ export async function GET() {
       .limit(5),
   ]);
 
-  const voteMatchRows = (activeVoteMatches || []) as any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
-  const activeVotes = voteMatchRows.map((m) => ({
+  type VoteMatchRow = { id: string; match_date: string; vote_deadline: string };
+  const activeVotes = ((activeVoteMatches || []) as VoteMatchRow[]).map((m) => ({
     id: m.id,
     title: `${m.match_date} 경기 참석 투표`,
     due: m.vote_deadline,
   }));
 
   // 4. Fetch goals+mvp for recent match AND task checks in parallel
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   const [goalsResult, mvpResult, userVoteResult, userMvpVoteResult] = await Promise.all([
     recentMatch
-      ? db.from("match_goals").select("*, scorer:scorer_id(name)").eq("match_id", recentMatch.id)
+      ? db.from("match_goals").select("scorer_id, is_own_goal").eq("match_id", recentMatch.id)
       : Promise.resolve({ data: [] }),
     recentMatch
       ? db.from("match_mvp_votes").select("candidate_id, users:candidate_id(name)").eq("match_id", recentMatch.id)
@@ -70,12 +69,14 @@ export async function GET() {
 
   let recentResult = null;
   if (recentMatch) {
-    const goalRows = (goalsResult.data || []) as any[];
+    type GoalRow = { scorer_id: string; is_own_goal: boolean };
+    const goalRows = (goalsResult.data || []) as GoalRow[];
     const ourGoals = goalRows.filter((g) => g.scorer_id !== "OPPONENT" && !g.is_own_goal).length;
     const oppGoals = goalRows.filter((g) => g.scorer_id === "OPPONENT" || g.is_own_goal).length;
 
     const mvpCounts: Record<string, { count: number; name: string }> = {};
-    const voteRows = (mvpResult.data || []) as any[];
+    type MvpVoteRow = { candidate_id: string; users: { name: string } | { name: string }[] | null };
+    const voteRows = (mvpResult.data || []) as MvpVoteRow[];
     voteRows.forEach((v) => {
       const id = v.candidate_id;
       const name = Array.isArray(v.users) ? v.users[0]?.name : v.users?.name;
@@ -92,7 +93,6 @@ export async function GET() {
       mvp: topMvp?.name || null,
     };
   }
-  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   // 5. Build pending tasks list
   const tasks: string[] = [];

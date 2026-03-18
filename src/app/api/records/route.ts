@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+type MemberRow = {
+  id: string;
+  user_id: string | null;
+  pre_name: string | null;
+  users: { id: string; name: string; preferred_positions: string[] } | { id: string; name: string; preferred_positions: string[] }[] | null;
+};
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -31,11 +36,12 @@ export async function GET(request: NextRequest) {
     }
   }
   const { data: matches } = await matchQuery;
-  const matchIds = matches?.map((m: any) => m.id) ?? [];
+  const matchIds = matches?.map((m) => m.id) ?? [];
+  const typedMembers = members as MemberRow[];
 
   if (matchIds.length === 0) {
     return apiSuccess({
-      records: members.map((m: any) => {
+      records: typedMembers.map((m) => {
         const user = Array.isArray(m.users) ? m.users[0] : m.users;
         return {
           memberId: m.user_id ?? m.id,
@@ -79,7 +85,7 @@ export async function GET(request: NextRequest) {
   }
 
   // 멤버별 집계 (동기, O(1) 맵 조회)
-  const stats = members.map((m: any) => {
+  const stats = typedMembers.map((m) => {
     const userId = m.user_id;
     const memberId = m.id;
     const user = Array.isArray(m.users) ? m.users[0] : m.users;

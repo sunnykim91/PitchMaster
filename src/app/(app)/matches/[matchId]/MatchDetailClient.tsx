@@ -372,7 +372,6 @@ export default function MatchDetailClient({
         preferredPositions: positions.length > 0 ? positions as AttendingPlayer["preferredPosition"][] : undefined,
       };
     });
-    }));
     return [...members, ...guestPlayers];
   }, [voteData.attendance, guests]);
 

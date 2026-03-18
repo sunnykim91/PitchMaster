@@ -15,6 +15,7 @@ export async function GET() {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  // select("*") intentional: all season columns are returned to the client
   const { data, error } = await db
     .from("seasons")
     .select("*")
