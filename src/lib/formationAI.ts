@@ -7,13 +7,23 @@ import { PREF_TO_POSITION } from "@/lib/types";
 export type PlayerInput = {
   id: string;
   name: string;
-  preferredPosition: PreferredPosition;
+  /** 복수 선호 포지션 (첫 번째가 주 포지션) */
+  preferredPositions: PreferredPosition[];
+  /** 하위 호환: 단일 포지션 */
+  preferredPosition?: PreferredPosition;
   /** Recent season stats (optional, for ranking) */
   goals?: number;
   assists?: number;
   mvp?: number;
   attendanceRate?: number;
 };
+
+/** 플레이어의 모든 선호 포지션 반환 (하위 호환) */
+function getPlayerPositions(p: PlayerInput): PreferredPosition[] {
+  if (p.preferredPositions?.length) return p.preferredPositions;
+  if (p.preferredPosition) return [p.preferredPosition];
+  return ["CAM"]; // fallback
+}
 
 export type AIRecommendation = {
   formation: FormationTemplate;
@@ -75,9 +85,9 @@ export function recommendFormation(
   // Rank players by performance score
   const rankedPlayers = [...players].sort((a, b) => playerScore(b) - playerScore(a));
 
-  // Separate GK candidates
-  const gkCandidates = rankedPlayers.filter((p) => p.preferredPosition === "GK");
-  const fieldCandidates = rankedPlayers.filter((p) => p.preferredPosition !== "GK");
+  // Separate GK candidates (GK가 선호 포지션 중 하나인 선수)
+  const gkCandidates = rankedPlayers.filter((p) => getPlayerPositions(p).includes("GK"));
+  const fieldCandidates = rankedPlayers.filter((p) => !getPlayerPositions(p).includes("GK"));
 
   // If no dedicated GK, pick lowest-scored field player
   let gk: PlayerInput;
@@ -94,10 +104,12 @@ export function recommendFormation(
   const fieldSlotCount = targetCount - 1;
   const fieldPlayers = availableField.slice(0, fieldSlotCount);
 
-  // Count position distribution
+  // Count position distribution (복수 포지션 고려 — 주 포지션 기준)
   const posCounts: Record<Position, number> = { GK: 0, DF: 0, MF: 0, FW: 0 };
   for (const p of fieldPlayers) {
-    posCounts[PREF_TO_POSITION[p.preferredPosition]]++;
+    const positions = getPlayerPositions(p);
+    const primary = positions[0] ?? "CAM";
+    posCounts[PREF_TO_POSITION[primary]]++;
   }
 
   // Score each formation
@@ -136,11 +148,11 @@ export function recommendFormation(
       usedPlayers.add(gk.id);
     }
 
-    // First pass: exact preferred position matches
+    // First pass: exact preferred position matches (복수 포지션 중 하나라도 일치)
     for (const slot of fieldSlots) {
       const pref = slotToPreferred(slot);
       const match = fieldPlayers.find(
-        (p) => p.preferredPosition === pref && !usedPlayers.has(p.id)
+        (p) => !usedPlayers.has(p.id) && getPlayerPositions(p).includes(pref)
       );
       if (match) {
         assignments[slot.id] = match.id;
@@ -149,12 +161,12 @@ export function recommendFormation(
       }
     }
 
-    // Second pass: same category matches
+    // Second pass: same category matches (복수 포지션의 카테고리 중 하나라도 일치)
     for (const slot of fieldSlots) {
       if (assignments[slot.id]) continue;
       const cat = slotToCategory(slot);
       const match = fieldPlayers.find(
-        (p) => PREF_TO_POSITION[p.preferredPosition] === cat && !usedPlayers.has(p.id)
+        (p) => !usedPlayers.has(p.id) && getPlayerPositions(p).some((pos) => PREF_TO_POSITION[pos] === cat)
       );
       if (match) {
         assignments[slot.id] = match.id;
@@ -182,7 +194,7 @@ export function recommendFormation(
       const exactMatches = Object.keys(assignments).filter((slotId) => {
         const slot = formation.slots.find((s) => s.id === slotId);
         const player = fieldPlayers.find((p) => p.id === assignments[slotId]);
-        return slot && player && slotToPreferred(slot) === player.preferredPosition;
+        return slot && player && getPlayerPositions(player).includes(slotToPreferred(slot));
       }).length;
 
       bestReason = `${formation.name} 추천 — 선호 포지션 일치 ${exactMatches}/${fieldSlotCount}명` +

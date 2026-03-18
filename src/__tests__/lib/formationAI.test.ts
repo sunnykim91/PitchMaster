@@ -6,10 +6,13 @@ import type { PlayerInput } from "@/lib/formationAI";
 
 function makePlayer(
   id: string,
-  preferredPosition: PlayerInput["preferredPosition"],
+  preferredPosition: string,
   overrides: Partial<PlayerInput> = {}
 ): PlayerInput {
-  return { id, name: `선수-${id}`, preferredPosition, ...overrides };
+  const positions = Array.isArray(overrides.preferredPositions)
+    ? overrides.preferredPositions
+    : [preferredPosition as PlayerInput["preferredPositions"][0]];
+  return { id, name: `선수-${id}`, preferredPositions: positions, ...overrides };
 }
 
 /** 4-3-3용 11인 팀: GK 1, DF 4, MF 3, FW 3 */
@@ -61,7 +64,7 @@ describe("recommendFormation()", () => {
     const gkSlot = rec!.formation.slots.find((s) => s.role === "GK");
     const assignedGkId = rec!.assignments[gkSlot!.id];
     const assignedPlayer = players.find((p) => p.id === assignedGkId);
-    expect(assignedPlayer?.preferredPosition).toBe("GK");
+    expect(assignedPlayer?.preferredPositions).toContain("GK");
   });
 
   it("전담 GK 없을 때 가장 낮은 점수 선수가 GK 배정", () => {
@@ -151,6 +154,48 @@ describe("recommendFormation()", () => {
     expect(rec).toHaveProperty("assignments");
     expect(typeof rec!.score).toBe("number");
     expect(typeof rec!.reason).toBe("string");
+  });
+
+  it("복수 포지션 선수가 여러 슬롯에 매칭 가능", () => {
+    // CB, CDM 둘 다 가능한 선수 → 수비 또는 미드 슬롯에 배치 가능
+    const team: PlayerInput[] = [
+      makePlayer("gk", "GK"),
+      makePlayer("multi", "CB", { preferredPositions: ["CB", "CDM"] }),
+      makePlayer("df2", "CB"),
+      makePlayer("df3", "LB"),
+      makePlayer("df4", "RB"),
+      makePlayer("mf1", "CAM"),
+      makePlayer("mf2", "CDM"),
+      makePlayer("mf3", "CAM"),
+      makePlayer("fw1", "LW"),
+      makePlayer("fw2", "ST"),
+      makePlayer("fw3", "RW"),
+    ];
+    const rec = recommendFormation(team);
+    expect(rec).not.toBeNull();
+    // multi 선수가 배정되어야 함
+    const assignedSlot = Object.entries(rec!.assignments).find(([, pid]) => pid === "multi");
+    expect(assignedSlot).toBeDefined();
+  });
+
+  it("GK가 복수 포지션에 포함되면 GK 후보로 인식", () => {
+    const team: PlayerInput[] = [
+      makePlayer("gk-multi", "GK", { preferredPositions: ["GK", "CB"] }),
+      makePlayer("df1", "CB"),
+      makePlayer("df2", "CB"),
+      makePlayer("df3", "LB"),
+      makePlayer("df4", "RB"),
+      makePlayer("mf1", "CAM"),
+      makePlayer("mf2", "CDM"),
+      makePlayer("mf3", "CAM"),
+      makePlayer("fw1", "LW"),
+      makePlayer("fw2", "ST"),
+      makePlayer("fw3", "RW"),
+    ];
+    const rec = recommendFormation(team);
+    expect(rec).not.toBeNull();
+    const gkSlot = rec!.formation.slots.find(s => s.role === "GK");
+    expect(rec!.assignments[gkSlot!.id]).toBe("gk-multi");
   });
 });
 

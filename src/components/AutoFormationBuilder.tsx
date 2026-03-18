@@ -25,7 +25,8 @@ import { cn } from "@/lib/utils";
 export type AttendingPlayer = {
   id: string;
   name: string;
-  preferredPosition: PreferredPosition; // GK, CB, FB, DM, AM, WG, ST
+  preferredPosition: PreferredPosition; // 주 포지션 (하위 호환)
+  preferredPositions?: PreferredPosition[]; // 복수 선호 포지션
 };
 
 type PlayerAssignment = AttendingPlayer & {

@@ -353,15 +353,25 @@ export default function MatchDetailClient({
         const memberData = a.member;
         const userData = a.users ?? memberData?.users;
         const name = userData?.name ?? memberData?.pre_name ?? "멤버";
-        const pos = userData?.preferred_positions?.[0] ?? "CAM";
+        const positions = (userData?.preferred_positions ?? []) as string[];
+        const pos = positions[0] ?? "CAM";
         const id = a.user_id ?? a.member_id ?? a.id;
-        return { id, name, preferredPosition: pos as AttendingPlayer["preferredPosition"] };
+        return {
+          id, name,
+          preferredPosition: pos as AttendingPlayer["preferredPosition"],
+          preferredPositions: positions.length > 0 ? positions as AttendingPlayer["preferredPosition"][] : undefined,
+        };
       });
     // 용병 추가
-    const guestPlayers: AttendingPlayer[] = guests.map((g) => ({
-      id: g.id,
-      name: g.name,
-      preferredPosition: ((g.position?.split(",")[0]) || "CAM") as AttendingPlayer["preferredPosition"],
+    const guestPlayers: AttendingPlayer[] = guests.map((g) => {
+      const positions = g.position?.split(",").map((p: string) => p.trim()).filter(Boolean) ?? [];
+      return {
+        id: g.id,
+        name: g.name,
+        preferredPosition: (positions[0] || "CAM") as AttendingPlayer["preferredPosition"],
+        preferredPositions: positions.length > 0 ? positions as AttendingPlayer["preferredPosition"][] : undefined,
+      };
+    });
     }));
     return [...members, ...guestPlayers];
   }, [voteData.attendance, guests]);
@@ -816,7 +826,7 @@ export default function MatchDetailClient({
         const aiPlayers: PlayerInput[] = attendingPlayers.map((p) => ({
           id: p.id,
           name: p.name,
-          preferredPosition: p.preferredPosition,
+          preferredPositions: p.preferredPositions ?? [p.preferredPosition],
         }));
         const maxPlayers = sportType === "FUTSAL" ? 5 : 11;
         const rec = recommendFormation(aiPlayers, Math.min(attendingPlayers.length, maxPlayers), sportType);
