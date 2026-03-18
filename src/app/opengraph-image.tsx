@@ -117,7 +117,7 @@ export default function OgImage() {
             display: "flex",
           }}
         >
-          경기 일정 · 참석 투표 · 전술판 · 회비 관리 · MVP 기록
+          실시간 투표 · AI 라인업 · 회비 자동정리 · 기록 분석 · 카톡 공유
         </div>
 
         {/* 기능 뱃지들 */}
@@ -128,7 +128,7 @@ export default function OgImage() {
             marginTop: 40,
           }}
         >
-          {["일정 관리", "전술판 편성", "회비 투명 관리", "기록 & MVP"].map(
+          {["실시간 투표", "AI 라인업", "회비 자동정리", "카톡 공유"].map(
             (text) => (
               <div
                 key={text}
