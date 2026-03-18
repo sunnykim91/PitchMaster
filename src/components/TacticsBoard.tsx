@@ -84,6 +84,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   // ── Fetch squads from API (skip if initialSquads provided) ──
   const {
     data: squadsApiData,
+    setData: setSquadsApiData,
     loading: squadsApiLoading,
   } = useApi<SquadsApiResponse>(
     `/api/squads?matchId=${matchId}`,
@@ -170,8 +171,24 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       formation: state.formationId,
       positions: state.placements,
     });
+    // 로컬 squadsData도 동기화 (쿼터 전환 시 즉시 반영)
+    setSquadsApiData((prev) => {
+      const existing = prev.squads.filter((s) => s.quarter_number !== quarterNum);
+      return {
+        squads: [
+          ...existing,
+          {
+            id: `local-${quarterNum}`,
+            match_id: matchId,
+            quarter_number: quarterNum,
+            formation: state.formationId,
+            positions: state.placements,
+          },
+        ],
+      };
+    });
     setSaving(false);
-  }, [matchId]);
+  }, [matchId, setSquadsApiData]);
 
   /** Pending save에 쿼터 번호도 함께 저장 */
   const pendingQuarterRef = useRef(activeQuarter);
