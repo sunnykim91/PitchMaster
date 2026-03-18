@@ -150,6 +150,44 @@ const screens = [
     ),
   },
   {
+    title: "팀 전적",
+    tag: "통계",
+    color: "text-emerald-400",
+    content: (
+      <div className="space-y-3">
+        <div className="flex items-baseline gap-2">
+          <span className="text-xl font-bold text-emerald-400">9승</span>
+          <span className="text-xl font-bold text-white/40">0무</span>
+          <span className="text-xl font-bold text-red-400">1패</span>
+          <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white/60">승률 90%</span>
+        </div>
+        <div className="flex gap-3 text-[11px] text-white/50">
+          <span>득점 <strong className="text-white">63</strong></span>
+          <span>실점 <strong className="text-white">28</strong></span>
+          <span>득실차 <strong className="text-emerald-400">+35</strong></span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] text-white/40">최근 5경기</span>
+          {["승", "패", "승", "승", "승"].map((r, i) => (
+            <span key={i} className={`flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${r === "승" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>{r}</span>
+          ))}
+        </div>
+        <div className="mt-1 space-y-1.5">
+          {[
+            { date: "3.10", opp: "메짤라", score: "2:0", color: "text-emerald-400" },
+            { date: "3.04", opp: "메짤라", score: "2:3", color: "text-red-400" },
+            { date: "2.23", opp: "영안FC", score: "8:6", color: "text-emerald-400" },
+          ].map((m, i) => (
+            <div key={i} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2">
+              <span className="text-[10px] text-white/50">{m.date} · {m.opp}</span>
+              <span className={`text-xs font-bold ${m.color}`}>{m.score}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+  {
     title: "회비 자동 정리",
     tag: "캡쳐 인식",
     color: "text-blue-400",

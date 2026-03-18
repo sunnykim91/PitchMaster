@@ -145,11 +145,13 @@ export default async function LoginPage({
           {/* Horizontal scroll preview */}
           <div className="mt-12 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
             {[
-              { label: "대시보드", desc: "다음 경기, 투표 현황, 할 일을 한눈에", color: "border-sky-500/30", bg: "bg-sky-500/5" },
-              { label: "경기 일정", desc: "실시간 참석 투표 + 자동 카운트", color: "border-emerald-500/30", bg: "bg-emerald-500/5" },
+              { label: "대시보드", desc: "다음 경기, 투표 현황, 팀 전적을 한눈에", color: "border-sky-500/30", bg: "bg-sky-500/5" },
+              { label: "경기 일정", desc: "실시간 투표 + 승/무/패 스코어 표시", color: "border-emerald-500/30", bg: "bg-emerald-500/5" },
+              { label: "팀 전적", desc: "승/무/패 · 득실차 · 최근 5경기 기록", color: "border-rose-500/30", bg: "bg-rose-500/5" },
               { label: "내 기록", desc: "레이더 차트 + 시즌 랭킹 시각화", color: "border-violet-500/30", bg: "bg-violet-500/5" },
-              { label: "AI 라인업", desc: "선호 포지션 분석해서 누가 어디서 뛸지 자동 추천", color: "border-purple-500/30", bg: "bg-purple-500/5" },
+              { label: "AI 라인업", desc: "선호 포지션 분석 → 자동 추천 + 심판/촬영 배정", color: "border-purple-500/30", bg: "bg-purple-500/5" },
               { label: "회비 관리", desc: "통장 캡쳐 한 장이면 입출금 자동 정리", color: "border-blue-500/30", bg: "bg-blue-500/5" },
+              { label: "게시판", desc: "사진 업로드 + 수정/삭제 자유", color: "border-pink-500/30", bg: "bg-pink-500/5" },
               { label: "카카오 공유", desc: "경기 결과 · 투표 링크 카드 공유", color: "border-amber-500/30", bg: "bg-amber-500/5" },
             ].map((item) => (
               <Card
@@ -370,9 +372,9 @@ export default async function LoginPage({
                 {[
                   "AI가 선호 포지션 분석해서 누가 어디서 뛸지 자동 추천",
                   "추천 결과를 전술판에 원클릭 적용 — 바로 수정도 가능",
-                  "쿼터별 출전 시간 공평 배분 — 한 명만 계속 뛰는 일 없음",
-                  "배치 구조 바꿔도 선수 위치 유지 — 4-3-3 → 4-4-2 자동 재배치",
-                  "완성된 전술판을 이미지로 저장 — 카톡으로 바로 공유",
+                  "쿼터별 출전 횟수 실시간 표시 — 공평하게 분배",
+                  "쉬는 선수 중 심판 · 촬영 역할 배정까지 한 화면에서",
+                  "완성된 전술판을 이미지로 저장 — 쉬는 선수/심판/촬영 포함",
                 ].map((text) => (
                   <div key={text} className="flex items-start gap-2">
                     <span className="mt-0.5 text-sm text-purple-400">✓</span>
@@ -407,21 +409,39 @@ export default async function LoginPage({
               },
               {
                 icon: "📊",
-                title: "데이터 시각화",
-                desc: "레이더 차트로 개인 능력치 분석. 랭킹 바 차트로 팀 내 순위 확인.",
+                title: "팀 전적 & 데이터 분석",
+                desc: "승/무/패, 득실차, 최근 5경기 한눈에. 레이더 차트로 개인 능력치까지.",
                 color: "text-sky-400",
               },
               {
                 icon: "🏆",
                 title: "경기 기록 & MVP",
-                desc: "골, 어시스트, 출석 자동 집계. MVP 투표로 시즌 랭킹이 쌓여요.",
+                desc: "골, 어시스트, 출석 자동 집계. MVP 투표 + 시즌 랭킹 + 승패 기록.",
                 color: "text-rose-400",
+              },
+              {
+                icon: "⚽",
+                title: "축구 & 풋살 모두 지원",
+                desc: "팀 생성 시 축구/풋살 선택. 인원수, 쿼터, 포메이션이 자동으로 맞춰져요.",
+                color: "text-primary",
+              },
+              {
+                icon: "🎽",
+                title: "심판 · 촬영 역할 배정",
+                desc: "쉬는 선수 중 심판/촬영 배정. 전술판 캡처에도 함께 표시.",
+                color: "text-blue-400",
               },
               {
                 icon: "💬",
                 title: "카카오톡 공유",
                 desc: "경기 결과, 투표 링크, 팀 초대를 카카오톡 피드 카드로 공유.",
                 color: "text-amber-400",
+              },
+              {
+                icon: "📸",
+                title: "게시판 & 사진 공유",
+                desc: "팀 게시판에 사진 업로드. 게시글 수정/삭제도 자유롭게.",
+                color: "text-pink-400",
               },
               {
                 icon: "🔔",
@@ -554,6 +574,18 @@ export default async function LoginPage({
                     kakao: "텍스트만",
                     band: "없음",
                     pm: "피드 카드 공유",
+                  },
+                  {
+                    feature: "팀 전적",
+                    kakao: "없음",
+                    band: "없음",
+                    pm: "승/무/패 + 득실차 자동 관리",
+                  },
+                  {
+                    feature: "풋살 지원",
+                    kakao: "없음",
+                    band: "없음",
+                    pm: "축구/풋살 모두 지원",
                   },
                   {
                     feature: "멀티팀",
