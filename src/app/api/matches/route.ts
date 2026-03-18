@@ -10,8 +10,9 @@ export async function GET() {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  // 날짜 지난 SCHEDULED 경기 → 자동 COMPLETED 처리
-  const today = new Date().toISOString().split("T")[0];
+  // 날짜 지난 SCHEDULED 경기 → 자동 COMPLETED 처리 (KST 기준)
+  const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const today = kstNow.toISOString().split("T")[0];
   await db
     .from("matches")
     .update({ status: "COMPLETED" })

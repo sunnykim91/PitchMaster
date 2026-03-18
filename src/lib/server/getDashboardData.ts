@@ -35,9 +35,10 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
   if (!db) return { upcomingMatch: null, recentResult: null, activeVotes: [], tasks: [], teamRecord: emptyRecord };
 
   const now = new Date().toISOString();
-  const today = now.split("T")[0];
+  const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const today = kstNow.toISOString().split("T")[0];
 
-  // 날짜 지난 SCHEDULED 경기 → 자동 COMPLETED 처리
+  // 날짜 지난 SCHEDULED 경기 → 자동 COMPLETED 처리 (KST 기준)
   await db
     .from("matches")
     .update({ status: "COMPLETED" })
