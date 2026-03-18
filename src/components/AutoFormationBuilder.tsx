@@ -283,30 +283,31 @@ function scheduleQuarters(
     };
     const slotReqs: SlotReq[] = [];
 
+    const getPos = (id: string): PreferredPosition => {
+      const p = field.find((f) => f.id === id);
+      return p?.preferredPosition ?? "CAM";
+    };
+
     // 풀타임 선수
     for (const fp of qFull) {
-      const p = field.find((f) => f.id === fp.id)!;
-      slotReqs.push({ ids: [fp.id], type: "full", preferredPos: p.preferredPosition });
+      slotReqs.push({ ids: [fp.id], type: "full", preferredPos: getPos(fp.id) });
     }
 
     // 하프 페어 — first_half[i] + second_half[i]가 같은 슬롯
     const pairCount = Math.min(qFirstHalf.length, qSecondHalf.length);
     for (let i = 0; i < pairCount; i++) {
-      const p1 = field.find((f) => f.id === qFirstHalf[i].id)!;
       slotReqs.push({
         ids: [qFirstHalf[i].id, qSecondHalf[i].id],
-        type: "first_half", // 페어 슬롯
-        preferredPos: p1.preferredPosition,
+        type: "first_half",
+        preferredPos: getPos(qFirstHalf[i].id),
       });
     }
     // 남은 미페어 하프 (있으면 풀타임 처리)
     for (let i = pairCount; i < qFirstHalf.length; i++) {
-      const p = field.find((f) => f.id === qFirstHalf[i].id)!;
-      slotReqs.push({ ids: [qFirstHalf[i].id], type: "full", preferredPos: p.preferredPosition });
+      slotReqs.push({ ids: [qFirstHalf[i].id], type: "full", preferredPos: getPos(qFirstHalf[i].id) });
     }
     for (let i = pairCount; i < qSecondHalf.length; i++) {
-      const p = field.find((f) => f.id === qSecondHalf[i].id)!;
-      slotReqs.push({ ids: [qSecondHalf[i].id], type: "full", preferredPos: p.preferredPosition });
+      slotReqs.push({ ids: [qSecondHalf[i].id], type: "full", preferredPos: getPos(qSecondHalf[i].id) });
     }
 
     // 슬롯을 세분화 포지션별로 분류
