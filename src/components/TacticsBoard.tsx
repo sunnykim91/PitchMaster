@@ -204,20 +204,6 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     });
   }, [debouncedSave]);
 
-  // 심판/촬영 역할 (쿼터별 positions에 __referee, __camera 키로 저장)
-  const referee = placements["__referee"]?.playerId ?? "";
-  const camera = placements["__camera"]?.playerId ?? "";
-
-  function handleRoleAssign(role: "__referee" | "__camera", playerId: string) {
-    updateBoardState((prev) => ({
-      ...prev,
-      placements: {
-        ...prev.placements,
-        [role]: playerId ? { playerId, x: 0, y: 0 } : null,
-      },
-    }));
-  }
-
   const [uniformMode, setUniformMode] = useState<"HOME" | "AWAY">("HOME");
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
   const [shareMsg, setShareMsg] = useState<string | null>(null);
@@ -241,6 +227,20 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     if (boardState.placements["__camera"]) normalized["__camera"] = boardState.placements["__camera"];
     return normalized;
   }, [boardState.placements, formation.slots]);
+
+  // 심판/촬영 역할 (쿼터별 positions에 __referee, __camera 키로 저장)
+  const referee = placements["__referee"]?.playerId ?? "";
+  const camera = placements["__camera"]?.playerId ?? "";
+
+  function handleRoleAssign(role: "__referee" | "__camera", playerId: string) {
+    updateBoardState((prev) => ({
+      ...prev,
+      placements: {
+        ...prev.placements,
+        [role]: playerId ? { playerId, x: 0, y: 0 } : null,
+      },
+    }));
+  }
 
   const assignedPlayers = useMemo(() => {
     const map = new Map<string, string>();

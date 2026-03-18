@@ -2,6 +2,15 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+export type TeamRecord = {
+  wins: number;
+  draws: number;
+  losses: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  recent5: ("W" | "D" | "L")[];
+};
+
 export type DashboardData = {
   upcomingMatch: {
     id: string;
@@ -19,11 +28,13 @@ export type DashboardData = {
   } | null;
   activeVotes: { id: string; title: string; due: string }[];
   tasks: string[];
+  teamRecord: TeamRecord;
 };
 
 export async function getDashboardData(teamId: string, userId: string): Promise<DashboardData> {
   const db = getSupabaseAdmin();
-  if (!db) return { upcomingMatch: null, recentResult: null, activeVotes: [], tasks: [] };
+  const emptyRecord: TeamRecord = { wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, recent5: [] };
+  if (!db) return { upcomingMatch: null, recentResult: null, activeVotes: [], tasks: [], teamRecord: emptyRecord };
 
   const now = new Date().toISOString();
 
@@ -103,5 +114,51 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
   if (upcomingMatch && !taskChecks[0].data) tasks.push("다음 경기 참석 투표 완료하기");
   if (recentMatch && !taskChecks[1].data) tasks.push("최근 경기 MVP 투표 완료하기");
 
-  return { upcomingMatch, recentResult, activeVotes, tasks };
+  // ── 팀 전적 계산 ──
+  const { data: completedMatches } = await db
+    .from("matches")
+    .select("id")
+    .eq("team_id", teamId)
+    .eq("status", "COMPLETED")
+    .order("match_date", { ascending: false });
+
+  const completedIds = (completedMatches ?? []).map((m: any) => m.id);
+  let teamRecord = emptyRecord;
+
+  if (completedIds.length > 0) {
+    const { data: allGoals } = await db
+      .from("match_goals")
+      .select("match_id, scorer_id")
+      .in("match_id", completedIds);
+
+    // 경기별 득점/실점 집계
+    const matchScores = new Map<string, { our: number; opp: number }>();
+    for (const g of allGoals ?? []) {
+      if (!matchScores.has(g.match_id)) matchScores.set(g.match_id, { our: 0, opp: 0 });
+      const s = matchScores.get(g.match_id)!;
+      if (g.scorer_id === "OPPONENT") s.opp++;
+      else s.our++;
+    }
+
+    let wins = 0, draws = 0, losses = 0, gf = 0, ga = 0;
+    const results: ("W" | "D" | "L")[] = [];
+
+    // completedIds는 날짜 내림차순이므로 최근 경기부터
+    for (const mid of completedIds) {
+      const s = matchScores.get(mid) ?? { our: 0, opp: 0 };
+      gf += s.our;
+      ga += s.opp;
+      if (s.our > s.opp) { wins++; results.push("W"); }
+      else if (s.our === s.opp) { draws++; results.push("D"); }
+      else { losses++; results.push("L"); }
+    }
+
+    teamRecord = {
+      wins, draws, losses,
+      goalsFor: gf, goalsAgainst: ga,
+      recent5: results.slice(0, 5),
+    };
+  }
+
+  return { upcomingMatch, recentResult, activeVotes, tasks, teamRecord };
 }

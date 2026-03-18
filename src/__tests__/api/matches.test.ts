@@ -51,7 +51,7 @@ describe("GET /api/matches", () => {
     const res = await GET();
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.matches).toEqual(mockMatches);
+    expect(json.matches).toEqual(mockMatches.map((m: Record<string, unknown>) => ({ ...m, score: null })));
   });
 
   it("400: DB 에러 발생시 에러 반환", async () => {

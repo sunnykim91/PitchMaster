@@ -17,7 +17,28 @@ export async function GET() {
     .order("match_date", { ascending: false });
 
   if (error) return apiError(error.message);
-  return apiSuccess({ matches: data });
+
+  // 완료된 경기의 스코어 계산
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const completedIds = (data ?? []).filter((m: any) => m.status === "COMPLETED").map((m: any) => m.id);
+  let scoreMap: Record<string, { our: number; opp: number }> = {};
+  if (completedIds.length > 0) {
+    const { data: goals } = await db.from("match_goals").select("match_id, scorer_id").in("match_id", completedIds);
+    const map: Record<string, { our: number; opp: number }> = {};
+    for (const g of goals ?? []) {
+      if (!map[g.match_id]) map[g.match_id] = { our: 0, opp: 0 };
+      if (g.scorer_id === "OPPONENT") map[g.match_id].opp++;
+      else map[g.match_id].our++;
+    }
+    scoreMap = map;
+  }
+
+  const matches = (data ?? []).map((m: any) => ({
+    ...m,
+    score: scoreMap[m.id] ? `${scoreMap[m.id].our} : ${scoreMap[m.id].opp}` : null,
+  }));
+
+  return apiSuccess({ matches });
 }
 
 export async function POST(request: NextRequest) {

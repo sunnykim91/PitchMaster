@@ -29,11 +29,21 @@ type ActiveVote = {
   due: string;
 };
 
+type TeamRecord = {
+  wins: number;
+  draws: number;
+  losses: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  recent5: ("W" | "D" | "L")[];
+};
+
 type DashboardData = {
   upcomingMatch: UpcomingMatch | null;
   recentResult: RecentResult | null;
   activeVotes: ActiveVote[];
   tasks: string[];
+  teamRecord: TeamRecord;
 };
 
 const emptyData: DashboardData = {
@@ -41,6 +51,7 @@ const emptyData: DashboardData = {
   recentResult: null,
   activeVotes: [],
   tasks: [],
+  teamRecord: { wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, recent5: [] },
 };
 
 function CardSkeleton() {
@@ -112,7 +123,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
     );
   }
 
-  const { upcomingMatch, activeVotes, tasks, recentResult } = data;
+  const { upcomingMatch, activeVotes, tasks, recentResult, teamRecord } = data;
 
   return (
     <div className="grid gap-4 stagger-children">
@@ -262,35 +273,74 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
           </CardHeader>
           <CardContent>
             {recentResult ? (
-              <Card className="border-0 border-l-2 border-l-emerald-500/40 bg-secondary hover:bg-secondary/70">
-                <CardContent className="p-4">
-                  <div className="flex items-baseline justify-between">
-                    <p className="text-xs text-muted-foreground">{formatDate(recentResult.date)}</p>
-                    <p className="font-heading text-3xl font-bold text-emerald-400">
-                      {recentResult.score}
-                    </p>
-                  </div>
-                  <p className="mt-2 text-sm text-foreground/70">
-                    상대팀:{" "}
-                    <span className="font-semibold text-foreground">
-                      {recentResult.opponent ?? "미정"}
-                    </span>
-                  </p>
-                  {recentResult.mvp && (
+              <div className="space-y-3">
+                <Card className="border-0 border-l-2 border-l-emerald-500/40 bg-secondary hover:bg-secondary/70">
+                  <CardContent className="p-4">
+                    <div className="flex items-baseline justify-between">
+                      <p className="text-xs text-muted-foreground">{formatDate(recentResult.date)}</p>
+                      <p className="font-heading text-3xl font-bold text-emerald-400">
+                        {recentResult.score}
+                      </p>
+                    </div>
                     <p className="mt-2 text-sm text-foreground/70">
-                      MVP: <span className="font-semibold text-foreground">{recentResult.mvp}</span>
+                      상대팀:{" "}
+                      <span className="font-semibold text-foreground">
+                        {recentResult.opponent ?? "미정"}
+                      </span>
                     </p>
-                  )}
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/matches/${recentResult.id}`}>상세 기록 보기</Link>
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href="/records">팀 랭킹 보기</Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                    {recentResult.mvp && (
+                      <p className="mt-2 text-sm text-foreground/70">
+                        MVP: <span className="font-semibold text-foreground">{recentResult.mvp}</span>
+                      </p>
+                    )}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/matches/${recentResult.id}`}>상세 기록 보기</Link>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href="/records">팀 랭킹 보기</Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* 시즌 전적 요약 */}
+                {(teamRecord.wins + teamRecord.draws + teamRecord.losses) > 0 && (
+                  <Card className="border-0 bg-secondary">
+                    <CardContent className="p-4">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">시즌 전적</p>
+                      <div className="mt-2 flex items-center gap-3">
+                        <span className="font-heading text-lg font-bold text-emerald-400">{teamRecord.wins}승</span>
+                        <span className="font-heading text-lg font-bold text-muted-foreground">{teamRecord.draws}무</span>
+                        <span className="font-heading text-lg font-bold text-red-400">{teamRecord.losses}패</span>
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          승률 {Math.round((teamRecord.wins / (teamRecord.wins + teamRecord.draws + teamRecord.losses)) * 100)}%
+                        </span>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                        <span>득점 {teamRecord.goalsFor} · 실점 {teamRecord.goalsAgainst} · 득실차 {teamRecord.goalsFor - teamRecord.goalsAgainst >= 0 ? "+" : ""}{teamRecord.goalsFor - teamRecord.goalsAgainst}</span>
+                      </div>
+                      {teamRecord.recent5.length > 0 && (
+                        <div className="mt-3 flex items-center gap-1.5">
+                          <span className="text-[10px] text-muted-foreground">최근:</span>
+                          {teamRecord.recent5.map((r, i) => (
+                            <span
+                              key={i}
+                              className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
+                                r === "W" ? "bg-emerald-500/20 text-emerald-400"
+                                : r === "D" ? "bg-muted text-muted-foreground"
+                                : "bg-red-500/20 text-red-400"
+                              }`}
+                            >
+                              {r === "W" ? "승" : r === "D" ? "무" : "패"}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             ) : (
               <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/50 py-10 text-center">
                 <span className="text-3xl">&#127942;</span>

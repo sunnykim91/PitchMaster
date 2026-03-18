@@ -32,6 +32,7 @@ type Match = {
   breakDuration: number;
   status: MatchStatus;
   voteDeadline?: string;
+  score?: string | null;
 };
 
 type DbMatch = {
@@ -46,6 +47,7 @@ type DbMatch = {
   break_duration: number;
   status: MatchStatus;
   vote_deadline: string | null;
+  score?: string | null;
   created_by: string;
   created_at: string;
 };
@@ -78,6 +80,7 @@ function mapDbMatchToMatch(db: DbMatch): Match {
     breakDuration: db.break_duration,
     status: db.status,
     voteDeadline: db.vote_deadline || undefined,
+    score: db.score ?? null,
   };
 }
 
@@ -424,9 +427,14 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
               <CardHeader>
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <Badge variant={match.status === "COMPLETED" ? "secondary" : "default"}>
-                      {match.status === "COMPLETED" ? "완료" : "예정"}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={match.status === "COMPLETED" ? "secondary" : "default"}>
+                        {match.status === "COMPLETED" ? "완료" : "예정"}
+                      </Badge>
+                      {match.status === "COMPLETED" && match.score && (
+                        <span className="font-heading text-lg font-bold text-emerald-400">{match.score}</span>
+                      )}
+                    </div>
                     <CardTitle className="mt-2 font-heading text-xl font-bold uppercase">
                       {match.date} · {formatTime(match.time)}
                     </CardTitle>
