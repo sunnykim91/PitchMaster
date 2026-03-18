@@ -36,6 +36,7 @@ type TeamInfo = {
   id: string;
   name: string;
   inviteCode: string;
+  sportType: string;
   role: Role;
   isCurrent: boolean;
 };
@@ -120,6 +121,15 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             onClick={() => setTeamMenuOpen(!teamMenuOpen)}
           >
             {session.user.teamName}
+            {(() => {
+              const current = teams.find((t) => t.isCurrent);
+              const st = current?.sportType ?? "SOCCER";
+              return (
+                <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${st === "FUTSAL" ? "bg-violet-500/15 text-violet-400" : "bg-emerald-500/15 text-emerald-400"}`}>
+                  {st === "FUTSAL" ? "풋살" : "축구"}
+                </span>
+              );
+            })()}
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </button>
           {teamMenuOpen && (
@@ -232,6 +242,15 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                 <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">PitchMaster</p>
                 <p className="text-lg font-bold flex items-center gap-1">
                   {session.user.teamName}
+                  {(() => {
+                    const current = teams.find((t) => t.isCurrent);
+                    const st = current?.sportType ?? "SOCCER";
+                    return (
+                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${st === "FUTSAL" ? "bg-violet-500/15 text-violet-400" : "bg-emerald-500/15 text-emerald-400"}`}>
+                        {st === "FUTSAL" ? "풋살" : "축구"}
+                      </span>
+                    );
+                  })()}
                   {teams.length > 1 && (
                     <Badge variant="secondary" className="text-[9px] px-1.5 py-0">
                       {teams.length}팀

@@ -16,7 +16,7 @@ export async function GET() {
 
   const { data, error } = await db
     .from("team_members")
-    .select("team_id, role, teams(id, name, invite_code)")
+    .select("team_id, role, teams(id, name, invite_code, sport_type)")
     .eq("user_id", session.user.id)
     .eq("status", "ACTIVE");
 
@@ -26,11 +26,12 @@ export async function GET() {
 
   const teams = (data ?? []).map((row) => {
     const teamsRaw = row.teams as unknown;
-    const team = (Array.isArray(teamsRaw) ? teamsRaw[0] : teamsRaw) as { id: string; name: string; invite_code: string } | null;
+    const team = (Array.isArray(teamsRaw) ? teamsRaw[0] : teamsRaw) as { id: string; name: string; invite_code: string; sport_type?: string } | null;
     return {
       id: team?.id ?? row.team_id,
       name: team?.name ?? "알 수 없는 팀",
       inviteCode: team?.invite_code ?? "",
+      sportType: team?.sport_type ?? "SOCCER",
       role: row.role,
       isCurrent: team?.id === session.user.teamId,
     };
