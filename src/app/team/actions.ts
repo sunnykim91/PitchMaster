@@ -10,6 +10,7 @@ export async function createTeam(formData: FormData) {
   if (!session) redirect("/login");
 
   const teamName = String(formData.get("teamName") || "").trim() || "우리 팀";
+  const sportType = String(formData.get("sportType") || "SOCCER");
   const inviteCode = nanoid(6).toUpperCase();
 
   const db = getSupabaseAdmin();
@@ -30,7 +31,7 @@ export async function createTeam(formData: FormData) {
   // Create team in DB
   const { data: team, error: teamError } = await db
     .from("teams")
-    .insert({ name: teamName, invite_code: inviteCode })
+    .insert({ name: teamName, invite_code: inviteCode, sport_type: sportType })
     .select()
     .single();
 

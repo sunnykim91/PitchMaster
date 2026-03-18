@@ -112,6 +112,30 @@ export default function TeamClient({ hasExistingTeam = false }: { hasExistingTea
                     <p className="text-xs text-destructive">이미 사용 중인 팀명입니다.</p>
                   )}
                 </div>
+                <div className="space-y-2">
+                  <Label>스포츠 유형</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: "SOCCER", label: "축구", desc: "11 vs 11" },
+                      { value: "FUTSAL", label: "풋살", desc: "3~8명" },
+                    ].map((opt) => (
+                      <label
+                        key={opt.value}
+                        className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border border-border bg-card px-4 py-3 text-center transition-colors hover:bg-accent has-[:checked]:border-primary has-[:checked]:bg-primary/5"
+                      >
+                        <input
+                          type="radio"
+                          name="sportType"
+                          value={opt.value}
+                          defaultChecked={opt.value === "SOCCER"}
+                          className="sr-only"
+                        />
+                        <span className="text-sm font-bold">{opt.label}</span>
+                        <span className="text-[11px] text-muted-foreground">{opt.desc}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
                 <Button
                   type="submit"
                   className="w-full"
