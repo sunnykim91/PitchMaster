@@ -74,7 +74,6 @@ export async function POST(request: NextRequest) {
 
   // memberId가 있으면 team_members.id 기반 (미연동 멤버 포함)
   if (memberId) {
-    // member의 user_id 조회
     const { data: memberRow } = await db
       .from("team_members")
       .select("user_id")
@@ -82,47 +81,28 @@ export async function POST(request: NextRequest) {
       .single();
     const linkedUserId = memberRow?.user_id || null;
 
-    // member_id 또는 user_id로 기존 레코드 검색 (member_id 없이 user_id로만 생성된 레코드도 찾기)
-    let existing = null;
-    const { data: byMember } = await db
+    // 기존 레코드가 있으면 업데이트, 없으면 삽입 (원자적)
+    // 먼저 기존 레코드 찾기 (member_id 또는 user_id)
+    const { data: existing } = await db
       .from("match_attendance")
       .select("id")
       .eq("match_id", matchId)
-      .eq("member_id", memberId)
+      .or(`member_id.eq.${memberId}${linkedUserId ? `,user_id.eq.${linkedUserId}` : ""}`)
+      .limit(1)
       .maybeSingle();
-    existing = byMember;
 
-    if (!existing && linkedUserId) {
-      const { data: byUser } = await db
-        .from("match_attendance")
-        .select("id")
-        .eq("match_id", matchId)
-        .eq("user_id", linkedUserId)
-        .maybeSingle();
-      existing = byUser;
-    }
+    const row = {
+      match_id: matchId,
+      user_id: linkedUserId,
+      member_id: memberId,
+      vote,
+      voted_at: new Date().toISOString(),
+    };
 
-    let data, error;
-    if (existing) {
-      ({ data, error } = await db
-        .from("match_attendance")
-        .update({ vote, member_id: memberId, user_id: linkedUserId, voted_at: new Date().toISOString() })
-        .eq("id", existing.id)
-        .select()
-        .single());
-    } else {
-      ({ data, error } = await db
-        .from("match_attendance")
-        .insert({
-          match_id: matchId,
-          user_id: linkedUserId,
-          member_id: memberId,
-          vote,
-          voted_at: new Date().toISOString(),
-        })
-        .select()
-        .single());
-    }
+    const { data, error } = existing
+      ? await db.from("match_attendance").update(row).eq("id", existing.id).select().single()
+      : await db.from("match_attendance").insert(row).select().single();
+
     if (error) return apiError(error.message);
     return apiSuccess(data);
   }
@@ -130,7 +110,6 @@ export async function POST(request: NextRequest) {
   // user_id 기반 — member_id도 자동으로 채움
   const voteUserId = targetUserId || ctx.userId;
 
-  // 해당 유저의 team_members.id 조회
   const { data: memberRow } = await db
     .from("team_members")
     .select("id")
@@ -139,7 +118,7 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
   const resolvedMemberId = memberRow?.id || null;
 
-  // 기존 레코드 확인: member_id 또는 user_id로 찾기
+  // 기존 레코드 찾기 (user_id 또는 member_id)
   const { data: existing } = await db
     .from("match_attendance")
     .select("id")
@@ -148,32 +127,17 @@ export async function POST(request: NextRequest) {
     .limit(1)
     .maybeSingle();
 
-  let data, error;
-  if (existing) {
-    ({ data, error } = await db
-      .from("match_attendance")
-      .update({
-        user_id: voteUserId,
-        member_id: resolvedMemberId,
-        vote,
-        voted_at: new Date().toISOString(),
-      })
-      .eq("id", existing.id)
-      .select()
-      .single());
-  } else {
-    ({ data, error } = await db
-      .from("match_attendance")
-      .insert({
-        match_id: matchId,
-        user_id: voteUserId,
-        member_id: resolvedMemberId,
-        vote,
-        voted_at: new Date().toISOString(),
-      })
-      .select()
-      .single());
-  }
+  const row = {
+    match_id: matchId,
+    user_id: voteUserId,
+    member_id: resolvedMemberId,
+    vote,
+    voted_at: new Date().toISOString(),
+  };
+
+  const { data, error } = existing
+    ? await db.from("match_attendance").update(row).eq("id", existing.id).select().single()
+    : await db.from("match_attendance").insert(row).select().single();
 
   if (error) return apiError(error.message);
   return apiSuccess(data);

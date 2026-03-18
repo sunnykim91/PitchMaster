@@ -126,13 +126,7 @@ export async function DELETE(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  // Cascade delete related data before deleting the match
-  const tables = ["match_goals", "match_mvp_votes", "match_attendance", "match_squad", "match_diary"];
-  for (const table of tables) {
-    const { error } = await db.from(table).delete().eq("match_id", body.id);
-    if (error) return apiError(`Failed to delete ${table}: ${error.message}`);
-  }
-
+  // DB FK CASCADE로 관련 데이터(goals, mvp, attendance, squad, diary, guests) 자동 삭제
   const { error } = await db
     .from("matches")
     .delete()
