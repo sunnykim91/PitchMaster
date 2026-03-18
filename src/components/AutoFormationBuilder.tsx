@@ -283,9 +283,11 @@ function scheduleQuarters(
     };
     const slotReqs: SlotReq[] = [];
 
+    const validPositions = new Set(["GK", "CB", "LB", "RB", "CDM", "CAM", "LW", "RW", "ST"]);
     const getPos = (id: string): PreferredPosition => {
       const p = field.find((f) => f.id === id);
-      return p?.preferredPosition ?? "CAM";
+      const pos = p?.preferredPosition;
+      return (pos && validPositions.has(pos)) ? pos as PreferredPosition : "CAM";
     };
 
     // 풀타임 선수
@@ -321,7 +323,11 @@ function scheduleQuarters(
     const reqsBySubPos: Record<PreferredPosition, SlotReq[]> = {
       GK: [], CB: [], LB: [], RB: [], CDM: [], CAM: [], LW: [], RW: [], ST: [],
     };
-    for (const sr of slotReqs) reqsBySubPos[sr.preferredPos].push(sr);
+    for (const sr of slotReqs) {
+      const bucket = reqsBySubPos[sr.preferredPos];
+      if (bucket) bucket.push(sr);
+      else reqsBySubPos["CAM"].push(sr); // 알 수 없는 포지션 → CAM fallback
+    }
 
     const usedSlots = new Set<string>();
     const assignedReqs = new Set<SlotReq>();
