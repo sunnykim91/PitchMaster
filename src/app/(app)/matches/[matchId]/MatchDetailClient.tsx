@@ -409,16 +409,21 @@ export default function MatchDetailClient({
     return ids;
   }, [voteData.attendance, membersData.members]);
 
+  /** 참석 멤버만 (용병 제외) — MVP 투표, 출석 체크용 */
+  const attendingMembers = useMemo(
+    () => baseRoster.filter((m) => attendingIds.has(m.id)),
+    [baseRoster, attendingIds]
+  );
+
   /** 전술판 roster: 참석 멤버 + 용병 */
   const roster = useMemo(() => {
-    const attendingMembers = baseRoster.filter((m) => attendingIds.has(m.id));
     const guestRoster = guests.map((g) => ({
       id: g.id,
       name: g.name,
       role: ((g.position?.split(",")[0]) || "MF") as DetailedPosition,
     }));
     return [...attendingMembers, ...guestRoster];
-  }, [baseRoster, attendingIds, guests]);
+  }, [attendingMembers, guests]);
 
   /** 전체 로스터 (골 기록 시 이름 해석용) */
   const fullRoster = useMemo(() => {
@@ -1122,7 +1127,7 @@ export default function MatchDetailClient({
 
             <CardContent>
               <div className="space-y-2">
-                {roster.map((player) => (
+                {attendingMembers.map((player) => (
                   <Button
                     key={player.id}
                     type="button"
@@ -1162,7 +1167,7 @@ export default function MatchDetailClient({
 
               <CardContent>
                 <div className="space-y-2">
-                  {roster.map((player) => {
+                  {attendingMembers.map((player) => {
                     const status = attendance[player.id];
                     return (
                       <Card
