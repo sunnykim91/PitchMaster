@@ -252,6 +252,8 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
   const [editingRecord, setEditingRecord] = useState<DuesRecord | null>(null);
+  const [editingSetting, setEditingSetting] = useState<DuesSetting | null>(null);
+  const [settingFormState, setSettingFormState] = useState({ memberType: "", monthlyAmount: "", description: "" });
   const bulkSectionRef = useRef<HTMLDivElement>(null);
 
   const loading = loadingSummary || loadingMembers;
@@ -305,6 +307,50 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       await refetchSummary();
       setIsSettingOpen(false);
     }
+  }
+
+  function handleEditSetting(setting: DuesSetting) {
+    setEditingSetting(setting);
+    setSettingFormState({
+      memberType: setting.memberType,
+      monthlyAmount: String(setting.monthlyAmount),
+      description: setting.description ?? "",
+    });
+  }
+
+  function handleCancelEditSetting() {
+    setEditingSetting(null);
+    setSettingFormState({ memberType: "", monthlyAmount: "", description: "" });
+  }
+
+  async function handleUpdateSetting(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingSetting) return;
+    const { error } = await apiMutate("/api/dues-settings", "PUT", {
+      id: editingSetting.id,
+      memberType: settingFormState.memberType,
+      monthlyAmount: Number(settingFormState.monthlyAmount),
+      description: settingFormState.description,
+    });
+    if (error) {
+      showToast(error, "error");
+      return;
+    }
+    showToast("회비 기준이 수정되었습니다.");
+    await refetchSummary();
+    setEditingSetting(null);
+    setSettingFormState({ memberType: "", monthlyAmount: "", description: "" });
+  }
+
+  async function handleDeleteSetting(id: string) {
+    if (!confirm("이 회비 기준을 삭제하시겠습니까?")) return;
+    const { error } = await apiMutate("/api/dues-settings", "DELETE", { id });
+    if (error) {
+      showToast(error, "error");
+      return;
+    }
+    showToast("회비 기준이 삭제되었습니다.");
+    await refetchSummary();
   }
 
   /* ── 일괄 등록 핸들러 ── */
@@ -1139,22 +1185,79 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         ) : null}
 
         <div className="mt-4 grid gap-3 md:grid-cols-3">
-          {settings.map((setting) => (
-            <Card
-              key={setting.id}
-              className="border-0 bg-secondary p-4"
-            >
-              <p className="text-sm font-bold text-foreground">
-                {setting.memberType}
-              </p>
-              <p className="mt-2 font-heading text-lg font-bold text-foreground">
-                {setting.monthlyAmount.toLocaleString()}원
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {setting.description}
-              </p>
-            </Card>
-          ))}
+          {settings.map((setting) =>
+            editingSetting?.id === setting.id ? (
+              <Card key={setting.id} className="border-0 bg-secondary p-4">
+                <form onSubmit={handleUpdateSetting} className="grid gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-muted-foreground">회원 유형</Label>
+                    <Input
+                      value={settingFormState.memberType}
+                      onChange={(e) => setSettingFormState((prev) => ({ ...prev, memberType: e.target.value }))}
+                      required
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-muted-foreground">월 회비</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={settingFormState.monthlyAmount}
+                      onChange={(e) => setSettingFormState((prev) => ({ ...prev, monthlyAmount: e.target.value }))}
+                      required
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-muted-foreground">설명</Label>
+                    <Input
+                      value={settingFormState.description}
+                      onChange={(e) => setSettingFormState((prev) => ({ ...prev, description: e.target.value }))}
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="submit" size="sm">저장</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={handleCancelEditSetting}>취소</Button>
+                  </div>
+                </form>
+              </Card>
+            ) : (
+              <Card
+                key={setting.id}
+                className="border-0 bg-secondary p-4"
+              >
+                <p className="text-sm font-bold text-foreground">
+                  {setting.memberType}
+                </p>
+                <p className="mt-2 font-heading text-lg font-bold text-foreground">
+                  {setting.monthlyAmount.toLocaleString()}원
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {setting.description}
+                </p>
+                {isStaffOrAbove(role) && (
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleEditSetting(setting)}
+                      className="text-xs text-muted-foreground hover:text-foreground transition"
+                    >
+                      수정
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSetting(setting.id)}
+                      className="text-xs text-destructive/70 hover:text-destructive transition"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                )}
+              </Card>
+            )
+          )}
         </div>
       </Card>
 

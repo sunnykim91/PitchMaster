@@ -44,3 +44,19 @@ export async function PUT(request: NextRequest) {
 
   return apiSuccess({ ok: true });
 }
+
+export async function DELETE() {
+  const ctx = await getApiContext();
+  if (ctx instanceof NextResponse) return ctx;
+
+  const db = getSupabaseAdmin();
+  if (!db) return apiError("Database not available", 503);
+
+  const { error } = await db
+    .from("notifications")
+    .delete()
+    .eq("user_id", ctx.userId);
+
+  if (error) return apiError(error.message);
+  return apiSuccess({ ok: true });
+}

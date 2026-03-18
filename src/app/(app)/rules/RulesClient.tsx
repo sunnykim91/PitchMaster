@@ -125,6 +125,17 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
     setFormState({ title: "", content: "", category: "일반" });
   }
 
+  async function handleDelete(id: string) {
+    if (!confirm("이 회칙을 삭제하시겠습니까?")) return;
+    const { error } = await apiMutate("/api/rules", "DELETE", { id });
+    if (error) {
+      showToast(error, "error");
+      return;
+    }
+    showToast("회칙이 삭제되었습니다.");
+    await refetch();
+  }
+
   if (loading && rules.length === 0) {
     return (
       <div className="grid gap-5">
@@ -282,9 +293,20 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
                         </p>
                       </div>
                       {isStaffOrAbove(role) && (
-                        <Button type="button" variant="outline" size="sm" onClick={() => handleEdit(rule)}>
-                          수정
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button type="button" variant="outline" size="sm" onClick={() => handleEdit(rule)}>
+                            수정
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDelete(rule.id)}
+                          >
+                            삭제
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </CardContent>

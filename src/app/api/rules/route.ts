@@ -83,3 +83,26 @@ export async function PUT(request: NextRequest) {
   if (error) return apiError(error.message);
   return apiSuccess(data);
 }
+
+export async function DELETE(request: NextRequest) {
+  const ctx = await getApiContext();
+  if (ctx instanceof NextResponse) return ctx;
+
+  const roleCheck = requireRole(ctx, PERMISSIONS.RULE_EDIT);
+  if (roleCheck) return roleCheck;
+
+  const body = await request.json();
+  if (!body.id) return apiError("id required");
+
+  const db = getSupabaseAdmin();
+  if (!db) return apiError("Database not available", 503);
+
+  const { error } = await db
+    .from("rules")
+    .delete()
+    .eq("id", body.id)
+    .eq("team_id", ctx.teamId);
+
+  if (error) return apiError(error.message);
+  return apiSuccess({ ok: true });
+}
