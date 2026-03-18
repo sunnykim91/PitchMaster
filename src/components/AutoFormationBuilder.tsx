@@ -294,12 +294,14 @@ function scheduleQuarters(
       return positions.length > 0 ? positions : ["CAM"];
     };
 
-    /** 이전 쿼터에서 선수가 배정된 포지션 타입 추적 (로테이션용) */
-    const playerPosHistory: Record<string, Record<string, number>> = {}; // playerId → { posKey: count }
+    /** 이전 쿼터에서 선수가 배정된 포지션 카테고리 추적 (로테이션용) */
+    const playerPosHistory: Record<string, Record<string, number>> = {}; // playerId → { PreferredPosition: count }
     for (const prev of results) {
       for (const a of prev.assignments) {
         if (!playerPosHistory[a.playerId]) playerPosHistory[a.playerId] = {};
-        const posKey = a.slotLabel;
+        // slotLabel(LCB,RCB,LDM 등) → PreferredPosition(CB,CDM 등)으로 변환
+        const slot = formation.slots.find((s) => s.id === a.slotId);
+        const posKey = slot ? getSlotSubPosition(slot) : a.slotLabel;
         playerPosHistory[a.playerId][posKey] = (playerPosHistory[a.playerId][posKey] ?? 0) + 1;
       }
     }
