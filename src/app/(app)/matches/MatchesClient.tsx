@@ -346,7 +346,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     name="quarterCount"
                     type="number"
                     min={1}
-                    max={6}
+                    max={12}
                     defaultValue={defaults.quarters}
                   />
                 </div>

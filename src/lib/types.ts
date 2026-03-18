@@ -108,7 +108,7 @@ export const FUTSAL_POSITION_GROUPS: { group: string; positions: FutsalPosition[
 /** 스포츠별 경기 기본값 */
 export const SPORT_DEFAULTS: Record<SportType, { playerCount: number; quarters: number; duration: number; breakTime: number }> = {
   SOCCER: { playerCount: 11, quarters: 4, duration: 25, breakTime: 5 },
-  FUTSAL: { playerCount: 6, quarters: 3, duration: 12, breakTime: 3 },
+  FUTSAL: { playerCount: 6, quarters: 8, duration: 12, breakTime: 3 },
 };
 
 export type SessionUser = {
