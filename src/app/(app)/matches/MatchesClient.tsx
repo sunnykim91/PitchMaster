@@ -431,9 +431,19 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       <Badge variant={match.status === "COMPLETED" ? "secondary" : "default"}>
                         {match.status === "COMPLETED" ? "완료" : "예정"}
                       </Badge>
-                      {match.status === "COMPLETED" && match.score && (
-                        <span className="font-heading text-lg font-bold text-emerald-400">{match.score}</span>
-                      )}
+                      {match.status === "COMPLETED" && match.score && (() => {
+                        const [our, opp] = match.score.split(":").map((s) => parseInt(s.trim(), 10));
+                        const color = our > opp ? "text-emerald-400" : our === opp ? "text-muted-foreground" : "text-red-400";
+                        const label = our > opp ? "승" : our === opp ? "무" : "패";
+                        return (
+                          <span className="flex items-center gap-1.5">
+                            <span className={cn("font-heading text-lg font-bold", color)}>{match.score}</span>
+                            <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-bold",
+                              our > opp ? "bg-emerald-500/15 text-emerald-400" : our === opp ? "bg-muted text-muted-foreground" : "bg-red-500/15 text-red-400"
+                            )}>{label}</span>
+                          </span>
+                        );
+                      })()}
                     </div>
                     <CardTitle className="mt-2 font-heading text-xl font-bold uppercase">
                       {match.date} · {formatTime(match.time)}
