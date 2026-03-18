@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   description: "실시간 참석투표, AI 라인업, 통장 캡쳐 회비 자동정리, 기록 분석, 카카오톡 공유까지. 조기축구 팀 운영을 한 곳에서.",
   manifest: "/manifest.json",
   metadataBase: new URL("https://pitch-master-eight.vercel.app"),
+  verification: {
+    google: "google0cfbdfe7b13f49fc",
+  },
   keywords: ["조기축구", "팀 관리", "참석 투표", "회비 관리", "전술판", "축구 기록", "MVP", "조기축구 앱"],
   appleWebApp: {
     capable: true,
