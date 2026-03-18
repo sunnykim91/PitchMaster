@@ -332,6 +332,9 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
         backgroundColor: "#0a0e14",
         pixelRatio: 2,
         cacheBust: true,
+        // 전체 높이를 명시적으로 지정해 잘림 방지
+        height: target.scrollHeight,
+        width: target.scrollWidth,
       });
 
       const res = await fetch(dataUrl);
@@ -678,7 +681,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
 
         <div className={cn("mt-5 grid gap-5", !readOnly && "lg:grid-cols-[1.2fr_0.8fr]")}>
           {/* Soccer pitch + resting (capture area) */}
-          <div ref={captureRef} className="space-y-3" style={{ backgroundColor: "#0a0e14" }}>
+          <div ref={captureRef} className="space-y-3" style={{ backgroundColor: "#0a0e14", padding: "0 0 8px 0" }}>
           {/* 쿼터 표시 (캡처 이미지에 포함) */}
           <div className="flex items-center justify-between px-1">
             <span className="text-sm font-bold text-white">
