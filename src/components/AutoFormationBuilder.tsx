@@ -578,7 +578,7 @@ export default function AutoFormationBuilder({
     setResults(res);
   }
 
-  function saveToTacticsBoard() {
+  async function saveToTacticsBoard() {
     if (!results) return;
     setSaving(true);
 
@@ -608,13 +608,13 @@ export default function AutoFormationBuilder({
       };
     });
 
-    // TODO: 테스트 완료 후 API 저장 로직 복원
-    // for (const sq of squads) {
-    //   await apiMutate("/api/squads", "POST", {
-    //     matchId, quarterNumber: sq.quarter_number,
-    //     formation: sq.formation, positions: sq.positions,
-    //   });
-    // }
+    // 생성된 스쿼드를 API에 저장 (나갔다 들어와도 유지)
+    for (const sq of squads) {
+      await apiMutate("/api/squads", "POST", {
+        matchId, quarterNumber: sq.quarter_number,
+        formation: sq.formation, positions: sq.positions,
+      });
+    }
 
     setSaving(false);
     onGenerated?.(squads);

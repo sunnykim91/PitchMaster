@@ -857,8 +857,7 @@ export default function MatchDetailClient({
                 type="button"
                 size="sm"
                 className="mt-4"
-                onClick={() => {
-                  // Convert AI recommendation to GeneratedSquad for all quarters
+                onClick={async () => {
                   const squads: GeneratedSquad[] = Array.from(
                     { length: match.quarterCount },
                     (_, i) => ({
@@ -876,6 +875,15 @@ export default function MatchDetailClient({
                       ),
                     })
                   );
+                  // API에 저장 (나갔다 들어와도 유지)
+                  for (const sq of squads) {
+                    await apiMutate("/api/squads", "POST", {
+                      matchId,
+                      quarterNumber: sq.quarter_number,
+                      formation: sq.formation,
+                      positions: sq.positions,
+                    });
+                  }
                   setGeneratedSquads(squads);
                   setTacticsKey((k) => k + 1);
                 }}
