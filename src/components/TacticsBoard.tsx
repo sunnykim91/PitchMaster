@@ -68,7 +68,7 @@ type TeamApiResponse = {
   };
 };
 
-const SAVE_DEBOUNCE_MS = 800;
+const SAVE_DEBOUNCE_MS = 300;
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
@@ -158,42 +158,54 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     setHydrated(true);
   }, [squadsData, squadsLoading, activeQuarter, defaultFormation]);
 
-  // ── Debounced save to API ──
-  const saveToApi = useCallback(async (state: BoardState) => {
+  // ── Save to API (쿼터 번호를 명시적으로 전달) ──
+  const activeQuarterRef = useRef(activeQuarter);
+  activeQuarterRef.current = activeQuarter;
+
+  const saveToApi = useCallback(async (state: BoardState, quarterNum: number) => {
     setSaving(true);
     await apiMutate("/api/squads", "POST", {
       matchId,
-      quarterNumber: activeQuarter,
+      quarterNumber: quarterNum,
       formation: state.formationId,
       positions: state.placements,
     });
     setSaving(false);
-  }, [matchId, activeQuarter]);
+  }, [matchId]);
+
+  /** Pending save에 쿼터 번호도 함께 저장 */
+  const pendingQuarterRef = useRef(activeQuarter);
 
   const debouncedSave = useCallback((state: BoardState) => {
     pendingSaveRef.current = state;
+    pendingQuarterRef.current = activeQuarterRef.current;
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
     }
     saveTimerRef.current = setTimeout(() => {
       if (pendingSaveRef.current) {
-        saveToApi(pendingSaveRef.current);
+        saveToApi(pendingSaveRef.current, pendingQuarterRef.current);
         pendingSaveRef.current = null;
       }
     }, SAVE_DEBOUNCE_MS);
   }, [saveToApi]);
 
+  /** 쿼터 전환 시 pending save 즉시 flush */
+  const flushPendingSave = useCallback(() => {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+    if (pendingSaveRef.current) {
+      saveToApi(pendingSaveRef.current, pendingQuarterRef.current);
+      pendingSaveRef.current = null;
+    }
+  }, [saveToApi]);
+
   // Flush pending saves on unmount
   useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
-      }
-      if (pendingSaveRef.current) {
-        saveToApi(pendingSaveRef.current);
-      }
-    };
-  }, [saveToApi]);
+    return () => flushPendingSave();
+  }, [flushPendingSave]);
 
   // Wrapper that updates local state and triggers debounced save
   const updateBoardState = useCallback((updater: BoardState | ((prev: BoardState) => BoardState)) => {
@@ -593,6 +605,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                   variant={activeQuarter === quarter ? "info" : "outline"}
                   size="sm"
                   onClick={() => {
+                    flushPendingSave(); // 이전 쿼터 저장 즉시 flush
                     setActiveQuarter(quarter);
                     setActiveSlotId(null);
                   }}
