@@ -204,6 +204,20 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     });
   }, [debouncedSave]);
 
+  // 심판/촬영 역할 (쿼터별 positions에 __referee, __camera 키로 저장)
+  const referee = placements["__referee"]?.playerId ?? "";
+  const camera = placements["__camera"]?.playerId ?? "";
+
+  function handleRoleAssign(role: "__referee" | "__camera", playerId: string) {
+    updateBoardState((prev) => ({
+      ...prev,
+      placements: {
+        ...prev.placements,
+        [role]: playerId ? { playerId, x: 0, y: 0 } : null,
+      },
+    }));
+  }
+
   const [uniformMode, setUniformMode] = useState<"HOME" | "AWAY">("HOME");
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
   const [shareMsg, setShareMsg] = useState<string | null>(null);
@@ -222,6 +236,9 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     formation.slots.forEach((slot) => {
       normalized[slot.id] = boardState.placements[slot.id] ?? null;
     });
+    // 심판/촬영 역할도 보존
+    if (boardState.placements["__referee"]) normalized["__referee"] = boardState.placements["__referee"];
+    if (boardState.placements["__camera"]) normalized["__camera"] = boardState.placements["__camera"];
     return normalized;
   }, [boardState.placements, formation.slots]);
 
@@ -848,7 +865,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                           {qCount > 0 && (
                             <span className={cn(
                               "rounded-full px-1.5 py-0.5 text-[10px] font-bold",
-                              qCount >= quarterCount ? "bg-red-500/15 text-red-400" : qCount === 0 ? "bg-muted" : "bg-primary/15 text-primary"
+                              "bg-primary/15 text-primary"
                             )}>
                               {qCount}Q
                             </span>
@@ -860,6 +877,33 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                       </Button>
                     );
                   })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 심판/촬영 역할 배정 */}
+            <Card className="border-0 bg-secondary">
+              <CardContent className="p-4">
+                <p className="text-sm font-bold text-foreground">역할 배정</p>
+                <div className="mt-3 space-y-3">
+                  {[
+                    { key: "__referee" as const, label: "심판", current: referee },
+                    { key: "__camera" as const, label: "촬영", current: camera },
+                  ].map(({ key, label, current }) => (
+                    <div key={key} className="space-y-1">
+                      <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+                      <select
+                        value={current}
+                        onChange={(e) => handleRoleAssign(key, e.target.value)}
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      >
+                        <option value="">미배정</option>
+                        {restingPlayers.map((p) => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -967,12 +1011,27 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                   );
                 })}
               </div>
-              {/* 쉬는 선수 */}
-              {qResting.length > 0 && (
-                <div style={{ padding: "6px 10px", fontSize: 10, color: "#fbbf24" }}>
-                  쉬는 선수: {qResting.map((r) => r.name).join(", ")}
-                </div>
-              )}
+              {/* 쉬는 선수 + 역할 */}
+              {(() => {
+                const qRef = row?.positions?.["__referee"] as Placement | null | undefined;
+                const qCam = row?.positions?.["__camera"] as Placement | null | undefined;
+                const refName = qRef?.playerId ? roster.find((r) => r.id === qRef.playerId)?.name : null;
+                const camName = qCam?.playerId ? roster.find((r) => r.id === qCam.playerId)?.name : null;
+                return (
+                  <div style={{ padding: "6px 10px", fontSize: 10 }}>
+                    {qResting.length > 0 && (
+                      <div style={{ color: "#fbbf24" }}>쉬는 선수: {qResting.map((r) => r.name).join(", ")}</div>
+                    )}
+                    {(refName || camName) && (
+                      <div style={{ color: "#94a3b8", marginTop: 2 }}>
+                        {refName && <span>심판: {refName}</span>}
+                        {refName && camName && <span> · </span>}
+                        {camName && <span>촬영: {camName}</span>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           );
         })}
