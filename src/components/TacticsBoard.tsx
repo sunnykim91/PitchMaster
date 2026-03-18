@@ -149,6 +149,9 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       formation.slots.forEach((slot) => {
         normalizedPlacements[slot.id] = row.positions?.[slot.id] ?? null;
       });
+      // 심판/촬영 역할도 복원
+      if (row.positions?.["__referee"]) normalizedPlacements["__referee"] = row.positions["__referee"] as Placement;
+      if (row.positions?.["__camera"]) normalizedPlacements["__camera"] = row.positions["__camera"] as Placement;
       setBoardState({ formationId: formation.id, placements: normalizedPlacements });
     } else {
       setBoardState({
