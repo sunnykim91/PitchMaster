@@ -420,7 +420,7 @@ export default function MatchDetailClient({
     return [...attendingMembers, ...guestRoster];
   }, [baseRoster, attendingIds, guests]);
 
-  /** 전체 로스터 (MVP 투표, 출석 체크용) */
+  /** 전체 로스터 (골 기록 시 이름 해석용) */
   const fullRoster = useMemo(() => {
     const guestRoster = guests.map((g) => ({
       id: g.id,
@@ -1122,7 +1122,7 @@ export default function MatchDetailClient({
 
             <CardContent>
               <div className="space-y-2">
-                {fullRoster.map((player) => (
+                {roster.map((player) => (
                   <Button
                     key={player.id}
                     type="button"
@@ -1162,7 +1162,7 @@ export default function MatchDetailClient({
 
               <CardContent>
                 <div className="space-y-2">
-                  {fullRoster.map((player) => {
+                  {roster.map((player) => {
                     const status = attendance[player.id];
                     return (
                       <Card
