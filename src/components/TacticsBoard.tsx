@@ -818,6 +818,36 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               </div>
             </div>
           )}
+
+          {/* 심판/촬영 역할 표시 (캡처 영역 내) */}
+          {(referee || camera) && (
+            <div className="rounded-xl bg-sky-500/10 px-4 py-3">
+              <div className="flex flex-wrap gap-3">
+                {referee && (() => {
+                  const p = roster.find((r) => r.id === referee);
+                  return p ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-sky-400">심판</span>
+                      <span className="inline-block rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-400">
+                        {p.name}
+                      </span>
+                    </div>
+                  ) : null;
+                })()}
+                {camera && (() => {
+                  const p = roster.find((r) => r.id === camera);
+                  return p ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-violet-400">촬영</span>
+                      <span className="inline-block rounded-md border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-medium text-violet-400">
+                        {p.name}
+                      </span>
+                    </div>
+                  ) : null;
+                })()}
+              </div>
+            </div>
+          )}
           </div>{/* end captureRef */}
 
           {/* Roster panel (편집 모드에서만 표시) */}
