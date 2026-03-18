@@ -42,8 +42,8 @@ export async function GET() {
 
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const goalRows = (goals || []) as any[];
-    const ourGoals = goalRows.filter((g) => g.scorer_id !== "OPPONENT").length;
-    const oppGoals = goalRows.filter((g) => g.scorer_id === "OPPONENT").length;
+    const ourGoals = goalRows.filter((g) => g.scorer_id !== "OPPONENT" && !g.is_own_goal).length;
+    const oppGoals = goalRows.filter((g) => g.scorer_id === "OPPONENT" || g.is_own_goal).length;
 
     // Get MVP
     const { data: mvpVotes } = await db

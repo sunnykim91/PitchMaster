@@ -69,12 +69,12 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
   let recentResult = null;
   if (recentMatch) {
     const [goalsRes, mvpRes] = await Promise.all([
-      db.from("match_goals").select("scorer_id").eq("match_id", recentMatch.id),
+      db.from("match_goals").select("scorer_id, is_own_goal").eq("match_id", recentMatch.id),
       db.from("match_mvp_votes").select("candidate_id, users:candidate_id(name)").eq("match_id", recentMatch.id),
     ]);
     const goalRows = (goalsRes.data || []) as any[];
-    const ourGoals = goalRows.filter((g) => g.scorer_id !== "OPPONENT").length;
-    const oppGoals = goalRows.filter((g) => g.scorer_id === "OPPONENT").length;
+    const ourGoals = goalRows.filter((g) => g.scorer_id !== "OPPONENT" && !g.is_own_goal).length;
+    const oppGoals = goalRows.filter((g) => g.scorer_id === "OPPONENT" || g.is_own_goal).length;
 
     const mvpCounts: Record<string, { count: number; name: string }> = {};
     const voteRows = (mvpRes.data || []) as any[];
@@ -128,7 +128,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
   if (completedIds.length > 0) {
     const { data: allGoals } = await db
       .from("match_goals")
-      .select("match_id, scorer_id")
+      .select("match_id, scorer_id, is_own_goal")
       .in("match_id", completedIds);
 
     // 경기별 득점/실점 집계
@@ -136,7 +136,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
     for (const g of allGoals ?? []) {
       if (!matchScores.has(g.match_id)) matchScores.set(g.match_id, { our: 0, opp: 0 });
       const s = matchScores.get(g.match_id)!;
-      if (g.scorer_id === "OPPONENT") s.opp++;
+      if (g.scorer_id === "OPPONENT" || g.is_own_goal) s.opp++;
       else s.our++;
     }
 

@@ -92,12 +92,12 @@ export async function getRecordsData(teamId: string) {
   let wins = 0, draws = 0, losses = 0, gf = 0, ga = 0;
   const recent5: ("W" | "D" | "L")[] = [];
   // matchIds는 이미 시즌 기간 내 완료 경기
-  const { data: allGoals } = await db.from("match_goals").select("match_id, scorer_id").in("match_id", matchIds);
+  const { data: allGoals } = await db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", matchIds);
   const matchScores = new Map<string, { our: number; opp: number }>();
   for (const g of allGoals ?? []) {
     if (!matchScores.has(g.match_id)) matchScores.set(g.match_id, { our: 0, opp: 0 });
     const s = matchScores.get(g.match_id)!;
-    if (g.scorer_id === "OPPONENT") s.opp++;
+    if (g.scorer_id === "OPPONENT" || g.is_own_goal) s.opp++;
     else s.our++;
   }
   for (const mid of matchIds) {

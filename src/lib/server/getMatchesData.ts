@@ -37,11 +37,11 @@ export async function getMatchesData(teamId: string): Promise<{ matches: DbMatch
     return { matches: matches.map((m) => ({ ...m, score: null })) };
   }
 
-  const { data: goals } = await db.from("match_goals").select("match_id, scorer_id").in("match_id", completedIds);
+  const { data: goals } = await db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", completedIds);
   const scoreMap: Record<string, { our: number; opp: number }> = {};
   for (const g of goals ?? []) {
     if (!scoreMap[g.match_id]) scoreMap[g.match_id] = { our: 0, opp: 0 };
-    if (g.scorer_id === "OPPONENT") scoreMap[g.match_id].opp++;
+    if (g.scorer_id === "OPPONENT" || g.is_own_goal) scoreMap[g.match_id].opp++;
     else scoreMap[g.match_id].our++;
   }
 

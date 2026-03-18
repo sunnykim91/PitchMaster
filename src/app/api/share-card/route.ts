@@ -36,21 +36,21 @@ export async function GET(request: NextRequest) {
 
     const { data: goals } = await db
       .from("match_goals")
-      .select("scorer_id")
+      .select("scorer_id, is_own_goal")
       .eq("match_id", matchId);
     if (goals) {
       ourGoals = goals.filter(
-        (g: { scorer_id: string }) => g.scorer_id !== "OPPONENT"
+        (g: { scorer_id: string; is_own_goal: boolean }) => g.scorer_id !== "OPPONENT" && !g.is_own_goal
       ).length;
       oppGoals = goals.filter(
-        (g: { scorer_id: string }) => g.scorer_id === "OPPONENT"
+        (g: { scorer_id: string; is_own_goal: boolean }) => g.scorer_id === "OPPONENT" || g.is_own_goal
       ).length;
     }
 
     // Get scorers names
     const scorerIds =
       goals
-        ?.filter((g: { scorer_id: string }) => g.scorer_id !== "OPPONENT")
+        ?.filter((g: { scorer_id: string; is_own_goal: boolean }) => g.scorer_id !== "OPPONENT" && !g.is_own_goal)
         .map((g: { scorer_id: string }) => g.scorer_id) ?? [];
     if (scorerIds.length > 0) {
       const { data: users } = await db
