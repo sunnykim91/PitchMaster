@@ -59,7 +59,7 @@ describe("GET /api/goals", () => {
 
   it("200: 골 목록 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_goals", mockGoals]);
+    const db = createMockDb(["matches", { id: "m1" }], ["match_goals", mockGoals]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
@@ -70,7 +70,7 @@ describe("GET /api/goals", () => {
 
   it("400: DB 에러 발생시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_goals", null, { message: "DB connection failed" }]);
+    const db = createMockDb(["matches", { id: "m1" }], ["match_goals", null, { message: "DB connection failed" }]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
@@ -123,7 +123,7 @@ describe("POST /api/goals", () => {
   it("201: 골 기록 생성 성공", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const newGoal = { id: "g-new", match_id: "m1", quarter_number: 1, minute: 15, scorer_id: "u1" };
-    const db = createMockDb(["match_goals", newGoal]);
+    const db = createMockDb(["matches", { id: "m1" }], ["match_goals", newGoal]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(goalBody));
@@ -134,7 +134,7 @@ describe("POST /api/goals", () => {
 
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_goals", null, { message: "insert failed" }]);
+    const db = createMockDb(["matches", { id: "m1" }], ["match_goals", null, { message: "insert failed" }]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(goalBody));
@@ -198,7 +198,8 @@ describe("PUT /api/goals", () => {
   it("200: 골 수정 성공 — 업데이트된 골 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const updatedGoal = { id: "g1", match_id: "m1", quarter_number: 2, minute: 20, scorer_id: "u1" };
-    const db = createMockDb(["match_goals", updatedGoal]);
+    // First match_goals call: goalCheck, second: update result
+    const db = createMockDb(["match_goals", { id: "g1" }], ["match_goals", updatedGoal]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest(updateBody));
@@ -210,7 +211,8 @@ describe("PUT /api/goals", () => {
 
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
-    const db = createMockDb(["match_goals", null, { message: "update failed" }]);
+    // First match_goals call: goalCheck succeeds, second: update fails
+    const db = createMockDb(["match_goals", { id: "g1" }], ["match_goals", null, { message: "update failed" }]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest(updateBody));
@@ -263,7 +265,8 @@ describe("DELETE /api/goals", () => {
 
   it("200: 골 삭제 성공", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_goals", null]);
+    // First match_goals call: goalCheck, second: delete (no data returned)
+    const db = createMockDb(["match_goals", { id: "g1" }], ["match_goals", null]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await DELETE(makeRequest("g1"));
@@ -274,7 +277,8 @@ describe("DELETE /api/goals", () => {
 
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_goals", null, { message: "delete failed" }]);
+    // First match_goals call: goalCheck succeeds, second: delete fails
+    const db = createMockDb(["match_goals", { id: "g1" }], ["match_goals", null, { message: "delete failed" }]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await DELETE(makeRequest("g1"));

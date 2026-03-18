@@ -106,7 +106,11 @@ function formatDue(iso: string) {
 }
 
 export default function DashboardClient({ userId, initialData }: { userId: string; initialData?: DashboardData }) {
-  const { data, loading } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
+  const { data, loading, error } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
+
+  if (error) {
+    return <Card className="p-6"><span className="text-destructive">오류: {error}</span></Card>;
+  }
 
   if (loading) {
     return (

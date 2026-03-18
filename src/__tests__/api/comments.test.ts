@@ -74,7 +74,7 @@ describe("GET /api/comments", () => {
 
   it("200: 댓글 목록 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["post_comments", mockComments]);
+    const db = createMockDb(["posts", { id: "p1" }], ["post_comments", mockComments]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeGetRequest({ postId: "p1" }));
@@ -86,7 +86,7 @@ describe("GET /api/comments", () => {
 
   it("200: 댓글 없으면 빈 배열 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["post_comments", []]);
+    const db = createMockDb(["posts", { id: "p-no-comments" }], ["post_comments", []]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeGetRequest({ postId: "p-no-comments" }));
@@ -97,7 +97,7 @@ describe("GET /api/comments", () => {
 
   it("400: DB 에러 발생시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["post_comments", null, { message: "query failed" }]);
+    const db = createMockDb(["posts", { id: "p1" }], ["post_comments", null, { message: "query failed" }]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeGetRequest({ postId: "p1" }));

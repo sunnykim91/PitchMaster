@@ -58,6 +58,7 @@ export default function NotificationsClient({ initialData }: { initialData: Init
   const {
     data: notifData,
     loading: loadingNotifs,
+    error: notifError,
     refetch: refetchNotifs,
   } = useApi<{ notifications: Record<string, unknown>[] }>(
     "/api/notifications",
@@ -127,6 +128,12 @@ export default function NotificationsClient({ initialData }: { initialData: Init
     },
     [settings, refetchSettings, showToast]
   );
+
+  /* ── Error state ─────────────────────────────────────── */
+
+  if (notifError) {
+    return <Card className="p-6"><span className="text-destructive">오류: {notifError}</span></Card>;
+  }
 
   /* ── Loading state ─────────────────────────────────────── */
 

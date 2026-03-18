@@ -16,6 +16,9 @@ export async function GET(request: NextRequest) {
     .select("*, users(id, name, preferred_positions), member:member_id(id, pre_name, pre_phone, user_id, users(id, name, preferred_positions))");
 
   if (matchId) {
+    // Verify match belongs to team
+    const { data: matchCheck } = await db.from("matches").select("id").eq("id", matchId).eq("team_id", ctx.teamId).single();
+    if (!matchCheck) return apiError("Match not found", 404);
     query = query.eq("match_id", matchId);
   } else {
     // 팀의 모든 경기 출석 데이터 조회

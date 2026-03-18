@@ -92,6 +92,7 @@ export default function RecordsClient({
   const {
     data: seasonsPayload,
     loading: loadingSeasons,
+    error: seasonsError,
   } = useApi<{ seasons: Record<string, unknown>[] }>(
     "/api/seasons",
     { seasons: initialData?.seasons ?? [] },
@@ -176,6 +177,10 @@ export default function RecordsClient({
 
   // useApi already refetches when URL changes (seasonId in URL),
   // so no explicit refetch useEffect needed.
+
+  if (seasonsError) {
+    return <Card className="p-6"><span className="text-destructive">오류: {seasonsError}</span></Card>;
+  }
 
   if (loadingSeasons) {
     return (

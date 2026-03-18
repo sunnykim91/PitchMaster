@@ -95,6 +95,7 @@ export default function BoardClient({
   const {
     data: postsPayload,
     loading: postsLoading,
+    error: postsError,
     refetch: refetchPosts,
   } = useApi<{ posts: Record<string, unknown>[] }>(
     "/api/posts",
@@ -301,6 +302,11 @@ export default function BoardClient({
     } finally {
       setCommentingPostId(null);
     }
+  }
+
+  /* ── Error state ── */
+  if (postsError) {
+    return <Card className="p-6"><span className="text-destructive">오류: {postsError}</span></Card>;
   }
 
   /* ── Loading state ── */

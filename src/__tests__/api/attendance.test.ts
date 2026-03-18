@@ -41,7 +41,7 @@ describe("GET /api/attendance", () => {
 
   it("200: matchId로 특정 경기 출석 조회", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_attendance", attendanceData]);
+    const db = createMockDb(["matches", { id: "m1" }], ["match_attendance", attendanceData]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest({ matchId: "m1" }));

@@ -370,7 +370,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
 
       const res = await fetch("/api/ocr", { method: "POST", body: formData });
       const json = await res.json();
-      console.log("OCR response:", res.status, json);
 
       if (!res.ok) {
         setOcrStatus(`OCR 서버 오류 (${res.status}): ${json.error || "알 수 없는 오류"}. 수동으로 입력해주세요.`);
@@ -383,7 +382,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       }
 
       const { rows: parsed, latestBalance } = parseTransactions(json.text);
-      console.log("Parsed transactions:", parsed, "Balance:", latestBalance);
       if (latestBalance !== null) {
         await apiMutate("/api/dues/balance", "POST", { balance: latestBalance });
         await refetchSummary();

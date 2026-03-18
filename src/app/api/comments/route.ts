@@ -13,6 +13,9 @@ export async function GET(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  const { data: postCheck } = await db.from("posts").select("id").eq("id", postId).eq("team_id", ctx.teamId).single();
+  if (!postCheck) return apiError("Post not found", 404);
+
   const { data, error } = await db
     .from("post_comments")
     .select("*, author:author_id(name)")
@@ -59,10 +62,14 @@ export async function DELETE(request: NextRequest) {
 
   const { data: comment } = await db
     .from("post_comments")
-    .select("author_id")
+    .select("author_id, post_id")
     .eq("id", id)
     .single();
   if (!comment) return apiError("Comment not found", 404);
+
+  // Verify the post belongs to this team
+  const { data: postCheck } = await db.from("posts").select("id").eq("id", comment.post_id).eq("team_id", ctx.teamId).single();
+  if (!postCheck) return apiError("Post not found", 404);
 
   const isAuthor = comment.author_id === ctx.userId;
   const isStaff = isStaffOrAbove(ctx.teamRole);

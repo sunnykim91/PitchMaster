@@ -12,6 +12,10 @@ export async function GET(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  // Verify match belongs to team
+  const { data: matchCheck } = await db.from("matches").select("id").eq("id", matchId).eq("team_id", ctx.teamId).single();
+  if (!matchCheck) return apiError("Match not found", 404);
+
   const { data, error } = await db
     .from("match_goals")
     .select("*")
@@ -30,6 +34,10 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  // Verify match belongs to team
+  const { data: matchCheck } = await db.from("matches").select("id").eq("id", body.matchId).eq("team_id", ctx.teamId).single();
+  if (!matchCheck) return apiError("Match not found", 404);
 
   const { data, error } = await db
     .from("match_goals")
@@ -59,6 +67,15 @@ export async function PUT(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  // Verify goal belongs to a match that belongs to this team
+  const { data: goalCheck } = await db
+    .from("match_goals")
+    .select("id, matches!inner(team_id)")
+    .eq("id", body.id)
+    .eq("matches.team_id", ctx.teamId)
+    .single();
+  if (!goalCheck) return apiError("Match not found", 404);
+
   const { data, error } = await db
     .from("match_goals")
     .update({
@@ -85,6 +102,15 @@ export async function DELETE(request: NextRequest) {
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  // Verify goal belongs to a match that belongs to this team
+  const { data: goalCheck } = await db
+    .from("match_goals")
+    .select("id, matches!inner(team_id)")
+    .eq("id", id)
+    .eq("matches.team_id", ctx.teamId)
+    .single();
+  if (!goalCheck) return apiError("Match not found", 404);
 
   const { error } = await db.from("match_goals").delete().eq("id", id);
   if (error) return apiError(error.message);

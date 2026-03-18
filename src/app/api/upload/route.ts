@@ -14,6 +14,12 @@ export async function POST(request: NextRequest) {
   const file = formData.get("file") as File | null;
   if (!file) return apiError("file required");
 
+  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+  if (file.size > MAX_SIZE) return apiError("File too large (max 5MB)", 400);
+  if (!ALLOWED_TYPES.includes(file.type)) return apiError("Only image files allowed", 400);
+
   const ext = file.name.split(".").pop() || "jpg";
   const path = `${ctx.teamId}/${nanoid()}.${ext}`;
 

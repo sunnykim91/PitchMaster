@@ -72,8 +72,8 @@ export async function PUT(request: NextRequest) {
   const { id, title, content, category, imageUrls } = body;
   if (!id) return apiError("Missing id", 400);
 
-  // Check ownership
-  const { data: post } = await db.from("posts").select("author_id").eq("id", id).single();
+  // Check ownership (scoped to team)
+  const { data: post } = await db.from("posts").select("author_id").eq("id", id).eq("team_id", ctx.teamId).single();
   if (!post) return apiError("Post not found", 404);
 
   // Author or staff can edit
@@ -103,7 +103,7 @@ export async function DELETE(request: NextRequest) {
   const { id } = await request.json();
   if (!id) return apiError("Missing id", 400);
 
-  const { data: post } = await db.from("posts").select("author_id").eq("id", id).single();
+  const { data: post } = await db.from("posts").select("author_id").eq("id", id).eq("team_id", ctx.teamId).single();
   if (!post) return apiError("Post not found", 404);
 
   const isAuthor = post.author_id === ctx.userId;

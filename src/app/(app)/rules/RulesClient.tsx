@@ -59,7 +59,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
   const role = effectiveRole(userRole);
   const { showToast } = useToast();
 
-  const { data, loading, refetch } = useApi<{ rules: ApiRule[] }>(
+  const { data, loading, error, refetch } = useApi<{ rules: ApiRule[] }>(
     "/api/rules",
     initialData ?? { rules: [] },
     { skip: !!initialData },
@@ -134,6 +134,10 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
     }
     showToast("회칙이 삭제되었습니다.");
     await refetch();
+  }
+
+  if (error) {
+    return <Card className="p-6"><span className="text-destructive">오류: {error}</span></Card>;
   }
 
   if (loading && rules.length === 0) {

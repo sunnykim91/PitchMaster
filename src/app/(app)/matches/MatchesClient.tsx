@@ -203,6 +203,10 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     }
   }
 
+  if (matchesError) {
+    return <Card className="p-6"><span className="text-destructive">오류: {matchesError}</span></Card>;
+  }
+
   if (matchesLoading || attendanceLoading) {
     return (
       <div className="grid gap-5">
