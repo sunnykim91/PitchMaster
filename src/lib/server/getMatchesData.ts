@@ -21,7 +21,15 @@ export async function getMatchesData(teamId: string): Promise<{ matches: DbMatch
   const db = getSupabaseAdmin();
   if (!db) return { matches: [] };
 
-  // select("*") intentional: all columns are spread and returned to the client via ...m
+  // 날짜 지난 SCHEDULED 경기 → 자동 COMPLETED 처리
+  const today = new Date().toISOString().split("T")[0];
+  await db
+    .from("matches")
+    .update({ status: "COMPLETED" })
+    .eq("team_id", teamId)
+    .eq("status", "SCHEDULED")
+    .lt("match_date", today);
+
   const { data } = await db
     .from("matches")
     .select("*")

@@ -10,7 +10,15 @@ export async function GET() {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  // select("*") intentional: all match columns are spread and returned to the client via ...m
+  // 날짜 지난 SCHEDULED 경기 → 자동 COMPLETED 처리
+  const today = new Date().toISOString().split("T")[0];
+  await db
+    .from("matches")
+    .update({ status: "COMPLETED" })
+    .eq("team_id", ctx.teamId)
+    .eq("status", "SCHEDULED")
+    .lt("match_date", today);
+
   const { data, error } = await db
     .from("matches")
     .select("*")

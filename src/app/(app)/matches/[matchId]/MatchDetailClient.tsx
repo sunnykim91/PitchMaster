@@ -966,8 +966,8 @@ export default function MatchDetailClient({
                       </Label>
                       <NativeSelect name="scorerId">
                         <option value="OPPONENT">상대팀 득점</option>
-                        <optgroup label="팀 멤버">
-                          {baseRoster.map((player) => (
+                        <optgroup label="참석 멤버">
+                          {attendingMembers.map((player) => (
                             <option key={player.id} value={player.id}>
                               {player.name}
                             </option>
@@ -998,8 +998,8 @@ export default function MatchDetailClient({
                       </Label>
                       <NativeSelect name="assistId">
                         <option value="">없음</option>
-                        <optgroup label="팀 멤버">
-                          {baseRoster.map((player) => (
+                        <optgroup label="참석 멤버">
+                          {attendingMembers.map((player) => (
                             <option key={player.id} value={player.id}>
                               {player.name}
                             </option>

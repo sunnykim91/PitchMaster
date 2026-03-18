@@ -159,10 +159,10 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Button size="sm" asChild>
-                      <Link href="/matches">일정 상세보기</Link>
+                      <Link href={`/matches/${upcomingMatch.id}`}>일정 상세보기</Link>
                     </Button>
                     <Button variant="outline" size="sm" asChild>
-                      <Link href="/matches">참석 투표하기</Link>
+                      <Link href={`/matches/${upcomingMatch.id}`}>참석 투표하기</Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -204,7 +204,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
                       <p className="text-xs text-muted-foreground">마감: {formatDue(vote.due)}</p>
                     </div>
                     <Button variant="link" size="sm" className="text-violet-400" asChild>
-                      <Link href="/matches">참여 &rarr;</Link>
+                      <Link href={`/matches/${vote.id}`}>참여 &rarr;</Link>
                     </Button>
                   </CardContent>
                 </Card>
