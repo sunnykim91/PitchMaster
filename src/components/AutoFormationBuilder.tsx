@@ -283,16 +283,39 @@ function scheduleQuarters(
     };
     const slotReqs: SlotReq[] = [];
 
-    const validPositions = new Set(["GK", "CB", "LB", "RB", "CDM", "CAM", "LW", "RW", "ST"]);
-    const getPos = (id: string): PreferredPosition => {
+    const validPositions = new Set<string>(["GK", "CB", "LB", "RB", "CDM", "CAM", "LW", "RW", "ST"]);
+
+    /** 선수의 유효한 선호 포지션 목록 반환 */
+    const getAllPos = (id: string): PreferredPosition[] => {
       const p = field.find((f) => f.id === id);
-      const pos = p?.preferredPosition;
-      return (pos && validPositions.has(pos)) ? pos as PreferredPosition : "CAM";
+      const positions = (p?.preferredPositions ?? [p?.preferredPosition]).filter(
+        (pos): pos is PreferredPosition => !!pos && validPositions.has(pos)
+      );
+      return positions.length > 0 ? positions : ["CAM"];
+    };
+
+    /** 이전 쿼터에서 선수가 배정된 포지션 타입 추적 (로테이션용) */
+    const playerPosHistory: Record<string, Record<string, number>> = {}; // playerId → { posKey: count }
+    for (const prev of results) {
+      for (const a of prev.assignments) {
+        if (!playerPosHistory[a.playerId]) playerPosHistory[a.playerId] = {};
+        const posKey = a.slotLabel;
+        playerPosHistory[a.playerId][posKey] = (playerPosHistory[a.playerId][posKey] ?? 0) + 1;
+      }
+    }
+
+    /** 포지션 겹침 시 양보: 이전에 덜 한 포지션 우선 */
+    const getBestPos = (id: string): PreferredPosition => {
+      const positions = getAllPos(id);
+      if (positions.length === 1) return positions[0];
+      const history = playerPosHistory[id] ?? {};
+      // 이전 쿼터에서 덜 배정된 포지션을 우선 선택
+      return [...positions].sort((a, b) => (history[a] ?? 0) - (history[b] ?? 0))[0];
     };
 
     // 풀타임 선수
     for (const fp of qFull) {
-      slotReqs.push({ ids: [fp.id], type: "full", preferredPos: getPos(fp.id) });
+      slotReqs.push({ ids: [fp.id], type: "full", preferredPos: getBestPos(fp.id) });
     }
 
     // 하프 페어 — first_half[i] + second_half[i]가 같은 슬롯
@@ -301,15 +324,15 @@ function scheduleQuarters(
       slotReqs.push({
         ids: [qFirstHalf[i].id, qSecondHalf[i].id],
         type: "first_half",
-        preferredPos: getPos(qFirstHalf[i].id),
+        preferredPos: getBestPos(qFirstHalf[i].id),
       });
     }
     // 남은 미페어 하프 (있으면 풀타임 처리)
     for (let i = pairCount; i < qFirstHalf.length; i++) {
-      slotReqs.push({ ids: [qFirstHalf[i].id], type: "full", preferredPos: getPos(qFirstHalf[i].id) });
+      slotReqs.push({ ids: [qFirstHalf[i].id], type: "full", preferredPos: getBestPos(qFirstHalf[i].id) });
     }
     for (let i = pairCount; i < qSecondHalf.length; i++) {
-      slotReqs.push({ ids: [qSecondHalf[i].id], type: "full", preferredPos: getPos(qSecondHalf[i].id) });
+      slotReqs.push({ ids: [qSecondHalf[i].id], type: "full", preferredPos: getBestPos(qSecondHalf[i].id) });
     }
 
     // 슬롯을 세분화 포지션별로 분류
@@ -326,7 +349,7 @@ function scheduleQuarters(
     for (const sr of slotReqs) {
       const bucket = reqsBySubPos[sr.preferredPos];
       if (bucket) bucket.push(sr);
-      else reqsBySubPos["CAM"].push(sr); // 알 수 없는 포지션 → CAM fallback
+      else reqsBySubPos["CAM"].push(sr);
     }
 
     const usedSlots = new Set<string>();
@@ -420,7 +443,7 @@ export default function AutoFormationBuilder({
   // Sync assignments when attendingPlayers changes — auto-distribute on init
   useEffect(() => {
     const gkCount = attendingPlayers.filter(
-      (p) => p.preferredPosition === "GK",
+      (p) => (p.preferredPositions ?? [p.preferredPosition]).includes("GK"),
     ).length;
     const fieldCount = attendingPlayers.length - gkCount;
     const slotsPerQuarter =
@@ -436,7 +459,7 @@ export default function AutoFormationBuilder({
     let highAssigned = 0;
     setAssignments(
       attendingPlayers.map((p) => {
-        const isGK = p.preferredPosition === "GK";
+        const isGK = (p.preferredPositions ?? [p.preferredPosition]).includes("GK");
         if (isGK) {
           return { ...p, isGK: true, quarters: quarterCount };
         }
@@ -517,8 +540,8 @@ export default function AutoFormationBuilder({
           isGK: newGK,
           preferredPosition: newGK
             ? ("GK" as PreferredPosition)
-            : a.preferredPosition === "GK"
-              ? ("CAM" as PreferredPosition)
+            : (a.preferredPositions ?? [a.preferredPosition]).includes("GK") && !newGK
+              ? ((a.preferredPositions?.find(p => p !== "GK") ?? "CAM") as PreferredPosition)
               : a.preferredPosition,
           quarters: newGK ? quarterCount : 0,
         };
@@ -752,15 +775,17 @@ export default function AutoFormationBuilder({
               </span>
 
               {/* Position badge */}
-              <Badge
-                variant="outline"
-                className={cn(
-                  "shrink-0 text-[10px]",
-                  POS_COLOR[player.preferredPosition],
-                )}
-              >
-                {POS_LABEL[player.preferredPosition]}
-              </Badge>
+              <div className="flex shrink-0 gap-0.5">
+                {(player.preferredPositions ?? [player.preferredPosition]).map((pos) => (
+                  <Badge
+                    key={pos}
+                    variant="outline"
+                    className={cn("text-[10px] px-1", POS_COLOR[pos])}
+                  >
+                    {POS_LABEL[pos] ?? pos}
+                  </Badge>
+                ))}
+              </div>
 
               {/* Quarter selector */}
               {player.isGK ? (
