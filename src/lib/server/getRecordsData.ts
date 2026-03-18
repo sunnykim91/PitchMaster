@@ -88,5 +88,28 @@ export async function getRecordsData(teamId: string) {
     };
   });
 
-  return { seasons: seasonList, activeSeasonId, records };
+  // 팀 전적 계산 (시즌 기간 내 경기)
+  let wins = 0, draws = 0, losses = 0, gf = 0, ga = 0;
+  const recent5: ("W" | "D" | "L")[] = [];
+  // matchIds는 이미 시즌 기간 내 완료 경기
+  const { data: allGoals } = await db.from("match_goals").select("match_id, scorer_id").in("match_id", matchIds);
+  const matchScores = new Map<string, { our: number; opp: number }>();
+  for (const g of allGoals ?? []) {
+    if (!matchScores.has(g.match_id)) matchScores.set(g.match_id, { our: 0, opp: 0 });
+    const s = matchScores.get(g.match_id)!;
+    if (g.scorer_id === "OPPONENT") s.opp++;
+    else s.our++;
+  }
+  for (const mid of matchIds) {
+    const s = matchScores.get(mid) ?? { our: 0, opp: 0 };
+    gf += s.our;
+    ga += s.opp;
+    if (s.our > s.opp) { wins++; recent5.push("W"); }
+    else if (s.our === s.opp) { draws++; recent5.push("D"); }
+    else { losses++; recent5.push("L"); }
+  }
+
+  const teamRecord = { wins, draws, losses, goalsFor: gf, goalsAgainst: ga, recent5: recent5.slice(0, 5) };
+
+  return { seasons: seasonList, activeSeasonId, records, teamRecord };
 }

@@ -60,10 +60,20 @@ function mapRecord(raw: Record<string, unknown>): RecordStat {
   };
 }
 
+type TeamRecord = {
+  wins: number;
+  draws: number;
+  losses: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  recent5: ("W" | "D" | "L")[];
+};
+
 type InitialData = {
   seasons: any[];
   activeSeasonId?: string | null;
   records?: any[];
+  teamRecord?: TeamRecord;
 };
 
 export default function RecordsClient({
@@ -203,6 +213,54 @@ export default function RecordsClient({
 
   return (
     <div className="grid gap-5 stagger-children">
+      {/* ── Row 0: 팀 전적 ── */}
+      {initialData?.teamRecord && (initialData.teamRecord.wins + initialData.teamRecord.draws + initialData.teamRecord.losses) > 0 && (() => {
+        const tr = initialData.teamRecord;
+        const total = tr.wins + tr.draws + tr.losses;
+        const diff = tr.goalsFor - tr.goalsAgainst;
+        return (
+          <Card>
+            <CardHeader className="pb-2">
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-emerald-400">Team Record</p>
+              <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">팀 전적</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-heading text-2xl font-bold text-emerald-400">{tr.wins}승</span>
+                    <span className="font-heading text-2xl font-bold text-muted-foreground">{tr.draws}무</span>
+                    <span className="font-heading text-2xl font-bold text-red-400">{tr.losses}패</span>
+                  </div>
+                  <Badge variant="outline" className="text-xs">승률 {Math.round((tr.wins / total) * 100)}%</Badge>
+                </div>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span>득점 <strong className="text-foreground">{tr.goalsFor}</strong></span>
+                  <span>실점 <strong className="text-foreground">{tr.goalsAgainst}</strong></span>
+                  <span>득실차 <strong className={diff >= 0 ? "text-emerald-400" : "text-red-400"}>{diff >= 0 ? "+" : ""}{diff}</strong></span>
+                </div>
+              </div>
+              {tr.recent5.length > 0 && (
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">최근 {tr.recent5.length}경기</span>
+                  {tr.recent5.map((r, i) => (
+                    <span
+                      key={i}
+                      className={cn(
+                        "flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold",
+                        r === "W" ? "bg-emerald-500/20 text-emerald-400" : r === "D" ? "bg-muted text-muted-foreground" : "bg-red-500/20 text-red-400"
+                      )}
+                    >
+                      {r === "W" ? "승" : r === "D" ? "무" : "패"}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       {/* ── Row 1: 내 기록 + 시즌 요약 (PC: 2단) ── */}
       <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
         {/* 내 기록 */}
