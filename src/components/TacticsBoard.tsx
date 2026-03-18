@@ -252,29 +252,41 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     return map;
   }, [placements]);
 
-  /** 전체 쿼터에서 각 선수의 출전 쿼터 번호 목록 */
+  /** 전체 쿼터에서 각 선수의 출전 쿼터 번호 목록 (저장된 데이터 + 현재 편집 중인 쿼터) */
   const playerQuarterMap = useMemo(() => {
-    const map = new Map<string, number[]>();
+    const map = new Map<string, Set<number>>();
+
+    const addPlayer = (pid: string, q: number) => {
+      if (!pid || pid === "__referee" || pid === "__camera") return;
+      if (!map.has(pid)) map.set(pid, new Set());
+      map.get(pid)!.add(q);
+    };
+
+    // 1. 저장된 스쿼드 데이터
     for (const squad of squadsData.squads) {
       if (!squad.positions) continue;
-      for (const placement of Object.values(squad.positions)) {
-        if (!placement) continue;
-        const pid = (placement as Placement).playerId;
-        if (pid) {
-          if (!map.has(pid)) map.set(pid, []);
-          map.get(pid)!.push(squad.quarter_number);
-        }
-        const spid = (placement as Placement).secondPlayerId;
-        if (spid) {
-          if (!map.has(spid)) map.set(spid, []);
-          map.get(spid)!.push(squad.quarter_number);
-        }
+      for (const [key, placement] of Object.entries(squad.positions)) {
+        if (!placement || key.startsWith("__")) continue;
+        const p = placement as Placement;
+        if (p.playerId) addPlayer(p.playerId, squad.quarter_number);
+        if (p.secondPlayerId) addPlayer(p.secondPlayerId, squad.quarter_number);
       }
     }
-    // 정렬
-    for (const [, qs] of map) qs.sort((a, b) => a - b);
-    return map;
-  }, [squadsData.squads]);
+
+    // 2. 현재 편집 중인 쿼터 (아직 저장 안 됐을 수 있음)
+    for (const [key, placement] of Object.entries(placements)) {
+      if (!placement || key.startsWith("__")) continue;
+      if (placement.playerId) addPlayer(placement.playerId, activeQuarter);
+      if (placement.secondPlayerId) addPlayer(placement.secondPlayerId, activeQuarter);
+    }
+
+    // Set → 정렬된 배열로 변환
+    const result = new Map<string, number[]>();
+    for (const [pid, qs] of map) {
+      result.set(pid, [...qs].sort((a, b) => a - b));
+    }
+    return result;
+  }, [squadsData.squads, placements, activeQuarter]);
 
   const sortedRoster = useMemo(() => {
     const unassigned: Player[] = [];
