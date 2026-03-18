@@ -111,9 +111,30 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
 
   const [isOpen, setIsOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [matchDate, setMatchDate] = useState("");
-  const [voteDeadline, setVoteDeadline] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+  const [matchDate, setMatchDate] = useState(today);
+  const [matchTime, setMatchTime] = useState("09:00");
+  const [location, setLocation] = useState("");
+  const [voteDeadline, setVoteDeadline] = useState(() => {
+    const prev = new Date();
+    prev.setDate(prev.getDate() - 1);
+    const yyyy = prev.getFullYear();
+    const mm = String(prev.getMonth() + 1).padStart(2, "0");
+    const dd = String(prev.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}T17:00`;
+  });
   const [playerCount, setPlayerCount] = useState(defaults.playerCount);
+
+  // 자주 사용하는 장소 목록 (기존 경기에서 추출)
+  const recentLocations = useMemo(() => {
+    const locs = (matchesData.matches ?? [])
+      .map((m) => m.location)
+      .filter((l): l is string => !!l && l.trim() !== "");
+    // 빈도순 정렬, 중복 제거
+    const counts = new Map<string, number>();
+    locs.forEach((l) => counts.set(l, (counts.get(l) ?? 0) + 1));
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([loc]) => loc);
+  }, [matchesData.matches]);
 
   const matches: Match[] = useMemo(
     () => (matchesData.matches ?? []).map(mapDbMatchToMatch),
@@ -269,12 +290,20 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="time">시간</Label>
-                  <Input
+                  <select
                     id="time"
                     name="time"
-                    type="time"
                     required
-                  />
+                    value={matchTime}
+                    onChange={(e) => setMatchTime(e.target.value)}
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    {Array.from({ length: 48 }, (_, i) => {
+                      const h = String(Math.floor(i / 2)).padStart(2, "0");
+                      const m = i % 2 === 0 ? "00" : "30";
+                      return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
+                    })}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="location">장소</Label>
@@ -282,7 +311,24 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     id="location"
                     name="location"
                     required
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder={recentLocations[0] ?? "예: 어린이대공원축구장"}
                   />
+                  {recentLocations.length > 0 && !location && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {recentLocations.slice(0, 5).map((loc) => (
+                        <button
+                          key={loc}
+                          type="button"
+                          onClick={() => setLocation(loc)}
+                          className="rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
+                        >
+                          {loc}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="opponent">상대팀</Label>
