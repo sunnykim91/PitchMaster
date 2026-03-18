@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toPng } from "html-to-image";
-import { formationTemplates } from "@/lib/formations";
+import { formationTemplates, getFormationsForSport } from "@/lib/formations";
 import { useApi, apiMutate } from "@/lib/useApi";
-import type { DetailedPosition } from "@/lib/types";
+import type { DetailedPosition, SportType } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ type TacticsBoardProps = {
   matchId: string;
   roster: Player[];
   quarterCount: number;
+  sportType?: SportType;
   teamSettings?: TeamSettings;
   initialSquads?: SquadRow[]; // 외부에서 주입 시 API fetch skip
   readOnly?: boolean; // MEMBER: 조회만 가능
@@ -71,8 +72,9 @@ const SAVE_DEBOUNCE_MS = 800;
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
-export default function TacticsBoard({ matchId, roster, quarterCount, teamSettings: teamSettingsProp, initialSquads, readOnly = false }: TacticsBoardProps) {
-  const defaultFormation = formationTemplates[0];
+export default function TacticsBoard({ matchId, roster, quarterCount, sportType = "SOCCER", teamSettings: teamSettingsProp, initialSquads, readOnly = false }: TacticsBoardProps) {
+  const filteredFormations = getFormationsForSport(sportType);
+  const defaultFormation = filteredFormations[0] ?? formationTemplates[0];
   const quarters = useMemo(
     () => Array.from({ length: Math.max(1, quarterCount) }, (_, index) => index + 1),
     [quarterCount]
@@ -550,7 +552,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, teamSettin
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {formationTemplates.map((item) => (
+                  {filteredFormations.map((item) => (
                     <SelectItem key={item.id} value={item.id}>
                       {item.name}
                     </SelectItem>

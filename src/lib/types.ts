@@ -74,6 +74,42 @@ export type PostCategory = "FREE" | "GALLERY";
 export type RuleCategory = "일반" | "회비" | "경조사" | "기타";
 export type JoinMode = "AUTO" | "MANUAL";
 export type MemberStatus = "ACTIVE" | "PENDING" | "BANNED";
+export type SportType = "SOCCER" | "FUTSAL";
+
+/** 풋살 전용 포지션 */
+export type FutsalPosition = "GK" | "FIXO" | "ALA" | "PIVO";
+
+export const SPORT_TYPE_LABEL: Record<SportType, string> = {
+  SOCCER: "축구",
+  FUTSAL: "풋살",
+};
+
+export const FUTSAL_POSITION_LABEL: Record<FutsalPosition, string> = {
+  GK: "골레이루 (GK)",
+  FIXO: "피소 (수비)",
+  ALA: "아라 (측면)",
+  PIVO: "피벗 (공격)",
+};
+
+export const FUTSAL_POSITION_SHORT: Record<FutsalPosition, string> = {
+  GK: "GK",
+  FIXO: "FIXO",
+  ALA: "ALA",
+  PIVO: "PIVO",
+};
+
+export const FUTSAL_POSITION_GROUPS: { group: string; positions: FutsalPosition[] }[] = [
+  { group: "골키퍼", positions: ["GK"] },
+  { group: "수비", positions: ["FIXO"] },
+  { group: "측면", positions: ["ALA"] },
+  { group: "공격", positions: ["PIVO"] },
+];
+
+/** 스포츠별 경기 기본값 */
+export const SPORT_DEFAULTS: Record<SportType, { playerCount: number; quarters: number; duration: number; breakTime: number }> = {
+  SOCCER: { playerCount: 11, quarters: 4, duration: 25, breakTime: 5 },
+  FUTSAL: { playerCount: 6, quarters: 3, duration: 12, breakTime: 3 },
+};
 
 export type SessionUser = {
   id: string;
@@ -102,6 +138,7 @@ export type DbTeam = {
   invite_code: string;
   invite_expires_at: string | null;
   join_mode: JoinMode;
+  sport_type: SportType;
   created_at: string;
 };
 
@@ -148,6 +185,7 @@ export type DbMatch = {
   quarter_count: number;
   quarter_duration: number;
   break_duration: number;
+  player_count: number;
   status: MatchStatus;
   vote_deadline: string | null;
   created_by: string | null;

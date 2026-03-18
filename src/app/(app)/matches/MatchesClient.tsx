@@ -6,7 +6,8 @@ import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { useToast } from "@/lib/ToastContext";
-import type { Role } from "@/lib/types";
+import type { Role, SportType } from "@/lib/types";
+import { SPORT_DEFAULTS } from "@/lib/types";
 import { cn, formatTime, formatDateTime } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -80,7 +81,7 @@ function mapDbMatchToMatch(db: DbMatch): Match {
   };
 }
 
-export default function MatchesClient({ userId, userRole, initialMatches }: { userId: string; userRole?: Role; initialMatches?: { matches: DbMatch[] } }) {
+export default function MatchesClient({ userId, userRole, initialMatches, sportType = "SOCCER" }: { userId: string; userRole?: Role; initialMatches?: { matches: DbMatch[] }; sportType?: SportType }) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
   const { showToast } = useToast();
@@ -105,10 +106,14 @@ export default function MatchesClient({ userId, userRole, initialMatches }: { us
     onchange: () => refetchAttendance(),
   });
 
+  const defaults = SPORT_DEFAULTS[sportType];
+  const isFutsal = sportType === "FUTSAL";
+
   const [isOpen, setIsOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [matchDate, setMatchDate] = useState("");
   const [voteDeadline, setVoteDeadline] = useState("");
+  const [playerCount, setPlayerCount] = useState(defaults.playerCount);
 
   const matches: Match[] = useMemo(
     () => (matchesData.matches ?? []).map(mapDbMatchToMatch),
@@ -147,9 +152,10 @@ export default function MatchesClient({ userId, userRole, initialMatches }: { us
       time: String(formData.get("time") || ""),
       location: String(formData.get("location") || ""),
       opponent: String(formData.get("opponent") || ""),
-      quarterCount: Number(formData.get("quarterCount") || 4),
-      quarterDuration: Number(formData.get("quarterDuration") || 25),
-      breakDuration: Number(formData.get("breakDuration") || 5),
+      quarterCount: Number(formData.get("quarterCount") || defaults.quarters),
+      quarterDuration: Number(formData.get("quarterDuration") || defaults.duration),
+      breakDuration: Number(formData.get("breakDuration") || defaults.breakTime),
+      playerCount,
       voteDeadline: String(formData.get("voteDeadline") || "") || undefined,
     };
     const { error } = await apiMutate("/api/matches", "POST", body);
@@ -295,7 +301,7 @@ export default function MatchesClient({ userId, userRole, initialMatches }: { us
                     type="number"
                     min={1}
                     max={6}
-                    defaultValue={4}
+                    defaultValue={defaults.quarters}
                   />
                 </div>
                 <div className="space-y-2">
@@ -306,7 +312,7 @@ export default function MatchesClient({ userId, userRole, initialMatches }: { us
                     type="number"
                     min={10}
                     max={40}
-                    defaultValue={25}
+                    defaultValue={defaults.duration}
                   />
                 </div>
                 <div className="space-y-2">
@@ -317,10 +323,24 @@ export default function MatchesClient({ userId, userRole, initialMatches }: { us
                     type="number"
                     min={0}
                     max={15}
-                    defaultValue={5}
+                    defaultValue={defaults.breakTime}
                   />
                 </div>
               </div>
+              {isFutsal && (
+                <div className="space-y-2">
+                  <Label htmlFor="playerCount">참가 인원 (명)</Label>
+                  <Input
+                    id="playerCount"
+                    name="playerCount"
+                    type="number"
+                    min={3}
+                    max={8}
+                    value={playerCount}
+                    onChange={(e) => setPlayerCount(Number(e.target.value))}
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="voteDeadline">투표 마감일</Label>
                 <Input

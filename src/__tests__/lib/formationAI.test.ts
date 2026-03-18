@@ -190,3 +190,56 @@ describe("formatRecommendation()", () => {
     expect(text.startsWith(rec!.reason)).toBe(true);
   });
 });
+
+// ─── 풋살 테스트 ──────────────────────────────────────────────────────────────
+
+describe("recommendFormation() — FUTSAL", () => {
+  function makeFutsalTeam(): PlayerInput[] {
+    return [
+      makePlayer("gk", "GK"),
+      makePlayer("fixo", "CB"),  // FIXO → CB 매핑
+      makePlayer("ala1", "LW"),  // ALA → LW 매핑
+      makePlayer("ala2", "RW"),  // ALA → RW 매핑
+      makePlayer("pivo", "ST"),  // PIVO → ST 매핑
+    ];
+  }
+
+  it("풋살 5명으로 포메이션 추천", () => {
+    const rec = recommendFormation(makeFutsalTeam(), 5, "FUTSAL");
+    expect(rec).not.toBeNull();
+    expect(rec!.formation.sportType).toBe("FUTSAL");
+    expect(rec!.formation.slots).toHaveLength(5);
+  });
+
+  it("풋살 포메이션만 반환 (축구 포메이션 제외)", () => {
+    const rec = recommendFormation(makeFutsalTeam(), 5, "FUTSAL");
+    expect(rec).not.toBeNull();
+    expect(rec!.formation.id).toMatch(/^futsal-/);
+  });
+
+  it("풋살 GK 슬롯에 GK 선수 배정", () => {
+    const rec = recommendFormation(makeFutsalTeam(), 5, "FUTSAL");
+    expect(rec).not.toBeNull();
+    const gkSlot = rec!.formation.slots.find(s => s.role === "GK");
+    expect(gkSlot).toBeDefined();
+    expect(rec!.assignments[gkSlot!.id]).toBe("gk");
+  });
+
+  it("풋살 3명으로도 추천 가능 (GK 제외 2명)", () => {
+    const small = [
+      makePlayer("gk", "GK"),
+      makePlayer("fixo", "CB"),
+      makePlayer("pivo", "ST"),
+    ];
+    // 3명은 5인 풋살 포메이션에 맞지 않으므로 null
+    const rec = recommendFormation(small, 3, "FUTSAL");
+    // 풋살 포메이션이 모두 5인이므로 3명에 맞는 건 없음
+    expect(rec).toBeNull();
+  });
+
+  it("축구 sportType이면 풋살 포메이션 안 나옴", () => {
+    const rec = recommendFormation(makeFutsalTeam(), 5, "SOCCER");
+    // 축구 포메이션은 11인이므로 5명에 맞는 게 없음
+    expect(rec).toBeNull();
+  });
+});

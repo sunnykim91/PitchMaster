@@ -1,5 +1,5 @@
-import { formationTemplates, type FormationTemplate, type FormationSlot } from "@/lib/formations";
-import type { PreferredPosition, Position } from "@/lib/types";
+import { getFormationsForSport, type FormationTemplate, type FormationSlot } from "@/lib/formations";
+import type { PreferredPosition, Position, SportType } from "@/lib/types";
 import { PREF_TO_POSITION } from "@/lib/types";
 
 /* ── Types ── */
@@ -63,10 +63,14 @@ function playerScore(p: PlayerInput): number {
 export function recommendFormation(
   players: PlayerInput[],
   fieldPlayerCount?: number,
+  sportType: SportType = "SOCCER",
 ): AIRecommendation | null {
   if (players.length < 2) return null;
 
-  const targetCount = fieldPlayerCount ?? Math.min(players.length, 11);
+  const defaultPlayerCount = sportType === "FUTSAL" ? 5 : 11;
+  const targetCount = fieldPlayerCount ?? Math.min(players.length, defaultPlayerCount);
+
+  const formations = getFormationsForSport(sportType);
 
   // Rank players by performance score
   const rankedPlayers = [...players].sort((a, b) => playerScore(b) - playerScore(a));
@@ -102,7 +106,7 @@ export function recommendFormation(
   let bestAssignments: Record<string, string> = {};
   let bestReason = "";
 
-  for (const formation of formationTemplates) {
+  for (const formation of formations) {
     const fieldSlots = formation.slots.filter((s) => s.role !== "GK");
     if (fieldSlots.length !== fieldSlotCount) continue;
 

@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  formationTemplates,
+  getFormationsForSport,
   type FormationSlot,
   type FormationTemplate,
 } from "@/lib/formations";
 import { apiMutate } from "@/lib/useApi";
-import type { Position, PreferredPosition } from "@/lib/types";
+import type { Position, PreferredPosition, SportType } from "@/lib/types";
 import { PREF_TO_POSITION, PREF_POSITION_SHORT } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,6 +56,7 @@ type Props = {
   matchId: string;
   quarterCount: number;
   attendingPlayers: AttendingPlayer[];
+  sportType?: SportType;
   onGenerated?: (squads: GeneratedSquad[]) => void;
 };
 
@@ -387,11 +388,13 @@ export default function AutoFormationBuilder({
   matchId,
   quarterCount,
   attendingPlayers,
+  sportType = "SOCCER",
   onGenerated,
 }: Props) {
+  const filteredFormations = getFormationsForSport(sportType);
   const [isOpen, setIsOpen] = useState(false);
   const [formationId, setFormationId] = useState(
-    formationTemplates[0].id,
+    filteredFormations[0]?.id ?? "",
   );
   const [assignments, setAssignments] = useState<PlayerAssignment[]>(
     [],
@@ -401,9 +404,9 @@ export default function AutoFormationBuilder({
 
   const formation = useMemo(
     () =>
-      formationTemplates.find((f) => f.id === formationId) ??
-      formationTemplates[0],
-    [formationId],
+      filteredFormations.find((f) => f.id === formationId) ??
+      filteredFormations[0],
+    [formationId, filteredFormations],
   );
 
   // Sync assignments when attendingPlayers changes — auto-distribute on init
@@ -413,8 +416,8 @@ export default function AutoFormationBuilder({
     ).length;
     const fieldCount = attendingPlayers.length - gkCount;
     const slotsPerQuarter =
-      (formationTemplates.find((f) => f.id === formationId) ??
-        formationTemplates[0]
+      (filteredFormations.find((f) => f.id === formationId) ??
+        filteredFormations[0]
       ).slots.length - 1;
     const dist = calculateFairDistribution(
       fieldCount,
@@ -670,7 +673,7 @@ export default function AutoFormationBuilder({
             }}
             className="w-auto"
           >
-            {formationTemplates.map((f) => (
+            {filteredFormations.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.name}
               </option>

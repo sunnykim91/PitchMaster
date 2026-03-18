@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "PitchMaster — 조기축구 팀 관리 플랫폼";
+export const alt = "PitchMaster — 조기축구 · 풋살 팀 관리 플랫폼";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -103,7 +103,7 @@ export default function OgImage() {
               display: "flex",
             }}
           >
-            조기축구 팀 관리 플랫폼
+            조기축구 · 풋살 팀 관리 플랫폼
           </div>
         </div>
 

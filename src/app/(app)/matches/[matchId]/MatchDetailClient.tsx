@@ -20,6 +20,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
 import { shareMatchResult } from "@/lib/kakaoShare";
 import { recommendFormation, type PlayerInput } from "@/lib/formationAI";
+import type { SportType } from "@/lib/types";
 
 /* ── API response row types (snake_case from DB) ── */
 
@@ -295,6 +296,12 @@ export default function MatchDetailClient({
     data: membersData,
     loading: membersLoading,
   } = useApi<{ members: MemberRow[] }>("/api/members", { members: [] });
+
+  const {
+    data: teamData,
+  } = useApi<{ team: { sport_type?: SportType; player_count?: number } }>("/api/teams", { team: {} });
+
+  const sportType: SportType = teamData.team?.sport_type ?? "SOCCER";
 
   const {
     data: voteData,
@@ -806,7 +813,8 @@ export default function MatchDetailClient({
           name: p.name,
           preferredPosition: p.preferredPosition,
         }));
-        const rec = recommendFormation(aiPlayers, Math.min(attendingPlayers.length, 11));
+        const maxPlayers = sportType === "FUTSAL" ? 5 : 11;
+        const rec = recommendFormation(aiPlayers, Math.min(attendingPlayers.length, maxPlayers), sportType);
         if (!rec) return null;
         return (
           <Card className="border-primary/20 bg-primary/5">
@@ -870,6 +878,7 @@ export default function MatchDetailClient({
           matchId={matchId}
           quarterCount={match.quarterCount}
           attendingPlayers={attendingPlayers}
+          sportType={sportType}
           onGenerated={(squads) => {
             setGeneratedSquads(squads);
             setTacticsKey((k) => k + 1);
@@ -882,6 +891,7 @@ export default function MatchDetailClient({
         matchId={matchId}
         roster={roster}
         quarterCount={match.quarterCount}
+        sportType={sportType}
         readOnly={!canManage}
         initialSquads={generatedSquads.length > 0 ? generatedSquads.map((sq) => ({
           id: `gen-${sq.quarter_number}`,

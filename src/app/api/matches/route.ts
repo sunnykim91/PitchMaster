@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
       quarter_count: body.quarterCount ?? 4,
       quarter_duration: body.quarterDuration ?? 25,
       break_duration: body.breakDuration ?? 5,
+      player_count: body.playerCount ?? 11,
       status: "SCHEDULED",
       vote_deadline: body.voteDeadline || null,
       created_by: ctx.userId,

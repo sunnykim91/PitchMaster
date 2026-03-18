@@ -1,4 +1,4 @@
-import type { DetailedPosition } from "@/lib/types";
+import type { DetailedPosition, SportType } from "@/lib/types";
 
 export type FormationSlot = {
   id: string;
@@ -11,6 +11,7 @@ export type FormationSlot = {
 export type FormationTemplate = {
   id: string;
   name: string;
+  sportType: SportType;
   slots: FormationSlot[];
 };
 
@@ -18,6 +19,7 @@ export const formationTemplates: FormationTemplate[] = [
   {
     id: "4-4-2",
     name: "4-4-2",
+    sportType: "SOCCER",
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
       { id: "lb", role: "LB", label: "LB", x: 15, y: 72 },
@@ -35,6 +37,7 @@ export const formationTemplates: FormationTemplate[] = [
   {
     id: "4-2-3-1",
     name: "4-2-3-1",
+    sportType: "SOCCER",
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
       { id: "lb", role: "LB", label: "LB", x: 15, y: 74 },
@@ -52,6 +55,7 @@ export const formationTemplates: FormationTemplate[] = [
   {
     id: "4-3-3",
     name: "4-3-3",
+    sportType: "SOCCER",
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
       { id: "lb", role: "LB", label: "LB", x: 16, y: 74 },
@@ -69,6 +73,7 @@ export const formationTemplates: FormationTemplate[] = [
   {
     id: "3-5-2",
     name: "3-5-2",
+    sportType: "SOCCER",
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
       { id: "lcb", role: "LCB", label: "LCB", x: 30, y: 76 },
@@ -86,6 +91,7 @@ export const formationTemplates: FormationTemplate[] = [
   {
     id: "3-4-3",
     name: "3-4-3",
+    sportType: "SOCCER",
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
       { id: "lcb", role: "LCB", label: "LCB", x: 30, y: 76 },
@@ -100,4 +106,47 @@ export const formationTemplates: FormationTemplate[] = [
       { id: "rw", role: "RW", label: "RW", x: 76, y: 26 },
     ],
   },
+  // Futsal 1-2-1 Diamond (5 players)
+  {
+    id: "futsal-1-2-1",
+    name: "1-2-1",
+    sportType: "FUTSAL",
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
+      { id: "fixo", role: "CB", label: "FIXO", x: 50, y: 68 },
+      { id: "ala-l", role: "LW", label: "ALA", x: 20, y: 45 },
+      { id: "ala-r", role: "RW", label: "ALA", x: 80, y: 45 },
+      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 22 },
+    ],
+  },
+  // Futsal 2-1-1 Pyramid (5 players)
+  {
+    id: "futsal-2-1-1",
+    name: "2-1-1",
+    sportType: "FUTSAL",
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
+      { id: "fixo-l", role: "LCB", label: "FIXO", x: 30, y: 65 },
+      { id: "fixo-r", role: "RCB", label: "FIXO", x: 70, y: 65 },
+      { id: "ala", role: "CAM", label: "ALA", x: 50, y: 42 },
+      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 22 },
+    ],
+  },
+  // Futsal 1-1-2 Offensive (5 players)
+  {
+    id: "futsal-1-1-2",
+    name: "1-1-2",
+    sportType: "FUTSAL",
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
+      { id: "fixo", role: "CB", label: "FIXO", x: 50, y: 65 },
+      { id: "ala", role: "CAM", label: "ALA", x: 50, y: 42 },
+      { id: "pivo-l", role: "LS", label: "PIVO", x: 30, y: 22 },
+      { id: "pivo-r", role: "RS", label: "PIVO", x: 70, y: 22 },
+    ],
+  },
 ];
+
+export function getFormationsForSport(sportType: SportType): FormationTemplate[] {
+  return formationTemplates.filter((f) => f.sportType === sportType);
+}

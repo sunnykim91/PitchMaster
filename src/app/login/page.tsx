@@ -64,7 +64,7 @@ export default async function LoginPage({
               카카오톡 공유까지 한 곳에서.
             </p>
             <p className="text-lg font-semibold text-foreground">
-              조기축구 운영에 관한 모든 것.
+              조기축구 · 풋살 운영에 관한 모든 것.
             </p>
           </div>
 
@@ -89,7 +89,7 @@ export default async function LoginPage({
             이런 경험 있으시죠?
           </p>
           <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
-            조기축구 운영,
+            조기축구 · 풋살 운영,
             <br />
             생각보다 일이 많습니다.
           </h2>
