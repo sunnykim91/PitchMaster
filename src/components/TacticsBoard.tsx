@@ -235,6 +235,30 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     return map;
   }, [placements]);
 
+  /** 전체 쿼터에서 각 선수의 출전 쿼터 번호 목록 */
+  const playerQuarterMap = useMemo(() => {
+    const map = new Map<string, number[]>();
+    for (const squad of squadsData.squads) {
+      if (!squad.positions) continue;
+      for (const placement of Object.values(squad.positions)) {
+        if (!placement) continue;
+        const pid = (placement as Placement).playerId;
+        if (pid) {
+          if (!map.has(pid)) map.set(pid, []);
+          map.get(pid)!.push(squad.quarter_number);
+        }
+        const spid = (placement as Placement).secondPlayerId;
+        if (spid) {
+          if (!map.has(spid)) map.set(spid, []);
+          map.get(spid)!.push(squad.quarter_number);
+        }
+      }
+    }
+    // 정렬
+    for (const [, qs] of map) qs.sort((a, b) => a - b);
+    return map;
+  }, [squadsData.squads]);
+
   const sortedRoster = useMemo(() => {
     const unassigned: Player[] = [];
     const assigned: Player[] = [];
@@ -805,6 +829,8 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                   {sortedRoster.map((player) => {
                     const assignedSlot = assignedPlayers.get(player.id);
                     const isAssigned = Boolean(assignedSlot);
+                    const playedQuarters = playerQuarterMap.get(player.id) ?? [];
+                    const qCount = playedQuarters.length;
                     return (
                       <Button
                         key={player.id}
@@ -818,10 +844,18 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                         )}
                       >
                         <span className="min-w-0 flex-1 truncate font-semibold">{player.name}</span>
-                        <span className="max-w-[45%] shrink-0 truncate whitespace-nowrap text-xs text-muted-foreground">
+                        <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+                          {qCount > 0 && (
+                            <span className={cn(
+                              "rounded-full px-1.5 py-0.5 text-[10px] font-bold",
+                              qCount >= quarterCount ? "bg-red-500/15 text-red-400" : qCount === 0 ? "bg-muted" : "bg-primary/15 text-primary"
+                            )}>
+                              {qCount}Q
+                            </span>
+                          )}
                           {assignedSlot
-                            ? `배치됨 · ${formation.slots.find((slot) => slot.id === assignedSlot)?.label}`
-                            : "선택"}
+                            ? formation.slots.find((slot) => slot.id === assignedSlot)?.label ?? "배치됨"
+                            : qCount > 0 ? playedQuarters.map(q => `${q}Q`).join(" ") : "미출전"}
                         </span>
                       </Button>
                     );
