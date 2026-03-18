@@ -379,29 +379,52 @@ function scheduleQuarters(
       assignedReqs.add(sr);
     }
 
-    // 1차: 세분화 포지션 매칭 (CB→CB슬롯, FB→FB슬롯, DM→DM슬롯, ...)
+    // 슬롯 요청에 선수의 모든 선호 포지션 정보 첨부
+    type EnrichedSlotReq = SlotReq & { allPositions: PreferredPosition[] };
+    const enrichedReqs: EnrichedSlotReq[] = slotReqs.map((sr) => ({
+      ...sr,
+      allPositions: getAllPos(sr.ids[0]),
+    }));
+
+    // 1차: 정확한 세분화 포지션 매칭 (주 포지션 기준)
     for (const subPos of ["CB", "LB", "RB", "CDM", "CAM", "LW", "RW", "ST"] as PreferredPosition[]) {
       const slots = slotsBySubPos[subPos].filter((s) => !usedSlots.has(s.id));
-      const reqs = reqsBySubPos[subPos].filter((sr) => !assignedReqs.has(sr));
+      const reqs = enrichedReqs.filter((sr) => !assignedReqs.has(sr) && sr.preferredPos === subPos);
       for (let i = 0; i < Math.min(slots.length, reqs.length); i++) {
         assignSlotReq(slots[i], reqs[i]);
       }
     }
 
-    // 2차: 미매칭 요청을 같은 상위 카테고리의 남은 슬롯에 배정
-    const remReqs = slotReqs.filter((sr) => !assignedReqs.has(sr));
-    for (const sr of remReqs) {
-      const parentCat = PREF_TO_POSITION[sr.preferredPos];
-      const slot = fieldSlots.find(
-        (s) => !usedSlots.has(s.id) && getSlotCategory(s) === parentCat,
-      );
-      if (slot) {
-        assignSlotReq(slot, sr);
+    // 2차: 복수 포지션 매칭 — 선수의 다른 선호 포지션으로 빈 슬롯에 배정
+    const rem2 = enrichedReqs.filter((sr) => !assignedReqs.has(sr));
+    for (const sr of rem2) {
+      // 선수의 모든 선호 포지션에서 빈 슬롯 찾기
+      let matched = false;
+      for (const pos of sr.allPositions) {
+        if (pos === sr.preferredPos) continue; // 이미 1차에서 시도함
+        const slot = slotsBySubPos[pos]?.find((s) => !usedSlots.has(s.id));
+        if (slot) {
+          assignSlotReq(slot, sr);
+          matched = true;
+          break;
+        }
+      }
+      // 정확한 포지션 없으면 같은 카테고리(DF/MF/FW)의 빈 슬롯
+      if (!matched) {
+        for (const pos of sr.allPositions) {
+          const cat = PREF_TO_POSITION[pos];
+          const slot = fieldSlots.find((s) => !usedSlots.has(s.id) && getSlotCategory(s) === cat);
+          if (slot) {
+            assignSlotReq(slot, sr);
+            matched = true;
+            break;
+          }
+        }
       }
     }
 
     // 3차: 그래도 남은 요청 → 아무 빈 슬롯에 배정
-    const finalRemReqs = slotReqs.filter((sr) => !assignedReqs.has(sr));
+    const finalRemReqs = enrichedReqs.filter((sr) => !assignedReqs.has(sr));
     const finalRemSlots = fieldSlots.filter((s) => !usedSlots.has(s.id));
     for (let i = 0; i < Math.min(finalRemSlots.length, finalRemReqs.length); i++) {
       assignSlotReq(finalRemSlots[i], finalRemReqs[i]);
