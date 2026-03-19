@@ -1087,16 +1087,17 @@ export default function MatchDetailClient({
               </div>
             </div>
             {canManage && (
-              <div className="mt-4 flex justify-center gap-3">
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowDetailForm(true);
-                    // Pre-select first attending member for quick goal
-                    if (formRef.current) {
-                      const sel = formRef.current.elements.namedItem("scorerId") as HTMLSelectElement;
-                      if (sel && attendingMembers.length > 0) sel.value = attendingMembers[0].id;
-                    }
+                  onClick={async () => {
+                    const formData = new FormData();
+                    formData.set("scorerId", attendingMembers[0]?.id ?? "OPPONENT");
+                    formData.set("assistId", "");
+                    formData.set("quarter", "1");
+                    formData.set("minute", "0");
+                    formData.set("isOwnGoal", "");
+                    await handleAddGoal(formData);
                   }}
                   className="rounded-full bg-[hsl(var(--success))] px-5 py-2 text-xs font-bold text-white shadow-[0_2px_8px_-2px_hsl(var(--success)/0.4)] transition-all hover:bg-[hsl(var(--success))]/90 active:scale-95"
                 >
@@ -1116,6 +1117,21 @@ export default function MatchDetailClient({
                   className="rounded-full bg-[hsl(var(--loss))] px-5 py-2 text-xs font-bold text-white shadow-[0_2px_8px_-2px_hsl(var(--loss)/0.4)] transition-all hover:bg-[hsl(var(--loss))]/90 active:scale-95"
                 >
                   + 실점
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const formData = new FormData();
+                    formData.set("scorerId", attendingMembers[0]?.id ?? "OPPONENT");
+                    formData.set("assistId", "");
+                    formData.set("quarter", "1");
+                    formData.set("minute", "0");
+                    formData.set("isOwnGoal", "on");
+                    await handleAddGoal(formData);
+                  }}
+                  className="rounded-full bg-[hsl(var(--warning))] px-5 py-2 text-xs font-bold text-[hsl(240_6%_6%)] shadow-[0_2px_8px_-2px_hsl(var(--warning)/0.4)] transition-all hover:bg-[hsl(var(--warning))]/90 active:scale-95"
+                >
+                  + 자책골
                 </button>
               </div>
             )}
@@ -1165,6 +1181,7 @@ export default function MatchDetailClient({
                         득점자
                       </Label>
                       <NativeSelect name="scorerId">
+                        <option value="">득점자 선택</option>
                         <option value="OPPONENT">실점</option>
                         <optgroup label="참석 멤버">
                           {attendingMembers.map((player) => (
@@ -1197,7 +1214,7 @@ export default function MatchDetailClient({
                         어시스트
                       </Label>
                       <NativeSelect name="assistId">
-                        <option value="">없음</option>
+                        <option value="">어시스트 선택</option>
                         <optgroup label="참석 멤버">
                           {attendingMembers.map((player) => (
                             <option key={player.id} value={player.id}>
@@ -1225,44 +1242,40 @@ export default function MatchDetailClient({
                     </div>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs font-semibold text-muted-foreground">쿼터</Label>
-                      <div className="flex gap-1">
-                        {Array.from({ length: match.quarterCount }, (_, i) => i + 1).map((q) => (
-                          <button
-                            key={q}
-                            type="button"
-                            onClick={(e) => {
-                              const input = e.currentTarget.parentElement?.querySelector("input[name=quarter]") as HTMLInputElement;
-                              if (input) input.value = String(q);
-                              // Update visual state
-                              e.currentTarget.parentElement?.querySelectorAll("button").forEach((btn) => btn.classList.remove("bg-primary", "text-white"));
-                              e.currentTarget.classList.add("bg-primary", "text-white");
-                            }}
-                            className={cn(
-                              "h-8 w-8 rounded-lg text-xs font-bold transition-colors",
-                              q === 1 ? "bg-primary text-white" : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                            )}
-                          >
-                            Q{q}
-                          </button>
-                        ))}
-                        <input name="quarter" type="hidden" defaultValue="1" />
-                      </div>
-                    </div>
-                    <input name="minute" type="hidden" value="0" />
-                    <div className="flex items-center gap-2 pt-5">
-                      <input
-                        name="isOwnGoal"
-                        type="checkbox"
-                        className="h-4 w-4 rounded border border-primary accent-primary"
-                      />
-                      <Label className="text-xs text-muted-foreground">
-                        자책골
-                      </Label>
+                  <div className="mt-3 space-y-1">
+                    <Label className="text-xs font-semibold text-muted-foreground">쿼터 (선택)</Label>
+                    <div className="flex flex-wrap gap-1">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          const input = e.currentTarget.parentElement?.querySelector("input[name=quarter]") as HTMLInputElement;
+                          if (input) input.value = "1";
+                          e.currentTarget.parentElement?.querySelectorAll("button").forEach((btn) => btn.classList.remove("bg-primary", "text-white"));
+                        }}
+                        className="h-8 rounded-lg bg-primary/10 px-3 text-xs font-bold text-primary transition-colors hover:bg-primary/20"
+                      >
+                        선택 안함
+                      </button>
+                      {Array.from({ length: match.quarterCount }, (_, i) => i + 1).map((q) => (
+                        <button
+                          key={q}
+                          type="button"
+                          onClick={(e) => {
+                            const input = e.currentTarget.parentElement?.querySelector("input[name=quarter]") as HTMLInputElement;
+                            if (input) input.value = String(q);
+                            e.currentTarget.parentElement?.querySelectorAll("button").forEach((btn) => btn.classList.remove("bg-primary", "text-white"));
+                            e.currentTarget.classList.add("bg-primary", "text-white");
+                          }}
+                          className="h-8 w-8 rounded-lg bg-secondary text-xs font-bold text-muted-foreground transition-colors hover:bg-secondary/80"
+                        >
+                          Q{q}
+                        </button>
+                      ))}
+                      <input name="quarter" type="hidden" defaultValue="1" />
                     </div>
                   </div>
+                  <input name="minute" type="hidden" value="0" />
+                  <input name="isOwnGoal" type="hidden" value="" />
 
                   <div className="mt-3 flex gap-2">
                     <Button type="submit" className="flex-1" size="sm">
@@ -1299,8 +1312,10 @@ export default function MatchDetailClient({
                       <p className="text-sm font-semibold truncate">
                         {goal.scorerId === "OPPONENT" ? (
                           <span className="text-[hsl(var(--loss))]">실점</span>
+                        ) : goal.isOwnGoal ? (
+                          <span className="text-[hsl(var(--warning))]">자책골</span>
                         ) : (
-                          resolvePlayerName(goal.scorerId)
+                          <span className="text-[hsl(var(--success))]">{resolvePlayerName(goal.scorerId)}</span>
                         )}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -1308,7 +1323,6 @@ export default function MatchDetailClient({
                         {goal.assistId
                           ? ` · A: ${resolvePlayerName(goal.assistId)}`
                           : ""}
-                        {goal.isOwnGoal ? " · 자책골" : ""}
                       </p>
                     </div>
                     {canManage && (
