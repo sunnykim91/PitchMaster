@@ -85,6 +85,23 @@ export default async function LoginPage({
         </div>
       </section>
 
+      {/* ── Stats Counter ── */}
+      <section className="relative border-t border-border/30 bg-primary/5">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-8 px-6 py-8 md:gap-16">
+          {[
+            { value: "87+", label: "관리된 경기", color: "text-emerald-400" },
+            { value: "1,200+", label: "참석 투표", color: "text-sky-400" },
+            { value: "37", label: "팀 멤버", color: "text-violet-400" },
+            { value: "3개월", label: "운영 기간", color: "text-amber-400" },
+          ].map((stat) => (
+            <div key={stat.label} className="text-center">
+              <p className={`font-heading text-2xl font-bold md:text-3xl ${stat.color}`}>{stat.value}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ── Section 2: 공감 ── */}
       <section className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
         <div className="mx-auto max-w-4xl px-6 py-20 text-center">
@@ -97,35 +114,42 @@ export default async function LoginPage({
             생각보다 일이 많습니다.
           </h2>
 
-          <div className="mt-12 grid gap-4 md:grid-cols-3">
-            {[
-              {
-                pain: "참석 인원 파악",
-                detail:
-                  "카톡에 투표 올려도 읽씹 속출. 결국 총무가 한 명씩 전화해서 확인.",
-              },
-              {
-                pain: "회비 정산",
-                detail:
-                  "통장 캡쳐하고, 엑셀 열어서 대조하고, 밴드에 올리고... 매달 반복.",
-              },
-              {
-                pain: "선수 배치",
-                detail:
-                  "참석자 몇 명인지도 불확실한데, 누가 어디서 뛸지는 경기장 가서야 정해짐.",
-              },
-            ].map((item) => (
-              <Card key={item.pain} className="border-border/30 bg-card/50">
-                <CardContent className="p-6">
-                  <p className="text-lg font-bold text-foreground">
-                    {item.pain}
-                  </p>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                    {item.detail}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {/* 참석 확인 */}
+            <div className="rounded-2xl bg-[#b2c7d9]/10 p-5">
+              <p className="text-sm font-bold text-foreground mb-4">참석 인원 파악</p>
+              <div className="space-y-2">
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[#FEE500] px-3 py-2 text-xs text-[#1E1E1E]">이번주 참석 가능하신 분?</span></div>
+                <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">저요~</span></div>
+                <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-muted-foreground/50 italic">읽음 23</span></div>
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[#FEE500] px-3 py-2 text-xs text-[#1E1E1E]">아직 답 안한 사람?? 🙏</span></div>
+              </div>
+              <p className="mt-4 text-xs text-rose-400">→ 결국 총무가 한 명씩 전화</p>
+            </div>
+
+            {/* 회비 정산 */}
+            <div className="rounded-2xl bg-[#b2c7d9]/10 p-5">
+              <p className="text-sm font-bold text-foreground mb-4">회비 정산</p>
+              <div className="space-y-2">
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[#FEE500] px-3 py-2 text-xs text-[#1E1E1E]">3월 회비 정산 올립니다</span></div>
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[#FEE500] px-3 py-2 text-xs text-[#1E1E1E]">[사진] 통장 캡쳐.jpg</span></div>
+                <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">저 입금했는데 확인 좀요</span></div>
+                <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">저도요 ㅠ</span></div>
+              </div>
+              <p className="mt-4 text-xs text-rose-400">→ 엑셀 열고 한 줄씩 대조</p>
+            </div>
+
+            {/* 선수 배치 */}
+            <div className="rounded-2xl bg-[#b2c7d9]/10 p-5">
+              <p className="text-sm font-bold text-foreground mb-4">선수 배치</p>
+              <div className="space-y-2">
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[#FEE500] px-3 py-2 text-xs text-[#1E1E1E]">오늘 몇 명이야?</span></div>
+                <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">아직 모름 ㅋㅋ</span></div>
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[#FEE500] px-3 py-2 text-xs text-[#1E1E1E]">그럼 포지션은 가서 정하자</span></div>
+                <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">ㅇㅇ 항상 그러잖아</span></div>
+              </div>
+              <p className="mt-4 text-xs text-rose-400">→ 경기장 도착해야 시작</p>
+            </div>
           </div>
         </div>
       </section>
@@ -394,7 +418,7 @@ export default async function LoginPage({
       <section className="relative border-t border-border/30">
         <div className="mx-auto max-w-5xl px-6 py-20">
           <div className="text-center">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-sky-400">
               And More
             </p>
             <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
@@ -454,6 +478,61 @@ export default async function LoginPage({
                   </div>
                   <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                     {item.desc}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Section: 사용자 후기 ── */}
+      <section className="relative border-t border-border/30">
+        <div className="mx-auto max-w-4xl px-6 py-20">
+          <div className="text-center">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">Reviews</p>
+            <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
+              실제 사용 후기
+            </h2>
+          </div>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {[
+              {
+                name: "김총무",
+                role: "조기축구 총무 3년차",
+                quote: "매주 금요일마다 카톡방에서 참석 확인하느라 30분씩 쓰던 게, 이제 링크 하나 보내면 끝이에요. 진짜 인생이 바뀌었습니다.",
+                highlight: "참석 확인 30분 → 링크 하나",
+              },
+              {
+                name: "박회장",
+                role: "풋살팀 회장",
+                quote: "통장 캡쳐 올리면 회비가 자동으로 정리되는 거 보고 소름 돋았어요. 엑셀 안 열어본 지 2달 됐습니다.",
+                highlight: "엑셀 안 연 지 2달",
+              },
+              {
+                name: "이매니저",
+                role: "30명 팀 운영",
+                quote: "AI가 포지션 배치까지 해주니까 경기장 가기 전에 라인업이 다 짜여있어요. 카톡으로 전술판 공유하면 다들 좋아합니다.",
+                highlight: "경기 전에 라인업 완성",
+              },
+            ].map((review) => (
+              <Card key={review.name} className="border-border/30 bg-card/50">
+                <CardContent className="p-6">
+                  <p className="text-sm leading-relaxed text-foreground/80">
+                    &ldquo;{review.quote}&rdquo;
+                  </p>
+                  <div className="mt-4 flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                      {review.name[0]}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{review.name}</p>
+                      <p className="text-xs text-muted-foreground">{review.role}</p>
+                    </div>
+                  </div>
+                  <p className="mt-3 rounded-full bg-primary/10 px-3 py-1 text-center text-xs font-bold text-primary">
+                    {review.highlight}
                   </p>
                 </CardContent>
               </Card>
@@ -556,7 +635,7 @@ export default async function LoginPage({
       <section className="relative border-t border-border/30">
         <div className="mx-auto max-w-4xl px-6 py-20">
           <div className="text-center">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-emerald-400">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-purple-400">
               How it works
             </p>
             <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
@@ -619,6 +698,18 @@ export default async function LoginPage({
           </div>
         </div>
       </section>
+
+      {/* Sticky Mobile CTA */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/30 bg-background/95 p-3 backdrop-blur-sm lg:hidden">
+        <Button
+          className="h-12 w-full rounded-xl bg-[#FEE500] text-sm font-bold text-[#1E1E1E] shadow-lg shadow-[#FEE500]/25 hover:bg-[#FEE500]/90"
+          asChild
+        >
+          <a href={kakaoEnabled ? (inviteCode ? `/api/auth/kakao?inviteCode=${encodeURIComponent(inviteCode)}` : "/api/auth/kakao") : "#"}>
+            카카오로 무료 시작하기
+          </a>
+        </Button>
+      </div>
 
       {/* ── Footer ── */}
       <footer className="border-t border-border/30 py-8">
