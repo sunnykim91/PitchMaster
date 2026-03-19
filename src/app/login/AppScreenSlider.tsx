@@ -11,8 +11,8 @@ const screens = [
       <div className="space-y-3">
         <div className="rounded-lg bg-sky-500/10 p-3">
           <p className="text-[10px] font-bold text-sky-400">NEXT MATCH</p>
-          <p className="mt-1 text-sm font-bold text-white">2026-03-18 · 20:00</p>
-          <p className="text-[11px] text-white/60">어린이대공원축구장 · vs Zelous</p>
+          <p className="mt-1 text-sm font-bold text-white">2026-03-22 · 09:00</p>
+          <p className="text-[11px] text-white/60">시민체육공원 · vs 블루윙FC</p>
           <div className="mt-2 flex gap-1.5">
             <span className="rounded bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary">참석 9</span>
             <span className="rounded bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-400">불참 12</span>
@@ -41,7 +41,7 @@ const screens = [
       <div className="space-y-2">
         <div className="rounded-lg bg-white/5 p-3">
           <p className="text-xs font-bold text-white">2026-03-18 · 20:00</p>
-          <p className="text-[10px] text-white/50">어린이대공원축구장</p>
+          <p className="text-[10px] text-white/50">시민체육공원</p>
         </div>
         <div className="flex gap-1.5">
           <button className="flex-1 rounded-lg bg-primary py-2 text-xs font-bold text-white">참석</button>
@@ -105,7 +105,7 @@ const screens = [
         </div>
         <div className="space-y-1.5">
           {[
-            { rank: 1, name: "김선휘", goals: 8, color: "text-primary" },
+            { rank: 1, name: "홍길동", goals: 8, color: "text-primary" },
             { rank: 2, name: "장석민", goals: 5, color: "text-white/70" },
             { rank: 3, name: "황석훈", goals: 3, color: "text-white/50" },
           ].map((r) => (
@@ -174,9 +174,9 @@ const screens = [
         </div>
         <div className="mt-1 space-y-1.5">
           {[
-            { date: "3.10", opp: "메짤라", score: "2:0", color: "text-primary" },
-            { date: "3.04", opp: "메짤라", score: "2:3", color: "text-red-400" },
-            { date: "2.23", opp: "영안FC", score: "8:6", color: "text-primary" },
+            { date: "3.10", opp: "레드스타", score: "2:0", color: "text-primary" },
+            { date: "3.04", opp: "레드스타", score: "2:3", color: "text-red-400" },
+            { date: "2.23", opp: "시티FC", score: "8:6", color: "text-primary" },
           ].map((m, i) => (
             <div key={i} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2">
               <span className="text-[10px] text-white/50">{m.date} · {m.opp}</span>
@@ -199,7 +199,7 @@ const screens = [
         </div>
         <div className="space-y-0 rounded-lg bg-white/5 overflow-hidden">
           {[
-            { date: "03.16", name: "김선휘", amount: "+30,000", color: "text-blue-400" },
+            { date: "03.16", name: "홍길동", amount: "+30,000", color: "text-blue-400" },
             { date: "03.12", name: "장석민", amount: "+30,000", color: "text-blue-400" },
             { date: "03.10", name: "구장대여", amount: "-79,230", color: "text-white" },
           ].map((t, i) => (

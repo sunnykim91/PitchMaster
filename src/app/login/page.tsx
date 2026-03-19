@@ -61,7 +61,7 @@ export default async function LoginPage({
             <p className="text-lg text-muted-foreground">
               읽씹 없는 참석투표 · 캡쳐 한 장이면 끝나는 회비정산
               <br />
-              경기장 가기 전에 완성되는 AI 라인업
+              원탭 득점 기록 · 경기장 가기 전에 완성되는 AI 라인업
             </p>
             <p className="text-lg font-semibold text-foreground">
               조기축구 · 풋살 팀 운영, 이제 여기서 끝내세요.
@@ -89,10 +89,10 @@ export default async function LoginPage({
       <section className="relative border-t border-border/30 bg-primary/5">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-8 px-6 py-8 md:gap-16">
           {[
-            { value: "87+", label: "관리된 경기", color: "text-primary" },
-            { value: "1,200+", label: "참석 투표", color: "text-sky-400" },
+            { value: "100+", label: "관리된 경기", color: "text-primary" },
+            { value: "1,500+", label: "참석 투표", color: "text-sky-400" },
             { value: "37", label: "팀 멤버", color: "text-violet-400" },
-            { value: "3개월", label: "운영 기간", color: "text-amber-400" },
+            { value: "4개월+", label: "운영 기간", color: "text-amber-400" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <p className={`font-heading text-2xl font-bold md:text-3xl ${stat.color}`}>{stat.value}</p>
@@ -158,10 +158,7 @@ export default async function LoginPage({
       <section className="relative border-t border-border/30">
         <div className="mx-auto max-w-5xl px-6 py-20">
           <div className="text-center">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
-              App Preview
-            </p>
-            <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
+            <h2 className="font-heading text-3xl font-bold md:text-4xl">
               총무가 필요한 건 다 있습니다.
             </h2>
             <p className="mt-3 text-muted-foreground">
@@ -199,10 +196,7 @@ export default async function LoginPage({
       <section className="relative border-t border-border/30">
         <div className="mx-auto max-w-5xl px-6 py-20">
           <div className="text-center">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-400">
-              Smart Finance
-            </p>
-            <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
+            <h2 className="font-heading text-3xl font-bold md:text-4xl">
               통장 캡쳐 한 장이면<br />이번 달 회비 정산 끝.
             </h2>
             <p className="mt-3 text-muted-foreground">
@@ -240,7 +234,7 @@ export default async function LoginPage({
                     },
                     {
                       date: "03.11",
-                      name: "상대팀FC",
+                      name: "블루윙FC",
                       time: "11:23",
                       amount: "+73,000원",
                       balance: "1,317,822원",
@@ -311,10 +305,7 @@ export default async function LoginPage({
       <section className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
         <div className="mx-auto max-w-5xl px-6 py-20">
           <div className="text-center">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-purple-400">
-              Auto Lineup
-            </p>
-            <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
+            <h2 className="font-heading text-3xl font-bold md:text-4xl">
               경기장 도착 전에<br />라인업이 완성됩니다.
             </h2>
             <p className="mt-3 text-muted-foreground">
@@ -418,10 +409,7 @@ export default async function LoginPage({
       <section className="relative border-t border-border/30">
         <div className="mx-auto max-w-5xl px-6 py-20">
           <div className="text-center">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-sky-400">
-              And More
-            </p>
-            <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
+            <h2 className="font-heading text-3xl font-bold md:text-4xl">
               팀 운영에 필요한 것, 더 있습니다.
             </h2>
           </div>
@@ -442,6 +430,12 @@ export default async function LoginPage({
               },
               {
                 icon: "⚽",
+                title: "간편 득점 기록",
+                desc: "스코어보드에서 +득점, +실점 버튼 한 번이면 끝. 상세 기록은 선택.",
+                color: "text-primary",
+              },
+              {
+                icon: "🏟️",
                 title: "축구 & 풋살 모두 지원",
                 desc: "팀 생성 시 선택하면 인원수, 쿼터, 포메이션이 자동으로.",
                 color: "text-primary",
@@ -490,8 +484,7 @@ export default async function LoginPage({
       <section className="relative border-t border-border/30">
         <div className="mx-auto max-w-4xl px-6 py-20">
           <div className="text-center">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">Reviews</p>
-            <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
+            <h2 className="font-heading text-3xl font-bold md:text-4xl">
               실제 사용 후기
             </h2>
           </div>
@@ -545,10 +538,7 @@ export default async function LoginPage({
       <section className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
         <div className="mx-auto max-w-4xl px-6 py-20">
           <div className="text-center">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">
-              Comparison
-            </p>
-            <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
+            <h2 className="font-heading text-3xl font-bold md:text-4xl">
               아직도 카톡방으로 운영하세요?
             </h2>
           </div>
@@ -604,6 +594,12 @@ export default async function LoginPage({
                     pm: "레이더 차트 + 랭킹",
                   },
                   {
+                    feature: "득점 기록",
+                    kakao: "없음",
+                    band: "없음",
+                    pm: "원탭 스코어보드 + 상세 기록",
+                  },
+                  {
                     feature: "멀티팀",
                     kakao: "방 여러 개",
                     band: "밴드 여러 개",
@@ -635,10 +631,7 @@ export default async function LoginPage({
       <section className="relative border-t border-border/30">
         <div className="mx-auto max-w-4xl px-6 py-20">
           <div className="text-center">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-purple-400">
-              How it works
-            </p>
-            <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
+            <h2 className="font-heading text-3xl font-bold md:text-4xl">
               세팅은 1분이면 끝납니다.
             </h2>
           </div>
@@ -658,7 +651,7 @@ export default async function LoginPage({
               {
                 step: "03",
                 title: "운영 시작",
-                desc: "경기 일정 잡고, 투표 받고, 선수 배치하고, 회비 관리까지",
+                desc: "경기 일정 등록 → 참석 투표 → AI 라인업 → 원탭 득점 기록까지",
               },
             ].map((item) => (
               <div key={item.step} className="text-center">
