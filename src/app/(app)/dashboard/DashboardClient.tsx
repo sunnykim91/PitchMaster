@@ -322,42 +322,6 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
         )}
       </div>
 
-      {/* ── Team Record Stats Row (4-column) ── */}
-      {recordTotal > 0 && (
-        <div className="grid grid-cols-4 gap-3">
-          {[
-            { label: "승", value: teamRecord.wins, color: "text-[hsl(var(--win))]" },
-            { label: "무", value: teamRecord.draws, color: "text-[hsl(var(--draw))]" },
-            { label: "패", value: teamRecord.losses, color: "text-[hsl(var(--loss))]" },
-            { label: "승률", value: `${recordTotal > 0 ? Math.round((teamRecord.wins / recordTotal) * 100) : 0}%`, color: "text-primary" },
-          ].map((stat) => (
-            <div key={stat.label} className="card-stat text-center">
-              <div className={`type-stat ${stat.color}`}>{stat.value}</div>
-              <div className="type-overline mt-1">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Quick Navigation */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {[
-          { label: "경기 일정", href: "/matches", color: "text-primary", bg: "hover:bg-primary/5" },
-          { label: "내 기록", href: "/records", color: "text-[hsl(var(--accent))]", bg: "hover:bg-[hsl(var(--accent)/0.05)]" },
-          { label: "회비 관리", href: "/dues", color: "text-[hsl(var(--info))]", bg: "hover:bg-[hsl(var(--info)/0.05)]" },
-          { label: "팀원 관리", href: "/members", color: "text-[hsl(var(--success))]", bg: "hover:bg-[hsl(var(--success)/0.05)]" },
-        ].map((nav) => (
-          <Link
-            key={nav.href}
-            href={nav.href}
-            className={`flex items-center justify-center gap-2 rounded-xl border border-border/30 bg-card py-3 text-sm font-semibold transition-colors ${nav.bg}`}
-          >
-            <span className={nav.color}>{nav.label}</span>
-            <span className="text-muted-foreground">&rarr;</span>
-          </Link>
-        ))}
-      </div>
-
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Votes */}
         <Card>
@@ -427,81 +391,75 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
         </Card>
       </div>
 
-      {/* Recent Result + Season Record */}
+      {/* Recent Result + Season Record (통합) */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <div>
-            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">최근 경기 요약</CardTitle>
+            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">시즌 전적</CardTitle>
           </div>
           <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
             <Link href="/records">전체 기록 &rarr;</Link>
           </Button>
         </CardHeader>
         <CardContent>
-          {recentResult ? (
-            <div className="space-y-3">
-              <Card className="border-0 border-l-2 border-l-primary/40 bg-secondary hover:bg-secondary/70 cursor-pointer transition-colors">
-                <CardContent className="p-4">
-                  <div className="flex items-baseline justify-between">
-                    <p className="text-xs text-muted-foreground">{formatDate(recentResult.date)}</p>
-                    <p className="type-score text-primary">
-                      {recentResult.score}
-                    </p>
+          {/* 시즌 전적 스탯 (항상 표시) */}
+          {recordTotal > 0 && (
+            <div className="mb-4">
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { label: "승", value: teamRecord.wins, color: "text-[hsl(var(--win))]" },
+                  { label: "무", value: teamRecord.draws, color: "text-[hsl(var(--draw))]" },
+                  { label: "패", value: teamRecord.losses, color: "text-[hsl(var(--loss))]" },
+                  { label: "승률", value: `${Math.round((teamRecord.wins / recordTotal) * 100)}%`, color: "text-primary" },
+                ].map((stat) => (
+                  <div key={stat.label} className="card-stat text-center">
+                    <div className={`type-stat ${stat.color}`}>{stat.value}</div>
+                    <div className="type-overline mt-1">{stat.label}</div>
                   </div>
-                  <p className="mt-2 text-sm text-foreground/70">
-                    상대팀:{" "}
-                    <span className="font-semibold text-foreground">
-                      {recentResult.opponent ?? "미정"}
-                    </span>
-                  </p>
-                  {recentResult.mvp && (
-                    <p className="mt-2 text-sm text-foreground/70">
-                      MVP: <span className="font-semibold text-foreground">{recentResult.mvp}</span>
-                    </p>
-                  )}
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/matches/${recentResult.id}`}>상세 기록 보기</Link>
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href="/records">팀 랭킹 보기</Link>
-                    </Button>
+                ))}
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                <span>득점 {teamRecord.goalsFor} · 실점 {teamRecord.goalsAgainst} · 득실차 {teamRecord.goalsFor - teamRecord.goalsAgainst >= 0 ? "+" : ""}{teamRecord.goalsFor - teamRecord.goalsAgainst}</span>
+                {teamRecord.recent5.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    {teamRecord.recent5.map((r, i) => (
+                      <span
+                        key={i}
+                        className={cn(
+                          "flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold",
+                          r === "W" && "bg-[hsl(var(--win)/0.15)] text-[hsl(var(--win))]",
+                          r === "D" && "bg-white/[0.06] text-muted-foreground",
+                          r === "L" && "bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))]"
+                        )}
+                      >
+                        {r === "W" ? "승" : r === "D" ? "무" : "패"}
+                      </span>
+                    ))}
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Season record with goals and recent 5 */}
-              {recordTotal > 0 && (
-                <Card className="border-0 bg-secondary">
-                  <CardContent className="p-4">
-                    <p className="type-overline">시즌 전적</p>
-                    <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                      <span>득점 {teamRecord.goalsFor} · 실점 {teamRecord.goalsAgainst} · 득실차 {teamRecord.goalsFor - teamRecord.goalsAgainst >= 0 ? "+" : ""}{teamRecord.goalsFor - teamRecord.goalsAgainst}</span>
-                    </div>
-                    {teamRecord.recent5.length > 0 && (
-                      <div className="mt-3 flex items-center gap-1.5">
-                        <span className="text-[10px] text-muted-foreground">최근:</span>
-                        <div className="flex items-center gap-1">
-                          {teamRecord.recent5.map((r, i) => (
-                            <span
-                              key={i}
-                              className={cn(
-                                "flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-bold",
-                                r === "W" && "bg-[hsl(var(--win)/0.15)] text-[hsl(var(--win))]",
-                                r === "D" && "bg-white/[0.06] text-muted-foreground",
-                                r === "L" && "bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))]"
-                              )}
-                            >
-                              {r === "W" ? "승" : r === "D" ? "무" : "패"}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
+                )}
+              </div>
             </div>
+          )}
+
+          {/* 최근 경기 결과 */}
+          {recentResult ? (
+            <Card className="mt-3 border-0 border-l-2 border-l-primary/40 bg-secondary hover:bg-secondary/70 cursor-pointer transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-baseline justify-between">
+                  <p className="text-xs text-muted-foreground">{formatDate(recentResult.date)}</p>
+                  <p className="type-stat text-primary">{recentResult.score}</p>
+                </div>
+                <p className="mt-1 truncate text-sm text-foreground/70">
+                  vs <span className="font-semibold text-foreground">{recentResult.opponent ?? "미정"}</span>
+                  {recentResult.mvp && <> · MVP <span className="font-semibold text-foreground">{recentResult.mvp}</span></>}
+                </p>
+                <div className="mt-3">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/matches/${recentResult.id}`}>상세 기록 보기</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           ) : (
             <EmptyState
               icon={Trophy}
@@ -511,6 +469,25 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
           )}
         </CardContent>
       </Card>
+
+      {/* Quick Navigation — PC only */}
+      <div className="hidden lg:grid grid-cols-4 gap-2">
+        {[
+          { label: "경기 일정", href: "/matches", color: "text-primary", bg: "hover:bg-primary/5" },
+          { label: "내 기록", href: "/records", color: "text-[hsl(var(--accent))]", bg: "hover:bg-[hsl(var(--accent)/0.05)]" },
+          { label: "회비 관리", href: "/dues", color: "text-[hsl(var(--info))]", bg: "hover:bg-[hsl(var(--info)/0.05)]" },
+          { label: "팀원 관리", href: "/members", color: "text-[hsl(var(--success))]", bg: "hover:bg-[hsl(var(--success)/0.05)]" },
+        ].map((nav) => (
+          <Link
+            key={nav.href}
+            href={nav.href}
+            className={`flex items-center justify-center gap-2 rounded-xl border border-border/30 bg-card py-3 text-sm font-semibold transition-colors ${nav.bg}`}
+          >
+            <span className={nav.color}>{nav.label}</span>
+            <span className="text-muted-foreground">&rarr;</span>
+          </Link>
+        ))}
+      </div>
     </div>
     </>
   );
