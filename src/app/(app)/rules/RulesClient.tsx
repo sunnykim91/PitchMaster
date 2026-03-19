@@ -70,6 +70,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formState, setFormState] = useState({ title: "", content: "", category: "일반" as RuleCategory });
   const [submitting, setSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const filteredRules = useMemo(() => {
@@ -79,7 +80,14 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!formState.title.trim() || !formState.content.trim()) return;
+    const errors: Record<string, string> = {};
+    if (!formState.title.trim()) errors.title = "회칙 제목을 입력해주세요.";
+    if (!formState.content.trim()) errors.content = "회칙 내용을 입력해주세요.";
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
 
     setSubmitting(true);
     try {
@@ -124,6 +132,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
   function handleCancel() {
     setEditingId(null);
     setFormState({ title: "", content: "", category: "일반" });
+    setFormErrors({});
   }
 
   async function handleDelete(id: string) {
@@ -138,7 +147,14 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
   }
 
   if (error) {
-    return <Card className="p-6"><span className="text-destructive">오류: {error}</span></Card>;
+    return (
+      <Card className="p-6">
+        <div className="flex items-center justify-between">
+          <span className="text-destructive">오류: {error}</span>
+          <Button variant="outline" size="sm" onClick={refetch}>다시 시도</Button>
+        </div>
+      </Card>
+    );
   }
 
   if (loading && rules.length === 0) {
@@ -237,19 +253,23 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
                       <Label className="text-sm font-semibold text-foreground/80">제목</Label>
                       <Input
                         value={formState.title}
-                        onChange={(event) => setFormState({ ...formState, title: event.target.value })}
+                        onChange={(event) => { setFormState({ ...formState, title: event.target.value }); setFormErrors((prev) => ({ ...prev, title: "" })); }}
                         required
+                        className={formErrors.title ? "border-destructive" : ""}
                       />
+                      {formErrors.title && <p className="text-xs text-destructive">{formErrors.title}</p>}
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-foreground/80">내용</Label>
                     <Textarea
                       value={formState.content}
-                      onChange={(event) => setFormState({ ...formState, content: event.target.value })}
+                      onChange={(event) => { setFormState({ ...formState, content: event.target.value }); setFormErrors((prev) => ({ ...prev, content: "" })); }}
+                      className={formErrors.content ? "border-destructive" : ""}
                       required
                       rows={4}
                     />
+                    {formErrors.content && <p className="text-xs text-destructive">{formErrors.content}</p>}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button type="submit" size="sm" className="px-6" disabled={submitting}>

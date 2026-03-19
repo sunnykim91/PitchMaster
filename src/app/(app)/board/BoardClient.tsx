@@ -115,6 +115,7 @@ export default function BoardClient({
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [likingPostIds, setLikingPostIds] = useState<Set<string>>(new Set());
   const [commentingPostId, setCommentingPostId] = useState<string | null>(null);
   const [deletingPostIds, setDeletingPostIds] = useState<Set<string>>(new Set());
@@ -197,7 +198,14 @@ export default function BoardClient({
   /* ── Submit (create or update) ── */
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!form.title.trim() || !form.content.trim()) return;
+    const errors: Record<string, string> = {};
+    if (!form.title.trim()) errors.title = "제목을 입력해주세요.";
+    if (!form.content.trim()) errors.content = "내용을 입력해주세요.";
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
     setSubmitting(true);
     try {
       const imageUrls = form.imageUrl.trim() ? [form.imageUrl.trim()] : [];
@@ -244,6 +252,7 @@ export default function BoardClient({
     setEditingPostId(null);
     setForm(EMPTY_FORM);
     setUploadError(null);
+    setFormErrors({});
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -309,7 +318,14 @@ export default function BoardClient({
 
   /* ── Error state ── */
   if (postsError) {
-    return <Card className="p-6"><span className="text-destructive">오류: {postsError}</span></Card>;
+    return (
+      <Card className="p-6">
+        <div className="flex items-center justify-between">
+          <span className="text-destructive">오류: {postsError}</span>
+          <Button variant="outline" size="sm" onClick={refetchPosts}>다시 시도</Button>
+        </div>
+      </Card>
+    );
   }
 
   /* ── Loading state ── */
@@ -403,9 +419,11 @@ export default function BoardClient({
                     <Input
                       id="post-title"
                       value={form.title}
-                      onChange={(event) => setForm({ ...form, title: event.target.value })}
+                      onChange={(event) => { setForm({ ...form, title: event.target.value }); setFormErrors((prev) => ({ ...prev, title: "" })); }}
                       required
+                      className={formErrors.title ? "border-destructive" : ""}
                     />
+                    {formErrors.title && <p className="text-xs text-destructive">{formErrors.title}</p>}
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -413,10 +431,12 @@ export default function BoardClient({
                   <Textarea
                     id="post-content"
                     value={form.content}
-                    onChange={(event) => setForm({ ...form, content: event.target.value })}
+                    onChange={(event) => { setForm({ ...form, content: event.target.value }); setFormErrors((prev) => ({ ...prev, content: "" })); }}
                     required
                     rows={4}
+                    className={formErrors.content ? "border-destructive" : ""}
                   />
+                  {formErrors.content && <p className="text-xs text-destructive">{formErrors.content}</p>}
                 </div>
                 {form.category === "GALLERY" && (
                   <div className="space-y-2">

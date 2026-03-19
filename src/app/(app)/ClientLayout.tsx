@@ -90,6 +90,25 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
     setIsOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    if (!teamMenuOpen) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setTeamMenuOpen(false);
+    }
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-team-menu]")) setTeamMenuOpen(false);
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("click", handleClickOutside, true);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("click", handleClickOutside, true);
+    };
+  }, [teamMenuOpen]);
+
   const navItems = useMemo(
     () => [
       { href: "/dashboard", label: "홈", detail: "대시보드", icon: Home },
@@ -117,7 +136,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
     <>
       <div className="space-y-1">
         <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">PitchMaster</p>
-        <div className="relative">
+        <div className="relative" data-team-menu>
           <button
             type="button"
             className="flex items-center gap-1 font-heading text-xl font-bold uppercase hover:text-primary transition-colors"

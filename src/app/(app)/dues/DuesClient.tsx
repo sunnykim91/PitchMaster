@@ -261,6 +261,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [editingRecord, setEditingRecord] = useState<DuesRecord | null>(null);
   const [editingSetting, setEditingSetting] = useState<DuesSetting | null>(null);
   const [settingFormState, setSettingFormState] = useState({ memberType: "", monthlyAmount: "", description: "" });
@@ -288,8 +289,18 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     const type = String(formData.get("type"));
     const amount = Number(formData.get("amount"));
     const description = String(formData.get("description"));
+    const recordedAt = String(formData.get("recordedAt") || "");
     const userId = String(formData.get("memberName") || "") || undefined;
     const screenshotUrlValue = screenshotUrl || undefined;
+
+    const errors: Record<string, string> = {};
+    if (!amount || amount <= 0) errors.amount = "금액을 입력해주세요.";
+    if (!recordedAt) errors.recordedAt = "날짜를 선택해주세요.";
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
 
     const { error } = await apiMutate("/api/dues", "POST", {
       type,
@@ -297,11 +308,13 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       description,
       userId,
       screenshotUrl: screenshotUrlValue,
+      recordedAt: recordedAt || undefined,
     });
     if (!error) {
       await refetchSummary();
       setIsFormOpen(false);
       setScreenshotUrl("");
+      setFormErrors({});
     }
   }
 
@@ -743,7 +756,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
               <Button
                 type="button"
                 size="sm"
-                onClick={() => { setIsFormOpen((prev) => !prev); setIsBulkMode(false); }}
+                onClick={() => { setIsFormOpen((prev) => { if (!prev) setFormErrors({}); return !prev; }); setIsBulkMode(false); }}
               >
                 입출금 기록 추가
               </Button>
@@ -800,14 +813,29 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                   <Label className="font-semibold text-muted-foreground">
                     금액
                   </Label>
-                  <Input name="amount" type="number" min={0} required />
+                  <Input
+                    name="amount"
+                    type="number"
+                    min={0}
+                    required
+                    className={formErrors.amount ? "border-destructive" : ""}
+                    onChange={() => setFormErrors((prev) => ({ ...prev, amount: "" }))}
+                  />
+                  {formErrors.amount && <p className="text-xs text-destructive">{formErrors.amount}</p>}
                 </div>
 
                 <div className="space-y-2">
                   <Label className="font-semibold text-muted-foreground">
                     날짜
                   </Label>
-                  <Input name="recordedAt" type="date" required />
+                  <Input
+                    name="recordedAt"
+                    type="date"
+                    required
+                    className={formErrors.recordedAt ? "border-destructive" : ""}
+                    onChange={() => setFormErrors((prev) => ({ ...prev, recordedAt: "" }))}
+                  />
+                  {formErrors.recordedAt && <p className="text-xs text-destructive">{formErrors.recordedAt}</p>}
                 </div>
 
                 <div className="space-y-2">

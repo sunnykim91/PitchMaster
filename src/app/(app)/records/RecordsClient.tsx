@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useApi } from "@/lib/useApi";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role } from "@/lib/types";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -93,6 +94,7 @@ export default function RecordsClient({
     data: seasonsPayload,
     loading: loadingSeasons,
     error: seasonsError,
+    refetch: refetchSeasons,
   } = useApi<{ seasons: Record<string, unknown>[] }>(
     "/api/seasons",
     { seasons: initialData?.seasons ?? [] },
@@ -179,7 +181,14 @@ export default function RecordsClient({
   // so no explicit refetch useEffect needed.
 
   if (seasonsError) {
-    return <Card className="p-6"><span className="text-destructive">오류: {seasonsError}</span></Card>;
+    return (
+      <Card className="p-6">
+        <div className="flex items-center justify-between">
+          <span className="text-destructive">오류: {seasonsError}</span>
+          <Button variant="outline" size="sm" onClick={refetchSeasons}>다시 시도</Button>
+        </div>
+      </Card>
+    );
   }
 
   if (loadingSeasons) {

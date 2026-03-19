@@ -132,7 +132,14 @@ export default function NotificationsClient({ initialData }: { initialData: Init
   /* ── Error state ─────────────────────────────────────── */
 
   if (notifError) {
-    return <Card className="p-6"><span className="text-destructive">오류: {notifError}</span></Card>;
+    return (
+      <Card className="p-6">
+        <div className="flex items-center justify-between">
+          <span className="text-destructive">오류: {notifError}</span>
+          <Button variant="outline" size="sm" onClick={refetchNotifs}>다시 시도</Button>
+        </div>
+      </Card>
+    );
   }
 
   /* ── Loading state ─────────────────────────────────────── */
