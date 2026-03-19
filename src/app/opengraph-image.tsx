@@ -161,7 +161,7 @@ export default function OgImage() {
             display: "flex",
           }}
         >
-          pitch-master-eight.vercel.app
+          pitch-master.app
         </div>
       </div>
     ),

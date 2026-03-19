@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/api/", "/dashboard", "/matches", "/records", "/dues", "/members", "/board", "/rules", "/notifications", "/settings"],
     },
-    sitemap: "https://pitch-master-eight.vercel.app/sitemap.xml",
+    sitemap: "https://pitch-master.app/sitemap.xml",
   };
 }

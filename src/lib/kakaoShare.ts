@@ -6,7 +6,7 @@ declare global {
   }
 }
 
-const APP_URL = "https://pitch-master-eight.vercel.app";
+const APP_URL = "https://pitch-master.app";
 
 let sdkLoading: Promise<boolean> | null = null;
 

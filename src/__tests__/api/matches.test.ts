@@ -45,7 +45,11 @@ describe("GET /api/matches", () => {
 
   it("200: 경기 목록 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["matches", mockMatches]);
+    const db = createMockDb(
+      ["matches", null],          // 1st: auto-complete update (ignored)
+      ["matches", mockMatches],   // 2nd: select matches
+      ["match_goals", []],        // 3rd: goals for score calc
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
@@ -56,7 +60,10 @@ describe("GET /api/matches", () => {
 
   it("400: DB 에러 발생시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["matches", null, { message: "DB connection failed" }]);
+    const db = createMockDb(
+      ["matches", null],                                    // 1st: auto-complete update
+      ["matches", null, { message: "DB connection failed" }], // 2nd: select error
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();

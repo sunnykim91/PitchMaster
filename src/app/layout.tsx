@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title: "PitchMaster — 조기축구 · 풋살 팀 관리 플랫폼",
   description: "실시간 참석투표, AI 라인업, 통장 캡쳐 회비 자동정리, 기록 분석, 카카오톡 공유까지. 조기축구 · 풋살 팀 운영을 한 곳에서.",
   manifest: "/manifest.json",
-  metadataBase: new URL("https://pitch-master-eight.vercel.app"),
+  metadataBase: new URL("https://pitch-master.app"),
   verification: {
     google: "google0cfbdfe7b13f49fc",
   },
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "PitchMaster — 조기축구 · 풋살 팀 관리 플랫폼",
     description: "실시간 참석투표, AI 라인업, 통장 캡쳐 회비 자동정리, 기록 분석까지. 조기축구 팀 운영을 한 곳에서.",
-    url: "https://pitch-master-eight.vercel.app",
+    url: "https://pitch-master.app",
     siteName: "PitchMaster",
     locale: "ko_KR",
     type: "website",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     follow: true,
   },
   alternates: {
-    canonical: "https://pitch-master-eight.vercel.app",
+    canonical: "https://pitch-master.app",
   },
 };
 

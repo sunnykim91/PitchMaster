@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { shareMatchResult, shareVoteLink, shareTeamInvite } from "@/lib/kakaoShare";
 
-const APP_URL = "https://pitch-master-eight.vercel.app";
+const APP_URL = "https://pitch-master.app";
 
 // ─── Mock Kakao SDK ───────────────────────────────────────────────────────────
 const mockKakao = {
