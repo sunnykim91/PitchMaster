@@ -705,7 +705,7 @@ export default async function LoginPage({
       </div>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-border/30 py-8">
+      <footer className="border-t border-border/30 py-8 pb-24 lg:pb-8">
         <div className="mx-auto flex max-w-4xl flex-col items-center gap-3 px-6">
           <div className="flex gap-4 text-xs text-muted-foreground/60">
             <a href="/privacy" className="transition hover:text-foreground">개인정보처리방침</a>
