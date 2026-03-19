@@ -113,13 +113,13 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const navItems = useMemo(
     () => [
       { href: "/dashboard", label: "홈", detail: "대시보드", icon: Home },
-      { href: "/matches", label: "경기 관리", detail: "일정/투표", icon: Calendar },
+      { href: "/matches", label: "경기 일정", detail: "일정/투표", icon: Calendar },
       { href: "/records", label: "내 기록", detail: "통계/랭킹", icon: Trophy },
-      { href: "/dues", label: "회비 관리", detail: "수납/지출", icon: Wallet },
+      { href: "/dues", label: "회비 관리", detail: "입출금/벌금", icon: Wallet },
       { href: "/members", label: "회원 관리", detail: "멤버/권한", icon: Users },
       { href: "/board", label: "게시판", detail: "공지/자유", icon: MessageSquare },
       { href: "/notifications", label: "알림", detail: "알림 센터", icon: Bell },
-      { href: "/rules", label: "회칙", detail: "규정/공지", icon: BookOpen },
+      { href: "/rules", label: "회칙", detail: "팀 규정", icon: BookOpen },
       { href: "/settings", label: "설정", detail: "개인/팀", icon: Settings },
     ],
     []

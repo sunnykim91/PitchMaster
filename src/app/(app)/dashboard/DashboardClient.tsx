@@ -314,7 +314,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
               description="새 경기를 등록해보세요."
               action={
                 <Button size="sm" asChild>
-                  <Link href="/matches">경기 등록하기</Link>
+                  <Link href="/matches">일정 등록하기</Link>
                 </Button>
               }
             />
@@ -476,7 +476,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
           { label: "경기 일정", href: "/matches", color: "text-primary", bg: "hover:bg-primary/5" },
           { label: "내 기록", href: "/records", color: "text-[hsl(var(--accent))]", bg: "hover:bg-[hsl(var(--accent)/0.05)]" },
           { label: "회비 관리", href: "/dues", color: "text-[hsl(var(--info))]", bg: "hover:bg-[hsl(var(--info)/0.05)]" },
-          { label: "팀원 관리", href: "/members", color: "text-[hsl(var(--success))]", bg: "hover:bg-[hsl(var(--success)/0.05)]" },
+          { label: "회원 관리", href: "/members", color: "text-[hsl(var(--success))]", bg: "hover:bg-[hsl(var(--success)/0.05)]" },
         ].map((nav) => (
           <Link
             key={nav.href}
