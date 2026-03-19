@@ -150,7 +150,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
               const current = teams.find((t) => t.isCurrent);
               const st = current?.sportType ?? "SOCCER";
               return (
-                <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${st === "FUTSAL" ? "bg-violet-500/15 text-violet-400" : "bg-emerald-500/15 text-emerald-400"}`}>
+                <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${st === "FUTSAL" ? "bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]" : "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"}`}>
                   {st === "FUTSAL" ? "풋살" : "축구"}
                 </span>
               );
@@ -187,7 +187,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
         </div>
         <p className="text-xs text-muted-foreground">
           {viewAsRole ? (
-            <span className="text-amber-400">{roleLabel} 시점 체험 중</span>
+            <span className="text-[hsl(var(--warning))]">{roleLabel} 시점 체험 중</span>
           ) : (
             <>{roleLabel}</>
           )}
@@ -217,10 +217,10 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       <Separator className="my-4" />
       <SidebarNav items={navItems} />
       <Separator className="my-4" />
-      <Card className="border-amber-500/20 bg-amber-500/5">
+      <Card className="border-[hsl(var(--accent))]/20 bg-[hsl(var(--accent))]/5">
         <CardContent className="p-4">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-400">초대 코드</p>
-          <p className="mt-1 font-mono text-lg font-bold tracking-[0.2em] text-amber-300">{session.user.inviteCode}</p>
+          <p className="type-overline text-[hsl(var(--accent))]">초대 코드</p>
+          <p className="mt-1 font-mono text-lg font-bold tracking-[0.2em] text-[hsl(var(--accent))]">{session.user.inviteCode}</p>
           <p className="mt-2 text-xs text-muted-foreground">멤버에게 공유해 팀에 초대하세요.</p>
           <Button
             variant="outline"
@@ -265,7 +265,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                     const current = teams.find((t) => t.isCurrent);
                     const st = current?.sportType ?? "SOCCER";
                     return (
-                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${st === "FUTSAL" ? "bg-violet-500/15 text-violet-400" : "bg-emerald-500/15 text-emerald-400"}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${st === "FUTSAL" ? "bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]" : "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"}`}>
                         {st === "FUTSAL" ? "풋살" : "축구"}
                       </span>
                     );
@@ -306,8 +306,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             <Card className="hidden lg:block">
               <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-sky-400">팀 운영 현황</p>
-                  <h2 className="font-heading text-xl font-bold uppercase">오늘의 팀 운영 현황</h2>
+                  <h2 className="font-heading text-lg sm:text-xl font-bold uppercase">오늘의 팀 운영 현황</h2>
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" asChild>

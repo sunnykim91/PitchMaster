@@ -5,10 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Users, MessageSquare, Bell, BookOpen, Settings } from "lucide-react";
 
 const menuItems = [
-  { href: "/members", label: "회원 관리", desc: "멤버 목록 · 역할 관리", icon: Users, color: "text-cyan-400" },
-  { href: "/board", label: "게시판", desc: "공지 · 자유 게시판", icon: MessageSquare, color: "text-pink-400" },
-  { href: "/notifications", label: "알림", desc: "알림 센터", icon: Bell, color: "text-amber-400" },
-  { href: "/rules", label: "회칙", desc: "팀 규정 관리", icon: BookOpen, color: "text-violet-400" },
+  { href: "/members", label: "회원 관리", desc: "멤버 목록 · 역할 관리", icon: Users, color: "text-[hsl(var(--success))]" },
+  { href: "/board", label: "게시판", desc: "공지 · 자유 게시판", icon: MessageSquare, color: "text-primary" },
+  { href: "/notifications", label: "알림", desc: "알림 센터", icon: Bell, color: "text-[hsl(var(--warning))]" },
+  { href: "/rules", label: "회칙", desc: "팀 규정 관리", icon: BookOpen, color: "text-[hsl(var(--accent))]" },
   { href: "/settings", label: "설정", desc: "프로필 · 팀 설정", icon: Settings, color: "text-muted-foreground" },
 ];
 
@@ -17,8 +17,7 @@ export default function MoreClient() {
     <div className="grid gap-5 stagger-children">
       <Card>
         <CardContent className="p-6">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">More</p>
-          <h2 className="mt-1 font-heading text-2xl font-bold">더보기</h2>
+          <h2 className="font-heading text-lg sm:text-2xl font-bold uppercase">더보기</h2>
         </CardContent>
       </Card>
 

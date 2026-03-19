@@ -319,7 +319,7 @@ export default function SettingsClient({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase text-foreground">
+            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase text-foreground">
               개인 설정
             </CardTitle>
           </div>
@@ -388,7 +388,7 @@ export default function SettingsClient({
                               setProfile({ ...profile, preferredPositions: next });
                             }}
                             className={cn(
-                              "rounded-md border px-3 py-1.5 text-sm font-medium transition-all",
+                              "rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
                               profile.preferredPositions.includes(pos)
                                 ? "border-primary bg-primary/15 text-primary"
                                 : "border-input bg-transparent text-muted-foreground hover:border-primary/30 hover:text-foreground"
@@ -414,7 +414,7 @@ export default function SettingsClient({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase text-foreground">
+            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase text-foreground">
               팀 설정
             </CardTitle>
           </div>

@@ -237,22 +237,22 @@ export default function RecordsClient({
         return (
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">팀 전적</CardTitle>
+              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">팀 전적</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="flex items-center gap-4">
                   <div className="flex items-baseline gap-2">
-                    <span className="font-heading text-2xl font-bold text-emerald-400">{tr.wins}승</span>
-                    <span className="font-heading text-2xl font-bold text-muted-foreground">{tr.draws}무</span>
-                    <span className="font-heading text-2xl font-bold text-red-400">{tr.losses}패</span>
+                    <span className="type-stat text-[hsl(var(--win))]">{tr.wins}승</span>
+                    <span className="type-stat text-muted-foreground">{tr.draws}무</span>
+                    <span className="type-stat text-[hsl(var(--loss))]">{tr.losses}패</span>
                   </div>
                   <Badge variant="outline" className="text-xs">승률 {Math.round((tr.wins / total) * 100)}%</Badge>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <span>득점 <strong className="text-foreground">{tr.goalsFor}</strong></span>
                   <span>실점 <strong className="text-foreground">{tr.goalsAgainst}</strong></span>
-                  <span>득실차 <strong className={diff >= 0 ? "text-emerald-400" : "text-red-400"}>{diff >= 0 ? "+" : ""}{diff}</strong></span>
+                  <span>득실차 <strong className={diff >= 0 ? "text-[hsl(var(--win))]" : "text-[hsl(var(--loss))]"}>{diff >= 0 ? "+" : ""}{diff}</strong></span>
                 </div>
               </div>
               {tr.recent5.length > 0 && (
@@ -263,7 +263,7 @@ export default function RecordsClient({
                       key={i}
                       className={cn(
                         "flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold",
-                        r === "W" ? "bg-emerald-500/20 text-emerald-400" : r === "D" ? "bg-muted text-muted-foreground" : "bg-red-500/20 text-red-400"
+                        r === "W" ? "bg-[hsl(var(--win)/0.2)] text-[hsl(var(--win))]" : r === "D" ? "bg-muted text-muted-foreground" : "bg-[hsl(var(--loss)/0.2)] text-[hsl(var(--loss))]"
                       )}
                     >
                       {r === "W" ? "승" : r === "D" ? "무" : "패"}
@@ -282,7 +282,7 @@ export default function RecordsClient({
         <Card>
           <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
             <div>
-              <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">
+              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
                 내 기록
               </CardTitle>
             </div>
@@ -315,17 +315,17 @@ export default function RecordsClient({
             ) : (
               <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
                 {[
-                  { label: "득점", value: myStats.goals, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-                  { label: "어시스트", value: myStats.assists, color: "text-sky-400", bg: "bg-sky-500/10" },
-                  { label: "MVP", value: myStats.mvp, color: "text-amber-400", bg: "bg-amber-500/10" },
-                  { label: "출석률", value: `${Math.round(myStats.attendanceRate * 100)}%`, color: "text-violet-400", bg: "bg-violet-500/10" },
+                  { label: "득점", value: myStats.goals, color: "text-[hsl(var(--success))]", bg: "bg-[hsl(var(--success)/0.1)]" },
+                  { label: "어시스트", value: myStats.assists, color: "text-[hsl(var(--info))]", bg: "bg-[hsl(var(--info)/0.1)]" },
+                  { label: "MVP", value: myStats.mvp, color: "text-[hsl(var(--warning))]", bg: "bg-[hsl(var(--warning)/0.1)]" },
+                  { label: "출석률", value: `${Math.round(myStats.attendanceRate * 100)}%`, color: "text-[hsl(var(--accent))]", bg: "bg-[hsl(var(--accent)/0.1)]" },
                 ].map((item) => (
-                  <Card key={item.label} className={cn("border-0 p-4", item.bg)}>
-                    <p className="text-xs text-muted-foreground">{item.label}</p>
-                    <p className={cn("mt-1 font-heading text-2xl font-bold", item.color)}>
+                  <div key={item.label} className={cn("card-stat", item.bg)}>
+                    <p className="type-overline">{item.label}</p>
+                    <p className={cn("mt-1 type-stat", item.color)}>
                       {item.value}
                     </p>
-                  </Card>
+                  </div>
                 ))}
               </div>
             )}
@@ -335,7 +335,7 @@ export default function RecordsClient({
         {/* 시즌 요약 + 레이더 차트 */}
         <Card>
           <CardHeader>
-            <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+            <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
               시즌 요약
             </CardTitle>
           </CardHeader>
@@ -365,7 +365,7 @@ export default function RecordsClient({
       {/* ── Row 2: 팀 랭킹 (PC: 3열 가로 배치) ── */}
       <Card>
         <CardHeader>
-          <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+          <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
             팀 랭킹
           </CardTitle>
         </CardHeader>
@@ -405,19 +405,19 @@ export default function RecordsClient({
                         key={item.memberId}
                         className="flex items-center justify-between text-sm text-muted-foreground"
                       >
-                        <span className="flex items-center gap-2">
+                        <span className="flex items-center gap-2 min-w-0">
                           {index === 0 ? (
-                            <Badge variant="success" className="h-5 w-5 justify-center rounded-md px-0 py-0">
+                            <Badge variant="success" className="h-5 w-5 shrink-0 justify-center rounded-md px-0 py-0">
                               {index + 1}
                             </Badge>
                           ) : (
-                            <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-secondary text-xs font-bold text-muted-foreground">
+                            <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-secondary text-xs font-bold text-muted-foreground">
                               {index + 1}
                             </span>
                           )}
-                          {item.memberName ?? "-"}
+                          <span className="truncate">{item.memberName ?? "-"}</span>
                         </span>
-                        <span className="font-bold text-foreground">
+                        <span className="type-stat shrink-0 text-foreground">
                           {item[group.key]}
                         </span>
                       </div>
@@ -443,7 +443,7 @@ export default function RecordsClient({
       {/* ── Row 3: 전체 회원 기록 (풀와이드 테이블) ── */}
       <Card>
         <CardHeader>
-          <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+          <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
             전체 회원 기록
           </CardTitle>
         </CardHeader>
@@ -496,12 +496,12 @@ export default function RecordsClient({
                   {allStats.map((s, i) => (
                     <tr key={s.memberId} className={cn(s.memberId === userId && "bg-primary/5")}>
                       <td className="py-2.5 text-muted-foreground">{i + 1}</td>
-                      <td className="py-2.5 font-semibold">{s.memberName || "-"}</td>
+                      <td className="py-2.5 font-semibold max-w-[120px] truncate">{s.memberName || "-"}</td>
                       <td className="py-2.5 text-center font-bold text-primary">{s.points}</td>
-                      <td className="py-2.5 text-center text-emerald-400">{s.goals}</td>
-                      <td className="py-2.5 text-center text-sky-400">{s.assists}</td>
-                      <td className="py-2.5 text-center text-amber-400">{s.mvp}</td>
-                      <td className="py-2.5 text-center text-violet-400">{Math.round(s.attendanceRate * 100)}%</td>
+                      <td className="py-2.5 text-center text-[hsl(var(--success))]">{s.goals}</td>
+                      <td className="py-2.5 text-center text-[hsl(var(--info))]">{s.assists}</td>
+                      <td className="py-2.5 text-center text-[hsl(var(--warning))]">{s.mvp}</td>
+                      <td className="py-2.5 text-center text-[hsl(var(--accent))]">{Math.round(s.attendanceRate * 100)}%</td>
                     </tr>
                   ))}
                 </tbody>

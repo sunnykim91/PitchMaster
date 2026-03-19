@@ -212,7 +212,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
         <CardContent className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="mt-1 font-heading text-2xl font-bold uppercase text-foreground">회칙 관리</h2>
+              <h2 className="font-heading text-lg sm:text-2xl font-bold uppercase text-foreground">회칙 관리</h2>
             </div>
             <div className="flex flex-wrap gap-2">
               {(["ALL", ...categories] as const).map((category) => (
@@ -222,7 +222,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
                   variant={selectedCategory === category ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedCategory(category as RuleCategory | "ALL")}
-                  className="text-xs font-semibold"
+                  className="text-xs font-semibold rounded-full px-4"
                 >
                   {category === "ALL" ? "전체" : category}
                 </Button>
@@ -236,7 +236,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
       {isStaffOrAbove(role) && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="font-heading text-xl font-bold uppercase text-foreground">
+            <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase text-foreground">
               회칙 등록/수정
             </CardTitle>
           </CardHeader>
@@ -302,7 +302,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
       {/* Rules List */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="font-heading text-xl font-bold uppercase text-foreground">
+          <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase text-foreground">
             회칙 목록
           </CardTitle>
         </CardHeader>
@@ -312,14 +312,14 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
               <EmptyState icon={BookOpen} title="등록된 회칙이 없습니다" />
             ) : (
               filteredRules.map((rule) => (
-                <Card key={rule.id} className="border-0 bg-secondary">
+                <Card key={rule.id} className="border-0 bg-secondary transition-colors hover:bg-[hsl(240_4%_18%)]">
                   <CardContent className="p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <Badge variant="default" className="text-[11px] uppercase tracking-[0.2em]">
                           {rule.category}
                         </Badge>
-                        <h4 className="mt-2 text-lg font-bold text-foreground">{rule.title}</h4>
+                        <h4 className="mt-2 text-lg font-bold text-foreground truncate">{rule.title}</h4>
                         <p className="mt-2 text-sm text-foreground/80">{rule.content}</p>
                         <p className="mt-3 text-xs text-muted-foreground">
                           등록: {rule.createdAt} · 수정: {rule.updatedAt}

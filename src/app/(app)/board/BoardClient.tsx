@@ -377,7 +377,7 @@ export default function BoardClient({
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4 pb-0">
           <div>
-            <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">
+            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">
               게시판
             </CardTitle>
           </div>
@@ -389,6 +389,7 @@ export default function BoardClient({
                 size="sm"
                 variant={filter === value ? "default" : "outline"}
                 onClick={() => setFilter(value)}
+                className="rounded-full px-4"
               >
                 {value === "ALL" ? "전체" : value === "FREE" ? "자유" : "사진"}
               </Button>
@@ -400,7 +401,7 @@ export default function BoardClient({
       {/* New / Edit Post Form */}
       <Card>
         <CardHeader>
-          <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+          <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase">
             {editingPostId ? "게시글 수정" : "게시글 작성"}
           </CardTitle>
         </CardHeader>
@@ -494,7 +495,7 @@ export default function BoardClient({
       {/* Post List */}
       <Card>
         <CardHeader>
-          <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+          <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase">
             최근 게시글
           </CardTitle>
         </CardHeader>
@@ -508,14 +509,14 @@ export default function BoardClient({
               const isLoadingComments = loadingComments.has(post.id);
               const canModifyPost = post.authorId === userId || isStaff;
               return (
-                <Card key={post.id} className="border-0 bg-secondary">
+                <Card key={post.id} className="border-0 bg-secondary transition-colors hover:bg-[hsl(240_4%_18%)]">
                   <CardContent className="p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <Badge variant="default">
                           {post.category === "FREE" ? "자유" : "사진"}
                         </Badge>
-                        <h4 className="mt-2 text-lg font-bold">{post.title}</h4>
+                        <h4 className="mt-2 text-lg font-bold truncate">{post.title}</h4>
                         <p className="mt-2 text-sm text-muted-foreground">{post.content}</p>
                         {post.imageUrls && post.imageUrls.length > 0 && (
                           <Image
@@ -586,11 +587,11 @@ export default function BoardClient({
                             {postComments.map((comment) => {
                               const canDeleteComment = comment.authorId === userId || isStaff;
                               return (
-                                <Card key={comment.id} className="border-0 bg-muted/50">
+                                <Card key={comment.id} className="border-0 bg-muted/30">
                                   <CardContent className="px-3 py-2">
                                     <div className="flex items-start justify-between gap-2">
                                       <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-bold">{comment.authorName}</p>
+                                        <p className="text-xs font-bold truncate">{comment.authorName}</p>
                                         <p className="text-sm text-muted-foreground">{comment.content}</p>
                                         <p className="mt-1 text-xs text-muted-foreground">{comment.createdAt}</p>
                                       </div>

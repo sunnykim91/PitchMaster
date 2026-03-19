@@ -175,7 +175,7 @@ export default function NotificationsClient({ initialData }: { initialData: Init
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">
+              <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">
                 알림 센터
               </CardTitle>
             </div>
@@ -194,7 +194,7 @@ export default function NotificationsClient({ initialData }: { initialData: Init
       {/* Notification Settings */}
       <Card>
         <CardHeader>
-          <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+          <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase">
             알림 수신 설정
           </CardTitle>
         </CardHeader>
@@ -235,7 +235,7 @@ export default function NotificationsClient({ initialData }: { initialData: Init
       {/* Recent Notifications */}
       <Card>
         <CardHeader>
-          <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+          <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase">
             최근 알림
           </CardTitle>
         </CardHeader>
@@ -251,13 +251,13 @@ export default function NotificationsClient({ initialData }: { initialData: Init
                     "transition",
                     notification.isRead
                       ? "border-0 bg-secondary"
-                      : "border-sky-500/20 bg-sky-500/5"
+                      : "border-l-2 border-l-[hsl(var(--primary))] border-[hsl(var(--info))]/20 bg-[hsl(var(--info))]/5"
                   )}
                 >
                   <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
                     <div>
-                      <p className="text-sm font-semibold">{notification.title}</p>
-                      <p className="text-xs text-muted-foreground">{notification.message}</p>
+                      <p className="text-sm font-semibold truncate">{notification.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{notification.message}</p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {notification.createdAt}
                       </p>

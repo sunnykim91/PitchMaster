@@ -156,6 +156,21 @@ const SPECIAL_PLAYERS = [
 const WEATHER_OPTIONS = ["맑음", "흐림", "비", "눈", "바람"] as const;
 const CONDITION_OPTIONS = ["최상", "좋음", "보통", "나쁨", "최악"] as const;
 
+const voteStyles = {
+  ATTEND: {
+    active: "bg-[hsl(var(--success))] text-white shadow-[0_2px_8px_-2px_hsl(var(--success)/0.4)]",
+    inactive: "bg-[hsl(var(--success)/0.08)] text-[hsl(var(--success))] border border-[hsl(var(--success)/0.2)] hover:bg-[hsl(var(--success)/0.15)]",
+  },
+  MAYBE: {
+    active: "bg-[hsl(var(--warning))] text-[hsl(240_6%_6%)] shadow-[0_2px_8px_-2px_hsl(var(--warning)/0.4)]",
+    inactive: "bg-white/[0.04] text-muted-foreground border border-white/[0.06] hover:bg-white/[0.08]",
+  },
+  ABSENT: {
+    active: "bg-[hsl(var(--loss))] text-white shadow-[0_2px_8px_-2px_hsl(var(--loss)/0.4)]",
+    inactive: "bg-white/[0.04] text-muted-foreground border border-white/[0.06] hover:bg-white/[0.08]",
+  },
+};
+
 const emptyMatch: Match = {
   id: "",
   date: "",
@@ -720,22 +735,27 @@ export default function MatchDetailClient({
                     {myVote === "ATTEND" ? "참석" : myVote === "ABSENT" ? "불참" : myVote === "MAYBE" ? "미정" : "미투표"}
                   </p>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-2">
                   {([
-                    { value: "ATTEND" as const, label: "참석", variant: "success" as const },
-                    { value: "MAYBE" as const, label: "미정", variant: "warning" as const },
-                    { value: "ABSENT" as const, label: "불참", variant: "destructive" as const },
-                  ]).map((opt) => (
-                    <Button
-                      key={opt.value}
-                      type="button"
-                      variant={myVote === opt.value ? opt.variant : "outline"}
-                      size="default"
-                      onClick={() => handleProxyVote(myMember.memberId, opt.value)}
-                    >
-                      {opt.label}
-                    </Button>
-                  ))}
+                    { value: "ATTEND" as const, label: "참석" },
+                    { value: "MAYBE" as const, label: "미정" },
+                    { value: "ABSENT" as const, label: "불참" },
+                  ]).map((opt) => {
+                    const isSelected = myVote === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={cn(
+                          "rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-105",
+                          isSelected ? voteStyles[opt.value].active : voteStyles[opt.value].inactive
+                        )}
+                        onClick={() => handleProxyVote(myMember.memberId, opt.value)}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </CardContent>
@@ -747,10 +767,10 @@ export default function MatchDetailClient({
       {canManage && match.status !== "COMPLETED" && (
         <Card>
           <CardHeader>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-400">
+            <p className="type-overline text-[hsl(var(--info))]">
               Attendance
             </p>
-            <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+            <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
               참석 투표 관리
             </CardTitle>
             <p className="text-xs text-muted-foreground">멤버별 참석/불참/미정을 대리 설정할 수 있습니다.</p>
@@ -762,9 +782,9 @@ export default function MatchDetailClient({
               const noVote = baseRoster.length - attend - absent - maybe;
               return (
                 <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold">
-                  <span className="text-emerald-400">참석 {attend}</span>
-                  <span className="text-red-400">불참 {absent}</span>
-                  <span className="text-amber-400">미정 {maybe}</span>
+                  <span className="text-[hsl(var(--success))]">참석 {attend}</span>
+                  <span className="text-[hsl(var(--loss))]">불참 {absent}</span>
+                  <span className="text-[hsl(var(--warning))]">미정 {maybe}</span>
                   <span className="text-muted-foreground">미투표 {noVote}</span>
                   <span className="text-muted-foreground/50">· 총 {baseRoster.length}명</span>
                 </div>
@@ -784,28 +804,33 @@ export default function MatchDetailClient({
                 const currentVote = memberVoteMap[member.memberId];
                 return (
                   <div key={member.id} className="flex items-center justify-between rounded-lg bg-secondary px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold">{member.name}</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-sm font-semibold truncate">{member.name}</span>
                       {!member.isLinked && (
                         <Badge variant="outline" className="text-[10px] text-muted-foreground">미연동</Badge>
                       )}
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1.5">
                       {([
-                        { value: "ATTEND" as const, label: "참석", variant: "success" as const },
-                        { value: "MAYBE" as const, label: "미정", variant: "warning" as const },
-                        { value: "ABSENT" as const, label: "불참", variant: "destructive" as const },
-                      ]).map((opt) => (
-                        <Button
-                          key={opt.value}
-                          type="button"
-                          variant={currentVote === opt.value ? opt.variant : "outline"}
-                          size="default"
-                          onClick={() => handleProxyVote(member.memberId, opt.value)}
-                        >
-                          {opt.label}
-                        </Button>
-                      ))}
+                        { value: "ATTEND" as const, label: "참석" },
+                        { value: "MAYBE" as const, label: "미정" },
+                        { value: "ABSENT" as const, label: "불참" },
+                      ]).map((opt) => {
+                        const isSelected = currentVote === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            className={cn(
+                              "rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200 active:scale-105",
+                              isSelected ? voteStyles[opt.value].active : voteStyles[opt.value].inactive
+                            )}
+                            onClick={() => handleProxyVote(member.memberId, opt.value)}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -820,10 +845,10 @@ export default function MatchDetailClient({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-orange-400">
+            <p className="type-overline text-[hsl(var(--accent))]">
               Guests
             </p>
-            <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+            <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
               용병 관리
             </CardTitle>
           </div>
@@ -898,7 +923,7 @@ export default function MatchDetailClient({
                 >
                   <CardContent className="flex items-center justify-between px-4 py-3">
                     <div>
-                      <p className="text-sm font-semibold">
+                      <p className="text-sm font-semibold truncate">
                         {guest.name}
                         {guest.position && (
                           <Badge variant="outline" className="ml-2 text-[10px]">
@@ -948,7 +973,7 @@ export default function MatchDetailClient({
               <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
                 AI Recommendation
               </p>
-              <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+              <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
                 AI 포메이션 추천
               </CardTitle>
             </CardHeader>
@@ -1044,10 +1069,10 @@ export default function MatchDetailClient({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-sky-400">
+              <p className="type-overline text-[hsl(var(--info))]">
                 Goals
               </p>
-              <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+              <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
                 골/어시스트 기록
               </CardTitle>
             </div>
@@ -1062,7 +1087,7 @@ export default function MatchDetailClient({
               <Card className="border-0 bg-secondary shadow-none">
                 <CardContent className="p-4">
                   {editingGoalId && (
-                    <div className="mb-3 flex items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-500">
+                    <div className="mb-3 flex items-center gap-2 rounded-lg bg-[hsl(var(--warning)/0.1)] px-3 py-2 text-xs font-bold text-[hsl(var(--warning))]">
                       <span>기록 수정 중</span>
                       <button
                         type="button"
@@ -1209,7 +1234,7 @@ export default function MatchDetailClient({
                   >
                     <CardContent className="flex items-center justify-between px-4 py-3">
                       <div>
-                        <p className="text-sm font-semibold">
+                        <p className="text-sm font-semibold truncate">
                           {resolvePlayerName(goal.scorerId)}
                         </p>
                         <p className="text-xs text-muted-foreground">
@@ -1249,10 +1274,10 @@ export default function MatchDetailClient({
           {/* ── MVP 투표 ── */}
           <Card>
             <CardHeader>
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-sky-400">
+              <p className="type-overline text-[hsl(var(--info))]">
                 MVP
               </p>
-              <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+              <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
                 MVP 투표
               </CardTitle>
             </CardHeader>
@@ -1267,7 +1292,7 @@ export default function MatchDetailClient({
                     className="flex w-full items-center justify-between"
                     onClick={() => handleVote(player.id)}
                   >
-                    <span className="font-semibold">{player.name}</span>
+                    <span className="font-semibold truncate">{player.name}</span>
                     <Badge
                       variant={
                         votes[userId] === player.id ? "secondary" : "outline"
@@ -1290,10 +1315,10 @@ export default function MatchDetailClient({
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
+                  <p className="type-overline">
                     Attendance
                   </p>
-                  <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+                  <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
                     출석 체크
                   </CardTitle>
                 </div>
@@ -1325,7 +1350,7 @@ export default function MatchDetailClient({
                         className="border-0 bg-secondary shadow-none"
                       >
                         <CardContent className="flex items-center justify-between px-4 py-3">
-                          <span className="text-sm font-semibold">
+                          <span className="text-sm font-semibold truncate">
                             {player.name}
                           </span>
                           <div className="flex gap-1">
@@ -1386,10 +1411,10 @@ export default function MatchDetailClient({
       {/* ── 경기 결과 공유 ── */}
       <Card>
         <CardHeader>
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
+          <p className="type-overline">
             Share
           </p>
-          <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+          <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
             경기 결과 공유
           </CardTitle>
         </CardHeader>
@@ -1400,10 +1425,10 @@ export default function MatchDetailClient({
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
                 PitchMaster
               </p>
-              <p className="mt-2 font-heading text-2xl font-bold">
+              <p className="mt-2 type-score text-foreground">
                 {score}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground truncate">
                 {match.opponent ? `vs ${match.opponent}` : "친선 경기"}
               </p>
               <p className="text-xs text-muted-foreground">
@@ -1449,10 +1474,10 @@ export default function MatchDetailClient({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-400">
+            <p className="type-overline text-[hsl(var(--info))]">
               Match Diary
             </p>
-            <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+            <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
               경기 일지
             </CardTitle>
           </div>
@@ -1542,10 +1567,10 @@ export default function MatchDetailClient({
                       className={cn(
                         "text-xs",
                         diary.condition === "최상" || diary.condition === "좋음"
-                          ? "border-emerald-500/30 text-emerald-400"
+                          ? "border-[hsl(var(--success)/0.3)] text-[hsl(var(--success))]"
                           : diary.condition === "보통"
-                          ? "border-amber-500/30 text-amber-400"
-                          : "border-rose-500/30 text-rose-400"
+                          ? "border-[hsl(var(--warning)/0.3)] text-[hsl(var(--warning))]"
+                          : "border-[hsl(var(--loss)/0.3)] text-[hsl(var(--loss))]"
                       )}
                     >
                       컨디션: {diary.condition}

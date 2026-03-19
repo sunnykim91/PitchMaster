@@ -40,9 +40,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             key={toast.id}
             className={cn(
               "rounded-lg px-4 py-3 text-sm font-medium shadow-lg animate-in slide-in-from-bottom-2 duration-200",
-              toast.variant === "success" && "bg-emerald-500 text-white",
+              toast.variant === "success" && "bg-[hsl(var(--success))] text-white",
               toast.variant === "error" && "bg-destructive text-destructive-foreground",
-              toast.variant === "info" && "bg-blue-500 text-white",
+              toast.variant === "info" && "bg-[hsl(var(--info))] text-white",
             )}
           >
             {toast.message}

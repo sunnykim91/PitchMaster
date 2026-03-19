@@ -235,7 +235,7 @@ export default function MembersClient({
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">회원 관리</CardTitle>
+              <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">회원 관리</CardTitle>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="px-4 py-2 text-xs font-bold">
@@ -294,16 +294,16 @@ export default function MembersClient({
 
           <div className="grid gap-3 md:grid-cols-3">
             {([
-              { label: "회장", value: stats.PRESIDENT, color: "text-amber-400", bg: "bg-amber-500/10" },
-              { label: "운영진", value: stats.STAFF, color: "text-sky-400", bg: "bg-sky-500/10" },
-              { label: "평회원", value: stats.MEMBER, color: "text-teal-400", bg: "bg-teal-500/10" },
+              { label: "회장", value: stats.PRESIDENT, color: "text-[hsl(var(--warning))]" },
+              { label: "운영진", value: stats.STAFF, color: "text-[hsl(var(--info))]" },
+              { label: "평회원", value: stats.MEMBER, color: "text-[hsl(var(--success))]" },
             ] as const).map((item) => (
-              <Card key={item.label} className={cn("border-0 p-4", item.bg)}>
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-                <p className={cn("mt-1 font-heading text-2xl font-bold", item.color)}>
+              <div key={item.label} className="card-stat">
+                <p className="type-overline">{item.label}</p>
+                <p className={cn("mt-1 type-stat", item.color)}>
                   {item.value}명
                 </p>
-              </Card>
+              </div>
             ))}
           </div>
         </CardContent>
@@ -313,7 +313,7 @@ export default function MembersClient({
       {unlinkedMembers.length > 0 && canViewAll && (
         <Card>
           <CardHeader>
-            <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+            <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase">
               미연동 멤버 ({unlinkedMembers.length}명)
             </CardTitle>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -325,12 +325,12 @@ export default function MembersClient({
               {unlinkedMembers.map((member) => (
                 <Card
                   key={member.id}
-                  className="flex flex-wrap items-center justify-between gap-4 border-amber-500/20 bg-amber-500/5 px-4 py-3"
+                  className="flex flex-wrap items-center justify-between gap-4 border-[hsl(var(--warning))]/20 bg-[hsl(var(--warning))]/5 px-4 py-3"
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold">{member.name}</p>
-                      <Badge variant="outline" className="border-amber-500/30 text-amber-500 text-[10px]">
+                      <p className="text-sm font-semibold truncate">{member.name}</p>
+                      <Badge variant="outline" className="border-[hsl(var(--warning))]/30 text-[hsl(var(--warning))] text-[10px] shrink-0">
                         미연동
                       </Badge>
                     </div>
@@ -400,7 +400,7 @@ export default function MembersClient({
       {/* ── Section 3: 멤버 목록 ── */}
       <Card>
         <CardHeader>
-          <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+          <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase">
             멤버 목록
           </CardTitle>
           {!canViewAll && (
@@ -422,12 +422,12 @@ export default function MembersClient({
           </div>
           <div className="space-y-2">
             {filteredLinkedMembers.map((member) => (
-              <Card
+              <div
                 key={member.id}
-                className="flex flex-wrap items-center justify-between gap-4 bg-secondary border-0 px-4 py-3"
+                className="card-list-item flex flex-wrap items-center justify-between gap-4"
               >
-                <div>
-                  <p className="text-sm font-semibold">{member.name}</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold truncate">{member.name}</p>
                   {canViewAll ? (
                     <p className="text-xs text-muted-foreground">
                       {formatPhone(member.phone)} · {member.birthDate}
@@ -475,7 +475,7 @@ export default function MembersClient({
                     </Button>
                   ) : null}
                 </div>
-              </Card>
+              </div>
             ))}
             {linkedMembers.length === 0 && (
               <EmptyState icon={Users} title="가입된 멤버가 없습니다" description="초대 코드를 공유해보세요." />

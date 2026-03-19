@@ -40,7 +40,7 @@ export default async function LoginPage({
       {/* 배경 장식 */}
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500/5 blur-3xl" />
       </div>
 
@@ -89,7 +89,7 @@ export default async function LoginPage({
       <section className="relative border-t border-border/30 bg-primary/5">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-8 px-6 py-8 md:gap-16">
           {[
-            { value: "87+", label: "관리된 경기", color: "text-emerald-400" },
+            { value: "87+", label: "관리된 경기", color: "text-primary" },
             { value: "1,200+", label: "참석 투표", color: "text-sky-400" },
             { value: "37", label: "팀 멤버", color: "text-violet-400" },
             { value: "3개월", label: "운영 기간", color: "text-amber-400" },
@@ -173,7 +173,7 @@ export default async function LoginPage({
           <div className="mt-12 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
             {[
               { label: "대시보드", desc: "다음 경기, 투표 현황, 팀 전적을 한눈에", color: "border-sky-500/30", bg: "bg-sky-500/5" },
-              { label: "경기 일정", desc: "실시간 투표 + 승/무/패 스코어 표시", color: "border-emerald-500/30", bg: "bg-emerald-500/5" },
+              { label: "경기 일정", desc: "실시간 투표 + 승/무/패 스코어 표시", color: "border-primary/30", bg: "bg-primary/5" },
               { label: "팀 전적", desc: "승/무/패 · 득실차 · 최근 5경기 기록", color: "border-rose-500/30", bg: "bg-rose-500/5" },
               { label: "내 기록", desc: "레이더 차트 + 시즌 랭킹 시각화", color: "border-violet-500/30", bg: "bg-violet-500/5" },
               { label: "AI 라인업", desc: "선호 포지션 분석 → 자동 추천 + 심판/촬영 배정", color: "border-purple-500/30", bg: "bg-purple-500/5" },
@@ -336,7 +336,7 @@ export default async function LoginPage({
                   backgroundImage: [
                     "repeating-linear-gradient(180deg, rgba(255,255,255,0) 0px, rgba(255,255,255,0) 38px, rgba(255,255,255,0.06) 38px, rgba(255,255,255,0.06) 76px)",
                     "repeating-linear-gradient(90deg, rgba(0,0,0,0.02) 0px, transparent 2px, transparent 4px)",
-                    "radial-gradient(ellipse at 50% 50%, rgba(34,197,94,0.15) 0%, transparent 70%)",
+                    "radial-gradient(ellipse at 50% 50%, hsl(16 85% 58% / 0.15) 0%, transparent 70%)",
                   ].join(", "),
                 }}
               >
@@ -432,7 +432,7 @@ export default async function LoginPage({
                 icon: "📡",
                 title: "실시간 동기화",
                 desc: "참석 투표, 골 기록, MVP 투표가 실시간 반영. 새로고침 불필요.",
-                color: "text-emerald-400",
+                color: "text-primary",
               },
               {
                 icon: "📊",

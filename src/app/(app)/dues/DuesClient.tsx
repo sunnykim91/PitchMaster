@@ -729,15 +729,15 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       {/* ── Section 1: 회비 현황 (always visible) ── */}
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="mt-1 font-heading text-2xl font-bold uppercase text-foreground">
+          <h2 className="font-heading text-lg sm:text-2xl font-bold uppercase text-foreground">
             회비 현황
           </h2>
         </div>
 
-        <Card className="mt-5 border-blue-500/20 bg-blue-500/10 p-5">
+        <div className="card-featured mt-5">
           <div>
-            <p className="text-xs text-blue-400/80">통장 잔고</p>
-            <p className="mt-1 font-heading text-3xl font-bold text-blue-300">
+            <p className="type-overline">통장 잔고</p>
+            <p className="mt-1 type-score text-[hsl(var(--primary))]">
               {summaryData.balance !== null
                 ? `${summaryData.balance.toLocaleString()}원`
                 : "스크린샷을 업로드하면 자동 반영됩니다"}
@@ -748,7 +748,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
               </p>
             )}
           </div>
-        </Card>
+        </div>
       </Card>
 
       {/* ── Dues Tab Bar ── */}
@@ -792,7 +792,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       )}
       {isFormOpen ? (
         <Card className="p-6">
-          <h3 className="mt-1 font-heading text-lg font-bold uppercase text-foreground">
+          <h3 className="font-heading text-base sm:text-lg font-bold uppercase text-foreground">
             입출금 기록 입력
           </h3>
 
@@ -909,7 +909,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       <>
       {/* ── Section 2.5: 스크린샷 일괄 등록 ── */}
         <Card className="p-6" ref={bulkSectionRef}>
-          <h3 className="mt-1 font-heading text-lg font-bold uppercase text-foreground">
+          <h3 className="font-heading text-base sm:text-lg font-bold uppercase text-foreground">
             스크린샷 보고 일괄 등록
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -918,7 +918,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           {ocrLoading && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
               <div className="flex flex-col items-center gap-3 rounded-2xl bg-background p-8 shadow-2xl">
-                <span className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-blue-400" />
+                <span className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-[hsl(var(--info))]" />
                 <p className="text-base font-semibold text-foreground">OCR 분석 중...</p>
                 <p className="text-sm text-muted-foreground">은행 앱 스크린샷을 인식하고 있습니다.</p>
               </div>
@@ -929,7 +929,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
               "mt-2 rounded-lg px-3 py-2 text-xs font-medium",
               ocrStatus.includes("오류") || ocrStatus.includes("못했") || ocrStatus.includes("실패")
                 ? "bg-destructive/10 text-destructive"
-                : "bg-emerald-500/10 text-emerald-400"
+                : "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]"
             )}>
               {ocrStatus}
             </div>
@@ -1036,7 +1036,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 className="mt-1 font-heading text-xl font-bold uppercase text-foreground">
+            <h3 className="font-heading text-lg sm:text-xl font-bold uppercase text-foreground">
               입출금 내역
             </h3>
           </div>
@@ -1124,15 +1124,15 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                 </form>
               </Card>
             ) : (
-              <Card
+              <div
                 key={record.id}
-                className="flex flex-wrap items-center justify-between gap-3 border-0 bg-secondary px-4 py-3"
+                className="card-list-item flex flex-wrap items-center justify-between gap-3"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground">
+                  <p className="text-sm font-semibold text-foreground truncate">
                     {record.description}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground truncate">
                     {record.recordedAt.split("T")[0]}
                     {record.memberName ? ` · ${record.memberName}` : ""}
                   </p>
@@ -1141,10 +1141,10 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                   <Badge
                     variant="secondary"
                     className={cn(
-                      "rounded-lg px-3 py-1 text-xs font-bold",
+                      "rounded-lg px-3 py-1 text-xs font-bold font-[family-name:var(--font-display)]",
                       record.type === "INCOME"
-                        ? "bg-emerald-500/15 text-emerald-400"
-                        : "bg-rose-500/15 text-rose-400"
+                        ? "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"
+                        : "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]"
                     )}
                   >
                     {record.type === "INCOME" ? "+" : "-"}
@@ -1169,7 +1169,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                     </>
                   )}
                 </div>
-              </Card>
+              </div>
             )
           )}
         </div>
@@ -1183,7 +1183,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 className="mt-1 font-heading text-xl font-bold uppercase text-foreground">
+            <h3 className="font-heading text-lg sm:text-xl font-bold uppercase text-foreground">
               회비 기준 설정
             </h3>
           </div>
@@ -1332,7 +1332,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 className="mt-1 font-heading text-xl font-bold uppercase text-foreground">
+            <h3 className="font-heading text-lg sm:text-xl font-bold uppercase text-foreground">
               벌금 관리
             </h3>
           </div>
@@ -1359,24 +1359,24 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
 
         {/* 벌금 현황 요약 */}
         <div className="mt-5 grid gap-3 md:grid-cols-3">
-          <Card className="border-0 bg-rose-500/10 p-4">
-            <p className="text-xs text-rose-400/80">총 벌금</p>
-            <p className="mt-1 font-heading text-2xl font-bold text-rose-400">
+          <div className="card-stat">
+            <p className="type-overline">총 벌금</p>
+            <p className="mt-1 type-stat text-[hsl(var(--loss))]">
               {penaltySummary.total.toLocaleString()}원
             </p>
-          </Card>
-          <Card className="border-0 bg-emerald-500/10 p-4">
-            <p className="text-xs text-emerald-400/80">납부 완료</p>
-            <p className="mt-1 font-heading text-2xl font-bold text-emerald-400">
+          </div>
+          <div className="card-stat">
+            <p className="type-overline">납부 완료</p>
+            <p className="mt-1 type-stat text-[hsl(var(--success))]">
               {penaltySummary.paid.toLocaleString()}원
             </p>
-          </Card>
-          <Card className="border-0 bg-amber-500/10 p-4">
-            <p className="text-xs text-amber-400/80">미납</p>
-            <p className="mt-1 font-heading text-2xl font-bold text-amber-300">
+          </div>
+          <div className="card-stat">
+            <p className="type-overline">미납</p>
+            <p className="mt-1 type-stat text-[hsl(var(--warning))]">
               {penaltySummary.unpaid.toLocaleString()}원
             </p>
-          </Card>
+          </div>
         </div>
 
         {/* 벌금 규칙 관리 (collapsible, staff only) */}
@@ -1413,7 +1413,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                 <Card key={rule.id} className="border-0 bg-secondary">
                   <CardContent className="flex items-center justify-between px-4 py-3">
                     <div>
-                      <p className="text-sm font-bold text-foreground">{rule.name}</p>
+                      <p className="text-sm font-bold text-foreground truncate">{rule.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {rule.amount.toLocaleString()}원
                         {rule.description ? ` · ${rule.description}` : ""}
@@ -1491,7 +1491,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
               >
                 <div className="min-w-0">
                   <p className={cn(
-                    "text-sm font-semibold",
+                    "text-sm font-semibold truncate",
                     record.isPaid ? "text-muted-foreground line-through" : "text-foreground"
                   )}>
                     {record.memberName} — {record.ruleName}
@@ -1505,10 +1505,10 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                   <Badge
                     variant="secondary"
                     className={cn(
-                      "rounded-lg px-3 py-1 text-xs font-bold",
+                      "rounded-lg px-3 py-1 text-xs font-bold font-[family-name:var(--font-display)]",
                       record.isPaid
-                        ? "bg-emerald-500/15 text-emerald-400"
-                        : "bg-rose-500/15 text-rose-400"
+                        ? "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"
+                        : "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]"
                     )}
                   >
                     {record.isPaid ? "납부" : "미납"} {record.amount.toLocaleString()}원

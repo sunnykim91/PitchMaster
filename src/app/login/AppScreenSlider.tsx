@@ -14,7 +14,7 @@ const screens = [
           <p className="mt-1 text-sm font-bold text-white">2026-03-18 · 20:00</p>
           <p className="text-[11px] text-white/60">어린이대공원축구장 · vs Zelous</p>
           <div className="mt-2 flex gap-1.5">
-            <span className="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400">참석 9</span>
+            <span className="rounded bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary">참석 9</span>
             <span className="rounded bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-400">불참 12</span>
           </div>
         </div>
@@ -36,7 +36,7 @@ const screens = [
   {
     title: "실시간 참석 투표",
     tag: "실시간",
-    color: "text-emerald-400",
+    color: "text-primary",
     content: (
       <div className="space-y-2">
         <div className="rounded-lg bg-white/5 p-3">
@@ -44,13 +44,13 @@ const screens = [
           <p className="text-[10px] text-white/50">어린이대공원축구장</p>
         </div>
         <div className="flex gap-1.5">
-          <button className="flex-1 rounded-lg bg-emerald-500 py-2 text-xs font-bold text-white">참석</button>
+          <button className="flex-1 rounded-lg bg-primary py-2 text-xs font-bold text-white">참석</button>
           <button className="flex-1 rounded-lg bg-white/10 py-2 text-xs font-bold text-white/50">불참</button>
           <button className="flex-1 rounded-lg bg-white/10 py-2 text-xs font-bold text-white/50">미정</button>
         </div>
         <p className="text-[10px] text-white/40">내 투표: 참석</p>
         <div className="mt-1 flex items-center justify-between text-[11px]">
-          <span className="font-bold text-emerald-400">참석 9</span>
+          <span className="font-bold text-primary">참석 9</span>
           <span className="text-white/30">·</span>
           <span className="font-bold text-red-400">불참 12</span>
           <span className="text-white/30">·</span>
@@ -58,14 +58,14 @@ const screens = [
         </div>
         <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/10">
           <div className="flex h-full">
-            <div className="bg-emerald-500" style={{ width: "37.5%" }} />
+            <div className="bg-primary" style={{ width: "37.5%" }} />
             <div className="bg-red-500" style={{ width: "50%" }} />
             <div className="bg-amber-500" style={{ width: "12.5%" }} />
           </div>
         </div>
-        <div className="mt-2 flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-2">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-          <p className="text-[10px] text-emerald-400">실시간 동기화 중</p>
+        <div className="mt-2 flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+          <p className="text-[10px] text-primary">실시간 동기화 중</p>
         </div>
       </div>
     ),
@@ -78,7 +78,7 @@ const screens = [
       <div className="space-y-3">
         <div className="grid grid-cols-4 gap-2">
           {[
-            { label: "득점", value: "5", color: "text-emerald-400", bg: "bg-emerald-500/10" },
+            { label: "득점", value: "5", color: "text-primary", bg: "bg-primary/10" },
             { label: "어시", value: "3", color: "text-sky-400", bg: "bg-sky-500/10" },
             { label: "MVP", value: "2", color: "text-amber-400", bg: "bg-amber-500/10" },
             { label: "출석", value: "80%", color: "text-violet-400", bg: "bg-violet-500/10" },
@@ -105,13 +105,13 @@ const screens = [
         </div>
         <div className="space-y-1.5">
           {[
-            { rank: 1, name: "김선휘", goals: 8, color: "text-emerald-400" },
+            { rank: 1, name: "김선휘", goals: 8, color: "text-primary" },
             { rank: 2, name: "장석민", goals: 5, color: "text-white/70" },
             { rank: 3, name: "황석훈", goals: 3, color: "text-white/50" },
           ].map((r) => (
             <div key={r.rank} className="flex items-center justify-between text-[11px]">
               <span className="flex items-center gap-2">
-                <span className={`flex h-4 w-4 items-center justify-center rounded text-[9px] font-bold ${r.rank === 1 ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-white/40"}`}>{r.rank}</span>
+                <span className={`flex h-4 w-4 items-center justify-center rounded text-[9px] font-bold ${r.rank === 1 ? "bg-primary/20 text-primary" : "bg-white/5 text-white/40"}`}>{r.rank}</span>
                 <span className="text-white/80">{r.name}</span>
               </span>
               <span className={`font-bold ${r.color}`}>{r.goals}골</span>
@@ -127,8 +127,8 @@ const screens = [
     color: "text-purple-400",
     content: (
       <div className="space-y-3">
-        <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
-          <p className="text-[10px] font-bold text-emerald-400">AI 추천</p>
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+          <p className="text-[10px] font-bold text-primary">AI 추천</p>
           <p className="mt-1 text-xs font-bold text-white">4-3-3 배치 추천</p>
           <p className="text-[10px] text-white/50">선호 포지션 일치 8/10명</p>
         </div>
@@ -145,18 +145,18 @@ const screens = [
             <div key={i} className="absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500 shadow-md shadow-blue-500/30" style={{ left: `${p.x}%`, top: `${p.y}%` }} />
           ))}
         </div>
-        <button className="w-full rounded-lg bg-emerald-500 py-2 text-xs font-bold text-white">추천 배치 적용하기</button>
+        <button className="w-full rounded-lg bg-primary py-2 text-xs font-bold text-white">추천 배치 적용하기</button>
       </div>
     ),
   },
   {
     title: "팀 전적",
     tag: "통계",
-    color: "text-emerald-400",
+    color: "text-primary",
     content: (
       <div className="space-y-3">
         <div className="flex items-baseline gap-2">
-          <span className="text-xl font-bold text-emerald-400">9승</span>
+          <span className="text-xl font-bold text-primary">9승</span>
           <span className="text-xl font-bold text-white/40">0무</span>
           <span className="text-xl font-bold text-red-400">1패</span>
           <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white/60">승률 90%</span>
@@ -164,19 +164,19 @@ const screens = [
         <div className="flex gap-3 text-[11px] text-white/50">
           <span>득점 <strong className="text-white">63</strong></span>
           <span>실점 <strong className="text-white">28</strong></span>
-          <span>득실차 <strong className="text-emerald-400">+35</strong></span>
+          <span>득실차 <strong className="text-primary">+35</strong></span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] text-white/40">최근 5경기</span>
           {["승", "패", "승", "승", "승"].map((r, i) => (
-            <span key={i} className={`flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${r === "승" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>{r}</span>
+            <span key={i} className={`flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${r === "승" ? "bg-primary/20 text-primary" : "bg-red-500/20 text-red-400"}`}>{r}</span>
           ))}
         </div>
         <div className="mt-1 space-y-1.5">
           {[
-            { date: "3.10", opp: "메짤라", score: "2:0", color: "text-emerald-400" },
+            { date: "3.10", opp: "메짤라", score: "2:0", color: "text-primary" },
             { date: "3.04", opp: "메짤라", score: "2:3", color: "text-red-400" },
-            { date: "2.23", opp: "영안FC", score: "8:6", color: "text-emerald-400" },
+            { date: "2.23", opp: "영안FC", score: "8:6", color: "text-primary" },
           ].map((m, i) => (
             <div key={i} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2">
               <span className="text-[10px] text-white/50">{m.date} · {m.opp}</span>

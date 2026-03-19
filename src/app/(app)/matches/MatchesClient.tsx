@@ -317,7 +317,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
       <Card className="rounded-md">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">
+            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
               경기 일정 관리
             </CardTitle>
             {isStaffOrAbove(role) && (
@@ -511,7 +511,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
           const absentCount = matchVotes.filter((v) => v === "ABSENT").length;
           const maybeCount = matchVotes.filter((v) => v === "MAYBE").length;
           return (
-            <Card key={match.id} className="rounded-md hover:bg-secondary/30 cursor-pointer transition-colors">
+            <Card key={match.id} className="rounded-md hover:bg-secondary/30 hover:border-white/[0.06] cursor-pointer transition-all">
               <CardHeader>
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
@@ -521,22 +521,22 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       </Badge>
                       {match.status === "COMPLETED" && match.score && (() => {
                         const [our, opp] = match.score.split(":").map((s) => parseInt(s.trim(), 10));
-                        const color = our > opp ? "text-emerald-400" : our === opp ? "text-muted-foreground" : "text-red-400";
+                        const color = our > opp ? "text-[hsl(var(--win))]" : our === opp ? "text-muted-foreground" : "text-[hsl(var(--loss))]";
                         const label = our > opp ? "승" : our === opp ? "무" : "패";
                         return (
                           <span className="flex items-center gap-1.5">
-                            <span className={cn("font-heading text-lg font-bold", color)}>{match.score}</span>
+                            <span className={cn("type-stat font-heading font-bold", color)}>{match.score}</span>
                             <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-bold",
-                              our > opp ? "bg-emerald-500/15 text-emerald-400" : our === opp ? "bg-muted text-muted-foreground" : "bg-red-500/15 text-red-400"
+                              our > opp ? "bg-[hsl(var(--win)/0.15)] text-[hsl(var(--win))]" : our === opp ? "bg-muted text-muted-foreground" : "bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))]"
                             )}>{label}</span>
                           </span>
                         );
                       })()}
                     </div>
-                    <CardTitle className="mt-2 font-heading text-xl font-bold uppercase">
+                    <CardTitle className="mt-2 font-heading text-lg sm:text-xl font-bold uppercase">
                       {formatMatchDate(match.date)} · {formatTime(match.time)}
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground truncate max-w-[280px] sm:max-w-none">
                       {match.location} {match.opponent ? `· ${match.opponent}` : ""}
                     </p>
                     {match.voteDeadline && (
