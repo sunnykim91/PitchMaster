@@ -776,17 +776,17 @@ export default function MatchDetailClient({
                       <Input name="guestName" required placeholder="홍길동" />
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                      <Label className="text-xs font-semibold text-muted-foreground">
-                        선호 포지션 (복수 선택)
-                      </Label>
-                      <div className="flex flex-wrap gap-2">
-                        {(["GK","CB","LB","RB","CDM","CAM","LW","RW","ST"] as const).map((pos) => (
-                          <label key={pos} className="flex items-center gap-1 text-xs">
-                            <input type="checkbox" name="guestPositions" value={pos} className="rounded" />
-                            {pos}
-                          </label>
-                        ))}
-                      </div>
+                      <fieldset>
+                        <legend className="text-xs font-semibold text-muted-foreground mb-1">선호 포지션 (복수 선택)</legend>
+                        <div className="flex flex-wrap gap-2">
+                          {(["GK","CB","LB","RB","CDM","CAM","LW","RW","ST"] as const).map((pos) => (
+                            <label key={pos} className="flex items-center gap-1 text-xs cursor-pointer">
+                              <input type="checkbox" name="guestPositions" value={pos} className="rounded" id={`guest-pos-${pos}`} />
+                              {pos}
+                            </label>
+                          ))}
+                        </div>
+                      </fieldset>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs font-semibold text-muted-foreground">

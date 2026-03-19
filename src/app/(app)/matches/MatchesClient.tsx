@@ -115,6 +115,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   const [isOpen, setIsOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [votingMatchId, setVotingMatchId] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const today = new Date().toISOString().split("T")[0];
   const [matchDate, setMatchDate] = useState(today);
   const [matchTime, setMatchTime] = useState("09:00");
@@ -179,6 +180,14 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   }, [matches]);
 
   async function handleCreate(formData: FormData) {
+    const errors: Record<string, string> = {};
+    if (!String(formData.get("date") || "").trim()) errors.matchDate = "경기 날짜를 선택해주세요.";
+    if (!String(formData.get("location") || "").trim()) errors.location = "장소를 입력해주세요.";
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
     setSubmitting(true);
     const body = {
       date: String(formData.get("date") || ""),
@@ -276,7 +285,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 type="button"
                 variant="default"
                 size="sm"
-                onClick={() => setIsOpen((prev) => !prev)}
+                onClick={() => { setIsOpen((prev) => !prev); setFormErrors({}); }}
               >
                 일정 등록하기
               </Button>
@@ -303,6 +312,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     onChange={(e) => {
                       const d = e.target.value;
                       setMatchDate(d);
+                      setFormErrors((prev) => ({ ...prev, matchDate: "" }));
                       if (d) {
                         const prev = new Date(d);
                         prev.setDate(prev.getDate() - 1);
@@ -312,7 +322,9 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         setVoteDeadline(`${yyyy}-${mm}-${dd}T17:00`);
                       }
                     }}
+                    className={formErrors.matchDate ? "border-destructive" : ""}
                   />
+                  {formErrors.matchDate && <p className="text-xs text-destructive mt-1">{formErrors.matchDate}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="time">시간</Label>
@@ -338,9 +350,11 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     name="location"
                     required
                     value={location}
-                    onChange={(e) => setLocation(e.target.value)}
+                    onChange={(e) => { setLocation(e.target.value); setFormErrors((prev) => ({ ...prev, location: "" })); }}
                     placeholder={recentLocations[0] ?? "예: 어린이대공원축구장"}
+                    className={formErrors.location ? "border-destructive" : ""}
                   />
+                  {formErrors.location && <p className="text-xs text-destructive mt-1">{formErrors.location}</p>}
                   {recentLocations.length > 0 && !location && (
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {recentLocations.slice(0, 5).map((loc) => (

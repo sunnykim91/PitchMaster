@@ -349,12 +349,26 @@ export default function SettingsClient({
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="font-semibold">프로필 이미지 URL</Label>
-              <Input
-                value={profile.profileImageUrl}
-                onChange={(event) => setProfile({ ...profile, profileImageUrl: event.target.value })}
-                placeholder="https://..."
-              />
+              <Label className="font-semibold">프로필 이미지</Label>
+              <div className="flex items-center gap-4">
+                {profile.profileImageUrl ? (
+                  <img src={profile.profileImageUrl} alt="프로필" className="h-12 w-12 rounded-full object-cover border border-border" />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-lg font-bold text-muted-foreground">
+                    {profile.name?.[0] ?? "?"}
+                  </div>
+                )}
+                <div className="flex-1">
+                  <Input
+                    type="url"
+                    placeholder="이미지 URL (카카오 프로필 자동 연동)"
+                    value={profile.profileImageUrl}
+                    onChange={(e) => setProfile({ ...profile, profileImageUrl: e.target.value })}
+                    className="text-xs"
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">카카오 로그인 시 프로필 이미지가 자동으로 설정됩니다.</p>
+                </div>
+              </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">

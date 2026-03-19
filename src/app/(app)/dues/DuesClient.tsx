@@ -927,7 +927,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                   const errs = bulkErrors[index] ?? [];
                   return (
                   <Card key={index} className="border-0 bg-secondary p-3">
-                    <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
                       <Input
                         type="date"
                         value={row.date}
