@@ -9,7 +9,7 @@ Sentry.init({
 
   // Session replay (optional, captures user interactions)
   replaysSessionSampleRate: 0,
-  replaysOnErrorSampleRate: 1.0,
+  replaysOnErrorSampleRate: 0.1,
 
   // Environment
   environment: process.env.NODE_ENV,

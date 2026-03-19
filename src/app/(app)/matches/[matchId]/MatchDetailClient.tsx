@@ -1,8 +1,16 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import TacticsBoard from "@/components/TacticsBoard";
-import AutoFormationBuilder from "@/components/AutoFormationBuilder";
+import dynamic from "next/dynamic";
+
+const TacticsBoard = dynamic(() => import("@/components/TacticsBoard"), {
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" /></div>
+});
+const AutoFormationBuilder = dynamic(() => import("@/components/AutoFormationBuilder"), {
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center py-10"><div className="h-6 w-6 animate-spin rounded-full border-4 border-muted border-t-primary" /></div>
+});
 import type { AttendingPlayer, GeneratedSquad } from "@/components/AutoFormationBuilder";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
