@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export async function GET() {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
@@ -10,32 +12,34 @@ export async function GET() {
   if (!db) return apiError("Database not available", 503);
 
   const now = new Date().toISOString();
+  const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const today = kstNow.toISOString().split("T")[0];
 
-  // 1-3. Fetch upcoming match, recent completed match, and active votes in parallel
-  const [
-    { data: upcomingMatch },
-    { data: recentMatch },
-    { data: activeVoteMatches },
-  ] = await Promise.all([
-    db
-      .from("matches")
+  // 날짜 지난 SCHEDULED 경기 → 자동 COMPLETED 처리
+  await db
+    .from("matches")
+    .update({ status: "COMPLETED" })
+    .eq("team_id", ctx.teamId)
+    .eq("status", "SCHEDULED")
+    .lt("match_date", today);
+
+  const [upcomingRes, recentRes, activeVotesRes] = await Promise.all([
+    db.from("matches")
       .select("id, match_date, match_time, vote_deadline, opponent_name, status, location")
       .eq("team_id", ctx.teamId)
       .eq("status", "SCHEDULED")
-      .gte("match_date", new Date().toISOString().split("T")[0])
+      .gte("match_date", today)
       .order("match_date", { ascending: true })
       .limit(1)
       .maybeSingle(),
-    db
-      .from("matches")
+    db.from("matches")
       .select("id, match_date, opponent_name, status")
       .eq("team_id", ctx.teamId)
       .eq("status", "COMPLETED")
       .order("match_date", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    db
-      .from("matches")
+    db.from("matches")
       .select("id, match_date, vote_deadline, opponent_name")
       .eq("team_id", ctx.teamId)
       .eq("status", "SCHEDULED")
@@ -44,40 +48,43 @@ export async function GET() {
       .limit(5),
   ]);
 
-  type VoteMatchRow = { id: string; match_date: string; vote_deadline: string };
-  const activeVotes = ((activeVoteMatches || []) as VoteMatchRow[]).map((m) => ({
-    id: m.id,
-    title: `${m.match_date} 경기 참석 투표`,
-    due: m.vote_deadline,
-  }));
+  const upcomingRaw = upcomingRes.data ?? null;
+  const recentMatch = recentRes.data ?? null;
 
-  // 4. Fetch goals+mvp for recent match AND task checks in parallel
-  const [goalsResult, mvpResult, userVoteResult, userMvpVoteResult] = await Promise.all([
-    recentMatch
-      ? db.from("match_goals").select("scorer_id, is_own_goal").eq("match_id", recentMatch.id)
-      : Promise.resolve({ data: [] }),
-    recentMatch
-      ? db.from("match_mvp_votes").select("candidate_id, users:candidate_id(name)").eq("match_id", recentMatch.id)
-      : Promise.resolve({ data: [] }),
-    upcomingMatch
-      ? db.from("match_attendance").select("vote").eq("match_id", upcomingMatch.id).eq("user_id", ctx.userId).maybeSingle()
-      : Promise.resolve({ data: null }),
-    recentMatch
-      ? db.from("match_mvp_votes").select("id").eq("match_id", recentMatch.id).eq("voter_id", ctx.userId).maybeSingle()
-      : Promise.resolve({ data: null }),
-  ]);
+  // 예정 경기 투표 현황 + 내 투표
+  let upcomingMatch: any = null;
+  if (upcomingRaw) {
+    const [votesRes, myMemberRes] = await Promise.all([
+      db.from("match_attendance").select("vote, user_id, member_id").eq("match_id", upcomingRaw.id),
+      db.from("team_members").select("id").eq("user_id", ctx.userId).limit(1).maybeSingle(),
+    ]);
+    const voteList = (votesRes.data ?? []) as { vote: string; user_id: string | null; member_id: string | null }[];
+    const voteCounts = {
+      attend: voteList.filter((v) => v.vote === "ATTEND").length,
+      absent: voteList.filter((v) => v.vote === "ABSENT").length,
+      undecided: voteList.filter((v) => v.vote === "MAYBE").length,
+    };
+    const myMemberId = myMemberRes.data?.id ?? null;
+    const myVoteRow = voteList.find((v) => v.user_id === ctx.userId || v.member_id === myMemberId);
+    const myVote = myVoteRow ? myVoteRow.vote : null;
+    upcomingMatch = { ...upcomingRaw, voteCounts, myVote, myMemberId };
+  }
 
+  // 최근 경기 결과
   let recentResult = null;
   if (recentMatch) {
+    const [goalsRes, mvpRes] = await Promise.all([
+      db.from("match_goals").select("scorer_id, is_own_goal").eq("match_id", recentMatch.id),
+      db.from("match_mvp_votes").select("candidate_id, users:candidate_id(name)").eq("match_id", recentMatch.id),
+    ]);
     type GoalRow = { scorer_id: string; is_own_goal: boolean };
-    const goalRows = (goalsResult.data || []) as GoalRow[];
-    const ourGoals = goalRows.filter((g) => g.scorer_id !== "OPPONENT" && !g.is_own_goal).length;
-    const oppGoals = goalRows.filter((g) => g.scorer_id === "OPPONENT" || g.is_own_goal).length;
+    const goalRows = (goalsRes.data || []) as GoalRow[];
+    const ourGoals = goalRows.filter((g: GoalRow) => g.scorer_id !== "OPPONENT" && !g.is_own_goal).length;
+    const oppGoals = goalRows.filter((g: GoalRow) => g.scorer_id === "OPPONENT" || g.is_own_goal).length;
 
     const mvpCounts: Record<string, { count: number; name: string }> = {};
-    type MvpVoteRow = { candidate_id: string; users: { name: string } | { name: string }[] | null };
-    const voteRows = (mvpResult.data || []) as MvpVoteRow[];
-    voteRows.forEach((v) => {
+    const voteRows = (mvpRes.data || []) as any[];
+    voteRows.forEach((v: any) => {
       const id = v.candidate_id;
       const name = Array.isArray(v.users) ? v.users[0]?.name : v.users?.name;
       if (!mvpCounts[id]) mvpCounts[id] = { count: 0, name: name || "" };
@@ -94,13 +101,64 @@ export async function GET() {
     };
   }
 
-  // 5. Build pending tasks list
+  type VoteMatchRow = { id: string; match_date: string; vote_deadline: string };
+  const activeVotes = ((activeVotesRes.data || []) as VoteMatchRow[]).map((m) => ({
+    id: m.id,
+    title: `${m.match_date} 경기 참석 투표`,
+    due: m.vote_deadline,
+  }));
+
+  // 할 일
   const tasks: string[] = [];
-  if (upcomingMatch && !userVoteResult.data) {
-    tasks.push("다음 경기 참석 투표 완료하기");
-  }
-  if (recentMatch && !userMvpVoteResult.data) {
-    tasks.push("최근 경기 MVP 투표 완료하기");
+  const [userVoteResult, userMvpVoteResult] = await Promise.all([
+    upcomingMatch
+      ? db.from("match_attendance").select("vote").eq("match_id", upcomingMatch.id).eq("user_id", ctx.userId).maybeSingle()
+      : Promise.resolve({ data: null }),
+    recentMatch
+      ? db.from("match_mvp_votes").select("id").eq("match_id", recentMatch.id).eq("voter_id", ctx.userId).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  if (upcomingMatch && !userVoteResult.data) tasks.push("다음 경기 참석 투표 완료하기");
+  if (recentMatch && !userMvpVoteResult.data) tasks.push("최근 경기 MVP 투표 완료하기");
+
+  // 팀 전적
+  const { data: completedMatches } = await db
+    .from("matches")
+    .select("id")
+    .eq("team_id", ctx.teamId)
+    .eq("status", "COMPLETED")
+    .order("match_date", { ascending: false });
+
+  const completedIds = (completedMatches ?? []).map((m: any) => m.id);
+  let teamRecord = { wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, recent5: [] as string[] };
+
+  if (completedIds.length > 0) {
+    const { data: allGoals } = await db
+      .from("match_goals")
+      .select("match_id, scorer_id, is_own_goal")
+      .in("match_id", completedIds);
+
+    const matchScores = new Map<string, { our: number; opp: number }>();
+    for (const g of (allGoals ?? []) as any[]) {
+      if (!matchScores.has(g.match_id)) matchScores.set(g.match_id, { our: 0, opp: 0 });
+      const s = matchScores.get(g.match_id)!;
+      if (g.scorer_id === "OPPONENT" || g.is_own_goal) s.opp++;
+      else s.our++;
+    }
+
+    let wins = 0, draws = 0, losses = 0, gf = 0, ga = 0;
+    const results: string[] = [];
+
+    for (const mid of completedIds) {
+      const s = matchScores.get(mid) ?? { our: 0, opp: 0 };
+      gf += s.our;
+      ga += s.opp;
+      if (s.our > s.opp) { wins++; results.push("W"); }
+      else if (s.our === s.opp) { draws++; results.push("D"); }
+      else { losses++; results.push("L"); }
+    }
+
+    teamRecord = { wins, draws, losses, goalsFor: gf, goalsAgainst: ga, recent5: results.slice(0, 5) };
   }
 
   return apiSuccess({
@@ -108,5 +166,6 @@ export async function GET() {
     recentResult,
     activeVotes,
     tasks,
+    teamRecord,
   });
 }
