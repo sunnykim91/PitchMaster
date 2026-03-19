@@ -1141,9 +1141,9 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
             ) : (
               <div
                 key={record.id}
-                className="card-list-item flex flex-wrap items-center justify-between gap-3"
+                className="card-list-item flex items-center gap-3"
               >
-                <div className="min-w-0">
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground truncate">
                     {record.description}
                   </p>
@@ -1152,11 +1152,10 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                     {record.memberName ? ` · ${record.memberName}` : ""}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant="secondary"
+                <div className="flex shrink-0 items-center gap-2">
+                  <span
                     className={cn(
-                      "rounded-lg px-3 py-1 text-xs font-bold font-[family-name:var(--font-display)]",
+                      "rounded-lg px-3 py-1 text-xs font-bold font-[family-name:var(--font-display)] whitespace-nowrap",
                       record.type === "INCOME"
                         ? "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"
                         : "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]"
@@ -1164,20 +1163,20 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                   >
                     {record.type === "INCOME" ? "+" : "-"}
                     {record.amount.toLocaleString()}원
-                  </Badge>
+                  </span>
                   {isStaffOrAbove(role) && (
                     <>
                       <button
                         type="button"
                         onClick={() => setEditingRecord(record)}
-                        className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                        className="shrink-0 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                       >
                         수정
                       </button>
                       <button
                         type="button"
                         onClick={() => setConfirmAction({ message: "이 내역을 삭제하시겠습니까?", onConfirm: () => handleDeleteRecord(record.id) })}
-                        className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        className="shrink-0 rounded px-2 py-1 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
                       >
                         삭제
                       </button>
