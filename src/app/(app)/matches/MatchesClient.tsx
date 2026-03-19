@@ -215,7 +215,14 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   }
 
   if (matchesError) {
-    return <Card className="p-6"><span className="text-destructive">오류: {matchesError}</span></Card>;
+    return (
+      <Card className="p-6">
+        <div className="flex items-center justify-between">
+          <span className="text-destructive">오류: {matchesError}</span>
+          <Button variant="outline" size="sm" onClick={refetchMatches}>다시 시도</Button>
+        </div>
+      </Card>
+    );
   }
 
   if (matchesLoading || attendanceLoading) {
