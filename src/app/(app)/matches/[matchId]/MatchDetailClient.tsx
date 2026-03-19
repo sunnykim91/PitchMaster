@@ -495,11 +495,21 @@ export default function MatchDetailClient({
   /* ── Goal handlers ── */
 
   async function handleAddGoal(formData: FormData) {
-    const scorerId = String(formData.get("scorerId") || "");
+    let scorerId = String(formData.get("scorerId") || "");
     const assistId = String(formData.get("assistId") || "") || undefined;
     const quarter = Number(formData.get("quarter") || 1);
     const minute = Number(formData.get("minute") || 0);
-    const isOwnGoal = Boolean(formData.get("isOwnGoal"));
+    let isOwnGoal = Boolean(formData.get("isOwnGoal"));
+
+    // "자책골" 선택 시 → isOwnGoal=true, scorerId는 빈 문자열로 처리
+    if (scorerId === "OWN_GOAL") {
+      isOwnGoal = true;
+      scorerId = attendingMembers[0]?.id ?? "";
+    }
+    // 득점자 미선택 시 기본값 (단순 1점 추가)
+    if (!scorerId) {
+      scorerId = attendingMembers[0]?.id ?? "OPPONENT";
+    }
 
     if (editingGoalId) {
       await apiMutate("/api/goals", "PUT", {
@@ -1090,15 +1100,7 @@ export default function MatchDetailClient({
               <div className="mt-4 flex flex-wrap justify-center gap-2">
                 <button
                   type="button"
-                  onClick={async () => {
-                    const formData = new FormData();
-                    formData.set("scorerId", attendingMembers[0]?.id ?? "OPPONENT");
-                    formData.set("assistId", "");
-                    formData.set("quarter", "1");
-                    formData.set("minute", "0");
-                    formData.set("isOwnGoal", "");
-                    await handleAddGoal(formData);
-                  }}
+                  onClick={() => setShowDetailForm(true)}
                   className="rounded-full bg-[hsl(var(--success))] px-5 py-2 text-xs font-bold text-white shadow-[0_2px_8px_-2px_hsl(var(--success)/0.4)] transition-all hover:bg-[hsl(var(--success))]/90 active:scale-95"
                 >
                   + 득점
@@ -1117,21 +1119,6 @@ export default function MatchDetailClient({
                   className="rounded-full bg-[hsl(var(--loss))] px-5 py-2 text-xs font-bold text-white shadow-[0_2px_8px_-2px_hsl(var(--loss)/0.4)] transition-all hover:bg-[hsl(var(--loss))]/90 active:scale-95"
                 >
                   + 실점
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const formData = new FormData();
-                    formData.set("scorerId", attendingMembers[0]?.id ?? "OPPONENT");
-                    formData.set("assistId", "");
-                    formData.set("quarter", "1");
-                    formData.set("minute", "0");
-                    formData.set("isOwnGoal", "on");
-                    await handleAddGoal(formData);
-                  }}
-                  className="rounded-full bg-[hsl(var(--warning))] px-5 py-2 text-xs font-bold text-[hsl(240_6%_6%)] shadow-[0_2px_8px_-2px_hsl(var(--warning)/0.4)] transition-all hover:bg-[hsl(var(--warning))]/90 active:scale-95"
-                >
-                  + 자책골
                 </button>
               </div>
             )}
@@ -1182,7 +1169,8 @@ export default function MatchDetailClient({
                       </Label>
                       <NativeSelect name="scorerId">
                         <option value="">득점자 선택</option>
-                        <option value="OPPONENT">실점</option>
+                        <option value="OPPONENT">실점 (상대팀)</option>
+                        <option value="OWN_GOAL">자책골</option>
                         <optgroup label="참석 멤버">
                           {attendingMembers.map((player) => (
                             <option key={player.id} value={player.id}>
@@ -1275,7 +1263,6 @@ export default function MatchDetailClient({
                     </div>
                   </div>
                   <input name="minute" type="hidden" value="0" />
-                  <input name="isOwnGoal" type="hidden" value="" />
 
                   <div className="mt-3 flex gap-2">
                     <Button type="submit" className="flex-1" size="sm">
