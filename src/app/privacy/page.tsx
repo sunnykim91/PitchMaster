@@ -160,10 +160,6 @@ export default function PrivacyPage() {
           </h2>
           <ul className="mt-3 ml-5 list-disc space-y-1 text-muted-foreground">
             <li>로그인 세션 유지를 위해 쿠키(Cookie)를 사용합니다.</li>
-            <li>
-              서비스 오류 추적을 위해 Sentry를 통해 오류 로그를 수집할 수
-              있습니다. (개인 식별 정보 미포함)
-            </li>
           </ul>
         </section>
 

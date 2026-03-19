@@ -22,19 +22,6 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
-  --color-chart-1: hsl(var(--chart-1));
-  --color-chart-2: hsl(var(--chart-2));
-  --color-chart-3: hsl(var(--chart-3));
-  --color-chart-4: hsl(var(--chart-4));
-  --color-chart-5: hsl(var(--chart-5));
-  --color-sidebar: hsl(var(--sidebar));
-  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
-  --color-sidebar-primary: hsl(var(--sidebar-primary));
-  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
-  --color-sidebar-accent: hsl(var(--sidebar-accent));
-  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
-  --color-sidebar-border: hsl(var(--sidebar-border));
-  --color-sidebar-ring: hsl(var(--sidebar-ring));
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -70,27 +57,6 @@
   --input: 215 14% 20%;
   --ring: 142 71% 45%;
 
-  /* ── Semantic accent colors for variety ── */
-  --pm-amber: 43 96% 56%;
-  --pm-sky: 199 89% 48%;
-  --pm-violet: 263 70% 58%;
-  --pm-rose: 347 77% 56%;
-  --pm-teal: 173 80% 40%;
-  --pm-orange: 25 95% 53%;
-
-  --chart-1: 142 71% 45%;
-  --chart-2: 199 89% 48%;
-  --chart-3: 263 70% 58%;
-  --chart-4: 43 96% 56%;
-  --chart-5: 347 77% 56%;
-  --sidebar: 220 18% 6%;
-  --sidebar-foreground: 210 20% 95%;
-  --sidebar-primary: 142 71% 45%;
-  --sidebar-primary-foreground: 220 20% 4%;
-  --sidebar-accent: 215 14% 15%;
-  --sidebar-accent-foreground: 210 20% 92%;
-  --sidebar-border: 215 14% 20%;
-  --sidebar-ring: 142 71% 45%;
 }
 
 body {
@@ -146,17 +112,6 @@ select optgroup {
   }
 }
 
-@keyframes fade-in-down {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes slide-down {
   from {
     opacity: 0;
@@ -170,30 +125,9 @@ select optgroup {
   }
 }
 
-@keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
-}
-
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-@keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 hsl(142 71% 45% / 0); }
-  50% { box-shadow: 0 0 12px 2px hsl(142 71% 45% / 0.15); }
 }
 
 /* ── Animation Utilities ── */
@@ -205,16 +139,8 @@ select optgroup {
   animation: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.animate-fade-in-down {
-  animation: fade-in-down 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
 .animate-slide-down {
   animation: slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.animate-scale-in {
-  animation: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .animate-shimmer {
@@ -226,14 +152,6 @@ select optgroup {
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
-}
-
-.animate-pulse-soft {
-  animation: pulse-soft 2s ease-in-out infinite;
-}
-
-.animate-glow-pulse {
-  animation: glow-pulse 2s ease-in-out infinite;
 }
 
 /* Staggered children animation */
