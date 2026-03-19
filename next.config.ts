@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
 import { execSync } from "child_process";
 
 const commitHash = (() => {
@@ -26,11 +25,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
-  // Suppress source map upload warnings when SENTRY_AUTH_TOKEN is not set
-  silent: true,
-  // Only upload source maps when SENTRY_AUTH_TOKEN is set
-  sourcemaps: {
-    disable: !process.env.SENTRY_AUTH_TOKEN,
-  },
-});
+export default nextConfig;
