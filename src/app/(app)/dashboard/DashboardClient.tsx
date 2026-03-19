@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Calendar, RefreshCw, Trophy, Vote } from "lucide-react";
+import { Calendar, Trophy, Vote } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { formatTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -209,16 +209,6 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
       </div>
     )}
     <div className="grid gap-4 stagger-children">
-      <div className="flex items-center justify-end">
-        <button
-          type="button"
-          onClick={() => refetch()}
-          className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          aria-label="새로고침"
-        >
-          <RefreshCw className="h-4 w-4" />
-        </button>
-      </div>
       <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         {/* Next Match - Sky blue accent */}
         <Card className="bg-gradient-to-br from-primary/10 via-background to-background shadow-lg shadow-primary/5">

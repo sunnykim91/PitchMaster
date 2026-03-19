@@ -19,7 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
 import { shareVoteLink } from "@/lib/kakaoShare";
 import { EmptyState } from "@/components/EmptyState";
-import { Calendar, RefreshCw } from "lucide-react";
+import { Calendar } from "lucide-react";
 
 type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
 type AttendanceVote = "ATTEND" | "ABSENT" | "MAYBE";
@@ -302,19 +302,9 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
       <Card className="rounded-md">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">
-                경기 일정 관리
-              </CardTitle>
-              <button
-                type="button"
-                onClick={() => { refetchMatches(); refetchAttendance(); }}
-                className="mt-1 rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                aria-label="새로고침"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </button>
-            </div>
+            <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">
+              경기 일정 관리
+            </CardTitle>
             {isStaffOrAbove(role) && (
               <Button
                 type="button"

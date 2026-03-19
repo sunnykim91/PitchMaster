@@ -9,7 +9,7 @@ import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { useToast } from "@/lib/ToastContext";
 import type { Role } from "@/lib/types";
 
-import { ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -729,19 +729,9 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       {/* ── Section 1: 회비 현황 (always visible) ── */}
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <h2 className="mt-1 font-heading text-2xl font-bold uppercase text-foreground">
-              회비 현황
-            </h2>
-            <button
-              type="button"
-              onClick={() => refetchSummary()}
-              className="mt-1 rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-              aria-label="새로고침"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
-          </div>
+          <h2 className="mt-1 font-heading text-2xl font-bold uppercase text-foreground">
+            회비 현황
+          </h2>
         </div>
 
         <Card className="mt-5 border-blue-500/20 bg-blue-500/10 p-5">
