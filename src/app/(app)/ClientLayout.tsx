@@ -22,7 +22,7 @@ type ClientLayoutProps = {
 };
 
 export default function ClientLayout({ session, children }: ClientLayoutProps) {
-  const canSwitchRole = session.user.teamRole === "PRESIDENT";
+  const canSwitchRole = session.user.name === "김선휘";
 
   return (
     <ViewAsRoleProvider isPresident={canSwitchRole}>
@@ -47,7 +47,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const { viewAsRole, setViewAsRole } = useViewAsRole();
-  const canSwitchRole = session.user.teamRole === "PRESIDENT";
+  const canSwitchRole = session.user.name === "김선휘";
   const [copied, setCopied] = useState(false);
 
   // 팀 스위처
