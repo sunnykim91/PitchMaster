@@ -404,6 +404,7 @@ export default function MatchDetailClient({
 
   /* ── Tab state ── */
   const [activeTab, setActiveTab] = useState<"info" | "record" | "tactics" | "diary">("info");
+  const [showDetailForm, setShowDetailForm] = useState(false);
 
   /* ── Local UI state ── */
   const [shareMessage, setShareMessage] = useState<string | null>(null);
@@ -1065,23 +1066,82 @@ export default function MatchDetailClient({
       {/* ── Tab: 경기 기록 ── */}
       {activeTab === "record" && (<>
       <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-        {/* ── 골/어시스트 기록 ── */}
+        <div className="space-y-5">
+        {/* ── 스코어보드 ── */}
+        <Card className="card-featured">
+          <div className="text-center">
+            <p className="type-overline">경기 스코어</p>
+            <div className="mt-3 flex items-center justify-center gap-6">
+              <div>
+                <p className="type-overline">우리팀</p>
+                <p className="type-score text-foreground">
+                  {goals.filter((g) => g.scorerId !== "OPPONENT" && !g.isOwnGoal).length}
+                </p>
+              </div>
+              <span className="text-2xl text-muted-foreground/40">:</span>
+              <div>
+                <p className="type-overline">상대팀</p>
+                <p className="type-score text-muted-foreground/60">
+                  {goals.filter((g) => g.scorerId === "OPPONENT" || g.isOwnGoal).length}
+                </p>
+              </div>
+            </div>
+            {canManage && (
+              <div className="mt-4 flex justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDetailForm(true);
+                    // Pre-select first attending member for quick goal
+                    if (formRef.current) {
+                      const sel = formRef.current.elements.namedItem("scorerId") as HTMLSelectElement;
+                      if (sel && attendingMembers.length > 0) sel.value = attendingMembers[0].id;
+                    }
+                  }}
+                  className="rounded-full bg-[hsl(var(--success))] px-5 py-2 text-xs font-bold text-white shadow-[0_2px_8px_-2px_hsl(var(--success)/0.4)] transition-all hover:bg-[hsl(var(--success))]/90 active:scale-95"
+                >
+                  + 득점
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const formData = new FormData();
+                    formData.set("scorerId", "OPPONENT");
+                    formData.set("assistId", "");
+                    formData.set("quarter", "1");
+                    formData.set("minute", "0");
+                    formData.set("isOwnGoal", "");
+                    await handleAddGoal(formData);
+                  }}
+                  className="rounded-full bg-[hsl(var(--loss))] px-5 py-2 text-xs font-bold text-white shadow-[0_2px_8px_-2px_hsl(var(--loss)/0.4)] transition-all hover:bg-[hsl(var(--loss))]/90 active:scale-95"
+                >
+                  + 실점
+                </button>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* ── 상세 골 기록 (접기/펼치기) ── */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <p className="type-overline text-[hsl(var(--info))]">
-                Goals
-              </p>
-              <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
-                골/어시스트 기록
-              </CardTitle>
-            </div>
+            <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase">
+              상세 기록
+            </CardTitle>
+            <button
+              type="button"
+              onClick={() => setShowDetailForm((prev) => !prev)}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showDetailForm ? "접기 ▲" : "펼치기 ▼"}
+            </button>
           </CardHeader>
 
           <CardContent>
+            {showDetailForm && (
             <form
               ref={formRef}
-              className="grid gap-3"
+              className="mb-4 grid gap-3"
               action={(formData) => handleAddGoal(formData)}
             >
               <Card className="border-0 bg-secondary shadow-none">
@@ -1165,21 +1225,34 @@ export default function MatchDetailClient({
                     </div>
                   </div>
 
-                  <div className="mt-3 grid gap-3 md:grid-cols-3">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-muted-foreground">
-                        쿼터
-                      </Label>
-                      <Input
-                        name="quarter"
-                        type="number"
-                        min={1}
-                        max={6}
-                        defaultValue={1}
-                      />
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs font-semibold text-muted-foreground">쿼터</Label>
+                      <div className="flex gap-1">
+                        {Array.from({ length: match.quarterCount }, (_, i) => i + 1).map((q) => (
+                          <button
+                            key={q}
+                            type="button"
+                            onClick={(e) => {
+                              const input = e.currentTarget.parentElement?.querySelector("input[name=quarter]") as HTMLInputElement;
+                              if (input) input.value = String(q);
+                              // Update visual state
+                              e.currentTarget.parentElement?.querySelectorAll("button").forEach((btn) => btn.classList.remove("bg-primary", "text-white"));
+                              e.currentTarget.classList.add("bg-primary", "text-white");
+                            }}
+                            className={cn(
+                              "h-8 w-8 rounded-lg text-xs font-bold transition-colors",
+                              q === 1 ? "bg-primary text-white" : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                            )}
+                          >
+                            Q{q}
+                          </button>
+                        ))}
+                        <input name="quarter" type="hidden" defaultValue="1" />
+                      </div>
                     </div>
                     <input name="minute" type="hidden" value="0" />
-                    <div className="flex items-center gap-2 pt-6">
+                    <div className="flex items-center gap-2 pt-5">
                       <input
                         name="isOwnGoal"
                         type="checkbox"
@@ -1209,35 +1282,40 @@ export default function MatchDetailClient({
                 </CardContent>
               </Card>
             </form>
+            )}
 
-            <div className="mt-4 space-y-2">
+            <div className="space-y-2">
               {goals.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   아직 기록된 골이 없습니다.
                 </p>
               ) : (
                 goals.map((goal) => (
-                  <Card
+                  <div
                     key={goal.id}
-                    className="border-0 bg-secondary shadow-none"
+                    className="card-list-item flex items-center justify-between"
                   >
-                    <CardContent className="flex items-center justify-between px-4 py-3">
-                      <div>
-                        <p className="text-sm font-semibold truncate">
-                          {resolvePlayerName(goal.scorerId)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Q{goal.quarter}
-                          {goal.assistId
-                            ? ` · 어시스트 ${resolvePlayerName(goal.assistId)}`
-                            : ""}
-                          {goal.isOwnGoal ? " · 자책골" : ""}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold truncate">
+                        {goal.scorerId === "OPPONENT" ? (
+                          <span className="text-[hsl(var(--loss))]">실점</span>
+                        ) : (
+                          resolvePlayerName(goal.scorerId)
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Q{goal.quarter}
+                        {goal.assistId
+                          ? ` · A: ${resolvePlayerName(goal.assistId)}`
+                          : ""}
+                        {goal.isOwnGoal ? " · 자책골" : ""}
+                      </p>
+                    </div>
+                    {canManage && (
+                      <div className="flex items-center gap-1">
                         <button
                           type="button"
-                          onClick={() => handleEditGoal(goal)}
+                          onClick={() => { handleEditGoal(goal); setShowDetailForm(true); }}
                           className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                         >
                           수정
@@ -1250,13 +1328,14 @@ export default function MatchDetailClient({
                           삭제
                         </button>
                       </div>
-                    </CardContent>
-                  </Card>
+                    )}
+                  </div>
                 ))
               )}
             </div>
           </CardContent>
         </Card>
+        </div>
 
         {/* ── 우측 컬럼 ── */}
         <div className="space-y-5">
