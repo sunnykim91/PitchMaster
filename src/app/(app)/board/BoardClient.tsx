@@ -368,7 +368,6 @@ export default function BoardClient({
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4 pb-0">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-orange-400">Board</p>
             <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">
               게시판
             </CardTitle>
@@ -392,9 +391,6 @@ export default function BoardClient({
       {/* New / Edit Post Form */}
       <Card>
         <CardHeader>
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
-            {editingPostId ? "Edit Post" : "New Post"}
-          </p>
           <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
             {editingPostId ? "게시글 수정" : "게시글 작성"}
           </CardTitle>
@@ -489,7 +485,6 @@ export default function BoardClient({
       {/* Post List */}
       <Card>
         <CardHeader>
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Recent</p>
           <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
             최근 게시글
           </CardTitle>

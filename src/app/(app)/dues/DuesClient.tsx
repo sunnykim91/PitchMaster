@@ -8,6 +8,7 @@ import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { useToast } from "@/lib/ToastContext";
 import type { Role } from "@/lib/types";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -730,9 +731,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">
-              Finance
-            </p>
             <h2 className="mt-1 font-heading text-2xl font-bold uppercase text-foreground">
               회비 현황
             </h2>
@@ -765,18 +763,16 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         </div>
 
         <Card className="mt-5 border-blue-500/20 bg-blue-500/10 p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-blue-400/80">통장 잔고</p>
-              <p className="mt-1 font-heading text-3xl font-bold text-blue-300">
-                {summaryData.balance !== null
-                  ? `${summaryData.balance.toLocaleString()}원`
-                  : "스크린샷을 업로드하면 자동 반영됩니다"}
-              </p>
-            </div>
+          <div>
+            <p className="text-xs text-blue-400/80">통장 잔고</p>
+            <p className="mt-1 font-heading text-3xl font-bold text-blue-300">
+              {summaryData.balance !== null
+                ? `${summaryData.balance.toLocaleString()}원`
+                : "스크린샷을 업로드하면 자동 반영됩니다"}
+            </p>
             {summaryData.balanceUpdatedAt && (
-              <p className="text-[10px] text-blue-400/50">
-                {new Date(summaryData.balanceUpdatedAt).toLocaleString("ko-KR")} 기준
+              <p className="text-[10px] text-muted-foreground">
+                최종 업데이트: {new Date(summaryData.balanceUpdatedAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
               </p>
             )}
           </div>
@@ -786,9 +782,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       {/* ── Section 2: 입출금 기록 입력 (collapsible, staff only) ── */}
       {isFormOpen ? (
         <Card className="p-6">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">
-            New Record
-          </p>
           <h3 className="mt-1 font-heading text-lg font-bold uppercase text-foreground">
             입출금 기록 입력
           </h3>
@@ -903,9 +896,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       {/* ── Section 2.5: 스크린샷 일괄 등록 ── */}
       {isBulkMode && (
         <Card className="p-6" ref={bulkSectionRef}>
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-400">
-            Bulk Import
-          </p>
           <h3 className="mt-1 font-heading text-lg font-bold uppercase text-foreground">
             스크린샷 보고 일괄 등록
           </h3>
@@ -1030,21 +1020,39 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">
-              History
-            </p>
             <h3 className="mt-1 font-heading text-xl font-bold uppercase text-foreground">
               입출금 내역
             </h3>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Input
-              type="month"
-              value={monthFilter}
-              onChange={(e) => setMonthFilter(e.target.value)}
-              className="w-36 text-xs"
-            />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const [y, m] = monthFilter.split("-").map(Number);
+                  const prev = new Date(y, m - 2);
+                  setMonthFilter(`${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`);
+                }}
+                className="rounded-lg p-1.5 hover:bg-secondary transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="min-w-[80px] text-center text-sm font-medium">
+                {monthFilter.replace("-", "년 ")}월
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const [y, m] = monthFilter.split("-").map(Number);
+                  const next = new Date(y, m);
+                  setMonthFilter(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`);
+                }}
+                className="rounded-lg p-1.5 hover:bg-secondary transition-colors"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
             <Input
               type="text"
               value={memberFilter}
@@ -1174,9 +1182,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">
-              Standards
-            </p>
             <h3 className="mt-1 font-heading text-xl font-bold uppercase text-foreground">
               회비 기준 설정
             </h3>
@@ -1341,9 +1346,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-rose-400">
-              Penalties
-            </p>
             <h3 className="mt-1 font-heading text-xl font-bold uppercase text-foreground">
               벌금 관리
             </h3>

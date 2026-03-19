@@ -169,7 +169,6 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
         <Card className="bg-gradient-to-br from-primary/10 via-background to-background shadow-lg shadow-primary/5">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-sky-400">Next Match</p>
               <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">다가오는 경기</CardTitle>
             </div>
             <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
@@ -211,6 +210,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
                           variant={upcomingMatch.myVote === opt.value ? opt.variant : "outline"}
                           size="sm"
                           disabled={voting}
+                          className="active:scale-105 transition-transform"
                           onClick={() => handleQuickVote(upcomingMatch.id, upcomingMatch.myMemberId!, opt.value)}
                         >
                           {opt.label}
@@ -244,7 +244,6 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-400">Votes</p>
               <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">진행 중인 투표</CardTitle>
             </div>
             <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
@@ -302,7 +301,6 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
         {/* Tasks - Amber accent */}
         <Card>
           <CardHeader className="pb-3">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">Tasks</p>
             <CardTitle className="font-heading text-2xl font-bold uppercase">해야 할 일</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -328,7 +326,6 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-emerald-400">Result</p>
               <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">최근 경기 요약</CardTitle>
             </div>
             <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>

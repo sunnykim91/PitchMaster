@@ -201,7 +201,6 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
         <CardContent className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-rose-400">Rules</p>
               <h2 className="mt-1 font-heading text-2xl font-bold uppercase text-foreground">회칙 관리</h2>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -226,7 +225,6 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
       {isStaffOrAbove(role) && (
         <Card>
           <CardHeader className="pb-2">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-foreground/80">Editor</p>
             <CardTitle className="font-heading text-xl font-bold uppercase text-foreground">
               회칙 등록/수정
             </CardTitle>
@@ -293,7 +291,6 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
       {/* Rules List */}
       <Card>
         <CardHeader className="pb-2">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-foreground/80">List</p>
           <CardTitle className="font-heading text-xl font-bold uppercase text-foreground">
             회칙 목록
           </CardTitle>

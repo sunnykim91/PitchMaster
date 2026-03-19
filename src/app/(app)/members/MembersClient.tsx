@@ -15,6 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn, formatPhone } from "@/lib/utils";
+import { Search } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
+import { Users } from "lucide-react";
 
 type Member = {
   id: string;
@@ -107,8 +110,22 @@ export default function MembersClient({
   const [kickingId, setKickingId] = useState<string | null>(null);
   const [linkingId, setLinkingId] = useState<string | null>(null);
 
+  const [searchQuery, setSearchQuery] = useState("");
+
   const linkedMembers = useMemo(() => members.filter((m) => m.isLinked), [members]);
   const unlinkedMembers = useMemo(() => members.filter((m) => !m.isLinked), [members]);
+
+  const filteredLinkedMembers = useMemo(
+    () =>
+      searchQuery.trim() === ""
+        ? linkedMembers
+        : linkedMembers.filter(
+            (m) =>
+              m.name.includes(searchQuery) ||
+              m.preName?.includes(searchQuery)
+          ),
+    [linkedMembers, searchQuery]
+  );
 
   const stats = useMemo(() => {
     const counts = { PRESIDENT: 0, STAFF: 0, MEMBER: 0 } as Record<Role, number>;
@@ -218,7 +235,6 @@ export default function MembersClient({
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-teal-400">Members</p>
               <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">회원 관리</CardTitle>
             </div>
             <div className="flex items-center gap-2">
@@ -297,7 +313,6 @@ export default function MembersClient({
       {unlinkedMembers.length > 0 && canViewAll && (
         <Card>
           <CardHeader>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">Unlinked</p>
             <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
               미연동 멤버 ({unlinkedMembers.length}명)
             </CardTitle>
@@ -406,7 +421,6 @@ export default function MembersClient({
       {/* ── Section 3: 멤버 목록 ── */}
       <Card>
         <CardHeader>
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-teal-400">Roster</p>
           <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
             멤버 목록
           </CardTitle>
@@ -417,8 +431,18 @@ export default function MembersClient({
           )}
         </CardHeader>
         <CardContent>
+          <div className="mb-3 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="이름으로 검색"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-lg border border-border bg-secondary/50 py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
           <div className="space-y-2">
-            {linkedMembers.map((member) => (
+            {filteredLinkedMembers.map((member) => (
               <Card
                 key={member.id}
                 className="flex flex-wrap items-center justify-between gap-4 bg-secondary border-0 px-4 py-3"
@@ -490,7 +514,10 @@ export default function MembersClient({
               </Card>
             ))}
             {linkedMembers.length === 0 && (
-              <p className="py-4 text-center text-sm text-muted-foreground">가입된 멤버가 없습니다.</p>
+              <EmptyState icon={Users} title="가입된 멤버가 없습니다" description="초대 코드를 공유해보세요." />
+            )}
+            {linkedMembers.length > 0 && filteredLinkedMembers.length === 0 && (
+              <p className="py-4 text-center text-sm text-muted-foreground">검색 결과가 없습니다.</p>
             )}
           </div>
         </CardContent>

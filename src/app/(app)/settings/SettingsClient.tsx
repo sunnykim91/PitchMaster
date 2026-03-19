@@ -168,7 +168,7 @@ export default function SettingsClient({
   const [team, setTeam] = useState<TeamSettings>(defaultTeam);
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
 
   // Sync fetched API data into local form state when it arrives
   const profileSynced = useRef(false);
@@ -319,7 +319,6 @@ export default function SettingsClient({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Profile</p>
             <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase text-foreground">
               개인 설정
             </CardTitle>
@@ -350,24 +349,11 @@ export default function SettingsClient({
             </div>
             <div className="space-y-2">
               <Label className="font-semibold">프로필 이미지</Label>
-              <div className="flex items-center gap-4">
-                {profile.profileImageUrl ? (
-                  <img src={profile.profileImageUrl} alt="프로필" className="h-12 w-12 rounded-full object-cover border border-border" />
-                ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-lg font-bold text-muted-foreground">
-                    {profile.name?.[0] ?? "?"}
-                  </div>
+              <div className="flex items-center gap-3">
+                {profile.profileImageUrl && (
+                  <img src={profile.profileImageUrl} alt="프로필" className="h-12 w-12 rounded-full object-cover" />
                 )}
-                <div className="flex-1">
-                  <Input
-                    type="url"
-                    placeholder="이미지 URL (카카오 프로필 자동 연동)"
-                    value={profile.profileImageUrl}
-                    onChange={(e) => setProfile({ ...profile, profileImageUrl: e.target.value })}
-                    className="text-xs"
-                  />
-                  <p className="mt-1 text-[11px] text-muted-foreground">카카오 로그인 시 프로필 이미지가 자동으로 설정됩니다.</p>
-                </div>
+                <p className="text-xs text-muted-foreground">카카오 프로필에서 자동 연동됩니다.</p>
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
@@ -428,7 +414,6 @@ export default function SettingsClient({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Team</p>
             <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase text-foreground">
               팀 설정
             </CardTitle>
@@ -548,38 +533,37 @@ export default function SettingsClient({
                   {saving ? "저장 중..." : "팀 설정 저장"}
                 </Button>
               )}
-              {canEditTeam && (
-                confirmDelete ? (
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={handleDeleteTeam}
-                    >
-                      정말 삭제하기
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setConfirmDelete(false)}
-                    >
-                      취소
-                    </Button>
-                  </div>
-                ) : (
+            </div>
+
+            {canEditTeam && (
+              <div className="mt-8 border-t border-destructive/20 pt-6">
+                <h3 className="text-sm font-bold text-destructive">위험 구역</h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  팀을 삭제하면 모든 경기, 회비, 기록이 영구 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                </p>
+                <div className="mt-3 space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    삭제하려면 팀 이름 <span className="font-bold text-foreground">{team.teamName}</span>을 입력하세요.
+                  </p>
+                  <input
+                    type="text"
+                    value={deleteConfirmName}
+                    onChange={(e) => setDeleteConfirmName(e.target.value)}
+                    placeholder="팀 이름 입력"
+                    className="w-full rounded-lg border border-border bg-secondary/50 px-3 py-2 text-sm"
+                  />
                   <Button
                     type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setConfirmDelete(true)}
+                    variant="destructive"
+                    disabled={deleteConfirmName !== team.teamName}
+                    onClick={handleDeleteTeam}
+                    className="w-full"
                   >
-                    팀 삭제
+                    팀 영구 삭제
                   </Button>
-                )
-              )}
-            </div>
+                </div>
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>

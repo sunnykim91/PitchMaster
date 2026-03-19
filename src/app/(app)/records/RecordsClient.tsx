@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, ArrowUpDown, ArrowDown } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role } from "@/lib/types";
@@ -237,7 +237,6 @@ export default function RecordsClient({
         return (
           <Card>
             <CardHeader className="pb-2">
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-emerald-400">Team Record</p>
               <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">팀 전적</CardTitle>
             </CardHeader>
             <CardContent>
@@ -283,7 +282,6 @@ export default function RecordsClient({
         <Card>
           <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-400">My Stats</p>
               <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">
                 내 기록
               </CardTitle>
@@ -337,7 +335,6 @@ export default function RecordsClient({
         {/* 시즌 요약 + 레이더 차트 */}
         <Card>
           <CardHeader>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Summary</p>
             <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
               시즌 요약
             </CardTitle>
@@ -368,7 +365,6 @@ export default function RecordsClient({
       {/* ── Row 2: 팀 랭킹 (PC: 3열 가로 배치) ── */}
       <Card>
         <CardHeader>
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-400">Rankings</p>
           <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
             팀 랭킹
           </CardTitle>
@@ -447,7 +443,6 @@ export default function RecordsClient({
       {/* ── Row 3: 전체 회원 기록 (풀와이드 테이블) ── */}
       <Card>
         <CardHeader>
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-400">All Stats</p>
           <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
             전체 회원 기록
           </CardTitle>
@@ -485,7 +480,14 @@ export default function RecordsClient({
                         )}
                         onClick={() => setSortKey(col.key)}
                       >
-                        {col.label}{sortKey === col.key ? " ▼" : ""}
+                        <span className="inline-flex items-center gap-1">
+                          {col.label}
+                          {sortKey === col.key ? (
+                            <ArrowDown className="h-3 w-3" />
+                          ) : (
+                            <ArrowUpDown className="h-3 w-3 opacity-30" />
+                          )}
+                        </span>
                       </th>
                     ))}
                   </tr>

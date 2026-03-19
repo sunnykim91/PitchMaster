@@ -175,9 +175,6 @@ export default function NotificationsClient({ initialData }: { initialData: Init
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-sky-400">
-                Notifications
-              </p>
               <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">
                 알림 센터
               </CardTitle>
@@ -197,9 +194,6 @@ export default function NotificationsClient({ initialData }: { initialData: Init
       {/* Notification Settings */}
       <Card>
         <CardHeader>
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
-            Settings
-          </p>
           <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
             알림 수신 설정
           </CardTitle>
@@ -213,18 +207,25 @@ export default function NotificationsClient({ initialData }: { initialData: Init
               const isOn = settings[item.key as keyof NotificationSettings];
               const isToggling = togglingKey === item.key;
               return (
-                <Button
-                  key={item.key}
-                  variant={isOn ? "default" : "outline"}
-                  className="justify-start px-4 py-3 text-sm font-semibold"
-                  onClick={() => toggleSetting(item.key as keyof NotificationSettings)}
-                  disabled={isToggling}
-                >
-                  {item.label}
-                  <span className="ml-2 text-xs">
-                    {isToggling ? "변경 중..." : isOn ? "켜짐" : "꺼짐"}
+                <div key={item.key} className="flex items-center justify-between rounded-lg border border-border bg-secondary/50 px-4 py-3">
+                  <span className="text-sm font-semibold">
+                    {item.label}
+                    {isToggling && <span className="ml-2 text-xs text-muted-foreground">변경 중...</span>}
                   </span>
-                </Button>
+                  <button
+                    onClick={() => toggleSetting(item.key as keyof NotificationSettings)}
+                    disabled={isToggling}
+                    className={cn(
+                      "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                      isOn ? "bg-primary" : "bg-muted"
+                    )}
+                  >
+                    <span className={cn(
+                      "inline-block h-4 w-4 rounded-full bg-white transition-transform",
+                      isOn ? "translate-x-6" : "translate-x-1"
+                    )} />
+                  </button>
+                </div>
               );
             })}
           </div>
@@ -234,9 +235,6 @@ export default function NotificationsClient({ initialData }: { initialData: Init
       {/* Recent Notifications */}
       <Card>
         <CardHeader>
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
-            Recent
-          </p>
           <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
             최근 알림
           </CardTitle>

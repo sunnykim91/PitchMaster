@@ -17,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
 import { shareVoteLink } from "@/lib/kakaoShare";
+import { EmptyState } from "@/components/EmptyState";
+import { Calendar } from "lucide-react";
 
 type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
 type AttendanceVote = "ATTEND" | "ABSENT" | "MAYBE";
@@ -68,6 +70,15 @@ const attendanceLabels: Record<AttendanceVote, string> = {
   MAYBE: "미정",
 };
 
+function formatMatchDate(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  const days = ["일", "월", "화", "수", "목", "금", "토"];
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const dow = days[d.getDay()];
+  return `${month}월 ${day}일 (${dow})`;
+}
+
 function mapDbMatchToMatch(db: DbMatch): Match {
   return {
     id: db.id,
@@ -113,6 +124,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   const isFutsal = sportType === "FUTSAL";
 
   const [isOpen, setIsOpen] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [votingMatchId, setVotingMatchId] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -275,7 +287,6 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-sky-400">Matches</p>
               <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">
                 경기 일정 관리
               </CardTitle>
@@ -378,65 +389,76 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   />
                 </div>
               </div>
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="space-y-2">
-                  <Label htmlFor="quarterCount">쿼터 수</Label>
-                  <Input
-                    id="quarterCount"
-                    name="quarterCount"
-                    type="number"
-                    min={1}
-                    max={12}
-                    defaultValue={defaults.quarters}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="quarterDuration">쿼터 시간 (분)</Label>
-                  <Input
-                    id="quarterDuration"
-                    name="quarterDuration"
-                    type="number"
-                    min={10}
-                    max={40}
-                    defaultValue={defaults.duration}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="breakDuration">휴식 시간 (분)</Label>
-                  <Input
-                    id="breakDuration"
-                    name="breakDuration"
-                    type="number"
-                    min={0}
-                    max={15}
-                    defaultValue={defaults.breakTime}
-                  />
-                </div>
-              </div>
-              {isFutsal && (
-                <div className="space-y-2">
-                  <Label htmlFor="playerCount">참가 인원 (명)</Label>
-                  <Input
-                    id="playerCount"
-                    name="playerCount"
-                    type="number"
-                    min={3}
-                    max={8}
-                    value={playerCount}
-                    onChange={(e) => setPlayerCount(Number(e.target.value))}
-                  />
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showAdvanced ? "상세 설정 접기 ▲" : "상세 설정 ▼"}
+              </button>
+              {showAdvanced && (
+                <div className="grid gap-3 animate-slide-down">
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="quarterCount">쿼터 수</Label>
+                      <Input
+                        id="quarterCount"
+                        name="quarterCount"
+                        type="number"
+                        min={1}
+                        max={12}
+                        defaultValue={defaults.quarters}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="quarterDuration">쿼터 시간 (분)</Label>
+                      <Input
+                        id="quarterDuration"
+                        name="quarterDuration"
+                        type="number"
+                        min={10}
+                        max={40}
+                        defaultValue={defaults.duration}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="breakDuration">휴식 시간 (분)</Label>
+                      <Input
+                        id="breakDuration"
+                        name="breakDuration"
+                        type="number"
+                        min={0}
+                        max={15}
+                        defaultValue={defaults.breakTime}
+                      />
+                    </div>
+                  </div>
+                  {isFutsal && (
+                    <div className="space-y-2">
+                      <Label htmlFor="playerCount">참가 인원 (명)</Label>
+                      <Input
+                        id="playerCount"
+                        name="playerCount"
+                        type="number"
+                        min={3}
+                        max={8}
+                        value={playerCount}
+                        onChange={(e) => setPlayerCount(Number(e.target.value))}
+                      />
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label htmlFor="voteDeadline">투표 마감일</Label>
+                    <Input
+                      id="voteDeadline"
+                      name="voteDeadline"
+                      type="datetime-local"
+                      value={voteDeadline}
+                      onChange={(e) => setVoteDeadline(e.target.value)}
+                    />
+                  </div>
                 </div>
               )}
-              <div className="space-y-2">
-                <Label htmlFor="voteDeadline">투표 마감일</Label>
-                <Input
-                  id="voteDeadline"
-                  name="voteDeadline"
-                  type="datetime-local"
-                  value={voteDeadline}
-                  onChange={(e) => setVoteDeadline(e.target.value)}
-                />
-              </div>
               <Button type="submit" variant="default" disabled={submitting}>
                 {submitting ? "저장 중..." : "일정 저장"}
               </Button>
@@ -448,8 +470,8 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
       <section className="grid gap-4">
         {sortedMatches.length === 0 && (
           <Card className="rounded-md p-6">
-            <CardContent className="p-0 text-sm text-muted-foreground">
-              등록된 경기 일정이 없습니다.
+            <CardContent className="p-0">
+              <EmptyState icon={Calendar} title="등록된 일정이 없습니다" description="새 일정을 등록해보세요." />
             </CardContent>
           </Card>
         )}
@@ -483,7 +505,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       })()}
                     </div>
                     <CardTitle className="mt-2 font-heading text-xl font-bold uppercase">
-                      {match.date} · {formatTime(match.time)}
+                      {formatMatchDate(match.date)} · {formatTime(match.time)}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
                       {match.location} {match.opponent ? `· ${match.opponent}` : ""}
@@ -538,6 +560,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                           variant={vote === item.value ? item.activeVariant : "secondary"}
                           size="default"
                           disabled={votingMatchId === match.id}
+                          className="active:scale-105 transition-transform"
                           onClick={() => handleVote(match.id, item.value)}
                         >
                           {item.label}
