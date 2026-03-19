@@ -502,7 +502,7 @@ export default function MatchDetailClient({
   function resolvePlayerName(playerId: string | undefined): string {
     if (!playerId) return "";
     if (playerId === "OPPONENT") return "실점";
-    if (playerId === "UNKNOWN") return "모름";
+    if (playerId === "UNKNOWN") return "득점";
     const special = SPECIAL_PLAYERS.find((s) => s.id === playerId);
     if (special) return special.name;
     // fullRoster: 전체 멤버 + 용병 (참석 여부 무관)
@@ -1308,21 +1308,32 @@ export default function MatchDetailClient({
                 <p className="text-sm text-muted-foreground">
                   아직 기록된 골이 없습니다.
                 </p>
-              ) : (
-                goals.map((goal) => (
+              ) : (() => {
+                let goalNum = 0;
+                let concNum = 0;
+                let ownNum = 0;
+                return goals.map((goal) => {
+                  let label: React.ReactNode;
+                  if (goal.scorerId === "OPPONENT") {
+                    concNum++;
+                    label = <span className="text-[hsl(var(--loss))]">실점 {concNum}</span>;
+                  } else if (goal.isOwnGoal) {
+                    ownNum++;
+                    label = <span className="text-[hsl(var(--warning))]">자책골 {ownNum}</span>;
+                  } else if (goal.scorerId === "UNKNOWN") {
+                    goalNum++;
+                    label = <span className="text-[hsl(var(--success))]">득점 {goalNum}</span>;
+                  } else {
+                    label = <span className="text-[hsl(var(--success))]">{resolvePlayerName(goal.scorerId)}</span>;
+                  }
+                  return (
                   <div
                     key={goal.id}
                     className="card-list-item flex items-center justify-between"
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate">
-                        {goal.scorerId === "OPPONENT" ? (
-                          <span className="text-[hsl(var(--loss))]">실점</span>
-                        ) : goal.isOwnGoal ? (
-                          <span className="text-[hsl(var(--warning))]">자책골</span>
-                        ) : (
-                          <span className="text-[hsl(var(--success))]">{resolvePlayerName(goal.scorerId)}</span>
-                        )}
+                        {label}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {goal.quarter > 0 ? `Q${goal.quarter}` : ""}
@@ -1350,8 +1361,9 @@ export default function MatchDetailClient({
                       </div>
                     )}
                   </div>
-                ))
-              )}
+                  );
+                });
+              })()}
             </div>
           </CardContent>
         </Card>
