@@ -253,7 +253,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
     <div className="min-h-screen">
       <div className="mx-auto grid max-w-7xl gap-4 px-4 py-4 lg:grid-cols-[260px_1fr]">
         {/* Mobile Header */}
-        <div className="lg:hidden">
+        <header className="lg:hidden">
           <Card className="backdrop-blur-sm bg-card/95">
             <CardContent className="flex items-center justify-between p-4">
               <div>
@@ -278,7 +278,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
               </div>
               <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="icon" aria-label="메뉴 열기">
                     <Menu className="h-4 w-4" />
                   </Button>
                 </SheetTrigger>
@@ -290,7 +290,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
               </Sheet>
             </CardContent>
           </Card>
-        </div>
+        </header>
 
         {/* Desktop Sidebar */}
         <aside className="hidden self-start lg:block animate-fade-in">
@@ -300,7 +300,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
         </aside>
 
         {/* Main Content */}
-        <div className="min-w-0 space-y-4 pb-16 lg:pb-0">
+        <main className="min-w-0 space-y-4 pb-16 lg:pb-0">
           {isStaffOrAbove(displayRole) && (
             <Card className="hidden lg:block">
               <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
@@ -329,7 +329,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
               <Link href="/terms" className="transition hover:text-foreground">이용약관</Link>
             </div>
           </footer>
-        </div>
+        </main>
       </div>
 
       {/* Mobile Bottom Tab Bar */}

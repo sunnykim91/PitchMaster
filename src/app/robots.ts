@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/dashboard", "/matches", "/records", "/dues", "/members", "/board", "/rules", "/notifications", "/settings"],
+      disallow: ["/api/"],
     },
     sitemap: "https://pitch-master.app/sitemap.xml",
   };
