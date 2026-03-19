@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 
 const TacticsBoard = dynamic(() => import("@/components/TacticsBoard"), {
@@ -403,7 +404,21 @@ export default function MatchDetailClient({
   const [generatedSquads, setGeneratedSquads] = useState<GeneratedSquad[]>([]);
 
   /* ── Tab state ── */
-  const [activeTab, setActiveTab] = useState<"info" | "record" | "tactics" | "diary">("info");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const validTabs = ["info", "tactics", "record", "diary"] as const;
+  type TabKey = (typeof validTabs)[number];
+  const tabFromUrl = searchParams.get("tab") as TabKey | null;
+  const [activeTab, setActiveTabState] = useState<TabKey>(
+    tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : "info"
+  );
+  const setActiveTab = useCallback((tab: TabKey) => {
+    setActiveTabState(tab);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, router, pathname]);
   const [showDetailForm, setShowDetailForm] = useState(false);
 
   /* ── Local UI state ── */
@@ -487,6 +502,7 @@ export default function MatchDetailClient({
   function resolvePlayerName(playerId: string | undefined): string {
     if (!playerId) return "";
     if (playerId === "OPPONENT") return "실점";
+    if (playerId === "UNKNOWN") return "모름";
     const special = SPECIAL_PLAYERS.find((s) => s.id === playerId);
     if (special) return special.name;
     // fullRoster: 전체 멤버 + 용병 (참석 여부 무관)
@@ -497,19 +513,21 @@ export default function MatchDetailClient({
 
   async function handleAddGoal(formData: FormData) {
     let scorerId = String(formData.get("scorerId") || "");
-    const assistId = String(formData.get("assistId") || "") || undefined;
-    const quarter = Number(formData.get("quarter") || 1);
-    const minute = Number(formData.get("minute") || 0);
+    const assistIdRaw = String(formData.get("assistId") || "");
+    const assistId = assistIdRaw || undefined;
+    const quarterRaw = Number(formData.get("quarter") ?? 1);
+    const quarter = quarterRaw || 0; // 0 = 쿼터 미지정
+    const minute = 0;
     let isOwnGoal = Boolean(formData.get("isOwnGoal"));
 
-    // "자책골" 선택 시 → isOwnGoal=true, scorerId는 빈 문자열로 처리
+    // "자책골" 선택 시
     if (scorerId === "OWN_GOAL") {
       isOwnGoal = true;
-      scorerId = attendingMembers[0]?.id ?? "";
+      scorerId = "UNKNOWN";
     }
-    // 득점자 미선택 시 기본값 (단순 1점 추가)
+    // 득점자 미선택 시 → "UNKNOWN" (모름)
     if (!scorerId) {
-      scorerId = attendingMembers[0]?.id ?? "OPPONENT";
+      scorerId = "UNKNOWN";
     }
 
     if (editingGoalId) {
@@ -1238,8 +1256,9 @@ export default function MatchDetailClient({
                         type="button"
                         onClick={(e) => {
                           const input = e.currentTarget.parentElement?.querySelector("input[name=quarter]") as HTMLInputElement;
-                          if (input) input.value = "1";
+                          if (input) input.value = "0";
                           e.currentTarget.parentElement?.querySelectorAll("button").forEach((btn) => btn.classList.remove("bg-primary", "text-white"));
+                          e.currentTarget.classList.add("bg-primary", "text-white");
                         }}
                         className="h-8 rounded-lg bg-primary/10 px-3 text-xs font-bold text-primary transition-colors hover:bg-primary/20"
                       >
@@ -1307,9 +1326,9 @@ export default function MatchDetailClient({
                         )}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Q{goal.quarter}
+                        {goal.quarter > 0 ? `Q${goal.quarter}` : ""}
                         {goal.assistId
-                          ? ` · A: ${resolvePlayerName(goal.assistId)}`
+                          ? `${goal.quarter > 0 ? " · " : ""}A: ${resolvePlayerName(goal.assistId)}`
                           : ""}
                       </p>
                     </div>

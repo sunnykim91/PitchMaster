@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useMemo, useState } from "react";
+import { useRef, useMemo, useState, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import Image from "next/image";
 import { useApi, apiMutate } from "@/lib/useApi";
@@ -243,7 +244,21 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   );
 
   /* ── Local UI state ── */
-  const [duesTab, setDuesTab] = useState<"records" | "bulk" | "penalty" | "settings">("records");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const validDuesTabs = ["records", "bulk", "penalty", "settings"] as const;
+  type DuesTabKey = (typeof validDuesTabs)[number];
+  const duesTabFromUrl = searchParams.get("tab") as DuesTabKey | null;
+  const [duesTab, setDuesTabState] = useState<DuesTabKey>(
+    duesTabFromUrl && validDuesTabs.includes(duesTabFromUrl) ? duesTabFromUrl : "records"
+  );
+  const setDuesTab = useCallback((tab: DuesTabKey) => {
+    setDuesTabState(tab);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, router, pathname]);
   const [filter, setFilter] = useState<RecordFilter>("ALL");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSettingOpen, setIsSettingOpen] = useState(false);
