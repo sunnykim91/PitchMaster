@@ -418,6 +418,7 @@ export default function MatchDetailClient({
   const role = effectiveRole(userRole);
   const canManageAttendance = isStaffOrAbove(role);
   const canManage = isStaffOrAbove(role);
+  const canRecord = true; // 골/어시 기록은 모든 회원 가능
 
   const baseRoster = useMemo(
     () =>
@@ -1096,7 +1097,7 @@ export default function MatchDetailClient({
                 </p>
               </div>
             </div>
-            {canManage && (
+            {canRecord && (
               <div className="mt-4 flex flex-wrap justify-center gap-2">
                 <button
                   type="button"
@@ -1312,7 +1313,7 @@ export default function MatchDetailClient({
                           : ""}
                       </p>
                     </div>
-                    {canManage && (
+                    {canRecord && (
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
