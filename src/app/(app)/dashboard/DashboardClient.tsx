@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { useApi } from "@/lib/useApi";
+import { useApi, apiMutate } from "@/lib/useApi";
 import { formatTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/lib/ToastContext";
 
 type UpcomingMatch = {
   id: string;
@@ -14,6 +16,8 @@ type UpcomingMatch = {
   opponent_name: string | null;
   location: string | null;
   voteCounts: { attend: number; absent: number; undecided: number };
+  myVote: "ATTEND" | "ABSENT" | "MAYBE" | null;
+  myMemberId: string | null;
 };
 
 type RecentResult = {
@@ -112,6 +116,21 @@ function formatDue(iso: string) {
 
 export default function DashboardClient({ userId, initialData }: { userId: string; initialData?: DashboardData }) {
   const { data, loading, error, refetch } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
+  const { showToast } = useToast();
+  const [voting, setVoting] = useState(false);
+
+  async function handleQuickVote(matchId: string, memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
+    setVoting(true);
+    try {
+      await apiMutate("/api/attendance", "POST", { matchId, vote, memberId });
+      showToast(vote === "ATTEND" ? "참석으로 투표했습니다." : vote === "ABSENT" ? "불참으로 투표했습니다." : "미정으로 투표했습니다.");
+      await refetch();
+    } catch {
+      showToast("투표에 실패했습니다.", "error");
+    } finally {
+      setVoting(false);
+    }
+  }
 
   if (error) {
     return (
@@ -176,7 +195,28 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
                       <span className="font-semibold text-muted-foreground">미정 {upcomingMatch.voteCounts.undecided}</span>
                     </div>
                   )}
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  {upcomingMatch.myMemberId && (
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground mr-1">내 투표:</span>
+                      {([
+                        { value: "ATTEND" as const, label: "참석", variant: "success" as const },
+                        { value: "MAYBE" as const, label: "미정", variant: "warning" as const },
+                        { value: "ABSENT" as const, label: "불참", variant: "destructive" as const },
+                      ]).map((opt) => (
+                        <Button
+                          key={opt.value}
+                          type="button"
+                          variant={upcomingMatch.myVote === opt.value ? opt.variant : "outline"}
+                          size="sm"
+                          disabled={voting}
+                          onClick={() => handleQuickVote(upcomingMatch.id, upcomingMatch.myMemberId!, opt.value)}
+                        >
+                          {opt.label}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <Button size="sm" asChild>
                       <Link href={`/matches/${upcomingMatch.id}`}>상세 보기</Link>
                     </Button>
