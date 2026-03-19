@@ -387,6 +387,9 @@ export default function MatchDetailClient({
   const [tacticsKey, setTacticsKey] = useState(0);
   const [generatedSquads, setGeneratedSquads] = useState<GeneratedSquad[]>([]);
 
+  /* ── Tab state ── */
+  const [activeTab, setActiveTab] = useState<"info" | "record" | "tactics" | "diary">("info");
+
   /* ── Local UI state ── */
   const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
@@ -675,6 +678,33 @@ export default function MatchDetailClient({
 
   return (
     <div className="grid gap-5 stagger-children">
+      {/* ── Sticky Tab Bar ── */}
+      <div className="sticky top-0 z-10 -mx-1 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="flex">
+          {([
+            { key: "info", label: "기본 정보" },
+            { key: "record", label: "경기 기록" },
+            { key: "tactics", label: "전술판" },
+            { key: "diary", label: "일지" },
+          ] as const).map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                "flex-1 py-3 text-sm font-medium transition-colors border-b-2",
+                activeTab === tab.key
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Tab: 기본 정보 ── */}
+      {activeTab === "info" && (<>
       {/* ── 내 참석 투표 (모든 멤버, 진행 전 경기만) ── */}
       {match.status !== "COMPLETED" && (() => {
         const myMember = baseRoster.find((m) => m.id === userId);
@@ -898,7 +928,10 @@ export default function MatchDetailClient({
         </CardContent>
       </Card>
       )}
+      </>)}
 
+      {/* ── Tab: 전술판 ── */}
+      {activeTab === "tactics" && (<>
       {/* ── AI 포메이션 추천 ── */}
       {canManage && attendingPlayers.length >= 5 && (() => {
         const aiPlayers: PlayerInput[] = attendingPlayers.map((p) => ({
@@ -1002,7 +1035,10 @@ export default function MatchDetailClient({
           positions: sq.positions,
         })) : undefined}
       />
+      </>)}
 
+      {/* ── Tab: 경기 기록 ── */}
+      {activeTab === "record" && (<>
       <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
         {/* ── 골/어시스트 기록 ── */}
         <Card>
@@ -1323,70 +1359,73 @@ export default function MatchDetailClient({
               </CardContent>
             </Card>
           )}
-
-          {/* ── 경기 결과 공유 ── */}
-          <Card>
-            <CardHeader>
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
-                Share
-              </p>
-              <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
-                경기 결과 공유
-              </CardTitle>
-            </CardHeader>
-
-            <CardContent>
-              <Card className="border-primary/20 bg-primary/5 shadow-none">
-                <CardContent className="p-4">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
-                    PitchMaster
-                  </p>
-                  <p className="mt-2 font-heading text-2xl font-bold">
-                    {score}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {match.opponent ? `vs ${match.opponent}` : "친선 경기"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {match.date} {formatTime(match.time)}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  className="bg-[hsl(var(--kakao))] text-[hsl(var(--kakao-foreground))] hover:bg-[hsl(var(--kakao))]/90"
-                  onClick={handleKakaoShare}
-                >
-                  카카오톡 공유
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleShare}
-                >
-                  결과 요약 복사
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleShareCardDownload}
-                >
-                  카드 이미지 저장
-                </Button>
-              </div>
-
-              {shareMessage ? (
-                <p className="mt-2 text-xs text-primary">{shareMessage}</p>
-              ) : null}
-            </CardContent>
-          </Card>
         </div>
       </section>
+      </>)}
+
+      {/* ── Tab: 일지 ── */}
+      {activeTab === "diary" && (<>
+      {/* ── 경기 결과 공유 ── */}
+      <Card>
+        <CardHeader>
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
+            Share
+          </p>
+          <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+            경기 결과 공유
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          <Card className="border-primary/20 bg-primary/5 shadow-none">
+            <CardContent className="p-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+                PitchMaster
+              </p>
+              <p className="mt-2 font-heading text-2xl font-bold">
+                {score}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {match.opponent ? `vs ${match.opponent}` : "친선 경기"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {match.date} {formatTime(match.time)}
+              </p>
+            </CardContent>
+          </Card>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              className="bg-[hsl(var(--kakao))] text-[hsl(var(--kakao-foreground))] hover:bg-[hsl(var(--kakao))]/90"
+              onClick={handleKakaoShare}
+            >
+              카카오톡 공유
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleShare}
+            >
+              결과 요약 복사
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleShareCardDownload}
+            >
+              카드 이미지 저장
+            </Button>
+          </div>
+
+          {shareMessage ? (
+            <p className="mt-2 text-xs text-primary">{shareMessage}</p>
+          ) : null}
+        </CardContent>
+      </Card>
 
       {/* ── 경기 일지 ── */}
       <Card>
@@ -1509,6 +1548,7 @@ export default function MatchDetailClient({
           )}
         </CardContent>
       </Card>
+      </>)}
     </div>
   );
 }

@@ -242,6 +242,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   );
 
   /* ── Local UI state ── */
+  const [duesTab, setDuesTab] = useState<"records" | "bulk" | "penalty" | "settings">("records");
   const [filter, setFilter] = useState<RecordFilter>("ALL");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSettingOpen, setIsSettingOpen] = useState(false);
@@ -727,7 +728,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
 
   return (
     <div className="grid gap-5 stagger-children">
-      {/* ── Section 1: 회비 현황 ── */}
+      {/* ── Section 1: 회비 현황 (always visible) ── */}
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -735,31 +736,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
               회비 현황
             </h2>
           </div>
-          {isStaffOrAbove(role) && (
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setIsBulkMode((prev) => {
-                    if (!prev) setTimeout(() => bulkSectionRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-                    return !prev;
-                  });
-                  setIsFormOpen(false);
-                }}
-              >
-                스크린샷 일괄 등록
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => { setIsFormOpen((prev) => { if (!prev) setFormErrors({}); return !prev; }); setIsBulkMode(false); }}
-              >
-                입출금 기록 추가
-              </Button>
-            </div>
-          )}
         </div>
 
         <Card className="mt-5 border-blue-500/20 bg-blue-500/10 p-5">
@@ -779,7 +755,45 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         </Card>
       </Card>
 
+      {/* ── Dues Tab Bar ── */}
+      <div className="sticky top-0 z-10 -mx-1 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="flex">
+          {[
+            { key: "records", label: "입출금" },
+            { key: "bulk", label: "일괄 등록" },
+            { key: "penalty", label: "벌금" },
+            { key: "settings", label: "설정" },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setDuesTab(tab.key as typeof duesTab)}
+              className={cn(
+                "flex-1 py-3 text-sm font-medium transition-colors border-b-2",
+                duesTab === tab.key
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {duesTab === "records" && (
+      <>
       {/* ── Section 2: 입출금 기록 입력 (collapsible, staff only) ── */}
+      {isStaffOrAbove(role) && (
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => { setIsFormOpen((prev) => { if (!prev) setFormErrors({}); return !prev; }); }}
+          >
+            {isFormOpen ? "입력 닫기" : "입출금 기록 추가"}
+          </Button>
+        </div>
+      )}
       {isFormOpen ? (
         <Card className="p-6">
           <h3 className="mt-1 font-heading text-lg font-bold uppercase text-foreground">
@@ -892,9 +906,12 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           </form>
         </Card>
       ) : null}
+      </>
+      )}
 
+      {duesTab === "bulk" && (
+      <>
       {/* ── Section 2.5: 스크린샷 일괄 등록 ── */}
-      {isBulkMode && (
         <Card className="p-6" ref={bulkSectionRef}>
           <h3 className="mt-1 font-heading text-lg font-bold uppercase text-foreground">
             스크린샷 보고 일괄 등록
@@ -1014,8 +1031,11 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
             </div>
           </div>
         </Card>
+      </>
       )}
 
+      {duesTab === "records" && (
+      <>
       {/* ── Section 3: 입출금 내역 ── */}
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -1177,7 +1197,11 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           )}
         </div>
       </Card>
+      </>
+      )}
 
+      {duesTab === "settings" && (
+      <>
       {/* ── Section 4: 회비 기준 설정 ── */}
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -1341,7 +1365,11 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           )}
         </div>
       </Card>
+      </>
+      )}
 
+      {duesTab === "penalty" && (
+      <>
       {/* ── Section 5: 벌금 관리 ── */}
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -1553,6 +1581,8 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           )}
         </div>
       </Card>
+      </>
+      )}
     </div>
   );
 }
