@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Calendar, Trophy, Vote } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { formatTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/lib/ToastContext";
+import { EmptyState } from "@/components/EmptyState";
 
 type UpcomingMatch = {
   id: string;
@@ -164,7 +166,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
     <div className="grid gap-4 stagger-children">
       <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         {/* Next Match - Sky blue accent */}
-        <Card>
+        <Card className="bg-gradient-to-br from-primary/10 via-background to-background shadow-lg shadow-primary/5">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-sky-400">Next Match</p>
@@ -224,14 +226,16 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
                 </CardContent>
               </Card>
             ) : (
-              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/50 py-10 text-center">
-                <span className="text-3xl" aria-hidden="true">&#9917;</span>
-                <p className="mt-3 text-sm font-semibold text-foreground/70">예정된 경기가 없어요</p>
-                <p className="mt-1 text-xs text-muted-foreground">새 경기를 등록해보세요.</p>
-                <Button size="sm" className="mt-4" asChild>
-                  <Link href="/matches">경기 등록하기</Link>
-                </Button>
-              </div>
+              <EmptyState
+                icon={Calendar}
+                title="예정된 경기가 없습니다"
+                description="새 경기를 등록해보세요."
+                action={
+                  <Button size="sm" asChild>
+                    <Link href="/matches">경기 등록하기</Link>
+                  </Button>
+                }
+              />
             )}
           </CardContent>
         </Card>
@@ -266,10 +270,10 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
                 </Card>
               ))
             ) : (
-              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/50 py-8 text-center">
-                <span className="text-2xl" aria-hidden="true">&#9989;</span>
-                <p className="mt-2 text-sm text-muted-foreground">진행 중인 투표가 없습니다.</p>
-              </div>
+              <EmptyState
+                icon={Vote}
+                title="진행 중인 투표가 없습니다"
+              />
             )}
           </CardContent>
         </Card>
@@ -402,11 +406,11 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
                 )}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/50 py-10 text-center">
-                <span className="text-3xl" aria-hidden="true">&#127942;</span>
-                <p className="mt-3 text-sm font-semibold text-foreground/70">아직 완료된 경기가 없어요</p>
-                <p className="mt-1 text-xs text-muted-foreground">경기를 진행하면 결과가 여기에 표시됩니다.</p>
-              </div>
+              <EmptyState
+                icon={Trophy}
+                title="아직 완료된 경기가 없습니다"
+                description="경기를 진행하면 결과가 여기에 표시됩니다."
+              />
             )}
           </CardContent>
         </Card>

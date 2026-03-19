@@ -499,7 +499,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       <Button
                         type="button"
                         size="sm"
-                        className="bg-[#FEE500] text-[#191919] hover:bg-[#FDD835] text-xs"
+                        className="bg-[hsl(var(--kakao))] text-[hsl(var(--kakao-foreground))] hover:bg-[hsl(var(--kakao))]/90 text-xs"
                         onClick={() => shareVoteLink({
                           matchId: match.id,
                           date: match.date,

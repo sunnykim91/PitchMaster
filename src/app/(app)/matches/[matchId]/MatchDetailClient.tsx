@@ -1357,7 +1357,7 @@ export default function MatchDetailClient({
                 <Button
                   type="button"
                   size="sm"
-                  className="bg-[#FEE500] text-[#191919] hover:bg-[#FDD835]"
+                  className="bg-[hsl(var(--kakao))] text-[hsl(var(--kakao-foreground))] hover:bg-[hsl(var(--kakao))]/90"
                   onClick={handleKakaoShare}
                 >
                   카카오톡 공유

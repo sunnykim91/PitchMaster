@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useCallback, useState } from "react";
+import { Bell } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/EmptyState";
 
 type Notification = {
   id: string;
@@ -241,9 +243,7 @@ export default function NotificationsClient({ initialData }: { initialData: Init
         </CardHeader>
         <CardContent>
           {notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-sm text-muted-foreground">새로운 알림이 없습니다.</p>
-            </div>
+            <EmptyState icon={Bell} title="새로운 알림이 없습니다" />
           ) : (
             <div className="space-y-2">
               {notifications.map((notification) => (

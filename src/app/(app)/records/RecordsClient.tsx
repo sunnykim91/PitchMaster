@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { BarChart3 } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role } from "@/lib/types";
@@ -10,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/EmptyState";
 import dynamic from "next/dynamic";
 
 const PlayerRadarChart = dynamic(() => import("@/components/charts/PlayerRadarChart"), { ssr: false });
@@ -389,9 +391,7 @@ export default function RecordsClient({
               ))}
             </div>
           ) : stats.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-sm text-muted-foreground">아직 기록이 없습니다. 경기를 진행해보세요.</p>
-            </div>
+            <EmptyState icon={BarChart3} title="아직 기록이 없습니다" description="경기를 진행해보세요." />
           ) : (
             <div className="grid gap-3 md:grid-cols-3">
               {[{
@@ -464,7 +464,7 @@ export default function RecordsClient({
               <p className="text-sm text-muted-foreground">아직 기록이 없습니다. 경기를 진행해보세요.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="table-scroll-container overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/30">

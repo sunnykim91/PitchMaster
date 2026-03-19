@@ -57,6 +57,16 @@
   --input: 215 14% 20%;
   --ring: 142 71% 45%;
 
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1rem;
+  --kakao: 51 100% 50%;
+  --kakao-foreground: 0 0% 12%;
+  --success: 142 71% 45%;
+  --warning: 43 96% 56%;
+  --info: 199 89% 48%;
+
 }
 
 body {
@@ -166,3 +176,26 @@ select optgroup {
 .stagger-children > *:nth-child(6) { animation-delay: 250ms; }
 .stagger-children > *:nth-child(7) { animation-delay: 300ms; }
 .stagger-children > *:nth-child(8) { animation-delay: 350ms; }
+.stagger-children > :nth-child(9) { animation-delay: 400ms; }
+.stagger-children > :nth-child(10) { animation-delay: 450ms; }
+.stagger-children > :nth-child(11) { animation-delay: 500ms; }
+.stagger-children > :nth-child(12) { animation-delay: 550ms; }
+
+.sidebar-atmosphere {
+  background: linear-gradient(180deg, hsl(142 71% 45% / 0.03) 0%, transparent 40%);
+}
+
+.table-scroll-container {
+  position: relative;
+}
+.table-scroll-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 32px;
+  background: linear-gradient(to right, transparent, hsl(var(--card)));
+  pointer-events: none;
+  z-index: 1;
+}

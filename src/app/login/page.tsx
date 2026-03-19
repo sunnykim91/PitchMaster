@@ -16,7 +16,7 @@ export default async function LoginPage({
 
   const kakaoButton = kakaoEnabled ? (
     <Button
-      className="h-14 rounded-2xl bg-[#FEE500] px-10 text-base font-bold text-[#1E1E1E] shadow-lg shadow-[#FEE500]/25 transition-all hover:bg-[#FEE500]/90 hover:shadow-xl hover:shadow-[#FEE500]/30"
+      className="h-14 rounded-2xl bg-[hsl(var(--kakao))] px-10 text-base font-bold text-[hsl(var(--kakao-foreground))] shadow-lg shadow-[hsl(var(--kakao))]/25 transition-all hover:bg-[hsl(var(--kakao))]/90 hover:shadow-xl hover:shadow-[hsl(var(--kakao))]/30"
       asChild
     >
       <a href={kakaoHref}>
@@ -28,7 +28,7 @@ export default async function LoginPage({
     </Button>
   ) : (
     <Button
-      className="h-14 rounded-2xl bg-[#FEE500] px-10 text-base font-bold text-[#1E1E1E]"
+      className="h-14 rounded-2xl bg-[hsl(var(--kakao))] px-10 text-base font-bold text-[hsl(var(--kakao-foreground))]"
       disabled
     >
       카카오로 시작하기 (환경변수 필요)
@@ -119,10 +119,10 @@ export default async function LoginPage({
             <div className="rounded-2xl bg-[#b2c7d9]/10 p-5">
               <p className="text-sm font-bold text-foreground mb-4">참석 인원 파악</p>
               <div className="space-y-2">
-                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[#FEE500] px-3 py-2 text-xs text-[#1E1E1E]">이번주 참석 가능하신 분?</span></div>
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">이번주 참석 가능하신 분?</span></div>
                 <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">저요~</span></div>
                 <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-muted-foreground/50 italic">읽음 23</span></div>
-                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[#FEE500] px-3 py-2 text-xs text-[#1E1E1E]">아직 답 안한 사람?? 🙏</span></div>
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">아직 답 안한 사람?? 🙏</span></div>
               </div>
               <p className="mt-4 text-xs text-rose-400">→ 결국 총무가 한 명씩 전화</p>
             </div>
@@ -131,8 +131,8 @@ export default async function LoginPage({
             <div className="rounded-2xl bg-[#b2c7d9]/10 p-5">
               <p className="text-sm font-bold text-foreground mb-4">회비 정산</p>
               <div className="space-y-2">
-                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[#FEE500] px-3 py-2 text-xs text-[#1E1E1E]">3월 회비 정산 올립니다</span></div>
-                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[#FEE500] px-3 py-2 text-xs text-[#1E1E1E]">[사진] 통장 캡쳐.jpg</span></div>
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">3월 회비 정산 올립니다</span></div>
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">[사진] 통장 캡쳐.jpg</span></div>
                 <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">저 입금했는데 확인 좀요</span></div>
                 <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">저도요 ㅠ</span></div>
               </div>
@@ -143,9 +143,9 @@ export default async function LoginPage({
             <div className="rounded-2xl bg-[#b2c7d9]/10 p-5">
               <p className="text-sm font-bold text-foreground mb-4">선수 배치</p>
               <div className="space-y-2">
-                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[#FEE500] px-3 py-2 text-xs text-[#1E1E1E]">오늘 몇 명이야?</span></div>
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">오늘 몇 명이야?</span></div>
                 <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">아직 모름 ㅋㅋ</span></div>
-                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[#FEE500] px-3 py-2 text-xs text-[#1E1E1E]">그럼 포지션은 가서 정하자</span></div>
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">그럼 포지션은 가서 정하자</span></div>
                 <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">ㅇㅇ 항상 그러잖아</span></div>
               </div>
               <p className="mt-4 text-xs text-rose-400">→ 경기장 도착해야 시작</p>
@@ -553,7 +553,7 @@ export default async function LoginPage({
             </h2>
           </div>
 
-          <div className="mt-12 overflow-x-auto">
+          <div className="table-scroll-container mt-12 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border/30">
@@ -702,7 +702,7 @@ export default async function LoginPage({
       {/* Sticky Mobile CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/30 bg-background/95 p-3 backdrop-blur-sm lg:hidden">
         <Button
-          className="h-12 w-full rounded-xl bg-[#FEE500] text-sm font-bold text-[#1E1E1E] shadow-lg shadow-[#FEE500]/25 hover:bg-[#FEE500]/90"
+          className="h-12 w-full rounded-xl bg-[hsl(var(--kakao))] text-sm font-bold text-[hsl(var(--kakao-foreground))] shadow-lg shadow-[hsl(var(--kakao))]/25 hover:bg-[hsl(var(--kakao))]/90"
           asChild
         >
           <a href={kakaoEnabled ? (inviteCode ? `/api/auth/kakao?inviteCode=${encodeURIComponent(inviteCode)}` : "/api/auth/kakao") : "#"}>

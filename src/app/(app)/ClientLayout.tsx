@@ -294,7 +294,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
         {/* Desktop Sidebar */}
         <aside className="hidden self-start lg:block animate-fade-in">
-          <Card className="sticky top-4 p-5 shadow-lg shadow-black/20">
+          <Card className="sticky top-4 p-5 shadow-lg shadow-black/20 sidebar-atmosphere">
             {sidebarContent}
           </Card>
         </aside>

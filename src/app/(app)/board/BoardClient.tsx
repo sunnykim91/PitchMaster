@@ -3,6 +3,7 @@
 import { useRef, useMemo, useState } from "react";
 import Image from "next/image";
 import type { FormEvent } from "react";
+import { MessageSquare } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
 import { isStaffOrAbove } from "@/lib/permissions";
@@ -16,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 type Post = {
   id: string;
@@ -494,9 +496,7 @@ export default function BoardClient({
         </CardHeader>
         <CardContent className="space-y-3">
           {filteredPosts.length === 0 ? (
-            <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-              해당 카테고리에 게시글이 없습니다.
-            </div>
+            <EmptyState icon={MessageSquare} title="게시글이 없습니다" />
           ) : (
             filteredPosts.map((post) => {
               const postComments = commentsByPost[post.id] ?? [];

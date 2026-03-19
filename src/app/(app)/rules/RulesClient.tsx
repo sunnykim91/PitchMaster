@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
+import { BookOpen } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
@@ -15,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 type RuleCategory = "일반" | "회비" | "경조사" | "기타";
 
@@ -299,9 +301,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
         <CardContent>
           <div className="space-y-3">
             {filteredRules.length === 0 ? (
-              <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-                등록된 회칙이 없습니다.
-              </div>
+              <EmptyState icon={BookOpen} title="등록된 회칙이 없습니다" />
             ) : (
               filteredRules.map((rule) => (
                 <Card key={rule.id} className="border-0 bg-secondary">
