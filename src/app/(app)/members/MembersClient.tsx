@@ -201,7 +201,14 @@ export default function MembersClient({
   }
 
   if (error) {
-    return <Card className="p-6"><span className="text-destructive">오류: {error}</span></Card>;
+    return (
+      <Card className="p-6">
+        <div className="flex items-center justify-between">
+          <span className="text-destructive">오류: {error}</span>
+          <Button variant="outline" size="sm" onClick={refetch}>다시 시도</Button>
+        </div>
+      </Card>
+    );
   }
 
   return (
@@ -384,7 +391,7 @@ export default function MembersClient({
                           size="sm"
                           onClick={() => setConfirmKick(member.id)}
                         >
-                          삭제
+                          제명
                         </Button>
                       )
                     )}
@@ -476,7 +483,7 @@ export default function MembersClient({
                         </Button>
                       </div>
                     ) : (
-                      <Button variant="outline" size="sm" onClick={() => setConfirmKick(member.id)}>탈퇴</Button>
+                      <Button variant="outline" size="sm" onClick={() => setConfirmKick(member.id)}>제명</Button>
                     )
                   ) : null}
                 </div>

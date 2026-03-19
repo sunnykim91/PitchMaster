@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn, formatPhone, formatTime } from "@/lib/utils";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -645,11 +646,21 @@ export default function MatchDetailClient({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="text-center space-y-2">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
-          <p className="text-sm text-muted-foreground">경기 데이터를 불러오는 중...</p>
-        </div>
+      <div className="grid gap-5 stagger-children">
+        <Card><CardHeader><Skeleton className="h-3 w-20" /><Skeleton className="mt-2 h-8 w-48" /></CardHeader>
+          <CardContent className="space-y-3">
+            <Skeleton className="h-20 w-full rounded-lg" />
+            <div className="flex gap-2"><Skeleton className="h-10 w-24" /><Skeleton className="h-10 w-24" /><Skeleton className="h-10 w-24" /></div>
+          </CardContent>
+        </Card>
+        <Card><CardContent className="p-4 space-y-3">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-40 w-full rounded-lg" />
+        </CardContent></Card>
+        <Card><CardContent className="p-4 space-y-3">
+          <Skeleton className="h-4 w-32" />
+          {[1,2,3].map(i => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
+        </CardContent></Card>
       </div>
     );
   }
@@ -713,8 +724,7 @@ export default function MatchDetailClient({
                           key={opt.value}
                           type="button"
                           variant={currentVote === opt.value ? opt.variant : "outline"}
-                          size="sm"
-                          className="text-xs"
+                          size="default"
                           onClick={() => handleProxyVote(member.memberId, opt.value)}
                         >
                           {opt.label}

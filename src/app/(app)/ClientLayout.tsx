@@ -122,6 +122,8 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             type="button"
             className="flex items-center gap-1 font-heading text-xl font-bold uppercase hover:text-primary transition-colors"
             onClick={() => setTeamMenuOpen(!teamMenuOpen)}
+            aria-expanded={teamMenuOpen}
+            aria-haspopup="listbox"
           >
             {session.user.teamName}
             {(() => {
@@ -136,7 +138,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </button>
           {teamMenuOpen && (
-            <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-lg border bg-popover p-1 shadow-lg">
+            <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-lg border bg-popover p-1 shadow-lg" role="listbox" aria-label="팀 선택">
               {teams.map((t) => (
                 <button
                   key={t.id}
@@ -261,8 +263,8 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                     <Menu className="h-4 w-4" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-[300px] overflow-y-auto">
-                  <SheetTitle className="sr-only">메뉴</SheetTitle>
+                <SheetContent side="right" className="w-[300px] overflow-y-auto">
+                  <SheetTitle className="text-sm font-bold text-foreground">메뉴</SheetTitle>
                   <SheetDescription className="sr-only">네비게이션 메뉴</SheetDescription>
                   <div className="mt-6">{sidebarContent}</div>
                 </SheetContent>
@@ -313,22 +315,24 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
       {/* Mobile Bottom Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/30 bg-background/95 backdrop-blur-sm lg:hidden">
-        <div className="flex items-center justify-around py-2">
+        <div className="flex items-center justify-around">
           {[
             { href: "/dashboard", label: "홈", icon: Home },
             { href: "/matches", label: "일정", icon: Calendar },
             { href: "/records", label: "기록", icon: Trophy },
             { href: "/dues", label: "회비", icon: Wallet },
-            { href: "/board", label: "게시판", icon: MessageSquare },
+            { href: "/members", label: "더보기", icon: Menu },
           ].map((tab) => {
-            const isActive = pathname === tab.href || pathname.startsWith(tab.href + "/");
+            const isActive = tab.href === "/members"
+              ? ["/members", "/board", "/notifications", "/rules", "/settings"].some((p) => pathname === p || pathname.startsWith(p + "/"))
+              : pathname === tab.href || pathname.startsWith(tab.href + "/");
             const Icon = tab.icon;
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] transition-colors",
+                  "flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-[10px] transition-colors",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >

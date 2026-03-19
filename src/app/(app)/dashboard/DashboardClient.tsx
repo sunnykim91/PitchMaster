@@ -107,10 +107,17 @@ function formatDue(iso: string) {
 }
 
 export default function DashboardClient({ userId, initialData }: { userId: string; initialData?: DashboardData }) {
-  const { data, loading, error } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
+  const { data, loading, error, refetch } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
 
   if (error) {
-    return <Card className="p-6"><span className="text-destructive">오류: {error}</span></Card>;
+    return (
+      <Card className="p-6">
+        <div className="flex items-center justify-between">
+          <span className="text-destructive">오류: {error}</span>
+          <Button variant="outline" size="sm" onClick={refetch}>다시 시도</Button>
+        </div>
+      </Card>
+    );
   }
 
   if (loading) {
@@ -174,7 +181,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
               </Card>
             ) : (
               <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/50 py-10 text-center">
-                <span className="text-3xl">&#9917;</span>
+                <span className="text-3xl" aria-hidden="true">&#9917;</span>
                 <p className="mt-3 text-sm font-semibold text-foreground/70">예정된 경기가 없어요</p>
                 <p className="mt-1 text-xs text-muted-foreground">새 경기를 등록해보세요.</p>
                 <Button size="sm" className="mt-4" asChild>
@@ -216,7 +223,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
               ))
             ) : (
               <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/50 py-8 text-center">
-                <span className="text-2xl">&#9989;</span>
+                <span className="text-2xl" aria-hidden="true">&#9989;</span>
                 <p className="mt-2 text-sm text-muted-foreground">진행 중인 투표가 없습니다.</p>
               </div>
             )}
@@ -352,7 +359,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/50 py-10 text-center">
-                <span className="text-3xl">&#127942;</span>
+                <span className="text-3xl" aria-hidden="true">&#127942;</span>
                 <p className="mt-3 text-sm font-semibold text-foreground/70">아직 완료된 경기가 없어요</p>
                 <p className="mt-1 text-xs text-muted-foreground">경기를 진행하면 결과가 여기에 표시됩니다.</p>
               </div>

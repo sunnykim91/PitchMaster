@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
@@ -128,6 +128,14 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     return `${yyyy}-${mm}-${dd}T17:00`;
   });
   const [playerCount, setPlayerCount] = useState(defaults.playerCount);
+
+  const formRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [isOpen]);
 
   // 자주 사용하는 장소 목록 (기존 경기에서 추출)
   const recentLocations = useMemo(() => {
@@ -270,7 +278,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
         </CardHeader>
 
         {isOpen ? (
-          <CardContent>
+          <CardContent ref={formRef}>
             <form
               className="grid gap-4 rounded-md border border-border bg-card p-5"
               action={(formData) => handleCreate(formData)}
@@ -283,6 +291,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     name="date"
                     type="date"
                     required
+                    autoFocus
                     value={matchDate}
                     onChange={(e) => {
                       const d = e.target.value;
@@ -506,7 +515,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                           key={item.value}
                           type="button"
                           variant={vote === item.value ? item.activeVariant : "secondary"}
-                          size="sm"
+                          size="default"
                           disabled={votingMatchId === match.id}
                           onClick={() => handleVote(match.id, item.value)}
                         >
@@ -519,7 +528,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         내 투표: {vote ? attendanceLabels[vote] : "미선택"}
                       </p>
                       <div className="flex gap-2 text-xs">
-                        <span className="text-green-500 font-semibold">참석 {attendCount}</span>
+                        <span className="text-emerald-400 font-semibold">참석 {attendCount}</span>
                         <span className="text-muted-foreground">·</span>
                         <span className="text-red-500 font-semibold">불참 {absentCount}</span>
                         {maybeCount > 0 && (

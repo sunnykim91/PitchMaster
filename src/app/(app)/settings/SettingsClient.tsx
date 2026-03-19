@@ -324,7 +324,7 @@ export default function SettingsClient({
               개인 설정
             </CardTitle>
           </div>
-          <Button variant="destructive" size="sm" onClick={handleLogout}>
+          <Button variant="outline" size="sm" onClick={handleLogout}>
             로그아웃
           </Button>
         </CardHeader>
