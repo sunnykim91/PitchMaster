@@ -238,7 +238,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
       {/* ── Hero: Next Match (full width) ── */}
       <div className="card-featured">
         <div className="flex items-center justify-between">
-          <CardTitle className="font-heading text-2xl font-bold uppercase">다가오는 경기</CardTitle>
+          <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">다가오는 경기</CardTitle>
           <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
             <Link href="/matches">전체 일정 &rarr;</Link>
           </Button>
@@ -249,10 +249,10 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
             <p className="mt-2 type-score text-foreground">
               {upcomingMatch.match_time ? formatTime(upcomingMatch.match_time) : "시간 미정"}
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 truncate text-sm text-muted-foreground">
               {upcomingMatch.location ?? "장소 미정"}
             </p>
-            <p className="mt-2 text-sm text-foreground/70">
+            <p className="mt-2 truncate text-sm text-foreground/70">
               상대팀:{" "}
               <span className="font-semibold text-foreground">
                 {upcomingMatch.opponent_name ?? "미정"}
@@ -261,7 +261,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
 
             {/* Vote buttons */}
             {upcomingMatch.myMemberId && (
-              <div className="mt-4 flex items-center gap-2">
+              <div className="mt-4 flex flex-wrap items-center gap-2">
                 <span className="text-xs text-muted-foreground mr-1">내 투표:</span>
                 {([
                   { value: "ATTEND" as const, label: "참석" },
@@ -363,7 +363,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">진행 중인 투표</CardTitle>
+              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">진행 중인 투표</CardTitle>
             </div>
             <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
               <Link href="/matches">투표하기 &rarr;</Link>
@@ -378,8 +378,8 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
                 >
                   <CardContent className="flex items-center justify-between p-3">
                     <div>
-                      <p className="text-sm font-semibold">{vote.title}</p>
-                      <p className="text-xs text-muted-foreground">마감: {formatDue(vote.due)}</p>
+                      <p className="truncate text-sm font-semibold">{vote.title}</p>
+                      <p className="truncate text-xs text-muted-foreground">마감: {formatDue(vote.due)}</p>
                     </div>
                     <Button variant="link" size="sm" className="text-primary" asChild>
                       <Link href={`/matches/${vote.id}`}>참여 &rarr;</Link>
@@ -399,7 +399,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
         {/* Tasks */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="font-heading text-2xl font-bold uppercase">해야 할 일</CardTitle>
+            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">해야 할 일</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {tasks.length > 0 ? (
@@ -425,7 +425,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <div>
-            <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">최근 경기 요약</CardTitle>
+            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">최근 경기 요약</CardTitle>
           </div>
           <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
             <Link href="/records">전체 기록 &rarr;</Link>

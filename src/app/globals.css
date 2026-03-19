@@ -245,12 +245,17 @@ select optgroup {
 .card-featured {
   position: relative;
   overflow: hidden;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background: hsl(var(--card));
+  border: 1px solid hsl(0 0% 100% / 0.06);
+  box-shadow: 0 4px 24px -4px hsl(16 85% 58% / 0.08), 0 1px 3px 0 rgb(0 0 0 / 0.3);
 }
 .card-featured::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, hsl(16 85% 58% / 0.06) 0%, transparent 50%);
+  background: linear-gradient(135deg, hsl(16 85% 58% / 0.08) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -258,7 +263,10 @@ select optgroup {
   background: linear-gradient(160deg, hsl(240 4% 13%) 0%, hsl(240 5% 10%) 100%);
   border: 1px solid hsl(0 0% 100% / 0.04);
   border-radius: 1rem;
-  padding: 1.25rem;
+  padding: 0.75rem 0.5rem;
+}
+@media (min-width: 640px) {
+  .card-stat { padding: 1.25rem; }
 }
 
 .card-list-item {
@@ -276,13 +284,13 @@ select optgroup {
 /* ── Athletic Premium — typography utilities ── */
 .type-score {
   font-family: var(--font-display);
-  font-size: 3rem;
+  font-size: clamp(2rem, 6vw, 3rem);
   line-height: 1;
   letter-spacing: 0.04em;
 }
 .type-stat {
   font-family: var(--font-display);
-  font-size: 2.25rem;
+  font-size: clamp(1.5rem, 5vw, 2.25rem);
   line-height: 1;
   letter-spacing: 0.02em;
 }
