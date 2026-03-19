@@ -227,7 +227,7 @@ export default function AppScreenSlider() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrent((prev) => (prev + 1) % screens.length);
-    }, 4000);
+    }, 6000);
     return () => clearInterval(timer);
   }, []);
 
@@ -264,10 +264,12 @@ export default function AppScreenSlider() {
           <button
             key={i}
             onClick={() => setCurrent(i)}
-            className={`h-1.5 rounded-full transition-all ${
-              i === current ? "w-6 bg-primary" : "w-1.5 bg-white/20"
-            }`}
-          />
+            className="flex items-center justify-center p-2"
+          >
+            <span className={`block rounded-full transition-all ${
+              i === current ? "h-1.5 w-6 bg-primary" : "h-1.5 w-1.5 bg-white/20"
+            }`} />
+          </button>
         ))}
       </div>
     </div>

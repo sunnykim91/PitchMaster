@@ -71,12 +71,15 @@ export default async function LoginPage({
           <div className="flex flex-col items-center gap-3 lg:items-start">
             {kakaoButton}
             <p className="text-xs text-muted-foreground">
-              별도 회원가입 없이, 카카오 계정으로 바로 시작할 수 있어요.
+              무료 · 광고 없음 · 1분이면 팀 세팅 완료
+            </p>
+            <p className="text-[11px] text-muted-foreground/60">
+              현재 37명 규모 팀이 3개월째 사용 중
             </p>
           </div>
         </div>
 
-        {/* 오른쪽: 앱 화면 미리보기 슬라이더 */}
+        {/* 오른쪽: 앱 화면 미리보기 슬라이더 (모바일에서는 CTA 아래) */}
         <div className="w-full max-w-sm flex-shrink-0">
           <AppScreenSlider />
         </div>
@@ -404,73 +407,37 @@ export default async function LoginPage({
               {
                 icon: "📡",
                 title: "실시간 동기화",
-                desc: "참석 투표, 골 기록, MVP 투표가 실시간으로 반영. 새로고침 불필요.",
+                desc: "참석 투표, 골 기록, MVP 투표가 실시간 반영. 새로고침 불필요.",
                 color: "text-emerald-400",
               },
               {
                 icon: "📊",
                 title: "팀 전적 & 데이터 분석",
-                desc: "승/무/패, 득실차, 최근 5경기 한눈에. 레이더 차트로 개인 능력치까지.",
+                desc: "승/무/패, 득실차, 최근 5경기. 레이더 차트로 개인 능력치까지.",
                 color: "text-sky-400",
-              },
-              {
-                icon: "🏆",
-                title: "경기 기록 & MVP",
-                desc: "골, 어시스트, 출석 자동 집계. MVP 투표 + 시즌 랭킹 + 승패 기록.",
-                color: "text-rose-400",
               },
               {
                 icon: "⚽",
                 title: "축구 & 풋살 모두 지원",
-                desc: "팀 생성 시 축구/풋살 선택. 인원수, 쿼터, 포메이션이 자동으로 맞춰져요.",
+                desc: "팀 생성 시 선택하면 인원수, 쿼터, 포메이션이 자동으로.",
                 color: "text-primary",
-              },
-              {
-                icon: "🎽",
-                title: "심판 · 촬영 역할 배정",
-                desc: "쉬는 선수 중 심판/촬영 배정. 전술판 캡처에도 함께 표시.",
-                color: "text-blue-400",
               },
               {
                 icon: "💬",
                 title: "카카오톡 공유",
-                desc: "경기 결과, 투표 링크, 팀 초대를 카카오톡 피드 카드로 공유.",
+                desc: "경기 결과, 투표 링크, 팀 초대를 카카오톡 카드로 공유.",
                 color: "text-amber-400",
               },
               {
-                icon: "📸",
-                title: "게시판 & 사진 공유",
-                desc: "팀 게시판에 사진 업로드. 게시글 수정/삭제도 자유롭게.",
-                color: "text-pink-400",
-              },
-              {
-                icon: "🔔",
-                title: "푸시 알림",
-                desc: "투표 마감 임박, 새 경기 등록 시 브라우저 푸시 알림으로 안내.",
-                color: "text-violet-400",
-              },
-              {
                 icon: "👥",
-                title: "팀원 사전등록 & 연동",
-                desc: "가입 전 팀원도 미리 등록. 카카오 가입 시 자동 연동.",
+                title: "멀티팀 · 사전등록",
+                desc: "한 계정으로 여러 팀. 가입 전 팀원도 미리 등록 + 자동 연동.",
                 color: "text-cyan-400",
-              },
-              {
-                icon: "💰",
-                title: "벌금 관리",
-                desc: "벌금 규칙 등록, 부과, 납부 확인까지. 미납 현황도 한눈에.",
-                color: "text-orange-400",
-              },
-              {
-                icon: "🔄",
-                title: "멀티팀 지원",
-                desc: "한 계정으로 여러 팀 운영. A팀 회장이면서 B팀 평회원도 가능.",
-                color: "text-teal-400",
               },
               {
                 icon: "📱",
                 title: "앱처럼 설치 가능",
-                desc: "홈 화면에 추가하면 앱처럼 사용. 인터넷 없어도 기본 기능 OK.",
+                desc: "홈 화면에 추가하면 앱처럼. 오프라인에서도 기본 기능 OK.",
                 color: "text-indigo-400",
               },
             ].map((item) => (
@@ -529,15 +496,15 @@ export default async function LoginPage({
                 {[
                   {
                     feature: "참석 투표",
-                    kakao: "1/2 수동 집계",
+                    kakao: "수동 집계",
                     band: "투표 기능",
-                    pm: "자동 집계 + 마감",
+                    pm: "실시간 자동 집계",
                   },
                   {
                     feature: "회비 관리",
                     kakao: "엑셀 / 메모",
                     band: "없음",
-                    pm: "캡쳐 한 장이면 자동 입력",
+                    pm: "통장 캡쳐 자동 입력",
                   },
                   {
                     feature: "선수 배치",
@@ -546,46 +513,16 @@ export default async function LoginPage({
                     pm: "AI 자동 배치 + 전술판",
                   },
                   {
-                    feature: "경기 기록",
+                    feature: "경기 기록 · 전적",
                     kakao: "없음",
                     band: "없음",
-                    pm: "골/어시/MVP 자동 집계",
-                  },
-                  {
-                    feature: "팀원 관리",
-                    kakao: "채팅방 = 팀원?",
-                    band: "멤버 관리",
-                    pm: "사전등록 + 자동연동",
-                  },
-                  {
-                    feature: "실시간 동기화",
-                    kakao: "없음",
-                    band: "없음",
-                    pm: "실시간 투표/기록 반영",
+                    pm: "골/어시/MVP + 승무패 자동",
                   },
                   {
                     feature: "데이터 분석",
                     kakao: "없음",
                     band: "없음",
-                    pm: "레이더/바 차트 시각화",
-                  },
-                  {
-                    feature: "카톡 공유",
-                    kakao: "텍스트만",
-                    band: "없음",
-                    pm: "피드 카드 공유",
-                  },
-                  {
-                    feature: "팀 전적",
-                    kakao: "없음",
-                    band: "없음",
-                    pm: "승/무/패 + 득실차 자동 관리",
-                  },
-                  {
-                    feature: "풋살 지원",
-                    kakao: "없음",
-                    band: "없음",
-                    pm: "축구/풋살 모두 지원",
+                    pm: "레이더 차트 + 랭킹",
                   },
                   {
                     feature: "멀티팀",

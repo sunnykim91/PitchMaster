@@ -114,6 +114,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
 
   const [isOpen, setIsOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [votingMatchId, setVotingMatchId] = useState<string | null>(null);
   const today = new Date().toISOString().split("T")[0];
   const [matchDate, setMatchDate] = useState(today);
   const [matchTime, setMatchTime] = useState("09:00");
@@ -194,7 +195,9 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   }
 
   async function handleVote(matchId: string, vote: AttendanceVote) {
+    setVotingMatchId(matchId);
     const { error } = await apiMutate("/api/attendance", "POST", { matchId, vote });
+    setVotingMatchId(null);
     if (!error) {
       await refetchAttendance();
       showToast("참석 의사를 저장했습니다.");
@@ -487,12 +490,10 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-3 md:grid-cols-[1.2fr_1fr]">
-                  <div className="rounded-md border border-border bg-card p-4 text-sm text-muted-foreground">
-                    <p className="font-bold text-card-foreground">경기 정보</p>
-                    <p className="mt-2">쿼터 {match.quarterCount} · {match.quarterDuration}분 경기</p>
-                    <p>휴식 {match.breakDuration}분</p>
-                  </div>
+                <p className="mb-3 text-xs text-muted-foreground">
+                  쿼터 {match.quarterCount} · {match.quarterDuration}분 · 휴식 {match.breakDuration}분
+                </p>
+                <div className="grid gap-3">
                   <div className="rounded-md border border-border bg-card p-4">
                     <p className="text-sm font-bold text-card-foreground">참석 투표</p>
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -506,6 +507,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                           type="button"
                           variant={vote === item.value ? item.activeVariant : "secondary"}
                           size="sm"
+                          disabled={votingMatchId === match.id}
                           onClick={() => handleVote(match.id, item.value)}
                         >
                           {item.label}

@@ -11,9 +11,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { Check, Copy, Link2, Menu, ChevronDown, Plus } from "lucide-react";
+import { Check, Copy, Link2, Menu, ChevronDown, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
+import { cn } from "@/lib/utils";
 
 type ClientLayoutProps = {
   session: Session;
@@ -91,13 +92,15 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
   const navItems = useMemo(
     () => [
-      { href: "/dashboard", label: "홈", detail: "대시보드" },
-      { href: "/dues", label: "회비 관리", detail: "수납/지출" },
-      { href: "/matches", label: "경기 관리", detail: "일정/투표" },
-      { href: "/records", label: "내 기록", detail: "통계/랭킹" },
-      { href: "/members", label: "회원 관리", detail: "멤버/권한" },
-      { href: "/rules", label: "회칙", detail: "규정/공지" },
-      { href: "/settings", label: "설정", detail: "개인/팀" },
+      { href: "/dashboard", label: "홈", detail: "대시보드", icon: Home },
+      { href: "/matches", label: "경기 관리", detail: "일정/투표", icon: Calendar },
+      { href: "/records", label: "내 기록", detail: "통계/랭킹", icon: Trophy },
+      { href: "/dues", label: "회비 관리", detail: "수납/지출", icon: Wallet },
+      { href: "/members", label: "회원 관리", detail: "멤버/권한", icon: Users },
+      { href: "/board", label: "게시판", detail: "공지/자유", icon: MessageSquare },
+      { href: "/notifications", label: "알림", detail: "알림 센터", icon: Bell },
+      { href: "/rules", label: "회칙", detail: "규정/공지", icon: BookOpen },
+      { href: "/settings", label: "설정", detail: "개인/팀", icon: Settings },
     ],
     []
   );
@@ -215,12 +218,6 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
         </CardContent>
       </Card>
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/board">게시판</Link>
-        </Button>
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/notifications">알림</Link>
-        </Button>
         <Button variant="outline" size="sm" className="gap-1" asChild>
           <Link href="/team"><Plus className="h-3.5 w-3.5" />새 팀</Link>
         </Button>
@@ -282,7 +279,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
         </aside>
 
         {/* Main Content */}
-        <div className="min-w-0 space-y-4">
+        <div className="min-w-0 space-y-4 pb-16 lg:pb-0">
           {isStaffOrAbove(displayRole) && (
             <Card className="hidden lg:block">
               <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
@@ -313,6 +310,35 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           </footer>
         </div>
       </div>
+
+      {/* Mobile Bottom Tab Bar */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/30 bg-background/95 backdrop-blur-sm lg:hidden">
+        <div className="flex items-center justify-around py-2">
+          {[
+            { href: "/dashboard", label: "홈", icon: Home },
+            { href: "/matches", label: "일정", icon: Calendar },
+            { href: "/records", label: "기록", icon: Trophy },
+            { href: "/dues", label: "회비", icon: Wallet },
+            { href: "/board", label: "게시판", icon: MessageSquare },
+          ].map((tab) => {
+            const isActive = pathname === tab.href || pathname.startsWith(tab.href + "/");
+            const Icon = tab.icon;
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className={cn(
+                  "flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] transition-colors",
+                  isActive ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                <Icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-muted-foreground")} />
+                {tab.label}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }

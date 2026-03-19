@@ -159,10 +159,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Button size="sm" asChild>
-                      <Link href={`/matches/${upcomingMatch.id}`}>일정 상세보기</Link>
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/matches/${upcomingMatch.id}`}>참석 투표하기</Link>
+                      <Link href={`/matches/${upcomingMatch.id}`}>상세 보기</Link>
                     </Button>
                   </div>
                 </CardContent>

@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
   href: string;
   label: string;
   detail?: string;
+  icon?: LucideIcon;
 };
 
 type SidebarNavProps = {
@@ -39,13 +40,16 @@ export default function SidebarNav({ items }: SidebarNavProps) {
               {isActive && (
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-primary" />
               )}
-              <span className="flex flex-col items-start">
+              <span className="flex items-center gap-2.5">
+                {item.icon && <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />}
+                <span className="flex flex-col items-start">
                 <span className="font-semibold text-sm">{item.label}</span>
                 {item.detail && (
                   <span className={cn("text-[11px]", isActive ? "text-primary/80" : "text-muted-foreground")}>
                     {item.detail}
                   </span>
                 )}
+                </span>
               </span>
               <ChevronRight className={cn("h-3.5 w-3.5 transition-transform duration-150", isActive ? "text-primary" : "text-muted-foreground")} />
             </Link>
