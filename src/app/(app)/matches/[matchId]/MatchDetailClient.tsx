@@ -675,6 +675,44 @@ export default function MatchDetailClient({
 
   return (
     <div className="grid gap-5 stagger-children">
+      {/* ── 내 참석 투표 (모든 멤버, 진행 전 경기만) ── */}
+      {match.status !== "COMPLETED" && (() => {
+        const myMember = baseRoster.find((m) => m.id === userId);
+        if (!myMember) return null;
+        const myVote = memberVoteMap[myMember.memberId];
+        return (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-muted-foreground">내 참석 투표</p>
+                  <p className="mt-1 text-sm font-semibold">
+                    {myVote === "ATTEND" ? "참석" : myVote === "ABSENT" ? "불참" : myVote === "MAYBE" ? "미정" : "미투표"}
+                  </p>
+                </div>
+                <div className="flex gap-1">
+                  {([
+                    { value: "ATTEND" as const, label: "참석", variant: "success" as const },
+                    { value: "MAYBE" as const, label: "미정", variant: "warning" as const },
+                    { value: "ABSENT" as const, label: "불참", variant: "destructive" as const },
+                  ]).map((opt) => (
+                    <Button
+                      key={opt.value}
+                      type="button"
+                      variant={myVote === opt.value ? opt.variant : "outline"}
+                      size="default"
+                      onClick={() => handleProxyVote(myMember.memberId, opt.value)}
+                    >
+                      {opt.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       {/* ── 참석투표 관리 (운영진 이상, 진행 전 경기만) ── */}
       {canManage && match.status !== "COMPLETED" && (
         <Card>
