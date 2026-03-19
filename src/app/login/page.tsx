@@ -52,19 +52,19 @@ export default async function LoginPage({
           </div>
 
           <h1 className="font-heading text-4xl font-bold leading-tight md:text-5xl lg:text-[3.5rem]">
-            우리 팀 운영,
+            총무님,
             <br />
-            <span className="text-primary">이제 톡방 말고 여기서.</span>
+            <span className="text-primary">아직도 카톡으로 운영하세요?</span>
           </h1>
 
           <div className="mx-auto max-w-md space-y-2 lg:mx-0">
             <p className="text-lg text-muted-foreground">
-              실시간 참석투표 · AI 라인업 · 회비 자동정리 · 기록 분석
+              읽씹 없는 참석투표 · 캡쳐 한 장이면 끝나는 회비정산
               <br />
-              카카오톡 공유까지 한 곳에서.
+              경기장 가기 전에 완성되는 AI 라인업
             </p>
             <p className="text-lg font-semibold text-foreground">
-              조기축구 · 풋살 운영에 관한 모든 것.
+              조기축구 · 풋살 팀 운영, 이제 여기서 끝내세요.
             </p>
           </div>
 
@@ -106,12 +106,12 @@ export default async function LoginPage({
       <section className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
         <div className="mx-auto max-w-4xl px-6 py-20 text-center">
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-rose-400">
-            이런 경험 있으시죠?
+            총무의 현실
           </p>
           <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
-            조기축구 · 풋살 운영,
+            매주 반복되는 이 루틴,
             <br />
-            생각보다 일이 많습니다.
+            지치지 않으셨나요?
           </h2>
 
           <div className="mt-12 grid gap-6 md:grid-cols-3">
@@ -162,10 +162,10 @@ export default async function LoginPage({
               App Preview
             </p>
             <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
-              실제 이렇게 사용해요.
+              총무가 필요한 건 다 있습니다.
             </h2>
             <p className="mt-3 text-muted-foreground">
-              대시보드부터 AI 라인업까지, 모든 기능을 한 앱에서.
+              카톡 + 엑셀 + 현장 라인업, 세 가지를 한 곳에서.
             </p>
           </div>
 
@@ -203,10 +203,10 @@ export default async function LoginPage({
               Smart Finance
             </p>
             <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
-              모임통장 캡쳐 한 장이면 끝.
+              통장 캡쳐 한 장이면<br />이번 달 회비 정산 끝.
             </h2>
             <p className="mt-3 text-muted-foreground">
-              더 이상 엑셀에 한 줄씩 옮겨 적지 않아도 돼요.
+              엑셀 열고 한 줄씩 대조하던 그 시간, 이제 돌려받으세요.
             </p>
           </div>
 
@@ -315,10 +315,10 @@ export default async function LoginPage({
               Auto Lineup
             </p>
             <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
-              누가 어디서 뛸지, 더 이상 고민하지 마세요.
+              경기장 도착 전에<br />라인업이 완성됩니다.
             </h2>
             <p className="mt-3 text-muted-foreground">
-              참석 인원과 선호 포지션만 있으면, 나머지는 자동입니다.
+              &ldquo;오늘 누가 어디서 뛰어?&rdquo; 이제 안 물어봐도 됩니다.
             </p>
           </div>
 
@@ -422,7 +422,7 @@ export default async function LoginPage({
               And More
             </p>
             <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
-              그 밖에도 다 돼요.
+              팀 운영에 필요한 것, 더 있습니다.
             </h2>
           </div>
 
@@ -639,7 +639,7 @@ export default async function LoginPage({
               How it works
             </p>
             <h2 className="mt-4 font-heading text-3xl font-bold md:text-4xl">
-              시작은 3초면 충분해요.
+              세팅은 1분이면 끝납니다.
             </h2>
           </div>
 
@@ -683,12 +683,12 @@ export default async function LoginPage({
       <section className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
         <div className="mx-auto max-w-3xl px-6 py-24 text-center">
           <h2 className="font-heading text-3xl font-bold md:text-4xl">
-            이번 주 경기,
+            이번 주부터 카톡 대신
             <br />
-            <span className="text-primary">PitchMaster로 준비해보세요.</span>
+            <span className="text-primary">PitchMaster로 운영해보세요.</span>
           </h2>
           <p className="mt-4 text-muted-foreground">
-            무료로 시작할 수 있어요. 팀원 초대도 링크 하나면 끝.
+            현재 무료. 팀원 초대도 링크 하나면 끝입니다.
           </p>
           <div className="mt-8 flex flex-col items-center gap-3">
             {kakaoButton}
