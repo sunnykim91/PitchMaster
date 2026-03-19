@@ -667,10 +667,33 @@ export default function MatchDetailClient({
               참석 투표 관리
             </CardTitle>
             <p className="text-xs text-muted-foreground">멤버별 참석/불참/미정을 대리 설정할 수 있습니다.</p>
+            {/* 투표 현황 카운터 */}
+            {(() => {
+              const attend = baseRoster.filter((m) => memberVoteMap[m.memberId] === "ATTEND").length;
+              const absent = baseRoster.filter((m) => memberVoteMap[m.memberId] === "ABSENT").length;
+              const maybe = baseRoster.filter((m) => memberVoteMap[m.memberId] === "MAYBE").length;
+              const noVote = baseRoster.length - attend - absent - maybe;
+              return (
+                <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold">
+                  <span className="text-emerald-400">참석 {attend}</span>
+                  <span className="text-red-400">불참 {absent}</span>
+                  <span className="text-amber-400">미정 {maybe}</span>
+                  <span className="text-muted-foreground">미투표 {noVote}</span>
+                  <span className="text-muted-foreground/50">· 총 {baseRoster.length}명</span>
+                </div>
+              );
+            })()}
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {baseRoster.map((member) => {
+              {[...baseRoster].sort((a, b) => {
+                const voteA = memberVoteMap[a.memberId];
+                const voteB = memberVoteMap[b.memberId];
+                const order: Record<string, number> = { ATTEND: 0, MAYBE: 1, ABSENT: 2 };
+                const orderA = voteA ? (order[voteA] ?? 3) : 4;
+                const orderB = voteB ? (order[voteB] ?? 3) : 4;
+                return orderA - orderB;
+              }).map((member) => {
                 const currentVote = memberVoteMap[member.memberId];
                 return (
                   <div key={member.id} className="flex items-center justify-between rounded-lg bg-secondary px-4 py-3">
