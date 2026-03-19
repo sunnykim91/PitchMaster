@@ -29,17 +29,14 @@ export default function SidebarNav({ items }: SidebarNavProps) {
             key={item.href}
             variant={isActive ? "secondary" : "ghost"}
             className={cn(
-              "w-full justify-between h-auto py-2.5 px-3 relative",
+              "w-full justify-between h-auto py-2.5 px-3",
               isActive
-                ? "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15"
-                : "hover:translate-x-0.5"
+                ? "bg-primary/10 text-primary hover:bg-primary/15"
+                : "text-muted-foreground hover:text-foreground hover:bg-white/[0.03]"
             )}
             asChild
           >
             <Link href={item.href}>
-              {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-primary" />
-              )}
               <span className="flex items-center gap-2.5">
                 {item.icon && <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />}
                 <span className="flex flex-col items-start">
@@ -51,7 +48,11 @@ export default function SidebarNav({ items }: SidebarNavProps) {
                 )}
                 </span>
               </span>
-              <ChevronRight className={cn("h-3.5 w-3.5 transition-transform duration-150", isActive ? "text-primary" : "text-muted-foreground")} />
+              {isActive ? (
+                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+              ) : (
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-150" />
+              )}
             </Link>
           </Button>
         );

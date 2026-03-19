@@ -6,7 +6,8 @@ function Skeleton({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("animate-shimmer rounded-md", className)}
+      className={cn("rounded-md bg-white/4", className)}
+      style={{ animation: "skeleton-pulse 2s ease-in-out infinite" }}
       {...props}
     />
   );

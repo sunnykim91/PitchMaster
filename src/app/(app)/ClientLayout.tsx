@@ -334,7 +334,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       </div>
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/30 bg-background/95 backdrop-blur-sm lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.06] bg-[hsl(240_6%_6%/0.85)] backdrop-blur-xl backdrop-saturate-150 lg:hidden">
         <div className="flex items-center justify-around">
           {[
             { href: "/dashboard", label: "홈", icon: Home },
@@ -349,27 +349,36 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                 key={tab.href}
                 href={tab.href}
                 className={cn(
-                  "flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-[10px] transition-colors",
+                  "relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-[10px] transition-colors",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
+                {isActive && (
+                  <span className="absolute -top-1 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-primary" />
+                )}
                 <Icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-muted-foreground")} />
                 {tab.label}
               </Link>
             );
           })}
-          <button
-            onClick={() => setMoreSheetOpen(true)}
-            className={cn(
-              "flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-[10px] transition-colors",
-              ["/members", "/board", "/notifications", "/rules", "/settings"].some((p) => pathname === p || pathname.startsWith(p + "/"))
-                ? "text-primary"
-                : "text-muted-foreground"
-            )}
-          >
-            <MoreHorizontal className="h-5 w-5" />
-            <span className="text-[10px]">더보기</span>
-          </button>
+          {(() => {
+            const isMoreActive = ["/members", "/board", "/notifications", "/rules", "/settings"].some((p) => pathname === p || pathname.startsWith(p + "/"));
+            return (
+              <button
+                onClick={() => setMoreSheetOpen(true)}
+                className={cn(
+                  "relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-[10px] transition-colors",
+                  isMoreActive ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                {isMoreActive && (
+                  <span className="absolute -top-1 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-primary" />
+                )}
+                <MoreHorizontal className="h-5 w-5" />
+                <span className="text-[10px]">더보기</span>
+              </button>
+            );
+          })()}
         </div>
       </nav>
 

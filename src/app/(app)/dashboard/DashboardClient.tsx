@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Calendar, Trophy, Vote } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
-import { formatTime } from "@/lib/utils";
+import { cn, formatTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -59,6 +59,21 @@ const emptyData: DashboardData = {
   activeVotes: [],
   tasks: [],
   teamRecord: { wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, recent5: [] },
+};
+
+const voteStyles = {
+  ATTEND: {
+    active: "bg-[hsl(var(--success))] text-white shadow-[0_2px_8px_-2px_hsl(var(--success)/0.4)]",
+    inactive: "bg-[hsl(var(--success)/0.08)] text-[hsl(var(--success))] border border-[hsl(var(--success)/0.2)] hover:bg-[hsl(var(--success)/0.15)]",
+  },
+  MAYBE: {
+    active: "bg-[hsl(var(--warning))] text-[hsl(240_6%_6%)] shadow-[0_2px_8px_-2px_hsl(var(--warning)/0.4)]",
+    inactive: "bg-white/[0.04] text-muted-foreground border border-white/[0.06] hover:bg-white/[0.08]",
+  },
+  ABSENT: {
+    active: "bg-[hsl(var(--loss))] text-white shadow-[0_2px_8px_-2px_hsl(var(--loss)/0.4)]",
+    inactive: "bg-white/[0.04] text-muted-foreground border border-white/[0.06] hover:bg-white/[0.08]",
+  },
 };
 
 function CardSkeleton() {
@@ -159,11 +174,13 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
   if (loading) {
     return (
       <div className="grid gap-4 stagger-children">
-        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <CardSkeleton />
-          <CardSkeleton />
+        <CardSkeleton />
+        <div className="grid grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 rounded-md" />
+          ))}
         </div>
-        <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="grid gap-4 lg:grid-cols-2">
           <CardSkeleton />
           <CardSkeleton />
         </div>
@@ -172,6 +189,15 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
   }
 
   const { upcomingMatch, activeVotes, tasks, recentResult, teamRecord } = data;
+
+  // Attendance bar percentages
+  const voteCounts = upcomingMatch?.voteCounts ?? { attend: 0, absent: 0, undecided: 0 };
+  const voteTotal = voteCounts.attend + voteCounts.absent + voteCounts.undecided;
+  const attendPercent = voteTotal > 0 ? (voteCounts.attend / voteTotal) * 100 : 0;
+  const absentPercent = voteTotal > 0 ? (voteCounts.absent / voteTotal) * 100 : 0;
+
+  // Team record totals
+  const recordTotal = teamRecord.wins + teamRecord.draws + teamRecord.losses;
 
   return (
     <>
@@ -209,83 +235,131 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
       </div>
     )}
     <div className="grid gap-4 stagger-children">
-      <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-        {/* Next Match - Sky blue accent */}
-        <Card className="bg-gradient-to-br from-primary/10 via-background to-background shadow-lg shadow-primary/5">
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <div>
-              <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">다가오는 경기</CardTitle>
-            </div>
-            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
-              <Link href="/matches">전체 일정 &rarr;</Link>
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {upcomingMatch ? (
-              <Card className="border-0 border-l-2 border-l-sky-500/40 bg-secondary hover:bg-secondary/70 cursor-pointer transition-colors">
-                <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground">{formatDate(upcomingMatch.match_date)}</p>
-                  <p className="mt-1 text-lg font-bold">
-                    {upcomingMatch.match_time ? formatTime(upcomingMatch.match_time) : "시간 미정"} · {upcomingMatch.location ?? "장소 미정"}
-                  </p>
-                  <p className="mt-1 text-sm text-foreground/70">
-                    상대팀:{" "}
-                    <span className="font-semibold text-foreground">
-                      {upcomingMatch.opponent_name ?? "미정"}
-                    </span>
-                  </p>
-                  {upcomingMatch.voteCounts && (
-                    <div className="mt-3 flex items-center gap-3 text-xs">
-                      <span className="font-semibold text-emerald-400">참석 {upcomingMatch.voteCounts.attend}</span>
-                      <span className="font-semibold text-rose-400">불참 {upcomingMatch.voteCounts.absent}</span>
-                      <span className="font-semibold text-muted-foreground">미정 {upcomingMatch.voteCounts.undecided}</span>
-                    </div>
-                  )}
-                  {upcomingMatch.myMemberId && (
-                    <div className="mt-3 flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground mr-1">내 투표:</span>
-                      {([
-                        { value: "ATTEND" as const, label: "참석", variant: "success" as const },
-                        { value: "MAYBE" as const, label: "미정", variant: "warning" as const },
-                        { value: "ABSENT" as const, label: "불참", variant: "destructive" as const },
-                      ]).map((opt) => (
-                        <Button
-                          key={opt.value}
-                          type="button"
-                          variant={upcomingMatch.myVote === opt.value ? opt.variant : "outline"}
-                          size="sm"
-                          disabled={voting}
-                          className="active:scale-105 transition-transform"
-                          onClick={() => handleQuickVote(upcomingMatch.id, upcomingMatch.myMemberId!, opt.value)}
-                        >
-                          {opt.label}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Button size="sm" asChild>
-                      <Link href={`/matches/${upcomingMatch.id}`}>상세 보기</Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <EmptyState
-                icon={Calendar}
-                title="예정된 경기가 없습니다"
-                description="새 경기를 등록해보세요."
-                action={
-                  <Button size="sm" asChild>
-                    <Link href="/matches">경기 등록하기</Link>
-                  </Button>
-                }
-              />
-            )}
-          </CardContent>
-        </Card>
+      {/* ── Hero: Next Match (full width) ── */}
+      <div className="card-featured">
+        <div className="flex items-center justify-between">
+          <CardTitle className="font-heading text-2xl font-bold uppercase">다가오는 경기</CardTitle>
+          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
+            <Link href="/matches">전체 일정 &rarr;</Link>
+          </Button>
+        </div>
+        {upcomingMatch ? (
+          <div className="mt-4">
+            <p className="type-overline">{formatDate(upcomingMatch.match_date)}</p>
+            <p className="mt-2 type-score text-foreground">
+              {upcomingMatch.match_time ? formatTime(upcomingMatch.match_time) : "시간 미정"}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {upcomingMatch.location ?? "장소 미정"}
+            </p>
+            <p className="mt-2 text-sm text-foreground/70">
+              상대팀:{" "}
+              <span className="font-semibold text-foreground">
+                {upcomingMatch.opponent_name ?? "미정"}
+              </span>
+            </p>
 
-        {/* Votes - Violet accent */}
+            {/* Vote buttons */}
+            {upcomingMatch.myMemberId && (
+              <div className="mt-4 flex items-center gap-2">
+                <span className="text-xs text-muted-foreground mr-1">내 투표:</span>
+                {([
+                  { value: "ATTEND" as const, label: "참석" },
+                  { value: "MAYBE" as const, label: "미정" },
+                  { value: "ABSENT" as const, label: "불참" },
+                ]).map((opt) => {
+                  const isSelected = upcomingMatch.myVote === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      disabled={voting}
+                      className={cn(
+                        "rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-105 disabled:opacity-50",
+                        isSelected ? voteStyles[opt.value].active : voteStyles[opt.value].inactive
+                      )}
+                      onClick={() => handleQuickVote(upcomingMatch.id, upcomingMatch.myMemberId!, opt.value)}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Attendance visual bar */}
+            <div className="mt-4">
+              <div className="flex h-1.5 overflow-hidden rounded-full bg-white/[0.04]">
+                <div className="rounded-full bg-[hsl(var(--success))] transition-all duration-500" style={{ width: `${attendPercent}%` }} />
+                <div className="bg-[hsl(var(--loss))] transition-all duration-500" style={{ width: `${absentPercent}%` }} />
+              </div>
+              <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
+                <span>참석 <strong className="text-[hsl(var(--success))]">{voteCounts.attend}</strong></span>
+                <span>불참 <strong className="text-[hsl(var(--loss))]">{voteCounts.absent}</strong></span>
+                <span>미정 <strong>{voteCounts.undecided}</strong></span>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <Button size="sm" asChild>
+                <Link href={`/matches/${upcomingMatch.id}`}>상세 보기</Link>
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-4">
+            <EmptyState
+              icon={Calendar}
+              title="예정된 경기가 없습니다"
+              description="새 경기를 등록해보세요."
+              action={
+                <Button size="sm" asChild>
+                  <Link href="/matches">경기 등록하기</Link>
+                </Button>
+              }
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ── Team Record Stats Row (4-column) ── */}
+      {recordTotal > 0 && (
+        <div className="grid grid-cols-4 gap-3">
+          {[
+            { label: "승", value: teamRecord.wins, color: "text-[hsl(var(--win))]" },
+            { label: "무", value: teamRecord.draws, color: "text-[hsl(var(--draw))]" },
+            { label: "패", value: teamRecord.losses, color: "text-[hsl(var(--loss))]" },
+            { label: "승률", value: `${recordTotal > 0 ? Math.round((teamRecord.wins / recordTotal) * 100) : 0}%`, color: "text-primary" },
+          ].map((stat) => (
+            <div key={stat.label} className="card-stat text-center">
+              <div className={`type-stat ${stat.color}`}>{stat.value}</div>
+              <div className="type-overline mt-1">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Quick Navigation */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {[
+          { label: "경기 일정", href: "/matches", color: "text-primary", bg: "hover:bg-primary/5" },
+          { label: "내 기록", href: "/records", color: "text-[hsl(var(--accent))]", bg: "hover:bg-[hsl(var(--accent)/0.05)]" },
+          { label: "회비 관리", href: "/dues", color: "text-[hsl(var(--info))]", bg: "hover:bg-[hsl(var(--info)/0.05)]" },
+          { label: "팀원 관리", href: "/members", color: "text-[hsl(var(--success))]", bg: "hover:bg-[hsl(var(--success)/0.05)]" },
+        ].map((nav) => (
+          <Link
+            key={nav.href}
+            href={nav.href}
+            className={`flex items-center justify-center gap-2 rounded-xl border border-border/30 bg-card py-3 text-sm font-semibold transition-colors ${nav.bg}`}
+          >
+            <span className={nav.color}>{nav.label}</span>
+            <span className="text-muted-foreground">&rarr;</span>
+          </Link>
+        ))}
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Votes */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
@@ -300,14 +374,14 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
               activeVotes.map((vote) => (
                 <Card
                   key={vote.id}
-                  className="cursor-pointer border-0 border-l-2 border-l-violet-500/40 bg-secondary hover:bg-secondary/70 transition-colors"
+                  className="cursor-pointer border-0 border-l-2 border-l-primary/40 bg-secondary hover:bg-secondary/70 transition-colors"
                 >
                   <CardContent className="flex items-center justify-between p-3">
                     <div>
                       <p className="text-sm font-semibold">{vote.title}</p>
                       <p className="text-xs text-muted-foreground">마감: {formatDue(vote.due)}</p>
                     </div>
-                    <Button variant="link" size="sm" className="text-violet-400" asChild>
+                    <Button variant="link" size="sm" className="text-primary" asChild>
                       <Link href={`/matches/${vote.id}`}>참여 &rarr;</Link>
                     </Button>
                   </CardContent>
@@ -321,29 +395,8 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
             )}
           </CardContent>
         </Card>
-      </div>
 
-      {/* Quick Navigation */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {[
-          { label: "경기 일정", href: "/matches", color: "text-sky-400", bg: "hover:bg-sky-500/5" },
-          { label: "내 기록", href: "/records", color: "text-violet-400", bg: "hover:bg-violet-500/5" },
-          { label: "회비 관리", href: "/dues", color: "text-blue-400", bg: "hover:bg-blue-500/5" },
-          { label: "팀원 관리", href: "/members", color: "text-emerald-400", bg: "hover:bg-emerald-500/5" },
-        ].map((nav) => (
-          <Link
-            key={nav.href}
-            href={nav.href}
-            className={`flex items-center justify-center gap-2 rounded-xl border border-border/30 bg-card py-3 text-sm font-semibold transition-colors ${nav.bg}`}
-          >
-            <span className={nav.color}>{nav.label}</span>
-            <span className="text-muted-foreground">&rarr;</span>
-          </Link>
-        ))}
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-        {/* Tasks - Amber accent */}
+        {/* Tasks */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="font-heading text-2xl font-bold uppercase">해야 할 일</CardTitle>
@@ -353,110 +406,105 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
               tasks.map((task) => (
                 <Card key={task} className="border-0 bg-secondary hover:bg-secondary/70">
                   <CardContent className="flex items-center gap-3 p-3 text-sm text-foreground/80">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--accent))]" />
                     {task}
                   </CardContent>
                 </Card>
               ))
             ) : (
-              <div className="flex items-center gap-3 rounded-lg bg-emerald-500/5 px-4 py-3">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-                <p className="text-sm text-emerald-400/80">모든 할 일을 완료했습니다!</p>
+              <div className="flex items-center gap-3 rounded-lg bg-[hsl(var(--success)/0.05)] px-4 py-3">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--success))]" />
+                <p className="text-sm text-[hsl(var(--success)/0.8)]">모든 할 일을 완료했습니다!</p>
               </div>
             )}
           </CardContent>
         </Card>
+      </div>
 
-        {/* Result - Green accent (primary) */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <div>
-              <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">최근 경기 요약</CardTitle>
-            </div>
-            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
-              <Link href="/records">전체 기록 &rarr;</Link>
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {recentResult ? (
-              <div className="space-y-3">
-                <Card className="border-0 border-l-2 border-l-emerald-500/40 bg-secondary hover:bg-secondary/70 cursor-pointer transition-colors">
-                  <CardContent className="p-4">
-                    <div className="flex items-baseline justify-between">
-                      <p className="text-xs text-muted-foreground">{formatDate(recentResult.date)}</p>
-                      <p className="font-heading text-3xl font-bold text-emerald-400">
-                        {recentResult.score}
-                      </p>
-                    </div>
-                    <p className="mt-2 text-sm text-foreground/70">
-                      상대팀:{" "}
-                      <span className="font-semibold text-foreground">
-                        {recentResult.opponent ?? "미정"}
-                      </span>
+      {/* Recent Result + Season Record */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <div>
+            <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">최근 경기 요약</CardTitle>
+          </div>
+          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
+            <Link href="/records">전체 기록 &rarr;</Link>
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {recentResult ? (
+            <div className="space-y-3">
+              <Card className="border-0 border-l-2 border-l-primary/40 bg-secondary hover:bg-secondary/70 cursor-pointer transition-colors">
+                <CardContent className="p-4">
+                  <div className="flex items-baseline justify-between">
+                    <p className="text-xs text-muted-foreground">{formatDate(recentResult.date)}</p>
+                    <p className="type-score text-primary">
+                      {recentResult.score}
                     </p>
-                    {recentResult.mvp && (
-                      <p className="mt-2 text-sm text-foreground/70">
-                        MVP: <span className="font-semibold text-foreground">{recentResult.mvp}</span>
-                      </p>
-                    )}
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/matches/${recentResult.id}`}>상세 기록 보기</Link>
-                      </Button>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href="/records">팀 랭킹 보기</Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                  <p className="mt-2 text-sm text-foreground/70">
+                    상대팀:{" "}
+                    <span className="font-semibold text-foreground">
+                      {recentResult.opponent ?? "미정"}
+                    </span>
+                  </p>
+                  {recentResult.mvp && (
+                    <p className="mt-2 text-sm text-foreground/70">
+                      MVP: <span className="font-semibold text-foreground">{recentResult.mvp}</span>
+                    </p>
+                  )}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/matches/${recentResult.id}`}>상세 기록 보기</Link>
+                    </Button>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href="/records">팀 랭킹 보기</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
-                {/* 시즌 전적 요약 */}
-                {(teamRecord.wins + teamRecord.draws + teamRecord.losses) > 0 && (
-                  <Card className="border-0 bg-secondary">
-                    <CardContent className="p-4">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">시즌 전적</p>
-                      <div className="mt-2 flex items-center gap-3">
-                        <span className="font-heading text-lg font-bold text-emerald-400">{teamRecord.wins}승</span>
-                        <span className="font-heading text-lg font-bold text-muted-foreground">{teamRecord.draws}무</span>
-                        <span className="font-heading text-lg font-bold text-red-400">{teamRecord.losses}패</span>
-                        <span className="ml-auto text-xs text-muted-foreground">
-                          승률 {Math.round((teamRecord.wins / (teamRecord.wins + teamRecord.draws + teamRecord.losses)) * 100)}%
-                        </span>
-                      </div>
-                      <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                        <span>득점 {teamRecord.goalsFor} · 실점 {teamRecord.goalsAgainst} · 득실차 {teamRecord.goalsFor - teamRecord.goalsAgainst >= 0 ? "+" : ""}{teamRecord.goalsFor - teamRecord.goalsAgainst}</span>
-                      </div>
-                      {teamRecord.recent5.length > 0 && (
-                        <div className="mt-3 flex items-center gap-1.5">
-                          <span className="text-[10px] text-muted-foreground">최근:</span>
+              {/* Season record with goals and recent 5 */}
+              {recordTotal > 0 && (
+                <Card className="border-0 bg-secondary">
+                  <CardContent className="p-4">
+                    <p className="type-overline">시즌 전적</p>
+                    <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                      <span>득점 {teamRecord.goalsFor} · 실점 {teamRecord.goalsAgainst} · 득실차 {teamRecord.goalsFor - teamRecord.goalsAgainst >= 0 ? "+" : ""}{teamRecord.goalsFor - teamRecord.goalsAgainst}</span>
+                    </div>
+                    {teamRecord.recent5.length > 0 && (
+                      <div className="mt-3 flex items-center gap-1.5">
+                        <span className="text-[10px] text-muted-foreground">최근:</span>
+                        <div className="flex items-center gap-1">
                           {teamRecord.recent5.map((r, i) => (
                             <span
                               key={i}
-                              className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
-                                r === "W" ? "bg-emerald-500/20 text-emerald-400"
-                                : r === "D" ? "bg-muted text-muted-foreground"
-                                : "bg-red-500/20 text-red-400"
-                              }`}
+                              className={cn(
+                                "flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-bold",
+                                r === "W" && "bg-[hsl(var(--win)/0.15)] text-[hsl(var(--win))]",
+                                r === "D" && "bg-white/[0.06] text-muted-foreground",
+                                r === "L" && "bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))]"
+                              )}
                             >
                               {r === "W" ? "승" : r === "D" ? "무" : "패"}
                             </span>
                           ))}
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            ) : (
-              <EmptyState
-                icon={Trophy}
-                title="아직 완료된 경기가 없습니다"
-                description="경기를 진행하면 결과가 여기에 표시됩니다."
-              />
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Trophy}
+              title="아직 완료된 경기가 없습니다"
+              description="경기를 진행하면 결과가 여기에 표시됩니다."
+            />
+          )}
+        </CardContent>
+      </Card>
     </div>
     </>
   );

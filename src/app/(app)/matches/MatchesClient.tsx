@@ -71,6 +71,21 @@ const attendanceLabels: Record<AttendanceVote, string> = {
   MAYBE: "미정",
 };
 
+const voteStyles = {
+  ATTEND: {
+    active: "bg-[hsl(var(--success))] text-white shadow-[0_2px_8px_-2px_hsl(var(--success)/0.4)]",
+    inactive: "bg-[hsl(var(--success)/0.08)] text-[hsl(var(--success))] border border-[hsl(var(--success)/0.2)] hover:bg-[hsl(var(--success)/0.15)]",
+  },
+  MAYBE: {
+    active: "bg-[hsl(var(--warning))] text-[hsl(240_6%_6%)] shadow-[0_2px_8px_-2px_hsl(var(--warning)/0.4)]",
+    inactive: "bg-white/[0.04] text-muted-foreground border border-white/[0.06] hover:bg-white/[0.08]",
+  },
+  ABSENT: {
+    active: "bg-[hsl(var(--loss))] text-white shadow-[0_2px_8px_-2px_hsl(var(--loss)/0.4)]",
+    inactive: "bg-white/[0.04] text-muted-foreground border border-white/[0.06] hover:bg-white/[0.08]",
+  },
+};
+
 function formatMatchDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
   const days = ["일", "월", "화", "수", "목", "금", "토"];
@@ -564,35 +579,39 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     <p className="text-sm font-bold text-card-foreground">참석 투표</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {([
-                        { value: "ATTEND" as const, label: "참석", activeVariant: "success" as const },
-                        { value: "ABSENT" as const, label: "불참", activeVariant: "destructive" as const },
-                        { value: "MAYBE" as const, label: "미정", activeVariant: "warning" as const },
-                      ]).map((item) => (
-                        <Button
-                          key={item.value}
-                          type="button"
-                          variant={vote === item.value ? item.activeVariant : "secondary"}
-                          size="default"
-                          disabled={votingMatchId === match.id}
-                          className="active:scale-105 transition-transform"
-                          onClick={() => handleVote(match.id, item.value)}
-                        >
-                          {item.label}
-                        </Button>
-                      ))}
+                        { value: "ATTEND" as const, label: "참석" },
+                        { value: "ABSENT" as const, label: "불참" },
+                        { value: "MAYBE" as const, label: "미정" },
+                      ]).map((item) => {
+                        const isSelected = vote === item.value;
+                        return (
+                          <button
+                            key={item.value}
+                            type="button"
+                            disabled={votingMatchId === match.id}
+                            className={cn(
+                              "rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-105 disabled:opacity-50",
+                              isSelected ? voteStyles[item.value].active : voteStyles[item.value].inactive
+                            )}
+                            onClick={() => handleVote(match.id, item.value)}
+                          >
+                            {item.label}
+                          </button>
+                        );
+                      })}
                     </div>
                     <div className="mt-2 flex items-center justify-between">
                       <p className="text-xs text-muted-foreground">
                         내 투표: {vote ? attendanceLabels[vote] : "미선택"}
                       </p>
                       <div className="flex gap-2 text-xs">
-                        <span className="text-emerald-400 font-semibold">참석 {attendCount}</span>
+                        <span className="text-[hsl(var(--success))] font-semibold">참석 {attendCount}</span>
                         <span className="text-muted-foreground">·</span>
-                        <span className="text-red-500 font-semibold">불참 {absentCount}</span>
+                        <span className="text-[hsl(var(--loss))] font-semibold">불참 {absentCount}</span>
                         {maybeCount > 0 && (
                           <>
                             <span className="text-muted-foreground">·</span>
-                            <span className="text-yellow-500 font-semibold">미정 {maybeCount}</span>
+                            <span className="text-[hsl(var(--warning))] font-semibold">미정 {maybeCount}</span>
                           </>
                         )}
                       </div>
