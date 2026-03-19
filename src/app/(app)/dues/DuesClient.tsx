@@ -970,7 +970,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                       <button
                         type="button"
                         onClick={() => removeBulkRow(index)}
-                        className="text-xs text-destructive/70 hover:text-destructive transition self-center"
+                        className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors self-center"
                       >
                         삭제
                       </button>
@@ -1103,7 +1103,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                       <button
                         type="button"
                         onClick={() => setEditingRecord(record)}
-                        className="text-xs text-muted-foreground hover:text-foreground transition"
+                        className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                       >
                         수정
                       </button>
@@ -1112,14 +1112,14 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                           <button
                             type="button"
                             onClick={() => handleDeleteRecord(record.id)}
-                            className="text-xs text-destructive font-semibold transition"
+                            className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive font-semibold hover:bg-destructive/10 transition-colors"
                           >
                             삭제
                           </button>
                           <button
                             type="button"
                             onClick={() => setConfirmDeleteRecordId(null)}
-                            className="text-xs text-muted-foreground hover:text-foreground transition"
+                            className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                           >
                             취소
                           </button>
@@ -1128,7 +1128,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                         <button
                           type="button"
                           onClick={() => setConfirmDeleteRecordId(record.id)}
-                          className="text-xs text-destructive/70 hover:text-destructive transition"
+                          className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
                         >
                           삭제
                         </button>
@@ -1271,7 +1271,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                     <button
                       type="button"
                       onClick={() => handleEditSetting(setting)}
-                      className="text-xs text-muted-foreground hover:text-foreground transition"
+                      className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                     >
                       수정
                     </button>
@@ -1280,14 +1280,14 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                         <button
                           type="button"
                           onClick={() => handleDeleteSetting(setting.id)}
-                          className="text-xs text-destructive font-semibold transition"
+                          className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive font-semibold hover:bg-destructive/10 transition-colors"
                         >
                           삭제
                         </button>
                         <button
                           type="button"
                           onClick={() => setConfirmDeleteSettingId(null)}
-                          className="text-xs text-muted-foreground hover:text-foreground transition"
+                          className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                         >
                           취소
                         </button>
@@ -1296,7 +1296,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                       <button
                         type="button"
                         onClick={() => setConfirmDeleteSettingId(setting.id)}
-                        className="text-xs text-destructive/70 hover:text-destructive transition"
+                        className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
                       >
                         삭제
                       </button>
@@ -1406,7 +1406,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                     <button
                       type="button"
                       onClick={() => handleDeletePenaltyRule(rule.id)}
-                      className="text-xs text-destructive/70 hover:text-destructive transition"
+                      className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
                     >
                       삭제
                     </button>
@@ -1511,7 +1511,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                       <button
                         type="button"
                         onClick={() => handleDeletePenaltyRecord(record.id)}
-                        className="text-xs text-destructive/70 hover:text-destructive transition"
+                        className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
                       >
                         삭제
                       </button>

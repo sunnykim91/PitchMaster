@@ -86,7 +86,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
     const voteCounts = {
       attend: voteList.filter((v) => v.vote === "ATTEND").length,
       absent: voteList.filter((v) => v.vote === "ABSENT").length,
-      undecided: voteList.filter((v) => v.vote === "UNDECIDED").length,
+      undecided: voteList.filter((v) => v.vote === "MAYBE").length,
     };
     upcomingMatch = { ...upcomingRaw, voteCounts };
   }

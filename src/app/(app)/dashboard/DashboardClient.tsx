@@ -65,12 +65,16 @@ function CardSkeleton() {
       <CardContent>
         <Card className="border-0 bg-secondary">
           <CardContent className="space-y-3 p-4">
-            <Skeleton className="h-3 w-24" />
-            <Skeleton className="h-5 w-48" />
-            <Skeleton className="h-4 w-36" />
-            <div className="flex gap-2 pt-1">
-              <Skeleton className="h-8 w-24 rounded-md" />
-              <Skeleton className="h-8 w-24 rounded-md" />
+            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-5 w-56" />
+            <Skeleton className="h-3 w-40" />
+            <div className="flex items-center gap-3 pt-1">
+              <Skeleton className="h-3 w-12" />
+              <Skeleton className="h-3 w-12" />
+              <Skeleton className="h-3 w-12" />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Skeleton className="h-9 w-24 rounded-md" />
             </div>
           </CardContent>
         </Card>

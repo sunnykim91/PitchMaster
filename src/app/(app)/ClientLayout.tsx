@@ -321,10 +321,10 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             { href: "/matches", label: "일정", icon: Calendar },
             { href: "/records", label: "기록", icon: Trophy },
             { href: "/dues", label: "회비", icon: Wallet },
-            { href: "/members", label: "더보기", icon: Menu },
+            { href: "/more", label: "더보기", icon: Menu },
           ].map((tab) => {
-            const isActive = tab.href === "/members"
-              ? ["/members", "/board", "/notifications", "/rules", "/settings"].some((p) => pathname === p || pathname.startsWith(p + "/"))
+            const isActive = tab.href === "/more"
+              ? ["/more", "/members", "/board", "/notifications", "/rules", "/settings"].some((p) => pathname === p || pathname.startsWith(p + "/"))
               : pathname === tab.href || pathname.startsWith(tab.href + "/");
             const Icon = tab.icon;
             return (
