@@ -1141,18 +1141,18 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
             ) : (
               <div
                 key={record.id}
-                className="card-list-item flex items-center gap-3"
+                className="card-list-item flex items-start justify-between gap-3"
               >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground">
                     {record.description}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     {record.recordedAt.split("T")[0]}
                     {record.memberName ? ` · ${record.memberName}` : ""}
                   </p>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 flex-col items-end gap-1">
                   <span
                     className={cn(
                       "rounded-lg px-3 py-1 text-xs font-bold font-[family-name:var(--font-display)] whitespace-nowrap",
@@ -1165,22 +1165,22 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                     {record.amount.toLocaleString()}원
                   </span>
                   {isStaffOrAbove(role) && (
-                    <>
+                    <div className="flex gap-1">
                       <button
                         type="button"
                         onClick={() => setEditingRecord(record)}
-                        className="shrink-0 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                        className="rounded px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                       >
                         수정
                       </button>
                       <button
                         type="button"
                         onClick={() => setConfirmAction({ message: "이 내역을 삭제하시겠습니까?", onConfirm: () => handleDeleteRecord(record.id) })}
-                        className="shrink-0 rounded px-2 py-1 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        className="rounded px-2 py-0.5 text-[11px] text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
                       >
                         삭제
                       </button>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
