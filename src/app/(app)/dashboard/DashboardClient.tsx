@@ -13,6 +13,7 @@ type UpcomingMatch = {
   match_time: string | null;
   opponent_name: string | null;
   location: string | null;
+  voteCounts: { attend: number; absent: number; undecided: number };
 };
 
 type RecentResult = {
@@ -157,6 +158,13 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
                       {upcomingMatch.opponent_name ?? "미정"}
                     </span>
                   </p>
+                  {upcomingMatch.voteCounts && (
+                    <div className="mt-3 flex items-center gap-3 text-xs">
+                      <span className="font-semibold text-emerald-400">참석 {upcomingMatch.voteCounts.attend}</span>
+                      <span className="font-semibold text-rose-400">불참 {upcomingMatch.voteCounts.absent}</span>
+                      <span className="font-semibold text-muted-foreground">미정 {upcomingMatch.voteCounts.undecided}</span>
+                    </div>
+                  )}
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Button size="sm" asChild>
                       <Link href={`/matches/${upcomingMatch.id}`}>상세 보기</Link>

@@ -16,6 +16,7 @@ export type DashboardData = {
     match_time: string | null;
     opponent_name: string | null;
     location: string | null;
+    voteCounts: { attend: number; absent: number; undecided: number };
   } | null;
   recentResult: {
     id: string;
@@ -71,8 +72,24 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
       .limit(5),
   ]);
 
-  const upcomingMatch = upcomingRes.data ?? null;
+  const upcomingRaw = upcomingRes.data ?? null;
   const recentMatch = recentRes.data ?? null;
+
+  // 예정 경기 투표 현황
+  let upcomingMatch: DashboardData["upcomingMatch"] = null;
+  if (upcomingRaw) {
+    const { data: votes } = await db
+      .from("match_attendance")
+      .select("vote")
+      .eq("match_id", upcomingRaw.id);
+    const voteList = (votes ?? []) as { vote: string }[];
+    const voteCounts = {
+      attend: voteList.filter((v) => v.vote === "ATTEND").length,
+      absent: voteList.filter((v) => v.vote === "ABSENT").length,
+      undecided: voteList.filter((v) => v.vote === "UNDECIDED").length,
+    };
+    upcomingMatch = { ...upcomingRaw, voteCounts };
+  }
 
   let recentResult = null;
   if (recentMatch) {
