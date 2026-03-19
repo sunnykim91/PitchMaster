@@ -21,25 +21,22 @@ export async function getMatchesData(teamId: string): Promise<{ matches: DbMatch
   const db = getSupabaseAdmin();
   if (!db) return { matches: [] };
 
-  // 날짜 지난 SCHEDULED 경기 → 자동 COMPLETED 처리 (KST 기준)
+  // 자동 완료 + matches 조회를 병렬 실행 (KST 기준)
   const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
   const today = kstNow.toISOString().split("T")[0];
-  await db
-    .from("matches")
-    .update({ status: "COMPLETED" })
-    .eq("team_id", teamId)
-    .eq("status", "SCHEDULED")
-    .lt("match_date", today);
 
-  const { data } = await db
-    .from("matches")
-    .select("*")
-    .eq("team_id", teamId)
-    .order("match_date", { ascending: false });
+  // 1단계: 자동 완료 + 전체 경기 조회 병렬
+  const [, { data }] = await Promise.all([
+    db.from("matches").update({ status: "COMPLETED" }).eq("team_id", teamId).eq("status", "SCHEDULED").lt("match_date", today),
+    db.from("matches").select("*").eq("team_id", teamId).order("match_date", { ascending: false }),
+  ]);
 
-  const matches = (data ?? []) as DbMatchRow[];
+  // 자동 완료된 경기 반영 (UPDATE가 SELECT보다 먼저 완료되면 이미 반영, 아니면 클라이언트에서 반영)
+  const matches = ((data ?? []) as DbMatchRow[]).map((m) =>
+    m.status === "SCHEDULED" && m.match_date < today ? { ...m, status: "COMPLETED" as const } : m
+  );
 
-  // 완료된 경기의 스코어 계산
+  // 2단계: 스코어 계산
   const completedIds = matches.filter((m) => m.status === "COMPLETED").map((m) => m.id);
   if (completedIds.length === 0) {
     return { matches: matches.map((m) => ({ ...m, score: null })) };

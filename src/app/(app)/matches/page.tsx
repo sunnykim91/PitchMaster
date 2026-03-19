@@ -7,15 +7,17 @@ import type { SportType } from "@/lib/types";
 export default async function MatchesPage() {
   const session = await auth();
   if (!session) return null;
-  const initialMatches = await getMatchesData(session.user.teamId!);
 
-  // 팀의 sport_type 조회
-  let sportType: SportType = "SOCCER";
+  // matches + sport_type 병렬 조회
   const db = getSupabaseAdmin();
-  if (db && session.user.teamId) {
-    const { data: team } = await db.from("teams").select("sport_type").eq("id", session.user.teamId).single();
-    if (team?.sport_type) sportType = team.sport_type as SportType;
-  }
+  const [initialMatches, sportType] = await Promise.all([
+    getMatchesData(session.user.teamId!),
+    (async (): Promise<SportType> => {
+      if (!db || !session.user.teamId) return "SOCCER";
+      const { data: team } = await db.from("teams").select("sport_type").eq("id", session.user.teamId).single();
+      return (team?.sport_type as SportType) ?? "SOCCER";
+    })(),
+  ]);
 
   return (
     <MatchesClient
