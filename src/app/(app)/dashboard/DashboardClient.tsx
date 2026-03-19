@@ -391,6 +391,12 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
               <EmptyState
                 icon={Vote}
                 title="진행 중인 투표가 없습니다"
+                description="경기 일정을 등록하면 투표가 생성됩니다."
+                action={
+                  <Button size="sm" asChild>
+                    <Link href="/matches">일정 등록하기</Link>
+                  </Button>
+                }
               />
             )}
           </CardContent>

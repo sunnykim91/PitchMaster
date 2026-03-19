@@ -484,7 +484,7 @@ export default function MatchDetailClient({
   /** 득점자/어시스트 ID → 화면 표시용 이름 */
   function resolvePlayerName(playerId: string | undefined): string {
     if (!playerId) return "";
-    if (playerId === "OPPONENT") return "상대팀 득점";
+    if (playerId === "OPPONENT") return "실점";
     const special = SPECIAL_PLAYERS.find((s) => s.id === playerId);
     if (special) return special.name;
     // fullRoster: 전체 멤버 + 용병 (참석 여부 무관)
@@ -698,8 +698,8 @@ export default function MatchDetailClient({
         <div className="flex">
           {([
             { key: "info", label: "기본 정보" },
-            { key: "record", label: "경기 기록" },
             { key: "tactics", label: "전술판" },
+            { key: "record", label: "경기 기록" },
             { key: "diary", label: "일지" },
           ] as const).map((tab) => (
             <button
@@ -1105,7 +1105,7 @@ export default function MatchDetailClient({
                         득점자
                       </Label>
                       <NativeSelect name="scorerId">
-                        <option value="OPPONENT">상대팀 득점</option>
+                        <option value="OPPONENT">실점</option>
                         <optgroup label="참석 멤버">
                           {attendingMembers.map((player) => (
                             <option key={player.id} value={player.id}>
@@ -1178,18 +1178,7 @@ export default function MatchDetailClient({
                         defaultValue={1}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-muted-foreground">
-                        시간(분)
-                      </Label>
-                      <Input
-                        name="minute"
-                        type="number"
-                        min={0}
-                        max={40}
-                        defaultValue={0}
-                      />
-                    </div>
+                    <input name="minute" type="hidden" value="0" />
                     <div className="flex items-center gap-2 pt-6">
                       <input
                         name="isOwnGoal"
@@ -1238,7 +1227,7 @@ export default function MatchDetailClient({
                           {resolvePlayerName(goal.scorerId)}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Q{goal.quarter} {goal.minute}분
+                          Q{goal.quarter}
                           {goal.assistId
                             ? ` · 어시스트 ${resolvePlayerName(goal.assistId)}`
                             : ""}
