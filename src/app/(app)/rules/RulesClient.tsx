@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { BookOpen } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 type RuleCategory = "일반" | "회비" | "경조사" | "기타";
 
@@ -73,7 +74,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
   const [formState, setFormState] = useState({ title: "", content: "", category: "일반" as RuleCategory });
   const [submitting, setSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
 
   const filteredRules = useMemo(() => {
     const list = selectedCategory === "ALL" ? rules : rules.filter((rule) => rule.category === selectedCategory);
@@ -137,8 +138,18 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
     setFormErrors({});
   }
 
+  /* ── Escape key: cancel edit ── */
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleCancel();
+    };
+    if (editingId) {
+      window.addEventListener("keydown", handleEsc);
+      return () => window.removeEventListener("keydown", handleEsc);
+    }
+  }, [editingId]);
+
   async function handleDelete(id: string) {
-    setConfirmDeleteId(null);
     const { error } = await apiMutate("/api/rules", "DELETE", { id });
     if (error) {
       showToast(error, "error");
@@ -319,36 +330,15 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
                           <Button type="button" variant="outline" size="sm" onClick={() => handleEdit(rule)}>
                             수정
                           </Button>
-                          {confirmDeleteId === rule.id ? (
-                            <div className="flex gap-1">
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleDelete(rule.id)}
-                              >
-                                삭제
-                              </Button>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setConfirmDeleteId(null)}
-                              >
-                                취소
-                              </Button>
-                            </div>
-                          ) : (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => setConfirmDeleteId(rule.id)}
-                            >
-                              삭제
-                            </Button>
-                          )}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => setConfirmAction({ message: "회칙을 삭제하시겠습니까?", onConfirm: () => handleDelete(rule.id) })}
+                          >
+                            삭제
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -359,6 +349,15 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={!!confirmAction}
+        title={confirmAction?.message ?? ""}
+        variant="destructive"
+        confirmLabel="삭제"
+        onConfirm={() => { confirmAction?.onConfirm(); setConfirmAction(null); }}
+        onCancel={() => setConfirmAction(null)}
+      />
     </div>
   );
 }

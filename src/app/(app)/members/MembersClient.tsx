@@ -18,6 +18,7 @@ import { cn, formatPhone } from "@/lib/utils";
 import { Search } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { Users } from "lucide-react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 type Member = {
   id: string;
@@ -86,7 +87,7 @@ export default function MembersClient({
     { skip: !!initialData },
   );
   const members = useMemo(() => mapApiMembers(membersData.members), [membersData.members]);
-  const [confirmKick, setConfirmKick] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
   const { showToast } = useToast();
@@ -162,7 +163,6 @@ export default function MembersClient({
       }
     } finally {
       setKickingId(null);
-      setConfirmKick(null);
     }
   }
 
@@ -381,34 +381,13 @@ export default function MembersClient({
                       </>
                     )}
                     {canKick && (
-                      confirmKick === member.id ? (
-                        <div className="flex gap-1">
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleKick(member.id)}
-                            disabled={kickingId === member.id}
-                          >
-                            {kickingId === member.id ? "처리 중..." : "확인"}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setConfirmKick(null)}
-                            disabled={kickingId === member.id}
-                          >
-                            취소
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setConfirmKick(member.id)}
-                        >
-                          제명
-                        </Button>
-                      )
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setConfirmAction({ message: `${member.name} 님을 제명하시겠습니까?`, onConfirm: () => handleKick(member.id) })}
+                      >
+                        제명
+                      </Button>
                     )}
                   </div>
                 </Card>
@@ -487,28 +466,13 @@ export default function MembersClient({
                     </Badge>
                   )}
                   {canKick && member.id !== userId ? (
-                    confirmKick === member.id ? (
-                      <div className="flex gap-1">
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleKick(member.id)}
-                          disabled={kickingId === member.id}
-                        >
-                          {kickingId === member.id ? "처리 중..." : "확인"}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setConfirmKick(null)}
-                          disabled={kickingId === member.id}
-                        >
-                          취소
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button variant="outline" size="sm" onClick={() => setConfirmKick(member.id)}>제명</Button>
-                    )
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setConfirmAction({ message: `${member.name} 님을 제명하시겠습니까?`, onConfirm: () => handleKick(member.id) })}
+                    >
+                      제명
+                    </Button>
                   ) : null}
                 </div>
               </Card>
@@ -522,6 +486,15 @@ export default function MembersClient({
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={!!confirmAction}
+        title={confirmAction?.message ?? ""}
+        variant="destructive"
+        confirmLabel="제명"
+        onConfirm={() => { confirmAction?.onConfirm(); setConfirmAction(null); }}
+        onCancel={() => setConfirmAction(null)}
+      />
     </div>
   );
 }

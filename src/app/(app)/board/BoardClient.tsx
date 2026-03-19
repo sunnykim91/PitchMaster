@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo, useState } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 import Image from "next/image";
 import type { FormEvent } from "react";
 import { MessageSquare } from "lucide-react";
@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 type Post = {
   id: string;
@@ -122,8 +123,18 @@ export default function BoardClient({
   const [commentingPostId, setCommentingPostId] = useState<string | null>(null);
   const [deletingPostIds, setDeletingPostIds] = useState<Set<string>>(new Set());
   const [deletingCommentIds, setDeletingCommentIds] = useState<Set<string>>(new Set());
-  const [confirmDeletePostId, setConfirmDeletePostId] = useState<string | null>(null);
-  const [confirmDeleteCommentId, setConfirmDeleteCommentId] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
+
+  /* ── Escape key: cancel edit ── */
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleCancelEdit();
+    };
+    if (editingPostId) {
+      window.addEventListener("keydown", handleEsc);
+      return () => window.removeEventListener("keydown", handleEsc);
+    }
+  }, [editingPostId]);
 
   /* ── Image upload state ── */
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -259,7 +270,6 @@ export default function BoardClient({
   }
 
   async function handleDeletePost(postId: string) {
-    setConfirmDeletePostId(null);
     setDeletingPostIds((prev) => new Set(prev).add(postId));
     try {
       await apiMutate("/api/posts", "DELETE", { id: postId });
@@ -275,7 +285,6 @@ export default function BoardClient({
   }
 
   async function handleDeleteComment(commentId: string, postId: string) {
-    setConfirmDeleteCommentId(null);
     setDeletingCommentIds((prev) => new Set(prev).add(commentId));
     try {
       await apiMutate("/api/comments", "DELETE", { id: commentId });
@@ -543,40 +552,16 @@ export default function BoardClient({
                             >
                               수정
                             </Button>
-                            {confirmDeletePostId === post.id ? (
-                              <div className="flex gap-1">
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="destructive"
-                                  className="text-xs h-7 px-2"
-                                  onClick={() => handleDeletePost(post.id)}
-                                  disabled={deletingPostIds.has(post.id)}
-                                >
-                                  삭제
-                                </Button>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-xs h-7 px-2"
-                                  onClick={() => setConfirmDeletePostId(null)}
-                                >
-                                  취소
-                                </Button>
-                              </div>
-                            ) : (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="text-xs h-7 px-2 text-destructive hover:text-destructive"
-                                onClick={() => setConfirmDeletePostId(post.id)}
-                                disabled={deletingPostIds.has(post.id)}
-                              >
-                                {deletingPostIds.has(post.id) ? "삭제 중..." : "삭제"}
-                              </Button>
-                            )}
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs h-7 px-2 text-destructive hover:text-destructive"
+                              onClick={() => setConfirmAction({ message: "게시글을 삭제하시겠습니까?", onConfirm: () => handleDeletePost(post.id) })}
+                              disabled={deletingPostIds.has(post.id)}
+                            >
+                              {deletingPostIds.has(post.id) ? "삭제 중..." : "삭제"}
+                            </Button>
                           </div>
                         )}
                       </div>
@@ -610,40 +595,16 @@ export default function BoardClient({
                                         <p className="mt-1 text-xs text-muted-foreground">{comment.createdAt}</p>
                                       </div>
                                       {canDeleteComment && (
-                                        confirmDeleteCommentId === comment.id ? (
-                                          <div className="flex gap-1 shrink-0">
-                                            <Button
-                                              type="button"
-                                              size="sm"
-                                              variant="destructive"
-                                              className="text-xs h-6 px-2"
-                                              onClick={() => handleDeleteComment(comment.id, post.id)}
-                                              disabled={deletingCommentIds.has(comment.id)}
-                                            >
-                                              삭제
-                                            </Button>
-                                            <Button
-                                              type="button"
-                                              size="sm"
-                                              variant="outline"
-                                              className="text-xs h-6 px-2"
-                                              onClick={() => setConfirmDeleteCommentId(null)}
-                                            >
-                                              취소
-                                            </Button>
-                                          </div>
-                                        ) : (
-                                          <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            className="text-xs h-6 px-2 text-destructive hover:text-destructive shrink-0"
-                                            onClick={() => setConfirmDeleteCommentId(comment.id)}
-                                            disabled={deletingCommentIds.has(comment.id)}
-                                          >
-                                            {deletingCommentIds.has(comment.id) ? "..." : "삭제"}
-                                          </Button>
-                                        )
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          className="text-xs h-6 px-2 text-destructive hover:text-destructive shrink-0"
+                                          onClick={() => setConfirmAction({ message: "댓글을 삭제하시겠습니까?", onConfirm: () => handleDeleteComment(comment.id, post.id) })}
+                                          disabled={deletingCommentIds.has(comment.id)}
+                                        >
+                                          {deletingCommentIds.has(comment.id) ? "..." : "삭제"}
+                                        </Button>
                                       )}
                                     </div>
                                   </CardContent>
@@ -687,6 +648,15 @@ export default function BoardClient({
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={!!confirmAction}
+        title={confirmAction?.message ?? ""}
+        variant="destructive"
+        confirmLabel="삭제"
+        onConfirm={() => { confirmAction?.onConfirm(); setConfirmAction(null); }}
+        onCancel={() => setConfirmAction(null)}
+      />
     </div>
   );
 }

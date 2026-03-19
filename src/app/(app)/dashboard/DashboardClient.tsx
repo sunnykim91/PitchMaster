@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Calendar, Trophy, Vote } from "lucide-react";
+import { Calendar, RefreshCw, Trophy, Vote } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { formatTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -120,6 +120,17 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
   const { data, loading, error, refetch } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
   const { showToast } = useToast();
   const [voting, setVoting] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem("pm_guide_dismissed");
+    if (!dismissed) setShowGuide(true);
+  }, []);
+
+  function dismissGuide() {
+    localStorage.setItem("pm_guide_dismissed", "1");
+    setShowGuide(false);
+  }
 
   async function handleQuickVote(matchId: string, memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
     setVoting(true);
@@ -163,7 +174,51 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
   const { upcomingMatch, activeVotes, tasks, recentResult, teamRecord } = data;
 
   return (
+    <>
+    {showGuide && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in">
+        <div className="mx-4 w-full max-w-md space-y-4 rounded-2xl bg-card p-6 shadow-2xl animate-scale-in">
+          <h2 className="text-lg font-bold text-foreground">PitchMaster 시작 가이드</h2>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">1</span>
+              <div>
+                <p className="text-sm font-semibold">일정 등록</p>
+                <p className="text-xs text-muted-foreground">경기 날짜와 장소를 등록하면 팀원에게 참석 투표 링크가 공유됩니다.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">2</span>
+              <div>
+                <p className="text-sm font-semibold">회비 관리</p>
+                <p className="text-xs text-muted-foreground">통장 캡쳐를 올리면 이름과 금액이 자동으로 인식됩니다.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">3</span>
+              <div>
+                <p className="text-sm font-semibold">팀원 초대</p>
+                <p className="text-xs text-muted-foreground">사이드바의 초대 코드를 팀원에게 공유하면 바로 가입할 수 있습니다.</p>
+              </div>
+            </div>
+          </div>
+          <Button className="w-full" onClick={dismissGuide}>
+            시작하기
+          </Button>
+        </div>
+      </div>
+    )}
     <div className="grid gap-4 stagger-children">
+      <div className="flex items-center justify-end">
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          aria-label="새로고침"
+        >
+          <RefreshCw className="h-4 w-4" />
+        </button>
+      </div>
       <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         {/* Next Match - Sky blue accent */}
         <Card className="bg-gradient-to-br from-primary/10 via-background to-background shadow-lg shadow-primary/5">
@@ -177,7 +232,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
           </CardHeader>
           <CardContent>
             {upcomingMatch ? (
-              <Card className="border-0 border-l-2 border-l-sky-500/40 bg-secondary hover:bg-secondary/70">
+              <Card className="border-0 border-l-2 border-l-sky-500/40 bg-secondary hover:bg-secondary/70 cursor-pointer transition-colors">
                 <CardContent className="p-4">
                   <p className="text-xs text-muted-foreground">{formatDate(upcomingMatch.match_date)}</p>
                   <p className="mt-1 text-lg font-bold">
@@ -255,7 +310,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
               activeVotes.map((vote) => (
                 <Card
                   key={vote.id}
-                  className="cursor-pointer border-0 border-l-2 border-l-violet-500/40 bg-secondary hover:bg-secondary/70"
+                  className="cursor-pointer border-0 border-l-2 border-l-violet-500/40 bg-secondary hover:bg-secondary/70 transition-colors"
                 >
                   <CardContent className="flex items-center justify-between p-3">
                     <div>
@@ -335,7 +390,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
           <CardContent>
             {recentResult ? (
               <div className="space-y-3">
-                <Card className="border-0 border-l-2 border-l-emerald-500/40 bg-secondary hover:bg-secondary/70">
+                <Card className="border-0 border-l-2 border-l-emerald-500/40 bg-secondary hover:bg-secondary/70 cursor-pointer transition-colors">
                   <CardContent className="p-4">
                     <div className="flex items-baseline justify-between">
                       <p className="text-xs text-muted-foreground">{formatDate(recentResult.date)}</p>
@@ -413,5 +468,6 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
         </Card>
       </div>
     </div>
+    </>
   );
 }

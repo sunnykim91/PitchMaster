@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
@@ -18,7 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
 import { shareVoteLink } from "@/lib/kakaoShare";
 import { EmptyState } from "@/components/EmptyState";
-import { Calendar } from "lucide-react";
+import { Calendar, RefreshCw } from "lucide-react";
 
 type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
 type AttendanceVote = "ATTEND" | "ABSENT" | "MAYBE";
@@ -99,6 +100,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
   const { showToast } = useToast();
+  const router = useRouter();
 
   const {
     data: matchesData,
@@ -147,6 +149,16 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   useEffect(() => {
     if (isOpen && formRef.current) {
       formRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsOpen(false);
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleEsc);
+      return () => window.removeEventListener("keydown", handleEsc);
     }
   }, [isOpen]);
 
@@ -212,12 +224,16 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
       playerCount,
       voteDeadline: String(formData.get("voteDeadline") || "") || undefined,
     };
-    const { error } = await apiMutate("/api/matches", "POST", body);
+    const { error, data } = await apiMutate<{ id: string }>("/api/matches", "POST", body);
     setSubmitting(false);
     if (!error) {
-      await refetchMatches();
-      setIsOpen(false);
       showToast("경기 일정이 등록되었습니다.");
+      if (data?.id) {
+        router.push(`/matches/${data.id}`);
+      } else {
+        await refetchMatches();
+        setIsOpen(false);
+      }
     } else {
       showToast(error, "error");
     }
@@ -286,10 +302,18 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
       <Card className="rounded-md">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
+            <div className="flex items-center gap-2">
               <CardTitle className="mt-1 font-heading text-2xl font-bold uppercase">
                 경기 일정 관리
               </CardTitle>
+              <button
+                type="button"
+                onClick={() => { refetchMatches(); refetchAttendance(); }}
+                className="mt-1 rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                aria-label="새로고침"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
             </div>
             {isStaffOrAbove(role) && (
               <Button
@@ -482,7 +506,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
           const absentCount = matchVotes.filter((v) => v === "ABSENT").length;
           const maybeCount = matchVotes.filter((v) => v === "MAYBE").length;
           return (
-            <Card key={match.id} className="rounded-md">
+            <Card key={match.id} className="rounded-md hover:bg-secondary/30 cursor-pointer transition-colors">
               <CardHeader>
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>

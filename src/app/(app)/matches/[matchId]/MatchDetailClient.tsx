@@ -1288,13 +1288,31 @@ export default function MatchDetailClient({
           {/* ── 출석 체크 (staff only) ── */}
           {canManageAttendance && (
             <Card>
-              <CardHeader>
-                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
-                  Attendance
-                </p>
-                <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
-                  출석 체크
-                </CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
+                    Attendance
+                  </p>
+                  <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
+                    출석 체크
+                  </CardTitle>
+                </div>
+                {attendingMembers.length > 0 && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      await Promise.all(
+                        attendingMembers.map((player) =>
+                          handleAttendance(player.id, "PRESENT")
+                        )
+                      );
+                    }}
+                  >
+                    전원 참석 처리
+                  </Button>
+                )}
               </CardHeader>
 
               <CardContent>

@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { Check, Copy, Link2, Menu, ChevronDown, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings } from "lucide-react";
+import { Check, Copy, Link2, Menu, ChevronDown, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
@@ -49,6 +49,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const { viewAsRole, setViewAsRole } = useViewAsRole();
   const canSwitchRole = session.user.name === "김선휘";
   const [copied, setCopied] = useState(false);
+  const [moreSheetOpen, setMoreSheetOpen] = useState(false);
 
   // 팀 스위처
   const [teams, setTeams] = useState<TeamInfo[]>([]);
@@ -340,11 +341,8 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             { href: "/matches", label: "일정", icon: Calendar },
             { href: "/records", label: "기록", icon: Trophy },
             { href: "/dues", label: "회비", icon: Wallet },
-            { href: "/more", label: "더보기", icon: Menu },
           ].map((tab) => {
-            const isActive = tab.href === "/more"
-              ? ["/more", "/members", "/board", "/notifications", "/rules", "/settings"].some((p) => pathname === p || pathname.startsWith(p + "/"))
-              : pathname === tab.href || pathname.startsWith(tab.href + "/");
+            const isActive = pathname === tab.href || pathname.startsWith(tab.href + "/");
             const Icon = tab.icon;
             return (
               <Link
@@ -360,8 +358,52 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
               </Link>
             );
           })}
+          <button
+            onClick={() => setMoreSheetOpen(true)}
+            className={cn(
+              "flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-[10px] transition-colors",
+              ["/members", "/board", "/notifications", "/rules", "/settings"].some((p) => pathname === p || pathname.startsWith(p + "/"))
+                ? "text-primary"
+                : "text-muted-foreground"
+            )}
+          >
+            <MoreHorizontal className="h-5 w-5" />
+            <span className="text-[10px]">더보기</span>
+          </button>
         </div>
       </nav>
+
+      {/* More Bottom Sheet */}
+      {moreSheetOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMoreSheetOpen(false)}>
+          <div className="absolute inset-0 bg-black/50" />
+          <div
+            className="absolute bottom-0 left-0 right-0 rounded-t-2xl bg-card p-4 pb-8 animate-slide-up shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-muted" />
+            <nav className="grid gap-1">
+              {[
+                { href: "/members", icon: Users, label: "회원관리" },
+                { href: "/board", icon: MessageSquare, label: "게시판" },
+                { href: "/notifications", icon: Bell, label: "알림" },
+                { href: "/rules", icon: BookOpen, label: "회칙" },
+                { href: "/settings", icon: Settings, label: "설정" },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMoreSheetOpen(false)}
+                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
