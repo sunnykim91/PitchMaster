@@ -1308,24 +1308,15 @@ export default function MatchDetailClient({
                 <p className="text-sm text-muted-foreground">
                   아직 기록된 골이 없습니다.
                 </p>
-              ) : (() => {
-                let goalNum = 0;
-                let concNum = 0;
-                let ownNum = 0;
-                return goals.map((goal) => {
-                  let label: React.ReactNode;
-                  if (goal.scorerId === "OPPONENT") {
-                    concNum++;
-                    label = <span className="text-[hsl(var(--loss))]">실점 {concNum}</span>;
-                  } else if (goal.isOwnGoal) {
-                    ownNum++;
-                    label = <span className="text-[hsl(var(--warning))]">자책골 {ownNum}</span>;
-                  } else if (goal.scorerId === "UNKNOWN") {
-                    goalNum++;
-                    label = <span className="text-[hsl(var(--success))]">득점 {goalNum}</span>;
-                  } else {
-                    label = <span className="text-[hsl(var(--success))]">{resolvePlayerName(goal.scorerId)}</span>;
-                  }
+              ) : (
+                goals.map((goal) => {
+                  const label = goal.scorerId === "OPPONENT"
+                    ? <span className="text-[hsl(var(--loss))]">실점</span>
+                    : goal.isOwnGoal
+                    ? <span className="text-[hsl(var(--warning))]">자책골</span>
+                    : goal.scorerId === "UNKNOWN"
+                    ? <span className="text-[hsl(var(--success))]">득점</span>
+                    : <span className="text-[hsl(var(--success))]">{resolvePlayerName(goal.scorerId)}</span>;
                   return (
                   <div
                     key={goal.id}
@@ -1362,8 +1353,8 @@ export default function MatchDetailClient({
                     )}
                   </div>
                   );
-                });
-              })()}
+                })
+              )}
             </div>
           </CardContent>
         </Card>
