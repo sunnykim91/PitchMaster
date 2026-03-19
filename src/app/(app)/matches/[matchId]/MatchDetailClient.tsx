@@ -1188,8 +1188,6 @@ export default function MatchDetailClient({
                       </Label>
                       <NativeSelect name="scorerId">
                         <option value="">득점자 선택</option>
-                        <option value="OPPONENT">실점 (상대팀)</option>
-                        <option value="OWN_GOAL">자책골</option>
                         <optgroup label="참석 멤버">
                           {attendingMembers.map((player) => (
                             <option key={player.id} value={player.id}>
@@ -1207,6 +1205,7 @@ export default function MatchDetailClient({
                           </optgroup>
                         )}
                         <optgroup label="기타">
+                          <option value="OWN_GOAL">자책골</option>
                           {SPECIAL_PLAYERS.map((sp) => (
                             <option key={sp.id} value={sp.id}>
                               {sp.name}
@@ -1260,7 +1259,7 @@ export default function MatchDetailClient({
                           e.currentTarget.parentElement?.querySelectorAll("button").forEach((btn) => btn.classList.remove("bg-primary", "text-white"));
                           e.currentTarget.classList.add("bg-primary", "text-white");
                         }}
-                        className="h-8 rounded-lg bg-primary/10 px-3 text-xs font-bold text-primary transition-colors hover:bg-primary/20"
+                        className="h-8 rounded-lg bg-primary px-3 text-xs font-bold text-white transition-colors hover:bg-primary/90"
                       >
                         선택 안함
                       </button>
@@ -1279,7 +1278,7 @@ export default function MatchDetailClient({
                           Q{q}
                         </button>
                       ))}
-                      <input name="quarter" type="hidden" defaultValue="1" />
+                      <input name="quarter" type="hidden" defaultValue="0" />
                     </div>
                   </div>
                   <input name="minute" type="hidden" value="0" />
