@@ -956,12 +956,66 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         </div>
       </Card>
 
+      {/* ── 평회원: 내 납부 상태 ── */}
+      {!isStaffOrAbove(role) && _userId && (() => {
+        const myStatus = duesStatus.find((m) => m.id === _userId);
+        return myStatus ? (
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="type-overline">{monthFilter.replace("-", "년 ")}월 내 납부 상태</p>
+                <p className={cn(
+                  "mt-1 text-lg font-bold",
+                  myStatus.status === "PAID" ? "text-[hsl(var(--success))]"
+                    : myStatus.status === "EXEMPT" ? "text-[hsl(var(--warning))]"
+                    : "text-[hsl(var(--loss))]"
+                )}>
+                  {myStatus.status === "PAID" ? "납부 완료" : myStatus.status === "EXEMPT" ? "면제" : "미납"}
+                </p>
+                {myStatus.paidAmount > 0 && (
+                  <p className="text-xs text-muted-foreground">{myStatus.paidAmount.toLocaleString()}원</p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const [y, m] = monthFilter.split("-").map(Number);
+                    const prev = new Date(y, m - 2);
+                    setMonthFilter(`${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`);
+                  }}
+                  className="rounded-lg p-1.5 hover:bg-secondary transition-colors"
+                  aria-label="이전 달"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <span className="min-w-[60px] text-center text-xs font-medium">
+                  {monthFilter.replace("-", ".")}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const [y, m] = monthFilter.split("-").map(Number);
+                    const next = new Date(y, m);
+                    setMonthFilter(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`);
+                  }}
+                  className="rounded-lg p-1.5 hover:bg-secondary transition-colors"
+                  aria-label="다음 달"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </Card>
+        ) : null;
+      })()}
+
       {/* ── Dues Tab Bar ── */}
       <div className="sticky top-0 z-10 -mx-1 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="flex" role="tablist">
           {([
             { key: "records" as const, label: "입출금", staffOnly: false },
-            { key: "status" as const, label: "납부현황", staffOnly: false },
+            { key: "status" as const, label: "납부현황", staffOnly: true },
             { key: "bulk" as const, label: "내역 올리기", staffOnly: true },
             { key: "settings" as const, label: "설정", staffOnly: true },
           ]).filter((tab) => !tab.staffOnly || isStaffOrAbove(role)).map((tab) => (
