@@ -300,7 +300,10 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   const filteredRecords = useMemo(() => {
     let list = filter === "ALL" ? monthRecords : monthRecords.filter((item) => item.type === filter);
     if (memberFilter.trim()) {
-      list = list.filter((item) => item.memberName?.includes(memberFilter.trim()));
+      const q = memberFilter.trim();
+      list = list.filter((item) =>
+        item.memberName?.includes(q) || item.description?.includes(q)
+      );
     }
     return [...list].sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
   }, [filter, monthRecords, memberFilter]);
@@ -618,8 +621,17 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   }
 
   async function handleDeleteRecord(id: string) {
+    // 삭제 전 잔고 차액 계산
+    const record = records.find((r) => r.id === id);
     const { error } = await apiMutate(`/api/dues?id=${id}`, "DELETE");
-    if (!error) await refetchSummary();
+    if (!error) {
+      // 잔고 조정: 입금 삭제 → 잔고 감소, 출금 삭제 → 잔고 증가
+      if (record && summaryData.balance !== null) {
+        const diff = record.type === "INCOME" ? -record.amount : record.amount;
+        await apiMutate("/api/dues/balance", "POST", { balance: summaryData.balance + diff });
+      }
+      await refetchSummary();
+    }
   }
 
   async function handleUpdateRecord(formData: FormData) {
@@ -631,6 +643,11 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     const recordedTime = String(formData.get("editTime") || "");
     const userId = String(formData.get("editMember") || "") || undefined;
 
+    // 수정 전 잔고 차액 계산
+    const oldValue = editingRecord.type === "INCOME" ? editingRecord.amount : -editingRecord.amount;
+    const newValue = type === "INCOME" ? amount : -amount;
+    const diff = newValue - oldValue;
+
     const { error } = await apiMutate("/api/dues", "PUT", {
       id: editingRecord.id,
       type,
@@ -641,6 +658,10 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       recordedTime: recordedTime || undefined,
     });
     if (!error) {
+      // 잔고 조정
+      if (diff !== 0 && summaryData.balance !== null) {
+        await apiMutate("/api/dues/balance", "POST", { balance: summaryData.balance + diff });
+      }
       await refetchSummary();
       setEditingRecord(null);
     }
