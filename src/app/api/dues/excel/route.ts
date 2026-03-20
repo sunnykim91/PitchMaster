@@ -14,38 +14,81 @@ export async function POST(req: NextRequest) {
     if (!file) return apiError("파일이 없습니다.", 400);
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const workbook = XLSX.read(buffer, { type: "buffer" });
+    const workbook = XLSX.read(buffer, { type: "buffer", cellDates: true });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
 
-    // 헤더 행 찾기 (거래일시, 구분, 거래금액 등)
+    // 디버그용: 처음 15행 로그
+    console.log("[Excel] Total rows:", rows.length);
+    for (let i = 0; i < Math.min(rows.length, 15); i++) {
+      console.log(`[Excel] Row ${i}:`, JSON.stringify(rows[i]?.slice(0, 8)));
+    }
+
+    // 헤더 행 찾기 — "거래일시" 텍스트가 포함된 행
     let headerIdx = -1;
-    for (let i = 0; i < Math.min(rows.length, 20); i++) {
+    for (let i = 0; i < Math.min(rows.length, 30); i++) {
       const row = rows[i];
-      if (!row) continue;
-      const joined = row.map((c: any) => String(c ?? "").trim()).join(",");
-      if (joined.includes("거래일시") && (joined.includes("거래금액") || joined.includes("금액"))) {
+      if (!row || !Array.isArray(row)) continue;
+      const cells = row.map((c: any) => String(c ?? "").replace(/\s+/g, "").trim());
+      const hasDate = cells.some((c: string) => c.includes("거래일시"));
+      const hasAmount = cells.some((c: string) => c.includes("거래금액") || c.includes("금액"));
+      if (hasDate && hasAmount) {
         headerIdx = i;
         break;
       }
     }
 
+    // 두 번째 시도: "거래일시"만으로 찾기
     if (headerIdx === -1) {
-      return apiError("카카오뱅크 엑셀 형식을 인식할 수 없습니다. '거래일시', '거래금액' 컬럼이 필요합니다.", 400);
+      for (let i = 0; i < Math.min(rows.length, 30); i++) {
+        const row = rows[i];
+        if (!row || !Array.isArray(row)) continue;
+        const cells = row.map((c: any) => String(c ?? "").replace(/\s+/g, "").trim());
+        if (cells.some((c: string) => c.includes("거래일시"))) {
+          headerIdx = i;
+          break;
+        }
+      }
     }
 
-    const headers = rows[headerIdx].map((h: any) => String(h ?? "").trim());
+    if (headerIdx === -1) {
+      // 최후 시도: 날짜 형식(YYYY.MM.DD)이 포함된 첫 데이터 행 찾기
+      for (let i = 0; i < Math.min(rows.length, 30); i++) {
+        const row = rows[i];
+        if (!row || !Array.isArray(row)) continue;
+        const firstCell = String(row[0] ?? "").trim();
+        if (/^\d{4}\.\d{2}\.\d{2}/.test(firstCell)) {
+          // 이 행이 데이터 시작, 헤더는 그 위
+          headerIdx = i - 1;
+          break;
+        }
+      }
+    }
 
-    // 컬럼 인덱스 찾기
+    console.log("[Excel] Header found at row:", headerIdx);
+
+    if (headerIdx === -1) {
+      return apiError("카카오뱅크 엑셀 형식을 인식할 수 없습니다.", 400);
+    }
+
+    // 헤더 정규화 (공백 제거)
+    const headers = rows[headerIdx].map((h: any) => String(h ?? "").replace(/\s+/g, "").trim());
+    console.log("[Excel] Headers:", headers);
+
+    // 컬럼 인덱스 찾기 (공백 무시 매칭)
     const colDate = headers.findIndex((h: string) => h.includes("거래일시"));
     const colType = headers.findIndex((h: string) => h === "구분");
     const colAmount = headers.findIndex((h: string) => h.includes("거래금액") || h === "금액");
     const colBalance = headers.findIndex((h: string) => h.includes("잔액") || h.includes("잔고"));
     const colContent = headers.findIndex((h: string) => h === "내용");
     const colMemo = headers.findIndex((h: string) => h === "메모");
+    const colTxType = headers.findIndex((h: string) => h.includes("거래구분"));
 
-    if (colDate === -1 || colAmount === -1) {
-      return apiError("필수 컬럼(거래일시, 거래금액)을 찾을 수 없습니다.", 400);
+    console.log("[Excel] Columns:", { colDate, colType, colAmount, colBalance, colContent, colMemo, colTxType });
+
+    // 최소한 날짜 컬럼은 필요
+    if (colDate === -1) {
+      return apiError("'거래일시' 컬럼을 찾을 수 없습니다.", 400);
     }
 
     // 데이터 행 파싱
@@ -61,31 +104,72 @@ export async function POST(req: NextRequest) {
 
     for (let i = headerIdx + 1; i < rows.length; i++) {
       const row = rows[i];
-      if (!row || !row[colDate]) continue;
+      if (!row || !Array.isArray(row)) continue;
 
-      const dateRaw = String(row[colDate] ?? "").trim();
-      // "2025.03.20 10:24:09" → "2025-03-20"
-      const dateParsed = dateRaw.replace(/\./g, "-").split(" ")[0];
+      // 날짜 파싱
+      const dateCell = row[colDate];
+      let dateParsed = "";
+      if (dateCell instanceof Date) {
+        dateParsed = dateCell.toISOString().split("T")[0];
+      } else {
+        const dateRaw = String(dateCell ?? "").trim();
+        if (!dateRaw) continue;
+        // "2025.03.20 10:24:09" or "2025-03-20"
+        dateParsed = dateRaw.replace(/\./g, "-").split(" ")[0];
+      }
       if (!dateParsed || dateParsed.length < 8) continue;
 
-      const amountRaw = Number(String(row[colAmount] ?? "0").replace(/,/g, ""));
-      if (isNaN(amountRaw) || amountRaw === 0) continue;
+      // 금액 파싱
+      let amount: number;
+      let type: "INCOME" | "EXPENSE";
 
-      const type = amountRaw > 0 ? "INCOME" as const : "EXPENSE" as const;
-      const amount = Math.abs(amountRaw);
+      if (colAmount !== -1) {
+        const amountRaw = Number(String(row[colAmount] ?? "0").replace(/,/g, ""));
+        if (isNaN(amountRaw) || amountRaw === 0) continue;
+        type = amountRaw > 0 ? "INCOME" : "EXPENSE";
+        amount = Math.abs(amountRaw);
+      } else if (colType !== -1) {
+        // "구분" 컬럼으로 입출금 판단
+        const typeStr = String(row[colType] ?? "").trim();
+        type = typeStr === "입금" ? "INCOME" : "EXPENSE";
+        // 금액은 다른 컬럼에서 찾기
+        const possibleAmount = row.find((c: any, idx: number) => {
+          if (idx === colDate || idx === colType || idx === colBalance) return false;
+          const n = Number(String(c ?? "0").replace(/,/g, ""));
+          return !isNaN(n) && n !== 0;
+        });
+        amount = Math.abs(Number(String(possibleAmount ?? "0").replace(/,/g, "")));
+        if (amount === 0) continue;
+      } else {
+        continue;
+      }
 
+      // 설명
       const content = colContent !== -1 ? String(row[colContent] ?? "").trim() : "";
       const memo = colMemo !== -1 ? String(row[colMemo] ?? "").trim() : "";
-      const description = [content, memo].filter(Boolean).join(" · ") || (type === "INCOME" ? "입금" : "출금");
+      const txType = colTxType !== -1 ? String(row[colTxType] ?? "").trim() : "";
+      const descParts = [content, memo].filter(Boolean);
+      const description = descParts.length > 0
+        ? descParts.join(" · ")
+        : txType || (type === "INCOME" ? "입금" : "출금");
 
-      const balance = colBalance !== -1 ? Number(String(row[colBalance] ?? "0").replace(/,/g, "")) : null;
-      if (balance !== null && !isNaN(balance)) lastBalance = balance;
+      // 잔액
+      let balance: number | null = null;
+      if (colBalance !== -1) {
+        const balRaw = Number(String(row[colBalance] ?? "").replace(/,/g, ""));
+        if (!isNaN(balRaw)) {
+          balance = balRaw;
+          lastBalance = balRaw;
+        }
+      }
 
       records.push({ date: dateParsed, type, amount, description, balance });
     }
 
+    console.log("[Excel] Parsed records:", records.length, "Last balance:", lastBalance);
+
     if (records.length === 0) {
-      return apiError("파싱된 거래 내역이 없습니다.", 400);
+      return apiError("파싱된 거래 내역이 없습니다. 카카오뱅크에서 다운로드한 엑셀 파일인지 확인해주세요.", 400);
     }
 
     return apiSuccess({
