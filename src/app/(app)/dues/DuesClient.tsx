@@ -346,7 +346,8 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   const [editingRecord, setEditingRecord] = useState<DuesRecord | null>(null);
   const [editingSetting, setEditingSetting] = useState<DuesSetting | null>(null);
   const [settingFormState, setSettingFormState] = useState({ memberType: "", monthlyAmount: "", description: "" });
-  const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void; variant?: "default" | "destructive"; confirmLabel?: string } | null>(null);
+  const [selfReporting, setSelfReporting] = useState(false);
   const bulkSectionRef = useRef<HTMLDivElement>(null);
 
   const loading = loadingSummary || loadingMembers;
@@ -974,6 +975,40 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                 </p>
                 {myStatus.paidAmount > 0 && (
                   <p className="text-xs text-muted-foreground">{myStatus.paidAmount.toLocaleString()}원</p>
+                )}
+                {myStatus.status === "UNPAID" && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="mt-2"
+                    disabled={selfReporting}
+                    onClick={() => setConfirmAction({
+                      message: "입금 사실을 운영진에게 알리시겠습니까?",
+                      variant: "default",
+                      confirmLabel: "신고하기",
+                      onConfirm: async () => {
+                        setSelfReporting(true);
+                        const { error } = await apiMutate("/api/dues/payment-status", "POST", {
+                          memberId: _userId,
+                          month: monthFilter,
+                          status: "PAID",
+                          paidAmount: settings.length > 0 ? settings[0].monthlyAmount : 0,
+                          note: "회원 자기 신고 (확인 필요)",
+                          selfReport: true,
+                        });
+                        setSelfReporting(false);
+                        if (!error) {
+                          await refetchPaymentStatus();
+                          showToast("납부 신고 완료. 운영진이 확인 후 처리합니다.", "success");
+                        } else {
+                          showToast(error, "error");
+                        }
+                      },
+                    })}
+                  >
+                    {selfReporting ? "신고 중..." : "입금했어요"}
+                  </Button>
                 )}
               </div>
               <div className="flex items-center gap-2">
@@ -1939,8 +1974,8 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       <ConfirmDialog
         open={!!confirmAction}
         title={confirmAction?.message ?? ""}
-        variant="destructive"
-        confirmLabel="삭제"
+        variant={confirmAction?.variant ?? "destructive"}
+        confirmLabel={confirmAction?.confirmLabel ?? "삭제"}
         onConfirm={() => { confirmAction?.onConfirm(); setConfirmAction(null); }}
         onCancel={() => setConfirmAction(null)}
       />

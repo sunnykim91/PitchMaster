@@ -31,11 +31,19 @@ export async function POST(req: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
 
-  const roleCheck = requireRole(ctx, PERMISSIONS.DUES_RECORD_ADD);
-  if (roleCheck) return roleCheck;
-
   const body = await req.json();
-  const { memberId, month, status, paidAmount, note } = body;
+  const { memberId, month, status, paidAmount, note, selfReport } = body;
+
+  // 회원 자기 신고: 본인의 납부 상태만 변경 가능
+  if (selfReport && memberId === ctx.userId) {
+    // selfReport는 PAID만 허용 (자기가 자기를 면제/미납 처리하는 건 불가)
+    if (status !== "PAID") {
+      return apiError("Self-report only allows PAID status", 400);
+    }
+  } else {
+    const roleCheck = requireRole(ctx, PERMISSIONS.DUES_RECORD_ADD);
+    if (roleCheck) return roleCheck;
+  }
 
   if (!memberId || !month || !status) {
     return apiError("memberId, month, status required", 400);

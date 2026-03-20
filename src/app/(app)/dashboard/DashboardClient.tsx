@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Calendar, Trophy, Vote } from "lucide-react";
+import { Calendar, Check, Copy, Link2, Trophy, Users, Vote } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
+import { isStaffOrAbove } from "@/lib/permissions";
+import { useViewAsRole } from "@/lib/ViewAsRoleContext";
+import type { Role } from "@/lib/types";
 import { cn, formatTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -167,10 +170,13 @@ function formatDue(iso: string) {
   }
 }
 
-export default function DashboardClient({ userId, initialData }: { userId: string; initialData?: DashboardData }) {
+export default function DashboardClient({ userId, userRole, initialData, inviteCode }: { userId: string; userRole?: Role; initialData?: DashboardData; inviteCode?: string }) {
   const { data, loading, error, refetch } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
   const { showToast } = useToast();
   const [voting, setVoting] = useState(false);
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const { effectiveRole } = useViewAsRole();
+  const role = effectiveRole(userRole);
 
   async function handleQuickVote(matchId: string, memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
     if (data.upcomingMatch?.myVote === vote) return;
@@ -212,8 +218,101 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
   // Team record totals
   const recordTotal = teamRecord.wins + teamRecord.draws + teamRecord.losses;
 
+  // Onboarding wizard: show only for brand-new teams with no data
+  const showWizard = !upcomingMatch && activeVotes.length === 0 && !recentResult && recordTotal === 0;
+
+  async function handleCopyInviteCode() {
+    if (!inviteCode) return;
+    try {
+      await navigator.clipboard.writeText(inviteCode);
+      setInviteCopied(true);
+      showToast("초대 코드가 복사되었습니다.");
+      setTimeout(() => setInviteCopied(false), 2000);
+    } catch {
+      showToast("복사에 실패했습니다. 설정에서 확인해주세요.", "error");
+    }
+  }
+
   return (
     <div className="grid gap-4 stagger-children">
+      {/* ── Onboarding Wizard (new teams only) ── */}
+      {showWizard && (
+        <Card className="card-featured">
+          <CardContent className="pt-6">
+            <h2 className="text-lg font-bold text-foreground">팀이 생성되었습니다! 🎉</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              아래 3단계를 완료하면 PitchMaster를 바로 활용할 수 있어요.
+            </p>
+
+            <div className="mt-4 space-y-3">
+              {/* Step 1: Invite */}
+              <div className="flex items-start gap-3 rounded-xl bg-secondary/50 p-4">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">
+                  1
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">팀원 초대하기</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    초대 코드를 팀원에게 공유하면 바로 가입할 수 있습니다.
+                  </p>
+                  {inviteCode ? (
+                    <Button size="sm" className="mt-2" onClick={handleCopyInviteCode}>
+                      {inviteCopied ? (
+                        <>
+                          <Check className="mr-1 h-3.5 w-3.5" />
+                          복사됨
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="mr-1 h-3.5 w-3.5" />
+                          초대 코드 복사
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button size="sm" className="mt-2" asChild>
+                      <Link href="/settings">초대 코드 확인 &rarr;</Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Step 2: Pre-register members */}
+              <div className="flex items-start gap-3 rounded-xl bg-secondary/50 p-4">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">
+                  2
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">팀원 미리 등록</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    가입 전 팀원 이름을 미리 등록하면 출석/회비 관리가 편해집니다.
+                  </p>
+                  <Button size="sm" variant="outline" className="mt-2" asChild>
+                    <Link href="/members">회원 관리 &rarr;</Link>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Step 3: Create first match */}
+              <div className="flex items-start gap-3 rounded-xl bg-secondary/50 p-4">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">
+                  3
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">첫 경기 등록</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    경기를 등록하면 팀원에게 참석 투표를 받을 수 있습니다.
+                  </p>
+                  <Button size="sm" variant="outline" className="mt-2" asChild>
+                    <Link href="/matches">일정 등록 &rarr;</Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* ── Hero: Next Match (full width) ── */}
       <div className="card-featured">
         <div className="flex items-center justify-between">
@@ -301,6 +400,37 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
           </div>
         )}
       </div>
+
+      {/* ── Invite card (staff/president only) ── */}
+      {isStaffOrAbove(role) && inviteCode && (
+        <Card className="border-[hsl(var(--accent))]/20 bg-[hsl(var(--accent))]/5">
+          <CardContent className="flex items-center justify-between gap-4 p-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <Users className="h-5 w-5 shrink-0 text-[hsl(var(--accent))]" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">팀원을 초대하세요</p>
+                <p className="text-xs text-muted-foreground truncate">초대 코드를 복사해 팀원에게 공유하세요</p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="shrink-0 gap-1.5 border-[hsl(var(--accent))]/30 text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/10"
+              onClick={() => {
+                const inviteUrl = `${window.location.origin}/team?code=${inviteCode}`;
+                navigator.clipboard.writeText(inviteUrl).then(() => {
+                  setInviteCopied(true);
+                  showToast("초대 링크가 복사되었습니다.");
+                  setTimeout(() => setInviteCopied(false), 2000);
+                });
+              }}
+            >
+              {inviteCopied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
+              {inviteCopied ? "복사됨!" : "초대 링크 복사"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Votes */}

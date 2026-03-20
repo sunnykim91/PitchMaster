@@ -150,7 +150,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   const [matchTime, setMatchTime] = useState("09:00");
   const [location, setLocation] = useState("");
   const [voteDeadline, setVoteDeadline] = useState(() => {
-    const prev = new Date();
+    const prev = new Date(today + "T00:00:00");
     prev.setDate(prev.getDate() - 1);
     const yyyy = prev.getFullYear();
     const mm = String(prev.getMonth() + 1).padStart(2, "0");
@@ -384,6 +384,17 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   </select>
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="voteDeadline">투표 마감</Label>
+                  <Input
+                    id="voteDeadline"
+                    name="voteDeadline"
+                    type="datetime-local"
+                    value={voteDeadline}
+                    onChange={(e) => setVoteDeadline(e.target.value)}
+                  />
+                  <p className="text-[11px] text-muted-foreground">이 시간까지 참석 여부를 알려주세요</p>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="location">장소</Label>
                   <Input
                     id="location"
@@ -476,16 +487,6 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       />
                     </div>
                   )}
-                  <div className="space-y-2">
-                    <Label htmlFor="voteDeadline">투표 마감일</Label>
-                    <Input
-                      id="voteDeadline"
-                      name="voteDeadline"
-                      type="datetime-local"
-                      value={voteDeadline}
-                      onChange={(e) => setVoteDeadline(e.target.value)}
-                    />
-                  </div>
                 </div>
               )}
               <Button type="submit" variant="default" disabled={submitting}>

@@ -12,5 +12,12 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session) return null;
   const initialData = await getDashboardData(session.user.teamId!, session.user.id);
-  return <DashboardClient userId={session.user.id} initialData={initialData} />;
+  return (
+    <DashboardClient
+      userId={session.user.id}
+      userRole={session.user.teamRole}
+      inviteCode={session.user.inviteCode ?? ""}
+      initialData={initialData}
+    />
+  );
 }

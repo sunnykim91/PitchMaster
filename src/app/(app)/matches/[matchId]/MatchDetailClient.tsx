@@ -30,6 +30,8 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
 import { shareMatchResult } from "@/lib/kakaoShare";
 import { recommendFormation, type PlayerInput } from "@/lib/formationAI";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useToast } from "@/lib/ToastContext";
 import type { SportType } from "@/lib/types";
 
 /* ── API response row types (snake_case from DB) ── */
@@ -265,6 +267,7 @@ export default function MatchDetailClient({
   const {
     data: matchesData,
     loading: matchesLoading,
+    refetch: refetchMatches,
   } = useApi<{ matches: MatchRow[] }>("/api/matches", { matches: [] });
 
   const {
@@ -434,6 +437,33 @@ export default function MatchDetailClient({
   const canManageAttendance = isStaffOrAbove(role);
   const canManage = isStaffOrAbove(role);
   const canRecord = true; // 골/어시 기록은 모든 회원 가능
+
+  /* ── 경기 완료 처리 ── */
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const { showToast } = useToast();
+
+  /** 경기 날짜가 오늘 이전 또는 오늘인지 확인 (KST 기준) */
+  const isMatchDatePastOrToday = useMemo(() => {
+    if (!match.date) return false;
+    const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    const todayStr = kstNow.toISOString().split("T")[0];
+    return match.date <= todayStr;
+  }, [match.date]);
+
+  async function handleCompleteMatch() {
+    setCompleting(true);
+    try {
+      await apiMutate("/api/matches", "PUT", { id: matchId, status: "COMPLETED" });
+      showToast("경기가 완료 처리되었습니다.");
+      await refetchMatches();
+    } catch {
+      showToast("경기 완료 처리에 실패했습니다.", "error");
+    } finally {
+      setCompleting(false);
+      setShowCompleteConfirm(false);
+    }
+  }
 
   const baseRoster = useMemo(
     () =>
@@ -750,6 +780,34 @@ export default function MatchDetailClient({
 
       {/* ── Tab: 기본 정보 ── */}
       {activeTab === "info" && (<>
+      {/* ── 경기 완료 처리 (운영진 이상, SCHEDULED + 경기일 오늘 이전/오늘) ── */}
+      {canManage && match.status === "SCHEDULED" && isMatchDatePastOrToday && (
+        <Card className="border-[hsl(var(--success))]/20 bg-[hsl(var(--success))]/5">
+          <CardContent className="flex items-center justify-between gap-4 p-4">
+            <div>
+              <p className="text-sm font-semibold text-foreground">경기를 완료 처리하시겠습니까?</p>
+              <p className="text-xs text-muted-foreground">완료 처리하면 전적과 기록에 반영됩니다.</p>
+            </div>
+            <Button
+              size="sm"
+              className="shrink-0"
+              disabled={completing}
+              onClick={() => setShowCompleteConfirm(true)}
+            >
+              {completing ? "처리 중..." : "경기 완료"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+      <ConfirmDialog
+        open={showCompleteConfirm}
+        title="경기 완료 처리"
+        description="이 경기를 완료 상태로 변경합니다. 완료된 경기의 기록만 시즌 전적에 반영됩니다."
+        confirmLabel="완료 처리"
+        cancelLabel="취소"
+        onConfirm={handleCompleteMatch}
+        onCancel={() => setShowCompleteConfirm(false)}
+      />
       {/* ── 내 참석 투표 (모든 멤버, 진행 전 경기만) ── */}
       {match.status !== "COMPLETED" && (() => {
         const myMember = baseRoster.find((m) => m.id === userId);
