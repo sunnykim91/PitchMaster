@@ -259,6 +259,42 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     params.set("tab", tab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }, [searchParams, router, pathname]);
+  const [monthFilter, setMonthFilter] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
+
+  // 납부 상태 API
+  const { data: paymentStatusRaw, refetch: refetchPaymentStatus } = useApi<any[]>(
+    `/api/dues/payment-status?month=${monthFilter}`,
+    [],
+  );
+  const paymentStatusMap = useMemo(() => {
+    const map = new Map<string, { status: string; paidAmount: number; note?: string }>();
+    for (const ps of paymentStatusRaw ?? []) {
+      map.set(ps.member_id, { status: ps.status, paidAmount: ps.paid_amount, note: ps.note });
+    }
+    return map;
+  }, [paymentStatusRaw]);
+
+  /** 입금 내역에서 자동 매칭된 멤버들의 납부 상태를 일괄 업데이트 */
+  async function syncPaymentStatus() {
+    const matches: { memberId: string; amount: number }[] = [];
+    for (const r of monthRecords) {
+      if (r.type !== "INCOME") continue;
+      const matched = members.find((m) => r.memberName === m.name || r.description?.includes(m.name));
+      if (matched) {
+        const existing = matches.find((m) => m.memberId === matched.id);
+        if (existing) existing.amount += r.amount;
+        else matches.push({ memberId: matched.id, amount: r.amount });
+      }
+    }
+    if (matches.length > 0) {
+      await apiMutate("/api/dues/payment-status", "PUT", { month: monthFilter, matches });
+      await refetchPaymentStatus();
+    }
+  }
+
   const [filter, setFilter] = useState<RecordFilter>("ALL");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSettingOpen, setIsSettingOpen] = useState(false);
@@ -278,10 +314,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   const [excelLoading, setExcelLoading] = useState(false);
   const [excelRecords, setExcelRecords] = useState<{ date: string; type: "INCOME" | "EXPENSE"; amount: number; description: string; balance: number | null }[]>([]);
   const [excelBalance, setExcelBalance] = useState<number | null>(null);
-  const [monthFilter, setMonthFilter] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [editingRecord, setEditingRecord] = useState<DuesRecord | null>(null);
   const [editingSetting, setEditingSetting] = useState<DuesSetting | null>(null);
@@ -304,13 +336,28 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     return records.filter((r) => r.recordedAt.startsWith(monthFilter));
   }, [records, monthFilter]);
 
-  /** 월별 회비 납부 현황 계산 */
+  /** 월별 회비 납부 현황 계산 (DB 납부 상태 우선, 없으면 자동 매칭) */
   const duesStatus = useMemo(() => {
     if (!members.length) return [];
     const settings = summaryData?.settings ?? [];
     const defaultAmount = settings.length > 0 ? (settings[0] as any).monthlyAmount ?? (settings[0] as any).monthly_amount ?? 0 : 0;
 
     return members.map((m) => {
+      const dbStatus = paymentStatusMap.get(m.id);
+
+      // DB에 상태가 있으면 그걸 사용
+      if (dbStatus) {
+        return {
+          id: m.id,
+          name: m.name,
+          expectedAmount: defaultAmount,
+          paidAmount: dbStatus.paidAmount,
+          status: dbStatus.status as "PAID" | "UNPAID" | "EXEMPT",
+          note: dbStatus.note,
+        };
+      }
+
+      // DB에 없으면 입금 내역에서 자동 판단
       const paid = monthRecords.filter(
         (r) => r.type === "INCOME" && (r.memberName === m.name || r.description?.includes(m.name))
       );
@@ -320,11 +367,11 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         name: m.name,
         expectedAmount: defaultAmount,
         paidAmount,
-        isPaid: paidAmount >= defaultAmount && defaultAmount > 0,
-        records: paid,
+        status: (paidAmount >= defaultAmount && defaultAmount > 0 ? "PAID" : "UNPAID") as "PAID" | "UNPAID" | "EXEMPT",
+        note: undefined as string | undefined,
       };
     });
-  }, [members, monthRecords, summaryData?.settings]);
+  }, [members, monthRecords, summaryData?.settings, paymentStatusMap]);
 
   const filteredRecords = useMemo(() => {
     let list = filter === "ALL" ? monthRecords : monthRecords.filter((item) => item.type === filter);
@@ -364,6 +411,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     });
     if (!error) {
       await refetchSummary();
+      await syncPaymentStatus();
       setIsFormOpen(false);
       setScreenshotUrl("");
       setFormErrors({});
@@ -1087,7 +1135,8 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                   showToast(msg, "success");
                   setExcelRecords([]);
                   setExcelBalance(null);
-                  refetchSummary();
+                  await refetchSummary();
+                  await syncPaymentStatus();
                 } catch {
                   showToast("저장 중 오류가 발생했습니다.", "error");
                 } finally {
@@ -1278,51 +1327,73 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         </div>
 
         {/* 회비 납부 현황 (운영진만) */}
-        {isStaffOrAbove(role) && duesStatus.length > 0 && duesStatus[0].expectedAmount > 0 && (() => {
-          const paidMembers = duesStatus.filter(m => m.isPaid);
-          const unpaidMembers = duesStatus.filter(m => !m.isPaid);
+        {isStaffOrAbove(role) && duesStatus.length > 0 && (() => {
+          const paidMembers = duesStatus.filter(m => m.status === "PAID");
+          const unpaidMembers = duesStatus.filter(m => m.status === "UNPAID");
+          const exemptMembers = duesStatus.filter(m => m.status === "EXEMPT");
           return (
           <Card className="mt-4 p-4">
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-bold text-foreground">
                 {monthFilter.replace("-", "년 ")}월 납부 현황
               </h4>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-[hsl(var(--success))] font-bold">{paidMembers.length}</span>
-                /{duesStatus.length}명
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-muted-foreground">
+                  <span className="text-[hsl(var(--success))] font-bold">{paidMembers.length}</span>
+                  /{duesStatus.length - exemptMembers.length}명
+                </p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await syncPaymentStatus();
+                    showToast("자동 매칭 완료", "success");
+                  }}
+                  className="rounded-lg bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary hover:bg-primary/20 transition-colors"
+                >
+                  자동 매칭
+                </button>
+              </div>
             </div>
 
-            {/* 납부 완료 */}
-            {paidMembers.length > 0 && (
-              <div className="mt-3">
-                <p className="text-[11px] font-bold text-[hsl(var(--success))]">✓ 납부 ({paidMembers.length}명)</p>
-                <div className="mt-1.5 space-y-1">
-                  {paidMembers.map((m) => (
-                    <div key={m.id} className="flex items-center justify-between rounded-lg bg-[hsl(var(--success))]/5 px-3 py-1.5">
-                      <span className="text-xs font-medium text-foreground">{m.name}</span>
-                      <span className="text-xs font-bold text-[hsl(var(--success))]">
-                        {m.paidAmount.toLocaleString()}원
-                      </span>
-                    </div>
-                  ))}
+            <div className="mt-3 space-y-1">
+              {duesStatus.map((m) => (
+                <div key={m.id} className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2">
+                  <span className="text-xs font-medium text-foreground">{m.name}</span>
+                  <div className="flex items-center gap-1">
+                    {m.status === "PAID" && m.paidAmount > 0 && (
+                      <span className="mr-1 text-[10px] text-muted-foreground">{m.paidAmount.toLocaleString()}원</span>
+                    )}
+                    {(["PAID", "UNPAID", "EXEMPT"] as const).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={async () => {
+                          await apiMutate("/api/dues/payment-status", "POST", {
+                            memberId: m.id,
+                            month: monthFilter,
+                            status: s,
+                            paidAmount: s === "PAID" ? m.paidAmount || m.expectedAmount : 0,
+                          });
+                          await refetchPaymentStatus();
+                        }}
+                        className={cn(
+                          "rounded-full px-2 py-0.5 text-[10px] font-bold transition-all",
+                          m.status === s
+                            ? s === "PAID"
+                              ? "bg-[hsl(var(--success))] text-white"
+                              : s === "EXEMPT"
+                              ? "bg-[hsl(var(--warning))] text-[hsl(240_6%_6%)]"
+                              : "bg-[hsl(var(--loss))] text-white"
+                            : "bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08]"
+                        )}
+                      >
+                        {s === "PAID" ? "납부" : s === "EXEMPT" ? "면제" : "미납"}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-
-            {/* 미납 */}
-            {unpaidMembers.length > 0 && (
-              <div className="mt-3">
-                <p className="text-[11px] font-bold text-[hsl(var(--loss))]">✗ 미납 ({unpaidMembers.length}명)</p>
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  {unpaidMembers.map((m) => (
-                    <span key={m.id} className="rounded-full bg-[hsl(var(--loss))]/10 px-2.5 py-1 text-[11px] font-medium text-[hsl(var(--loss))]">
-                      {m.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+              ))}
+            </div>
           </Card>
           );
         })()}
