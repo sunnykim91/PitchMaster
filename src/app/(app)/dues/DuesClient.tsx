@@ -1249,7 +1249,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
             </div>
           ) : filteredRecords.map((record) =>
             editingRecord?.id === record.id ? (
-              <Card key={record.id} className="border-0 bg-secondary p-4">
+              <Card key={record.id} data-edit-id={record.id} className="border-0 bg-secondary p-4">
                 <form className="grid gap-3" action={(fd) => handleUpdateRecord(fd)}>
                   <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                     <NativeSelect name="editType" defaultValue={record.type}>
@@ -1305,15 +1305,20 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                     <div className="flex gap-1">
                       <button
                         type="button"
-                        onClick={() => setEditingRecord(record)}
-                        className="rounded px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                        onClick={() => {
+                          setEditingRecord(record);
+                          setTimeout(() => {
+                            document.querySelector(`[data-edit-id="${record.id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                          }, 100);
+                        }}
+                        className="min-h-[36px] rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                       >
                         수정
                       </button>
                       <button
                         type="button"
                         onClick={() => setConfirmAction({ message: "이 내역을 삭제하시겠습니까?", onConfirm: () => handleDeleteRecord(record.id) })}
-                        className="rounded px-2 py-0.5 text-[11px] text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        className="min-h-[36px] rounded-lg px-3 py-1.5 text-xs font-medium text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
                       >
                         삭제
                       </button>
