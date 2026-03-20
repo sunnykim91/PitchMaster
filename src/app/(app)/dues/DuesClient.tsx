@@ -291,11 +291,40 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
 
   const loading = loadingSummary || loadingMembers;
 
+  /** description에서 팀원 이름 자동 매칭 → user_id 반환 */
+  function autoMatchMember(description: string): string | undefined {
+    if (!description) return undefined;
+    const matched = members.find((m) => description.includes(m.name));
+    return matched?.id;
+  }
+
   /** 월별 필터 적용된 레코드 */
   const monthRecords = useMemo(() => {
     if (!monthFilter) return records;
     return records.filter((r) => r.recordedAt.startsWith(monthFilter));
   }, [records, monthFilter]);
+
+  /** 월별 회비 납부 현황 계산 */
+  const duesStatus = useMemo(() => {
+    if (!members.length) return [];
+    const settings = summaryData?.settings ?? [];
+    const defaultAmount = settings.length > 0 ? (settings[0] as any).monthlyAmount ?? (settings[0] as any).monthly_amount ?? 0 : 0;
+
+    return members.map((m) => {
+      const paid = monthRecords.filter(
+        (r) => r.type === "INCOME" && (r.memberName === m.name || r.description?.includes(m.name))
+      );
+      const paidAmount = paid.reduce((sum, r) => sum + r.amount, 0);
+      return {
+        id: m.id,
+        name: m.name,
+        expectedAmount: defaultAmount,
+        paidAmount,
+        isPaid: paidAmount >= defaultAmount && defaultAmount > 0,
+        records: paid,
+      };
+    });
+  }, [members, monthRecords, summaryData?.settings]);
 
   const filteredRecords = useMemo(() => {
     let list = filter === "ALL" ? monthRecords : monthRecords.filter((item) => item.type === filter);
@@ -313,7 +342,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     const amount = Number(formData.get("amount"));
     const description = String(formData.get("description"));
     const recordedAt = String(formData.get("recordedAt") || "");
-    const userId = String(formData.get("memberName") || "") || undefined;
+    const userId = autoMatchMember(description);
     const screenshotUrlValue = screenshotUrl || undefined;
 
     const errors: Record<string, string> = {};
@@ -641,7 +670,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     const description = String(formData.get("editDescription"));
     const recordedAt = String(formData.get("editDate") || "");
     const recordedTime = String(formData.get("editTime") || "");
-    const userId = String(formData.get("editMember") || "") || undefined;
+    const userId = autoMatchMember(description);
 
     // 수정 전 잔고 차액 계산
     const oldValue = editingRecord.type === "INCOME" ? editingRecord.amount : -editingRecord.amount;
@@ -881,15 +910,9 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="font-semibold text-muted-foreground">
-                    입금자/출금자
-                  </Label>
-                  <NativeSelect name="memberName">
-                    <option value="">선택 안 함</option>
-                    {members.map((m) => (
-                      <option key={m.id} value={m.id}>{m.name}</option>
-                    ))}
-                  </NativeSelect>
+                  <p className="text-[11px] text-muted-foreground">
+                    💡 내용에 팀원 이름이 포함되면 자동으로 매칭됩니다.
+                  </p>
                 </div>
               </div>
 
@@ -1049,6 +1072,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                       type: r.type,
                       amount: r.amount,
                       description: r.description,
+                      userId: autoMatchMember(r.description),
                       recordedAt: r.date,
                     });
                     if (!error) successCount++;
@@ -1161,16 +1185,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                         className={cn("text-xs", errs.includes("description") && "border-destructive")}
                         placeholder="내용 (예: 3월 회비)"
                       />
-                      <NativeSelect
-                        value={row.memberName}
-                        onChange={(e) => updateBulkRow(index, "memberName", e.target.value)}
-                        className="text-xs"
-                      >
-                        <option value="">입금자/출금자</option>
-                        {members.map((m) => (
-                          <option key={m.id} value={m.id}>{m.name}</option>
-                        ))}
-                      </NativeSelect>
                       <button
                         type="button"
                         onClick={() => removeBulkRow(index)}
@@ -1263,6 +1277,34 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           </div>
         </div>
 
+        {/* 회비 납부 현황 */}
+        {duesStatus.length > 0 && duesStatus[0].expectedAmount > 0 && (
+          <Card className="mt-4 p-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-bold text-foreground">납부 현황</h4>
+              <p className="text-xs text-muted-foreground">
+                <span className="text-[hsl(var(--success))] font-bold">{duesStatus.filter(m => m.isPaid).length}</span>
+                /{duesStatus.length}명 납부
+              </p>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {duesStatus.map((m) => (
+                <span
+                  key={m.id}
+                  className={cn(
+                    "rounded-full px-2.5 py-1 text-[11px] font-medium",
+                    m.isPaid
+                      ? "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"
+                      : "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]"
+                  )}
+                >
+                  {m.name} {m.isPaid ? "✓" : `미납`}
+                </span>
+              ))}
+            </div>
+          </Card>
+        )}
+
         <div className="mt-4 space-y-2">
           {filteredRecords.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -1281,18 +1323,10 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                     <Input name="editDate" type="date" defaultValue={record.recordedAt.split("T")[0]} />
                     <Input name="editTime" type="time" defaultValue={record.recordedAt.includes("T") ? record.recordedAt.split("T")[1]?.slice(0, 5) : ""} />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input name="editDescription" defaultValue={record.description} required placeholder="내용" />
-                    <NativeSelect name="editMember" defaultValue="">
-                      <option value="">입금자/출금자</option>
-                      {members.map((m) => (
-                        <option key={m.id} value={m.id}>{m.name}</option>
-                      ))}
-                    </NativeSelect>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button type="submit" size="sm">저장</Button>
+                  <Input name="editDescription" defaultValue={record.description} required placeholder="내용" />
+                  <div className="flex justify-end gap-2">
                     <Button type="button" variant="outline" size="sm" onClick={() => setEditingRecord(null)}>취소</Button>
+                    <Button type="submit" size="sm">저장</Button>
                   </div>
                 </form>
               </Card>
