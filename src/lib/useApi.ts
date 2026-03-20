@@ -31,16 +31,22 @@ export function useApi<T>(
   const hasFetchedUrlRef = useRef<string | null>(null);
   const initialRef = useRef(initialData);
 
+  // URL 변경 시 렌더 중 동기적으로 데이터 리셋 (stale 데이터가 1프레임도 안 보이게)
+  const [prevUrl, setPrevUrl] = useState(url);
+  if (prevUrl !== url) {
+    setPrevUrl(url);
+    setData(initialRef.current);
+    setLoading(true);
+  }
+
   const fetchData = useCallback(async () => {
     // 이전 fetch 취소
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
-    // URL 변경 시 이전 데이터 즉시 초기화 (stale 데이터 깜박임 방지)
     if (hasFetchedUrlRef.current !== url) {
       setLoading(true);
-      setData(initialRef.current);
     }
     setError(null);
 
