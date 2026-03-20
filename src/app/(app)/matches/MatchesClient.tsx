@@ -575,6 +575,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   쿼터 {match.quarterCount} · {match.quarterDuration}분 · 휴식 {match.breakDuration}분
                 </p>
                 <div className="grid gap-3">
+                  {match.status !== "COMPLETED" && (
                   <div className="rounded-md border border-border bg-card p-4">
                     <p className="text-sm font-bold text-card-foreground">참석 투표</p>
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -617,6 +618,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       </div>
                     </div>
                   </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
