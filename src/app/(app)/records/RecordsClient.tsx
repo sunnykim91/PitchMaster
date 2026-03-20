@@ -115,7 +115,7 @@ export default function RecordsClient({
   type PeriodType = "season" | "year" | "h1" | "h2" | "q1" | "q2" | "q3" | "q4";
   const [periodType, setPeriodType] = useState<PeriodType>("season");
   const PERIOD_LABELS: Record<PeriodType, string> = {
-    season: "시즌 기본",
+    season: "시즌 전체",
     year: "연간",
     h1: "상반기",
     h2: "하반기",
@@ -537,7 +537,7 @@ export default function RecordsClient({
                     <th className="sticky left-0 z-1 bg-card pb-3 text-left font-medium text-muted-foreground">#</th>
                     <th className="sticky left-8 z-1 bg-card pb-3 text-left font-medium text-muted-foreground">이름</th>
                     {([
-                      { key: "points" as const, label: "공격P" },
+                      { key: "points" as const, label: "공격포인트" },
                       { key: "goals" as const, label: "골" },
                       { key: "assists" as const, label: "어시" },
                       { key: "mvp" as const, label: "MVP" },

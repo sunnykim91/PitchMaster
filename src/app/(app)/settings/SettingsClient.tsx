@@ -537,7 +537,7 @@ export default function SettingsClient({
 
             {canEditTeam && (
               <div className="mt-8 border-t border-destructive/20 pt-6">
-                <h3 className="text-sm font-bold text-destructive">위험 구역</h3>
+                <h3 className="text-sm font-bold text-destructive">팀 삭제</h3>
                 <p className="mt-1 text-xs text-muted-foreground">
                   팀을 삭제하면 모든 경기, 회비, 기록이 영구 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
                 </p>

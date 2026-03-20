@@ -246,7 +246,7 @@ export default function MembersClient({
                   size="sm"
                   onClick={() => setShowRegForm(!showRegForm)}
                 >
-                  {showRegForm ? "닫기" : "팀원 사전등록"}
+                  {showRegForm ? "닫기" : "팀원 미리 등록"}
                 </Button>
               )}
             </div>
@@ -314,7 +314,7 @@ export default function MembersClient({
         <Card>
           <CardHeader>
             <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase">
-              미연동 멤버 ({unlinkedMembers.length}명)
+              미가입 멤버 ({unlinkedMembers.length}명)
             </CardTitle>
             <p className="mt-1 text-xs text-muted-foreground">
               사전 등록된 멤버입니다. 해당 팀원이 카카오로 가입하면 자동 연동됩니다.
@@ -331,7 +331,7 @@ export default function MembersClient({
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-semibold truncate">{member.name}</p>
                       <Badge variant="outline" className="border-[hsl(var(--warning))]/30 text-[hsl(var(--warning))] text-[10px] shrink-0">
-                        미연동
+                        미가입
                       </Badge>
                     </div>
                     {member.phone && (
@@ -375,7 +375,7 @@ export default function MembersClient({
                             size="sm"
                             onClick={() => setLinkingMemberId(member.id)}
                           >
-                            수동 연동
+                            계정 연결
                           </Button>
                         )}
                       </>

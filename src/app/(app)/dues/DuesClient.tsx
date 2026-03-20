@@ -573,7 +573,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
 
     // Clova OCR API 호출
     setOcrLoading(true);
-    setOcrStatus("Naver Clova OCR로 분석 중...");
+    setOcrStatus("스크린샷 분석 중...");
     try {
       const formData = new FormData();
       formData.append("image", file);
@@ -941,7 +941,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
             <p className="mt-1 type-score text-[hsl(var(--primary))]">
               {summaryData.balance !== null
                 ? `${summaryData.balance.toLocaleString()}원`
-                : "스크린샷을 업로드하면 자동 반영됩니다"}
+                : "내역 올리기 탭에서 통장 스크린샷이나 엑셀을 올리면 잔고가 자동 반영됩니다"}
             </p>
             {summaryData.balanceUpdatedAt && (
               <p className="text-[10px] text-muted-foreground">
@@ -958,7 +958,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           {([
             { key: "records" as const, label: "입출금", staffOnly: false },
             { key: "status" as const, label: "납부현황", staffOnly: false },
-            { key: "bulk" as const, label: "일괄 등록", staffOnly: true },
+            { key: "bulk" as const, label: "내역 올리기", staffOnly: true },
             { key: "settings" as const, label: "설정", staffOnly: true },
           ]).filter((tab) => !tab.staffOnly || isStaffOrAbove(role)).map((tab) => (
             <button
@@ -1046,7 +1046,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
 
                 <div className="space-y-2">
                   <p className="text-[11px] text-muted-foreground">
-                    💡 내용에 팀원 이름이 포함되면 자동으로 매칭됩니다.
+                    💡 내용에 팀원 이름이 포함되면 해당 팀원의 납부 기록으로 자동 연결됩니다.
                   </p>
                 </div>
               </div>
@@ -1110,7 +1110,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           엑셀 파일 업로드
         </h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          카카오뱅크에서 다운로드한 엑셀 파일을 업로드하면 거래 내역이 자동으로 파싱됩니다.
+          은행 앱에서 다운로드한 거래 내역 엑셀을 올려주세요. 날짜·금액·내용이 자동으로 분류됩니다. (카카오뱅크 형식에 최적화)
         </p>
         <div className="mt-4">
           <input
@@ -1255,7 +1255,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
               <div className="flex flex-col items-center gap-3 rounded-2xl bg-background p-8 shadow-2xl">
                 <span className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-[hsl(var(--info))]" />
-                <p className="text-base font-semibold text-foreground">OCR 분석 중...</p>
+                <p className="text-base font-semibold text-foreground">거래 내역 인식 중...</p>
                 <p className="text-sm text-muted-foreground">은행 앱 스크린샷을 인식하고 있습니다.</p>
                 <button
                   type="button"
@@ -1428,7 +1428,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         <div className="mt-4 space-y-2">
           {filteredRecords.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-sm text-muted-foreground">아직 회비 기록이 없습니다.</p>
+              <p className="text-sm text-muted-foreground">아직 거래 내역이 없습니다.</p>
             </div>
           ) : filteredRecords.map((record) =>
             editingRecord?.id === record.id ? (
@@ -1559,7 +1559,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                 onClick={() => syncPaymentStatus()}
                 className="rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-colors"
               >
-                자동 매칭
+                입금 내역으로 납부 확인
               </button>
             )}
           </div>

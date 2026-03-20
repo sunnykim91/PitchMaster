@@ -837,7 +837,7 @@ export default function MatchDetailClient({
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-sm font-semibold truncate">{member.name}</span>
                       {!member.isLinked && (
-                        <Badge variant="outline" className="text-[10px] text-muted-foreground">미연동</Badge>
+                        <Badge variant="outline" className="text-[10px] text-muted-foreground">미가입</Badge>
                       )}
                     </div>
                     <div className="flex gap-1.5">
@@ -1249,7 +1249,7 @@ export default function MatchDetailClient({
                   </div>
 
                   <div className="mt-3 space-y-1">
-                    <Label className="text-xs font-semibold text-muted-foreground">쿼터 (선택)</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground">쿼터 (선택사항)</Label>
                     <div className="flex flex-wrap gap-1">
                       <button
                         type="button"

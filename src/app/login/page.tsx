@@ -23,7 +23,7 @@ export default async function LoginPage({
         <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.724 1.8 5.113 4.508 6.459-.2.732-.722 2.654-.828 3.065-.13.507.186.5.39.364.16-.107 2.554-1.74 3.59-2.448.768.112 1.562.17 2.34.17 5.523 0 10-3.463 10-7.691S17.523 3 12 3" />
         </svg>
-        카카오로 3초 만에 시작
+        카카오로 간편 시작
       </a>
     </Button>
   ) : (
@@ -59,7 +59,7 @@ export default async function LoginPage({
 
           <div className="mx-auto max-w-md space-y-3 lg:mx-0">
             <p className="break-keep text-sm text-muted-foreground sm:text-base">
-              참석투표 · 회비정산 · AI 라인업
+              참석 투표 · 회비 관리 · 자동 포지션 배치
               <br />
               <span className="font-semibold text-foreground">한 곳에서, 한 번에.</span>
             </p>

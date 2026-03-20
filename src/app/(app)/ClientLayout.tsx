@@ -115,7 +115,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       { href: "/dashboard", label: "홈", detail: "대시보드", icon: Home },
       { href: "/matches", label: "경기 일정", detail: "일정/투표", icon: Calendar },
       { href: "/records", label: "내 기록", detail: "통계/랭킹", icon: Trophy },
-      { href: "/dues", label: "회비 관리", detail: "입출금/벌금", icon: Wallet },
+      { href: "/dues", label: "회비 관리", detail: "거래 내역/납부", icon: Wallet },
       { href: "/members", label: "회원 관리", detail: "멤버/권한", icon: Users },
       { href: "/board", label: "게시판", detail: "공지/자유", icon: MessageSquare },
       { href: "/notifications", label: "알림", detail: "알림 센터", icon: Bell },
@@ -306,7 +306,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             <Card className="hidden lg:block">
               <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
                 <div>
-                  <h2 className="font-heading text-lg sm:text-xl font-bold uppercase">오늘의 팀 운영 현황</h2>
+                  <h2 className="font-heading text-lg sm:text-xl font-bold uppercase">빠른 작업</h2>
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" asChild>

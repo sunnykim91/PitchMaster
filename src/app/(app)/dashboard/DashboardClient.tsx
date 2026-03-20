@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Calendar, Trophy, Vote } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
@@ -171,17 +171,6 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
   const { data, loading, error, refetch } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
   const { showToast } = useToast();
   const [voting, setVoting] = useState(false);
-  const [showGuide, setShowGuide] = useState(false);
-
-  useEffect(() => {
-    const dismissed = localStorage.getItem("pm_guide_dismissed");
-    if (!dismissed) setShowGuide(true);
-  }, []);
-
-  function dismissGuide() {
-    localStorage.setItem("pm_guide_dismissed", "1");
-    setShowGuide(false);
-  }
 
   async function handleQuickVote(matchId: string, memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
     if (data.upcomingMatch?.myVote === vote) return;
@@ -224,40 +213,6 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
   const recordTotal = teamRecord.wins + teamRecord.draws + teamRecord.losses;
 
   return (
-    <>
-    {showGuide && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in">
-        <div className="mx-4 w-full max-w-md space-y-4 rounded-2xl bg-card p-6 shadow-2xl animate-scale-in">
-          <h2 className="text-lg font-bold text-foreground">PitchMaster 시작 가이드</h2>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">1</span>
-              <div>
-                <p className="text-sm font-semibold">일정 등록</p>
-                <p className="text-xs text-muted-foreground">경기 날짜와 장소를 등록하면 팀원에게 참석 투표 링크가 공유됩니다.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">2</span>
-              <div>
-                <p className="text-sm font-semibold">회비 관리</p>
-                <p className="text-xs text-muted-foreground">통장 캡쳐를 올리면 이름과 금액이 자동으로 인식됩니다.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">3</span>
-              <div>
-                <p className="text-sm font-semibold">팀원 초대</p>
-                <p className="text-xs text-muted-foreground">사이드바의 초대 코드를 팀원에게 공유하면 바로 가입할 수 있습니다.</p>
-              </div>
-            </div>
-          </div>
-          <Button className="w-full" onClick={dismissGuide}>
-            시작하기
-          </Button>
-        </div>
-      </div>
-    )}
     <div className="grid gap-4 stagger-children">
       {/* ── Hero: Next Match (full width) ── */}
       <div className="card-featured">
@@ -352,7 +307,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">진행 중인 투표</CardTitle>
+              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">참석 투표</CardTitle>
             </div>
             <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
               <Link href="/matches">투표하기 &rarr;</Link>
@@ -380,7 +335,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
               <EmptyState
                 icon={Vote}
                 title="진행 중인 투표가 없습니다"
-                description="경기 일정을 등록하면 투표가 생성됩니다."
+                description="경기 일정이 등록되면 여기서 참석 투표를 할 수 있습니다."
                 action={
                   <Button size="sm" asChild>
                     <Link href="/matches">일정 등록하기</Link>
@@ -394,7 +349,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
         {/* Tasks */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">해야 할 일</CardTitle>
+            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">미완료 항목</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {tasks.length > 0 ? (
@@ -518,6 +473,5 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
         ))}
       </div>
     </div>
-    </>
   );
 }
