@@ -199,14 +199,22 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
 
   const settings: DuesSetting[] = useMemo(
     () =>
-      summaryData.settings.map((s) => ({
-        id: s.id,
-        memberType: s.member_type,
-        monthlyAmount: s.monthly_amount,
-        description: s.description ?? "",
-      })),
+      summaryData.settings
+        .filter((s) => s.member_type !== "__PERIOD__")
+        .map((s) => ({
+          id: s.id,
+          memberType: s.member_type,
+          monthlyAmount: s.monthly_amount,
+          description: s.description ?? "",
+        })),
     [summaryData.settings]
   );
+
+  /** 납부 기준일 (매월 N일부터 다음달 N-1일까지를 한 달로 봄, 기본값 1 = 달력 기준) */
+  const periodConfig = useMemo(() => {
+    const row = summaryData.settings.find((s) => s.member_type === "__PERIOD__");
+    return { id: row?.id, startDay: row?.monthly_amount ?? 1 };
+  }, [summaryData.settings]);
 
   const penaltyRules: PenaltyRule[] = useMemo(
     () =>
@@ -350,11 +358,35 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     return matched?.id;
   }
 
-  /** 월별 필터 적용된 레코드 */
+  /** 납부 기준일 기반 기간 계산: "2026-03" + startDay=25 → 2026-02-25 ~ 2026-03-24 */
+  function getDuesPeriod(month: string, startDay: number): { from: string; to: string } {
+    const [y, m] = month.split("-").map(Number);
+    if (startDay <= 1) {
+      // 기본값: 달력 월 (1일~말일)
+      const lastDay = new Date(y, m, 0).getDate();
+      return { from: `${month}-01`, to: `${month}-${String(lastDay).padStart(2, "0")}` };
+    }
+    // 전월 startDay ~ 당월 startDay-1
+    const prevMonth = new Date(y, m - 2); // m-1에서 1 더 빼면 전월
+    const prevY = prevMonth.getFullYear();
+    const prevM = String(prevMonth.getMonth() + 1).padStart(2, "0");
+    const endDay = startDay - 1;
+    return {
+      from: `${prevY}-${prevM}-${String(startDay).padStart(2, "0")}`,
+      to: `${month}-${String(endDay).padStart(2, "0")}`,
+    };
+  }
+
+  /** 월별 필터 적용된 레코드 (기준일 기반) */
   const monthRecords = useMemo(() => {
     if (!monthFilter) return records;
-    return records.filter((r) => r.recordedAt.startsWith(monthFilter));
-  }, [records, monthFilter]);
+    const { from, to } = getDuesPeriod(monthFilter, periodConfig.startDay);
+    return records.filter((r) => {
+      const date = r.recordedAt.split("T")[0];
+      return date >= from && date <= to;
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [records, monthFilter, periodConfig.startDay]);
 
   /** 설정된 회비 금액 목록 (ex: [20000, 15000, 10000]) */
   const duesAmounts = useMemo(() => settings.map((s) => s.monthlyAmount), [settings]);
@@ -1533,6 +1565,16 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           </div>
         </div>
 
+        {/* 기준일 안내 */}
+        {periodConfig.startDay > 1 && (() => {
+          const { from, to } = getDuesPeriod(monthFilter, periodConfig.startDay);
+          return (
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              납부 기간: {from} ~ {to}
+            </p>
+          );
+        })()}
+
         {/* 경고: 회비 기준 미설정 */}
         {settings.length === 0 && (
           <div className="mt-3 rounded-lg bg-[hsl(var(--warning))]/10 px-3 py-2">
@@ -1632,6 +1674,57 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
 
       {duesTab === "settings" && (
       <>
+      {/* ── 납부 기준일 설정 ── */}
+      {isStaffOrAbove(role) && (
+        <Card className="p-5">
+          <h3 className="text-sm font-bold text-foreground">납부 기준일</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            매월 회비 납부 기간의 시작일. 예: 25일 → 2/25~3/24를 3월 회비로 인식.
+          </p>
+          <div className="mt-3 flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">매월</span>
+            <Input
+              type="number"
+              min={1}
+              max={28}
+              className="w-20 text-center text-sm"
+              defaultValue={periodConfig.startDay}
+              onBlur={async (e) => {
+                const val = Math.max(1, Math.min(28, Number(e.target.value) || 1));
+                if (val === periodConfig.startDay) return;
+                if (periodConfig.id) {
+                  // 기존 설정 수정
+                  await apiMutate("/api/dues-settings", "PUT", {
+                    id: periodConfig.id,
+                    memberType: "__PERIOD__",
+                    monthlyAmount: val,
+                    description: "납부 기준일",
+                  });
+                } else {
+                  // 신규 생성
+                  await apiMutate("/api/dues-settings", "POST", {
+                    memberType: "__PERIOD__",
+                    monthlyAmount: val,
+                    description: "납부 기준일",
+                  });
+                }
+                await refetchSummary();
+                showToast(`납부 기준일: 매월 ${val}일로 설정됨`, "success");
+              }}
+            />
+            <span className="text-xs text-muted-foreground">일부터</span>
+          </div>
+          {periodConfig.startDay > 1 && (() => {
+            const { from, to } = getDuesPeriod(monthFilter, periodConfig.startDay);
+            return (
+              <p className="mt-2 text-[11px] text-primary">
+                {monthFilter.replace("-", "년 ")}월 회비 기간: {from} ~ {to}
+              </p>
+            );
+          })()}
+        </Card>
+      )}
+
       {/* ── Section 4: 회비 기준 설정 ── */}
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
