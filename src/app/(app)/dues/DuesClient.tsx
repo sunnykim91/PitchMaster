@@ -1277,33 +1277,55 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           </div>
         </div>
 
-        {/* 회비 납부 현황 */}
-        {duesStatus.length > 0 && duesStatus[0].expectedAmount > 0 && (
+        {/* 회비 납부 현황 (운영진만) */}
+        {isStaffOrAbove(role) && duesStatus.length > 0 && duesStatus[0].expectedAmount > 0 && (() => {
+          const paidMembers = duesStatus.filter(m => m.isPaid);
+          const unpaidMembers = duesStatus.filter(m => !m.isPaid);
+          return (
           <Card className="mt-4 p-4">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-bold text-foreground">납부 현황</h4>
+              <h4 className="text-sm font-bold text-foreground">
+                {monthFilter.replace("-", "년 ")}월 납부 현황
+              </h4>
               <p className="text-xs text-muted-foreground">
-                <span className="text-[hsl(var(--success))] font-bold">{duesStatus.filter(m => m.isPaid).length}</span>
-                /{duesStatus.length}명 납부
+                <span className="text-[hsl(var(--success))] font-bold">{paidMembers.length}</span>
+                /{duesStatus.length}명
               </p>
             </div>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {duesStatus.map((m) => (
-                <span
-                  key={m.id}
-                  className={cn(
-                    "rounded-full px-2.5 py-1 text-[11px] font-medium",
-                    m.isPaid
-                      ? "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"
-                      : "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]"
-                  )}
-                >
-                  {m.name} {m.isPaid ? "✓" : `미납`}
-                </span>
-              ))}
-            </div>
+
+            {/* 납부 완료 */}
+            {paidMembers.length > 0 && (
+              <div className="mt-3">
+                <p className="text-[11px] font-bold text-[hsl(var(--success))]">✓ 납부 ({paidMembers.length}명)</p>
+                <div className="mt-1.5 space-y-1">
+                  {paidMembers.map((m) => (
+                    <div key={m.id} className="flex items-center justify-between rounded-lg bg-[hsl(var(--success))]/5 px-3 py-1.5">
+                      <span className="text-xs font-medium text-foreground">{m.name}</span>
+                      <span className="text-xs font-bold text-[hsl(var(--success))]">
+                        {m.paidAmount.toLocaleString()}원
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 미납 */}
+            {unpaidMembers.length > 0 && (
+              <div className="mt-3">
+                <p className="text-[11px] font-bold text-[hsl(var(--loss))]">✗ 미납 ({unpaidMembers.length}명)</p>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {unpaidMembers.map((m) => (
+                    <span key={m.id} className="rounded-full bg-[hsl(var(--loss))]/10 px-2.5 py-1 text-[11px] font-medium text-[hsl(var(--loss))]">
+                      {m.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </Card>
-        )}
+          );
+        })()}
 
         <div className="mt-4 space-y-2">
           {filteredRecords.length === 0 ? (
