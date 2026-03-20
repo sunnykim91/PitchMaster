@@ -28,6 +28,7 @@ type Member = {
   preferredFoot: "RIGHT" | "LEFT" | "BOTH";
   phone: string;
   birthDate: string;
+  status: string;
   isLinked: boolean; // user_id가 있는지
   preName: string | null;
   prePhone: string | null;
@@ -60,6 +61,7 @@ function mapApiMembers(rows: ApiMemberRow[]): Member[] {
     preferredFoot: row.users?.preferred_foot ?? "RIGHT",
     phone: row.users?.phone ?? row.pre_phone ?? "",
     birthDate: row.users?.birth_date ?? "",
+    status: row.status,
     isLinked: row.user_id !== null,
     preName: row.pre_name,
     prePhone: row.pre_phone,
@@ -113,8 +115,10 @@ export default function MembersClient({
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  const linkedMembers = useMemo(() => members.filter((m) => m.isLinked), [members]);
-  const unlinkedMembers = useMemo(() => members.filter((m) => !m.isLinked), [members]);
+  const activeMembers = useMemo(() => members.filter((m) => m.status === "ACTIVE"), [members]);
+  const dormantMembers = useMemo(() => members.filter((m) => m.status === "DORMANT"), [members]);
+  const linkedMembers = useMemo(() => activeMembers.filter((m) => m.isLinked), [activeMembers]);
+  const unlinkedMembers = useMemo(() => activeMembers.filter((m) => !m.isLinked), [activeMembers]);
 
   const filteredLinkedMembers = useMemo(
     () =>
@@ -130,11 +134,11 @@ export default function MembersClient({
 
   const stats = useMemo(() => {
     const counts = { PRESIDENT: 0, STAFF: 0, MEMBER: 0 } as Record<Role, number>;
-    members.forEach((member) => {
+    activeMembers.forEach((member) => {
       counts[member.role] += 1;
     });
-    return counts;
-  }, [members]);
+    return { ...counts, DORMANT: dormantMembers.length };
+  }, [activeMembers, dormantMembers]);
 
   async function handleRoleChange(memberId: string, newRole: Role) {
     if (!canChangeRole) return;
@@ -199,6 +203,20 @@ export default function MembersClient({
       }
     } finally {
       setLinkingId(null);
+    }
+  }
+
+  async function handleStatusChange(memberId: string, newStatus: "ACTIVE" | "DORMANT") {
+    const { error: err } = await apiMutate("/api/members", "PUT", {
+      action: "update_status",
+      memberId,
+      status: newStatus,
+    });
+    if (!err) {
+      showToast(newStatus === "DORMANT" ? "휴면 처리되었습니다." : "활동 회원으로 복귀했습니다.");
+      await refetch();
+    } else {
+      showToast("상태 변경에 실패했습니다.", "error");
     }
   }
 
@@ -292,11 +310,12 @@ export default function MembersClient({
             </Card>
           )}
 
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
             {([
               { label: "회장", value: stats.PRESIDENT, color: "text-[hsl(var(--warning))]" },
               { label: "운영진", value: stats.STAFF, color: "text-[hsl(var(--info))]" },
               { label: "평회원", value: stats.MEMBER, color: "text-[hsl(var(--success))]" },
+              { label: "휴면", value: stats.DORMANT, color: "text-muted-foreground" },
             ] as const).map((item) => (
               <div key={item.label} className="card-stat">
                 <p className="type-overline">{item.label}</p>
@@ -466,13 +485,22 @@ export default function MembersClient({
                     </Badge>
                   )}
                   {canKick && member.id !== userId ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setConfirmAction({ message: `${member.name} 님을 제명하시겠습니까?`, onConfirm: () => handleKick(member.id) })}
-                    >
-                      제명
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleStatusChange(member.id, "DORMANT")}
+                      >
+                        휴면
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setConfirmAction({ message: `${member.name} 님을 제명하시겠습니까?`, onConfirm: () => handleKick(member.id) })}
+                      >
+                        제명
+                      </Button>
+                    </>
                   ) : null}
                 </div>
               </div>
@@ -486,6 +514,51 @@ export default function MembersClient({
           </div>
         </CardContent>
       </Card>
+
+      {/* ── Section 4: 휴면 회원 ── */}
+      {dormantMembers.length > 0 && canViewAll && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase">
+              휴면 회원 ({dormantMembers.length}명)
+            </CardTitle>
+            <p className="mt-1 text-xs text-muted-foreground">
+              장기 휴회 또는 활동 중단 회원입니다. 복귀 시 활동 회원으로 전환할 수 있습니다.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {dormantMembers.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-secondary/30 px-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-muted-foreground">{member.name}</p>
+                    {member.isLinked && (
+                      <p className="text-[11px] text-muted-foreground/60">
+                        {member.preferredPositions.length > 0 ? member.preferredPositions.join(", ") : "포지션 미설정"}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="text-[10px]">휴면</Badge>
+                    {canKick && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleStatusChange(member.id, "ACTIVE")}
+                      >
+                        복귀
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <ConfirmDialog
         open={!!confirmAction}
