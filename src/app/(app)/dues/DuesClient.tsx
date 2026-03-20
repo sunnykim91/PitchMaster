@@ -1030,7 +1030,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                   }
                   // 잔고 업데이트
                   if (excelBalance !== null) {
-                    await apiMutate("/api/dues/balance", "PUT", { balance: excelBalance });
+                    await apiMutate("/api/dues/balance", "POST", { balance: excelBalance });
                   }
                   showToast(`${successCount}건 저장 완료${excelBalance !== null ? " · 잔고 업데이트됨" : ""}`, "success");
                   setExcelRecords([]);
