@@ -403,7 +403,7 @@ export default function RecordsClient({
               <SelectContent>
                 {(Object.entries(PERIOD_LABELS) as [PeriodType, string][]).map(([key, label]) => (
                   <SelectItem key={key} value={key}>
-                    {key === "season" ? label : `${periodYear} ${label}`}
+                    {key === "season" ? (season?.name ?? label) : `${periodYear} ${label}`}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -529,12 +529,13 @@ export default function RecordsClient({
               <p className="text-sm text-muted-foreground">아직 기록이 없습니다. 경기를 진행해보세요.</p>
             </div>
           ) : (
+            <div className="relative">
             <div className="table-scroll-container overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/30">
-                    <th className="pb-3 text-left font-medium text-muted-foreground">#</th>
-                    <th className="pb-3 text-left font-medium text-muted-foreground">이름</th>
+                    <th className="sticky left-0 z-1 bg-card pb-3 text-left font-medium text-muted-foreground">#</th>
+                    <th className="sticky left-8 z-1 bg-card pb-3 text-left font-medium text-muted-foreground">이름</th>
                     {([
                       { key: "points" as const, label: "공격P" },
                       { key: "goals" as const, label: "골" },
@@ -544,11 +545,15 @@ export default function RecordsClient({
                     ]).map((col) => (
                       <th
                         key={col.key}
+                        role="columnheader"
+                        tabIndex={0}
+                        aria-sort={sortKey === col.key ? "descending" : "none"}
                         className={cn(
                           "cursor-pointer pb-3 text-center font-medium transition hover:text-foreground",
                           sortKey === col.key ? "text-primary" : "text-muted-foreground"
                         )}
                         onClick={() => setSortKey(col.key)}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSortKey(col.key); } }}
                       >
                         <span className="inline-flex items-center gap-1">
                           {col.label}
@@ -565,8 +570,8 @@ export default function RecordsClient({
                 <tbody className="divide-y divide-border/20">
                   {allStats.map((s, i) => (
                     <tr key={s.memberId} className={cn(s.memberId === userId && "bg-primary/5")}>
-                      <td className="py-2.5 text-muted-foreground">{i + 1}</td>
-                      <td className="py-2.5 font-semibold max-w-[120px] truncate">{s.memberName || "-"}</td>
+                      <td className="sticky left-0 z-1 bg-card py-2.5 text-muted-foreground">{i + 1}</td>
+                      <td className="sticky left-8 z-1 bg-card py-2.5 font-semibold max-w-[120px] truncate">{s.memberName || "-"}</td>
                       <td className="py-2.5 text-center font-bold text-primary">{s.points}</td>
                       <td className="py-2.5 text-center text-[hsl(var(--success))]">{s.goals}</td>
                       <td className="py-2.5 text-center text-[hsl(var(--info))]">{s.assists}</td>
@@ -576,6 +581,8 @@ export default function RecordsClient({
                   ))}
                 </tbody>
               </table>
+            </div>
+              <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-card to-transparent md:hidden" />
             </div>
           )}
         </CardContent>

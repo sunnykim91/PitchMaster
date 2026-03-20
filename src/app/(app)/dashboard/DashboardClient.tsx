@@ -68,39 +68,75 @@ const voteStyles = {
   },
   MAYBE: {
     active: "bg-[hsl(var(--warning))] text-[hsl(240_6%_6%)] shadow-[0_2px_8px_-2px_hsl(var(--warning)/0.4)]",
-    inactive: "bg-white/[0.04] text-muted-foreground border border-white/[0.06] hover:bg-white/[0.08]",
+    inactive: "bg-secondary/50 text-muted-foreground border border-border hover:bg-secondary",
   },
   ABSENT: {
     active: "bg-[hsl(var(--loss))] text-white shadow-[0_2px_8px_-2px_hsl(var(--loss)/0.4)]",
-    inactive: "bg-white/[0.04] text-muted-foreground border border-white/[0.06] hover:bg-white/[0.08]",
+    inactive: "bg-secondary/50 text-muted-foreground border border-border hover:bg-secondary",
   },
 };
 
 function CardSkeleton() {
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <Skeleton className="h-3 w-20" />
-        <Skeleton className="mt-1 h-7 w-40" />
-      </CardHeader>
-      <CardContent>
-        <Card className="border-0 bg-secondary">
-          <CardContent className="space-y-3 p-4">
-            <Skeleton className="h-3 w-32" />
-            <Skeleton className="h-5 w-56" />
-            <Skeleton className="h-3 w-40" />
-            <div className="flex items-center gap-3 pt-1">
-              <Skeleton className="h-3 w-12" />
-              <Skeleton className="h-3 w-12" />
-              <Skeleton className="h-3 w-12" />
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Skeleton className="h-9 w-24 rounded-md" />
-            </div>
+    <div className="grid gap-4 stagger-children">
+      {/* Hero match card */}
+      <div className="card-featured">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-7 w-36" />
+          <Skeleton className="h-5 w-20" />
+        </div>
+        <div className="mt-4 space-y-2">
+          <Skeleton className="h-3 w-32" />
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-3 w-48" />
+          <Skeleton className="h-3 w-40" />
+          <div className="flex gap-2 pt-2">
+            <Skeleton className="h-8 w-16 rounded-full" />
+            <Skeleton className="h-8 w-16 rounded-full" />
+            <Skeleton className="h-8 w-16 rounded-full" />
+          </div>
+          <Skeleton className="mt-2 h-1.5 w-full rounded-full" />
+        </div>
+      </div>
+
+      {/* 2-col grid: votes + tasks */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-3">
+            <Skeleton className="h-7 w-40" />
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Skeleton className="h-14 rounded-md" />
+            <Skeleton className="h-14 rounded-md" />
           </CardContent>
         </Card>
-      </CardContent>
-    </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <Skeleton className="h-7 w-32" />
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Skeleton className="h-10 rounded-md" />
+            <Skeleton className="h-10 rounded-md" />
+            <Skeleton className="h-10 rounded-md" />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Season record card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <Skeleton className="h-7 w-28" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-4 gap-3 mb-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 rounded-md" />
+            ))}
+          </div>
+          <Skeleton className="h-16 rounded-md" />
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
@@ -148,6 +184,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
   }
 
   async function handleQuickVote(matchId: string, memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
+    if (data.upcomingMatch?.myVote === vote) return;
     setVoting(true);
     try {
       await apiMutate("/api/attendance", "POST", { matchId, vote, memberId });
@@ -172,20 +209,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
   }
 
   if (loading) {
-    return (
-      <div className="grid gap-4 stagger-children">
-        <CardSkeleton />
-        <div className="grid grid-cols-4 gap-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-md" />
-          ))}
-        </div>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <CardSkeleton />
-          <CardSkeleton />
-        </div>
-      </div>
-    );
+    return <CardSkeleton />;
   }
 
   const { upcomingMatch, activeVotes, tasks, recentResult, teamRecord } = data;
@@ -274,6 +298,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
                       key={opt.value}
                       type="button"
                       disabled={voting}
+                      aria-pressed={upcomingMatch.myVote === opt.value}
                       className={cn(
                         "rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-105 disabled:opacity-50",
                         isSelected ? voteStyles[opt.value].active : voteStyles[opt.value].inactive
@@ -289,7 +314,7 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
 
             {/* Attendance visual bar */}
             <div className="mt-4">
-              <div className="flex h-1.5 overflow-hidden rounded-full bg-white/[0.04]">
+              <div className="flex h-1.5 overflow-hidden rounded-full bg-secondary/50">
                 <div className="rounded-full bg-[hsl(var(--success))] transition-all duration-500" style={{ width: `${attendPercent}%` }} />
                 <div className="bg-[hsl(var(--loss))] transition-all duration-500" style={{ width: `${absentPercent}%` }} />
               </div>
@@ -402,70 +427,74 @@ export default function DashboardClient({ userId, initialData }: { userId: strin
           </Button>
         </CardHeader>
         <CardContent>
-          {/* 시즌 전적 스탯 (항상 표시) */}
-          {recordTotal > 0 && (
-            <div className="mb-4">
-              <div className="grid grid-cols-4 gap-3">
-                {[
-                  { label: "승", value: teamRecord.wins, color: "text-[hsl(var(--win))]" },
-                  { label: "무", value: teamRecord.draws, color: "text-[hsl(var(--draw))]" },
-                  { label: "패", value: teamRecord.losses, color: "text-[hsl(var(--loss))]" },
-                  { label: "승률", value: `${Math.round((teamRecord.wins / recordTotal) * 100)}%`, color: "text-primary" },
-                ].map((stat) => (
-                  <div key={stat.label} className="card-stat text-center">
-                    <div className={`type-stat ${stat.color}`}>{stat.value}</div>
-                    <div className="type-overline mt-1">{stat.label}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-                <span>득점 {teamRecord.goalsFor} · 실점 {teamRecord.goalsAgainst} · 득실차 {teamRecord.goalsFor - teamRecord.goalsAgainst >= 0 ? "+" : ""}{teamRecord.goalsFor - teamRecord.goalsAgainst}</span>
-                {teamRecord.recent5.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    {teamRecord.recent5.map((r, i) => (
-                      <span
-                        key={i}
-                        className={cn(
-                          "flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold",
-                          r === "W" && "bg-[hsl(var(--win)/0.15)] text-[hsl(var(--win))]",
-                          r === "D" && "bg-white/[0.06] text-muted-foreground",
-                          r === "L" && "bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))]"
-                        )}
-                      >
-                        {r === "W" ? "승" : r === "D" ? "무" : "패"}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* 최근 경기 결과 */}
-          {recentResult ? (
-            <Card className="mt-3 border-0 border-l-2 border-l-primary/40 bg-secondary hover:bg-secondary/70 cursor-pointer transition-colors">
-              <CardContent className="p-4">
-                <div className="flex items-baseline justify-between">
-                  <p className="text-xs text-muted-foreground">{formatDate(recentResult.date)}</p>
-                  <p className="type-stat text-primary">{recentResult.score}</p>
-                </div>
-                <p className="mt-1 truncate text-sm text-foreground/70">
-                  vs <span className="font-semibold text-foreground">{recentResult.opponent ?? "미정"}</span>
-                  {recentResult.mvp && <> · MVP <span className="font-semibold text-foreground">{recentResult.mvp}</span></>}
-                </p>
-                <div className="mt-3">
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/matches/${recentResult.id}`}>상세 기록 보기</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
+          {recordTotal === 0 && !recentResult ? (
             <EmptyState
               icon={Trophy}
-              title="아직 완료된 경기가 없습니다"
-              description="경기를 진행하면 결과가 여기에 표시됩니다."
+              title="아직 전적이 없습니다"
+              description="경기를 진행하면 시즌 전적이 집계됩니다"
             />
+          ) : (
+            <>
+              {/* 시즌 전적 스탯 */}
+              {recordTotal > 0 && (
+                <div className="mb-4">
+                  <div className="grid grid-cols-4 gap-3">
+                    {[
+                      { label: "승", value: teamRecord.wins, color: "text-[hsl(var(--win))]" },
+                      { label: "무", value: teamRecord.draws, color: "text-[hsl(var(--draw))]" },
+                      { label: "패", value: teamRecord.losses, color: "text-[hsl(var(--loss))]" },
+                      { label: "승률", value: `${Math.round((teamRecord.wins / recordTotal) * 100)}%`, color: "text-primary" },
+                    ].map((stat) => (
+                      <div key={stat.label} className="card-stat text-center">
+                        <div className={`type-stat ${stat.color}`}>{stat.value}</div>
+                        <div className="type-overline mt-1">{stat.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                    <span>득점 {teamRecord.goalsFor} · 실점 {teamRecord.goalsAgainst} · 득실차 {teamRecord.goalsFor - teamRecord.goalsAgainst >= 0 ? "+" : ""}{teamRecord.goalsFor - teamRecord.goalsAgainst}</span>
+                    {teamRecord.recent5.length > 0 && (
+                      <div className="flex items-center gap-1">
+                        {teamRecord.recent5.map((r, i) => (
+                          <span
+                            key={i}
+                            className={cn(
+                              "flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold",
+                              r === "W" && "bg-[hsl(var(--win)/0.15)] text-[hsl(var(--win))]",
+                              r === "D" && "bg-secondary text-muted-foreground",
+                              r === "L" && "bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))]"
+                            )}
+                          >
+                            {r === "W" ? "승" : r === "D" ? "무" : "패"}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 최근 경기 결과 */}
+              {recentResult && (
+                <Card className="mt-3 border-0 border-l-2 border-l-primary/40 bg-secondary hover:bg-secondary/70 cursor-pointer transition-colors">
+                  <CardContent className="p-4">
+                    <div className="flex items-baseline justify-between">
+                      <p className="text-xs text-muted-foreground">{formatDate(recentResult.date)}</p>
+                      <p className="type-stat text-primary">{recentResult.score}</p>
+                    </div>
+                    <p className="mt-1 truncate text-sm text-foreground/70">
+                      vs <span className="font-semibold text-foreground">{recentResult.opponent ?? "미정"}</span>
+                      {recentResult.mvp && <> · MVP <span className="font-semibold text-foreground">{recentResult.mvp}</span></>}
+                    </p>
+                    <div className="mt-3">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/matches/${recentResult.id}`}>상세 기록 보기</Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

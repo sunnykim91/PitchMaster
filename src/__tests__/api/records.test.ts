@@ -158,4 +158,46 @@ describe("GET /api/records", () => {
     // DB의 from("matches")에 seasonId가 eq로 전달되는지 확인
     expect(db.from).toHaveBeenCalledWith("matches");
   });
+
+  it("200: startDate+endDate 파라미터로 날짜 범위 필터 (시즌 조회 없이)", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+    // startDate+endDate 사용 시 seasons 테이블 조회 없음 — team_members + matches + 4 bulk 쿼리
+    const db = createMockDb(
+      ["team_members", teamMembers],
+      ["matches", [{ id: "match-date-1" }]],
+      ["match_goals", []],
+      ["match_goals", []],
+      ["match_mvp_votes", []],
+      ["match_attendance", []]
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await GET(makeRequest({ startDate: "2026-01-01", endDate: "2026-03-31" }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.records).toHaveLength(3);
+    // seasons 테이블 호출이 없어야 함 (from 호출 목록에 "seasons" 없음)
+    const fromCalls = db.from.mock.calls.map((c: [string]) => c[0]);
+    expect(fromCalls).not.toContain("seasons");
+  });
+
+  it("200: seasonId와 startDate 동시 제공 시 startDate 우선", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+    // startDate가 우선이므로 seasons 조회 없이 직접 날짜 필터
+    const db = createMockDb(
+      ["team_members", teamMembers],
+      ["matches", [{ id: "match-priority-1" }]],
+      ["match_goals", []],
+      ["match_goals", []],
+      ["match_mvp_votes", []],
+      ["match_attendance", []]
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await GET(makeRequest({ seasonId: "season-001", startDate: "2026-01-01", endDate: "2026-06-30" }));
+    expect(res.status).toBe(200);
+    // seasons 테이블 조회가 발생하지 않아야 함
+    const fromCalls = db.from.mock.calls.map((c: [string]) => c[0]);
+    expect(fromCalls).not.toContain("seasons");
+  });
 });

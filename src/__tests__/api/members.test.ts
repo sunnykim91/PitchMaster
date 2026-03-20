@@ -321,6 +321,135 @@ describe("PUT /api/members", () => {
     const json = await res.json();
     expect(json.error).toBe("update failed");
   });
+
+  // ─── action: update_dues_type ─────────────────────────────────────────────
+  describe("action: update_dues_type", () => {
+    it("400: memberId 누락 시 에러", async () => {
+      vi.mocked(auth).mockResolvedValue(presidentSession);
+      const db = createMockDb();
+      vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+      const res = await PUT(makeRequest({ action: "update_dues_type", duesType: "REGULAR" }));
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toContain("memberId");
+    });
+
+    it("503: DB 없는 경우", async () => {
+      vi.mocked(auth).mockResolvedValue(presidentSession);
+      vi.mocked(getSupabaseAdmin).mockReturnValue(null);
+
+      const res = await PUT(makeRequest({ action: "update_dues_type", memberId: "mem-1", duesType: "REGULAR" }));
+      expect(res.status).toBe(503);
+    });
+
+    it("200: 회비 유형 변경 성공", async () => {
+      vi.mocked(auth).mockResolvedValue(presidentSession);
+      const db = createMockDb(["team_members", null]);
+      vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+      const res = await PUT(makeRequest({ action: "update_dues_type", memberId: "mem-1", duesType: "REGULAR" }));
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.ok).toBe(true);
+    });
+
+    it("200: duesType 미전달 시 null로 설정", async () => {
+      vi.mocked(auth).mockResolvedValue(presidentSession);
+      const db = createMockDb(["team_members", null]);
+      vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+      const res = await PUT(makeRequest({ action: "update_dues_type", memberId: "mem-1" }));
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.ok).toBe(true);
+    });
+
+    it("400: DB 에러 시 에러 반환", async () => {
+      vi.mocked(auth).mockResolvedValue(presidentSession);
+      const db = createMockDb(["team_members", null, { message: "dues update failed" }]);
+      vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+      const res = await PUT(makeRequest({ action: "update_dues_type", memberId: "mem-1", duesType: "REGULAR" }));
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toBe("dues update failed");
+    });
+  });
+
+  // ─── action: bulk_update_dues_type ────────────────────────────────────────
+  describe("action: bulk_update_dues_type", () => {
+    it("400: updates 누락 시 에러", async () => {
+      vi.mocked(auth).mockResolvedValue(presidentSession);
+      const db = createMockDb();
+      vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+      const res = await PUT(makeRequest({ action: "bulk_update_dues_type" }));
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toContain("updates");
+    });
+
+    it("400: updates 빈 배열 시 에러", async () => {
+      vi.mocked(auth).mockResolvedValue(presidentSession);
+      const db = createMockDb();
+      vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+      const res = await PUT(makeRequest({ action: "bulk_update_dues_type", updates: [] }));
+      expect(res.status).toBe(400);
+    });
+
+    it("503: DB 없는 경우", async () => {
+      vi.mocked(auth).mockResolvedValue(presidentSession);
+      vi.mocked(getSupabaseAdmin).mockReturnValue(null);
+
+      const res = await PUT(makeRequest({
+        action: "bulk_update_dues_type",
+        updates: [{ memberId: "mem-1", duesType: "REGULAR" }],
+      }));
+      expect(res.status).toBe(503);
+    });
+
+    it("200: 일괄 회비 유형 변경 성공", async () => {
+      vi.mocked(auth).mockResolvedValue(presidentSession);
+      const db = createMockDb(
+        ["team_members", null],
+        ["team_members", null],
+        ["team_members", null]
+      );
+      vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+      const updates = [
+        { memberId: "mem-1", duesType: "REGULAR" },
+        { memberId: "mem-2", duesType: "HALF" },
+        { memberId: "mem-3", duesType: null },
+      ];
+      const res = await PUT(makeRequest({ action: "bulk_update_dues_type", updates }));
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.updated).toBe(3);
+    });
+
+    it("200: 부분 실패 시 updated 카운트 반영", async () => {
+      vi.mocked(auth).mockResolvedValue(presidentSession);
+      const db = createMockDb(
+        ["team_members", null],
+        ["team_members", null, { message: "update failed" }],
+        ["team_members", null]
+      );
+      vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+      const updates = [
+        { memberId: "mem-1", duesType: "REGULAR" },
+        { memberId: "mem-2", duesType: "HALF" },
+        { memberId: "mem-3", duesType: "REGULAR" },
+      ];
+      const res = await PUT(makeRequest({ action: "bulk_update_dues_type", updates }));
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.updated).toBe(2);
+    });
+  });
 });
 
 // ─── DELETE /api/members ──────────────────────────────────────────────────────

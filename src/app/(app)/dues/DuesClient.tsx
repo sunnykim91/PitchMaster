@@ -334,6 +334,9 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   const [excelRecords, setExcelRecords] = useState<{ date: string; type: "INCOME" | "EXPENSE"; amount: number; description: string; balance: number | null }[]>([]);
   const [excelBalance, setExcelBalance] = useState<number | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [savingSetting, setSavingSetting] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState("");
   const [editingRecord, setEditingRecord] = useState<DuesRecord | null>(null);
   const [editingSetting, setEditingSetting] = useState<DuesSetting | null>(null);
   const [settingFormState, setSettingFormState] = useState({ memberType: "", monthlyAmount: "", description: "" });
@@ -443,21 +446,26 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       return;
     }
     setFormErrors({});
+    setSaving(true);
 
-    const { error } = await apiMutate("/api/dues", "POST", {
-      type,
-      amount,
-      description,
-      userId,
-      screenshotUrl: screenshotUrlValue,
-      recordedAt: recordedAt || undefined,
-    });
-    if (!error) {
-      await refetchSummary();
-      await syncPaymentStatus();
-      setIsFormOpen(false);
-      setScreenshotUrl("");
-      setFormErrors({});
+    try {
+      const { error } = await apiMutate("/api/dues", "POST", {
+        type,
+        amount,
+        description,
+        userId,
+        screenshotUrl: screenshotUrlValue,
+        recordedAt: recordedAt || undefined,
+      });
+      if (!error) {
+        await refetchSummary();
+        await syncPaymentStatus();
+        setIsFormOpen(false);
+        setScreenshotUrl("");
+        setFormErrors({});
+      }
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -466,14 +474,19 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     const monthlyAmount = Number(formData.get("monthlyAmount"));
     const description = String(formData.get("description") || "");
 
-    const { error } = await apiMutate("/api/dues-settings", "POST", {
-      memberType,
-      monthlyAmount,
-      description,
-    });
-    if (!error) {
-      await refetchSummary();
-      setIsSettingOpen(false);
+    setSavingSetting(true);
+    try {
+      const { error } = await apiMutate("/api/dues-settings", "POST", {
+        memberType,
+        monthlyAmount,
+        description,
+      });
+      if (!error) {
+        await refetchSummary();
+        setIsSettingOpen(false);
+      }
+    } finally {
+      setSavingSetting(false);
     }
   }
 
@@ -578,8 +591,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       } else {
         setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
       }
-    } catch (err) {
-      console.error("OCR error:", err);
+    } catch {
       setOcrStatus("OCR 처리 중 오류가 발생했습니다. 수동으로 입력해주세요.");
     } finally {
       setOcrLoading(false);
@@ -912,15 +924,17 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
 
       {/* ── Dues Tab Bar ── */}
       <div className="sticky top-0 z-10 -mx-1 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="flex">
-          {[
-            { key: "records", label: "입출금" },
-            { key: "status", label: "납부현황" },
-            { key: "bulk", label: "일괄 등록" },
-            { key: "settings", label: "설정" },
-          ].map((tab) => (
+        <div className="flex" role="tablist">
+          {([
+            { key: "records" as const, label: "입출금", staffOnly: false },
+            { key: "status" as const, label: "납부현황", staffOnly: false },
+            { key: "bulk" as const, label: "일괄 등록", staffOnly: true },
+            { key: "settings" as const, label: "설정", staffOnly: true },
+          ]).filter((tab) => !tab.staffOnly || isStaffOrAbove(role)).map((tab) => (
             <button
               key={tab.key}
+              role="tab"
+              aria-selected={duesTab === tab.key}
               onClick={() => setDuesTab(tab.key as typeof duesTab)}
               className={cn(
                 "flex-1 py-3 text-sm font-medium transition-colors border-b-2",
@@ -1049,8 +1063,8 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
               )}
             </Card>
 
-            <Button type="submit" className="w-full" size="lg">
-              저장하기
+            <Button type="submit" className="w-full" size="lg" disabled={saving}>
+              {saving ? "저장 중..." : "저장하기"}
             </Button>
           </form>
         </Card>
@@ -1071,7 +1085,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         <div className="mt-4">
           <input
             type="file"
-            accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,*/*"
+            accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
@@ -1157,7 +1171,9 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                 setBulkSaving(true);
                 try {
                   let successCount = 0;
-                  for (const r of excelRecords) {
+                  for (let i = 0; i < excelRecords.length; i++) {
+                    const r = excelRecords[i];
+                    setBulkProgress(`저장 중... (${i + 1}/${excelRecords.length})`);
                     const { error } = await apiMutate("/api/dues", "POST", {
                       teamId: undefined,
                       type: r.type,
@@ -1184,11 +1200,12 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                   showToast("저장 중 오류가 발생했습니다.", "error");
                 } finally {
                   setBulkSaving(false);
+                  setBulkProgress("");
                 }
               }}
               disabled={bulkSaving}
             >
-              {bulkSaving ? "저장 중..." : excelRecords.length > 0
+              {bulkSaving ? (bulkProgress || "저장 중...") : excelRecords.length > 0
                 ? `${excelRecords.length}건 저장${excelBalance !== null ? " + 잔고 업데이트" : ""}`
                 : "잔고 업데이트"}
             </Button>
@@ -1210,6 +1227,13 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                 <span className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-[hsl(var(--info))]" />
                 <p className="text-base font-semibold text-foreground">OCR 분석 중...</p>
                 <p className="text-sm text-muted-foreground">은행 앱 스크린샷을 인식하고 있습니다.</p>
+                <button
+                  type="button"
+                  onClick={() => { setOcrLoading(false); setOcrStatus("취소됨"); }}
+                  className="mt-2 rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary transition-colors"
+                >
+                  취소
+                </button>
               </div>
             </div>
           )}
@@ -1324,6 +1348,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
             <div className="flex items-center gap-2">
               <button
                 type="button"
+                aria-label="이전 달"
                 onClick={() => {
                   const [y, m] = monthFilter.split("-").map(Number);
                   const prev = new Date(y, m - 2);
@@ -1338,6 +1363,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
               </span>
               <button
                 type="button"
+                aria-label="다음 달"
                 onClick={() => {
                   const [y, m] = monthFilter.split("-").map(Number);
                   const next = new Date(y, m);
@@ -1460,6 +1486,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           <div className="flex items-center gap-2">
             <button
               type="button"
+              aria-label="이전 달"
               onClick={() => {
                 const [y, m] = monthFilter.split("-").map(Number);
                 const prev = new Date(y, m - 2);
@@ -1474,6 +1501,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
             </span>
             <button
               type="button"
+              aria-label="다음 달"
               onClick={() => {
                 const [y, m] = monthFilter.split("-").map(Number);
                 const next = new Date(y, m);
@@ -1532,7 +1560,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                   {ROLE_LABEL[m.role] && (
                     <span className={cn(
                       "shrink-0 rounded px-1 py-px text-[9px] font-bold",
-                      m.role === "OWNER" ? "bg-primary/20 text-primary" : "bg-white/[0.08] text-muted-foreground"
+                      m.role === "OWNER" ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"
                     )}>
                       {ROLE_LABEL[m.role]}
                     </span>
@@ -1559,14 +1587,14 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                           await refetchPaymentStatus();
                         }}
                         className={cn(
-                          "rounded-full px-2.5 py-1 text-[10px] font-bold transition-all",
+                          "rounded-full px-3 py-1.5 min-h-[36px] text-[10px] font-bold transition-all",
                           m.status === s
                             ? s === "PAID"
                               ? "bg-[hsl(var(--success))] text-white"
                               : s === "EXEMPT"
                               ? "bg-[hsl(var(--warning))] text-[hsl(240_6%_6%)]"
                               : "bg-[hsl(var(--loss))] text-white"
-                            : "bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08]"
+                            : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
                         )}
                       >
                         {s === "PAID" ? "납부" : s === "EXEMPT" ? "면제" : "미납"}
@@ -1655,13 +1683,18 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
               </div>
             </Card>
 
-            <Button type="submit" className="w-full" size="lg">
-              기준 저장
+            <Button type="submit" className="w-full" size="lg" disabled={savingSetting}>
+              {savingSetting ? "저장 중..." : "기준 저장"}
             </Button>
           </form>
         ) : null}
 
         <div className="mt-4 grid gap-3 md:grid-cols-3">
+          {settings.length === 0 && (
+            <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+              <p className="text-sm text-muted-foreground">아직 회비 기준이 없습니다. 위에서 기준을 추가해주세요.</p>
+            </div>
+          )}
           {settings.map((setting) =>
             editingSetting?.id === setting.id ? (
               <Card key={setting.id} className="border-0 bg-secondary p-4">
