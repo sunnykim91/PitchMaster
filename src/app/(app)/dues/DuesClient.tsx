@@ -986,32 +986,36 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           </div>
         )}
 
-        {excelRecords.length > 0 && (
+        {(excelRecords.length > 0 || excelBalance !== null) && (
           <div className="mt-4 space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-foreground">{excelRecords.length}건 인식됨</p>
+              <p className="text-sm font-bold text-foreground">
+                {excelRecords.length > 0 ? `${excelRecords.length}건 새 내역` : "새 내역 없음 (모두 중복)"}
+              </p>
               {excelBalance !== null && (
                 <p className="text-xs text-muted-foreground">
                   최종 잔액: <span className="font-bold text-primary">{excelBalance.toLocaleString()}원</span>
                 </p>
               )}
             </div>
-            <div className="max-h-60 space-y-1 overflow-y-auto rounded-lg bg-secondary p-3">
-              {excelRecords.map((r, i) => (
-                <div key={i} className="flex items-center justify-between py-1 text-xs">
-                  <div className="min-w-0 flex-1">
-                    <span className="text-muted-foreground">{r.date}</span>
-                    <span className="ml-2 text-foreground">{r.description}</span>
+            {excelRecords.length > 0 && (
+              <div className="max-h-60 space-y-1 overflow-y-auto rounded-lg bg-secondary p-3">
+                {excelRecords.map((r, i) => (
+                  <div key={i} className="flex items-center justify-between py-1 text-xs">
+                    <div className="min-w-0 flex-1">
+                      <span className="text-muted-foreground">{r.date}</span>
+                      <span className="ml-2 text-foreground">{r.description}</span>
+                    </div>
+                    <span className={cn(
+                      "ml-2 shrink-0 font-bold",
+                      r.type === "INCOME" ? "text-[hsl(var(--success))]" : "text-[hsl(var(--loss))]"
+                    )}>
+                      {r.type === "INCOME" ? "+" : "-"}{r.amount.toLocaleString()}원
+                    </span>
                   </div>
-                  <span className={cn(
-                    "ml-2 shrink-0 font-bold",
-                    r.type === "INCOME" ? "text-[hsl(var(--success))]" : "text-[hsl(var(--loss))]"
-                  )}>
-                    {r.type === "INCOME" ? "+" : "-"}{r.amount.toLocaleString()}원
-                  </span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
             <Button
               className="w-full"
               onClick={async () => {
@@ -1032,7 +1036,10 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                   if (excelBalance !== null) {
                     await apiMutate("/api/dues/balance", "POST", { balance: excelBalance });
                   }
-                  showToast(`${successCount}건 저장 완료${excelBalance !== null ? " · 잔고 업데이트됨" : ""}`, "success");
+                  const msg = excelRecords.length > 0
+                    ? `${successCount}건 저장 완료${excelBalance !== null ? " · 잔고 업데이트됨" : ""}`
+                    : "잔고가 업데이트되었습니다.";
+                  showToast(msg, "success");
                   setExcelRecords([]);
                   setExcelBalance(null);
                   refetchSummary();
@@ -1044,7 +1051,9 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
               }}
               disabled={bulkSaving}
             >
-              {bulkSaving ? "저장 중..." : `${excelRecords.length}건 일괄 저장${excelBalance !== null ? " + 잔고 업데이트" : ""}`}
+              {bulkSaving ? "저장 중..." : excelRecords.length > 0
+                ? `${excelRecords.length}건 저장${excelBalance !== null ? " + 잔고 업데이트" : ""}`
+                : "잔고 업데이트"}
             </Button>
           </div>
         )}
