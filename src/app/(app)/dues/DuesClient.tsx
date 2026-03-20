@@ -270,17 +270,19 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   });
 
   // 납부 상태 API
-  const { data: paymentStatusRaw, refetch: refetchPaymentStatus } = useApi<any[]>(
+  const { data: paymentStatusRaw, loading: loadingPaymentStatus, refetch: refetchPaymentStatus } = useApi<any[]>(
     `/api/dues/payment-status?month=${monthFilter}`,
     [],
   );
+  // 월 변경 시 이전 데이터와 혼합 방지: 로딩 중이면 빈 맵 사용
   const paymentStatusMap = useMemo(() => {
+    if (loadingPaymentStatus) return new Map<string, { status: string; paidAmount: number; note?: string }>();
     const map = new Map<string, { status: string; paidAmount: number; note?: string }>();
     for (const ps of paymentStatusRaw ?? []) {
       map.set(ps.member_id, { status: ps.status, paidAmount: ps.paid_amount, note: ps.note });
     }
     return map;
-  }, [paymentStatusRaw]);
+  }, [paymentStatusRaw, loadingPaymentStatus]);
 
   /** 입금 내역에서 자동 매칭된 멤버들의 납부 상태를 일괄 업데이트 */
   async function syncPaymentStatus() {
