@@ -952,9 +952,23 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                   showToast(json.error || "엑셀 파싱 실패", "error");
                   return;
                 }
-                setExcelRecords(json.records);
+                // 기존 회비 내역과 중복 체크
+                const existingRecords = summaryData?.records ?? [];
+                const existingKeys = new Set(
+                  existingRecords.map((r: any) => `${r.recordedAt?.split("T")[0]}_${r.amount}_${r.type}`)
+                );
+                const filtered = json.records.filter((r: any) => {
+                  const key = `${r.date}_${r.amount}_${r.type}`;
+                  return !existingKeys.has(key);
+                });
+                const dupCount = json.totalCount - filtered.length;
+                setExcelRecords(filtered);
                 setExcelBalance(json.lastBalance);
-                showToast(`${json.totalCount}건의 거래 내역을 인식했습니다.`, "success");
+                if (dupCount > 0) {
+                  showToast(`${json.totalCount}건 중 ${dupCount}건 중복 제외, ${filtered.length}건 새 내역`, "info");
+                } else {
+                  showToast(`${json.totalCount}건의 거래 내역을 인식했습니다.`, "success");
+                }
               } catch {
                 showToast("엑셀 파일 처리 중 오류가 발생했습니다.", "error");
               } finally {
