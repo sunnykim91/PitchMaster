@@ -275,6 +275,9 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   const [bulkErrors, setBulkErrors] = useState<Record<number, string[]>>({});
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrStatus, setOcrStatus] = useState("");
+  const [excelLoading, setExcelLoading] = useState(false);
+  const [excelRecords, setExcelRecords] = useState<{ date: string; type: "INCOME" | "EXPENSE"; amount: number; description: string; balance: number | null }[]>([]);
+  const [excelBalance, setExcelBalance] = useState<number | null>(null);
   const [monthFilter, setMonthFilter] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -922,6 +925,117 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
 
       {duesTab === "bulk" && (
       <>
+      {/* ── 엑셀 업로드 ── */}
+      <Card className="p-6">
+        <h3 className="font-heading text-base sm:text-lg font-bold uppercase text-foreground">
+          엑셀 파일 업로드
+        </h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          카카오뱅크에서 다운로드한 엑셀 파일을 업로드하면 거래 내역이 자동으로 파싱됩니다.
+        </p>
+        <div className="mt-4">
+          <input
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              setExcelLoading(true);
+              setExcelRecords([]);
+              setExcelBalance(null);
+              try {
+                const formData = new FormData();
+                formData.append("file", file);
+                const res = await fetch("/api/dues/excel", { method: "POST", body: formData });
+                const json = await res.json();
+                if (!res.ok) {
+                  showToast(json.error || "엑셀 파싱 실패", "error");
+                  return;
+                }
+                setExcelRecords(json.records);
+                setExcelBalance(json.lastBalance);
+                showToast(`${json.totalCount}건의 거래 내역을 인식했습니다.`, "success");
+              } catch {
+                showToast("엑셀 파일 처리 중 오류가 발생했습니다.", "error");
+              } finally {
+                setExcelLoading(false);
+              }
+            }}
+            className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-xs file:font-bold file:text-primary hover:file:bg-primary/20"
+          />
+        </div>
+
+        {excelLoading && (
+          <div className="mt-4 flex items-center gap-2">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-muted border-t-primary" />
+            <span className="text-sm text-muted-foreground">파싱 중...</span>
+          </div>
+        )}
+
+        {excelRecords.length > 0 && (
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-bold text-foreground">{excelRecords.length}건 인식됨</p>
+              {excelBalance !== null && (
+                <p className="text-xs text-muted-foreground">
+                  최종 잔액: <span className="font-bold text-primary">{excelBalance.toLocaleString()}원</span>
+                </p>
+              )}
+            </div>
+            <div className="max-h-60 space-y-1 overflow-y-auto rounded-lg bg-secondary p-3">
+              {excelRecords.map((r, i) => (
+                <div key={i} className="flex items-center justify-between py-1 text-xs">
+                  <div className="min-w-0 flex-1">
+                    <span className="text-muted-foreground">{r.date}</span>
+                    <span className="ml-2 text-foreground">{r.description}</span>
+                  </div>
+                  <span className={cn(
+                    "ml-2 shrink-0 font-bold",
+                    r.type === "INCOME" ? "text-[hsl(var(--success))]" : "text-[hsl(var(--loss))]"
+                  )}>
+                    {r.type === "INCOME" ? "+" : "-"}{r.amount.toLocaleString()}원
+                  </span>
+                </div>
+              ))}
+            </div>
+            <Button
+              className="w-full"
+              onClick={async () => {
+                setBulkSaving(true);
+                try {
+                  let successCount = 0;
+                  for (const r of excelRecords) {
+                    const { error } = await apiMutate("/api/dues", "POST", {
+                      teamId: undefined,
+                      type: r.type,
+                      amount: r.amount,
+                      description: r.description,
+                      recordedAt: r.date,
+                    });
+                    if (!error) successCount++;
+                  }
+                  // 잔고 업데이트
+                  if (excelBalance !== null) {
+                    await apiMutate("/api/dues/balance", "PUT", { balance: excelBalance });
+                  }
+                  showToast(`${successCount}건 저장 완료${excelBalance !== null ? " · 잔고 업데이트됨" : ""}`, "success");
+                  setExcelRecords([]);
+                  setExcelBalance(null);
+                  refetchSummary();
+                } catch {
+                  showToast("저장 중 오류가 발생했습니다.", "error");
+                } finally {
+                  setBulkSaving(false);
+                }
+              }}
+              disabled={bulkSaving}
+            >
+              {bulkSaving ? "저장 중..." : `${excelRecords.length}건 일괄 저장${excelBalance !== null ? " + 잔고 업데이트" : ""}`}
+            </Button>
+          </div>
+        )}
+      </Card>
+
       {/* ── Section 2.5: 스크린샷 일괄 등록 ── */}
         <Card className="p-6" ref={bulkSectionRef}>
           <h3 className="font-heading text-base sm:text-lg font-bold uppercase text-foreground">
