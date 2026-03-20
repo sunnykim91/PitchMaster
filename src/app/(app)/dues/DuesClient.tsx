@@ -252,7 +252,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const validDuesTabs = ["records", "bulk", "penalty", "settings"] as const;
+  const validDuesTabs = ["records", "status", "bulk", "settings"] as const;
   type DuesTabKey = (typeof validDuesTabs)[number];
   const duesTabFromUrl = searchParams.get("tab") as DuesTabKey | null;
   const [duesTab, setDuesTabState] = useState<DuesTabKey>(
@@ -913,8 +913,8 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         <div className="flex">
           {[
             { key: "records", label: "입출금" },
+            { key: "status", label: "납부현황" },
             { key: "bulk", label: "일괄 등록" },
-            { key: "penalty", label: "벌금" },
             { key: "settings", label: "설정" },
           ].map((tab) => (
             <button
@@ -1367,98 +1367,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           </div>
         </div>
 
-        {/* 회비 납부 현황 (운영진만) */}
-        {isStaffOrAbove(role) && duesStatus.length > 0 && (() => {
-          const paidMembers = duesStatus.filter(m => m.status === "PAID");
-          const exemptMembers = duesStatus.filter(m => m.status === "EXEMPT");
-          return (
-          <Card className="mt-4 p-4">
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-bold text-foreground">
-                {monthFilter.replace("-", "년 ")}월 납부 현황
-              </h4>
-              <div className="flex items-center gap-2">
-                <p className="text-xs text-muted-foreground">
-                  <span className="text-[hsl(var(--success))] font-bold">{paidMembers.length}</span>
-                  /{duesStatus.length - exemptMembers.length}명
-                </p>
-                <button
-                  type="button"
-                  onClick={() => syncPaymentStatus()}
-                  className="rounded-lg bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary hover:bg-primary/20 transition-colors"
-                >
-                  자동 매칭
-                </button>
-              </div>
-            </div>
-
-            {/* 경고: 회비 기준 미설정 */}
-            {settings.length === 0 && (
-              <div className="mt-2 rounded-lg bg-[hsl(var(--warning))]/10 px-3 py-2">
-                <p className="text-[11px] text-[hsl(var(--warning))]">
-                  회비 기준이 설정되지 않았습니다.{" "}
-                  <button type="button" onClick={() => setDuesTab("settings")} className="underline font-bold">
-                    설정 탭에서 추가
-                  </button>
-                </p>
-              </div>
-            )}
-
-            <div className="mt-3 space-y-1">
-              {duesStatus.map((m) => (
-                <div key={m.id} className="flex items-center justify-between gap-2 rounded-lg bg-secondary/50 px-3 py-2">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-xs font-medium text-foreground whitespace-nowrap">{m.name}</span>
-                    {ROLE_LABEL[m.role] && (
-                      <span className={cn(
-                        "shrink-0 rounded px-1 py-px text-[9px] font-bold",
-                        m.role === "OWNER" ? "bg-primary/20 text-primary" : "bg-white/[0.08] text-muted-foreground"
-                      )}>
-                        {ROLE_LABEL[m.role]}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {m.paidAmount > 0 && (
-                      <span className="mr-1 text-[10px] font-medium text-[hsl(var(--success))]">
-                        {m.paidAmount.toLocaleString()}원
-                      </span>
-                    )}
-                    {(["PAID", "UNPAID", "EXEMPT"] as const).map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={async () => {
-                          await apiMutate("/api/dues/payment-status", "POST", {
-                            memberId: m.id,
-                            month: monthFilter,
-                            status: s,
-                            paidAmount: s === "PAID" ? m.paidAmount : 0,
-                          });
-                          await refetchPaymentStatus();
-                        }}
-                        className={cn(
-                          "rounded-full px-2 py-0.5 text-[10px] font-bold transition-all",
-                          m.status === s
-                            ? s === "PAID"
-                              ? "bg-[hsl(var(--success))] text-white"
-                              : s === "EXEMPT"
-                              ? "bg-[hsl(var(--warning))] text-[hsl(240_6%_6%)]"
-                              : "bg-[hsl(var(--loss))] text-white"
-                            : "bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08]"
-                        )}
-                      >
-                        {s === "PAID" ? "납부" : s === "EXEMPT" ? "면제" : "미납"}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-          );
-        })()}
-
         <div className="mt-4 space-y-2">
           {filteredRecords.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -1538,6 +1446,145 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
             )
           )}
         </div>
+      </Card>
+      </>
+      )}
+
+      {duesTab === "status" && (
+      <>
+      {/* ── 납부현황 탭 ── */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                const [y, m] = monthFilter.split("-").map(Number);
+                const prev = new Date(y, m - 2);
+                setMonthFilter(`${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`);
+              }}
+              className="rounded-lg p-1.5 hover:bg-secondary transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="min-w-[80px] text-center text-sm font-bold">
+              {monthFilter.replace("-", "년 ")}월
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const [y, m] = monthFilter.split("-").map(Number);
+                const next = new Date(y, m);
+                setMonthFilter(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`);
+              }}
+              className="rounded-lg p-1.5 hover:bg-secondary transition-colors"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            {(() => {
+              const paidMembers = duesStatus.filter(m => m.status === "PAID");
+              const exemptMembers = duesStatus.filter(m => m.status === "EXEMPT");
+              return (
+                <p className="text-xs text-muted-foreground">
+                  <span className="text-[hsl(var(--success))] font-bold">{paidMembers.length}</span>
+                  /{duesStatus.length - exemptMembers.length}명 납부
+                </p>
+              );
+            })()}
+            {isStaffOrAbove(role) && (
+              <button
+                type="button"
+                onClick={() => syncPaymentStatus()}
+                className="rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-colors"
+              >
+                자동 매칭
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 경고: 회비 기준 미설정 */}
+        {settings.length === 0 && (
+          <div className="mt-3 rounded-lg bg-[hsl(var(--warning))]/10 px-3 py-2">
+            <p className="text-[11px] text-[hsl(var(--warning))]">
+              회비 기준이 설정되지 않았습니다.{" "}
+              <button type="button" onClick={() => setDuesTab("settings")} className="underline font-bold">
+                설정 탭에서 추가
+              </button>
+            </p>
+          </div>
+        )}
+
+        {duesStatus.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-sm text-muted-foreground">팀원이 없습니다.</p>
+          </div>
+        ) : (
+          <div className="mt-3 space-y-1">
+            {duesStatus.map((m) => (
+              <div key={m.id} className="flex items-center justify-between gap-2 rounded-lg bg-secondary/50 px-3 py-2.5">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-xs font-medium text-foreground whitespace-nowrap">{m.name}</span>
+                  {ROLE_LABEL[m.role] && (
+                    <span className={cn(
+                      "shrink-0 rounded px-1 py-px text-[9px] font-bold",
+                      m.role === "OWNER" ? "bg-primary/20 text-primary" : "bg-white/[0.08] text-muted-foreground"
+                    )}>
+                      {ROLE_LABEL[m.role]}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  {m.paidAmount > 0 && (
+                    <span className="mr-1 text-[10px] font-medium text-[hsl(var(--success))]">
+                      {m.paidAmount.toLocaleString()}원
+                    </span>
+                  )}
+                  {isStaffOrAbove(role) ? (
+                    (["PAID", "UNPAID", "EXEMPT"] as const).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={async () => {
+                          await apiMutate("/api/dues/payment-status", "POST", {
+                            memberId: m.id,
+                            month: monthFilter,
+                            status: s,
+                            paidAmount: s === "PAID" ? m.paidAmount : 0,
+                          });
+                          await refetchPaymentStatus();
+                        }}
+                        className={cn(
+                          "rounded-full px-2.5 py-1 text-[10px] font-bold transition-all",
+                          m.status === s
+                            ? s === "PAID"
+                              ? "bg-[hsl(var(--success))] text-white"
+                              : s === "EXEMPT"
+                              ? "bg-[hsl(var(--warning))] text-[hsl(240_6%_6%)]"
+                              : "bg-[hsl(var(--loss))] text-white"
+                            : "bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08]"
+                        )}
+                      >
+                        {s === "PAID" ? "납부" : s === "EXEMPT" ? "면제" : "미납"}
+                      </button>
+                    ))
+                  ) : (
+                    <span className={cn(
+                      "rounded-full px-2.5 py-1 text-[10px] font-bold",
+                      m.status === "PAID" ? "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"
+                        : m.status === "EXEMPT" ? "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]"
+                        : "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]"
+                    )}>
+                      {m.status === "PAID" ? "납부" : m.status === "EXEMPT" ? "면제" : "미납"}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
       </>
       )}
@@ -1691,221 +1738,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       </>
       )}
 
-      {duesTab === "penalty" && (
-      <>
-      {/* ── Section 5: 벌금 관리 ── */}
-      <Card className="p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h3 className="font-heading text-lg sm:text-xl font-bold uppercase text-foreground">
-              벌금 관리
-            </h3>
-          </div>
-          {isStaffOrAbove(role) && (
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsPenaltyRuleOpen((prev) => !prev)}
-              >
-                규칙 관리
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => setIsPenaltyFormOpen((prev) => !prev)}
-              >
-                벌금 부과
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* 벌금 현황 요약 */}
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
-          <div className="card-stat">
-            <p className="type-overline">총 벌금</p>
-            <p className="mt-1 type-stat text-[hsl(var(--loss))]">
-              {penaltySummary.total.toLocaleString()}원
-            </p>
-          </div>
-          <div className="card-stat">
-            <p className="type-overline">납부 완료</p>
-            <p className="mt-1 type-stat text-[hsl(var(--success))]">
-              {penaltySummary.paid.toLocaleString()}원
-            </p>
-          </div>
-          <div className="card-stat">
-            <p className="type-overline">미납</p>
-            <p className="mt-1 type-stat text-[hsl(var(--warning))]">
-              {penaltySummary.unpaid.toLocaleString()}원
-            </p>
-          </div>
-        </div>
-
-        {/* 벌금 규칙 관리 (collapsible, staff only) */}
-        {isPenaltyRuleOpen && (
-          <div className="mt-4">
-            <form
-              className="grid gap-4"
-              action={(formData) => handleAddPenaltyRule(formData)}
-            >
-              <Card className="border-0 bg-secondary p-5">
-                <p className="mb-3 text-sm font-bold text-foreground">벌금 규칙 추가</p>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label className="font-semibold text-muted-foreground">항목명</Label>
-                    <Input name="penaltyName" required placeholder="예: 무단불참" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-semibold text-muted-foreground">금액</Label>
-                    <Input name="penaltyAmount" type="number" min={0} required placeholder="5000" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-semibold text-muted-foreground">설명</Label>
-                    <Input name="penaltyDescription" placeholder="사전 연락 없이 불참" />
-                  </div>
-                </div>
-                <Button type="submit" className="mt-3 w-full" size="sm">
-                  규칙 추가
-                </Button>
-              </Card>
-            </form>
-
-            <div className="mt-3 grid gap-2 md:grid-cols-2">
-              {penaltyRules.map((rule) => (
-                <Card key={rule.id} className="border-0 bg-secondary">
-                  <CardContent className="flex items-center justify-between px-4 py-3">
-                    <div>
-                      <p className="text-sm font-bold text-foreground truncate">{rule.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {rule.amount.toLocaleString()}원
-                        {rule.description ? ` · ${rule.description}` : ""}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmAction({ message: "이 벌금 규칙을 삭제하시겠습니까?", onConfirm: () => handleDeletePenaltyRule(rule.id) })}
-                      className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
-                    >
-                      삭제
-                    </button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 벌금 부과 폼 (collapsible, staff only) */}
-        {isPenaltyFormOpen && (
-          <form
-            className="mt-4 grid gap-4"
-            action={(formData) => handleAddPenaltyRecord(formData)}
-          >
-            <Card className="border-0 bg-secondary p-5">
-              <p className="mb-3 text-sm font-bold text-foreground">벌금 부과</p>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="font-semibold text-muted-foreground">대상 회원</Label>
-                  <NativeSelect name="penaltyMemberId">
-                    {members.map((m) => (
-                      <option key={m.id} value={m.id}>{m.name}</option>
-                    ))}
-                  </NativeSelect>
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-semibold text-muted-foreground">벌금 항목</Label>
-                  <NativeSelect name="penaltyRuleId">
-                    {penaltyRules.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.name} ({r.amount.toLocaleString()}원)
-                      </option>
-                    ))}
-                  </NativeSelect>
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-semibold text-muted-foreground">날짜</Label>
-                  <Input name="penaltyDate" type="date" required />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-semibold text-muted-foreground">비고</Label>
-                  <Input name="penaltyNote" placeholder="추가 메모" />
-                </div>
-              </div>
-              <Button type="submit" className="mt-3 w-full" size="sm">
-                벌금 부과
-              </Button>
-            </Card>
-          </form>
-        )}
-
-        {/* 벌금 내역 */}
-        <div className="mt-4 space-y-2">
-          {penaltyRecords.length === 0 ? (
-            <p className="text-sm text-muted-foreground">벌금 내역이 없습니다.</p>
-          ) : (
-            penaltyRecords.map((record) => (
-              <Card
-                key={record.id}
-                className={cn(
-                  "flex flex-wrap items-center justify-between gap-3 border-0 px-4 py-3",
-                  record.isPaid ? "bg-secondary/60" : "bg-secondary"
-                )}
-              >
-                <div className="min-w-0">
-                  <p className={cn(
-                    "text-sm font-semibold truncate",
-                    record.isPaid ? "text-muted-foreground line-through" : "text-foreground"
-                  )}>
-                    {record.memberName} — {record.ruleName}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {record.date}
-                    {record.note ? ` · ${record.note}` : ""}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant="secondary"
-                    className={cn(
-                      "rounded-lg px-3 py-1 text-xs font-bold font-[family-name:var(--font-display)]",
-                      record.isPaid
-                        ? "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"
-                        : "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]"
-                    )}
-                  >
-                    {record.isPaid ? "납부" : "미납"} {record.amount.toLocaleString()}원
-                  </Badge>
-                  {isStaffOrAbove(role) && (
-                    <>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="text-xs"
-                        onClick={() => handleTogglePenaltyPaid(record.id)}
-                      >
-                        {record.isPaid ? "미납 처리" : "납부 확인"}
-                      </Button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmAction({ message: "이 벌금 내역을 삭제하시겠습니까?", onConfirm: () => handleDeletePenaltyRecord(record.id) })}
-                        className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
-                      >
-                        삭제
-                      </button>
-                    </>
-                  )}
-                </div>
-              </Card>
-            ))
-          )}
-        </div>
-      </Card>
-      </>
-      )}
 
       <ConfirmDialog
         open={!!confirmAction}
