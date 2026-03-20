@@ -72,7 +72,7 @@ export async function PUT(req: NextRequest) {
   if (ctx instanceof NextResponse) return ctx;
 
   const body = await req.json();
-  const { month, matches } = body as { month: string; matches: { memberId: string; amount: number }[] };
+  const { month, matches } = body as { month: string; matches: { memberId: string; amount: number; status?: string }[] };
 
   if (!month || !matches) return apiError("month, matches required", 400);
 
@@ -87,7 +87,7 @@ export async function PUT(req: NextRequest) {
         team_id: ctx.teamId,
         member_id: m.memberId,
         month,
-        status: "PAID",
+        status: m.status || "PAID",
         paid_amount: m.amount,
         updated_by: ctx.userId,
         updated_at: new Date().toISOString(),

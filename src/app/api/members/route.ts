@@ -19,8 +19,8 @@ export async function GET() {
 
   // Staff+ see all info, members see limited info
   const select = isStaff
-    ? "id, user_id, role, status, joined_at, pre_name, pre_phone, users(id, name, birth_date, phone, preferred_positions, preferred_foot, profile_image_url)"
-    : "id, user_id, role, status, joined_at, pre_name, pre_phone, users(id, name, preferred_positions)";
+    ? "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, users(id, name, birth_date, phone, preferred_positions, preferred_foot, profile_image_url)"
+    : "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, users(id, name, preferred_positions)";
 
   const { data, error } = await db
     .from("team_members")
@@ -105,6 +105,46 @@ export async function PUT(request: NextRequest) {
   if (roleCheck) return roleCheck;
 
   const body = await request.json();
+
+  // 회비 유형 변경
+  if (body.action === "update_dues_type") {
+    const { memberId, duesType } = body;
+    if (!memberId) return apiError("memberId required");
+
+    const db = getSupabaseAdmin();
+    if (!db) return apiError("Database not available", 503);
+
+    const { error } = await db
+      .from("team_members")
+      .update({ dues_type: duesType || null })
+      .eq("id", memberId)
+      .eq("team_id", ctx.teamId);
+
+    if (error) return apiError(error.message);
+    return apiSuccess({ ok: true });
+  }
+
+  // 일괄 회비 유형 변경
+  if (body.action === "bulk_update_dues_type") {
+    const { updates } = body as { updates: { memberId: string; duesType: string | null }[] };
+    if (!updates?.length) return apiError("updates required");
+
+    const db = getSupabaseAdmin();
+    if (!db) return apiError("Database not available", 503);
+
+    let count = 0;
+    for (const u of updates) {
+      const { error } = await db
+        .from("team_members")
+        .update({ dues_type: u.duesType || null })
+        .eq("id", u.memberId)
+        .eq("team_id", ctx.teamId);
+      if (!error) count++;
+    }
+    return apiSuccess({ updated: count });
+  }
+
+  // 기존 역할 변경
   if (!body.memberId || !body.role)
     return apiError("memberId and role required");
 

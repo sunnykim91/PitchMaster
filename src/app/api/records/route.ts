@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
   if (ctx instanceof NextResponse) return ctx;
 
   const seasonId = request.nextUrl.searchParams.get("seasonId");
+  const startDate = request.nextUrl.searchParams.get("startDate");
+  const endDate = request.nextUrl.searchParams.get("endDate");
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
@@ -27,9 +29,12 @@ export async function GET(request: NextRequest) {
 
   if (!members) return apiSuccess({ records: [] });
 
-  // Get matches: 시즌 날짜 범위로 필터 (season_id FK 의존 안 함)
+  // Get matches: 시즌 날짜 범위 또는 직접 날짜로 필터
   let matchQuery = db.from("matches").select("id").eq("team_id", ctx.teamId).eq("status", "COMPLETED");
-  if (seasonId) {
+  if (startDate && endDate) {
+    // 직접 날짜 범위 지정 (기간 필터)
+    matchQuery = matchQuery.gte("match_date", startDate).lte("match_date", endDate);
+  } else if (seasonId) {
     const { data: season } = await db.from("seasons").select("start_date, end_date").eq("id", seasonId).single();
     if (season) {
       matchQuery = matchQuery.gte("match_date", season.start_date).lte("match_date", season.end_date);

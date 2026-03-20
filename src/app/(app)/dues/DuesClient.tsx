@@ -69,13 +69,18 @@ type ApiPenaltyRecord = {
 type ApiMemberRow = {
   id: string;
   user_id: string | null;
+  role: string;
   pre_name: string | null;
+  dues_type: string | null;
   users: { id: string; name: string } | null;
 };
 
 type ApiMember = {
   id: string;
   name: string;
+  memberId: string; // team_members.id (for dues_type update)
+  role: string;
+  duesType: string | null;
 };
 
 /* ── Client-side types (camelCase) ── */
@@ -173,6 +178,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   const {
     data: membersRaw,
     loading: loadingMembers,
+    refetch: refetchMembers,
   } = useApi<{ members: ApiMemberRow[] }>(
     "/api/members",
     initialData?.members ? { members: initialData.members } : { members: [] },
@@ -239,6 +245,9 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         .map((m: ApiMemberRow) => ({
           id: m.users?.id ?? `unlinked_${m.id}`,
           name: m.users?.name ?? m.pre_name ?? "",
+          memberId: m.id,
+          role: m.role ?? "MEMBER",
+          duesType: m.dues_type ?? null,
         })),
     [membersRaw.members],
   );
@@ -279,19 +288,38 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
 
   /** 입금 내역에서 자동 매칭된 멤버들의 납부 상태를 일괄 업데이트 */
   async function syncPaymentStatus() {
-    const matches: { memberId: string; amount: number }[] = [];
+    // 회비 기준 미설정 시 차단
+    if (settings.length === 0) {
+      showToast("회비 기준을 먼저 설정해주세요. (설정 탭)", "error");
+      return;
+    }
+
+    const matches: { memberId: string; amount: number; status: "PAID" | "UNPAID" }[] = [];
     for (const r of monthRecords) {
       if (r.type !== "INCOME") continue;
       const matched = members.find((m) => r.memberName === m.name || r.description?.includes(m.name));
       if (matched) {
         const existing = matches.find((m) => m.memberId === matched.id);
         if (existing) existing.amount += r.amount;
-        else matches.push({ memberId: matched.id, amount: r.amount });
+        else matches.push({ memberId: matched.id, amount: r.amount, status: "UNPAID" });
       }
     }
+
+    // 기대 금액과 비교하여 납부 여부 판단
+    for (const m of matches) {
+      const member = members.find((mem) => mem.id === m.memberId);
+      if (!member) continue;
+      const expectedAmount = getMemberExpectedAmount(member);
+      m.status = m.amount >= expectedAmount && expectedAmount > 0 ? "PAID" : "UNPAID";
+    }
+
     if (matches.length > 0) {
       await apiMutate("/api/dues/payment-status", "PUT", { month: monthFilter, matches });
       await refetchPaymentStatus();
+      const paidCount = matches.filter((m) => m.status === "PAID").length;
+      showToast(`${matches.length}명 매칭 (납부 ${paidCount}명)`, "success");
+    } else {
+      showToast("매칭된 입금 내역이 없습니다", "info");
     }
   }
 
@@ -336,21 +364,46 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     return records.filter((r) => r.recordedAt.startsWith(monthFilter));
   }, [records, monthFilter]);
 
+  /** 회비 설정 맵: memberType → monthlyAmount */
+  const settingsAmountMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const s of settings) {
+      map.set(s.memberType, s.monthlyAmount);
+    }
+    return map;
+  }, [settings]);
+
+  /** 회원별 기대 금액 조회 (해당 회원의 dues_type 기반) */
+  function getMemberExpectedAmount(member: ApiMember): number {
+    if (member.duesType && settingsAmountMap.has(member.duesType)) {
+      return settingsAmountMap.get(member.duesType)!;
+    }
+    // dues_type 미지정 시 첫 번째 설정값 (fallback)
+    return settings.length > 0 ? settings[0].monthlyAmount : 0;
+  }
+
+  /** 역할 우선순위 (높을수록 상단) */
+  const ROLE_PRIORITY: Record<string, number> = { OWNER: 0, MANAGER: 1, STAFF: 2, MEMBER: 3 };
+  const ROLE_LABEL: Record<string, string> = { OWNER: "회장", MANAGER: "운영진", STAFF: "스태프" };
+  const STATUS_PRIORITY: Record<string, number> = { UNPAID: 0, PAID: 1, EXEMPT: 2 };
+
   /** 월별 회비 납부 현황 계산 (DB 납부 상태 우선, 없으면 자동 매칭) */
   const duesStatus = useMemo(() => {
     if (!members.length) return [];
-    const settings = summaryData?.settings ?? [];
-    const defaultAmount = settings.length > 0 ? (settings[0] as any).monthlyAmount ?? (settings[0] as any).monthly_amount ?? 0 : 0;
 
-    return members.map((m) => {
+    const list = members.map((m) => {
+      const expectedAmount = getMemberExpectedAmount(m);
       const dbStatus = paymentStatusMap.get(m.id);
 
       // DB에 상태가 있으면 그걸 사용
       if (dbStatus) {
         return {
           id: m.id,
+          memberId: m.memberId,
           name: m.name,
-          expectedAmount: defaultAmount,
+          role: m.role,
+          duesType: m.duesType,
+          expectedAmount,
           paidAmount: dbStatus.paidAmount,
           status: dbStatus.status as "PAID" | "UNPAID" | "EXEMPT",
           note: dbStatus.note,
@@ -364,14 +417,27 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       const paidAmount = paid.reduce((sum, r) => sum + r.amount, 0);
       return {
         id: m.id,
+        memberId: m.memberId,
         name: m.name,
-        expectedAmount: defaultAmount,
+        role: m.role,
+        duesType: m.duesType,
+        expectedAmount,
         paidAmount,
-        status: (paidAmount >= defaultAmount && defaultAmount > 0 ? "PAID" : "UNPAID") as "PAID" | "UNPAID" | "EXEMPT",
+        status: (paidAmount >= expectedAmount && expectedAmount > 0 ? "PAID" : "UNPAID") as "PAID" | "UNPAID" | "EXEMPT",
         note: undefined as string | undefined,
       };
     });
-  }, [members, monthRecords, summaryData?.settings, paymentStatusMap]);
+
+    // 정렬: 역할 우선 (회장>운영진>스태프>회원) → 상태 (미납>납부>면제)
+    list.sort((a, b) => {
+      const roleDiff = (ROLE_PRIORITY[a.role] ?? 3) - (ROLE_PRIORITY[b.role] ?? 3);
+      if (roleDiff !== 0) return roleDiff;
+      return (STATUS_PRIORITY[a.status] ?? 1) - (STATUS_PRIORITY[b.status] ?? 1);
+    });
+
+    return list;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [members, monthRecords, settings, settingsAmountMap, paymentStatusMap]);
 
   const filteredRecords = useMemo(() => {
     let list = filter === "ALL" ? monthRecords : monthRecords.filter((item) => item.type === filter);
@@ -1329,8 +1395,8 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         {/* 회비 납부 현황 (운영진만) */}
         {isStaffOrAbove(role) && duesStatus.length > 0 && (() => {
           const paidMembers = duesStatus.filter(m => m.status === "PAID");
-          const unpaidMembers = duesStatus.filter(m => m.status === "UNPAID");
           const exemptMembers = duesStatus.filter(m => m.status === "EXEMPT");
+          const noTypeMembers = duesStatus.filter(m => !m.duesType);
           return (
           <Card className="mt-4 p-4">
             <div className="flex items-center justify-between">
@@ -1344,10 +1410,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                 </p>
                 <button
                   type="button"
-                  onClick={async () => {
-                    await syncPaymentStatus();
-                    showToast("자동 매칭 완료", "success");
-                  }}
+                  onClick={() => syncPaymentStatus()}
                   className="rounded-lg bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary hover:bg-primary/20 transition-colors"
                 >
                   자동 매칭
@@ -1355,13 +1418,74 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
               </div>
             </div>
 
+            {/* 경고: 회비 기준 미설정 */}
+            {settings.length === 0 && (
+              <div className="mt-2 rounded-lg bg-[hsl(var(--warning))]/10 px-3 py-2">
+                <p className="text-[11px] text-[hsl(var(--warning))]">
+                  회비 기준이 설정되지 않았습니다.{" "}
+                  <button type="button" onClick={() => setDuesTab("settings")} className="underline font-bold">
+                    설정 탭에서 추가
+                  </button>
+                </p>
+              </div>
+            )}
+
+            {/* 경고: 유형 미지정 회원 */}
+            {settings.length > 0 && noTypeMembers.length > 0 && (
+              <div className="mt-2 rounded-lg bg-[hsl(var(--accent))]/10 px-3 py-2">
+                <p className="text-[11px] text-muted-foreground">
+                  회비 유형 미지정 {noTypeMembers.length}명 — 아래에서 유형을 지정하면 정확한 매칭이 가능합니다
+                </p>
+              </div>
+            )}
+
             <div className="mt-3 space-y-1">
               {duesStatus.map((m) => (
-                <div key={m.id} className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2">
-                  <span className="text-xs font-medium text-foreground">{m.name}</span>
-                  <div className="flex items-center gap-1">
-                    {m.status === "PAID" && m.paidAmount > 0 && (
-                      <span className="mr-1 text-[10px] text-muted-foreground">{m.paidAmount.toLocaleString()}원</span>
+                <div key={m.id} className="flex items-center justify-between gap-2 rounded-lg bg-secondary/50 px-3 py-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-xs font-medium text-foreground whitespace-nowrap">{m.name}</span>
+                    {ROLE_LABEL[m.role] && (
+                      <span className={cn(
+                        "shrink-0 rounded px-1 py-px text-[9px] font-bold",
+                        m.role === "OWNER" ? "bg-primary/20 text-primary" : "bg-white/[0.08] text-muted-foreground"
+                      )}>
+                        {ROLE_LABEL[m.role]}
+                      </span>
+                    )}
+                    {/* 회비 유형 드롭다운 */}
+                    {settings.length > 0 && (
+                      <select
+                        value={m.duesType ?? ""}
+                        onChange={async (e) => {
+                          const newType = e.target.value || null;
+                          await apiMutate("/api/members", "PUT", {
+                            action: "update_dues_type",
+                            memberId: m.memberId,
+                            duesType: newType,
+                          });
+                          await refetchMembers();
+                        }}
+                        className="rounded bg-white/[0.06] border-0 px-1.5 py-0.5 text-[10px] text-muted-foreground outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        <option value="">유형 선택</option>
+                        {settings.map((s) => (
+                          <option key={s.id} value={s.memberType}>{s.memberType}</option>
+                        ))}
+                      </select>
+                    )}
+                    {/* 기대 금액 */}
+                    <span className="text-[10px] text-muted-foreground/60 whitespace-nowrap">
+                      {m.expectedAmount > 0 ? `${m.expectedAmount.toLocaleString()}원` : ""}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {m.paidAmount > 0 && (
+                      <span className={cn(
+                        "mr-1 text-[10px] font-medium",
+                        m.paidAmount >= m.expectedAmount ? "text-[hsl(var(--success))]" : "text-[hsl(var(--warning))]"
+                      )}>
+                        {m.paidAmount.toLocaleString()}원
+                      </span>
                     )}
                     {(["PAID", "UNPAID", "EXEMPT"] as const).map((s) => (
                       <button
