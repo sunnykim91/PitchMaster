@@ -117,38 +117,48 @@ export default async function LoginPage({
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {/* 참석 확인 */}
             <div className="rounded-2xl bg-[#b2c7d9]/10 p-5">
-              <p className="text-sm font-bold text-foreground mb-4">참석 인원 파악</p>
-              <div className="space-y-2">
-                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">이번주 참석 가능하신 분?</span></div>
-                <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">저요~</span></div>
-                <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-muted-foreground/50 italic">읽음 23</span></div>
-                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">아직 답 안한 사람?? 🙏</span></div>
+              <p className="text-sm font-bold text-foreground mb-4">📋 참석 인원 파악</p>
+              <div className="space-y-2.5">
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">이번주 토요일 참석 가능한 분~?</span></div>
+                <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">🙋‍♂️</span></div>
+                <div className="flex items-center justify-start gap-2">
+                  <span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">저 갈 수 있어요</span>
+                  <span className="text-[10px] text-muted-foreground/40">읽음 25</span>
+                </div>
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">답 안한 사람 15명인데... 🙏</span></div>
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">금요일까지 답 부탁!!</span></div>
               </div>
-              <p className="mt-4 text-xs text-rose-400">→ 결국 총무가 한 명씩 전화</p>
+              <p className="mt-4 text-xs font-semibold text-rose-400">→ 결국 금요일 밤에 한 명씩 전화...</p>
             </div>
 
             {/* 회비 정산 */}
             <div className="rounded-2xl bg-[#b2c7d9]/10 p-5">
-              <p className="text-sm font-bold text-foreground mb-4">회비 정산</p>
-              <div className="space-y-2">
-                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">3월 회비 정산 올립니다</span></div>
-                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">[사진] 통장 캡쳐.jpg</span></div>
-                <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">저 입금했는데 확인 좀요</span></div>
-                <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">저도요 ㅠ</span></div>
+              <p className="text-sm font-bold text-foreground mb-4">💰 회비 정산</p>
+              <div className="space-y-2.5">
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">3월 회비 정산입니다</span></div>
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">📷 통장캡쳐.jpg</span></div>
+                <div className="flex items-center justify-start gap-2">
+                  <span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">저 지난주에 보냈는데요?</span>
+                  <span className="text-[10px] text-muted-foreground/40">읽음 18</span>
+                </div>
+                <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">저도 입금했어요 확인 좀 ㅠ</span></div>
               </div>
-              <p className="mt-4 text-xs text-rose-400">→ 엑셀 열고 한 줄씩 대조</p>
+              <p className="mt-4 text-xs font-semibold text-rose-400">→ 엑셀 열어서 30분 동안 대조...</p>
             </div>
 
             {/* 선수 배치 */}
             <div className="rounded-2xl bg-[#b2c7d9]/10 p-5">
-              <p className="text-sm font-bold text-foreground mb-4">선수 배치</p>
-              <div className="space-y-2">
-                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">오늘 몇 명이야?</span></div>
-                <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">아직 모름 ㅋㅋ</span></div>
-                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">그럼 포지션은 가서 정하자</span></div>
-                <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">ㅇㅇ 항상 그러잖아</span></div>
+              <p className="text-sm font-bold text-foreground mb-4">⚽ 선수 배치</p>
+              <div className="space-y-2.5">
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">내일 몇 명 오는 거야?</span></div>
+                <div className="flex items-center justify-start gap-2">
+                  <span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">아직 답 안 한 사람 많은데ㅋㅋ</span>
+                  <span className="text-[10px] text-muted-foreground/40">읽음 22</span>
+                </div>
+                <div className="flex justify-end"><span className="rounded-2xl rounded-tr-sm bg-[hsl(var(--kakao))] px-3 py-2 text-xs text-[hsl(var(--kakao-foreground))]">포지션은 가서 정하자...</span></div>
+                <div className="flex justify-start"><span className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-xs text-foreground/70">ㅇㅇ 매번 그러잖아 ㅋ</span></div>
               </div>
-              <p className="mt-4 text-xs text-rose-400">→ 경기장 도착해야 시작</p>
+              <p className="mt-4 text-xs font-semibold text-rose-400">→ 경기장 도착해서야 라인업 시작...</p>
             </div>
           </div>
         </div>

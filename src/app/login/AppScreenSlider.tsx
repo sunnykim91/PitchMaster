@@ -106,8 +106,8 @@ const screens = [
         <div className="space-y-1.5">
           {[
             { rank: 1, name: "홍길동", goals: 8, color: "text-primary" },
-            { rank: 2, name: "장석민", goals: 5, color: "text-white/70" },
-            { rank: 3, name: "황석훈", goals: 3, color: "text-white/50" },
+            { rank: 2, name: "이준혁", goals: 5, color: "text-white/70" },
+            { rank: 3, name: "박민수", goals: 3, color: "text-white/50" },
           ].map((r) => (
             <div key={r.rank} className="flex items-center justify-between text-[11px]">
               <span className="flex items-center gap-2">
@@ -200,7 +200,7 @@ const screens = [
         <div className="space-y-0 rounded-lg bg-white/5 overflow-hidden">
           {[
             { date: "03.16", name: "홍길동", amount: "+30,000", color: "text-blue-400" },
-            { date: "03.12", name: "장석민", amount: "+30,000", color: "text-blue-400" },
+            { date: "03.12", name: "이준혁", amount: "+30,000", color: "text-blue-400" },
             { date: "03.10", name: "구장대여", amount: "-79,230", color: "text-white" },
           ].map((t, i) => (
             <div key={i} className="flex items-center justify-between border-t border-white/5 px-3 py-2.5">
