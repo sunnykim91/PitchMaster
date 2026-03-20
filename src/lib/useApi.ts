@@ -29,15 +29,6 @@ export function useApi<T>(
   // Abort controller로 stale fetch 정리
   const abortRef = useRef<AbortController | null>(null);
   const hasFetchedUrlRef = useRef<string | null>(null);
-  const initialRef = useRef(initialData);
-
-  // URL 변경 시 렌더 중 동기적으로 데이터 리셋 (stale 데이터가 1프레임도 안 보이게)
-  const [prevUrl, setPrevUrl] = useState(url);
-  if (prevUrl !== url) {
-    setPrevUrl(url);
-    setData(initialRef.current);
-    setLoading(true);
-  }
 
   const fetchData = useCallback(async () => {
     // 이전 fetch 취소
@@ -45,6 +36,7 @@ export function useApi<T>(
     const controller = new AbortController();
     abortRef.current = controller;
 
+    // 같은 URL로 이미 fetch한 경우 loading 표시하지 않음 (refetch 시 깜빡임 방지)
     if (hasFetchedUrlRef.current !== url) {
       setLoading(true);
     }
