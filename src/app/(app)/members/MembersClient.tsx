@@ -400,13 +400,22 @@ export default function MembersClient({
                       </>
                     )}
                     {canKick && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setConfirmAction({ message: `${member.name} 님을 제명하시겠습니까?`, onConfirm: () => handleKick(member.id) })}
-                      >
-                        제명
-                      </Button>
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleStatusChange(member.id, "DORMANT")}
+                        >
+                          휴면
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setConfirmAction({ message: `${member.name} 님을 제명하시겠습니까?`, onConfirm: () => handleKick(member.id) })}
+                        >
+                          제명
+                        </Button>
+                      </>
                     )}
                   </div>
                 </Card>
