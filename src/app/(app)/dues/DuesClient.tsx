@@ -936,7 +936,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         <div className="mt-4">
           <input
             type="file"
-            accept=".xlsx,.xls,.csv"
+            accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,*/*"
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
