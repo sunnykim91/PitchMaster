@@ -57,15 +57,17 @@ export default async function LoginPage({
             <span className="text-primary">아직도 카톡으로 운영하세요?</span>
           </h1>
 
-          <div className="mx-auto max-w-md space-y-2 lg:mx-0">
+          <div className="mx-auto max-w-md space-y-3 lg:mx-0">
             <p className="break-keep text-sm text-muted-foreground sm:text-base">
               참석투표 · 회비정산 · AI 라인업
               <br />
-              한 곳에서 끝.
+              <span className="font-semibold text-foreground">한 곳에서, 한 번에.</span>
             </p>
-            <p className="break-keep text-sm font-semibold text-foreground sm:text-base">
-              조기축구 · 풋살 팀 운영, 여기서 끝.
-            </p>
+            <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">참석 확인 30분 → 30초</span>
+              <span className="rounded-full bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-400">회비 정산 30분 → 1분</span>
+              <span className="rounded-full bg-purple-500/10 px-3 py-1 text-xs font-bold text-purple-400">라인업 20분 → 3초</span>
+            </div>
           </div>
 
           <div className="flex flex-col items-center gap-3 lg:items-start">
@@ -115,16 +117,19 @@ export default async function LoginPage({
           <div className="mt-10 grid gap-6 sm:mt-12 md:grid-cols-3">
             {[
               {
-                before: { title: "참석 확인", pain: "카톡에 물어보고, 읽씹당하고, 금요일에 전화돌리기" },
-                after: { title: "실시간 투표", solution: "링크 하나 보내면 참석/불참 자동 집계" },
+                icon: "📱",
+                before: { title: "참석 확인", pain: "카톡에 물어보고, 읽씹, 금요일에 전화" },
+                after: { title: "실시간 투표", solution: "링크 하나 → 자동 집계", time: "30초" },
               },
               {
-                before: { title: "회비 정산", pain: "통장 캡쳐 → 엑셀 → 한 줄씩 대조 30분" },
-                after: { title: "자동 정리", solution: "캡쳐 올리면 이름·금액 자동 인식" },
+                icon: "💳",
+                before: { title: "회비 정산", pain: "통장 캡쳐 → 엑셀 → 대조 30분" },
+                after: { title: "자동 정리", solution: "캡쳐 올리면 자동 인식", time: "1분" },
               },
               {
-                before: { title: "선수 배치", pain: "경기장 도착해서야 포지션 정하기 시작" },
-                after: { title: "AI 라인업", solution: "선호 포지션 기반 자동 배치 완료" },
+                icon: "⚽",
+                before: { title: "선수 배치", pain: "경기장 도착해서야 포지션 정함" },
+                after: { title: "AI 라인업", solution: "선호 포지션 기반 자동 배치", time: "3초" },
               },
             ].map((item) => (
               <div
@@ -149,9 +154,14 @@ export default async function LoginPage({
                 </div>
                 {/* After */}
                 <div className="bg-emerald-500/10 p-4 sm:p-5">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                    After
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                      After
+                    </p>
+                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                      {item.after.time}
+                    </span>
+                  </div>
                   <p className="mt-1 text-sm font-bold text-foreground">
                     {item.after.title}
                   </p>
@@ -161,6 +171,12 @@ export default async function LoginPage({
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* 미니 CTA */}
+          <div className="mt-10 flex flex-col items-center gap-2">
+            {kakaoButton}
+            <p className="text-[11px] text-muted-foreground">지금 바로 체험해보세요</p>
           </div>
         </div>
       </section>
@@ -457,7 +473,9 @@ export default async function LoginPage({
                       {row.band}
                     </td>
                     <td className="py-2.5 text-center font-semibold text-primary sm:py-3">
-                      {row.pm}
+                      <span className="inline-flex items-center gap-1">
+                        <span className="text-[10px]">✓</span> {row.pm}
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -479,22 +497,22 @@ export default async function LoginPage({
           <div className="mt-10 grid gap-5 sm:mt-12 md:grid-cols-3">
             {[
               {
-                name: "김총무",
-                role: "조기축구 총무 3년차",
-                quote: "매주 금요일 카톡방에서 참석 확인 30분씩 쓰던 게, 링크 하나 보내면 끝이에요.",
-                highlight: "참석 확인 30분 → 링크 하나",
+                name: "K총무",
+                role: "조기축구 총무 4년차 · 25명 팀",
+                quote: "매주 금요일 저녁마다 한 명씩 전화하던 게, 링크 하나 보내고 끝이에요. 진짜 인생 바뀜.",
+                highlight: "전화 25통 → 링크 1개",
               },
               {
-                name: "박회장",
-                role: "풋살팀 회장",
-                quote: "통장 캡쳐 올리면 회비가 자동 정리되는 거 보고 소름. 엑셀 안 연 지 2달.",
-                highlight: "엑셀 안 연 지 2달",
+                name: "P회장",
+                role: "평일 풋살팀 회장 · 18명",
+                quote: "통장 캡쳐 올렸더니 회비가 자동으로 정리되더라고요. 엑셀 파일 삭제했습니다.",
+                highlight: "엑셀 삭제 완료",
               },
               {
-                name: "이매니저",
-                role: "30명 팀 운영",
-                quote: "AI가 포지션 배치까지 해주니까 경기장 가기 전에 라인업 완성. 카톡으로 공유하면 끝.",
-                highlight: "경기 전에 라인업 완성",
+                name: "L운영진",
+                role: "주말 축구팀 · 35명 운영",
+                quote: "경기장 도착 전에 라인업이 카톡으로 공유되니까 다들 좋아해요. 특히 쿼터별 균등 배분이 공정해서.",
+                highlight: "라인업 갈등 해소",
               },
             ].map((review) => (
               <Card key={review.name} className="border-border/30 bg-card/50">
