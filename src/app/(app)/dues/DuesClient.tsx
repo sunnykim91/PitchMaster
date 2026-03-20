@@ -269,8 +269,8 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
 
-  // 납부 상태 API (useApi가 URL 변경 시 자동으로 데이터 초기화)
-  const { data: paymentStatusRaw, refetch: refetchPaymentStatus } = useApi<any[]>(
+  // 납부 상태 API
+  const { data: paymentStatusRaw, loading: loadingPaymentStatus, refetch: refetchPaymentStatus } = useApi<any[]>(
     `/api/dues/payment-status?month=${monthFilter}`,
     [],
   );
@@ -1545,7 +1545,20 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           </div>
         )}
 
-        {duesStatus.length === 0 ? (
+        {loadingPaymentStatus ? (
+          <div className="mt-3 space-y-1">
+            {Array.from({ length: Math.min(members.length || 5, 10) }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2.5">
+                <Skeleton className="h-4 w-20" />
+                <div className="flex gap-1">
+                  <Skeleton className="h-7 w-12 rounded-full" />
+                  <Skeleton className="h-7 w-12 rounded-full" />
+                  <Skeleton className="h-7 w-12 rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : duesStatus.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <p className="text-sm text-muted-foreground">팀원이 없습니다.</p>
           </div>
