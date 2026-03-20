@@ -537,7 +537,7 @@ export default function RecordsClient({
                     <th className="sticky left-0 z-1 bg-card pb-3 text-left font-medium text-muted-foreground">#</th>
                     <th className="sticky left-8 z-1 bg-card pb-3 text-left font-medium text-muted-foreground">이름</th>
                     {([
-                      { key: "points" as const, label: "공격포인트" },
+                      { key: "points" as const, label: "G+A" },
                       { key: "goals" as const, label: "골" },
                       { key: "assists" as const, label: "어시" },
                       { key: "mvp" as const, label: "MVP" },

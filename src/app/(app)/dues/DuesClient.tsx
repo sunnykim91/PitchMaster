@@ -938,11 +938,15 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         <div className="card-featured mt-5">
           <div>
             <p className="type-overline">통장 잔고</p>
-            <p className="mt-1 type-score text-[hsl(var(--primary))]">
-              {summaryData.balance !== null
-                ? `${summaryData.balance.toLocaleString()}원`
-                : "내역 올리기 탭에서 통장 스크린샷이나 엑셀을 올리면 잔고가 자동 반영됩니다"}
-            </p>
+            {summaryData.balance !== null ? (
+              <p className="mt-1 type-score text-[hsl(var(--primary))]">
+                {summaryData.balance.toLocaleString()}원
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-muted-foreground">
+                내역 올리기 탭에서 스크린샷이나 엑셀을 올리면 잔고가 반영됩니다
+              </p>
+            )}
             {summaryData.balanceUpdatedAt && (
               <p className="text-[10px] text-muted-foreground">
                 최종 업데이트: {new Date(summaryData.balanceUpdatedAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
@@ -1559,7 +1563,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                 onClick={() => syncPaymentStatus()}
                 className="rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-colors"
               >
-                입금 내역으로 납부 확인
+                납부 자동 확인
               </button>
             )}
           </div>
