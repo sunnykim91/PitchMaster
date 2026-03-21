@@ -8,6 +8,8 @@ import {
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
 
+const SEASON_DELETE_ROLE = PERMISSIONS.SEASON_CREATE; // STAFF+
+
 export async function GET() {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
@@ -83,6 +85,41 @@ export async function PUT(request: NextRequest) {
     .from("seasons")
     .update({ is_active: true })
     .eq("id", body.id);
+
+  if (error) return apiError(error.message);
+  return apiSuccess({ ok: true });
+}
+
+export async function DELETE(request: NextRequest) {
+  const ctx = await getApiContext();
+  if (ctx instanceof NextResponse) return ctx;
+
+  const roleCheck = requireRole(ctx, SEASON_DELETE_ROLE);
+  if (roleCheck) return roleCheck;
+
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
+  if (!id) return apiError("id required");
+
+  const db = getSupabaseAdmin();
+  if (!db) return apiError("Database not available", 503);
+
+  // Prevent deleting active season
+  const { data: season } = await db
+    .from("seasons")
+    .select("is_active")
+    .eq("id", id)
+    .eq("team_id", ctx.teamId)
+    .single();
+
+  if (!season) return apiError("Season not found", 404);
+  if (season.is_active) return apiError("활성 시즌은 삭제할 수 없습니다", 400);
+
+  const { error } = await db
+    .from("seasons")
+    .delete()
+    .eq("id", id)
+    .eq("team_id", ctx.teamId);
 
   if (error) return apiError(error.message);
   return apiSuccess({ ok: true });

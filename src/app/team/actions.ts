@@ -45,14 +45,13 @@ export async function createTeam(formData: FormData) {
     status: "ACTIVE",
   });
 
-  // Create default season
+  // Create default season (yearly)
   const year = new Date().getFullYear();
-  const half = new Date().getMonth() < 6 ? "상반기" : "하반기";
   await db.from("seasons").insert({
     team_id: team.id,
-    name: `${year} ${half}`,
-    start_date: half === "상반기" ? `${year}-01-01` : `${year}-07-01`,
-    end_date: half === "상반기" ? `${year}-06-30` : `${year}-12-31`,
+    name: `${year}`,
+    start_date: `${year}-01-01`,
+    end_date: `${year}-12-31`,
     is_active: true,
   });
 
