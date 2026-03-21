@@ -94,7 +94,6 @@ export async function GET(request: NextRequest) {
         if (!name) continue;
         const cur = nameMap.get(name) ?? { goals: 0, assists: 0, attendance: 0, games: 0 };
         cur.attendance++;
-        cur.games = Math.max(cur.games, 1); // 최소 1
         nameMap.set(name, cur);
       }
     }
@@ -109,7 +108,7 @@ export async function GET(request: NextRequest) {
         goals: s.goals,
         assists: s.assists,
         mvp: 0,
-        attendanceRate: totalGames > 0 && s.attendance > 0 ? s.attendance / Math.max(s.games, totalGames) : (s.games > 0 ? s.attendance / s.games : 0),
+        attendanceRate: (s.games + totalGames) > 0 ? s.attendance / (s.games + totalGames) : 0,
         preferredPositions: [],
       }));
 
