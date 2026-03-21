@@ -50,6 +50,15 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const canSwitchRole = session.user.name === "김선휘";
   const [copied, setCopied] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
+  const [sheetClosing, setSheetClosing] = useState(false);
+
+  function closeSheet() {
+    setSheetClosing(true);
+    setTimeout(() => {
+      setMoreSheetOpen(false);
+      setSheetClosing(false);
+    }, 200);
+  }
 
   // 팀 스위처
   const [teams, setTeams] = useState<TeamInfo[]>([]);
@@ -295,7 +304,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
         {/* Desktop Sidebar */}
         <aside className="hidden self-start lg:block animate-fade-in">
-          <Card className="sticky top-4 p-5 shadow-lg shadow-black/20 sidebar-atmosphere">
+          <Card className="sticky top-4 p-5 shadow-lg shadow-foreground/10 sidebar-atmosphere">
             {sidebarContent}
           </Card>
         </aside>
@@ -333,7 +342,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       </div>
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.06] bg-[hsl(240_6%_6%/0.85)] backdrop-blur-xl backdrop-saturate-150 lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/85 backdrop-blur-xl backdrop-saturate-150 lg:hidden">
         <div className="flex items-center justify-around">
           {[
             { href: "/dashboard", label: "홈", icon: Home },
@@ -383,10 +392,13 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
       {/* More Bottom Sheet */}
       {moreSheetOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMoreSheetOpen(false)}>
+        <div className="fixed inset-0 z-50 lg:hidden" onClick={closeSheet}>
           <div className="absolute inset-0 bg-black/50" />
           <div
-            className="absolute bottom-0 left-0 right-0 rounded-t-2xl bg-card p-4 pb-8 animate-slide-up shadow-2xl"
+            className={cn(
+              "absolute bottom-0 left-0 right-0 rounded-t-2xl bg-card p-4 pb-8 shadow-2xl",
+              sheetClosing ? "animate-sheet-slide-down" : "animate-slide-up"
+            )}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-muted" />
@@ -401,7 +413,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => setMoreSheetOpen(false)}
+                  onClick={closeSheet}
                   className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                 >
                   <item.icon className="h-5 w-5" />

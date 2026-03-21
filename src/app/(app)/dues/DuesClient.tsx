@@ -1738,7 +1738,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                             ? s === "PAID"
                               ? "bg-[hsl(var(--success))] text-white"
                               : s === "EXEMPT"
-                              ? "bg-[hsl(var(--warning))] text-[hsl(240_6%_6%)]"
+                              ? "bg-[hsl(var(--warning))] text-background"
                               : "bg-[hsl(var(--loss))] text-white"
                             : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
                         )}

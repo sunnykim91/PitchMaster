@@ -88,6 +88,59 @@
   --space-card: 1.25rem;
   --space-card-lg: 1.5rem;
   --space-section: 1.25rem;
+
+  /* Card radius tokens */
+  --radius-card: 1rem;
+  --radius-card-inner: 0.875rem;
+}
+
+/* ── Light Mode — system preference ── */
+@media (prefers-color-scheme: light) {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 10%;
+    --card: 0 0% 98%;
+    --card-foreground: 240 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 10%;
+    --primary: 16 85% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4% 92%;
+    --secondary-foreground: 240 10% 10%;
+    --muted: 240 4% 95%;
+    --muted-foreground: 215 15% 45%;
+    --accent: 40 60% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 4% 88%;
+    --input: 240 4% 88%;
+    --ring: 16 85% 50%;
+
+    --kakao: 51 100% 50%;
+    --kakao-foreground: 0 0% 12%;
+    --success: 152 60% 38%;
+    --warning: 38 92% 45%;
+    --info: 210 70% 45%;
+
+    --win: 152 60% 38%;
+    --draw: 38 60% 45%;
+    --loss: 0 65% 45%;
+    --pitch: 145 50% 35%;
+
+    --sidebar-background: 240 4% 96%;
+    --sidebar-foreground: 240 10% 10%;
+    --sidebar-primary: 16 85% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 4% 92%;
+    --sidebar-accent-foreground: 240 10% 30%;
+    --sidebar-border: 240 4% 88%;
+    --sidebar-ring: 16 85% 50%;
+
+    /* Skeleton pulse – higher contrast on light bg */
+    --skeleton-lo: 0.06;
+    --skeleton-hi: 0.12;
+  }
 }
 
 body {
@@ -109,7 +162,7 @@ body {
   color: white;
 }
 
-/* ── Native Select (dark mode) ── */
+/* ── Native Select ── */
 select option,
 select optgroup {
   background-color: hsl(var(--popover));
@@ -120,11 +173,11 @@ select optgroup {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: hsl(240 4% 20%);
+  background: hsl(var(--border));
   border-radius: 3px;
   transition: background 0.2s ease;
 }
-::-webkit-scrollbar-thumb:hover { background: hsl(240 4% 28%); }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
 
 /* ── Keyframe Animations ── */
 @keyframes fade-in {
@@ -146,8 +199,8 @@ select optgroup {
 }
 
 @keyframes skeleton-pulse {
-  0%, 100% { opacity: 0.04; }
-  50% { opacity: 0.08; }
+  0%, 100% { opacity: var(--skeleton-lo, 0.04); }
+  50% { opacity: var(--skeleton-hi, 0.08); }
 }
 
 @keyframes slide-down {
@@ -166,6 +219,11 @@ select optgroup {
 @keyframes slide-up {
   from { transform: translateY(100%); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes sheet-slide-down {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(100%); opacity: 0; }
 }
 
 @keyframes scale-in {
@@ -193,6 +251,10 @@ select optgroup {
 
 .animate-slide-up {
   animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-sheet-slide-down {
+  animation: sheet-slide-down 0.2s ease-out forwards;
 }
 
 .animate-scale-in {
@@ -253,8 +315,8 @@ select optgroup {
   padding: 1.5rem;
   border-radius: 1rem;
   background: hsl(var(--card));
-  border: 1px solid hsl(0 0% 100% / 0.06);
-  box-shadow: 0 4px 24px -4px hsl(16 85% 58% / 0.08), 0 1px 3px 0 rgb(0 0 0 / 0.3);
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 4px 24px -4px hsl(16 85% 58% / 0.08), 0 1px 3px 0 hsl(var(--foreground) / 0.06);
 }
 .card-featured::before {
   content: '';
@@ -265,9 +327,9 @@ select optgroup {
 }
 
 .card-stat {
-  background: linear-gradient(160deg, hsl(240 4% 13%) 0%, hsl(240 5% 10%) 100%);
-  border: 1px solid hsl(0 0% 100% / 0.04);
-  border-radius: 1rem;
+  background: linear-gradient(160deg, hsl(var(--secondary)) 0%, hsl(var(--card)) 100%);
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.875rem;
   padding: 0.75rem 0.5rem;
 }
 @media (min-width: 640px) {
@@ -275,15 +337,15 @@ select optgroup {
 }
 
 .card-list-item {
-  border-radius: 0.75rem;
+  border-radius: 0.875rem;
   background: hsl(var(--secondary));
   padding: 0.875rem 1rem;
   transition: background 150ms ease;
   border: 1px solid transparent;
 }
 .card-list-item:hover {
-  background: hsl(240 4% 18%);
-  border-color: hsl(0 0% 100% / 0.04);
+  background: hsl(var(--muted));
+  border-color: hsl(var(--border));
 }
 
 /* ── Athletic Premium — typography utilities ── */
@@ -312,6 +374,17 @@ select optgroup {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: hsl(var(--muted-foreground));
+}
+
+/* ── Scroll Reveal Animation ── */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.scroll-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 @media (prefers-reduced-motion: reduce) {

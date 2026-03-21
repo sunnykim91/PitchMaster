@@ -173,12 +173,12 @@ const voteStyles = {
     inactive: "bg-[hsl(var(--success)/0.08)] text-[hsl(var(--success))] border border-[hsl(var(--success)/0.2)] hover:bg-[hsl(var(--success)/0.15)]",
   },
   MAYBE: {
-    active: "bg-[hsl(var(--warning))] text-[hsl(240_6%_6%)] shadow-[0_2px_8px_-2px_hsl(var(--warning)/0.4)]",
-    inactive: "bg-white/[0.04] text-muted-foreground border border-white/[0.06] hover:bg-white/[0.08]",
+    active: "bg-[hsl(var(--warning))] text-background shadow-[0_2px_8px_-2px_hsl(var(--warning)/0.4)]",
+    inactive: "bg-secondary/50 text-muted-foreground border border-border hover:bg-secondary",
   },
   ABSENT: {
     active: "bg-[hsl(var(--loss))] text-white shadow-[0_2px_8px_-2px_hsl(var(--loss)/0.4)]",
-    inactive: "bg-white/[0.04] text-muted-foreground border border-white/[0.06] hover:bg-white/[0.08]",
+    inactive: "bg-secondary/50 text-muted-foreground border border-border hover:bg-secondary",
   },
 };
 

@@ -509,7 +509,7 @@ export default function BoardClient({
               const isLoadingComments = loadingComments.has(post.id);
               const canModifyPost = post.authorId === userId || isStaff;
               return (
-                <Card key={post.id} className="border-0 bg-secondary transition-colors hover:bg-[hsl(240_4%_18%)]">
+                <Card key={post.id} className="border-0 bg-secondary transition-colors hover:bg-muted">
                   <CardContent className="p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">

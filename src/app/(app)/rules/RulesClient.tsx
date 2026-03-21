@@ -312,7 +312,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
               <EmptyState icon={BookOpen} title="등록된 회칙이 없습니다" />
             ) : (
               filteredRules.map((rule) => (
-                <Card key={rule.id} className="border-0 bg-secondary transition-colors hover:bg-[hsl(240_4%_18%)]">
+                <Card key={rule.id} className="border-0 bg-secondary transition-colors hover:bg-muted">
                   <CardContent className="p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>

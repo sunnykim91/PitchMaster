@@ -2,6 +2,7 @@ import { isKakaoConfigured } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import AppScreenSlider from "./AppScreenSlider";
+import ScrollRevealInit from "./ScrollRevealInit";
 
 export default async function LoginPage({
   searchParams,
@@ -54,6 +55,7 @@ export default async function LoginPage({
 
   return (
     <main className="relative min-h-screen overflow-hidden">
+      <ScrollRevealInit />
       {/* 배경 장식 */}
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
@@ -105,7 +107,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Stats Counter ── */}
-      <section aria-label="사용 통계" className="relative border-t border-border/30 bg-primary/5">
+      <section aria-label="사용 통계" className="scroll-reveal relative border-t border-border/30 bg-primary/5">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-8 px-6 py-8 md:gap-16">
           {[
             { value: "100+", label: "관리된 경기", color: "text-primary" },
@@ -122,7 +124,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Section 2: Before / After ── */}
-      <section aria-label="기능 비교" className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
+      <section aria-label="기능 비교" className="scroll-reveal relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
         <div className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-20">
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-rose-400">
             총무의 현실
@@ -199,7 +201,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Section 3: Core 3 Features ── */}
-      <section aria-label="핵심 기능" className="relative border-t border-border/30">
+      <section aria-label="핵심 기능" className="scroll-reveal relative border-t border-border/30">
         <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="text-center">
             <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
@@ -353,7 +355,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Section 4: More Features (4 cards) ── */}
-      <section aria-label="추가 기능" className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
+      <section aria-label="추가 기능" className="scroll-reveal relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
         <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="text-center">
             <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
@@ -408,7 +410,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Section 5: 비교표 ── */}
-      <section aria-label="서비스 비교" className="relative border-t border-border/30">
+      <section aria-label="서비스 비교" className="scroll-reveal relative border-t border-border/30">
         <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="text-center">
             <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
@@ -503,7 +505,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Section 6: 사용자 후기 ── */}
-      <section aria-label="사용자 후기" className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
+      <section aria-label="사용자 후기" className="scroll-reveal relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
         <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="text-center">
             <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
@@ -557,7 +559,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Section 7: 이용 방법 ── */}
-      <section aria-label="이용 방법" className="relative border-t border-border/30">
+      <section aria-label="이용 방법" className="scroll-reveal relative border-t border-border/30">
         <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="text-center">
             <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
@@ -602,7 +604,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Section 8: CTA ── */}
-      <section aria-label="시작하기" className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
+      <section aria-label="시작하기" className="scroll-reveal relative border-t border-border/30 bg-gradient-to-b from-primary/5 via-primary/10 to-transparent backdrop-blur-sm">
         <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 sm:py-24">
           <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
             이번 주부터 카톡 대신
