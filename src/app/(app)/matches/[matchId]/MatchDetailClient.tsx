@@ -615,6 +615,18 @@ export default function MatchDetailClient({
       if (assistSelect) assistSelect.value = goal.assistId ?? "";
       if (quarterInput) quarterInput.value = String(goal.quarter);
       if (ownGoalInput) ownGoalInput.checked = !!goal.isOwnGoal;
+      // 쿼터 버튼 하이라이트 업데이트
+      const quarterBtns = quarterInput?.parentElement?.querySelectorAll("button");
+      quarterBtns?.forEach((btn) => {
+        btn.classList.remove("bg-primary", "text-white");
+        btn.classList.add("bg-secondary", "text-muted-foreground");
+      });
+      // 해당 쿼터 버튼 활성화 (0=선택안함=첫번째, 1~n=Q1~Qn)
+      const targetIdx = goal.quarter; // 0=선택안함, 1=Q1, ...
+      if (quarterBtns && quarterBtns[targetIdx]) {
+        quarterBtns[targetIdx].classList.remove("bg-secondary", "text-muted-foreground");
+        quarterBtns[targetIdx].classList.add("bg-primary", "text-white");
+      }
       // 스크롤해서 폼 보이기
       form.scrollIntoView({ behavior: "smooth", block: "center" });
       return true;
