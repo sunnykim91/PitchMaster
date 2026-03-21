@@ -1712,7 +1712,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-1">
                   {m.paidAmount > 0 && (
                     <span className="mr-1 text-[10px] font-medium text-[hsl(var(--success))]">
                       {m.paidAmount.toLocaleString()}원
@@ -1733,7 +1733,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                           await refetchPaymentStatus();
                         }}
                         className={cn(
-                          "rounded-full px-3 py-1.5 min-h-[36px] text-[10px] font-bold transition-all",
+                          "rounded-full px-2 py-1 text-[10px] font-bold transition-all",
                           m.status === s
                             ? s === "PAID"
                               ? "bg-[hsl(var(--success))] text-white"

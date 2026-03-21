@@ -366,7 +366,7 @@ export default function MembersClient({
                               onValueChange={(userId) => handleLink(member.id, userId)}
                               disabled={linkingId === member.id}
                             >
-                              <SelectTrigger className="w-auto min-w-[140px] text-xs">
+                              <SelectTrigger className="w-auto min-w-[110px] text-xs">
                                 <SelectValue placeholder={linkingId === member.id ? "연동 중..." : "가입된 유저 선택"} />
                               </SelectTrigger>
                               <SelectContent>
@@ -465,21 +465,14 @@ export default function MembersClient({
                     선호 포지션: {member.preferredPositions.join(" · ") || "미설정"}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="px-3 py-1">
-                    {member.preferredFoot === "RIGHT"
-                      ? "오른발"
-                      : member.preferredFoot === "LEFT"
-                      ? "왼발"
-                      : "양발"}
-                  </Badge>
+                <div className="flex flex-wrap items-center gap-1.5">
                   {canChangeRole ? (
                     <Select
                       value={member.role}
                       onValueChange={(value) => handleRoleChange(member.id, value as Role)}
                       disabled={changingRoleId === member.id}
                     >
-                      <SelectTrigger className="w-auto min-w-[100px]">
+                      <SelectTrigger className="w-auto min-w-[80px] text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -489,7 +482,7 @@ export default function MembersClient({
                       </SelectContent>
                     </Select>
                   ) : (
-                    <Badge variant="secondary" className="px-3 py-1">
+                    <Badge variant="secondary" className="px-2 py-0.5 text-xs">
                       {roleLabels[member.role]}
                     </Badge>
                   )}

@@ -1451,18 +1451,18 @@ export default function MatchDetailClient({
                       </p>
                     </div>
                     {canRecord && (
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
                           onClick={() => handleEditGoal(goal)}
-                          className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                          className="rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary/70 active:scale-95 transition-all"
                         >
                           수정
                         </button>
                         <button
                           type="button"
                           onClick={() => setConfirmGoalDelete(goal.id)}
-                          className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          className="rounded-lg bg-[hsl(var(--loss)/0.1)] px-3 py-1.5 text-xs font-medium text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.2)] active:scale-95 transition-all"
                         >
                           삭제
                         </button>
