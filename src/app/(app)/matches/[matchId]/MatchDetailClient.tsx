@@ -862,36 +862,6 @@ export default function MatchDetailClient({
         onConfirm={handleCompleteMatch}
         onCancel={() => setShowCompleteConfirm(false)}
       />
-      <ConfirmDialog
-        open={confirmGoalDelete !== null}
-        title="골 기록 삭제"
-        description="이 골 기록을 삭제하시겠습니까? 삭제된 기록은 복구할 수 없습니다."
-        confirmLabel="삭제"
-        cancelLabel="취소"
-        onConfirm={async () => {
-          if (confirmGoalDelete) {
-            await handleDeleteGoal(confirmGoalDelete);
-          }
-          setConfirmGoalDelete(null);
-        }}
-        onCancel={() => setConfirmGoalDelete(null)}
-      />
-      <ConfirmDialog
-        open={showBulkAttendConfirm}
-        title="전원 참석 처리"
-        description={`참석 투표한 ${attendingMembers.length}명 전원을 출석으로 처리합니다.`}
-        confirmLabel="전원 참석 처리"
-        cancelLabel="취소"
-        onConfirm={async () => {
-          await Promise.all(
-            attendingMembers.map((player) =>
-              handleAttendance(player.id, "PRESENT")
-            )
-          );
-          setShowBulkAttendConfirm(false);
-        }}
-        onCancel={() => setShowBulkAttendConfirm(false)}
-      />
       {/* ── 내 참석 투표 (모든 멤버, 진행 전 경기만) ── */}
       {match.status !== "COMPLETED" && (() => {
         const myMember = baseRoster.find((m) => m.id === userId);
@@ -1817,6 +1787,39 @@ export default function MatchDetailClient({
         </CardContent>
       </Card>
       </>)}
+
+      {/* ── 전역 다이얼로그 (탭 밖에 위치해야 어떤 탭에서든 동작) ── */}
+      <ConfirmDialog
+        open={confirmGoalDelete !== null}
+        title="골 기록 삭제"
+        description="이 골 기록을 삭제하시겠습니까? 삭제된 기록은 복구할 수 없습니다."
+        confirmLabel="삭제"
+        cancelLabel="취소"
+        variant="destructive"
+        onConfirm={async () => {
+          if (confirmGoalDelete) {
+            await handleDeleteGoal(confirmGoalDelete);
+          }
+          setConfirmGoalDelete(null);
+        }}
+        onCancel={() => setConfirmGoalDelete(null)}
+      />
+      <ConfirmDialog
+        open={showBulkAttendConfirm}
+        title="전원 참석 처리"
+        description={`참석 투표한 ${attendingMembers.length}명 전원을 출석으로 처리합니다.`}
+        confirmLabel="전원 참석 처리"
+        cancelLabel="취소"
+        onConfirm={async () => {
+          await Promise.all(
+            attendingMembers.map((player) =>
+              handleAttendance(player.id, "PRESENT")
+            )
+          );
+          setShowBulkAttendConfirm(false);
+        }}
+        onCancel={() => setShowBulkAttendConfirm(false)}
+      />
     </div>
   );
 }
