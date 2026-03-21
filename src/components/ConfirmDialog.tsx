@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -26,10 +27,12 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const confirmRef = useRef<HTMLButtonElement>(null);
   const [ready, setReady] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (open) {
-      // 열린 직후 터치 이벤트가 backdrop으로 전파되는 것 방지
       setReady(false);
       const timer = setTimeout(() => setReady(true), 200);
       confirmRef.current?.focus();
@@ -46,9 +49,10 @@ export function ConfirmDialog({
     }
   }, [open, onCancel]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
+  // Portal로 document.body에 직접 렌더 — transform 부모에 의한 fixed 위치 오류 방지
+  return createPortal(
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in"
       onClick={() => { if (ready) onCancel(); }}
@@ -66,6 +70,7 @@ export function ConfirmDialog({
           </Button>
         </div>
       </Card>
-    </div>
+    </div>,
+    document.body
   );
 }
