@@ -430,8 +430,8 @@ export default function SettingsClient({
         </CardContent>
       </Card>
 
-      {/* Team Settings */}
-      <Card>
+      {/* Team Settings (운영진 이상만 표시) */}
+      {isStaffOrAbove(role) && <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
             <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase text-foreground">
@@ -556,7 +556,7 @@ export default function SettingsClient({
             </div>
           </form>
         </CardContent>
-      </Card>
+      </Card>}
 
       {/* Season Management - STAFF+ only */}
       {canManageSeasons && <SeasonManager />}

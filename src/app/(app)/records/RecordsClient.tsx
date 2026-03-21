@@ -508,17 +508,21 @@ export default function RecordsClient({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/20">
-                  {allStats.map((s, i) => (
-                    <tr key={s.memberId} className={cn(s.memberId === userId && "bg-primary/5")}>
-                      <td className={cn("sticky left-0 z-1 py-2.5 text-muted-foreground", s.memberId === userId ? "bg-primary/5" : "bg-card")}>{i + 1}</td>
-                      <td className={cn("sticky left-8 z-1 py-2.5 font-semibold max-w-[120px] truncate", s.memberId === userId ? "bg-primary/5" : "bg-card")}>{s.memberName || "-"}</td>
+                  {allStats.map((s, i) => {
+                    const isMe = s.memberId === userId;
+                    const rowBg = isMe ? "bg-primary/5" : "bg-card";
+                    return (
+                    <tr key={s.memberId} className={cn(isMe && "bg-primary/5")}>
+                      <td className={cn("sticky left-0 z-[1] py-2.5 text-muted-foreground", rowBg)}>{i + 1}</td>
+                      <td className={cn("sticky left-8 z-[1] py-2.5 font-semibold max-w-[120px] truncate", rowBg)}>{s.memberName || "-"}</td>
                       <td className="py-2.5 text-center font-bold text-primary">{s.points}</td>
                       <td className="py-2.5 text-center text-[hsl(var(--success))]">{s.goals}</td>
                       <td className="py-2.5 text-center text-[hsl(var(--info))]">{s.assists}</td>
                       <td className="py-2.5 text-center text-[hsl(var(--warning))]">{s.mvp}</td>
                       <td className="py-2.5 text-center text-[hsl(var(--accent))]">{Math.round(s.attendanceRate * 100)}%</td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
