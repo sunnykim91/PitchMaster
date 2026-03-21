@@ -110,6 +110,7 @@ export default function RecordsClient({
 
   const activeSeason = seasons.find((s) => s.isActive) ?? seasons[0];
   const [seasonId, setSeasonId] = useState<string>(initialData?.activeSeasonId ?? "");
+  const ALL_TIME_KEY = "__ALL__";
 
   // Sync seasonId when seasons load (SSR 없는 경우)
   useEffect(() => {
@@ -119,10 +120,12 @@ export default function RecordsClient({
   }, [seasons, seasonId, activeSeason]);
 
   // ── Records (SSR 데이터 사용, 시즌 변경 시 클라이언트 fetch) ──
-  const isInitialSeason = seasonId === (initialData?.activeSeasonId ?? "");
+  const isAllTime = seasonId === ALL_TIME_KEY;
+  const isInitialSeason = seasonId === (initialData?.activeSeasonId ?? "") && !isAllTime;
   const recordsUrl = useMemo(() => {
+    if (isAllTime) return "/api/records?mode=all";
     return seasonId ? `/api/records?seasonId=${seasonId}` : "/api/records";
-  }, [seasonId]);
+  }, [seasonId, isAllTime]);
 
   const {
     data: recordsPayload,
@@ -297,6 +300,9 @@ export default function RecordsClient({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value={ALL_TIME_KEY} className="font-bold">
+                    전체 통합
+                  </SelectItem>
                   {seasons.map((item) => (
                     <SelectItem key={item.id} value={item.id}>
                       {item.name}
@@ -340,12 +346,12 @@ export default function RecordsClient({
         <Card>
           <CardHeader>
             <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
-              시즌 요약
+              {isAllTime ? "통합 기록" : "시즌 요약"}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <p>기간: {season ? `${season.startDate} ~ ${season.endDate}` : ""}</p>
+              <p>기간: {isAllTime ? "전체 시즌 통합" : season ? `${season.startDate} ~ ${season.endDate}` : ""}</p>
               <p>참여 인원: {stats.length}명</p>
               <p>평균 출석률: {Math.round(teamAttendance * 100)}%</p>
             </div>

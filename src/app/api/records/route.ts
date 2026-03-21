@@ -16,9 +16,81 @@ export async function GET(request: NextRequest) {
   const seasonId = request.nextUrl.searchParams.get("seasonId");
   const startDate = request.nextUrl.searchParams.get("startDate");
   const endDate = request.nextUrl.searchParams.get("endDate");
+  const mode = request.nextUrl.searchParams.get("mode"); // "all" = 전체 통합
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  // 전체 통합 모드: 실제 경기 + 레거시 데이터 합산
+  if (mode === "all") {
+    // 1. 레거시 통계 전체 합산 (이름 기준)
+    const { data: legacy } = await db
+      .from("legacy_player_stats")
+      .select("member_name, goals, assists, attendance, games")
+      .eq("team_id", ctx.teamId);
+
+    const nameMap = new Map<string, { goals: number; assists: number; attendance: number; games: number }>();
+    for (const l of legacy ?? []) {
+      const name = l.member_name as string;
+      const cur = nameMap.get(name) ?? { goals: 0, assists: 0, attendance: 0, games: 0 };
+      cur.goals += (l.goals as number) ?? 0;
+      cur.assists += (l.assists as number) ?? 0;
+      cur.attendance += (l.attendance as number) ?? 0;
+      cur.games += (l.games as number) ?? 0;
+      nameMap.set(name, cur);
+    }
+
+    // 2. 실제 경기 통계
+    const { data: allMatches } = await db.from("matches").select("id").eq("team_id", ctx.teamId).eq("status", "COMPLETED");
+    const allMatchIds = (allMatches ?? []).map((m) => m.id);
+
+    if (allMatchIds.length > 0) {
+      const [goalsRes, assistsRes] = await Promise.all([
+        db.from("match_goals").select("scorer_id").in("match_id", allMatchIds).eq("is_own_goal", false).neq("scorer_id", "OPPONENT"),
+        db.from("match_goals").select("assist_id").in("match_id", allMatchIds).not("assist_id", "is", null),
+      ]);
+
+      // ID → 이름 매핑
+      const { data: members } = await db.from("team_members").select("id, user_id, pre_name, users(id, name)").eq("team_id", ctx.teamId);
+      const idToName = new Map<string, string>();
+      for (const m of (members ?? []) as MemberRow[]) {
+        const user = Array.isArray(m.users) ? m.users[0] : m.users;
+        const name = user?.name ?? m.pre_name ?? "";
+        if (m.user_id) idToName.set(m.user_id, name);
+        idToName.set(m.id, name);
+      }
+
+      for (const row of goalsRes.data ?? []) {
+        const name = idToName.get(row.scorer_id) ?? row.scorer_id;
+        if (name === "UNKNOWN") continue;
+        const cur = nameMap.get(name) ?? { goals: 0, assists: 0, attendance: 0, games: 0 };
+        cur.goals++;
+        nameMap.set(name, cur);
+      }
+      for (const row of assistsRes.data ?? []) {
+        const name = idToName.get(row.assist_id) ?? row.assist_id;
+        if (!name || name === "UNKNOWN") continue;
+        const cur = nameMap.get(name) ?? { goals: 0, assists: 0, attendance: 0, games: 0 };
+        cur.assists++;
+        nameMap.set(name, cur);
+      }
+    }
+
+    // 3. 결과 반환
+    const records = [...nameMap.entries()]
+      .filter(([name]) => name !== "UNKNOWN" && name !== "OPPONENT")
+      .map(([name, s]) => ({
+        memberId: name,
+        name,
+        goals: s.goals,
+        assists: s.assists,
+        mvp: 0,
+        attendanceRate: s.games > 0 ? s.attendance / s.games : 0,
+        preferredPositions: [],
+      }));
+
+    return apiSuccess({ records, allTime: true });
+  }
 
   // Get team members (연동 + 미연동)
   const { data: members } = await db
