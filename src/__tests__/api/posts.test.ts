@@ -16,6 +16,7 @@ const mockPosts = [
     title: "첫 번째 게시글",
     content: "내용1",
     category: "FREE",
+    is_pinned: false,
     post_likes: [{ count: 5 }],
     post_comments: [{ count: 2 }],
   },
@@ -23,7 +24,8 @@ const mockPosts = [
     id: "p2",
     title: "두 번째 게시글",
     content: "내용2",
-    category: "NOTICE",
+    category: "FREE",
+    is_pinned: true,
     post_likes: [{ count: 0 }],
     post_comments: [{ count: 7 }],
   },
@@ -105,20 +107,6 @@ describe("GET /api/posts", () => {
     expect(json.posts[0].comments_count).toBe(0);
   });
 
-  it("200: category 파라미터로 필터링", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
-    const filtered = [mockPosts[1]];
-    const db = createMockDb(["posts", filtered]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
-
-    const res = await GET(makeGetRequest({ category: "NOTICE" }));
-    expect(res.status).toBe(200);
-
-    const json = await res.json();
-    expect(json.posts).toHaveLength(1);
-    expect(json.posts[0].id).toBe("p2");
-  });
-
   it("400: DB 에러 발생시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["posts", null, { message: "DB connection failed" }]);
@@ -138,7 +126,6 @@ describe("POST /api/posts", () => {
   const postBody = {
     title: "새 게시글",
     content: "게시글 내용입니다.",
-    category: "FREE",
     imageUrls: [],
   };
 
@@ -180,11 +167,11 @@ describe("POST /api/posts", () => {
 
   it("201: STAFF — 게시글 생성 성공", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
-    const newPost = { id: "p-staff", title: "공지사항", content: "중요 공지", category: "NOTICE" };
+    const newPost = { id: "p-staff", title: "공지사항", content: "중요 공지", category: "FREE" };
     const db = createMockDb(["posts", newPost]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
-    const res = await POST(makePostRequest({ ...postBody, category: "NOTICE", title: "공지사항", content: "중요 공지" }));
+    const res = await POST(makePostRequest({ ...postBody, title: "공지사항", content: "중요 공지" }));
     expect(res.status).toBe(201);
     const json = await res.json();
     expect(json.id).toBe("p-staff");

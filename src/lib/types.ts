@@ -70,7 +70,7 @@ export type DetailedPosition =
 export type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
 export type AttendanceVote = "ATTEND" | "ABSENT" | "MAYBE";
 export type DuesType = "INCOME" | "EXPENSE";
-export type PostCategory = "FREE" | "GALLERY";
+export type PostCategory = "FREE" | "GALLERY"; // legacy, category 구분 제거됨
 export type RuleCategory = "일반" | "회비" | "경조사" | "기타";
 export type JoinMode = "AUTO" | "MANUAL";
 export type MemberStatus = "ACTIVE" | "PENDING" | "BANNED";
@@ -270,6 +270,8 @@ export type DbPost = {
   content: string;
   category: PostCategory;
   image_urls: string[];
+  is_pinned: boolean;
+  pinned_at: string | null;
   created_at: string;
 };
 
