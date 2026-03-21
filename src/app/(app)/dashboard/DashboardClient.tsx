@@ -403,18 +403,17 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
       {/* ── Invite card (staff/president only) ── */}
       {isStaffOrAbove(role) && inviteCode && (
         <Card className="border-[hsl(var(--accent))]/20 bg-[hsl(var(--accent))]/5">
-          <CardContent className="flex items-center justify-between gap-4 p-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <Users className="h-5 w-5 shrink-0 text-[hsl(var(--accent))]" />
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">팀원을 초대하세요</p>
-                <p className="text-xs text-muted-foreground truncate">초대 코드를 복사해 팀원에게 공유하세요</p>
-              </div>
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 shrink-0 text-[hsl(var(--accent))]" />
+              <p className="text-sm font-semibold text-foreground">팀원을 초대하세요</p>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="shrink-0 gap-1.5 border-[hsl(var(--accent))]/30 text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/10"
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground truncate">초대 코드를 공유하면 바로 가입</p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="shrink-0 gap-1 text-xs border-[hsl(var(--accent))]/30 text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/10"
               onClick={() => {
                 const inviteUrl = `${window.location.origin}/team?code=${inviteCode}`;
                 navigator.clipboard.writeText(inviteUrl).then(() => {
@@ -426,7 +425,8 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
             >
               {inviteCopied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
               {inviteCopied ? "복사됨!" : "초대 링크 복사"}
-            </Button>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

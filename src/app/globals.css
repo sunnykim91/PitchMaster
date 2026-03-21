@@ -317,7 +317,7 @@ select optgroup {
 .card-featured {
   position: relative;
   overflow: hidden;
-  padding: 1.5rem;
+  padding: 1rem;
   border-radius: 1rem;
   background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
