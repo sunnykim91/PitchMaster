@@ -111,43 +111,6 @@ export default function RecordsClient({
   const activeSeason = seasons.find((s) => s.isActive) ?? seasons[0];
   const [seasonId, setSeasonId] = useState<string>(initialData?.activeSeasonId ?? "");
 
-  // 기간 필터: 년/반기/분기
-  type PeriodType = "season" | "year" | "h1" | "h2" | "q1" | "q2" | "q3" | "q4";
-  const [periodType, setPeriodType] = useState<PeriodType>("season");
-  const PERIOD_LABELS: Record<PeriodType, string> = {
-    season: "시즌 전체",
-    year: "연간",
-    h1: "상반기",
-    h2: "하반기",
-    q1: "1분기",
-    q2: "2분기",
-    q3: "3분기",
-    q4: "4분기",
-  };
-
-  // 선택한 시즌의 연도 기준으로 기간 계산
-  const periodYear = useMemo(() => {
-    const season = seasons.find((s) => s.id === seasonId);
-    if (season?.startDate) return parseInt(season.startDate.slice(0, 4));
-    return new Date().getFullYear();
-  }, [seasonId, seasons]);
-
-  const periodDateRange = useMemo((): { startDate: string; endDate: string } | null => {
-    if (periodType === "season") return null; // use seasonId
-    const y = periodYear;
-    const ranges: Record<Exclude<PeriodType, "season">, [string, string]> = {
-      year: [`${y}-01-01`, `${y}-12-31`],
-      h1: [`${y}-01-01`, `${y}-06-30`],
-      h2: [`${y}-07-01`, `${y}-12-31`],
-      q1: [`${y}-01-01`, `${y}-03-31`],
-      q2: [`${y}-04-01`, `${y}-06-30`],
-      q3: [`${y}-07-01`, `${y}-09-30`],
-      q4: [`${y}-10-01`, `${y}-12-31`],
-    };
-    const [s, e] = ranges[periodType as Exclude<PeriodType, "season">];
-    return { startDate: s, endDate: e };
-  }, [periodType, periodYear]);
-
   // Sync seasonId when seasons load (SSR 없는 경우)
   useEffect(() => {
     if (seasons.length > 0 && !seasonId) {
@@ -156,13 +119,10 @@ export default function RecordsClient({
   }, [seasons, seasonId, activeSeason]);
 
   // ── Records (SSR 데이터 사용, 시즌 변경 시 클라이언트 fetch) ──
-  const isInitialSeason = seasonId === (initialData?.activeSeasonId ?? "") && periodType === "season";
+  const isInitialSeason = seasonId === (initialData?.activeSeasonId ?? "");
   const recordsUrl = useMemo(() => {
-    if (periodDateRange) {
-      return `/api/records?startDate=${periodDateRange.startDate}&endDate=${periodDateRange.endDate}`;
-    }
     return seasonId ? `/api/records?seasonId=${seasonId}` : "/api/records";
-  }, [seasonId, periodDateRange]);
+  }, [seasonId]);
 
   const {
     data: recordsPayload,
@@ -170,7 +130,7 @@ export default function RecordsClient({
   } = useApi<{ records: Record<string, unknown>[] }>(
     recordsUrl,
     { records: (isInitialSeason && initialData?.records) ? initialData.records : [] },
-    { skip: (!seasonId && !periodDateRange) || (isInitialSeason && !!initialData?.records?.length) },
+    { skip: !seasonId || (isInitialSeason && !!initialData?.records?.length) },
   );
 
   // SSR 초기 데이터 → 시즌 변경 시 API fetch로 전환
@@ -220,22 +180,8 @@ export default function RecordsClient({
 
   function handleSeasonChange(value: string) {
     setSeasonId(value);
-    setPeriodType("season"); // 시즌 변경 시 기간 필터 초기화
-    setInitialRecordsUsed(true); // SSR 데이터 대신 API fetch 사용
-  }
-
-  function handlePeriodChange(value: string) {
-    setPeriodType(value as PeriodType);
     setInitialRecordsUsed(true);
   }
-
-  // 현재 표시 중인 기간 텍스트
-  const displayPeriod = useMemo(() => {
-    if (periodDateRange) {
-      return `${periodDateRange.startDate} ~ ${periodDateRange.endDate}`;
-    }
-    return season ? `${season.startDate} ~ ${season.endDate}` : "";
-  }, [periodDateRange, season]);
 
   // useApi already refetches when URL changes (seasonId in URL),
   // so no explicit refetch useEffect needed.
@@ -392,26 +338,14 @@ export default function RecordsClient({
 
         {/* 시즌 요약 + 레이더 차트 */}
         <Card>
-          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
+          <CardHeader>
             <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
               시즌 요약
             </CardTitle>
-            <Select value={periodType} onValueChange={handlePeriodChange}>
-              <SelectTrigger className="w-auto min-w-[90px] text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(Object.entries(PERIOD_LABELS) as [PeriodType, string][]).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>
-                    {key === "season" ? (season?.name ?? label) : `${periodYear} ${label}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <p>기간: {displayPeriod}</p>
+              <p>기간: {season ? `${season.startDate} ~ ${season.endDate}` : ""}</p>
               <p>참여 인원: {stats.length}명</p>
               <p>평균 출석률: {Math.round(teamAttendance * 100)}%</p>
             </div>
