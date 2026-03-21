@@ -38,7 +38,8 @@ import { shareMatchResult } from "@/lib/kakaoShare";
 import { recommendFormation, type PlayerInput } from "@/lib/formationAI";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { EmptyState } from "@/components/EmptyState";
-import { Target } from "lucide-react";
+import { ChevronLeft, Target } from "lucide-react";
+import Link from "next/link";
 import { useToast } from "@/lib/ToastContext";
 import type { SportType } from "@/lib/types";
 
@@ -779,10 +780,8 @@ export default function MatchDetailClient({
     link.click();
   }
 
-  /* ── Loading state ── */
-  const isLoading = matchesLoading || membersLoading || goalsLoading || guestsLoading || mvpLoading || attendanceLoading || diaryLoading || voteLoading;
-
-  if (isLoading) {
+  /* ── Loading state: only block on primary match data ── */
+  if (matchesLoading) {
     return (
       <div className="grid gap-5 stagger-children">
         <Card><CardHeader><Skeleton className="h-3 w-20" /><Skeleton className="mt-2 h-8 w-48" /></CardHeader>
@@ -805,6 +804,16 @@ export default function MatchDetailClient({
 
   return (
     <div className="grid gap-5 stagger-children">
+      {/* ── Back Navigation ── */}
+      <div className="flex items-center gap-2 -mt-1 mb-1">
+        <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" asChild>
+          <Link href="/matches">
+            <ChevronLeft className="h-4 w-4" />
+            일정 목록
+          </Link>
+        </Button>
+      </div>
+
       {/* ── Sticky Tab Bar ── */}
       <div className="sticky top-0 z-10 -mx-1 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="flex" role="tablist">
@@ -949,7 +958,7 @@ export default function MatchDetailClient({
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-sm font-semibold truncate">{member.name}</span>
                       {!member.isLinked && (
-                        <Badge variant="outline" className="text-[10px] text-muted-foreground">미가입</Badge>
+                        <Badge variant="outline" className="text-xs text-muted-foreground">미가입</Badge>
                       )}
                     </div>
                     <div className="flex gap-1.5">
@@ -1068,7 +1077,7 @@ export default function MatchDetailClient({
                       <p className="text-sm font-semibold truncate">
                         {guest.name}
                         {guest.position && (
-                          <Badge variant="outline" className="ml-2 text-[10px]">
+                          <Badge variant="outline" className="ml-2 text-xs">
                             {guest.position}
                           </Badge>
                         )}
@@ -1112,7 +1121,7 @@ export default function MatchDetailClient({
         return (
           <Card className="border-primary/20 bg-primary/5">
             <CardHeader>
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
+              <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">
                 AI Recommendation
               </p>
               <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
@@ -1617,7 +1626,7 @@ export default function MatchDetailClient({
         <CardContent>
           <Card className="border-primary/20 bg-primary/5 shadow-none">
             <CardContent className="p-4">
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
                 PitchMaster
               </p>
               <p className="mt-2 type-score text-foreground">

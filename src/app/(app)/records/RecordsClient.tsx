@@ -269,7 +269,7 @@ export default function RecordsClient({
                     <span
                       key={i}
                       className={cn(
-                        "flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold",
+                        "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold",
                         r === "W" ? "bg-[hsl(var(--win)/0.2)] text-[hsl(var(--win))]" : r === "D" ? "bg-muted text-muted-foreground" : "bg-[hsl(var(--loss)/0.2)] text-[hsl(var(--loss))]"
                       )}
                     >

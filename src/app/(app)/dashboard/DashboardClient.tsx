@@ -228,7 +228,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
   }
 
   return (
-    <div className="grid gap-4 stagger-children min-w-0">
+    <div className="grid gap-3 stagger-children min-w-0">
       {/* ── Onboarding Wizard (new teams only) ── */}
       {showWizard && (
         <Card className="card-featured">
@@ -426,7 +426,8 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
         </Card>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/* ── Bento section: votes + tasks + season record ── */}
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {/* Votes */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -493,10 +494,9 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
             )}
           </CardContent>
         </Card>
-      </div>
 
-      {/* Recent Result + Season Record (통합) */}
-      <Card>
+        {/* Recent Result + Season Record (통합) */}
+        <Card className="md:col-span-2 lg:col-span-1">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <div>
             <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">시즌 전적</CardTitle>
@@ -538,7 +538,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                           <span
                             key={i}
                             className={cn(
-                              "flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold",
+                              "flex h-6 w-6 items-center justify-center rounded text-xs font-bold",
                               r === "W" && "bg-[hsl(var(--win)/0.15)] text-[hsl(var(--win))]",
                               r === "D" && "bg-secondary text-muted-foreground",
                               r === "L" && "bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))]"
@@ -577,6 +577,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
           )}
         </CardContent>
       </Card>
+      </div>
 
       {/* Quick Navigation — PC only */}
       <div className="hidden lg:grid grid-cols-4 gap-2">

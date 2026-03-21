@@ -392,7 +392,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     value={voteDeadline}
                     onChange={(e) => setVoteDeadline(e.target.value)}
                   />
-                  <p className="text-[11px] text-muted-foreground">이 시간까지 참석 여부를 알려주세요</p>
+                  <p className="text-xs text-muted-foreground">이 시간까지 참석 여부를 알려주세요</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="location">장소</Label>
@@ -527,7 +527,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         return (
                           <span className="flex items-center gap-1.5">
                             <span className={cn("type-stat font-heading font-bold", color)}>{match.score}</span>
-                            <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-bold",
+                            <span className={cn("rounded-full px-1.5 py-0.5 text-xs font-bold",
                               our > opp ? "bg-[hsl(var(--win)/0.15)] text-[hsl(var(--win))]" : our === opp ? "bg-muted text-muted-foreground" : "bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))]"
                             )}>{label}</span>
                           </span>

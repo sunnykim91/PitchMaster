@@ -145,7 +145,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const sidebarContent = (
     <>
       <div className="space-y-1">
-        <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">PitchMaster</p>
+        <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">PitchMaster</p>
         <div className="relative" data-team-menu>
           <button
             type="button"
@@ -159,7 +159,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
               const current = teams.find((t) => t.isCurrent);
               const st = current?.sportType ?? "SOCCER";
               return (
-                <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${st === "FUTSAL" ? "bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]" : "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"}`}>
+                <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-bold ${st === "FUTSAL" ? "bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]" : "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"}`}>
                   {st === "FUTSAL" ? "풋살" : "축구"}
                 </span>
               );
@@ -177,7 +177,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                   onClick={() => handleSwitchTeam(t.id)}
                 >
                   <span className={t.isCurrent ? "font-bold text-primary" : ""}>{t.name}</span>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {t.role === "PRESIDENT" ? "회장" : t.role === "STAFF" ? "운영진" : "평회원"}
                   </span>
                 </button>
@@ -214,7 +214,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                 type="button"
                 variant={isActive ? "default" : "outline"}
                 size="sm"
-                className="rounded-lg px-2 py-1 text-[11px]"
+                className="rounded-lg px-2 py-1 text-xs"
                 onClick={() => setViewAsRole(role === "PRESIDENT" ? null : role)}
               >
                 {label}
@@ -253,7 +253,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           <Link href="/team"><Plus className="h-3.5 w-3.5" />새 팀</Link>
         </Button>
       </div>
-      <p className="mt-4 text-[10px] text-muted-foreground/50">
+      <p className="mt-4 text-xs text-muted-foreground/50">
         v{process.env.NEXT_PUBLIC_COMMIT_HASH}
       </p>
     </>
@@ -267,20 +267,20 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           <Card className="backdrop-blur-sm bg-card/95">
             <CardContent className="flex items-center justify-between p-4">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">PitchMaster</p>
+                <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">PitchMaster</p>
                 <p className="text-lg font-bold flex items-center gap-1">
                   {session.user.teamName}
                   {(() => {
                     const current = teams.find((t) => t.isCurrent);
                     const st = current?.sportType ?? "SOCCER";
                     return (
-                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${st === "FUTSAL" ? "bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]" : "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${st === "FUTSAL" ? "bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]" : "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"}`}>
                         {st === "FUTSAL" ? "풋살" : "축구"}
                       </span>
                     );
                   })()}
                   {teams.length > 1 && (
-                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0">
+                    <Badge variant="secondary" className="text-xs px-1.5 py-0">
                       {teams.length}팀
                     </Badge>
                   )}
@@ -357,7 +357,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                 key={tab.href}
                 href={tab.href}
                 className={cn(
-                  "relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-[10px] active:scale-95 transition-all",
+                  "relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-xs active:scale-95 transition-all",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
@@ -375,7 +375,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
               <button
                 onClick={() => setMoreSheetOpen(true)}
                 className={cn(
-                  "relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-[10px] active:scale-95 transition-all",
+                  "relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-xs active:scale-95 transition-all",
                   isMoreActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
@@ -383,7 +383,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                   <span className="absolute -top-1 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-primary" />
                 )}
                 <MoreHorizontal className="h-5 w-5" />
-                <span className="text-[10px]">더보기</span>
+                <span className="text-xs">더보기</span>
               </button>
             );
           })()}

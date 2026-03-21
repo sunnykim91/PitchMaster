@@ -613,7 +613,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       <CardContent className="p-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">Tactics</p>
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Tactics</p>
             <h3 className="mt-1 font-heading text-xl font-bold uppercase text-foreground">전술판 편성</h3>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -773,7 +773,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                     type="button"
                     onClick={() => handleSelectSlot(slot.id)}
                     className={cn(
-                      "absolute flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border text-[11px] font-bold text-white transition",
+                      "absolute flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border text-xs font-bold text-white transition",
                       activeSlotId === slot.id
                         ? "border-primary/60 bg-primary/20 shadow-lg shadow-primary/20"
                         : "border-white/25 bg-black/25"
@@ -809,24 +809,24 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                     dragRef.current = { slotId: slot.id };
                   }}
                   onClick={() => handleSelectSlot(slot.id)}
-                  className="absolute -translate-x-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-[11px] font-bold transition"
+                  className="absolute -translate-x-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs font-bold transition"
                   style={{ left: `${placement.x}%`, top: `${placement.y}%`, touchAction: "none" }}
                 >
                   <span className="flex flex-col items-center gap-0.5">
                     <span className="block h-10 w-10 rounded-sm border border-white/25 shadow-md shadow-black/30" style={uniformStyle} />
                     {secondPlayer ? (
                       <span className="flex flex-col items-center rounded-md bg-black/70 px-1.5 py-0.5 shadow-sm">
-                        <span className="flex items-center gap-0.5 text-[9px] font-bold text-sky-300">
+                        <span className="flex items-center gap-0.5 text-xs font-bold text-sky-300">
                           <span className="rounded bg-sky-500/30 px-0.5">전</span>
                           {player?.name ?? "선수"}
                         </span>
-                        <span className="flex items-center gap-0.5 text-[9px] font-bold text-violet-300">
+                        <span className="flex items-center gap-0.5 text-xs font-bold text-violet-300">
                           <span className="rounded bg-violet-500/30 px-0.5">후</span>
                           {secondPlayer.name}
                         </span>
                       </span>
                     ) : (
-                      <span className="block max-w-[96px] truncate whitespace-nowrap rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                      <span className="block max-w-[96px] truncate whitespace-nowrap rounded-md bg-black/60 px-1.5 py-0.5 text-xs font-bold text-white shadow-sm">
                         {displayName}
                       </span>
                     )}
@@ -942,7 +942,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                         <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
                           {qCount > 0 && (
                             <span className={cn(
-                              "rounded-full px-1.5 py-0.5 text-[10px] font-bold",
+                              "rounded-full px-1.5 py-0.5 text-xs font-bold",
                               "bg-primary/15 text-primary"
                             )}>
                               {qCount}Q

@@ -86,7 +86,7 @@ export default function TeamClient({ hasExistingTeam = false }: { hasExistingTea
         <div className="grid gap-8 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">Create</p>
+              <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Create</p>
               <CardTitle className="font-heading text-2xl font-bold uppercase">새 팀 만들기</CardTitle>
               <CardDescription>팀명을 입력하면 초대 코드가 생성됩니다.</CardDescription>
             </CardHeader>
@@ -131,7 +131,7 @@ export default function TeamClient({ hasExistingTeam = false }: { hasExistingTea
                           className="sr-only"
                         />
                         <span className="text-sm font-bold">{opt.label}</span>
-                        <span className="text-[11px] text-muted-foreground">{opt.desc}</span>
+                        <span className="text-xs text-muted-foreground">{opt.desc}</span>
                       </label>
                     ))}
                   </div>
@@ -149,7 +149,7 @@ export default function TeamClient({ hasExistingTeam = false }: { hasExistingTea
 
           <Card>
             <CardHeader>
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">Join</p>
+              <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Join</p>
               <CardTitle className="font-heading text-2xl font-bold uppercase">초대 코드로 가입</CardTitle>
               <CardDescription>팀에서 받은 초대 코드를 입력하면 즉시 가입됩니다.</CardDescription>
             </CardHeader>

@@ -42,7 +42,7 @@ export default function SidebarNav({ items }: SidebarNavProps) {
                 <span className="flex flex-col items-start">
                 <span className="font-semibold text-sm">{item.label}</span>
                 {item.detail && (
-                  <span className={cn("text-[11px]", isActive ? "text-primary/80" : "text-muted-foreground")}>
+                  <span className={cn("text-xs", isActive ? "text-primary/80" : "text-muted-foreground")}>
                     {item.detail}
                   </span>
                 )}

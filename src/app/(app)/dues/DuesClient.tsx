@@ -949,7 +949,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
               </p>
             )}
             {summaryData.balanceUpdatedAt && (
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 최종 업데이트: {new Date(summaryData.balanceUpdatedAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
               </p>
             )}
@@ -1138,7 +1138,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     💡 내용에 팀원 이름이 포함되면 해당 팀원의 납부 기록으로 자동 연결됩니다.
                   </p>
                 </div>
@@ -1427,7 +1427,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                       <button
                         type="button"
                         onClick={() => removeBulkRow(index)}
-                        className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors self-center"
+                        className="min-h-[36px] min-w-[36px] rounded px-2 text-xs bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] transition-colors self-center"
                       >
                         삭제
                       </button>
@@ -1586,7 +1586,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                       <button
                         type="button"
                         onClick={() => setConfirmAction({ message: "이 내역을 삭제하시겠습니까?", onConfirm: () => handleDeleteRecord(record.id) })}
-                        className="min-h-[36px] rounded-lg px-3 py-1.5 text-xs font-medium text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        className="min-h-[36px] rounded-lg px-3 py-1.5 text-xs font-medium bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] transition-colors"
                       >
                         삭제
                       </button>
@@ -1662,7 +1662,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         {periodConfig.startDay > 1 && (() => {
           const { from, to } = getDuesPeriod(monthFilter, periodConfig.startDay);
           return (
-            <p className="mt-1 text-[10px] text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
               납부 기간: {from} ~ {to}
             </p>
           );
@@ -1671,7 +1671,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         {/* 경고: 회비 기준 미설정 */}
         {settings.length === 0 && (
           <div className="mt-3 rounded-lg bg-[hsl(var(--warning))]/10 px-3 py-2">
-            <p className="text-[11px] text-[hsl(var(--warning))]">
+            <p className="text-xs text-[hsl(var(--warning))]">
               회비 기준이 설정되지 않았습니다.{" "}
               <button type="button" onClick={() => setDuesTab("settings")} className="underline font-bold">
                 설정 탭에서 추가
@@ -1705,7 +1705,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                   <span className="text-xs font-medium text-foreground whitespace-nowrap">{m.name}</span>
                   {ROLE_LABEL[m.role] && (
                     <span className={cn(
-                      "shrink-0 rounded px-1 py-px text-[9px] font-bold",
+                      "shrink-0 rounded px-1 py-px text-xs font-bold",
                       m.role === "OWNER" ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"
                     )}>
                       {ROLE_LABEL[m.role]}
@@ -1714,7 +1714,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                 </div>
                 <div className="flex items-center gap-1">
                   {m.paidAmount > 0 && (
-                    <span className="mr-1 text-[10px] font-medium text-[hsl(var(--success))]">
+                    <span className="mr-1 text-xs font-medium text-[hsl(var(--success))]">
                       {m.paidAmount.toLocaleString()}원
                     </span>
                   )}
@@ -1733,7 +1733,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                           await refetchPaymentStatus();
                         }}
                         className={cn(
-                          "rounded-full px-2 py-1 text-[10px] font-bold transition-all",
+                          "rounded-full px-2 py-1 text-xs font-bold transition-all",
                           m.status === s
                             ? s === "PAID"
                               ? "bg-[hsl(var(--success))] text-white"
@@ -1748,7 +1748,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                     ))
                   ) : (
                     <span className={cn(
-                      "rounded-full px-2.5 py-1 text-[10px] font-bold",
+                      "rounded-full px-2.5 py-1 text-xs font-bold",
                       m.status === "PAID" ? "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"
                         : m.status === "EXEMPT" ? "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]"
                         : "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]"
@@ -1810,7 +1810,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           {periodConfig.startDay > 1 && (() => {
             const { from, to } = getDuesPeriod(monthFilter, periodConfig.startDay);
             return (
-              <p className="mt-2 text-[11px] text-primary">
+              <p className="mt-2 text-xs text-primary">
                 {monthFilter.replace("-", "년 ")}월 회비 기간: {from} ~ {to}
               </p>
             );
@@ -1956,7 +1956,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                     <button
                       type="button"
                       onClick={() => setConfirmAction({ message: "이 회비 기준을 삭제하시겠습니까?", onConfirm: () => handleDeleteSetting(setting.id) })}
-                      className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                      className="min-h-[36px] min-w-[36px] rounded px-2 text-xs bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] transition-colors"
                     >
                       삭제
                     </button>

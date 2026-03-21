@@ -681,7 +681,7 @@ export default function AutoFormationBuilder({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">
               Auto Formation
             </p>
             <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
@@ -707,7 +707,7 @@ export default function AutoFormationBuilder({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">
             Auto Formation
           </p>
           <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
@@ -789,7 +789,7 @@ export default function AutoFormationBuilder({
                 type="button"
                 onClick={() => toggleGK(player.id)}
                 className={cn(
-                  "flex h-6 w-6 shrink-0 items-center justify-center rounded text-[10px] font-bold transition",
+                  "flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold transition",
                   player.isGK
                     ? "bg-amber-500/30 text-amber-400"
                     : "bg-muted text-muted-foreground hover:bg-muted/80",
@@ -810,7 +810,7 @@ export default function AutoFormationBuilder({
                   <Badge
                     key={pos}
                     variant="outline"
-                    className={cn("text-[10px] px-1", POS_COLOR[pos])}
+                    className={cn("text-xs px-1", POS_COLOR[pos])}
                   >
                     {POS_LABEL[pos] ?? pos}
                   </Badge>
@@ -869,7 +869,7 @@ export default function AutoFormationBuilder({
             {/* Legend */}
             <div className="flex items-center gap-3">
               <h4 className="text-sm font-bold">편성 결과</h4>
-              <div className="ml-auto flex gap-3 text-[10px] text-muted-foreground">
+              <div className="ml-auto flex gap-3 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <span className="inline-block h-3 w-5 rounded-sm bg-primary/60" />
                   풀타임
@@ -902,21 +902,21 @@ export default function AutoFormationBuilder({
               <div className="min-w-[320px]">
                 {/* Header row */}
                 <div className="flex items-center gap-1 px-1 pb-1">
-                  <span className="w-20 text-[10px] font-bold text-muted-foreground">
+                  <span className="w-20 text-xs font-bold text-muted-foreground">
                     선수
                   </span>
-                  <span className="w-8 shrink-0 text-center text-[10px] font-bold text-muted-foreground">
+                  <span className="w-8 shrink-0 text-center text-xs font-bold text-muted-foreground">
                     합계
                   </span>
                   {Array.from({ length: quarterCount }, (_, i) => (
                     <span
                       key={i}
-                      className="flex-1 text-center text-[10px] font-bold text-muted-foreground"
+                      className="flex-1 text-center text-xs font-bold text-muted-foreground"
                     >
                       Q{i + 1}
                     </span>
                   ))}
-                  <span className="w-10 text-center text-[10px] font-bold text-muted-foreground">
+                  <span className="w-10 text-center text-xs font-bold text-muted-foreground">
                     배치
                   </span>
                 </div>
@@ -943,7 +943,7 @@ export default function AutoFormationBuilder({
                         </span>
                         {/* 총 쿼터 수 */}
                         <span className={cn(
-                          "w-8 shrink-0 text-center text-[10px] font-bold",
+                          "w-8 shrink-0 text-center text-xs font-bold",
                           totalQ % 1 !== 0 ? "text-sky-400" : "text-muted-foreground",
                         )}>
                           {totalQ % 1 !== 0 ? `${totalQ}` : `${totalQ}`}Q
@@ -993,7 +993,7 @@ export default function AutoFormationBuilder({
                             );
                           },
                         )}
-                        <span className="w-10 text-center text-[10px] text-muted-foreground">
+                        <span className="w-10 text-center text-xs text-muted-foreground">
                           {playerPositionLabel.get(player.id) ?? "-"}
                         </span>
                       </div>
@@ -1021,7 +1021,7 @@ export default function AutoFormationBuilder({
                         >
                           <Badge
                             variant="outline"
-                            className="w-9 justify-center px-0 text-[9px]"
+                            className="w-9 justify-center px-0 text-xs"
                           >
                             {a.slotLabel}
                           </Badge>
@@ -1032,7 +1032,7 @@ export default function AutoFormationBuilder({
                             <Badge
                               variant="outline"
                               className={cn(
-                                "ml-auto shrink-0 text-[9px] font-bold",
+                                "ml-auto shrink-0 text-xs font-bold",
                                 a.type === "first_half"
                                   ? "border-sky-500/40 bg-sky-500/10 text-sky-400"
                                   : "border-violet-500/40 bg-violet-500/10 text-violet-400",

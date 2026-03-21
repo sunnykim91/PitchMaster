@@ -4,7 +4,7 @@ export default function OfflinePage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
       <div className="space-y-4">
-        <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
+        <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">
           PitchMaster
         </p>
         <h1 className="font-heading text-3xl font-bold">

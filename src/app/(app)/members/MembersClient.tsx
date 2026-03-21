@@ -296,7 +296,7 @@ export default function MembersClient({
                     />
                   </div>
                 </div>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   전화번호가 있으면 가입 시 자동 연동, 없으면 이름으로 매칭됩니다.
                 </p>
                 <Button
@@ -349,7 +349,7 @@ export default function MembersClient({
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-semibold truncate">{member.name}</p>
-                      <Badge variant="outline" className="border-[hsl(var(--warning))]/30 text-[hsl(var(--warning))] text-[10px] shrink-0">
+                      <Badge variant="outline" className="border-[hsl(var(--warning))]/30 text-[hsl(var(--warning))] text-xs shrink-0">
                         미가입
                       </Badge>
                     </div>
@@ -538,13 +538,13 @@ export default function MembersClient({
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-muted-foreground">{member.name}</p>
                     {member.isLinked && (
-                      <p className="text-[11px] text-muted-foreground/60">
+                      <p className="text-xs text-muted-foreground/60">
                         {member.preferredPositions.length > 0 ? member.preferredPositions.join(", ") : "포지션 미설정"}
                       </p>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-[10px]">휴면</Badge>
+                    <Badge variant="secondary" className="text-xs">휴면</Badge>
                     {canKick && (
                       <Button
                         variant="outline"

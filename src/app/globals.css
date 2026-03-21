@@ -70,7 +70,7 @@
 
   /* Sport-specific */
   --win: 152 60% 48%;
-  --draw: 40 10% 55%;
+  --draw: 40 30% 55%;
   --loss: 0 65% 55%;
   --pitch: 152 40% 28%;
 
@@ -160,6 +160,18 @@ select optgroup {
   50% { opacity: var(--skeleton-hi, 0.08); }
 }
 
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.skeleton-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, hsl(var(--foreground) / 0.04) 50%, transparent 100%);
+  animation: shimmer 2s infinite;
+}
+
 @keyframes slide-down {
   from {
     opacity: 0;
@@ -234,17 +246,17 @@ select optgroup {
   animation: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
-.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
-.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
-.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
-.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
-.stagger-children > *:nth-child(7) { animation-delay: 300ms; }
-.stagger-children > *:nth-child(8) { animation-delay: 350ms; }
-.stagger-children > :nth-child(9) { animation-delay: 400ms; }
-.stagger-children > :nth-child(10) { animation-delay: 450ms; }
-.stagger-children > :nth-child(11) { animation-delay: 500ms; }
-.stagger-children > :nth-child(12) { animation-delay: 550ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 90ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 210ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 240ms; }
+.stagger-children > :nth-child(9) { animation-delay: 270ms; }
+.stagger-children > :nth-child(10) { animation-delay: 300ms; }
+.stagger-children > :nth-child(11) { animation-delay: 330ms; }
+.stagger-children > :nth-child(12) { animation-delay: 360ms; }
 
 .sidebar-atmosphere {
   background: linear-gradient(180deg, hsl(16 85% 58% / 0.03) 0%, transparent 40%);
@@ -279,7 +291,7 @@ select optgroup {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, hsl(16 85% 58% / 0.08) 0%, transparent 50%);
+  background: linear-gradient(135deg, hsl(16 85% 58% / 0.15) 0%, transparent 50%);
   pointer-events: none;
 }
 

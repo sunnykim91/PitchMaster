@@ -94,7 +94,7 @@ export default async function LoginPage({
             <p className="text-xs text-muted-foreground">
               무료 · 광고 없음 · 1분이면 팀 세팅 완료
             </p>
-            <p className="text-[11px] text-muted-foreground/60">
+            <p className="text-xs text-muted-foreground/60">
               현재 37명 규모 팀이 3개월째 사용 중
             </p>
           </div>
@@ -117,7 +117,7 @@ export default async function LoginPage({
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <p className={`font-heading text-xl font-bold sm:text-2xl md:text-3xl ${stat.color}`}>{stat.value}</p>
-              <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">{stat.label}</p>
+              <p className="mt-1 text-xs text-muted-foreground sm:text-xs">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -126,7 +126,7 @@ export default async function LoginPage({
       {/* ── Section 2: Before / After ── */}
       <section aria-label="기능 비교" className="scroll-reveal relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
         <div className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-20">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-rose-400">
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-rose-400">
             총무의 현실
           </p>
           <h2 className="mt-4 break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
@@ -157,7 +157,7 @@ export default async function LoginPage({
               >
                 {/* Before */}
                 <div className="bg-rose-500/10 p-4 sm:p-5">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-rose-400">
+                  <p className="text-xs font-bold uppercase tracking-wider text-rose-400">
                     Before
                   </p>
                   <p className="mt-1 text-sm font-bold text-foreground">
@@ -174,10 +174,10 @@ export default async function LoginPage({
                 {/* After */}
                 <div className="bg-emerald-500/10 p-4 sm:p-5">
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                    <p className="text-xs font-bold uppercase tracking-wider text-emerald-400">
                       After
                     </p>
-                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs font-bold text-emerald-400">
                       {item.after.time}
                     </span>
                   </div>
@@ -195,7 +195,7 @@ export default async function LoginPage({
           {/* 미니 CTA */}
           <div className="mt-10 flex flex-col items-center gap-2">
             {kakaoButton2}
-            <p className="text-[11px] text-muted-foreground">지금 바로 체험해보세요</p>
+            <p className="text-xs text-muted-foreground">지금 바로 체험해보세요</p>
           </div>
         </div>
       </section>
@@ -293,7 +293,7 @@ export default async function LoginPage({
           <div className="mx-auto mt-10 w-full max-w-xs rounded-2xl p-2" style={{ backgroundColor: "#0a0e14" }}>
             <div className="flex items-center justify-between px-1">
               <span className="text-xs font-bold text-white">1쿼터 · 4-3-3</span>
-              <span className="text-[10px] text-white/50">PitchMaster</span>
+              <span className="text-xs text-white/50">PitchMaster</span>
             </div>
             <div
               className="relative mt-2 aspect-[4/5] w-full overflow-hidden rounded-xl border-2 border-white/10 shadow-xl shadow-black/30"
@@ -342,7 +342,7 @@ export default async function LoginPage({
                   style={{ left: `${p.x}%`, top: `${p.y}%` }}
                 >
                   <div
-                    className="flex h-9 w-9 items-center justify-center rounded-full text-[9px] font-bold text-white shadow-lg sm:h-10 sm:w-10 sm:text-[10px]"
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white shadow-lg sm:h-10 sm:w-10 sm:text-xs"
                     style={{ backgroundColor: "#2563eb" }}
                   >
                     {p.label}
@@ -399,7 +399,7 @@ export default async function LoginPage({
                   <p className={`mt-2 text-xs font-bold sm:text-sm ${item.color}`}>
                     {item.title}
                   </p>
-                  <p className="mt-1 break-keep text-[11px] leading-relaxed text-muted-foreground sm:text-xs">
+                  <p className="mt-1 break-keep text-xs leading-relaxed text-muted-foreground sm:text-xs">
                     {item.desc}
                   </p>
                 </CardContent>
@@ -493,7 +493,7 @@ export default async function LoginPage({
                     </td>
                     <td className="py-2.5 text-center font-semibold text-primary sm:py-3">
                       <span className="inline-flex items-center gap-1">
-                        <span className="text-[10px]">✓</span> {row.pm}
+                        <span className="text-xs">✓</span> {row.pm}
                       </span>
                     </td>
                   </tr>
@@ -545,10 +545,10 @@ export default async function LoginPage({
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-foreground sm:text-sm">{review.name}</p>
-                      <p className="text-[10px] text-muted-foreground sm:text-xs">{review.role}</p>
+                      <p className="text-xs text-muted-foreground sm:text-xs">{review.role}</p>
                     </div>
                   </div>
-                  <p className="mt-3 rounded-full bg-primary/10 px-3 py-1 text-center text-[10px] font-bold text-primary sm:text-xs">
+                  <p className="mt-3 rounded-full bg-primary/10 px-3 py-1 text-center text-xs font-bold text-primary sm:text-xs">
                     {review.highlight}
                   </p>
                 </CardContent>

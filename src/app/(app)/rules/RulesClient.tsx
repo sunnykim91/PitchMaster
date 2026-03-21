@@ -316,7 +316,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
                   <CardContent className="p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <Badge variant="default" className="text-[11px] uppercase tracking-[0.2em]">
+                        <Badge variant="default" className="text-xs uppercase tracking-[0.2em]">
                           {rule.category}
                         </Badge>
                         <h4 className="mt-2 text-lg font-bold text-foreground truncate">{rule.title}</h4>

@@ -35,7 +35,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
         )}
         <Card>
           <CardHeader>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">가입 정보</p>
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">가입 정보</p>
             <CardTitle className="font-heading text-3xl font-bold uppercase">기본 정보를 입력해주세요</CardTitle>
             <CardDescription>필수 정보를 입력해야 PitchMaster 기능을 이용할 수 있어요.</CardDescription>
           </CardHeader>
