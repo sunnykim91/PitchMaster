@@ -287,7 +287,7 @@ export default function RecordsClient({
       <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
         {/* 내 기록 */}
         <Card>
-          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
+          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 px-4 sm:px-6">
             <div>
               <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
                 내 기록

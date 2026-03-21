@@ -23,6 +23,26 @@ export async function GET(request: NextRequest) {
 
   // 전체 통합 모드: 실제 경기 + 레거시 데이터 합산
   if (mode === "all") {
+    // 멤버 전체 조회 (ACTIVE + DORMANT — ID→이름 매핑용)
+    const { data: allMembers } = await db
+      .from("team_members")
+      .select("id, user_id, pre_name, users(id, name, preferred_positions)")
+      .eq("team_id", ctx.teamId)
+      .in("status", ["ACTIVE", "DORMANT"]);
+
+    const idToName = new Map<string, string>();
+    const nameToMemberId = new Map<string, string>();
+    for (const m of (allMembers ?? []) as MemberRow[]) {
+      const user = Array.isArray(m.users) ? m.users[0] : m.users;
+      const name = user?.name ?? m.pre_name ?? "";
+      const odeMemberId = m.user_id ?? m.id;
+      if (name) {
+        if (m.user_id) idToName.set(m.user_id, name);
+        idToName.set(m.id, name);
+        nameToMemberId.set(name, odeMemberId);
+      }
+    }
+
     // 1. 레거시 통계 전체 합산 (이름 기준)
     const { data: legacy } = await db
       .from("legacy_player_stats")
@@ -45,47 +65,51 @@ export async function GET(request: NextRequest) {
     const allMatchIds = (allMatches ?? []).map((m) => m.id);
 
     if (allMatchIds.length > 0) {
-      const [goalsRes, assistsRes] = await Promise.all([
-        db.from("match_goals").select("scorer_id").in("match_id", allMatchIds).eq("is_own_goal", false).neq("scorer_id", "OPPONENT"),
+      const [goalsRes, assistsRes, attendRes] = await Promise.all([
+        db.from("match_goals").select("scorer_id").in("match_id", allMatchIds).eq("is_own_goal", false).neq("scorer_id", "OPPONENT").neq("scorer_id", "UNKNOWN"),
         db.from("match_goals").select("assist_id").in("match_id", allMatchIds).not("assist_id", "is", null),
+        db.from("match_attendance").select("user_id, member_id").in("match_id", allMatchIds).eq("vote", "ATTEND"),
       ]);
 
-      // ID → 이름 매핑
-      const { data: members } = await db.from("team_members").select("id, user_id, pre_name, users(id, name)").eq("team_id", ctx.teamId);
-      const idToName = new Map<string, string>();
-      for (const m of (members ?? []) as MemberRow[]) {
-        const user = Array.isArray(m.users) ? m.users[0] : m.users;
-        const name = user?.name ?? m.pre_name ?? "";
-        if (m.user_id) idToName.set(m.user_id, name);
-        idToName.set(m.id, name);
-      }
-
       for (const row of goalsRes.data ?? []) {
-        const name = idToName.get(row.scorer_id) ?? row.scorer_id;
-        if (name === "UNKNOWN") continue;
+        const name = idToName.get(row.scorer_id);
+        if (!name) continue;
         const cur = nameMap.get(name) ?? { goals: 0, assists: 0, attendance: 0, games: 0 };
         cur.goals++;
         nameMap.set(name, cur);
       }
       for (const row of assistsRes.data ?? []) {
-        const name = idToName.get(row.assist_id) ?? row.assist_id;
-        if (!name || name === "UNKNOWN") continue;
+        if (!row.assist_id) continue;
+        const name = idToName.get(row.assist_id);
+        if (!name) continue;
         const cur = nameMap.get(name) ?? { goals: 0, assists: 0, attendance: 0, games: 0 };
         cur.assists++;
         nameMap.set(name, cur);
       }
+      // 실제 경기 출석도 합산
+      for (const row of attendRes.data ?? []) {
+        const id = row.user_id ?? row.member_id;
+        if (!id) continue;
+        const name = idToName.get(id);
+        if (!name) continue;
+        const cur = nameMap.get(name) ?? { goals: 0, assists: 0, attendance: 0, games: 0 };
+        cur.attendance++;
+        cur.games = Math.max(cur.games, 1); // 최소 1
+        nameMap.set(name, cur);
+      }
     }
 
-    // 3. 결과 반환
+    // 3. 결과 반환 (이름 + 실제 memberId 매핑)
+    const totalGames = allMatchIds.length;
     const records = [...nameMap.entries()]
       .filter(([name]) => name !== "UNKNOWN" && name !== "OPPONENT")
       .map(([name, s]) => ({
-        memberId: name,
+        memberId: nameToMemberId.get(name) ?? name,
         name,
         goals: s.goals,
         assists: s.assists,
         mvp: 0,
-        attendanceRate: s.games > 0 ? s.attendance / s.games : 0,
+        attendanceRate: totalGames > 0 && s.attendance > 0 ? s.attendance / Math.max(s.games, totalGames) : (s.games > 0 ? s.attendance / s.games : 0),
         preferredPositions: [],
       }));
 
