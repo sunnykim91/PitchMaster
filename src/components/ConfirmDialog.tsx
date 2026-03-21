@@ -40,7 +40,7 @@ export function ConfirmDialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onCancel}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onCancel}>
       <Card className="mx-4 w-full max-w-sm p-6 animate-scale-in" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-base font-bold text-foreground">{title}</h3>
         {description && <p className="mt-2 text-sm text-muted-foreground">{description}</p>}
