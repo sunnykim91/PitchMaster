@@ -588,10 +588,13 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   }
 
   function handleClearSlot(slotId: string) {
-    updateBoardState((prev) => ({
-      ...prev,
-      placements: { ...prev.placements, [slotId]: null },
-    }));
+    const newState: BoardState = {
+      ...boardState,
+      placements: { ...boardState.placements, [slotId]: null },
+    };
+    setBoardState(newState);
+    // debounce 건너뛰고 즉시 저장
+    saveToApi(newState, activeQuarterRef.current);
     setActiveSlotId(null);
   }
 
@@ -600,7 +603,10 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     formation.slots.forEach((slot) => {
       reset[slot.id] = null;
     });
-    updateBoardState({ formationId: formation.id, placements: reset });
+    const newState: BoardState = { formationId: formation.id, placements: reset };
+    setBoardState(newState);
+    // debounce 건너뛰고 즉시 저장
+    saveToApi(newState, activeQuarterRef.current);
     setActiveSlotId(null);
   }
 
