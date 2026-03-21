@@ -117,9 +117,10 @@ export async function getRecordsData(teamId: string) {
     const memberId = m.id;
     const user = Array.isArray(m.users) ? m.users[0] : m.users;
     const ids = userId ? [userId, memberId] : [memberId];
-    const attended = userId
-      ? (attendByUser.get(userId) ?? 0) || (attendByMember.get(memberId) ?? 0)
-      : (attendByMember.get(memberId) ?? 0);
+    const attended = Math.max(
+      userId ? (attendByUser.get(userId) ?? 0) : 0,
+      attendByMember.get(memberId) ?? 0
+    );
     return {
       memberId: userId ?? memberId,
       name: user?.name ?? m.pre_name ?? "",

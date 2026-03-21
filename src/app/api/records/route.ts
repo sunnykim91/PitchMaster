@@ -234,9 +234,10 @@ export async function GET(request: NextRequest) {
     const goals = lookupIds.reduce((sum, id) => sum + (goalMap.get(id) ?? 0), 0);
     const assists = lookupIds.reduce((sum, id) => sum + (assistMap.get(id) ?? 0), 0);
     const mvp = lookupIds.reduce((sum, id) => sum + (mvpMap.get(id) ?? 0), 0);
-    const attended = userId
-      ? (attendByUserId.get(userId) ?? 0) || (attendByMemberId.get(memberId) ?? 0)
-      : (attendByMemberId.get(memberId) ?? 0);
+    const attended = Math.max(
+      userId ? (attendByUserId.get(userId) ?? 0) : 0,
+      attendByMemberId.get(memberId) ?? 0
+    );
 
     return {
       memberId: userId ?? memberId,
