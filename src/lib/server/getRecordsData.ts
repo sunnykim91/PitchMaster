@@ -45,6 +45,40 @@ export async function getRecordsData(teamId: string) {
   const typedMembers = members as MemberRow[];
 
   if (matchIds.length === 0) {
+    // 레거시 통계 확인
+    const legacyYear = activeSeason?.start_date ? parseInt(activeSeason.start_date.slice(0, 4)) : null;
+    if (legacyYear) {
+      const { data: legacy } = await db
+        .from("legacy_player_stats")
+        .select("*")
+        .eq("team_id", teamId)
+        .eq("year", legacyYear);
+
+      if (legacy && legacy.length > 0) {
+        const first = legacy[0] as Record<string, unknown>;
+        return {
+          seasons: seasonList,
+          activeSeasonId,
+          records: legacy.map((l: Record<string, unknown>) => ({
+            memberId: (l.member_id as string) ?? (l.member_name as string),
+            name: l.member_name as string,
+            goals: l.goals as number,
+            assists: l.assists as number,
+            mvp: 0,
+            attendanceRate: (l.games as number) > 0 ? (l.attendance as number) / (l.games as number) : 0,
+            preferredPositions: [],
+          })),
+          teamRecord: {
+            wins: (first.wins as number) ?? 0,
+            draws: (first.draws as number) ?? 0,
+            losses: (first.losses as number) ?? 0,
+            goalsFor: 0, goalsAgainst: 0,
+            recent5: [] as ("W" | "D" | "L")[],
+          },
+        };
+      }
+    }
+
     return {
       seasons: seasonList,
       activeSeasonId,

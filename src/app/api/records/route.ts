@@ -45,6 +45,45 @@ export async function GET(request: NextRequest) {
   const typedMembers = members as MemberRow[];
 
   if (matchIds.length === 0) {
+    // 실제 경기 없으면 레거시 통계 확인
+    let legacyYear: number | null = null;
+    if (startDate && endDate) {
+      const sy = parseInt(startDate.slice(0, 4));
+      const ey = parseInt(endDate.slice(0, 4));
+      if (sy === ey) legacyYear = sy;
+    } else if (seasonId) {
+      const { data: season } = await db.from("seasons").select("start_date").eq("id", seasonId).single();
+      if (season) legacyYear = parseInt(season.start_date.slice(0, 4));
+    }
+
+    if (legacyYear) {
+      const { data: legacy } = await db
+        .from("legacy_player_stats")
+        .select("*")
+        .eq("team_id", ctx.teamId)
+        .eq("year", legacyYear);
+
+      if (legacy && legacy.length > 0) {
+        return apiSuccess({
+          records: legacy.map((l: Record<string, unknown>) => ({
+            memberId: (l.member_id as string) ?? (l.member_name as string),
+            name: l.member_name as string,
+            goals: l.goals as number,
+            assists: l.assists as number,
+            mvp: 0,
+            attendanceRate: (l.games as number) > 0 ? (l.attendance as number) / (l.games as number) : 0,
+            preferredPositions: [],
+          })),
+          legacy: true,
+          teamRecord: legacy.length > 0 ? {
+            wins: (legacy[0] as Record<string, number>).wins ?? 0,
+            draws: (legacy[0] as Record<string, number>).draws ?? 0,
+            losses: (legacy[0] as Record<string, number>).losses ?? 0,
+          } : undefined,
+        });
+      }
+    }
+
     return apiSuccess({
       records: typedMembers.map((m) => {
         const user = Array.isArray(m.users) ? m.users[0] : m.users;
