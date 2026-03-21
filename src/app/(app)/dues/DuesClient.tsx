@@ -913,12 +913,12 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   if (loading) {
     return (
       <div className="grid gap-5 stagger-children">
-        <Card className="p-6"><div className="space-y-4">
+        <Card className="p-4 sm:p-6"><div className="space-y-4">
           <div className="flex items-center justify-between"><Skeleton className="h-5 w-32"/><Skeleton className="h-8 w-24"/></div>
           <Skeleton className="h-10 w-48"/>
           <Skeleton className="h-3 w-40"/>
         </div></Card>
-        <Card className="p-6"><div className="space-y-3">
+        <Card className="p-4 sm:p-6"><div className="space-y-3">
           <Skeleton className="h-5 w-24"/>
           {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-12 w-full"/>)}
         </div></Card>
@@ -929,7 +929,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   return (
     <div className="grid gap-5 stagger-children">
       {/* ── Section 1: 회비 현황 (always visible) ── */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="font-heading text-lg sm:text-2xl font-bold uppercase text-foreground">
             회비 현황
@@ -1019,7 +1019,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                     const prev = new Date(y, m - 2);
                     setMonthFilter(`${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`);
                   }}
-                  className="rounded-lg p-1.5 hover:bg-secondary transition-colors"
+                  className="rounded-lg p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary transition-colors focus-visible:ring-2 focus-visible:ring-primary"
                   aria-label="이전 달"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -1034,7 +1034,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                     const next = new Date(y, m);
                     setMonthFilter(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`);
                   }}
-                  className="rounded-lg p-1.5 hover:bg-secondary transition-colors"
+                  className="rounded-lg p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary transition-colors focus-visible:ring-2 focus-visible:ring-primary"
                   aria-label="다음 달"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -1046,7 +1046,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       })()}
 
       {/* ── Dues Tab Bar ── */}
-      <div className="sticky top-0 z-10 -mx-1 bg-background/95 backdrop-blur-sm border-b border-border">
+      <div className="sticky top-0 z-10 -mx-1 px-1 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="flex" role="tablist">
           {([
             { key: "records" as const, label: "입출금", staffOnly: false },
@@ -1087,7 +1087,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         </div>
       )}
       {isFormOpen ? (
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <h3 className="font-heading text-base sm:text-lg font-bold uppercase text-foreground">
             입출금 기록 입력
           </h3>
@@ -1096,7 +1096,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
             className="mt-4 grid gap-4"
             action={(formData) => handleAddRecord(formData)}
           >
-            <Card className="border-0 bg-secondary p-5">
+            <Card className="border-0 bg-secondary p-3 sm:p-5">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label className="font-semibold text-muted-foreground">
@@ -1198,7 +1198,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       {duesTab === "bulk" && (
       <>
       {/* ── 엑셀 업로드 ── */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <h3 className="font-heading text-base sm:text-lg font-bold uppercase text-foreground">
           엑셀 파일 업로드
         </h3>
@@ -1337,7 +1337,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       </Card>
 
       {/* ── Section 2.5: 스크린샷 일괄 등록 ── */}
-        <Card className="p-6" ref={bulkSectionRef}>
+        <Card className="p-4 sm:p-6" ref={bulkSectionRef}>
           <h3 className="font-heading text-base sm:text-lg font-bold uppercase text-foreground">
             스크린샷 보고 일괄 등록
           </h3>
@@ -1459,7 +1459,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       {duesTab === "records" && (
       <>
       {/* ── Section 3: 입출금 내역 ── */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h3 className="font-heading text-lg sm:text-xl font-bold uppercase text-foreground">
@@ -1477,7 +1477,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                   const prev = new Date(y, m - 2);
                   setMonthFilter(`${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`);
                 }}
-                className="rounded-lg p-1.5 hover:bg-secondary transition-colors"
+                className="rounded-lg p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary transition-colors focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -1492,7 +1492,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                   const next = new Date(y, m);
                   setMonthFilter(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`);
                 }}
-                className="rounded-lg p-1.5 hover:bg-secondary transition-colors"
+                className="rounded-lg p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary transition-colors focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -1615,7 +1615,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                 const prev = new Date(y, m - 2);
                 setMonthFilter(`${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`);
               }}
-              className="rounded-lg p-1.5 hover:bg-secondary transition-colors"
+              className="rounded-lg p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary transition-colors focus-visible:ring-2 focus-visible:ring-primary"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -1630,7 +1630,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                 const next = new Date(y, m);
                 setMonthFilter(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`);
               }}
-              className="rounded-lg p-1.5 hover:bg-secondary transition-colors"
+              className="rounded-lg p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary transition-colors focus-visible:ring-2 focus-visible:ring-primary"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -1733,7 +1733,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                           await refetchPaymentStatus();
                         }}
                         className={cn(
-                          "rounded-full px-2 py-1 text-xs font-bold transition-all",
+                          "rounded-full px-2 py-2 min-h-[36px] text-xs font-bold transition-all active:scale-95",
                           m.status === s
                             ? s === "PAID"
                               ? "bg-[hsl(var(--success))] text-white"
@@ -1769,7 +1769,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       <>
       {/* ── 납부 기준일 설정 ── */}
       {isStaffOrAbove(role) && (
-        <Card className="p-5">
+        <Card className="p-3 sm:p-5">
           <h3 className="text-sm font-bold text-foreground">납부 기준일</h3>
           <p className="mt-1 text-xs text-muted-foreground">
             매월 회비 납부 기간의 시작일. 예: 25일 → 2/25~3/24를 3월 회비로 인식.
@@ -1819,7 +1819,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       )}
 
       {/* ── Section 4: 회비 기준 설정 ── */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h3 className="font-heading text-lg sm:text-xl font-bold uppercase text-foreground">
@@ -1843,7 +1843,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
             className="mt-4 grid gap-4"
             action={(formData) => handleAddSetting(formData)}
           >
-            <Card className="border-0 bg-secondary p-5">
+            <Card className="border-0 bg-secondary p-3 sm:p-5">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label className="font-semibold text-muted-foreground">

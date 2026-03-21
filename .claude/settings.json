@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(ls /Users/sunny/develop/pitchmaster/PitchMaster/.env*)",
+      "Bash(wc -l \"src/app/\\(app\\)/matches/[matchId]/MatchDetailClient.tsx\")"
+    ]
+  }
+}

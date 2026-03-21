@@ -481,7 +481,7 @@ export default async function LoginPage({
                     pm: "한 계정 전환",
                   },
                 ].map((row) => (
-                  <tr key={row.feature}>
+                  <tr key={row.feature} className="hover:bg-secondary/30 transition-colors">
                     <td className="py-2.5 font-medium text-foreground sm:py-3">
                       {row.feature}
                     </td>

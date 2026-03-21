@@ -356,6 +356,11 @@ select optgroup {
   transform: translateY(0);
 }
 
+.card-interactive:hover {
+  box-shadow: 0 4px 16px -4px hsl(var(--foreground) / 0.12);
+  border-color: hsl(var(--border));
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

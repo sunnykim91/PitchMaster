@@ -62,10 +62,10 @@ export function ConfirmDialog({
         <h3 className="text-base font-bold text-foreground">{title}</h3>
         {description && <p className="mt-2 text-sm text-muted-foreground">{description}</p>}
         <div className="mt-5 flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={onCancel}>
+          <Button variant="outline" size="lg" className="flex-1" onClick={onCancel}>
             {cancelLabel}
           </Button>
-          <Button ref={confirmRef} variant={variant === "destructive" ? "destructive" : "default"} className="flex-1" onClick={onConfirm}>
+          <Button ref={confirmRef} variant={variant === "destructive" ? "destructive" : "default"} size="lg" className="flex-1" onClick={onConfirm}>
             {confirmLabel}
           </Button>
         </div>

@@ -510,8 +510,8 @@ export default function RecordsClient({
                 <tbody className="divide-y divide-border/20">
                   {allStats.map((s, i) => (
                     <tr key={s.memberId} className={cn(s.memberId === userId && "bg-primary/5")}>
-                      <td className="sticky left-0 z-1 bg-card py-2.5 text-muted-foreground">{i + 1}</td>
-                      <td className="sticky left-8 z-1 bg-card py-2.5 font-semibold max-w-[120px] truncate">{s.memberName || "-"}</td>
+                      <td className={cn("sticky left-0 z-1 py-2.5 text-muted-foreground", s.memberId === userId ? "bg-primary/5" : "bg-card")}>{i + 1}</td>
+                      <td className={cn("sticky left-8 z-1 py-2.5 font-semibold max-w-[120px] truncate", s.memberId === userId ? "bg-primary/5" : "bg-card")}>{s.memberName || "-"}</td>
                       <td className="py-2.5 text-center font-bold text-primary">{s.points}</td>
                       <td className="py-2.5 text-center text-[hsl(var(--success))]">{s.goals}</td>
                       <td className="py-2.5 text-center text-[hsl(var(--info))]">{s.assists}</td>

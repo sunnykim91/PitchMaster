@@ -815,7 +815,7 @@ export default function MatchDetailClient({
       </div>
 
       {/* ── Sticky Tab Bar ── */}
-      <div className="sticky top-0 z-10 -mx-1 bg-background/95 backdrop-blur-sm border-b border-border">
+      <div className="sticky top-0 z-10 -mx-1 px-1 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="flex" role="tablist">
           {([
             { key: "info", label: "기본 정보" },

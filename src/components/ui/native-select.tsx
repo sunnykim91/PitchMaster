@@ -10,7 +10,7 @@ const NativeSelect = React.forwardRef<
       <select
         ref={ref}
         className={cn(
-          "flex h-9 w-full appearance-none rounded-md border border-input bg-card px-3 pr-8 py-2 text-sm shadow-sm transition-colors",
+          "flex h-11 w-full appearance-none rounded-md border border-input bg-card px-3 pr-8 py-2 text-sm shadow-sm transition-colors",
           "focus:outline-none focus:ring-1 focus:ring-ring",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "[&_option]:bg-popover [&_option]:text-popover-foreground",

@@ -234,7 +234,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           <Button
             variant="outline"
             size="sm"
-            className="mt-3 w-full gap-2 border-amber-500/30 text-amber-300 hover:bg-amber-500/10"
+            className="mt-3 w-full gap-2 border-[hsl(var(--accent))]/30 text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/10"
             onClick={() => {
               const inviteUrl = `${window.location.origin}/team?code=${session.user.inviteCode}`;
               navigator.clipboard.writeText(inviteUrl).then(() => {
@@ -375,7 +375,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
               <button
                 onClick={() => setMoreSheetOpen(true)}
                 className={cn(
-                  "relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-xs active:scale-95 transition-all",
+                  "relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-xs active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-primary",
                   isMoreActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
@@ -401,7 +401,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             )}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-muted" />
+            <div className="flex justify-center py-3"><div className="h-1 w-10 rounded-full bg-muted" /></div>
             <nav className="grid gap-1">
               {[
                 { href: "/members", icon: Users, label: "회원관리" },
