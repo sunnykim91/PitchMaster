@@ -592,6 +592,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       ...prev,
       placements: { ...prev.placements, [slotId]: null },
     }));
+    setActiveSlotId(null);
   }
 
   function clearBoard() {
