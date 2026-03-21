@@ -32,6 +32,7 @@ type Member = {
   isLinked: boolean; // user_id가 있는지
   preName: string | null;
   prePhone: string | null;
+  coachPositions: string[];
 };
 
 type ApiMemberRow = {
@@ -42,6 +43,7 @@ type ApiMemberRow = {
   joined_at: string;
   pre_name: string | null;
   pre_phone: string | null;
+  coach_positions?: string[] | null;
   users: {
     id: string;
     name: string;
@@ -65,6 +67,7 @@ function mapApiMembers(rows: ApiMemberRow[]): Member[] {
     isLinked: row.user_id !== null,
     preName: row.pre_name,
     prePhone: row.pre_phone,
+    coachPositions: row.coach_positions ?? [],
   }));
 }
 
@@ -114,6 +117,13 @@ export default function MembersClient({
   const [linkingId, setLinkingId] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
+
+  // 감독 지정 포지션 편집
+  const [editingCoachPos, setEditingCoachPos] = useState<string | null>(null);
+  const [tempCoachPos, setTempCoachPos] = useState<string[]>([]);
+  const [savingCoachPos, setSavingCoachPos] = useState(false);
+
+  const POSITIONS = ["GK", "CB", "LB", "RB", "CDM", "CAM", "LW", "RW", "ST"];
 
   const activeMembers = useMemo(() => members.filter((m) => m.status === "ACTIVE"), [members]);
   const dormantMembers = useMemo(() => members.filter((m) => m.status === "DORMANT"), [members]);
@@ -217,6 +227,26 @@ export default function MembersClient({
       await refetch();
     } else {
       showToast("상태 변경에 실패했습니다.", "error");
+    }
+  }
+
+  async function handleSaveCoachPositions(memberId: string) {
+    setSavingCoachPos(true);
+    try {
+      const { error: err } = await apiMutate("/api/members", "PUT", {
+        action: "update_coach_positions",
+        memberId,
+        coachPositions: tempCoachPos.length > 0 ? tempCoachPos : null,
+      });
+      if (!err) {
+        showToast("감독 지정 포지션이 저장되었습니다.");
+        setEditingCoachPos(null);
+        await refetch();
+      } else {
+        showToast("저장에 실패했습니다.", "error");
+      }
+    } finally {
+      setSavingCoachPos(false);
     }
   }
 
@@ -454,7 +484,7 @@ export default function MembersClient({
                 key={member.id}
                 className="card-list-item flex flex-wrap items-center justify-between gap-4"
               >
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold truncate">{member.name}</p>
                   {canViewAll ? (
                     <p className="text-xs text-muted-foreground">
@@ -464,8 +494,76 @@ export default function MembersClient({
                   <p className="text-xs text-muted-foreground">
                     선호 포지션: {member.preferredPositions.join(" · ") || "미설정"}
                   </p>
+                  {/* 감독 지정 포지션 표시 */}
+                  {(canChangeRole || isStaffOrAbove(role)) && member.coachPositions.length > 0 && editingCoachPos !== member.id && (
+                    <p className="text-xs text-primary font-medium mt-0.5">
+                      감독 지정: {member.coachPositions.join(" · ")}
+                    </p>
+                  )}
+                  {/* 인라인 편집기 */}
+                  {editingCoachPos === member.id && (
+                    <div className="mt-2 space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">감독 지정 포지션 선택</p>
+                      <div className="flex flex-wrap gap-1">
+                        {POSITIONS.map((pos) => {
+                          const selected = tempCoachPos.includes(pos);
+                          return (
+                            <button
+                              key={pos}
+                              type="button"
+                              onClick={() =>
+                                setTempCoachPos((prev) =>
+                                  selected ? prev.filter((p) => p !== pos) : [...prev, pos]
+                                )
+                              }
+                              className={cn(
+                                "rounded px-2 py-0.5 text-xs font-medium border transition-colors",
+                                selected
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-secondary text-muted-foreground border-border hover:border-primary/50"
+                              )}
+                            >
+                              {pos}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="flex gap-1.5">
+                        <Button
+                          size="sm"
+                          onClick={() => handleSaveCoachPositions(member.id)}
+                          disabled={savingCoachPos}
+                          className="h-6 px-2 text-xs"
+                        >
+                          {savingCoachPos ? "저장 중..." : "저장"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditingCoachPos(null)}
+                          disabled={savingCoachPos}
+                          className="h-6 px-2 text-xs"
+                        >
+                          취소
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5">
+                  {(canChangeRole || isStaffOrAbove(role)) && editingCoachPos !== member.id && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setEditingCoachPos(member.id);
+                        setTempCoachPos(member.coachPositions);
+                      }}
+                      className="h-6 px-2 text-xs"
+                    >
+                      포지션 지정
+                    </Button>
+                  )}
                   {canChangeRole ? (
                     <Select
                       value={member.role}

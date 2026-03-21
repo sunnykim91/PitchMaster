@@ -95,7 +95,7 @@ type AttendanceVoteRow = {
   member_id: string | null;
   vote: "ATTEND" | "ABSENT" | "MAYBE";
   users: { id: string; name: string; preferred_positions?: string[] } | null;
-  member: { id: string; pre_name: string | null; user_id: string | null; users: { id: string; name: string; preferred_positions?: string[] } | null } | null;
+  member: { id: string; pre_name: string | null; user_id: string | null; coach_positions?: string[] | null; users: { id: string; name: string; preferred_positions?: string[] } | null } | null;
 };
 
 type DiaryRow = {
@@ -391,7 +391,10 @@ export default function MatchDetailClient({
         const memberData = a.member;
         const userData = a.users ?? memberData?.users;
         const name = userData?.name ?? memberData?.pre_name ?? "멤버";
-        const positions = (userData?.preferred_positions ?? []) as string[];
+        // 감독 지정 포지션 우선, 없으면 선수 선호 포지션
+        const coachPos = memberData?.coach_positions;
+        const playerPos = userData?.preferred_positions ?? [];
+        const positions = (coachPos && coachPos.length > 0 ? coachPos : playerPos) as string[];
         const pos = positions[0] ?? "CAM";
         const id = a.user_id ?? a.member_id ?? a.id;
         return {

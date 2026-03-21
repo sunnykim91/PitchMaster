@@ -19,8 +19,8 @@ export async function GET() {
 
   // Staff+ see all info, members see limited info
   const select = isStaff
-    ? "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, users(id, name, birth_date, phone, preferred_positions, preferred_foot, profile_image_url)"
-    : "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, users(id, name, preferred_positions)";
+    ? "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, coach_positions, users(id, name, birth_date, phone, preferred_positions, preferred_foot, profile_image_url)"
+    : "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, coach_positions, users(id, name, preferred_positions)";
 
   // ACTIVE + DORMANT 멤버 모두 조회
   const { data, error } = await db
@@ -106,6 +106,24 @@ export async function PUT(request: NextRequest) {
   if (roleCheck) return roleCheck;
 
   const body = await request.json();
+
+  // 감독 지정 포지션 변경
+  if (body.action === "update_coach_positions") {
+    const { memberId, coachPositions } = body;
+    if (!memberId) return apiError("memberId required");
+
+    const db = getSupabaseAdmin();
+    if (!db) return apiError("Database not available", 503);
+
+    const { error } = await db
+      .from("team_members")
+      .update({ coach_positions: coachPositions ?? null })
+      .eq("id", memberId)
+      .eq("team_id", ctx.teamId);
+
+    if (error) return apiError(error.message);
+    return apiSuccess({ ok: true });
+  }
 
   // 회원 상태 변경 (ACTIVE ↔ DORMANT)
   if (body.action === "update_status") {
