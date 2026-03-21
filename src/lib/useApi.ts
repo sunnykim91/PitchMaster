@@ -43,7 +43,7 @@ export function useApi<T>(
     setError(null);
 
     try {
-      const res = await fetch(url, { signal: controller.signal });
+      const res = await fetch(url, { signal: controller.signal, credentials: "include" });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `HTTP ${res.status}`);
@@ -86,6 +86,7 @@ export async function apiMutate<T = unknown>(
   try {
     const res = await fetch(url, {
       method,
+      credentials: "include",
       headers: body ? { "Content-Type": "application/json" } : undefined,
       body: body ? JSON.stringify(body) : undefined,
     });

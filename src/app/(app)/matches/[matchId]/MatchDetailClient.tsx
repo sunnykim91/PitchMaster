@@ -618,8 +618,12 @@ export default function MatchDetailClient({
   /* ── 참석투표 대리 관리 (운영진 이상) ── */
 
   async function handleProxyVote(memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
-    await apiMutate("/api/attendance", "POST", { matchId, vote, memberId });
-    await refetchVote();
+    const { error: err } = await apiMutate("/api/attendance", "POST", { matchId, vote, memberId });
+    if (err) {
+      showToast("투표에 실패했습니다. 다시 시도해주세요.", "error");
+    } else {
+      await refetchVote();
+    }
   }
 
   /** 멤버별 현재 참석투표 상태 (member_id 기반) */
