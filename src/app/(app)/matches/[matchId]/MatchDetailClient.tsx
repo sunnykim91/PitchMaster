@@ -572,7 +572,7 @@ export default function MatchDetailClient({
     }
 
     if (editingGoalId) {
-      await apiMutate("/api/goals", "PUT", {
+      const { error: err } = await apiMutate("/api/goals", "PUT", {
         id: editingGoalId,
         scorerId,
         assistId,
@@ -581,8 +581,10 @@ export default function MatchDetailClient({
         isOwnGoal,
       });
       setEditingGoalId(null);
+      if (err) { showToast("수정에 실패했습니다.", "error"); return; }
+      showToast("기록이 수정되었습니다.");
     } else {
-      await apiMutate("/api/goals", "POST", {
+      const { error: err } = await apiMutate("/api/goals", "POST", {
         matchId,
         scorerId,
         assistId,
@@ -590,28 +592,40 @@ export default function MatchDetailClient({
         minute,
         isOwnGoal,
       });
+      if (err) { showToast("기록 추가에 실패했습니다.", "error"); return; }
     }
     formRef.current?.reset();
+    setShowDetailForm(false);
     await refetchGoals();
   }
 
   function handleEditGoal(goal: GoalEvent) {
     setEditingGoalId(goal.id);
-    requestAnimationFrame(() => {
+    setShowDetailForm(true);
+    // 폼 렌더링 후 값 세팅 (2프레임 대기)
+    setTimeout(() => {
       const form = formRef.current;
       if (!form) return;
-      (form.elements.namedItem("scorerId") as HTMLSelectElement).value = goal.scorerId;
-      (form.elements.namedItem("assistId") as HTMLSelectElement).value = goal.assistId ?? "";
-      (form.elements.namedItem("quarter") as HTMLInputElement).value = String(goal.quarter);
-      (form.elements.namedItem("minute") as HTMLInputElement).value = String(goal.minute);
-      (form.elements.namedItem("isOwnGoal") as HTMLInputElement).checked = !!goal.isOwnGoal;
-    });
+      const scorerSelect = form.elements.namedItem("scorerId") as HTMLSelectElement;
+      const assistSelect = form.elements.namedItem("assistId") as HTMLSelectElement;
+      const quarterInput = form.elements.namedItem("quarter") as HTMLInputElement;
+      const ownGoalInput = form.elements.namedItem("isOwnGoal") as HTMLInputElement;
+      if (scorerSelect) scorerSelect.value = goal.scorerId;
+      if (assistSelect) assistSelect.value = goal.assistId ?? "";
+      if (quarterInput) quarterInput.value = String(goal.quarter);
+      if (ownGoalInput) ownGoalInput.checked = !!goal.isOwnGoal;
+    }, 50);
   }
 
   async function handleDeleteGoal(goalId: string) {
-    await apiMutate(`/api/goals?id=${goalId}`, "DELETE");
+    const { error: err } = await apiMutate(`/api/goals?id=${goalId}`, "DELETE");
+    if (err) {
+      showToast("삭제에 실패했습니다.", "error");
+      return;
+    }
     if (editingGoalId === goalId) setEditingGoalId(null);
     await refetchGoals();
+    showToast("기록이 삭제되었습니다.");
   }
 
   function handleCancelEdit() {
@@ -1440,7 +1454,7 @@ export default function MatchDetailClient({
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
-                          onClick={() => { handleEditGoal(goal); setShowDetailForm(true); }}
+                          onClick={() => handleEditGoal(goal)}
                           className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                         >
                           수정

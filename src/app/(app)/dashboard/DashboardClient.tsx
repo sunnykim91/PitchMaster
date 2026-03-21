@@ -131,7 +131,7 @@ function CardSkeleton() {
           <Skeleton className="h-7 w-28" />
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-4 gap-3 mb-4">
+          <div className="grid grid-cols-4 gap-2 mb-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-16 rounded-md" />
             ))}
@@ -233,7 +233,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
   }
 
   return (
-    <div className="grid gap-4 stagger-children min-w-0 overflow-hidden">
+    <div className="grid gap-4 stagger-children min-w-0">
       {/* ── Onboarding Wizard (new teams only) ── */}
       {showWizard && (
         <Card className="card-featured">
@@ -522,16 +522,16 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
               {/* 시즌 전적 스탯 */}
               {recordTotal > 0 && (
                 <div className="mb-4">
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-4 gap-2">
                     {[
                       { label: "승", value: teamRecord.wins, color: "text-[hsl(var(--win))]" },
                       { label: "무", value: teamRecord.draws, color: "text-[hsl(var(--draw))]" },
                       { label: "패", value: teamRecord.losses, color: "text-[hsl(var(--loss))]" },
                       { label: "승률", value: `${Math.round((teamRecord.wins / recordTotal) * 100)}%`, color: "text-primary" },
                     ].map((stat) => (
-                      <div key={stat.label} className="card-stat text-center">
-                        <div className={`type-stat ${stat.color}`}>{stat.value}</div>
-                        <div className="type-overline mt-1">{stat.label}</div>
+                      <div key={stat.label} className="card-stat text-center p-2">
+                        <div className={`text-lg sm:text-xl font-bold font-[family-name:var(--font-display)] ${stat.color}`}>{stat.value}</div>
+                        <div className="type-overline mt-0.5">{stat.label}</div>
                       </div>
                     ))}
                   </div>
