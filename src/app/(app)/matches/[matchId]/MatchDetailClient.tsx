@@ -602,19 +602,30 @@ export default function MatchDetailClient({
   function handleEditGoal(goal: GoalEvent) {
     setEditingGoalId(goal.id);
     setShowDetailForm(true);
-    // 폼 렌더링 후 값 세팅 (2프레임 대기)
-    setTimeout(() => {
+    // 폼 렌더링 완료 대기 후 값 세팅 (여러 프레임 시도)
+    const setFormValues = () => {
       const form = formRef.current;
-      if (!form) return;
+      if (!form) return false;
       const scorerSelect = form.elements.namedItem("scorerId") as HTMLSelectElement;
+      if (!scorerSelect) return false;
       const assistSelect = form.elements.namedItem("assistId") as HTMLSelectElement;
       const quarterInput = form.elements.namedItem("quarter") as HTMLInputElement;
       const ownGoalInput = form.elements.namedItem("isOwnGoal") as HTMLInputElement;
-      if (scorerSelect) scorerSelect.value = goal.scorerId;
+      scorerSelect.value = goal.scorerId;
       if (assistSelect) assistSelect.value = goal.assistId ?? "";
       if (quarterInput) quarterInput.value = String(goal.quarter);
       if (ownGoalInput) ownGoalInput.checked = !!goal.isOwnGoal;
-    }, 50);
+      // 스크롤해서 폼 보이기
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+      return true;
+    };
+    // 100ms 간격으로 최대 5회 시도
+    let attempts = 0;
+    const trySet = () => {
+      if (setFormValues() || ++attempts >= 5) return;
+      setTimeout(trySet, 100);
+    };
+    setTimeout(trySet, 100);
   }
 
   async function handleDeleteGoal(goalId: string) {
@@ -1451,18 +1462,18 @@ export default function MatchDetailClient({
                       </p>
                     </div>
                     {canRecord && (
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-2 shrink-0">
                         <button
                           type="button"
                           onClick={() => handleEditGoal(goal)}
-                          className="rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary/70 active:scale-95 transition-all"
+                          className="rounded-lg bg-secondary min-h-[44px] min-w-[44px] px-3 py-2 text-xs font-semibold text-foreground hover:bg-secondary/70 active:scale-95 transition-all"
                         >
                           수정
                         </button>
                         <button
                           type="button"
                           onClick={() => setConfirmGoalDelete(goal.id)}
-                          className="rounded-lg bg-[hsl(var(--loss)/0.1)] px-3 py-1.5 text-xs font-medium text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.2)] active:scale-95 transition-all"
+                          className="rounded-lg bg-[hsl(var(--loss)/0.15)] min-h-[44px] min-w-[44px] px-3 py-2 text-xs font-semibold text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] active:scale-95 transition-all"
                         >
                           삭제
                         </button>
