@@ -1462,18 +1462,18 @@ export default function MatchDetailClient({
                       </p>
                     </div>
                     {canRecord && (
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-2 shrink-0" style={{ touchAction: "manipulation" }}>
                         <button
                           type="button"
-                          onClick={() => handleEditGoal(goal)}
-                          className="rounded-lg bg-secondary min-h-[44px] min-w-[44px] px-3 py-2 text-xs font-semibold text-foreground hover:bg-secondary/70 active:scale-95 transition-all"
+                          onClick={(e) => { e.stopPropagation(); handleEditGoal(goal); }}
+                          className="rounded-lg bg-secondary min-h-[44px] px-4 py-2 text-xs font-semibold text-foreground hover:bg-secondary/70 active:bg-secondary/50 active:scale-95 transition-all cursor-pointer select-none"
                         >
                           수정
                         </button>
                         <button
                           type="button"
-                          onClick={() => setConfirmGoalDelete(goal.id)}
-                          className="rounded-lg bg-[hsl(var(--loss)/0.15)] min-h-[44px] min-w-[44px] px-3 py-2 text-xs font-semibold text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] active:scale-95 transition-all"
+                          onClick={(e) => { e.stopPropagation(); setConfirmGoalDelete(goal.id); }}
+                          className="rounded-lg bg-[hsl(var(--loss)/0.15)] min-h-[44px] px-4 py-2 text-xs font-semibold text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] active:bg-[hsl(var(--loss)/0.35)] active:scale-95 transition-all cursor-pointer select-none"
                         >
                           삭제
                         </button>

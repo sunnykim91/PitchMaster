@@ -235,7 +235,7 @@ export default function RecordsClient({
   }
 
   return (
-    <div className="grid gap-5 stagger-children">
+    <div className="grid gap-5 stagger-children min-w-0">
       {/* ── Row 0: 팀 전적 ── */}
       {initialData?.teamRecord && (initialData.teamRecord.wins + initialData.teamRecord.draws + initialData.teamRecord.losses) > 0 && (() => {
         const tr = initialData.teamRecord;
@@ -296,7 +296,7 @@ export default function RecordsClient({
             <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
               시즌
               <Select value={seasonId} onValueChange={handleSeasonChange}>
-                <SelectTrigger className="w-auto min-w-[120px] text-xs">
+                <SelectTrigger className="w-auto min-w-[90px] text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -427,7 +427,7 @@ export default function RecordsClient({
                           )}
                           <span className="truncate">{item.memberName ?? "-"}</span>
                         </span>
-                        <span className="type-stat shrink-0 text-foreground">
+                        <span className="shrink-0 text-lg font-bold font-[family-name:var(--font-display)] text-foreground">
                           {item[group.key]}
                         </span>
                       </div>
