@@ -127,6 +127,9 @@ export default function RecordsClient({
     return seasonId ? `/api/records?seasonId=${seasonId}` : "/api/records";
   }, [seasonId, isAllTime]);
 
+  // SSR 초기 데이터 → 시즌 변경 시 API fetch로 전환
+  const [initialRecordsUsed, setInitialRecordsUsed] = useState(false);
+
   const {
     data: recordsPayload,
     loading: loadingRecords,
@@ -135,9 +138,6 @@ export default function RecordsClient({
     { records: (isInitialSeason && initialData?.records) ? initialData.records : [] },
     { skip: !seasonId || (isInitialSeason && !!initialData?.records?.length && !initialRecordsUsed) },
   );
-
-  // SSR 초기 데이터 → 시즌 변경 시 API fetch로 전환
-  const [initialRecordsUsed, setInitialRecordsUsed] = useState(false);
   const effectiveRecords = useMemo(() => {
     // SSR 데이터가 있고 아직 초기 시즌이면 SSR 데이터 사용
     if (isInitialSeason && initialData?.records?.length && !initialRecordsUsed) {
