@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { ImageLightbox } from "@/components/ImageLightbox";
 
 type Post = {
   id: string;
@@ -124,6 +125,7 @@ export default function BoardClient({
   const [deletingPostIds, setDeletingPostIds] = useState<Set<string>>(new Set());
   const [deletingCommentIds, setDeletingCommentIds] = useState<Set<string>>(new Set());
   const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
   /* ── Escape key: cancel edit ── */
   useEffect(() => {
@@ -446,36 +448,34 @@ export default function BoardClient({
                   />
                   {formErrors.content && <p className="text-xs text-destructive">{formErrors.content}</p>}
                 </div>
-                {form.category === "GALLERY" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="post-image-file">이미지 업로드</Label>
-                    <input
-                      ref={fileInputRef}
-                      id="post-image-file"
-                      type="file"
-                      accept="image/*"
-                      className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90 disabled:opacity-50"
-                      disabled={uploading}
-                      onChange={handleFileChange}
+                <div className="space-y-2">
+                  <Label htmlFor="post-image-file">사진 첨부 <span className="text-muted-foreground font-normal">(이미지만 가능, 최대 5MB)</span></Label>
+                  <input
+                    ref={fileInputRef}
+                    id="post-image-file"
+                    type="file"
+                    accept="image/*"
+                    className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90 disabled:opacity-50"
+                    disabled={uploading}
+                    onChange={handleFileChange}
+                  />
+                  {uploading && (
+                    <p className="text-xs text-muted-foreground">업로드 중...</p>
+                  )}
+                  {uploadError && (
+                    <p className="text-xs text-destructive">{uploadError}</p>
+                  )}
+                  {form.imageUrl && !uploading && (
+                    <Image
+                      src={form.imageUrl}
+                      alt="미리보기"
+                      width={320}
+                      height={160}
+                      className="mt-2 max-h-40 rounded-xl object-contain"
+                      unoptimized
                     />
-                    {uploading && (
-                      <p className="text-xs text-muted-foreground">업로드 중...</p>
-                    )}
-                    {uploadError && (
-                      <p className="text-xs text-destructive">{uploadError}</p>
-                    )}
-                    {form.imageUrl && !uploading && (
-                      <Image
-                        src={form.imageUrl}
-                        alt="미리보기"
-                        width={320}
-                        height={160}
-                        className="mt-2 max-h-40 rounded-xl object-contain"
-                        unoptimized
-                      />
-                    )}
-                  </div>
-                )}
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <Button type="submit" className="w-fit" disabled={submitting || uploading}>
                     {submitting ? (editingPostId ? "수정 중..." : "등록 중...") : (editingPostId ? "게시글 수정" : "게시글 등록")}
@@ -517,16 +517,22 @@ export default function BoardClient({
                           {post.category === "FREE" ? "자유" : "사진"}
                         </Badge>
                         <h4 className="mt-2 text-lg font-bold truncate">{post.title}</h4>
-                        <p className="mt-2 text-sm text-muted-foreground">{post.content}</p>
+                        <p className="mt-2 text-sm text-muted-foreground whitespace-pre-line">{post.content}</p>
                         {post.imageUrls && post.imageUrls.length > 0 && (
-                          <Image
-                            src={post.imageUrls[0]}
-                            alt={post.title}
-                            width={480}
-                            height={192}
-                            className="mt-3 max-h-48 rounded-xl object-contain"
-                            unoptimized
-                          />
+                          <button
+                            type="button"
+                            className="mt-3 block cursor-zoom-in"
+                            onClick={() => setLightboxSrc(post.imageUrls![0])}
+                          >
+                            <Image
+                              src={post.imageUrls[0]}
+                              alt={post.title}
+                              width={480}
+                              height={192}
+                              className="max-h-48 rounded-xl object-contain"
+                              unoptimized
+                            />
+                          </button>
                         )}
                         <p className="mt-3 text-xs text-muted-foreground">
                           {post.author} · {post.createdAt}
@@ -657,6 +663,11 @@ export default function BoardClient({
         confirmLabel="삭제"
         onConfirm={() => { confirmAction?.onConfirm(); setConfirmAction(null); }}
         onCancel={() => setConfirmAction(null)}
+      />
+
+      <ImageLightbox
+        src={lightboxSrc}
+        onClose={() => setLightboxSrc(null)}
       />
     </div>
   );

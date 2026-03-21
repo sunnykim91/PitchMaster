@@ -44,6 +44,8 @@ export async function POST(request: NextRequest) {
       title: body.title,
       content: body.content,
       category: body.category || "일반",
+      file_url: body.fileUrl || null,
+      file_name: body.fileName || null,
       created_by: ctx.userId,
       created_at: now,
       updated_at: now,
@@ -74,6 +76,8 @@ export async function PUT(request: NextRequest) {
       title: body.title,
       content: body.content,
       category: body.category,
+      file_url: body.fileUrl ?? null,
+      file_name: body.fileName ?? null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", body.id)

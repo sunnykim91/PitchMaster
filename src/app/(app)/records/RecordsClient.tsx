@@ -133,7 +133,7 @@ export default function RecordsClient({
   } = useApi<{ records: Record<string, unknown>[] }>(
     recordsUrl,
     { records: (isInitialSeason && initialData?.records) ? initialData.records : [] },
-    { skip: !seasonId || (isInitialSeason && !!initialData?.records?.length) },
+    { skip: !seasonId || (isInitialSeason && !!initialData?.records?.length && !initialRecordsUsed) },
   );
 
   // SSR 초기 데이터 → 시즌 변경 시 API fetch로 전환

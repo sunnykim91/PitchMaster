@@ -88,13 +88,11 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     loading: squadsApiLoading,
   } = useApi<SquadsApiResponse>(
     `/api/squads?matchId=${matchId}`,
-    { squads: [] },
+    initialSquads ? { squads: initialSquads } : { squads: [] },
     { skip: Boolean(initialSquads) }
   );
-  const squadsData = useMemo(
-    () => initialSquads ? { squads: initialSquads } : squadsApiData,
-    [initialSquads, squadsApiData],
-  );
+  // initialSquads는 최초 hydrate용 — 로컬 저장 후에는 squadsApiData가 진실의 원천
+  const squadsData = squadsApiData;
   const squadsLoading = initialSquads ? false : squadsApiLoading;
 
   // ── Fetch team settings from API (only if not passed as prop) ──

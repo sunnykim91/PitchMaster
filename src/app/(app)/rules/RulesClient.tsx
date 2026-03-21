@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Download, FileText, Paperclip } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
@@ -26,6 +26,8 @@ interface Rule {
   title: string;
   content: string;
   category: RuleCategory;
+  fileUrl: string | null;
+  fileName: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -36,6 +38,8 @@ interface ApiRule {
   title: string;
   content: string;
   category: RuleCategory;
+  file_url?: string | null;
+  file_name?: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -48,6 +52,8 @@ function mapRule(apiRule: ApiRule): Rule {
     title: apiRule.title,
     content: apiRule.content,
     category: apiRule.category,
+    fileUrl: apiRule.file_url ?? null,
+    fileName: apiRule.file_name ?? null,
     createdAt: apiRule.created_at,
     updatedAt: apiRule.updated_at,
   };
@@ -71,10 +77,13 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
 
   const [selectedCategory, setSelectedCategory] = useState<RuleCategory | "ALL">("ALL");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formState, setFormState] = useState({ title: "", content: "", category: "일반" as RuleCategory });
+  const [formState, setFormState] = useState({ title: "", content: "", category: "일반" as RuleCategory, fileUrl: "" as string, fileName: "" as string });
   const [submitting, setSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const filteredRules = useMemo(() => {
     const list = selectedCategory === "ALL" ? rules : rules.filter((rule) => rule.category === selectedCategory);
@@ -94,13 +103,16 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
 
     setSubmitting(true);
     try {
+      const payload = {
+        title: formState.title,
+        content: formState.content,
+        category: formState.category,
+        fileUrl: formState.fileUrl || null,
+        fileName: formState.fileName || null,
+      };
+
       if (editingId) {
-        const { error } = await apiMutate("/api/rules", "PUT", {
-          id: editingId,
-          title: formState.title,
-          content: formState.content,
-          category: formState.category,
-        });
+        const { error } = await apiMutate("/api/rules", "PUT", { id: editingId, ...payload });
         if (error) {
           showToast(error, "error");
           return;
@@ -108,11 +120,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
         setEditingId(null);
         showToast("회칙이 수정되었습니다.");
       } else {
-        const { error } = await apiMutate("/api/rules", "POST", {
-          title: formState.title,
-          content: formState.content,
-          category: formState.category,
-        });
+        const { error } = await apiMutate("/api/rules", "POST", payload);
         if (error) {
           showToast(error, "error");
           return;
@@ -120,7 +128,9 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
         showToast("회칙이 등록되었습니다.");
       }
 
-      setFormState({ title: "", content: "", category: "일반" });
+      setFormState({ title: "", content: "", category: "일반", fileUrl: "", fileName: "" });
+      setUploadError(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       await refetch();
     } finally {
       setSubmitting(false);
@@ -129,13 +139,38 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
 
   function handleEdit(rule: Rule) {
     setEditingId(rule.id);
-    setFormState({ title: rule.title, content: rule.content, category: rule.category });
+    setFormState({ title: rule.title, content: rule.content, category: rule.category, fileUrl: rule.fileUrl ?? "", fileName: rule.fileName ?? "" });
+    setUploadError(null);
   }
 
   function handleCancel() {
     setEditingId(null);
-    setFormState({ title: "", content: "", category: "일반" });
+    setFormState({ title: "", content: "", category: "일반", fileUrl: "", fileName: "" });
     setFormErrors({});
+    setUploadError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload/file", { method: "POST", body: fd });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error((json as { error?: string }).error ?? "업로드 실패");
+      }
+      const json = (await res.json()) as { data: { url: string; fileName: string } };
+      setFormState((prev) => ({ ...prev, fileUrl: json.data.url, fileName: json.data.fileName }));
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "업로드 실패");
+    } finally {
+      setUploading(false);
+    }
   }
 
   /* ── Escape key: cancel edit ── */
@@ -282,8 +317,42 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
                     />
                     {formErrors.content && <p className="text-xs text-destructive">{formErrors.content}</p>}
                   </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-foreground/80">
+                      <Paperclip className="inline h-3.5 w-3.5 mr-1" />
+                      첨부파일 <span className="text-muted-foreground font-normal">(PDF, HWP, DOC, DOCX, XLS, XLSX / 최대 10MB)</span>
+                    </Label>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf,.hwp,.hwpx,.doc,.docx,.xls,.xlsx"
+                      className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90 disabled:opacity-50"
+                      disabled={uploading}
+                      onChange={handleFileChange}
+                    />
+                    {uploading && <p className="text-xs text-muted-foreground">업로드 중...</p>}
+                    {uploadError && <p className="text-xs text-destructive">{uploadError}</p>}
+                    {formState.fileUrl && !uploading && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <FileText className="h-4 w-4 shrink-0" />
+                        <span className="truncate">{formState.fileName || "첨부파일"}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs text-destructive hover:text-destructive"
+                          onClick={() => {
+                            setFormState((prev) => ({ ...prev, fileUrl: "", fileName: "" }));
+                            if (fileInputRef.current) fileInputRef.current.value = "";
+                          }}
+                        >
+                          삭제
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button type="submit" size="sm" className="px-6" disabled={submitting}>
+                    <Button type="submit" size="sm" className="px-6" disabled={submitting || uploading}>
                       {editingId ? "수정 완료" : "등록하기"}
                     </Button>
                     {editingId ? (
@@ -320,7 +389,19 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
                           {rule.category}
                         </Badge>
                         <h4 className="mt-2 text-lg font-bold text-foreground truncate">{rule.title}</h4>
-                        <p className="mt-2 text-sm text-foreground/80">{rule.content}</p>
+                        <p className="mt-2 text-sm text-foreground/80 whitespace-pre-line">{rule.content}</p>
+                        {rule.fileUrl && (
+                          <a
+                            href={rule.fileUrl}
+                            download={rule.fileName || true}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                            {rule.fileName || "첨부파일 다운로드"}
+                          </a>
+                        )}
                         <p className="mt-3 text-xs text-muted-foreground">
                           등록: {rule.createdAt} · 수정: {rule.updatedAt}
                         </p>
