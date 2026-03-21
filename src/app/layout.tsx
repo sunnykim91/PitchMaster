@@ -84,6 +84,21 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
       <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "PitchMaster",
+              "applicationCategory": "SportsApplication",
+              "operatingSystem": "Web",
+              "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" },
+              "description": "조기축구·풋살 팀 관리 서비스 — 참석 투표, 회비 관리, AI 라인업",
+              "url": "https://pitch-master.app"
+            })
+          }}
+        />
         {children}
         <ServiceWorkerRegister />
       </body>

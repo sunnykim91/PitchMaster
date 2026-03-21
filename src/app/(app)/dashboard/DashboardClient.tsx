@@ -353,7 +353,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                       disabled={voting}
                       aria-pressed={upcomingMatch.myVote === opt.value}
                       className={cn(
-                        "rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-105 disabled:opacity-50",
+                        "rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-105 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                         isSelected ? voteStyles[opt.value].active : voteStyles[opt.value].inactive
                       )}
                       onClick={() => handleQuickVote(upcomingMatch.id, upcomingMatch.myMemberId!, opt.value)}

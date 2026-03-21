@@ -83,6 +83,11 @@
   --sidebar-accent-foreground: 40 6% 80%;
   --sidebar-border: 240 4% 16%;
   --sidebar-ring: 16 85% 58%;
+
+  /* Spacing scale tokens */
+  --space-card: 1.25rem;
+  --space-card-lg: 1.5rem;
+  --space-section: 1.25rem;
 }
 
 body {
@@ -307,4 +312,12 @@ select optgroup {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: hsl(var(--muted-foreground));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

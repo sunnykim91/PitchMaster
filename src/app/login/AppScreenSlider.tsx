@@ -234,7 +234,7 @@ export default function AppScreenSlider() {
   const screen = screens[current];
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" role="region" aria-label="앱 화면 미리보기">
       {/* Phone frame */}
       <div className="relative mx-auto w-full max-w-[280px] overflow-hidden rounded-[2rem] border-2 border-white/10 bg-[#0a0c10] p-1.5 shadow-2xl shadow-black/50">
         {/* Notch */}
@@ -264,6 +264,7 @@ export default function AppScreenSlider() {
           <button
             key={i}
             onClick={() => setCurrent(i)}
+            aria-label={screens[i].title}
             className="flex items-center justify-center p-2"
           >
             <span className={`block rounded-full transition-all ${

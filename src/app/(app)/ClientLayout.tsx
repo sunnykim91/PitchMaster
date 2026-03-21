@@ -348,7 +348,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                 key={tab.href}
                 href={tab.href}
                 className={cn(
-                  "relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-[10px] transition-colors",
+                  "relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-[10px] active:scale-95 transition-all",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
@@ -366,7 +366,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
               <button
                 onClick={() => setMoreSheetOpen(true)}
                 className={cn(
-                  "relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-[10px] transition-colors",
+                  "relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-[10px] active:scale-95 transition-all",
                   isMoreActive ? "text-primary" : "text-muted-foreground"
                 )}
               >

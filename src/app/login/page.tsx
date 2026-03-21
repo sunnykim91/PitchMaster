@@ -14,19 +14,15 @@ export default async function LoginPage({
     ? `/api/auth/kakao?inviteCode=${encodeURIComponent(inviteCode)}`
     : "/api/auth/kakao";
 
-  const kakaoButton = kakaoEnabled ? (
-    <Button
-      className="h-14 rounded-2xl bg-[hsl(var(--kakao))] px-10 text-base font-bold text-[hsl(var(--kakao-foreground))] shadow-lg shadow-[hsl(var(--kakao))]/25 transition-all hover:bg-[hsl(var(--kakao))]/90 hover:shadow-xl hover:shadow-[hsl(var(--kakao))]/30"
-      asChild
-    >
-      <a href={kakaoHref}>
-        <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.724 1.8 5.113 4.508 6.459-.2.732-.722 2.654-.828 3.065-.13.507.186.5.39.364.16-.107 2.554-1.74 3.59-2.448.768.112 1.562.17 2.34.17 5.523 0 10-3.463 10-7.691S17.523 3 12 3" />
-        </svg>
-        카카오로 간편 시작
-      </a>
-    </Button>
-  ) : (
+  const kakaoIcon = (
+    <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.724 1.8 5.113 4.508 6.459-.2.732-.722 2.654-.828 3.065-.13.507.186.5.39.364.16-.107 2.554-1.74 3.59-2.448.768.112 1.562.17 2.34.17 5.523 0 10-3.463 10-7.691S17.523 3 12 3" />
+    </svg>
+  );
+
+  const kakaoButtonBase = "h-14 rounded-2xl bg-[hsl(var(--kakao))] px-10 text-base font-bold text-[hsl(var(--kakao-foreground))] shadow-lg shadow-[hsl(var(--kakao))]/25 transition-all hover:bg-[hsl(var(--kakao))]/90 hover:shadow-xl hover:shadow-[hsl(var(--kakao))]/30";
+
+  const disabledKakaoButton = (
     <Button
       className="h-14 rounded-2xl bg-[hsl(var(--kakao))] px-10 text-base font-bold text-[hsl(var(--kakao-foreground))]"
       disabled
@@ -34,6 +30,27 @@ export default async function LoginPage({
       카카오로 시작하기 (환경변수 필요)
     </Button>
   );
+
+  /** 1st CTA (hero) */
+  const kakaoButton = kakaoEnabled ? (
+    <Button className={kakaoButtonBase} asChild>
+      <a href={kakaoHref}>{kakaoIcon}카카오로 간편 시작</a>
+    </Button>
+  ) : disabledKakaoButton;
+
+  /** 2nd CTA (after before/after) */
+  const kakaoButton2 = kakaoEnabled ? (
+    <Button className={kakaoButtonBase} asChild>
+      <a href={kakaoHref}>{kakaoIcon}지금 바로 시작하기</a>
+    </Button>
+  ) : disabledKakaoButton;
+
+  /** 3rd CTA (final section) */
+  const kakaoButton3 = kakaoEnabled ? (
+    <Button className={kakaoButtonBase} asChild>
+      <a href={kakaoHref}>{kakaoIcon}무료로 시작하기</a>
+    </Button>
+  ) : disabledKakaoButton;
 
   return (
     <main className="relative min-h-screen overflow-hidden">
@@ -45,7 +62,7 @@ export default async function LoginPage({
       </div>
 
       {/* ── Section 1: Hero ── */}
-      <section className="relative mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center gap-12 px-4 py-16 sm:px-6 lg:flex-row lg:gap-16">
+      <section aria-label="서비스 소개" className="relative mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center gap-12 px-4 py-16 sm:px-6 lg:flex-row lg:gap-16">
         <div className="flex-1 space-y-8 text-center lg:text-left">
           <div className="inline-block rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.3em] text-primary">
             PitchMaster
@@ -88,7 +105,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Stats Counter ── */}
-      <section className="relative border-t border-border/30 bg-primary/5">
+      <section aria-label="사용 통계" className="relative border-t border-border/30 bg-primary/5">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-8 px-6 py-8 md:gap-16">
           {[
             { value: "100+", label: "관리된 경기", color: "text-primary" },
@@ -105,7 +122,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Section 2: Before / After ── */}
-      <section className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
+      <section aria-label="기능 비교" className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
         <div className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-20">
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-rose-400">
             총무의 현실
@@ -175,14 +192,14 @@ export default async function LoginPage({
 
           {/* 미니 CTA */}
           <div className="mt-10 flex flex-col items-center gap-2">
-            {kakaoButton}
+            {kakaoButton2}
             <p className="text-[11px] text-muted-foreground">지금 바로 체험해보세요</p>
           </div>
         </div>
       </section>
 
       {/* ── Section 3: Core 3 Features ── */}
-      <section className="relative border-t border-border/30">
+      <section aria-label="핵심 기능" className="relative border-t border-border/30">
         <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="text-center">
             <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
@@ -323,7 +340,7 @@ export default async function LoginPage({
                   style={{ left: `${p.x}%`, top: `${p.y}%` }}
                 >
                   <div
-                    className="flex h-9 w-9 items-center justify-center rounded-full text-[8px] font-bold text-white shadow-lg sm:h-10 sm:w-10 sm:text-[9px]"
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-[9px] font-bold text-white shadow-lg sm:h-10 sm:w-10 sm:text-[10px]"
                     style={{ backgroundColor: "#2563eb" }}
                   >
                     {p.label}
@@ -336,7 +353,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Section 4: More Features (4 cards) ── */}
-      <section className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
+      <section aria-label="추가 기능" className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
         <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="text-center">
             <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
@@ -391,7 +408,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Section 5: 비교표 ── */}
-      <section className="relative border-t border-border/30">
+      <section aria-label="서비스 비교" className="relative border-t border-border/30">
         <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="text-center">
             <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
@@ -403,16 +420,16 @@ export default async function LoginPage({
             <table className="w-full text-xs sm:text-sm">
               <thead>
                 <tr className="border-b border-border/30">
-                  <th className="pb-3 text-left text-muted-foreground font-medium sm:pb-4">
+                  <th scope="col" className="pb-3 text-left text-muted-foreground font-medium sm:pb-4">
                     기능
                   </th>
-                  <th className="pb-3 text-center text-muted-foreground font-medium sm:pb-4">
+                  <th scope="col" className="pb-3 text-center text-muted-foreground font-medium sm:pb-4">
                     카톡
                   </th>
-                  <th className="pb-3 text-center text-muted-foreground font-medium sm:pb-4">
+                  <th scope="col" className="pb-3 text-center text-muted-foreground font-medium sm:pb-4">
                     밴드
                   </th>
-                  <th className="pb-3 text-center font-bold text-primary sm:pb-4">
+                  <th scope="col" className="pb-3 text-center font-bold text-primary sm:pb-4">
                     PitchMaster
                   </th>
                 </tr>
@@ -486,7 +503,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Section 6: 사용자 후기 ── */}
-      <section className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
+      <section aria-label="사용자 후기" className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
         <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="text-center">
             <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
@@ -540,7 +557,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Section 7: 이용 방법 ── */}
-      <section className="relative border-t border-border/30">
+      <section aria-label="이용 방법" className="relative border-t border-border/30">
         <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="text-center">
             <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
@@ -585,7 +602,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Section 8: CTA ── */}
-      <section className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
+      <section aria-label="시작하기" className="relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
         <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 sm:py-24">
           <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
             이번 주부터 카톡 대신
@@ -596,7 +613,7 @@ export default async function LoginPage({
             현재 무료. 팀원 초대도 링크 하나면 끝.
           </p>
           <div className="mt-6 flex flex-col items-center gap-3 sm:mt-8">
-            {kakaoButton}
+            {kakaoButton3}
             <p className="text-xs text-muted-foreground">
               무료 · 광고 없음 · 카카오 계정으로 바로 시작
             </p>
@@ -611,19 +628,25 @@ export default async function LoginPage({
           asChild
         >
           <a href={kakaoEnabled ? (inviteCode ? `/api/auth/kakao?inviteCode=${encodeURIComponent(inviteCode)}` : "/api/auth/kakao") : "#"}>
-            카카오로 무료 시작하기
+            무료로 시작
           </a>
         </Button>
       </div>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-border/30 py-8 pb-24 lg:pb-8">
+      <footer aria-label="사이트 정보" className="border-t border-border/30 py-8 pb-24 lg:pb-8">
         <div className="mx-auto flex max-w-4xl flex-col items-center gap-3 px-6">
           <div className="flex gap-4 text-xs text-muted-foreground/60">
             <a href="/privacy" className="transition hover:text-foreground">개인정보처리방침</a>
             <span>·</span>
             <a href="/terms" className="transition hover:text-foreground">이용약관</a>
           </div>
+          <p className="text-xs text-muted-foreground">
+            데이터는 한국 리전(서울)에 안전하게 저장됩니다
+          </p>
+          <p className="text-xs text-muted-foreground">
+            문의: pitchmaster.app@gmail.com
+          </p>
           <p className="text-xs text-muted-foreground/40">
             PitchMaster &copy; {new Date().getFullYear()}
           </p>

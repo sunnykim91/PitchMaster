@@ -4,13 +4,19 @@ import { useMemo, useRef, useState, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 
+const TacticsBoardSkeleton = () => (
+  <div className="flex flex-col items-center justify-center py-12 gap-3">
+    <Skeleton className="h-48 w-full rounded-xl" />
+    <p className="text-xs text-muted-foreground">전술판 불러오는 중...</p>
+  </div>
+);
 const TacticsBoard = dynamic(() => import("@/components/TacticsBoard"), {
   ssr: false,
-  loading: () => <div className="flex items-center justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" /></div>
+  loading: () => <TacticsBoardSkeleton />
 });
 const AutoFormationBuilder = dynamic(() => import("@/components/AutoFormationBuilder"), {
   ssr: false,
-  loading: () => <div className="flex items-center justify-center py-10"><div className="h-6 w-6 animate-spin rounded-full border-4 border-muted border-t-primary" /></div>
+  loading: () => <TacticsBoardSkeleton />
 });
 import type { AttendingPlayer, GeneratedSquad } from "@/components/AutoFormationBuilder";
 import { useApi, apiMutate } from "@/lib/useApi";
@@ -31,6 +37,8 @@ import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
 import { shareMatchResult } from "@/lib/kakaoShare";
 import { recommendFormation, type PlayerInput } from "@/lib/formationAI";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { EmptyState } from "@/components/EmptyState";
+import { Target } from "lucide-react";
 import { useToast } from "@/lib/ToastContext";
 import type { SportType } from "@/lib/types";
 
@@ -429,6 +437,8 @@ export default function MatchDetailClient({
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [isGuestFormOpen, setIsGuestFormOpen] = useState(false);
   const [isDiaryEditing, setIsDiaryEditing] = useState(false);
+  const [confirmGoalDelete, setConfirmGoalDelete] = useState<string | null>(null);
+  const [showBulkAttendConfirm, setShowBulkAttendConfirm] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const diaryFormRef = useRef<HTMLFormElement>(null);
 
@@ -759,7 +769,7 @@ export default function MatchDetailClient({
     <div className="grid gap-5 stagger-children">
       {/* ── Sticky Tab Bar ── */}
       <div className="sticky top-0 z-10 -mx-1 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="flex">
+        <div className="flex" role="tablist">
           {([
             { key: "info", label: "기본 정보" },
             { key: "tactics", label: "전술판" },
@@ -768,6 +778,8 @@ export default function MatchDetailClient({
           ] as const).map((tab) => (
             <button
               key={tab.key}
+              role="tab"
+              aria-selected={activeTab === tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={cn(
                 "flex-1 py-3 text-sm font-medium transition-colors border-b-2",
@@ -812,6 +824,36 @@ export default function MatchDetailClient({
         onConfirm={handleCompleteMatch}
         onCancel={() => setShowCompleteConfirm(false)}
       />
+      <ConfirmDialog
+        open={confirmGoalDelete !== null}
+        title="골 기록 삭제"
+        description="이 골 기록을 삭제하시겠습니까? 삭제된 기록은 복구할 수 없습니다."
+        confirmLabel="삭제"
+        cancelLabel="취소"
+        onConfirm={async () => {
+          if (confirmGoalDelete) {
+            await handleDeleteGoal(confirmGoalDelete);
+          }
+          setConfirmGoalDelete(null);
+        }}
+        onCancel={() => setConfirmGoalDelete(null)}
+      />
+      <ConfirmDialog
+        open={showBulkAttendConfirm}
+        title="전원 참석 처리"
+        description={`참석 투표한 ${attendingMembers.length}명 전원을 출석으로 처리합니다.`}
+        confirmLabel="전원 참석 처리"
+        cancelLabel="취소"
+        onConfirm={async () => {
+          await Promise.all(
+            attendingMembers.map((player) =>
+              handleAttendance(player.id, "PRESENT")
+            )
+          );
+          setShowBulkAttendConfirm(false);
+        }}
+        onCancel={() => setShowBulkAttendConfirm(false)}
+      />
       {/* ── 내 참석 투표 (모든 멤버, 진행 전 경기만) ── */}
       {match.status !== "COMPLETED" && (() => {
         const myMember = baseRoster.find((m) => m.id === userId);
@@ -839,7 +881,7 @@ export default function MatchDetailClient({
                         key={opt.value}
                         type="button"
                         className={cn(
-                          "rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-105",
+                          "rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-105 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                           isSelected ? voteStyles[opt.value].active : voteStyles[opt.value].inactive
                         )}
                         onClick={() => handleProxyVote(myMember.memberId, opt.value)}
@@ -914,7 +956,7 @@ export default function MatchDetailClient({
                             key={opt.value}
                             type="button"
                             className={cn(
-                              "rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200 active:scale-105",
+                              "rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200 active:scale-105 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                               isSelected ? voteStyles[opt.value].active : voteStyles[opt.value].inactive
                             )}
                             onClick={() => handleProxyVote(member.memberId, opt.value)}
@@ -1367,9 +1409,7 @@ export default function MatchDetailClient({
 
             <div className="space-y-2">
               {goals.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  아직 기록된 골이 없습니다.
-                </p>
+                <EmptyState icon={Target} title="아직 기록이 없습니다" description="위의 +득점 버튼으로 골을 기록하세요" />
               ) : (
                 goals.map((goal) => {
                   const label = goal.scorerId === "OPPONENT"
@@ -1406,7 +1446,7 @@ export default function MatchDetailClient({
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDeleteGoal(goal.id)}
+                          onClick={() => setConfirmGoalDelete(goal.id)}
                           className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
                         >
                           삭제
@@ -1480,13 +1520,7 @@ export default function MatchDetailClient({
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={async () => {
-                      await Promise.all(
-                        attendingMembers.map((player) =>
-                          handleAttendance(player.id, "PRESENT")
-                        )
-                      );
-                    }}
+                    onClick={() => setShowBulkAttendConfirm(true)}
                   >
                     전원 참석 처리
                   </Button>
