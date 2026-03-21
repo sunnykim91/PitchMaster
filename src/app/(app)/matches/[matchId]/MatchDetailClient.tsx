@@ -162,6 +162,7 @@ type AttendanceState = Record<string, "PRESENT" | "ABSENT" | "LATE">;
 /** 기본 제공되는 특수 선택지 */
 const SPECIAL_PLAYERS = [
   { id: "UNKNOWN", name: "모름" },
+  { id: "OPPONENT", name: "실점 (상대팀)" },
 ] as const;
 
 const WEATHER_OPTIONS = ["맑음", "흐림", "비", "눈", "바람"] as const;
@@ -1234,7 +1235,7 @@ export default function MatchDetailClient({
                     const formData = new FormData();
                     formData.set("scorerId", "OPPONENT");
                     formData.set("assistId", "");
-                    formData.set("quarter", "1");
+                    formData.set("quarter", "0");
                     formData.set("minute", "0");
                     formData.set("isOwnGoal", "");
                     await handleAddGoal(formData);

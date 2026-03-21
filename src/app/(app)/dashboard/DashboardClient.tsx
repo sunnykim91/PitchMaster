@@ -233,7 +233,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
   }
 
   return (
-    <div className="grid gap-4 stagger-children">
+    <div className="grid gap-4 stagger-children min-w-0 overflow-hidden">
       {/* ── Onboarding Wizard (new teams only) ── */}
       {showWizard && (
         <Card className="card-featured">

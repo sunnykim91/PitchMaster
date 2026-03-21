@@ -260,7 +260,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   );
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       <div className="mx-auto grid max-w-7xl gap-4 px-4 py-4 lg:grid-cols-[260px_1fr]">
         {/* Mobile Header */}
         <header className="lg:hidden">
