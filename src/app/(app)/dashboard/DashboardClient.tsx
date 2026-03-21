@@ -145,12 +145,8 @@ function CardSkeleton() {
 
 function formatDate(iso: string) {
   try {
-    const d = new Date(iso);
-    return d.toLocaleDateString("ko-KR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    const [y, m, d] = iso.split("-").map(Number);
+    return `${y}년 ${m}월 ${d}일`;
   } catch {
     return iso;
   }
@@ -159,12 +155,11 @@ function formatDate(iso: string) {
 function formatDue(iso: string) {
   try {
     const d = new Date(iso);
-    return d.toLocaleDateString("ko-KR", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    const h = String(d.getHours()).padStart(2, "0");
+    const min = String(d.getMinutes()).padStart(2, "0");
+    return `마감: ${m}월 ${day}일 ${h}:${min}`;
   } catch {
     return iso;
   }

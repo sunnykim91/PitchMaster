@@ -94,54 +94,6 @@
   --radius-card-inner: 0.875rem;
 }
 
-/* ── Light Mode — system preference ── */
-@media (prefers-color-scheme: light) {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 10%;
-    --card: 0 0% 98%;
-    --card-foreground: 240 10% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 10%;
-    --primary: 16 85% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 4% 92%;
-    --secondary-foreground: 240 10% 10%;
-    --muted: 240 4% 95%;
-    --muted-foreground: 215 15% 45%;
-    --accent: 40 60% 45%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 240 4% 88%;
-    --input: 240 4% 88%;
-    --ring: 16 85% 50%;
-
-    --kakao: 51 100% 50%;
-    --kakao-foreground: 0 0% 12%;
-    --success: 152 60% 38%;
-    --warning: 38 92% 45%;
-    --info: 210 70% 45%;
-
-    --win: 152 60% 38%;
-    --draw: 38 60% 45%;
-    --loss: 0 65% 45%;
-    --pitch: 145 50% 35%;
-
-    --sidebar-background: 240 4% 96%;
-    --sidebar-foreground: 240 10% 10%;
-    --sidebar-primary: 16 85% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 4% 92%;
-    --sidebar-accent-foreground: 240 10% 30%;
-    --sidebar-border: 240 4% 88%;
-    --sidebar-ring: 16 85% 50%;
-
-    /* Skeleton pulse – higher contrast on light bg */
-    --skeleton-lo: 0.06;
-    --skeleton-hi: 0.12;
-  }
-}
 
 html, body {
   overflow-x: hidden;
