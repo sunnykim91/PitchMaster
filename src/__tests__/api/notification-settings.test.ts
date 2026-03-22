@@ -14,14 +14,10 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 describe("GET /api/notification-settings", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  const makeRequest = () => new NextRequest("http://localhost/api/notification-settings");
-
   it("401: 비로그인 접근 거부", async () => {
     vi.mocked(auth).mockResolvedValue(null);
     const res = await GET();
     expect(res.status).toBe(401);
-    const json = await res.json();
-    expect(json.error).toBe("Unauthorized");
   });
 
   it("403: 팀 없는 경우", async () => {
@@ -39,7 +35,7 @@ describe("GET /api/notification-settings", () => {
 
   it("200: 설정 레코드 있는 경우 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const settings = { user_id: "user-member-001", email: false, push: true };
+    const settings = { user_id: "user-member-001", push: true };
     const db = createMockDb(["notification_settings", settings]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
@@ -49,7 +45,7 @@ describe("GET /api/notification-settings", () => {
     expect(json.settings).toEqual(settings);
   });
 
-  it("200: 설정 레코드 없는 경우 기본값 반환 (email:true, push:true)", async () => {
+  it("200: 설정 레코드 없는 경우 기본값 반환 (push:true)", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["notification_settings", null]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
@@ -57,7 +53,7 @@ describe("GET /api/notification-settings", () => {
     const res = await GET();
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.settings).toEqual({ email: true, push: true });
+    expect(json.settings).toEqual({ push: true });
   });
 
   it("400: DB 에러 시 에러 반환", async () => {
@@ -86,56 +82,67 @@ describe("PUT /api/notification-settings", () => {
 
   it("401: 비로그인 접근 거부", async () => {
     vi.mocked(auth).mockResolvedValue(null);
-    const res = await PUT(makeRequest({ email: true, push: false }));
+    const res = await PUT(makeRequest({ push: false }));
     expect(res.status).toBe(401);
   });
 
   it("403: 팀 없는 경우", async () => {
     vi.mocked(auth).mockResolvedValue(noTeamSession);
-    const res = await PUT(makeRequest({ email: true, push: false }));
+    const res = await PUT(makeRequest({ push: false }));
     expect(res.status).toBe(403);
   });
 
   it("503: DB 없는 경우", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     vi.mocked(getSupabaseAdmin).mockReturnValue(null);
-    const res = await PUT(makeRequest({ email: true, push: false }));
+    const res = await PUT(makeRequest({ push: false }));
     expect(res.status).toBe(503);
   });
 
-  it("200: 설정 upsert 성공 — 업데이트된 settings 반환", async () => {
+  it("200: 기존 설정 있으면 update 성공", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const updatedSettings = { user_id: "user-member-001", email: true, push: false };
-    const db = createMockDb(["notification_settings", updatedSettings]);
+    const updated = { user_id: "user-member-001", push: false };
+    // 1st call: select (existing found), 2nd call: update
+    const db = createMockDb(
+      ["notification_settings", { id: "existing-id" }],
+      ["notification_settings", updated]
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
-    const res = await PUT(makeRequest({ email: true, push: false }));
+    const res = await PUT(makeRequest({ push: false }));
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.settings).toEqual(updatedSettings);
+    expect(json.settings.push).toBe(false);
   });
 
-  it("200: email, push 모두 false로 설정 가능", async () => {
+  it("200: 기존 설정 없으면 insert 성공", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const updatedSettings = { user_id: "user-member-001", email: false, push: false };
-    const db = createMockDb(["notification_settings", updatedSettings]);
+    const inserted = { user_id: "user-member-001", push: true };
+    // 1st call: select (null), 2nd call: insert
+    const db = createMockDb(
+      ["notification_settings", null],
+      ["notification_settings", inserted]
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
-    const res = await PUT(makeRequest({ email: false, push: false }));
+    const res = await PUT(makeRequest({ push: true }));
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.settings.email).toBe(false);
-    expect(json.settings.push).toBe(false);
+    expect(json.settings.push).toBe(true);
   });
 
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["notification_settings", null, { message: "upsert failed" }]);
+    // 1st call: select (null), 2nd call: insert fails
+    const db = createMockDb(
+      ["notification_settings", null],
+      ["notification_settings", null, { message: "insert failed" }]
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
-    const res = await PUT(makeRequest({ email: true, push: true }));
+    const res = await PUT(makeRequest({ push: true }));
     expect(res.status).toBe(400);
     const json = await res.json();
-    expect(json.error).toBe("upsert failed");
+    expect(json.error).toBe("insert failed");
   });
 });

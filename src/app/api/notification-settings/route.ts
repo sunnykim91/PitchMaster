@@ -15,7 +15,7 @@ export async function GET() {
     .eq("user_id", ctx.userId)
     .maybeSingle();
   if (error) return apiError(error.message);
-  return apiSuccess({ settings: data || { email: true, push: true } });
+  return apiSuccess({ settings: data || { push: true } });
 }
 
 export async function PUT(request: NextRequest) {
@@ -26,18 +26,29 @@ export async function PUT(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  const { data, error } = await db
+  // upsert 대신 select → insert/update로 처리 (unique constraint 이슈 방지)
+  const { data: existing } = await db
     .from("notification_settings")
-    .upsert(
-      {
-        user_id: ctx.userId,
-        email: body.email ?? true,
-        push: body.push ?? true,
-      },
-      { onConflict: "user_id" }
-    )
-    .select()
-    .single();
+    .select("id")
+    .eq("user_id", ctx.userId)
+    .maybeSingle();
+
+  let data, error;
+  if (existing) {
+    ({ data, error } = await db
+      .from("notification_settings")
+      .update({ push: body.push ?? true })
+      .eq("user_id", ctx.userId)
+      .select()
+      .single());
+  } else {
+    ({ data, error } = await db
+      .from("notification_settings")
+      .insert({ user_id: ctx.userId, push: body.push ?? true })
+      .select()
+      .single());
+  }
+
   if (error) return apiError(error.message);
   return apiSuccess({ settings: data });
 }

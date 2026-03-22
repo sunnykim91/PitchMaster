@@ -52,6 +52,40 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const [copied, setCopied] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [sheetClosing, setSheetClosing] = useState(false);
+  const [notiOpen, setNotiOpen] = useState(false);
+  const [notifications, setNotifications] = useState<{ id: string; title: string; message: string; is_read: boolean; created_at: string }[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // 알림 데이터 로드
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications");
+      if (!res.ok) return;
+      const json = await res.json();
+      const items = json.notifications ?? [];
+      setNotifications(items);
+      setUnreadCount(items.filter((n: { is_read: boolean }) => !n.is_read).length);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  const markAllRead = async () => {
+    const unread = notifications.filter((n) => !n.is_read);
+    if (unread.length === 0) return;
+    await Promise.all(
+      unread.map((n) =>
+        fetch("/api/notifications", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: n.id, is_read: true }),
+        })
+      )
+    );
+    fetchNotifications();
+  };
 
   function closeSheet() {
     setSheetClosing(true);
@@ -128,7 +162,6 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       { href: "/dues", label: "회비 관리", detail: "거래 내역/납부", icon: Wallet },
       { href: "/members", label: "회원 관리", detail: "멤버/권한", icon: Users },
       { href: "/board", label: "게시판", detail: "공지/자유", icon: MessageSquare },
-      { href: "/notifications", label: "알림", detail: "알림 센터", icon: Bell },
       { href: "/rules", label: "회칙", detail: "팀 규정", icon: BookOpen },
       { href: "/settings", label: "설정", detail: "개인/팀", icon: Settings },
     ],
@@ -287,6 +320,49 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                   )}
                 </p>
               </div>
+              <div className="flex items-center gap-2">
+                <Sheet open={notiOpen} onOpenChange={(open) => { setNotiOpen(open); if (open) fetchNotifications(); }}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" aria-label="알림" className="relative">
+                      <Bell className="h-4 w-4" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[hsl(var(--loss))] px-1 text-[10px] font-bold text-white">
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </span>
+                      )}
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-[320px] overflow-y-auto">
+                    <SheetTitle className="flex items-center justify-between text-sm font-bold">
+                      알림
+                      {unreadCount > 0 && (
+                        <button onClick={markAllRead} className="text-xs font-normal text-primary">모두 읽음</button>
+                      )}
+                    </SheetTitle>
+                    <SheetDescription className="sr-only">알림 목록</SheetDescription>
+                    <div className="mt-4 space-y-2">
+                      {notifications.length === 0 ? (
+                        <p className="py-8 text-center text-sm text-muted-foreground">알림이 없습니다</p>
+                      ) : (
+                        notifications.map((n) => (
+                          <div
+                            key={n.id}
+                            className={cn(
+                              "rounded-lg p-3 text-sm transition-colors",
+                              n.is_read ? "bg-secondary/50" : "bg-primary/5 border border-primary/20"
+                            )}
+                          >
+                            <p className="font-semibold">{n.title}</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">{n.message}</p>
+                            <p className="mt-1 text-xs text-muted-foreground/50">
+                              {new Date(n.created_at).toLocaleDateString("ko-KR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </SheetContent>
+                </Sheet>
               <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>
                   <Button variant="outline" size="icon" aria-label="메뉴 열기">
@@ -299,6 +375,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                   <div className="mt-6">{sidebarContent}</div>
                 </SheetContent>
               </Sheet>
+              </div>
             </CardContent>
           </Card>
         </header>
@@ -373,7 +450,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             );
           })}
           {(() => {
-            const isMoreActive = ["/members", "/board", "/notifications", "/rules", "/settings"].some((p) => pathname === p || pathname.startsWith(p + "/"));
+            const isMoreActive = ["/members", "/board", "/rules", "/settings"].some((p) => pathname === p || pathname.startsWith(p + "/"));
             return (
               <button
                 onClick={() => setMoreSheetOpen(true)}
@@ -409,7 +486,6 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
               {[
                 { href: "/members", icon: Users, label: "회원관리" },
                 { href: "/board", icon: MessageSquare, label: "게시판" },
-                { href: "/notifications", icon: Bell, label: "알림" },
                 { href: "/rules", icon: BookOpen, label: "회칙" },
                 { href: "/settings", icon: Settings, label: "설정" },
               ].map((item) => (
