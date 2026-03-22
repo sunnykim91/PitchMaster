@@ -20,33 +20,39 @@ const ToastContext = createContext<{
   showToast: (message: string, variant?: ToastVariant) => void;
 }>({ showToast: () => {} });
 
+let toastCounter = 0;
+
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = useCallback((message: string, variant: ToastVariant = "success") => {
-    const id = Math.random().toString(36).slice(2);
-    setToasts((prev) => [...prev, { id, message, variant }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3500);
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
+
+  const showToast = useCallback((message: string, variant: ToastVariant = "success") => {
+    const id = `toast-${++toastCounter}`;
+    setToasts((prev) => [...prev, { id, message, variant }]);
+    setTimeout(() => removeToast(id), 3500);
+  }, [removeToast]);
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-[60] flex flex-col gap-2 pointer-events-none">
+      <div className="fixed bottom-4 right-4 z-[60] flex flex-col gap-2">
         {toasts.map((toast) => (
-          <div
+          <button
             key={toast.id}
+            type="button"
+            onClick={() => removeToast(toast.id)}
             className={cn(
-              "rounded-lg px-4 py-3 text-sm font-medium shadow-lg animate-in slide-in-from-bottom-2 duration-200",
+              "cursor-pointer rounded-lg px-4 py-3 text-sm font-medium shadow-lg animate-in slide-in-from-bottom-2 duration-200 transition-opacity hover:opacity-80",
               toast.variant === "success" && "bg-[hsl(var(--success))] text-white",
               toast.variant === "error" && "bg-destructive text-destructive-foreground",
               toast.variant === "info" && "bg-[hsl(var(--info))] text-white",
             )}
           >
             {toast.message}
-          </div>
+          </button>
         ))}
       </div>
     </ToastContext.Provider>

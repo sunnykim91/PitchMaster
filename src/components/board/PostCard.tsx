@@ -1,0 +1,216 @@
+"use client";
+
+import Image from "next/image";
+import { MessageSquare, Heart, Pin, ChevronDown, ChevronUp, Pencil, Trash2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { relativeTime } from "@/lib/utils";
+import { PollBlock } from "@/components/board/PollBlock";
+import { CommentSection } from "@/components/board/CommentSection";
+import type { Post, Comment } from "@/app/(app)/board/BoardClient";
+
+export interface PostCardProps {
+  post: Post;
+  userId: string;
+  isStaff: boolean;
+  onEdit: (post: Post) => void;
+  onDelete: (postId: string) => void;
+  onLike: (postId: string) => void;
+  onPin: (postId: string) => void;
+  onImageClick: (src: string) => void;
+  onVote: (pollId: string, optionId: string) => void;
+  onToggleExpand: (postId: string) => void;
+  likingPostIds: Set<string>;
+  deletingPostIds: Set<string>;
+  votingOptionId: string | null;
+  /* Comment-related props */
+  comments: Comment[];
+  isExpanded: boolean;
+  isLoadingComments: boolean;
+  commentInput: string;
+  onCommentInputChange: (value: string) => void;
+  onCommentSubmit: (postId: string) => void;
+  onCommentDelete: (commentId: string, postId: string) => void;
+  commentingPostId: string | null;
+  deletingCommentIds: Set<string>;
+  onSetConfirmAction: (action: { message: string; onConfirm: () => void }) => void;
+}
+
+export function PostCard({
+  post,
+  userId,
+  isStaff,
+  onEdit,
+  onDelete,
+  onLike,
+  onPin,
+  onImageClick,
+  onVote,
+  onToggleExpand,
+  likingPostIds,
+  deletingPostIds,
+  votingOptionId,
+  comments,
+  isExpanded,
+  isLoadingComments,
+  commentInput,
+  onCommentInputChange,
+  onCommentSubmit,
+  onCommentDelete,
+  commentingPostId,
+  deletingCommentIds,
+  onSetConfirmAction,
+}: PostCardProps) {
+  const canModifyPost = post.authorId === userId || isStaff;
+
+  return (
+    <Card
+      className={cn(
+        "overflow-hidden transition-colors",
+        post.isPinned && "border-primary/30 bg-primary/[0.03]"
+      )}
+    >
+      <CardContent className="p-4">
+        {/* Post header: author + meta */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            {/* Avatar placeholder */}
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <span className="text-xs font-bold text-primary">
+                {post.author?.charAt(0) || "?"}
+              </span>
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-semibold truncate">{post.author}</span>
+                {post.isPinned && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 gap-0.5 text-primary border-primary/30">
+                    <Pin className="h-2.5 w-2.5" />
+                    고정
+                  </Badge>
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground">{relativeTime(post.createdAt)}</p>
+            </div>
+          </div>
+
+          {/* Actions menu */}
+          {(canModifyPost || isStaff) && (
+            <div className="flex items-center gap-0.5 shrink-0">
+              {isStaff && (
+                <button
+                  type="button"
+                  onClick={() => onPin(post.id)}
+                  className={cn(
+                    "p-1.5 rounded-md transition-colors",
+                    post.isPinned
+                      ? "text-primary hover:bg-primary/10"
+                      : "text-muted-foreground hover:bg-muted"
+                  )}
+                  title={post.isPinned ? "고정 해제" : "고정"}
+                >
+                  <Pin className="h-4 w-4" />
+                </button>
+              )}
+              {canModifyPost && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onEdit(post)}
+                    className="p-1.5 rounded-md text-muted-foreground hover:bg-muted transition-colors"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSetConfirmAction({ message: "게시글을 삭제하시겠습니까?", onConfirm: () => onDelete(post.id) })}
+                    disabled={deletingPostIds.has(post.id)}
+                    className="p-1.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Post body */}
+        <div className="mt-3">
+          <h3 className="text-[15px] font-bold leading-snug">{post.title}</h3>
+          <p className="mt-1.5 text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
+            {post.content}
+          </p>
+        </div>
+
+        {/* Image */}
+        {post.imageUrls && post.imageUrls.length > 0 && (
+          <button
+            type="button"
+            className="mt-3 block w-full cursor-zoom-in"
+            onClick={() => onImageClick(post.imageUrls![0])}
+          >
+            <Image
+              src={post.imageUrls[0]}
+              alt={post.title}
+              width={480}
+              height={240}
+              className="w-full max-h-56 rounded-lg object-cover"
+              unoptimized
+            />
+          </button>
+        )}
+
+        {/* Poll */}
+        {post.poll && (
+          <PollBlock
+            poll={post.poll}
+            onVote={onVote}
+            votingOptionId={votingOptionId}
+          />
+        )}
+
+        {/* Footer: likes + comments toggle */}
+        <div className="mt-3 flex items-center gap-1 border-t border-border/30 pt-2.5">
+          <button
+            type="button"
+            onClick={() => onLike(post.id)}
+            disabled={likingPostIds.has(post.id)}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-primary/5"
+          >
+            <Heart className={cn("h-4 w-4", post.likes > 0 && "fill-primary/20 text-primary")} />
+            {post.likes > 0 && <span>{post.likes}</span>}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onToggleExpand(post.id)}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted"
+          >
+            <MessageSquare className="h-4 w-4" />
+            {post.comments > 0 && <span>{post.comments}</span>}
+            {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          </button>
+        </div>
+
+        {/* Comments section */}
+        <CommentSection
+          postId={post.id}
+          comments={comments}
+          isLoading={isLoadingComments}
+          isExpanded={isExpanded}
+          userId={userId}
+          isStaff={isStaff}
+          commentInput={commentInput}
+          onInputChange={onCommentInputChange}
+          onSubmit={onCommentSubmit}
+          onDelete={onCommentDelete}
+          commentingPostId={commentingPostId}
+          deletingCommentIds={deletingCommentIds}
+          onSetConfirmAction={onSetConfirmAction}
+        />
+      </CardContent>
+    </Card>
+  );
+}

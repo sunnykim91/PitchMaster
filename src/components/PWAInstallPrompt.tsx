@@ -30,6 +30,7 @@ export default function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
   const [mode, setMode] = useState<PromptMode>("install");
+  const [showIosGuide, setShowIosGuide] = useState(false);
 
   useEffect(() => {
     // 이미 PWA로 실행 중이면 표시 안 함
@@ -78,7 +79,7 @@ export default function PWAInstallPrompt() {
     }
 
     if (mode === "ios") {
-      alert("하단 공유 버튼(□↑)을 누른 후 \"홈 화면에 추가\"를 선택해주세요.");
+      setShowIosGuide(true);
       return;
     }
 
@@ -127,7 +128,7 @@ export default function PWAInstallPrompt() {
             <p className="text-sm font-bold">앱처럼 사용하기</p>
             <p className="mt-0.5 text-xs text-muted-foreground">{content.desc}</p>
           </div>
-          <button onClick={handleDismiss} className="shrink-0 p-1 text-muted-foreground">
+          <button onClick={handleDismiss} aria-label="닫기" className="shrink-0 p-1 text-muted-foreground">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -138,6 +139,33 @@ export default function PWAInstallPrompt() {
           {content.btn}
         </button>
       </div>
+      {showIosGuide && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={() => setShowIosGuide(false)}>
+          <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-bold">홈 화면에 추가하기</h3>
+            <div className="mt-4 space-y-4">
+              <div className="flex items-start gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">1</span>
+                <p className="text-sm text-muted-foreground">하단의 <span className="font-semibold text-foreground">공유 버튼(□↑)</span>을 탭하세요</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">2</span>
+                <p className="text-sm text-muted-foreground">메뉴에서 <span className="font-semibold text-foreground">&quot;홈 화면에 추가&quot;</span>를 선택하세요</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">3</span>
+                <p className="text-sm text-muted-foreground">우측 상단의 <span className="font-semibold text-foreground">&quot;추가&quot;</span>를 탭하세요</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowIosGuide(false)}
+              className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

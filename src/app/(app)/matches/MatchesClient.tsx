@@ -9,7 +9,9 @@ import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { useToast } from "@/lib/ToastContext";
 import type { Role, SportType } from "@/lib/types";
 import { SPORT_DEFAULTS } from "@/lib/types";
-import { cn, formatTime, formatDateTime } from "@/lib/utils";
+import { cn, formatTime, formatDateTime, formatMatchDate } from "@/lib/utils";
+import { voteStyles } from "@/lib/voteStyles";
+import { toKoreanError } from "@/lib/errorMessages";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,30 +72,6 @@ const attendanceLabels: Record<AttendanceVote, string> = {
   ABSENT: "불참",
   MAYBE: "미정",
 };
-
-const voteStyles = {
-  ATTEND: {
-    active: "bg-[hsl(var(--success))] text-white shadow-[0_2px_8px_-2px_hsl(var(--success)/0.4)]",
-    inactive: "bg-secondary/50 text-muted-foreground border border-border hover:bg-[hsl(var(--success)/0.1)] hover:text-[hsl(var(--success))] hover:border-[hsl(var(--success)/0.3)]",
-  },
-  MAYBE: {
-    active: "bg-[hsl(var(--warning))] text-background shadow-[0_2px_8px_-2px_hsl(var(--warning)/0.4)]",
-    inactive: "bg-secondary/50 text-muted-foreground border border-border hover:bg-[hsl(var(--warning)/0.1)] hover:text-[hsl(var(--warning))] hover:border-[hsl(var(--warning)/0.3)]",
-  },
-  ABSENT: {
-    active: "bg-[hsl(var(--loss))] text-white shadow-[0_2px_8px_-2px_hsl(var(--loss)/0.4)]",
-    inactive: "bg-secondary/50 text-muted-foreground border border-border hover:bg-[hsl(var(--loss)/0.1)] hover:text-[hsl(var(--loss))] hover:border-[hsl(var(--loss)/0.3)]",
-  },
-};
-
-function formatMatchDate(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  const days = ["일", "월", "화", "수", "목", "금", "토"];
-  const month = d.getMonth() + 1;
-  const day = d.getDate();
-  const dow = days[d.getDay()];
-  return `${month}월 ${day}일 (${dow})`;
-}
 
 function mapDbMatchToMatch(db: DbMatch): Match {
   return {
@@ -250,7 +228,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
         setIsOpen(false);
       }
     } else {
-      showToast(error, "error");
+      showToast(toKoreanError(error), "error");
     }
   }
 
@@ -262,7 +240,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
       await refetchAttendance();
       showToast("참석 의사를 저장했습니다.");
     } else {
-      showToast(error, "error");
+      showToast(toKoreanError(error), "error");
     }
   }
 
@@ -270,7 +248,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     return (
       <Card className="p-6">
         <div className="flex items-center justify-between">
-          <span className="text-destructive">오류: {matchesError}</span>
+          <span className="text-destructive">오류: {toKoreanError(matchesError)}</span>
           <Button variant="outline" size="sm" onClick={refetchMatches}>다시 시도</Button>
         </div>
       </Card>

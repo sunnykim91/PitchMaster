@@ -18,6 +18,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { toKoreanError } from "@/lib/errorMessages";
+import { formatDateTime } from "@/lib/utils";
 
 type RuleCategory = "일반" | "회비" | "경조사" | "기타";
 
@@ -114,7 +116,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
       if (editingId) {
         const { error } = await apiMutate("/api/rules", "PUT", { id: editingId, ...payload });
         if (error) {
-          showToast(error, "error");
+          showToast(toKoreanError(error), "error");
           return;
         }
         setEditingId(null);
@@ -122,7 +124,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
       } else {
         const { error } = await apiMutate("/api/rules", "POST", payload);
         if (error) {
-          showToast(error, "error");
+          showToast(toKoreanError(error), "error");
           return;
         }
         showToast("회칙이 등록되었습니다.");
@@ -187,7 +189,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
   async function handleDelete(id: string) {
     const { error } = await apiMutate("/api/rules", "DELETE", { id });
     if (error) {
-      showToast(error, "error");
+      showToast(toKoreanError(error), "error");
       return;
     }
     showToast("회칙이 삭제되었습니다.");
@@ -198,7 +200,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
     return (
       <Card className="p-6">
         <div className="flex items-center justify-between">
-          <span className="text-destructive">오류: {error}</span>
+          <span className="text-destructive">오류: {toKoreanError(error)}</span>
           <Button variant="outline" size="sm" onClick={refetch}>다시 시도</Button>
         </div>
       </Card>
@@ -403,7 +405,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
                           </a>
                         )}
                         <p className="mt-3 text-xs text-muted-foreground">
-                          등록: {rule.createdAt} · 수정: {rule.updatedAt}
+                          등록: {formatDateTime(rule.createdAt)} · 수정: {formatDateTime(rule.updatedAt)}
                         </p>
                       </div>
                       {isStaffOrAbove(role) && (

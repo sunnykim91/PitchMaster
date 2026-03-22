@@ -7,7 +7,9 @@ import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role } from "@/lib/types";
-import { cn, formatTime } from "@/lib/utils";
+import { cn, formatTime, formatDateKo, formatDue } from "@/lib/utils";
+import { voteStyles } from "@/lib/voteStyles";
+import { toKoreanError } from "@/lib/errorMessages";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -62,21 +64,6 @@ const emptyData: DashboardData = {
   activeVotes: [],
   tasks: [],
   teamRecord: { wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, recent5: [] },
-};
-
-const voteStyles = {
-  ATTEND: {
-    active: "bg-[hsl(var(--success))] text-white shadow-[0_2px_8px_-2px_hsl(var(--success)/0.4)]",
-    inactive: "bg-secondary/50 text-muted-foreground border border-border hover:bg-[hsl(var(--success)/0.1)] hover:text-[hsl(var(--success))] hover:border-[hsl(var(--success)/0.3)]",
-  },
-  MAYBE: {
-    active: "bg-[hsl(var(--warning))] text-background shadow-[0_2px_8px_-2px_hsl(var(--warning)/0.4)]",
-    inactive: "bg-secondary/50 text-muted-foreground border border-border hover:bg-[hsl(var(--warning)/0.1)] hover:text-[hsl(var(--warning))] hover:border-[hsl(var(--warning)/0.3)]",
-  },
-  ABSENT: {
-    active: "bg-[hsl(var(--loss))] text-white shadow-[0_2px_8px_-2px_hsl(var(--loss)/0.4)]",
-    inactive: "bg-secondary/50 text-muted-foreground border border-border hover:bg-[hsl(var(--loss)/0.1)] hover:text-[hsl(var(--loss))] hover:border-[hsl(var(--loss)/0.3)]",
-  },
 };
 
 function CardSkeleton() {
@@ -143,28 +130,6 @@ function CardSkeleton() {
   );
 }
 
-function formatDate(iso: string) {
-  try {
-    const [y, m, d] = iso.split("-").map(Number);
-    return `${y}년 ${m}월 ${d}일`;
-  } catch {
-    return iso;
-  }
-}
-
-function formatDue(iso: string) {
-  try {
-    const d = new Date(iso);
-    const m = d.getMonth() + 1;
-    const day = d.getDate();
-    const h = String(d.getHours()).padStart(2, "0");
-    const min = String(d.getMinutes()).padStart(2, "0");
-    return `마감: ${m}월 ${day}일 ${h}:${min}`;
-  } catch {
-    return iso;
-  }
-}
-
 export default function DashboardClient({ userId, userRole, initialData, inviteCode }: { userId: string; userRole?: Role; initialData?: DashboardData; inviteCode?: string }) {
   const { data, loading, error, refetch } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
   const { showToast } = useToast();
@@ -190,7 +155,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
     return (
       <Card className="p-6">
         <div className="flex items-center justify-between">
-          <span className="text-destructive">오류: {error}</span>
+          <span className="text-destructive">오류: {toKoreanError(error)}</span>
           <Button variant="outline" size="sm" onClick={refetch}>다시 시도</Button>
         </div>
       </Card>
@@ -317,7 +282,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
         </div>
         {upcomingMatch ? (
           <div className="mt-4">
-            <p className="type-overline">{formatDate(upcomingMatch.match_date)}</p>
+            <p className="type-overline">{formatDateKo(upcomingMatch.match_date)}</p>
             <p className="mt-2 type-score text-foreground">
               {upcomingMatch.match_time ? formatTime(upcomingMatch.match_time) : "시간 미정"}
             </p>
@@ -558,8 +523,14 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                 <Card className="mt-3 border-0 border-l-2 border-l-primary/40 bg-secondary hover:bg-secondary/70 cursor-pointer transition-colors">
                   <CardContent className="p-4">
                     <div className="flex items-baseline justify-between">
-                      <p className="text-xs text-muted-foreground">{formatDate(recentResult.date)}</p>
-                      <p className="type-stat text-primary">{recentResult.score}</p>
+                      <p className="text-xs text-muted-foreground">{formatDateKo(recentResult.date)}</p>
+                      {(() => {
+                        const parts = recentResult.score?.split(":").map((s: string) => parseInt(s.trim(), 10));
+                        const scoreColor = parts && parts.length === 2
+                          ? parts[0] > parts[1] ? "text-[hsl(var(--win))]" : parts[0] < parts[1] ? "text-[hsl(var(--loss))]" : "text-muted-foreground"
+                          : "text-primary";
+                        return <p className={cn("type-stat", scoreColor)}>{recentResult.score}</p>;
+                      })()}
                     </div>
                     <p className="mt-1 truncate text-sm text-foreground/70">
                       vs <span className="font-semibold text-foreground">{recentResult.opponent ?? "미정"}</span>

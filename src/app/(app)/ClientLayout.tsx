@@ -472,17 +472,18 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
       {/* More Bottom Sheet */}
       {moreSheetOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" onClick={closeSheet}>
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="더보기 메뉴" onClick={closeSheet}>
           <div className="absolute inset-0 bg-black/50" />
           <div
             className={cn(
               "absolute bottom-0 left-0 right-0 rounded-t-2xl bg-card p-4 pb-8 shadow-2xl",
               sheetClosing ? "animate-sheet-slide-down" : "animate-slide-up"
             )}
+            role="navigation"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-center py-3"><div className="h-1 w-10 rounded-full bg-muted" /></div>
-            <nav className="grid gap-1">
+            <nav className="grid gap-1" aria-label="추가 메뉴">
               {[
                 { href: "/members", icon: Users, label: "회원관리" },
                 { href: "/board", icon: MessageSquare, label: "게시판" },

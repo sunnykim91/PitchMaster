@@ -33,3 +33,59 @@ export function formatDateTime(value: string): string {
   const time = formatTime(value);
   return time ? `${date} ${time}` : date;
 }
+
+/** ISO date → "2025년 3월 16일" */
+export function formatDateKo(iso: string): string {
+  try {
+    const [y, m, d] = iso.split("-").map(Number);
+    return `${y}년 ${m}월 ${d}일`;
+  } catch {
+    return iso;
+  }
+}
+
+/** ISO date → "3월 16일 (토)" */
+export function formatMatchDate(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  const days = ["일", "월", "화", "수", "목", "금", "토"];
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const dow = days[d.getDay()];
+  return `${month}월 ${day}일 (${dow})`;
+}
+
+/** ISO datetime → "마감: 3월 16일 17:00" */
+export function formatDue(iso: string): string {
+  try {
+    const d = new Date(iso);
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    const h = String(d.getHours()).padStart(2, "0");
+    const min = String(d.getMinutes()).padStart(2, "0");
+    return `마감: ${m}월 ${day}일 ${h}:${min}`;
+  } catch {
+    return iso;
+  }
+}
+
+/** ISO date → "2025.03.16" */
+export function formatDateDot(dateStr: string): string {
+  if (!dateStr) return "";
+  const [y, m, d] = dateStr.split("-");
+  return `${y}.${m}.${d}`;
+}
+
+/** Relative time display in Korean */
+export function relativeTime(dateStr: string): string {
+  const now = new Date();
+  const d = new Date(dateStr);
+  const diffMs = now.getTime() - d.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "방금";
+  if (diffMin < 60) return `${diffMin}분 전`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}시간 전`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 7) return `${diffDay}일 전`;
+  return dateStr;
+}
