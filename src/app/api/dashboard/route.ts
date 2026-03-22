@@ -121,13 +121,29 @@ export async function GET() {
   if (upcomingMatch && !userVoteResult.data) tasks.push("다음 경기 참석 투표 완료하기");
   if (recentMatch && !userMvpVoteResult.data) tasks.push("최근 경기 MVP 투표 완료하기");
 
-  // 팀 전적
-  const { data: completedMatches } = await db
+  // 팀 전적 (활성 시즌 기준)
+  const { data: seasonList } = await db
+    .from("seasons")
+    .select("start_date, end_date, is_active")
+    .eq("team_id", ctx.teamId)
+    .order("start_date", { ascending: false });
+
+  const currentSeason = (seasonList ?? []).find((s: any) => s.is_active) ?? (seasonList ?? [])[0];
+
+  let completedQ = db
     .from("matches")
     .select("id")
     .eq("team_id", ctx.teamId)
     .eq("status", "COMPLETED")
     .order("match_date", { ascending: false });
+
+  if (currentSeason) {
+    completedQ = completedQ
+      .gte("match_date", currentSeason.start_date)
+      .lte("match_date", currentSeason.end_date);
+  }
+
+  const { data: completedMatches } = await completedQ;
 
   const completedIds = (completedMatches ?? []).map((m: any) => m.id);
   let teamRecord = { wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, recent5: [] as string[] };

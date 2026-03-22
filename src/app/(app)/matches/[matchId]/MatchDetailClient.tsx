@@ -443,6 +443,7 @@ export default function MatchDetailClient({
   const [isGuestFormOpen, setIsGuestFormOpen] = useState(false);
   const [isDiaryEditing, setIsDiaryEditing] = useState(false);
   const [confirmGoalDelete, setConfirmGoalDelete] = useState<string | null>(null);
+  const [voteSearch, setVoteSearch] = useState("");
   const [showBulkAttendConfirm, setShowBulkAttendConfirm] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const diaryFormRef = useRef<HTMLFormElement>(null);
@@ -928,6 +929,13 @@ export default function MatchDetailClient({
               참석 투표 관리
             </CardTitle>
             <p className="text-xs text-muted-foreground">멤버별 참석/불참/미정을 대리 설정할 수 있습니다.</p>
+            <input
+              type="text"
+              placeholder="이름 검색..."
+              value={voteSearch}
+              onChange={(e) => setVoteSearch(e.target.value)}
+              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            />
             {/* 투표 현황 카운터 */}
             {(() => {
               const attend = baseRoster.filter((m) => memberVoteMap[m.memberId] === "ATTEND").length;
@@ -947,7 +955,7 @@ export default function MatchDetailClient({
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {[...baseRoster].sort((a, b) => {
+              {[...baseRoster].filter((m) => !voteSearch || m.name.includes(voteSearch)).sort((a, b) => {
                 const voteA = memberVoteMap[a.memberId];
                 const voteB = memberVoteMap[b.memberId];
                 const order: Record<string, number> = { ATTEND: 0, MAYBE: 1, ABSENT: 2 };

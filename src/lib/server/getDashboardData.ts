@@ -147,13 +147,29 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
   if (upcomingMatch && !taskChecks[0].data) tasks.push("다음 경기 참석 투표 완료하기");
   if (recentMatch && !taskChecks[1].data) tasks.push("최근 경기 MVP 투표 완료하기");
 
-  // ── 팀 전적 계산 ──
-  const { data: completedMatches } = await db
+  // ── 팀 전적 계산 (활성 시즌 기준) ──
+  const { data: seasons } = await db
+    .from("seasons")
+    .select("start_date, end_date, is_active")
+    .eq("team_id", teamId)
+    .order("start_date", { ascending: false });
+
+  const activeSeason = (seasons ?? []).find((s: { is_active: boolean }) => s.is_active) ?? (seasons ?? [])[0];
+
+  let completedQuery = db
     .from("matches")
     .select("id")
     .eq("team_id", teamId)
     .eq("status", "COMPLETED")
     .order("match_date", { ascending: false });
+
+  if (activeSeason) {
+    completedQuery = completedQuery
+      .gte("match_date", activeSeason.start_date)
+      .lte("match_date", activeSeason.end_date);
+  }
+
+  const { data: completedMatches } = await completedQuery;
 
   const completedIds = (completedMatches ?? []).map((m) => m.id);
   let teamRecord = emptyRecord;
