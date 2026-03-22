@@ -484,13 +484,13 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                 <div className="mb-4">
                   <div className="grid grid-cols-4 gap-1">
                     {[
-                      { label: "승", value: teamRecord.wins, color: "text-[hsl(var(--win))]" },
-                      { label: "무", value: teamRecord.draws, color: "text-[hsl(var(--draw))]" },
-                      { label: "패", value: teamRecord.losses, color: "text-[hsl(var(--loss))]" },
+                      { label: "승", value: String(teamRecord.wins), color: "text-[hsl(var(--win))]" },
+                      { label: "무", value: String(teamRecord.draws), color: "text-[hsl(var(--draw))]" },
+                      { label: "패", value: String(teamRecord.losses), color: "text-[hsl(var(--loss))]" },
                       { label: "승률", value: `${Math.round((teamRecord.wins / recordTotal) * 100)}%`, color: "text-primary" },
                     ].map((stat) => (
-                      <div key={stat.label} className="card-stat text-center p-2 overflow-hidden">
-                        <div className={`text-base sm:text-lg font-bold font-[family-name:var(--font-display)] truncate ${stat.color}`}>{stat.value}</div>
+                      <div key={stat.label} className="card-stat text-center p-2">
+                        <div className={`text-lg font-bold font-[family-name:var(--font-display)] whitespace-nowrap ${stat.color}`}>{stat.value}</div>
                         <div className="type-overline mt-0.5">{stat.label}</div>
                       </div>
                     ))}
