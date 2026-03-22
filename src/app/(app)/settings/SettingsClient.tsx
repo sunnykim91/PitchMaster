@@ -362,36 +362,47 @@ export default function SettingsClient({
 
   return (
     <div className="grid gap-5 stagger-children">
-      {message ? (
-        <Card className="border-primary/20 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary">
+      {message && (
+        <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary animate-in fade-in duration-200">
           {message}
-        </Card>
-      ) : null}
+        </div>
+      )}
 
-      {/* Profile Settings */}
+      {/* ── 개인 설정 ── */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase text-foreground">
-              개인 설정
-            </CardTitle>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {profile.profileImageUrl ? (
+                <img src={profile.profileImageUrl} alt="프로필" className="h-11 w-11 rounded-full object-cover ring-2 ring-primary/20" />
+              ) : (
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
+                  {profile.name?.charAt(0) || "?"}
+                </div>
+              )}
+              <div>
+                <CardTitle className="text-lg font-bold">개인 설정</CardTitle>
+                <p className="text-xs text-muted-foreground">프로필 및 알림을 관리합니다</p>
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={handleLogout}>
+              로그아웃
+            </Button>
           </div>
-          <Button variant="outline" size="sm" onClick={handleLogout}>
-            로그아웃
-          </Button>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleProfileSubmit} className="grid gap-4 rounded-xl bg-secondary p-5">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label className="font-semibold">이름</Label>
+        <CardContent className="space-y-5">
+          <form onSubmit={handleProfileSubmit} className="space-y-5">
+            {/* 기본 정보 */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground">이름</Label>
                 <Input
                   value={profile.name}
                   onChange={(event) => setProfile({ ...profile, name: event.target.value })}
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="font-semibold">연락처</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground">연락처</Label>
                 <Input
                   type="tel"
                   inputMode="numeric"
@@ -400,36 +411,32 @@ export default function SettingsClient({
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="font-semibold">프로필 이미지</Label>
-              <div className="flex items-center gap-3">
-                {profile.profileImageUrl && (
-                  <img src={profile.profileImageUrl} alt="프로필" className="h-12 w-12 rounded-full object-cover" />
-                )}
-                <p className="text-xs text-muted-foreground">카카오 프로필에서 자동 연동됩니다.</p>
-              </div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label className="font-semibold">주발</Label>
-                <Select value={profile.preferredFoot} onValueChange={(value) => setProfile({ ...profile, preferredFoot: value as PreferredFoot })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="RIGHT">오른발</SelectItem>
-                    <SelectItem value="LEFT">왼발</SelectItem>
-                    <SelectItem value="BOTH">양발</SelectItem>
-                  </SelectContent>
-                </Select>
+
+            {/* 플레이 스타일 */}
+            <div className="rounded-xl border border-border/50 p-4 space-y-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">플레이 스타일</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-muted-foreground">주발</Label>
+                  <Select value={profile.preferredFoot} onValueChange={(value) => setProfile({ ...profile, preferredFoot: value as PreferredFoot })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="RIGHT">오른발</SelectItem>
+                      <SelectItem value="LEFT">왼발</SelectItem>
+                      <SelectItem value="BOTH">양발</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="space-y-2">
-                <Label className="font-semibold">선호 포지션</Label>
+                <Label className="text-xs font-semibold text-muted-foreground">선호 포지션</Label>
                 <div className="space-y-3">
                   {POSITION_GROUPS.map((group) => (
                     <div key={group.group}>
-                      <p className="mb-1.5 text-xs font-semibold text-muted-foreground">{group.group}</p>
-                      <div className="flex flex-wrap gap-2">
+                      <p className="mb-1.5 text-[11px] font-semibold text-muted-foreground/70">{group.group}</p>
+                      <div className="flex flex-wrap gap-1.5">
                         {group.positions.map((pos) => (
                           <button
                             key={pos}
@@ -441,13 +448,13 @@ export default function SettingsClient({
                               setProfile({ ...profile, preferredPositions: next });
                             }}
                             className={cn(
-                              "rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
+                              "rounded-full border px-2.5 py-1 text-xs font-medium transition-all active:scale-95",
                               profile.preferredPositions.includes(pos)
                                 ? "border-primary bg-primary/15 text-primary"
-                                : "border-input bg-transparent text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                                : "border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:text-foreground"
                             )}
                           >
-                            {PREF_POSITION_SHORT[pos]} · {PREF_POSITION_LABEL[pos]}
+                            {PREF_POSITION_SHORT[pos]}
                           </button>
                         ))}
                       </div>
@@ -456,36 +463,38 @@ export default function SettingsClient({
                 </div>
               </div>
             </div>
-            <Button type="submit" size="sm" className="justify-self-start" disabled={saving}>
-              {saving ? "저장 중..." : "개인 설정 저장"}
+
+            <Button type="submit" size="sm" disabled={saving} className="w-full sm:w-auto">
+              {saving ? "저장 중..." : "저장"}
             </Button>
           </form>
 
           {/* 알림 설정 */}
-          <div className="mt-4 rounded-xl bg-secondary p-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-                  <Bell className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold">푸시 알림</p>
-                  <p className="text-xs text-muted-foreground">경기 등록, 투표 마감 알림을 받습니다</p>
+          <div className="rounded-xl border border-border/50 p-4">
+            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">알림</p>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <Bell className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">푸시 알림</p>
+                  <p className="text-xs text-muted-foreground">경기 등록, 투표 마감 알림</p>
                 </div>
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={pushEnabled}
                 onClick={handlePushToggle}
                 disabled={pushLoading}
                 className={cn(
-                  "relative h-7 w-12 rounded-full transition-colors duration-200",
-                  pushEnabled ? "bg-primary" : "bg-muted-foreground/30"
+                  "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                  pushEnabled ? "bg-primary" : "bg-muted-foreground/25"
                 )}
               >
                 <span
                   className={cn(
-                    "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-transform duration-200",
-                    pushEnabled ? "translate-x-5" : "translate-x-0.5"
+                    "pointer-events-none block h-5 w-5 rounded-full bg-white shadow-md ring-0 transition-transform duration-200",
+                    pushEnabled ? "translate-x-[22px]" : "translate-x-[2px]"
                   )}
                 />
               </button>
@@ -494,169 +503,153 @@ export default function SettingsClient({
         </CardContent>
       </Card>
 
-      {/* Team Settings (운영진 이상만 표시) */}
-      {isStaffOrAbove(role) && <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase text-foreground">
-              팀 설정
-            </CardTitle>
-          </div>
-          {!canEditTeam && (
-            <Badge variant="secondary">회장만 수정 가능</Badge>
-          )}
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleTeamSubmit} className="grid gap-4 rounded-xl bg-secondary p-5">
-            <div className="space-y-2">
-              <Label className="font-semibold">팀명</Label>
-              <Input
-                value={team.teamName}
-                onChange={(event) => setTeam({ ...team, teamName: event.target.value })}
-                disabled={!canEditTeam}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="font-semibold">팀 로고 URL</Label>
-              <Input
-                value={team.logoUrl}
-                onChange={(event) => setTeam({ ...team, logoUrl: event.target.value })}
-                placeholder="https://..."
-                disabled={!canEditTeam}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="font-semibold">초대 코드</Label>
-              <Input value={team.inviteCode} readOnly />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label className="font-semibold">홈 유니폼 색상</Label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={uniformPrimary}
-                    onChange={(event) => setTeam({ ...team, uniformPrimary: event.target.value })}
-                    disabled={!canEditTeam}
-                    className="h-12 w-12 rounded-xl border border-input bg-transparent p-1"
-                  />
-                  <Input
-                    value={uniformPrimary}
-                    onChange={(event) => setTeam({ ...team, uniformPrimary: event.target.value })}
-                    disabled={!canEditTeam}
-                    className="flex-1"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="font-semibold">원정 유니폼 색상</Label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={uniformSecondary}
-                    onChange={(event) => setTeam({ ...team, uniformSecondary: event.target.value })}
-                    disabled={!canEditTeam}
-                    className="h-12 w-12 rounded-xl border border-input bg-transparent p-1"
-                  />
-                  <Input
-                    value={uniformSecondary}
-                    onChange={(event) => setTeam({ ...team, uniformSecondary: event.target.value })}
-                    disabled={!canEditTeam}
-                    className="flex-1"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="font-semibold">유니폼 패턴</Label>
-                <Select
-                  value={uniformPattern}
-                  onValueChange={(value) =>
-                    setTeam({
-                      ...team,
-                      uniformPattern: value as TeamSettings["uniformPattern"],
-                    })
-                  }
-                  disabled={!canEditTeam}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="SOLID">단색</SelectItem>
-                    <SelectItem value="STRIPES_VERTICAL">세로 스트라이프</SelectItem>
-                    <SelectItem value="STRIPES_HORIZONTAL">가로 스트라이프</SelectItem>
-                    <SelectItem value="STRIPES_DIAGONAL">대각 스트라이프</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <Card className="border-0 bg-secondary">
-              <CardContent className="p-4">
-                <p className="text-sm font-bold text-foreground">유니폼 미리보기</p>
-                <div className="mt-3 flex items-center gap-4">
-                  <div className="flex flex-col items-center gap-2">
-                    <div
-                      className="h-16 w-16 border border-border"
-                      style={getJerseyStyle(uniformPrimary, uniformSecondary, uniformPattern)}
-                    />
-                    <span className="text-xs text-muted-foreground">홈</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <div
-                      className="h-16 w-16 border border-border"
-                      style={getJerseyStyle(uniformSecondary, uniformPrimary, uniformPattern)}
-                    />
-                    <span className="text-xs text-muted-foreground">원정</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <div className="flex flex-wrap items-center gap-3">
-              {canEditTeam && (
-                <Button type="submit" size="sm" disabled={saving}>
-                  {saving ? "저장 중..." : "팀 설정 저장"}
-                </Button>
-              )}
-            </div>
-          </form>
-        </CardContent>
-      </Card>}
-
-      {/* Season Management - STAFF+ only */}
-      {canManageSeasons && <SeasonManager />}
-
-      {/* 팀 삭제 - PRESIDENT only */}
-      {canEditTeam && (
+      {/* ── 팀 설정 (운영진 이상) ── */}
+      {isStaffOrAbove(role) && (
         <Card>
           <CardHeader>
-            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase text-destructive">
-              팀 삭제
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-xl bg-secondary p-5 space-y-3">
-              <p className="text-xs text-muted-foreground">
-                팀을 삭제하면 모든 경기, 회비, 기록이 영구 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                삭제하려면 팀 이름 <span className="font-bold text-foreground">{team.teamName}</span>을 입력하세요.
-              </p>
-              <input
-                type="text"
-                value={deleteConfirmName}
-                onChange={(e) => setDeleteConfirmName(e.target.value)}
-                placeholder="팀 이름 입력"
-                className="w-full rounded-lg border border-border bg-secondary/50 px-3 py-2 text-sm"
-              />
-              <Button
-                variant="destructive"
-                disabled={deleteConfirmName !== team.teamName}
-                onClick={handleDeleteTeam}
-                className="w-full"
-              >
-                팀 영구 삭제
-              </Button>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-bold">팀 설정</CardTitle>
+              {!canEditTeam && (
+                <Badge variant="secondary" className="text-xs">회장만 수정 가능</Badge>
+              )}
             </div>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <form onSubmit={handleTeamSubmit} className="space-y-5">
+              {/* 기본 정보 */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-muted-foreground">팀명</Label>
+                  <Input
+                    value={team.teamName}
+                    onChange={(event) => setTeam({ ...team, teamName: event.target.value })}
+                    disabled={!canEditTeam}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-muted-foreground">초대 코드</Label>
+                  <Input value={team.inviteCode} readOnly className="font-mono tracking-wider" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground">팀 로고 URL</Label>
+                <Input
+                  value={team.logoUrl}
+                  onChange={(event) => setTeam({ ...team, logoUrl: event.target.value })}
+                  placeholder="https://..."
+                  disabled={!canEditTeam}
+                />
+              </div>
+
+              {/* 유니폼 */}
+              <div className="rounded-xl border border-border/50 p-4 space-y-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">유니폼</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-muted-foreground">홈 색상</Label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={uniformPrimary}
+                        onChange={(event) => setTeam({ ...team, uniformPrimary: event.target.value })}
+                        disabled={!canEditTeam}
+                        className="h-10 w-10 shrink-0 cursor-pointer rounded-lg border border-input bg-transparent p-0.5"
+                      />
+                      <Input
+                        value={uniformPrimary}
+                        onChange={(event) => setTeam({ ...team, uniformPrimary: event.target.value })}
+                        disabled={!canEditTeam}
+                        className="flex-1 font-mono text-xs"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-muted-foreground">원정 색상</Label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={uniformSecondary}
+                        onChange={(event) => setTeam({ ...team, uniformSecondary: event.target.value })}
+                        disabled={!canEditTeam}
+                        className="h-10 w-10 shrink-0 cursor-pointer rounded-lg border border-input bg-transparent p-0.5"
+                      />
+                      <Input
+                        value={uniformSecondary}
+                        onChange={(event) => setTeam({ ...team, uniformSecondary: event.target.value })}
+                        disabled={!canEditTeam}
+                        className="flex-1 font-mono text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-muted-foreground">패턴</Label>
+                  <Select
+                    value={uniformPattern}
+                    onValueChange={(value) => setTeam({ ...team, uniformPattern: value as TeamSettings["uniformPattern"] })}
+                    disabled={!canEditTeam}
+                  >
+                    <SelectTrigger className="w-full sm:w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="SOLID">단색</SelectItem>
+                      <SelectItem value="STRIPES_VERTICAL">세로 스트라이프</SelectItem>
+                      <SelectItem value="STRIPES_HORIZONTAL">가로 스트라이프</SelectItem>
+                      <SelectItem value="STRIPES_DIAGONAL">대각 스트라이프</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-6 pt-2">
+                  <div className="flex flex-col items-center gap-1.5">
+                    <div className="h-14 w-14 rounded-lg border border-border shadow-sm" style={getJerseyStyle(uniformPrimary, uniformSecondary, uniformPattern)} />
+                    <span className="text-[11px] font-medium text-muted-foreground">홈</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1.5">
+                    <div className="h-14 w-14 rounded-lg border border-border shadow-sm" style={getJerseyStyle(uniformSecondary, uniformPrimary, uniformPattern)} />
+                    <span className="text-[11px] font-medium text-muted-foreground">원정</span>
+                  </div>
+                </div>
+              </div>
+
+              {canEditTeam && (
+                <Button type="submit" size="sm" disabled={saving} className="w-full sm:w-auto">
+                  {saving ? "저장 중..." : "저장"}
+                </Button>
+              )}
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── 시즌 관리 ── */}
+      {canManageSeasons && <SeasonManager />}
+
+      {/* ── 팀 삭제 ── */}
+      {canEditTeam && (
+        <Card className="border-[hsl(var(--loss))]/20">
+          <CardContent className="p-5 space-y-3">
+            <p className="text-sm font-bold text-[hsl(var(--loss))]">팀 삭제</p>
+            <p className="text-xs text-muted-foreground">
+              팀을 삭제하면 모든 경기, 회비, 기록이 영구 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              삭제하려면 팀 이름 <span className="font-bold text-foreground">{team.teamName}</span>을 입력하세요.
+            </p>
+            <Input
+              value={deleteConfirmName}
+              onChange={(e) => setDeleteConfirmName(e.target.value)}
+              placeholder="팀 이름 입력"
+            />
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={deleteConfirmName !== team.teamName}
+              onClick={handleDeleteTeam}
+              className="w-full"
+            >
+              팀 영구 삭제
+            </Button>
           </CardContent>
         </Card>
       )}
