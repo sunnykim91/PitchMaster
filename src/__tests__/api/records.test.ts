@@ -200,4 +200,91 @@ describe("GET /api/records", () => {
     const fromCalls = db.from.mock.calls.map((c: [string]) => c[0]);
     expect(fromCalls).not.toContain("seasons");
   });
+
+  it("출석률: user_id/member_id 혼재 시 Math.max로 큰 값 사용", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+
+    // 5경기 중 member_id로 3번, user_id로 1번 출석 기록
+    // → attendByUserId = 1, attendByMemberId = 3
+    // → Math.max(1, 3) = 3, 출석률 = 3/5 = 0.6
+    const fiveMatches = [
+      { id: "m-1" }, { id: "m-2" }, { id: "m-3" }, { id: "m-4" }, { id: "m-5" },
+    ];
+    const attendanceData = [
+      { user_id: null, member_id: "mem-1" },      // 스태프 체크
+      { user_id: null, member_id: "mem-1" },      // 스태프 체크
+      { user_id: "user-1", member_id: "mem-1" },  // 본인 투표
+    ];
+
+    const db = createMockDb(
+      ["team_members", teamMembers],
+      ["matches", fiveMatches],
+      ["match_goals", []],
+      ["match_goals", []],
+      ["match_mvp_votes", []],
+      ["match_attendance", attendanceData]
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await GET(makeRequest());
+    const json = await res.json();
+    const minJun = json.records.find((r: { name: string }) => r.name === "김민준");
+    // user_id 카운트(1)가 아닌 member_id 카운트(3)를 사용해야 함
+    expect(minJun.attendanceRate).toBe(0.6); // 3/5
+  });
+
+  it("전체 통합: 분모 = 레거시 games + 실제 경기수", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+
+    const db = createMockDb(
+      // mode="all" → team_members 조회
+      ["team_members", [
+        { id: "mem-1", user_id: "user-1", pre_name: null, users: { id: "user-1", name: "테스트", preferred_positions: [] } },
+      ]],
+      // legacy_player_stats
+      ["legacy_player_stats", [
+        { member_name: "테스트", goals: 5, assists: 3, attendance: 18, games: 20 },
+      ]],
+      // matches (실제 완료 경기 10개)
+      ["matches", Array.from({ length: 10 }, (_, i) => ({ id: `rm-${i}` }))],
+      // match_goals (득점)
+      ["match_goals", []],
+      // match_goals (도움)
+      ["match_goals", []],
+      // match_attendance (실제 5경기 참석)
+      ["match_attendance", Array.from({ length: 5 }, () => ({ user_id: "user-1", member_id: "mem-1" }))],
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await GET(makeRequest({ mode: "all" }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    const record = json.records.find((r: { name: string }) => r.name === "테스트");
+    // 분자: 레거시 18 + 실제 5 = 23
+    // 분모: 레거시 games 20 + 실제 경기 10 = 30
+    // 출석률: 23/30 ≈ 0.7667
+    expect(record.attendanceRate).toBeCloseTo(23 / 30, 4);
+    expect(record.attendanceRate).toBeLessThanOrEqual(1);
+  });
+
+  it("전체 통합: 레거시만 있고 실제 경기 없으면 레거시 비율 사용", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+
+    const db = createMockDb(
+      ["team_members", [
+        { id: "mem-1", user_id: null, pre_name: "레거시맨", users: null },
+      ]],
+      ["legacy_player_stats", [
+        { member_name: "레거시맨", goals: 10, assists: 2, attendance: 15, games: 20 },
+      ]],
+      ["matches", []], // 실제 경기 없음
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await GET(makeRequest({ mode: "all" }));
+    const json = await res.json();
+    const record = json.records.find((r: { name: string }) => r.name === "레거시맨");
+    // 분모 = games(20) + totalGames(0) = 20
+    expect(record.attendanceRate).toBe(15 / 20);
+  });
 });
