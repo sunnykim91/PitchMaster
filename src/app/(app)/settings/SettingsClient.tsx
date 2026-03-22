@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, Check, ChevronUp, Calendar } from "lucide-react";
+import { Plus, Trash2, Check, ChevronUp, Calendar, Bell } from "lucide-react";
+import { subscribeToPush } from "@/lib/pushSubscription";
 import { useApi, apiMutate } from "@/lib/useApi";
 import type { PreferredPosition, PreferredFoot, Role } from "@/lib/types";
 import { POSITION_GROUPS, PREF_POSITION_LABEL, PREF_POSITION_SHORT } from "@/lib/types";
@@ -188,6 +189,8 @@ export default function SettingsClient({
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [pushEnabled, setPushEnabled] = useState(true);
+  const [pushLoading, setPushLoading] = useState(false);
 
   // Sync fetched API data into local form state when it arrives
   const profileSynced = useRef(false);
@@ -255,6 +258,36 @@ export default function SettingsClient({
       teamSynced.current = false;
       await refetchTeam();
     }
+    setTimeout(() => setMessage(null), 2000);
+  }
+
+  // 알림 설정 로드
+  useEffect(() => {
+    fetch("/api/notification-settings")
+      .then((r) => r.json())
+      .then((j) => { if (j.settings) setPushEnabled(j.settings.push ?? true); })
+      .catch(() => {});
+  }, []);
+
+  async function handlePushToggle() {
+    const next = !pushEnabled;
+    setPushLoading(true);
+    try {
+      if (next) {
+        // 푸시 활성화 시 구독도 시도
+        await subscribeToPush();
+      }
+      await fetch("/api/notification-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ push: next }),
+      });
+      setPushEnabled(next);
+      setMessage(next ? "푸시 알림이 활성화되었습니다" : "푸시 알림이 비활성화되었습니다");
+    } catch {
+      setMessage("알림 설정 변경에 실패했습니다");
+    }
+    setPushLoading(false);
     setTimeout(() => setMessage(null), 2000);
   }
 
@@ -427,6 +460,37 @@ export default function SettingsClient({
               {saving ? "저장 중..." : "개인 설정 저장"}
             </Button>
           </form>
+
+          {/* 알림 설정 */}
+          <div className="mt-4 rounded-xl bg-secondary p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                  <Bell className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">푸시 알림</p>
+                  <p className="text-xs text-muted-foreground">경기 등록, 투표 마감 알림을 받습니다</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handlePushToggle}
+                disabled={pushLoading}
+                className={cn(
+                  "relative h-7 w-12 rounded-full transition-colors duration-200",
+                  pushEnabled ? "bg-primary" : "bg-muted-foreground/30"
+                )}
+              >
+                <span
+                  className={cn(
+                    "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-transform duration-200",
+                    pushEnabled ? "translate-x-5" : "translate-x-0.5"
+                  )}
+                />
+              </button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
