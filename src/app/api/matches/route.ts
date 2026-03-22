@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, requireRole, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
+import { sendTeamPush } from "@/lib/server/sendPush";
 
 export async function GET() {
   const ctx = await getApiContext();
@@ -84,6 +85,16 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) return apiError(error.message);
+
+  // 경기 등록 알림 발송 (비동기, 응답 차단 안 함)
+  const matchDate = body.date;
+  const opponent = body.opponent || "상대 미정";
+  sendTeamPush(ctx.teamId!, {
+    title: "새 경기 일정이 등록되었습니다",
+    body: `${matchDate} vs ${opponent}`,
+    url: `/matches/${data.id}`,
+  }).catch(() => {});
+
   return apiSuccess(data, 201);
 }
 

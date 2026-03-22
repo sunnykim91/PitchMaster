@@ -38,7 +38,7 @@ import { shareMatchResult } from "@/lib/kakaoShare";
 import { recommendFormation, type PlayerInput } from "@/lib/formationAI";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { EmptyState } from "@/components/EmptyState";
-import { ChevronLeft, Target } from "lucide-react";
+import { ChevronLeft, Target, Bell } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/lib/ToastContext";
 import type { SportType } from "@/lib/types";
@@ -943,13 +943,37 @@ export default function MatchDetailClient({
               const maybe = baseRoster.filter((m) => memberVoteMap[m.memberId] === "MAYBE").length;
               const noVote = baseRoster.length - attend - absent - maybe;
               return (
-                <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold">
-                  <span className="text-[hsl(var(--success))]">참석 {attend}</span>
-                  <span className="text-[hsl(var(--loss))]">불참 {absent}</span>
-                  <span className="text-[hsl(var(--warning))]">미정 {maybe}</span>
-                  <span className="text-muted-foreground">미투표 {noVote}</span>
-                  <span className="text-muted-foreground/50">· 총 {baseRoster.length}명</span>
-                </div>
+                <>
+                  <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold">
+                    <span className="text-[hsl(var(--success))]">참석 {attend}</span>
+                    <span className="text-[hsl(var(--loss))]">불참 {absent}</span>
+                    <span className="text-[hsl(var(--warning))]">미정 {maybe}</span>
+                    <span className="text-muted-foreground">미투표 {noVote}</span>
+                    <span className="text-muted-foreground/50">· 총 {baseRoster.length}명</span>
+                  </div>
+                  {noVote > 0 && (
+                    <button
+                      type="button"
+                      className="mt-3 flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 active:scale-95"
+                      onClick={async () => {
+                        try {
+                          const res = await fetch("/api/push/vote-nudge", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ matchId: match.id }),
+                          });
+                          const data = await res.json();
+                          alert(`미투표자 ${data.unvoted ?? 0}명에게 알림을 보냈습니다`);
+                        } catch {
+                          alert("알림 발송에 실패했습니다");
+                        }
+                      }}
+                    >
+                      <Bell className="h-3.5 w-3.5" />
+                      투표독려 알림 보내기
+                    </button>
+                  )}
+                </>
               );
             })()}
           </CardHeader>
