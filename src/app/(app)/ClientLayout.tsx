@@ -15,6 +15,7 @@ import { Check, Copy, Link2, Menu, ChevronDown, Plus, Home, Calendar, Trophy, Wa
 import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 type ClientLayoutProps = {
   session: Session;
@@ -340,6 +341,8 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           </footer>
         </main>
       </div>
+
+      <PWAInstallPrompt />
 
       {/* Mobile Bottom Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/85 backdrop-blur-xl backdrop-saturate-150 lg:hidden">
