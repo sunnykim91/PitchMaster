@@ -489,8 +489,8 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                       { label: "패", value: String(teamRecord.losses), color: "text-[hsl(var(--loss))]" },
                       { label: "승률", value: `${Math.round((teamRecord.wins / recordTotal) * 100)}%`, color: "text-primary" },
                     ].map((stat) => (
-                      <div key={stat.label} className="card-stat text-center p-2">
-                        <div className={`text-lg font-bold font-[family-name:var(--font-display)] whitespace-nowrap ${stat.color}`}>{stat.value}</div>
+                      <div key={stat.label} className="card-stat text-center px-1 py-2">
+                        <div className={`text-base font-bold font-[family-name:var(--font-display)] whitespace-nowrap ${stat.color}`}>{stat.value}</div>
                         <div className="type-overline mt-0.5">{stat.label}</div>
                       </div>
                     ))}
