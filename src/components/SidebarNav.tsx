@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ type SidebarNavProps = {
   items: NavItem[];
 };
 
-export default function SidebarNav({ items }: SidebarNavProps) {
+function SidebarNav({ items }: SidebarNavProps) {
   const pathname = usePathname();
 
   return (
@@ -60,3 +61,5 @@ export default function SidebarNav({ items }: SidebarNavProps) {
     </nav>
   );
 }
+
+export default memo(SidebarNav);

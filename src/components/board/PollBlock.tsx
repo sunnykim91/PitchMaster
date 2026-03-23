@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { relativeTime } from "@/lib/utils";
@@ -11,7 +12,7 @@ export interface PollBlockProps {
   votingOptionId: string | null;
 }
 
-export function PollBlock({ poll, onVote, votingOptionId }: PollBlockProps) {
+export const PollBlock = memo(function PollBlock({ poll, onVote, votingOptionId }: PollBlockProps) {
   const isPollExpired = poll.endsAt ? new Date(poll.endsAt) < new Date() : false;
   const hasVoted = !!poll.myVote;
 
@@ -95,4 +96,4 @@ export function PollBlock({ poll, onVote, votingOptionId }: PollBlockProps) {
       </div>
     </div>
   );
-}
+});

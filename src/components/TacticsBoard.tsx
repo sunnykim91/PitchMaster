@@ -358,8 +358,10 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     }
 
     try {
+      const bgColor = getComputedStyle(document.documentElement).getPropertyValue("--background").trim();
+      const captureBackground = bgColor ? `hsl(${bgColor})` : "#0a0e14";
       const dataUrl = await toPng(target, {
-        backgroundColor: "#0a0e14",
+        backgroundColor: captureBackground,
         pixelRatio: 2,
         cacheBust: true,
         // 전체 높이를 명시적으로 지정해 잘림 방지
@@ -445,7 +447,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     const g = (c1.g + c2.g) / 2;
     const b = (c1.b + c2.b) / 2;
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.62 ? "#0a0e14" : "#f0f4f8";
+    return luminance > 0.62 ? "hsl(var(--background))" : "hsl(var(--foreground))";
   }
 
   function getUniformStyle(primary: string, secondary: string, pattern: string) {
@@ -719,20 +721,20 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
 
         <div className={cn("mt-5 grid gap-5", !readOnly && "lg:grid-cols-[1.2fr_0.8fr]")}>
           {/* Soccer pitch + resting (capture area) */}
-          <div ref={captureRef} className="space-y-3" style={{ backgroundColor: "#0a0e14", padding: "0 0 8px 0" }}>
+          <div ref={captureRef} className="space-y-3" style={{ backgroundColor: "hsl(var(--background))", padding: "0 0 8px 0" }}>
           {/* 쿼터 표시 (캡처 이미지에 포함) */}
           <div className="flex items-center justify-between px-1">
-            <span className="text-sm font-bold text-white">
+            <span className="text-sm font-bold text-foreground">
               {activeQuarter}쿼터 · {formation.name}
             </span>
-            <span className="text-xs text-white/50">PitchMaster</span>
+            <span className="text-xs text-muted-foreground/50">PitchMaster</span>
           </div>
           <div
             ref={boardRef}
             className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border-2 border-white/10 shadow-xl shadow-black/30"
             style={{
               touchAction: "none",
-              background: "#1a6b32",
+              background: "hsl(var(--pitch))",
               backgroundImage: [
                 // 진한/연한 잔디 가로 줄무늬 (실제 축구장 느낌)
                 "repeating-linear-gradient(180deg, rgba(255,255,255,0) 0px, rgba(255,255,255,0) 38px, rgba(255,255,255,0.06) 38px, rgba(255,255,255,0.06) 76px)",
@@ -821,17 +823,17 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                     <span className="block h-10 w-10 rounded-sm border border-white/25 shadow-md shadow-black/30" style={uniformStyle} />
                     {secondPlayer ? (
                       <span className="flex flex-col items-center rounded-md bg-black/70 px-1.5 py-0.5 shadow-sm">
-                        <span className="flex items-center gap-0.5 text-xs font-bold text-sky-300">
+                        <span className="flex items-center gap-0.5 text-xs font-bold text-[hsl(var(--info))]">
                           <span className="rounded bg-sky-500/30 px-0.5">전</span>
                           {player?.name ?? "선수"}
                         </span>
-                        <span className="flex items-center gap-0.5 text-xs font-bold text-violet-300">
+                        <span className="flex items-center gap-0.5 text-xs font-bold text-[hsl(var(--accent))]">
                           <span className="rounded bg-violet-500/30 px-0.5">후</span>
                           {secondPlayer.name}
                         </span>
                       </span>
                     ) : (
-                      <span className="block max-w-[96px] truncate whitespace-nowrap rounded-md bg-black/60 px-1.5 py-0.5 text-xs font-bold text-white shadow-sm">
+                      <span className="block max-w-[96px] truncate whitespace-nowrap rounded-md bg-black/60 px-1.5 py-0.5 text-xs font-bold text-foreground shadow-sm">
                         {displayName}
                       </span>
                     )}
@@ -1003,13 +1005,13 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     {/* 전체 쿼터 캡처용 (오프스크린) */}
     <div
       ref={allQuartersRef}
-      style={{ position: "absolute", left: "-9999px", top: 0, width: 800, backgroundColor: "#0a0e14", padding: 16 }}
+      style={{ position: "absolute", left: "-9999px", top: 0, width: 800, backgroundColor: "hsl(var(--background))", padding: 16 }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <span style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>
+        <span style={{ fontSize: 18, fontWeight: 700, color: "hsl(var(--foreground))" }}>
           전체 라인업 · {formation.name}
         </span>
-        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>PitchMaster</span>
+        <span style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>PitchMaster</span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         {quarters.map((q) => {
@@ -1040,8 +1042,8 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
           const qResting = roster.filter((r) => !assignedIds.has(r.id));
 
           return (
-            <div key={q} style={{ backgroundColor: "#111827", borderRadius: 12, overflow: "hidden" }}>
-              <div style={{ padding: "8px 12px", fontSize: 13, fontWeight: 700, color: "#fff" }}>
+            <div key={q} style={{ backgroundColor: "hsl(var(--card))", borderRadius: 12, overflow: "hidden" }}>
+              <div style={{ padding: "8px 12px", fontSize: 13, fontWeight: 700, color: "hsl(var(--foreground))" }}>
                 {q}쿼터
               </div>
               <div
@@ -1049,7 +1051,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                   position: "relative",
                   aspectRatio: "4/5",
                   width: "100%",
-                  background: "#1a6b32",
+                  background: "hsl(var(--pitch))",
                   backgroundImage: [
                     "repeating-linear-gradient(180deg, rgba(255,255,255,0) 0px, rgba(255,255,255,0) 38px, rgba(255,255,255,0.06) 38px, rgba(255,255,255,0.06) 76px)",
                     "radial-gradient(ellipse at 50% 50%, rgba(34,197,94,0.15) 0%, transparent 70%)",
@@ -1082,11 +1084,11 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                       <div style={{ ...uStyle, width: 28, height: 28, borderRadius: 4 }} />
                       {secondPlayer ? (
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", backgroundColor: "rgba(0,0,0,0.7)", borderRadius: 4, padding: "1px 4px" }}>
-                          <span style={{ fontSize: 7, fontWeight: 700, color: "#7dd3fc" }}>전 {player?.name ?? ""}</span>
-                          <span style={{ fontSize: 7, fontWeight: 700, color: "#c4b5fd" }}>후 {secondPlayer.name}</span>
+                          <span style={{ fontSize: 7, fontWeight: 700, color: "hsl(var(--info))" }}>전 {player?.name ?? ""}</span>
+                          <span style={{ fontSize: 7, fontWeight: 700, color: "hsl(var(--accent))" }}>후 {secondPlayer.name}</span>
                         </div>
                       ) : (
-                        <span style={{ fontSize: 8, fontWeight: 700, color: "#fff", backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 4, padding: "1px 4px", whiteSpace: "nowrap" }}>
+                        <span style={{ fontSize: 8, fontWeight: 700, color: "hsl(var(--foreground))", backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 4, padding: "1px 4px", whiteSpace: "nowrap" }}>
                           {player?.name ?? ""}
                         </span>
                       )}
@@ -1103,10 +1105,10 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                 return (
                   <div style={{ padding: "6px 10px", fontSize: 10 }}>
                     {qResting.length > 0 && (
-                      <div style={{ color: "#fbbf24" }}>쉬는 선수: {qResting.map((r) => r.name).join(", ")}</div>
+                      <div style={{ color: "hsl(var(--warning))" }}>쉬는 선수: {qResting.map((r) => r.name).join(", ")}</div>
                     )}
                     {(refName || camName) && (
-                      <div style={{ color: "#94a3b8", marginTop: 2 }}>
+                      <div style={{ color: "hsl(var(--muted-foreground))", marginTop: 2 }}>
                         {refName && <span>심판: {refName}</span>}
                         {refName && camName && <span> · </span>}
                         {camName && <span>촬영: {camName}</span>}

@@ -58,12 +58,6 @@ export default async function LoginPage({
   return (
     <main className="relative min-h-screen overflow-hidden">
       <ScrollRevealInit />
-      {/* 배경 장식 */}
-      <div className="pointer-events-none fixed inset-0">
-        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500/5 blur-3xl" />
-      </div>
 
       {/* ── Section 1: Hero ── */}
       <section aria-label="서비스 소개" className="relative mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center gap-12 px-4 py-16 sm:px-6 lg:flex-row lg:gap-16">
@@ -86,8 +80,8 @@ export default async function LoginPage({
             </p>
             <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
               <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">참석 확인 30분 → 30초</span>
-              <span className="rounded-full bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-400">회비 정산 30분 → 1분</span>
-              <span className="rounded-full bg-purple-500/10 px-3 py-1 text-xs font-bold text-purple-400">라인업 20분 → 3초</span>
+              <span className="rounded-full bg-[hsl(var(--info))]/10 px-3 py-1 text-xs font-bold text-[hsl(var(--info))]">회비 정산 30분 → 1분</span>
+              <span className="rounded-full bg-[hsl(var(--accent))]/10 px-3 py-1 text-xs font-bold text-[hsl(var(--accent))]">라인업 20분 → 3초</span>
             </div>
           </div>
 
@@ -100,6 +94,10 @@ export default async function LoginPage({
               무료 · 광고 없음 · 1분이면 팀 세팅 완료
             </p>
           </div>
+
+          <p className="mt-6 text-xs text-muted-foreground">
+            5개 팀 · 100+ 회원 · 6개월+ 운영
+          </p>
         </div>
 
         {/* 오른쪽: 앱 화면 미리보기 슬라이더 */}
@@ -108,27 +106,11 @@ export default async function LoginPage({
         </div>
       </section>
 
-      {/* ── Stats Counter ── */}
-      <section aria-label="사용 통계" className="scroll-reveal relative border-t border-border/30 bg-primary/5">
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-8 px-6 py-8 md:gap-16">
-          {[
-            { value: "5개 팀", label: "등록 팀", color: "text-primary" },
-            { value: "100+", label: "등록 회원", color: "text-sky-400" },
-            { value: "200+", label: "관리된 경기", color: "text-violet-400" },
-            { value: "6개월+", label: "운영 기간", color: "text-amber-400" },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className={`font-heading text-xl font-bold sm:text-2xl md:text-3xl ${stat.color}`}>{stat.value}</p>
-              <p className="mt-1 text-xs text-muted-foreground sm:text-xs">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* ── Section 2: Before / After ── */}
-      <section aria-label="기능 비교" className="scroll-reveal relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
+      <section aria-label="기능 비교" className="scroll-reveal relative border-t border-border/30 bg-card/50">
         <div className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-20">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-rose-400">
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-destructive">
             총무의 현실
           </p>
           <h2 className="mt-4 break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
@@ -150,7 +132,7 @@ export default async function LoginPage({
               {
                 icon: "⚽",
                 before: { title: "선수 배치", pain: "경기장 도착해서야 포지션 정함" },
-                after: { title: "AI 라인업", solution: "선호 포지션 기반 자동 배치", time: "3초" },
+                after: { title: "스마트 라인업", solution: "선호 포지션 기반 자동 배치", time: "3초" },
               },
             ].map((item) => (
               <div
@@ -158,8 +140,8 @@ export default async function LoginPage({
                 className="overflow-hidden rounded-2xl border border-border/30"
               >
                 {/* Before */}
-                <div className="bg-rose-500/10 p-4 sm:p-5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-rose-400">
+                <div className="bg-destructive/10 p-4 sm:p-5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-destructive">
                     Before
                   </p>
                   <p className="mt-1 text-sm font-bold text-foreground">
@@ -170,16 +152,16 @@ export default async function LoginPage({
                   </p>
                 </div>
                 {/* Divider arrow */}
-                <div className="flex items-center justify-center bg-border/10 py-1">
+                <div className="flex items-center justify-center bg-border/10 py-1" aria-hidden="true">
                   <span className="text-lg text-muted-foreground">↓</span>
                 </div>
                 {/* After */}
-                <div className="bg-emerald-500/10 p-4 sm:p-5">
+                <div className="bg-[hsl(var(--success))]/10 p-4 sm:p-5">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                    <p className="text-xs font-bold uppercase tracking-wider text-[hsl(var(--success))]">
                       After
                     </p>
-                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs font-bold text-emerald-400">
+                    <span className="rounded-full bg-[hsl(var(--success))]/20 px-2 py-0.5 text-xs font-bold text-[hsl(var(--success))]">
                       {item.after.time}
                     </span>
                   </div>
@@ -217,90 +199,51 @@ export default async function LoginPage({
           </div>
 
           <div className="mt-10 grid gap-6 sm:mt-12 md:grid-cols-3">
-            {/* 투표 */}
-            <Card className="border-border/30 bg-card/50 transition-all hover:border-primary/20">
-              <CardContent className="p-5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-lg">
-                  📋
-                </div>
-                <p className="mt-3 text-sm font-bold text-primary">참석 투표</p>
-                <p className="mt-1 break-keep text-xs text-muted-foreground">
-                  링크 하나면 끝
-                </p>
-                <ul className="mt-3 space-y-1.5">
-                  {[
-                    "실시간 참석/불참 자동 집계",
-                    "마감 시간 설정 가능",
-                    "읽씹 걱정 제로",
-                  ].map((t) => (
-                    <li key={t} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                      <span className="mt-0.5 text-primary">✓</span>
-                      <span className="break-keep">{t}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* 회비 */}
-            <Card className="border-border/30 bg-card/50 transition-all hover:border-blue-400/20">
-              <CardContent className="p-5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-lg">
-                  💰
-                </div>
-                <p className="mt-3 text-sm font-bold text-blue-400">회비 정산</p>
-                <p className="mt-1 break-keep text-xs text-muted-foreground">
-                  캡쳐 한 장이면 끝
-                </p>
-                <ul className="mt-3 space-y-1.5">
-                  {[
-                    "이름·금액·날짜 자동 인식",
-                    "중복 내역 자동 감지",
-                    "팀원 이름 자동 매칭",
-                  ].map((t) => (
-                    <li key={t} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                      <span className="mt-0.5 text-blue-400">✓</span>
-                      <span className="break-keep">{t}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* 라인업 */}
-            <Card className="border-border/30 bg-card/50 transition-all hover:border-purple-400/20">
-              <CardContent className="p-5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-lg">
-                  🧠
-                </div>
-                <p className="mt-3 text-sm font-bold text-purple-400">AI 라인업</p>
-                <p className="mt-1 break-keep text-xs text-muted-foreground">
-                  버튼 한 번이면 끝
-                </p>
-                <ul className="mt-3 space-y-1.5">
-                  {[
-                    "선호 포지션 기반 자동 배치",
-                    "쿼터별 출전 횟수 균등 분배",
-                    "전술판 이미지 저장·공유",
-                  ].map((t) => (
-                    <li key={t} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                      <span className="mt-0.5 text-purple-400">✓</span>
-                      <span className="break-keep">{t}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+            {[
+              {
+                title: "참석 투표",
+                tagline: "링크 하나면 끝",
+                desc: "실시간 참석/불참 자동 집계, 마감 시간 설정으로 읽씹 걱정 제로",
+                color: "text-primary",
+                borderColor: "hover:border-primary/20",
+              },
+              {
+                title: "회비 정산",
+                tagline: "캡쳐 한 장이면 끝",
+                desc: "통장 스크린샷을 올리면 이름·금액·날짜를 자동 인식하고 팀원에 매칭",
+                color: "text-[hsl(var(--info))]",
+                borderColor: "hover:border-[hsl(var(--info))]/20",
+              },
+              {
+                title: "스마트 라인업",
+                tagline: "버튼 한 번이면 끝",
+                desc: "선호 포지션 기반 자동 배치, 쿼터별 균등 분배로 공정한 출전 보장",
+                color: "text-[hsl(var(--accent))]",
+                borderColor: "hover:border-[hsl(var(--accent))]/20",
+              },
+            ].map((item) => (
+              <Card key={item.title} className={`border-border/30 bg-card/50 transition-all ${item.borderColor}`}>
+                <CardContent className="p-5">
+                  <p className={`text-sm font-bold ${item.color}`}>{item.title}</p>
+                  <p className="mt-1 text-xs font-semibold text-foreground">
+                    {item.tagline}
+                  </p>
+                  <p className="mt-2 break-keep text-xs leading-relaxed text-muted-foreground">
+                    {item.desc}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
           {/* Mini tactical board */}
-          <div className="mx-auto mt-10 w-full max-w-xs rounded-2xl p-2" style={{ backgroundColor: "#0a0e14" }}>
+          <div className="mx-auto mt-10 w-full max-w-xs rounded-2xl bg-background p-2">
             <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-bold text-white">1쿼터 · 4-3-3</span>
-              <span className="text-xs text-white/50">PitchMaster</span>
+              <span className="text-xs font-bold text-foreground">1쿼터 · 4-3-3</span>
+              <span className="text-xs text-foreground/50">PitchMaster</span>
             </div>
             <div
-              className="relative mt-2 aspect-[4/5] w-full overflow-hidden rounded-xl border-2 border-white/10 shadow-xl shadow-black/30"
+              className="relative mt-2 aspect-[4/5] w-full overflow-hidden rounded-xl border-2 border-foreground/10 shadow-xl shadow-black/30"
               style={{
                 background: "#1a6b32",
                 backgroundImage: [
@@ -311,20 +254,20 @@ export default async function LoginPage({
               }}
             >
               {/* 경기장 라인 */}
-              <div className="absolute inset-3 rounded-sm border-2 border-white/30" />
-              <div className="absolute inset-x-3 top-1/2 h-0.5 -translate-y-px bg-white/30" />
-              <div className="absolute left-1/2 top-1/2 h-[18%] w-[28%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/30" />
-              <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/40" />
-              <div className="absolute inset-x-[20%] top-3 h-[16%] border-2 border-t-0 border-white/30" />
-              <div className="absolute inset-x-[32%] top-3 h-[8%] border-2 border-t-0 border-white/30" />
-              <div className="absolute left-1/2 top-[18.5%] h-[6%] w-[16%] -translate-x-1/2 rounded-b-full border-2 border-t-0 border-white/30" />
-              <div className="absolute inset-x-[20%] bottom-3 h-[16%] border-2 border-b-0 border-white/30" />
-              <div className="absolute inset-x-[32%] bottom-3 h-[8%] border-2 border-b-0 border-white/30" />
-              <div className="absolute left-1/2 bottom-[18.5%] h-[6%] w-[16%] -translate-x-1/2 rounded-t-full border-2 border-b-0 border-white/30" />
-              <div className="absolute left-3 top-3 h-4 w-4 rounded-br-full border-b-2 border-r-2 border-white/30" />
-              <div className="absolute right-3 top-3 h-4 w-4 rounded-bl-full border-b-2 border-l-2 border-white/30" />
-              <div className="absolute bottom-3 left-3 h-4 w-4 rounded-tr-full border-r-2 border-t-2 border-white/30" />
-              <div className="absolute bottom-3 right-3 h-4 w-4 rounded-tl-full border-l-2 border-t-2 border-white/30" />
+              <div className="absolute inset-3 rounded-sm border-2 border-foreground/30" />
+              <div className="absolute inset-x-3 top-1/2 h-0.5 -translate-y-px bg-foreground/30" />
+              <div className="absolute left-1/2 top-1/2 h-[18%] w-[28%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-foreground/30" />
+              <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/40" />
+              <div className="absolute inset-x-[20%] top-3 h-[16%] border-2 border-t-0 border-foreground/30" />
+              <div className="absolute inset-x-[32%] top-3 h-[8%] border-2 border-t-0 border-foreground/30" />
+              <div className="absolute left-1/2 top-[18.5%] h-[6%] w-[16%] -translate-x-1/2 rounded-b-full border-2 border-t-0 border-foreground/30" />
+              <div className="absolute inset-x-[20%] bottom-3 h-[16%] border-2 border-b-0 border-foreground/30" />
+              <div className="absolute inset-x-[32%] bottom-3 h-[8%] border-2 border-b-0 border-foreground/30" />
+              <div className="absolute left-1/2 bottom-[18.5%] h-[6%] w-[16%] -translate-x-1/2 rounded-t-full border-2 border-b-0 border-foreground/30" />
+              <div className="absolute left-3 top-3 h-4 w-4 rounded-br-full border-b-2 border-r-2 border-foreground/30" />
+              <div className="absolute right-3 top-3 h-4 w-4 rounded-bl-full border-b-2 border-l-2 border-foreground/30" />
+              <div className="absolute bottom-3 left-3 h-4 w-4 rounded-tr-full border-r-2 border-t-2 border-foreground/30" />
+              <div className="absolute bottom-3 right-3 h-4 w-4 rounded-tl-full border-l-2 border-t-2 border-foreground/30" />
 
               {/* 4-3-3 선수 배치 */}
               {[
@@ -346,8 +289,7 @@ export default async function LoginPage({
                   style={{ left: `${p.x}%`, top: `${p.y}%` }}
                 >
                   <div
-                    className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white shadow-lg sm:h-10 sm:w-10 sm:text-xs"
-                    style={{ backgroundColor: "#2563eb" }}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow-lg sm:h-10 sm:w-10 sm:text-xs"
                   >
                     {p.label}
                   </div>
@@ -359,7 +301,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Section 4: More Features (8 cards) ── */}
-      <section aria-label="추가 기능" className="scroll-reveal relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
+      <section aria-label="추가 기능" className="scroll-reveal relative border-t border-border/30 bg-card/50">
         <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="text-center">
             <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
@@ -368,83 +310,44 @@ export default async function LoginPage({
             <p className="mt-2 text-sm text-muted-foreground">팀 운영에 필요한 모든 것이 여기에.</p>
           </div>
 
-          <div className="mt-10 grid gap-4 grid-cols-2 sm:mt-12 md:grid-cols-4">
+          {/* Primary 4 features: 2x2 grid with left border accent */}
+          <div className="mt-10 grid gap-5 grid-cols-1 sm:mt-12 sm:grid-cols-2">
             {[
               {
-                icon: "⚽",
                 title: "원탭 득점 기록",
                 desc: "쿼터별 스코어보드로 득점·어시스트 즉시 기록",
-                color: "text-primary",
-                bg: "bg-primary/10",
               },
               {
-                icon: "📊",
                 title: "시즌 통계 & 랭킹",
                 desc: "승률, 출석률, 레이더 차트, 개인별 랭킹",
-                color: "text-sky-400",
-                bg: "bg-sky-500/10",
               },
               {
-                icon: "🏆",
                 title: "MVP 투표",
                 desc: "경기 후 팀원이 직접 뽑는 MVP",
-                color: "text-amber-400",
-                bg: "bg-amber-500/10",
               },
               {
-                icon: "📋",
                 title: "팀 게시판",
                 desc: "공지사항, 자유글, 투표까지 팀 전용 소통 공간",
-                color: "text-violet-400",
-                bg: "bg-violet-500/10",
-              },
-              {
-                icon: "🔔",
-                title: "푸시 알림",
-                desc: "경기 등록·투표 마감 알림을 앱처럼 받기",
-                color: "text-rose-400",
-                bg: "bg-rose-500/10",
-              },
-              {
-                icon: "📜",
-                title: "회칙 관리",
-                desc: "팀 규정을 앱에서 관리, 파일 첨부 가능",
-                color: "text-emerald-400",
-                bg: "bg-emerald-500/10",
-              },
-              {
-                icon: "🏟️",
-                title: "축구 & 풋살",
-                desc: "종목별 인원·쿼터·포메이션 자동 설정",
-                color: "text-primary",
-                bg: "bg-primary/10",
-              },
-              {
-                icon: "👀",
-                title: "데모 체험",
-                desc: "회원가입 없이 모든 기능을 바로 둘러보기",
-                color: "text-sky-400",
-                bg: "bg-sky-500/10",
               },
             ].map((item) => (
-              <Card
+              <div
                 key={item.title}
-                className="group border-border/30 bg-card/50 transition-all hover:border-primary/20"
+                className="border-l-2 border-primary pl-4 py-2"
               >
-                <CardContent className="p-4 sm:p-5">
-                  <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${item.bg} text-lg`}>
-                    {item.icon}
-                  </div>
-                  <p className={`mt-2.5 text-sm font-bold ${item.color}`}>
-                    {item.title}
-                  </p>
-                  <p className="mt-1 break-keep text-xs leading-relaxed text-foreground/60 sm:text-sm sm:leading-relaxed">
-                    {item.desc}
-                  </p>
-                </CardContent>
-              </Card>
+                <p className="text-sm font-bold text-foreground">
+                  {item.title}
+                </p>
+                <p className="mt-1 break-keep text-xs leading-relaxed text-muted-foreground sm:text-sm">
+                  {item.desc}
+                </p>
+              </div>
             ))}
           </div>
+
+          {/* Secondary 4 features: inline list */}
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            푸시 알림 · 회칙 관리 · 축구 & 풋살 지원 · 데모 체험
+          </p>
         </div>
       </section>
 
@@ -459,6 +362,7 @@ export default async function LoginPage({
 
           <div className="table-scroll-container mt-10 overflow-x-auto sm:mt-12">
             <table className="w-full text-xs sm:text-sm">
+              <caption className="sr-only">카톡, 밴드, PitchMaster 기능 비교표</caption>
               <thead>
                 <tr className="border-b border-border/30">
                   <th scope="col" className="pb-3 text-left text-muted-foreground font-medium sm:pb-4">
@@ -493,7 +397,7 @@ export default async function LoginPage({
                     feature: "선수 배치",
                     kakao: "없음",
                     band: "없음",
-                    pm: "AI 배치 + 전술판",
+                    pm: "자동 배치 + 전술판",
                   },
                   {
                     feature: "경기 기록",
@@ -542,7 +446,7 @@ export default async function LoginPage({
                     <td className="py-2.5 text-center text-muted-foreground/60 sm:py-3">
                       {row.band === "없음" ? <span className="text-muted-foreground/30">—</span> : row.band}
                     </td>
-                    <td className="py-2.5 text-center font-semibold text-emerald-400 sm:py-3">
+                    <td className="py-2.5 text-center font-semibold text-[hsl(var(--success))] sm:py-3">
                       <span className="inline-flex items-center gap-1">
                         <span className="text-xs">✓</span> {row.pm}
                       </span>
@@ -556,7 +460,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Section 6: 사용자 후기 ── */}
-      <section aria-label="사용자 후기" className="scroll-reveal relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
+      <section aria-label="사용자 후기" className="scroll-reveal relative border-t border-border/30 bg-card/50">
         <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="text-center">
             <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
@@ -571,33 +475,27 @@ export default async function LoginPage({
                 role: "조기축구 총무 4년차 · 25명 팀",
                 quote: "매주 금요일 저녁마다 한 명씩 전화하던 게, 링크 하나 보내고 끝이에요. 진짜 인생 바뀜.",
                 highlight: "전화 25통 → 링크 1개",
-                stars: 5,
               },
               {
                 name: "P회장",
                 role: "평일 풋살팀 회장 · 18명",
                 quote: "통장 캡쳐 올렸더니 회비가 자동으로 정리되더라고요. 엑셀 파일 삭제했습니다.",
                 highlight: "엑셀 삭제 완료",
-                stars: 5,
               },
               {
                 name: "L운영진",
                 role: "주말 축구팀 · 35명 운영",
                 quote: "경기장 도착 전에 라인업이 카톡으로 공유되니까 다들 좋아해요. 특히 쿼터별 균등 배분이 공정해서.",
                 highlight: "라인업 갈등 해소",
-                stars: 5,
               },
             ].map((review) => (
               <Card key={review.name} className="border-border/30 bg-card/50">
                 <CardContent className="p-4 sm:p-6">
-                  <div className="flex gap-0.5 text-amber-400">
-                    {Array.from({ length: review.stars }, (_, i) => (
-                      <span key={i} className="text-sm">★</span>
-                    ))}
-                  </div>
-                  <p className="mt-2 break-keep text-xs leading-relaxed text-foreground/80 sm:text-sm">
-                    &ldquo;{review.quote}&rdquo;
-                  </p>
+                  <blockquote className="border-l-2 border-primary/30 pl-3">
+                    <p className="break-keep text-xs leading-relaxed text-foreground/80 sm:text-sm">
+                      &ldquo;{review.quote}&rdquo;
+                    </p>
+                  </blockquote>
                   <div className="mt-3 flex items-center gap-3 sm:mt-4">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary sm:h-9 sm:w-9 sm:text-sm">
                       {review.name[0]}
@@ -641,7 +539,7 @@ export default async function LoginPage({
               {
                 step: "03",
                 title: "운영 시작",
-                desc: "일정 등록 → 투표 → AI 라인업 → 득점 기록",
+                desc: "일정 등록 → 투표 → 스마트 라인업 → 득점 기록",
               },
             ].map((item) => (
               <div key={item.step} className="text-center">
@@ -663,7 +561,7 @@ export default async function LoginPage({
       </section>
 
       {/* ── Section 8: CTA ── */}
-      <section aria-label="시작하기" className="scroll-reveal relative border-t border-border/30 bg-gradient-to-b from-primary/5 via-primary/10 to-transparent backdrop-blur-sm">
+      <section aria-label="시작하기" className="scroll-reveal relative border-t border-border/30 bg-gradient-to-b from-primary/5 via-primary/10 to-transparent">
         <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 sm:py-24">
           <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
             이번 주부터 카톡 대신
@@ -688,14 +586,23 @@ export default async function LoginPage({
       {/* Sticky Mobile CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/30 bg-background/95 p-3 backdrop-blur-sm lg:hidden">
         <div className="flex gap-2">
-          <Button
-            className="h-12 flex-1 rounded-xl bg-[hsl(var(--kakao))] text-sm font-bold text-[hsl(var(--kakao-foreground))] shadow-lg shadow-[hsl(var(--kakao))]/25 hover:bg-[hsl(var(--kakao))]/90"
-            asChild
-          >
-            <a href={kakaoEnabled ? (inviteCode ? `/api/auth/kakao?inviteCode=${encodeURIComponent(inviteCode)}` : "/api/auth/kakao") : "#"}>
+          {kakaoEnabled ? (
+            <Button
+              className="h-12 flex-1 rounded-xl bg-[hsl(var(--kakao))] text-sm font-bold text-[hsl(var(--kakao-foreground))] shadow-lg shadow-[hsl(var(--kakao))]/25 hover:bg-[hsl(var(--kakao))]/90"
+              asChild
+            >
+              <a href={inviteCode ? `/api/auth/kakao?inviteCode=${encodeURIComponent(inviteCode)}` : "/api/auth/kakao"}>
+                무료로 시작
+              </a>
+            </Button>
+          ) : (
+            <Button
+              className="h-12 flex-1 rounded-xl bg-[hsl(var(--kakao))] text-sm font-bold text-[hsl(var(--kakao-foreground))]"
+              disabled
+            >
               무료로 시작
-            </a>
-          </Button>
+            </Button>
+          )}
           <Suspense fallback={null}>
             <DemoButton compact />
           </Suspense>
@@ -706,9 +613,9 @@ export default async function LoginPage({
       <footer aria-label="사이트 정보" className="border-t border-border/30 py-8 pb-24 lg:pb-8">
         <div className="mx-auto flex max-w-4xl flex-col items-center gap-3 px-6">
           <div className="flex gap-4 text-xs text-muted-foreground/60">
-            <a href="/privacy" className="transition hover:text-foreground">개인정보처리방침</a>
-            <span>·</span>
-            <a href="/terms" className="transition hover:text-foreground">이용약관</a>
+            <a href="/privacy" className="transition hover:text-foreground focus-visible:text-foreground focus-visible:underline focus-visible:outline-none">개인정보처리방침</a>
+            <span aria-hidden="true">·</span>
+            <a href="/terms" className="transition hover:text-foreground focus-visible:text-foreground focus-visible:underline focus-visible:outline-none">이용약관</a>
           </div>
           <p className="text-xs text-muted-foreground">
             데이터는 한국 리전(서울)에 안전하게 저장됩니다

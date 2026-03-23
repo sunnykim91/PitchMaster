@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { formatPhone, stripPhone } from "@/lib/utils";
 
@@ -10,7 +10,7 @@ type PhoneInputProps = Omit<React.ComponentProps<"input">, "onChange" | "value">
   onValueChange?: (raw: string) => void;
 };
 
-export function PhoneInput({ value, defaultValue, onValueChange, name, ...props }: PhoneInputProps) {
+function PhoneInputBase({ value, defaultValue, onValueChange, name, ...props }: PhoneInputProps) {
   const [display, setDisplay] = useState(formatPhone(value ?? defaultValue ?? ""));
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,3 +33,5 @@ export function PhoneInput({ value, defaultValue, onValueChange, name, ...props 
     </>
   );
 }
+
+export const PhoneInput = memo(PhoneInputBase);

@@ -19,10 +19,12 @@ type PlayerRadarProps = {
   maxMvp: number;
 };
 
-/** Normalize a value to 0-100 scale relative to team max */
+/** Normalize a value to 0-100 scale relative to team max, with a minimum floor for visibility */
+const MIN_FLOOR = 15;
 function norm(value: number, max: number): number {
   if (max === 0) return 0;
-  return Math.round((value / max) * 100);
+  if (value === 0) return 0;
+  return Math.round(MIN_FLOOR + ((value / max) * (100 - MIN_FLOOR)));
 }
 
 export default function PlayerRadarChart({

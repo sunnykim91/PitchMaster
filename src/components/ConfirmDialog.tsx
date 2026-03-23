@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -15,7 +15,7 @@ interface ConfirmDialogProps {
   onCancel: () => void;
 }
 
-export function ConfirmDialog({
+function ConfirmDialogBase({
   open,
   title,
   description,
@@ -74,3 +74,5 @@ export function ConfirmDialog({
     document.body
   );
 }
+
+export const ConfirmDialog = memo(ConfirmDialogBase);

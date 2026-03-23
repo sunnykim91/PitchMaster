@@ -7,35 +7,44 @@ import { Eye } from "lucide-react";
 export default function DemoButton({ compact }: { compact?: boolean } = {}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleDemo() {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/auth/demo", { method: "POST" });
       const data = await res.json();
       if (data.ok) {
         router.push("/dashboard");
       } else {
-        alert("데모 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        setError("데모 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.");
       }
     } catch {
-      alert("데모 로그인에 실패했습니다.");
+      setError("데모 로그인에 실패했습니다.");
     }
     setLoading(false);
   }
 
   return (
-    <button
-      onClick={handleDemo}
-      disabled={loading}
-      className={
-        compact
-          ? "flex h-12 items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/5 px-4 text-sm font-semibold text-primary transition-all hover:bg-primary/10 active:scale-[0.98] disabled:opacity-50"
-          : "flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-6 py-3 text-sm font-semibold text-primary transition-all hover:bg-primary/10 active:scale-[0.98] disabled:opacity-50"
-      }
-    >
-      <Eye className="h-4 w-4" />
-      {loading ? "접속 중..." : compact ? "둘러보기" : "회원가입 없이 둘러보기"}
-    </button>
+    <div>
+      <button
+        onClick={handleDemo}
+        disabled={loading}
+        className={
+          compact
+            ? "flex h-12 items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/5 px-4 text-sm font-semibold text-primary transition-all hover:bg-primary/10 active:scale-[0.98] disabled:opacity-50"
+            : "flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-6 py-3 text-sm font-semibold text-primary transition-all hover:bg-primary/10 active:scale-[0.98] disabled:opacity-50"
+        }
+      >
+        <Eye className="h-4 w-4" />
+        {loading ? "접속 중..." : compact ? "둘러보기" : "회원가입 없이 둘러보기"}
+      </button>
+      {error && (
+        <p className="mt-1 text-xs text-destructive" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }

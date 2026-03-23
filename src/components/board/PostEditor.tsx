@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { memo, useRef, useState } from "react";
 import Image from "next/image";
 import type { FormEvent } from "react";
 import { X, BarChart3, Plus, ImageIcon } from "lucide-react";
@@ -24,7 +24,7 @@ export interface PostEditorProps {
   setFormErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
 }
 
-export function PostEditor({
+export const PostEditor = memo(function PostEditor({
   form,
   setForm,
   pollForm,
@@ -240,4 +240,4 @@ export function PostEditor({
       </CardContent>
     </Card>
   );
-}
+});

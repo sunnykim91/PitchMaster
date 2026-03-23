@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { X, Send } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { relativeTime } from "@/lib/utils";
@@ -21,7 +22,7 @@ export interface CommentSectionProps {
   onSetConfirmAction: (action: { message: string; onConfirm: () => void }) => void;
 }
 
-export function CommentSection({
+export const CommentSection = memo(function CommentSection({
   postId,
   comments,
   isLoading,
@@ -68,6 +69,7 @@ export function CommentSection({
                 {canDeleteComment && (
                   <button
                     type="button"
+                    aria-label="댓글 삭제"
                     onClick={() => onSetConfirmAction({ message: "댓글을 삭제하시겠습니까?", onConfirm: () => onDelete(comment.id, postId) })}
                     disabled={deletingCommentIds.has(comment.id)}
                     className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-all shrink-0"
@@ -112,4 +114,4 @@ export function CommentSection({
       </div>
     </div>
   );
-}
+});

@@ -14,8 +14,21 @@ import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/EmptyState";
 import dynamic from "next/dynamic";
 
-const PlayerRadarChart = dynamic(() => import("@/components/charts/PlayerRadarChart"), { ssr: false });
-const BarRankingChart = dynamic(() => import("@/components/charts/BarRankingChart"), { ssr: false });
+// 차트 로딩 인디케이터
+const ChartSpinner = () => (
+  <div className="flex items-center justify-center py-12">
+    <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+  </div>
+);
+
+const PlayerRadarChart = dynamic(() => import("@/components/charts/PlayerRadarChart"), {
+  ssr: false,
+  loading: ChartSpinner,
+});
+const BarRankingChart = dynamic(() => import("@/components/charts/BarRankingChart"), {
+  ssr: false,
+  loading: ChartSpinner,
+});
 
 type Season = {
   id: string;
@@ -293,7 +306,7 @@ export default function RecordsClient({
                 내 기록
               </CardTitle>
             </div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
               시즌
               <Select value={seasonId} onValueChange={handleSeasonChange}>
                 <SelectTrigger className="w-auto min-w-[90px] text-xs">
@@ -469,65 +482,118 @@ export default function RecordsClient({
               <p className="text-sm text-muted-foreground">아직 기록이 없습니다. 경기를 진행해보세요.</p>
             </div>
           ) : (
-            <div className="relative">
-            <div className="table-scroll-container overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border/30">
-                    <th className="sticky left-0 z-1 bg-card pb-3 text-left font-medium text-muted-foreground">#</th>
-                    <th className="sticky left-8 z-1 bg-card pb-3 text-left font-medium text-muted-foreground">이름</th>
-                    {([
-                      { key: "points" as const, label: "G+A" },
-                      { key: "goals" as const, label: "골" },
-                      { key: "assists" as const, label: "어시" },
-                      { key: "mvp" as const, label: "MVP" },
-                      { key: "attendanceRate" as const, label: "출석률" },
-                    ]).map((col) => (
-                      <th
-                        key={col.key}
-                        role="columnheader"
-                        tabIndex={0}
-                        aria-sort={sortKey === col.key ? "descending" : "none"}
-                        className={cn(
-                          "cursor-pointer pb-3 text-center font-medium transition hover:text-foreground",
-                          sortKey === col.key ? "text-primary" : "text-muted-foreground"
-                        )}
-                        onClick={() => setSortKey(col.key)}
-                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSortKey(col.key); } }}
-                      >
-                        <span className="inline-flex items-center gap-1">
-                          {col.label}
-                          {sortKey === col.key ? (
-                            <ArrowDown className="h-3 w-3" />
-                          ) : (
-                            <ArrowUpDown className="h-3 w-3 opacity-30" />
-                          )}
-                        </span>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/20">
-                  {allStats.map((s, i) => {
-                    const isMe = s.memberId === userId;
-                    const rowBg = isMe ? "bg-primary/5" : "bg-card";
-                    return (
-                    <tr key={s.memberId} className={cn(isMe && "bg-primary/5")}>
-                      <td className={cn("sticky left-0 z-[1] py-2.5 text-muted-foreground", rowBg)}>{i + 1}</td>
-                      <td className={cn("sticky left-8 z-[1] py-2.5 font-semibold max-w-[120px] truncate", rowBg)}>{s.memberName || "-"}</td>
-                      <td className="py-2.5 text-center font-bold text-primary">{s.points}</td>
-                      <td className="py-2.5 text-center text-[hsl(var(--success))]">{s.goals}</td>
-                      <td className="py-2.5 text-center text-[hsl(var(--info))]">{s.assists}</td>
-                      <td className="py-2.5 text-center text-[hsl(var(--warning))]">{s.mvp}</td>
-                      <td className="py-2.5 text-center text-[hsl(var(--accent))]">{Math.round(s.attendanceRate * 100)}%</td>
-                    </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-              <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-card to-transparent md:hidden" />
-            </div>
+            <>
+              {/* 모바일 카드 레이아웃 (sm 미만) */}
+              <div className="block sm:hidden space-y-2">
+                {allStats.map((s, i) => {
+                  const isMe = s.memberId === userId;
+                  const isTop3 = i < 3 && s.points > 0;
+                  return (
+                    <div
+                      key={s.memberId}
+                      className={cn(
+                        "rounded-xl px-4 py-3 border border-border/20",
+                        isMe && "bg-primary/5 border-primary/20",
+                        isTop3 && !isMe && "bg-[hsl(var(--warning)/0.05)]"
+                      )}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className={cn(
+                            "text-xs font-bold shrink-0",
+                            isTop3 ? "text-[hsl(var(--warning))]" : "text-muted-foreground"
+                          )}>
+                            {i + 1}
+                          </span>
+                          <span className="font-semibold text-sm truncate">{s.memberName || "-"}</span>
+                        </div>
+                        <span className="text-sm font-bold text-primary shrink-0">G+A {s.points}</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-1 text-center text-xs">
+                        <div>
+                          <p className="text-muted-foreground">골</p>
+                          <p className="font-semibold text-[hsl(var(--success))]">{s.goals}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">어시</p>
+                          <p className="font-semibold text-[hsl(var(--info))]">{s.assists}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">MVP</p>
+                          <p className="font-semibold text-[hsl(var(--warning))]">{s.mvp}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">출석</p>
+                          <p className="font-semibold text-accent">{Math.round(s.attendanceRate * 100)}%</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* 데스크탑 테이블 (sm 이상) */}
+              <div className="relative hidden sm:block">
+                <div className="table-scroll-container overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border/30">
+                        <th className="sticky left-0 z-1 bg-card pb-3 text-left font-medium text-muted-foreground">#</th>
+                        <th className="sticky left-8 z-1 bg-card pb-3 text-left font-medium text-muted-foreground">이름</th>
+                        {([
+                          { key: "points" as const, label: "G+A" },
+                          { key: "goals" as const, label: "골" },
+                          { key: "assists" as const, label: "어시" },
+                          { key: "mvp" as const, label: "MVP" },
+                          { key: "attendanceRate" as const, label: "출석률" },
+                        ]).map((col) => (
+                          <th
+                            key={col.key}
+                            role="columnheader"
+                            tabIndex={0}
+                            aria-sort={sortKey === col.key ? "descending" : "none"}
+                            className={cn(
+                              "cursor-pointer pb-3 text-center font-medium transition hover:text-foreground",
+                              sortKey === col.key ? "text-primary" : "text-muted-foreground"
+                            )}
+                            onClick={() => setSortKey(col.key)}
+                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSortKey(col.key); } }}
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              {col.label}
+                              {sortKey === col.key ? (
+                                <ArrowDown className="h-3 w-3" />
+                              ) : (
+                                <ArrowUpDown className="h-3 w-3 opacity-30" />
+                              )}
+                            </span>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/20">
+                      {allStats.map((s, i) => {
+                        const isMe = s.memberId === userId;
+                        const isTop3 = i < 3 && s.points > 0;
+                        const rowBg = isMe ? "bg-primary/5" : isTop3 ? "bg-[hsl(var(--warning)/0.05)]" : "bg-card";
+                        return (
+                          <tr key={s.memberId} className={cn(isMe && "bg-primary/5", isTop3 && !isMe && "bg-[hsl(var(--warning)/0.05)]")}>
+                            <td className={cn("sticky left-0 z-1 py-2.5", rowBg, isTop3 ? "text-[hsl(var(--warning))] font-bold" : "text-muted-foreground")}>{i + 1}</td>
+                            <td className={cn("sticky left-8 z-1 py-2.5 font-semibold max-w-[120px] truncate", rowBg)}>{s.memberName || "-"}</td>
+                            <td className="py-2.5 text-center font-bold text-primary">{s.points}</td>
+                            <td className="py-2.5 text-center text-[hsl(var(--success))]">{s.goals}</td>
+                            <td className="py-2.5 text-center text-[hsl(var(--info))]">{s.assists}</td>
+                            <td className="py-2.5 text-center text-[hsl(var(--warning))]">{s.mvp}</td>
+                            <td className="py-2.5 text-center text-accent">{Math.round(s.attendanceRate * 100)}%</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-linear-to-l from-card to-transparent md:hidden" />
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

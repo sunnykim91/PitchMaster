@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 export default function ScrollRevealInit() {
   useEffect(() => {
+    document.documentElement.classList.add("js-ready");
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {

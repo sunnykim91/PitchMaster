@@ -511,6 +511,8 @@ export default function MembersClient({
                             <button
                               key={pos}
                               type="button"
+                              aria-label={`${pos} ${selected ? "선택됨" : "미선택"}`}
+                              aria-pressed={selected}
                               onClick={() =>
                                 setTempCoachPos((prev) =>
                                   selected ? prev.filter((p) => p !== pos) : [...prev, pos]

@@ -186,7 +186,7 @@ export default function BoardClient({
     }
   }, []);
 
-  function toggleExpand(postId: string) {
+  const toggleExpand = useCallback((postId: string) => {
     setExpandedPostIds((prev) => {
       const next = new Set(prev);
       if (next.has(postId)) {
@@ -199,7 +199,7 @@ export default function BoardClient({
       }
       return next;
     });
-  }
+  }, [commentsByPost, fetchComments]);
 
   /* ── Submit (create or update) ── */
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -253,7 +253,7 @@ export default function BoardClient({
     }
   }
 
-  function handleEditPost(post: Post) {
+  const handleEditPost = useCallback((post: Post) => {
     setEditingPostId(post.id);
     setForm({
       title: post.title,
@@ -263,7 +263,7 @@ export default function BoardClient({
     setPollForm(EMPTY_POLL);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  }, []);
 
   function handleCancelEdit() {
     setEditingPostId(null);
@@ -273,7 +273,7 @@ export default function BoardClient({
     setFormErrors({});
   }
 
-  async function handleDeletePost(postId: string) {
+  const handleDeletePost = useCallback(async (postId: string) => {
     setDeletingPostIds((prev) => new Set(prev).add(postId));
     try {
       await apiMutate("/api/posts", "DELETE", { id: postId });
@@ -286,9 +286,9 @@ export default function BoardClient({
         return next;
       });
     }
-  }
+  }, [refetchPosts, showToast]);
 
-  async function handleDeleteComment(commentId: string, postId: string) {
+  const handleDeleteComment = useCallback(async (commentId: string, postId: string) => {
     setDeletingCommentIds((prev) => new Set(prev).add(commentId));
     try {
       await apiMutate("/api/comments", "DELETE", { id: commentId });
@@ -301,9 +301,9 @@ export default function BoardClient({
         return next;
       });
     }
-  }
+  }, [refetchPosts, fetchComments, showToast]);
 
-  async function handleLike(postId: string) {
+  const handleLike = useCallback(async (postId: string) => {
     setLikingPostIds((prev) => new Set(prev).add(postId));
     try {
       await apiMutate("/api/posts/like", "POST", { postId });
@@ -315,9 +315,9 @@ export default function BoardClient({
         return next;
       });
     }
-  }
+  }, [refetchPosts]);
 
-  async function handlePin(postId: string) {
+  const handlePin = useCallback(async (postId: string) => {
     try {
       await apiMutate("/api/posts", "PUT", { id: postId, action: "pin" });
       await refetchPosts();
@@ -325,9 +325,9 @@ export default function BoardClient({
     } catch {
       showToast("고정 변경에 실패했습니다.");
     }
-  }
+  }, [refetchPosts, showToast]);
 
-  async function handleVote(pollId: string, optionId: string) {
+  const handleVote = useCallback(async (pollId: string, optionId: string) => {
     setVotingOptionId(optionId);
     try {
       await apiMutate("/api/posts/vote", "POST", { pollId, optionId });
@@ -335,21 +335,21 @@ export default function BoardClient({
     } finally {
       setVotingOptionId(null);
     }
-  }
+  }, [refetchPosts]);
 
-  async function handleAddComment(postId: string) {
+  const handleAddComment = useCallback(async (postId: string) => {
     const content = commentInputs[postId]?.trim();
     if (!content) return;
     setCommentingPostId(postId);
     try {
       await apiMutate("/api/comments", "POST", { postId, content });
-      setCommentInputs({ ...commentInputs, [postId]: "" });
+      setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
       await Promise.all([refetchPosts(), fetchComments(postId)]);
       showToast("댓글이 등록되었습니다.");
     } finally {
       setCommentingPostId(null);
     }
-  }
+  }, [commentInputs, refetchPosts, fetchComments, showToast]);
 
   /* ── Error state ── */
   if (postsError) {
@@ -440,7 +440,7 @@ export default function BoardClient({
               onDelete={handleDeletePost}
               onLike={handleLike}
               onPin={handlePin}
-              onImageClick={(src) => setLightboxSrc(src)}
+              onImageClick={setLightboxSrc}
               onVote={handleVote}
               onToggleExpand={toggleExpand}
               likingPostIds={likingPostIds}
@@ -451,7 +451,7 @@ export default function BoardClient({
               isLoadingComments={loadingComments.has(post.id)}
               commentInput={commentInputs[post.id] ?? ""}
               onCommentInputChange={(value) =>
-                setCommentInputs({ ...commentInputs, [post.id]: value })
+                setCommentInputs((prev) => ({ ...prev, [post.id]: value }))
               }
               onCommentSubmit={handleAddComment}
               onCommentDelete={handleDeleteComment}

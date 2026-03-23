@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { NativeSelect } from "@/components/ui/native-select";
 
 type BirthDateSelectProps = {
@@ -17,7 +17,7 @@ function daysInMonth(year: number, month: number) {
   return new Date(year, month, 0).getDate();
 }
 
-export function BirthDateSelect({ name, defaultValue = "1998-01-01", required }: BirthDateSelectProps) {
+function BirthDateSelectBase({ name, defaultValue = "1998-01-01", required }: BirthDateSelectProps) {
   const [y, m, d] = defaultValue.split("-").map(Number);
   const [year, setYear] = useState(y || 1998);
   const [month, setMonth] = useState(m || 1);
@@ -67,3 +67,5 @@ export function BirthDateSelect({ name, defaultValue = "1998-01-01", required }:
     </div>
   );
 }
+
+export const BirthDateSelect = memo(BirthDateSelectBase);

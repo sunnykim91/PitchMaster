@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Calendar, Check, Copy, Link2, Trophy, Users, Vote } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
@@ -174,6 +174,10 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
   const attendPercent = voteTotal > 0 ? (voteCounts.attend / voteTotal) * 100 : 0;
   const absentPercent = voteTotal > 0 ? (voteCounts.absent / voteTotal) * 100 : 0;
 
+  // 출석 바 스타일 메모이제이션 (인라인 객체 재생성 방지)
+  const attendBarStyle = useMemo(() => ({ width: `${attendPercent}%` }), [attendPercent]);
+  const absentBarStyle = useMemo(() => ({ width: `${absentPercent}%` }), [absentPercent]);
+
   // Team record totals
   const recordTotal = teamRecord.wins + teamRecord.draws + teamRecord.losses;
 
@@ -211,7 +215,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                 </span>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-foreground">팀원 초대하기</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p className="mt-0.5 text-sm text-muted-foreground">
                     초대 코드를 팀원에게 공유하면 바로 가입할 수 있습니다.
                   </p>
                   {inviteCode ? (
@@ -243,7 +247,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                 </span>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-foreground">팀원 미리 등록</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p className="mt-0.5 text-sm text-muted-foreground">
                     가입 전 팀원 이름을 미리 등록하면 출석/회비 관리가 편해집니다.
                   </p>
                   <Button size="sm" variant="outline" className="mt-2" asChild>
@@ -259,7 +263,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                 </span>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-foreground">첫 경기 등록</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p className="mt-0.5 text-sm text-muted-foreground">
                     경기를 등록하면 팀원에게 참석 투표를 받을 수 있습니다.
                   </p>
                   <Button size="sm" variant="outline" className="mt-2" asChild>
@@ -299,7 +303,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
             {/* Vote buttons */}
             {upcomingMatch.myMemberId && (
               <div className="mt-4 flex flex-wrap items-center gap-2">
-                <span className="text-xs text-muted-foreground mr-1">내 투표:</span>
+                <span className="text-sm text-muted-foreground mr-1">내 투표:</span>
                 {([
                   { value: "ATTEND" as const, label: "참석" },
                   { value: "MAYBE" as const, label: "미정" },
@@ -328,8 +332,8 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
             {/* Attendance visual bar */}
             <div className="mt-4">
               <div className="flex h-1.5 overflow-hidden rounded-full bg-secondary/50">
-                <div className="rounded-full bg-[hsl(var(--success))] transition-all duration-500" style={{ width: `${attendPercent}%` }} />
-                <div className="bg-[hsl(var(--loss))] transition-all duration-500" style={{ width: `${absentPercent}%` }} />
+                <div className="rounded-full bg-[hsl(var(--success))] transition-all duration-500 will-change-[width]" style={attendBarStyle} />
+                <div className="bg-[hsl(var(--loss))] transition-all duration-500 will-change-[width]" style={absentBarStyle} />
               </div>
               <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
                 <span>참석 <strong className="text-[hsl(var(--success))]">{voteCounts.attend}</strong></span>
@@ -369,7 +373,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
               <p className="text-sm font-semibold text-foreground">팀원을 초대하세요</p>
             </div>
             <div className="mt-2 flex items-center justify-between gap-2">
-              <p className="text-xs text-muted-foreground truncate">초대 코드를 공유하면 바로 가입</p>
+              <p className="text-sm text-muted-foreground truncate">초대 코드를 공유하면 바로 가입</p>
               <Button
                 size="sm"
                 variant="outline"

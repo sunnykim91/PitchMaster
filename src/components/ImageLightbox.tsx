@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 
@@ -9,7 +9,7 @@ interface ImageLightboxProps {
   onClose: () => void;
 }
 
-export function ImageLightbox({ src, alt = "", onClose }: ImageLightboxProps) {
+function ImageLightboxBase({ src, alt = "", onClose }: ImageLightboxProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
@@ -42,10 +42,11 @@ export function ImageLightbox({ src, alt = "", onClose }: ImageLightboxProps) {
           height={800}
           className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg cursor-zoom-out"
           onClick={onClose}
-          unoptimized
         />
       </div>
     </div>,
     document.body,
   );
 }
+
+export const ImageLightbox = memo(ImageLightboxBase);

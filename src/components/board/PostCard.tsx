@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Image from "next/image";
 import { MessageSquare, Heart, Pin, ChevronDown, ChevronUp, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,7 +38,7 @@ export interface PostCardProps {
   onSetConfirmAction: (action: { message: string; onConfirm: () => void }) => void;
 }
 
-export function PostCard({
+export const PostCard = memo(function PostCard({
   post,
   userId,
   isStaff,
@@ -157,7 +158,6 @@ export function PostCard({
               width={480}
               height={240}
               className="w-full max-h-56 rounded-lg object-cover"
-              unoptimized
             />
           </button>
         )}
@@ -213,4 +213,4 @@ export function PostCard({
       </CardContent>
     </Card>
   );
-}
+});
