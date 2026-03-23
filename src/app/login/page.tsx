@@ -79,10 +79,10 @@ export default async function LoginPage({
           </h1>
 
           <div className="mx-auto max-w-md space-y-3 lg:mx-0">
-            <p className="break-keep text-sm text-muted-foreground sm:text-base">
+            <p className="break-keep text-sm text-foreground/70 sm:text-base">
               참석 투표 · 회비 관리 · 자동 포지션 배치
               <br />
-              <span className="font-semibold text-foreground">한 곳에서, 한 번에.</span>
+              <span className="font-bold text-foreground">한 곳에서, 한 번에.</span>
             </p>
             <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
               <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">참석 확인 30분 → 30초</span>
@@ -375,48 +375,56 @@ export default async function LoginPage({
                 title: "원탭 득점 기록",
                 desc: "쿼터별 스코어보드로 득점·어시스트 즉시 기록",
                 color: "text-primary",
+                bg: "bg-primary/10",
               },
               {
                 icon: "📊",
                 title: "시즌 통계 & 랭킹",
                 desc: "승률, 출석률, 레이더 차트, 개인별 랭킹",
                 color: "text-sky-400",
+                bg: "bg-sky-500/10",
               },
               {
                 icon: "🏆",
                 title: "MVP 투표",
                 desc: "경기 후 팀원이 직접 뽑는 MVP",
                 color: "text-amber-400",
+                bg: "bg-amber-500/10",
               },
               {
                 icon: "📋",
                 title: "팀 게시판",
                 desc: "공지사항, 자유글, 투표까지 팀 전용 소통 공간",
                 color: "text-violet-400",
+                bg: "bg-violet-500/10",
               },
               {
                 icon: "🔔",
                 title: "푸시 알림",
                 desc: "경기 등록·투표 마감 알림을 앱처럼 받기",
                 color: "text-rose-400",
+                bg: "bg-rose-500/10",
               },
               {
                 icon: "📜",
                 title: "회칙 관리",
                 desc: "팀 규정을 앱에서 관리, 파일 첨부 가능",
                 color: "text-emerald-400",
+                bg: "bg-emerald-500/10",
               },
               {
                 icon: "🏟️",
                 title: "축구 & 풋살",
                 desc: "종목별 인원·쿼터·포메이션 자동 설정",
                 color: "text-primary",
+                bg: "bg-primary/10",
               },
               {
                 icon: "👀",
                 title: "데모 체험",
                 desc: "회원가입 없이 모든 기능을 바로 둘러보기",
                 color: "text-sky-400",
+                bg: "bg-sky-500/10",
               },
             ].map((item) => (
               <Card
@@ -424,11 +432,13 @@ export default async function LoginPage({
                 className="group border-border/30 bg-card/50 transition-all hover:border-primary/20"
               >
                 <CardContent className="p-4 sm:p-5">
-                  <span className="text-xl sm:text-2xl">{item.icon}</span>
-                  <p className={`mt-2 text-xs font-bold sm:text-sm ${item.color}`}>
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${item.bg} text-lg`}>
+                    {item.icon}
+                  </div>
+                  <p className={`mt-2.5 text-sm font-bold ${item.color}`}>
                     {item.title}
                   </p>
-                  <p className="mt-1 break-keep text-xs leading-relaxed text-muted-foreground">
+                  <p className="mt-1 break-keep text-xs leading-relaxed text-foreground/60 sm:text-sm sm:leading-relaxed">
                     {item.desc}
                   </p>
                 </CardContent>
@@ -527,10 +537,10 @@ export default async function LoginPage({
                       {row.feature}
                     </td>
                     <td className="py-2.5 text-center text-muted-foreground/60 sm:py-3">
-                      {row.kakao}
+                      {row.kakao === "없음" ? <span className="text-muted-foreground/30">—</span> : row.kakao}
                     </td>
                     <td className="py-2.5 text-center text-muted-foreground/60 sm:py-3">
-                      {row.band}
+                      {row.band === "없음" ? <span className="text-muted-foreground/30">—</span> : row.band}
                     </td>
                     <td className="py-2.5 text-center font-semibold text-emerald-400 sm:py-3">
                       <span className="inline-flex items-center gap-1">
