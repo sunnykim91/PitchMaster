@@ -14,18 +14,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid subscription" }, { status: 400 });
   }
 
-  // Upsert subscription (replace if same endpoint exists)
+  // 기존 동일 endpoint 삭제 후 insert (unique 제약 없이 안전)
+  await db.from("push_subscriptions").delete().eq("endpoint", subscription.endpoint);
   const { error } = await db
     .from("push_subscriptions")
-    .upsert(
-      {
-        user_id: session.user.id,
-        endpoint: subscription.endpoint,
-        keys: subscription.keys ?? {},
-        created_at: new Date().toISOString(),
-      },
-      { onConflict: "endpoint" }
-    );
+    .insert({
+      user_id: session.user.id,
+      endpoint: subscription.endpoint,
+      keys: subscription.keys ?? {},
+    });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
