@@ -112,10 +112,10 @@ export default async function LoginPage({
       <section aria-label="사용 통계" className="scroll-reveal relative border-t border-border/30 bg-primary/5">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-8 px-6 py-8 md:gap-16">
           {[
-            { value: "100+", label: "관리된 경기", color: "text-primary" },
-            { value: "1,500+", label: "참석 투표", color: "text-sky-400" },
-            { value: "37", label: "팀 멤버", color: "text-violet-400" },
-            { value: "4개월+", label: "운영 기간", color: "text-amber-400" },
+            { value: "5개 팀", label: "등록 팀", color: "text-primary" },
+            { value: "100+", label: "등록 회원", color: "text-sky-400" },
+            { value: "200+", label: "관리된 경기", color: "text-violet-400" },
+            { value: "6개월+", label: "운영 기간", color: "text-amber-400" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <p className={`font-heading text-xl font-bold sm:text-2xl md:text-3xl ${stat.color}`}>{stat.value}</p>
@@ -195,9 +195,11 @@ export default async function LoginPage({
           </div>
 
           {/* 미니 CTA */}
-          <div className="mt-10 flex flex-col items-center gap-2">
+          <div className="mt-10 flex flex-col items-center gap-3">
             {kakaoButton2}
-            <p className="text-xs text-muted-foreground">지금 바로 체험해보세요</p>
+            <Suspense fallback={<div className="h-10" />}>
+              <DemoButton />
+            </Suspense>
           </div>
         </div>
       </section>
@@ -356,40 +358,65 @@ export default async function LoginPage({
         </div>
       </section>
 
-      {/* ── Section 4: More Features (4 cards) ── */}
+      {/* ── Section 4: More Features (8 cards) ── */}
       <section aria-label="추가 기능" className="scroll-reveal relative border-t border-border/30 bg-card/30 backdrop-blur-sm">
         <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="text-center">
             <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">
-              더 있습니다.
+              이것만이 아닙니다.
             </h2>
+            <p className="mt-2 text-sm text-muted-foreground">팀 운영에 필요한 모든 것이 여기에.</p>
           </div>
 
-          <div className="mt-10 grid gap-5 grid-cols-2 sm:mt-12 md:grid-cols-4">
+          <div className="mt-10 grid gap-4 grid-cols-2 sm:mt-12 md:grid-cols-4">
             {[
               {
                 icon: "⚽",
-                title: "간편 득점 기록",
-                desc: "원탭 스코어보드로 득점·실점 바로 기록",
+                title: "원탭 득점 기록",
+                desc: "쿼터별 스코어보드로 득점·어시스트 즉시 기록",
                 color: "text-primary",
               },
               {
                 icon: "📊",
-                title: "팀 전적 & 분석",
-                desc: "승/무/패, 득실차, 레이더 차트까지",
+                title: "시즌 통계 & 랭킹",
+                desc: "승률, 출석률, 레이더 차트, 개인별 랭킹",
                 color: "text-sky-400",
+              },
+              {
+                icon: "🏆",
+                title: "MVP 투표",
+                desc: "경기 후 팀원이 직접 뽑는 MVP",
+                color: "text-amber-400",
+              },
+              {
+                icon: "📋",
+                title: "팀 게시판",
+                desc: "공지사항, 자유글, 투표까지 팀 전용 소통 공간",
+                color: "text-violet-400",
+              },
+              {
+                icon: "🔔",
+                title: "푸시 알림",
+                desc: "경기 등록·투표 마감 알림을 앱처럼 받기",
+                color: "text-rose-400",
+              },
+              {
+                icon: "📜",
+                title: "회칙 관리",
+                desc: "팀 규정을 앱에서 관리, 파일 첨부 가능",
+                color: "text-emerald-400",
               },
               {
                 icon: "🏟️",
                 title: "축구 & 풋살",
-                desc: "인원·쿼터·포메이션 자동 설정",
+                desc: "종목별 인원·쿼터·포메이션 자동 설정",
                 color: "text-primary",
               },
               {
-                icon: "💬",
-                title: "카카오톡 공유",
-                desc: "결과·투표 카드 한 번에 공유",
-                color: "text-amber-400",
+                icon: "👀",
+                title: "데모 체험",
+                desc: "회원가입 없이 모든 기능을 바로 둘러보기",
+                color: "text-sky-400",
               },
             ].map((item) => (
               <Card
@@ -401,7 +428,7 @@ export default async function LoginPage({
                   <p className={`mt-2 text-xs font-bold sm:text-sm ${item.color}`}>
                     {item.title}
                   </p>
-                  <p className="mt-1 break-keep text-xs leading-relaxed text-muted-foreground sm:text-xs">
+                  <p className="mt-1 break-keep text-xs leading-relaxed text-muted-foreground">
                     {item.desc}
                   </p>
                 </CardContent>
@@ -471,10 +498,22 @@ export default async function LoginPage({
                     pm: "레이더 차트 + 랭킹",
                   },
                   {
-                    feature: "득점 기록",
+                    feature: "게시판 / 공지",
+                    kakao: "공지 묻힘",
+                    band: "게시판",
+                    pm: "고정 공지 + 투표",
+                  },
+                  {
+                    feature: "푸시 알림",
+                    kakao: "없음",
+                    band: "앱 알림",
+                    pm: "투표 마감 자동 알림",
+                  },
+                  {
+                    feature: "데모 체험",
                     kakao: "없음",
                     band: "없음",
-                    pm: "원탭 스코어보드",
+                    pm: "가입 없이 둘러보기",
                   },
                   {
                     feature: "멀티팀",
@@ -487,13 +526,13 @@ export default async function LoginPage({
                     <td className="py-2.5 font-medium text-foreground sm:py-3">
                       {row.feature}
                     </td>
-                    <td className="py-2.5 text-center text-muted-foreground sm:py-3">
+                    <td className="py-2.5 text-center text-muted-foreground/60 sm:py-3">
                       {row.kakao}
                     </td>
-                    <td className="py-2.5 text-center text-muted-foreground sm:py-3">
+                    <td className="py-2.5 text-center text-muted-foreground/60 sm:py-3">
                       {row.band}
                     </td>
-                    <td className="py-2.5 text-center font-semibold text-primary sm:py-3">
+                    <td className="py-2.5 text-center font-semibold text-emerald-400 sm:py-3">
                       <span className="inline-flex items-center gap-1">
                         <span className="text-xs">✓</span> {row.pm}
                       </span>
@@ -522,23 +561,31 @@ export default async function LoginPage({
                 role: "조기축구 총무 4년차 · 25명 팀",
                 quote: "매주 금요일 저녁마다 한 명씩 전화하던 게, 링크 하나 보내고 끝이에요. 진짜 인생 바뀜.",
                 highlight: "전화 25통 → 링크 1개",
+                stars: 5,
               },
               {
                 name: "P회장",
                 role: "평일 풋살팀 회장 · 18명",
                 quote: "통장 캡쳐 올렸더니 회비가 자동으로 정리되더라고요. 엑셀 파일 삭제했습니다.",
                 highlight: "엑셀 삭제 완료",
+                stars: 5,
               },
               {
                 name: "L운영진",
                 role: "주말 축구팀 · 35명 운영",
                 quote: "경기장 도착 전에 라인업이 카톡으로 공유되니까 다들 좋아해요. 특히 쿼터별 균등 배분이 공정해서.",
                 highlight: "라인업 갈등 해소",
+                stars: 5,
               },
             ].map((review) => (
               <Card key={review.name} className="border-border/30 bg-card/50">
                 <CardContent className="p-4 sm:p-6">
-                  <p className="break-keep text-xs leading-relaxed text-foreground/80 sm:text-sm">
+                  <div className="flex gap-0.5 text-amber-400">
+                    {Array.from({ length: review.stars }, (_, i) => (
+                      <span key={i} className="text-sm">★</span>
+                    ))}
+                  </div>
+                  <p className="mt-2 break-keep text-xs leading-relaxed text-foreground/80 sm:text-sm">
                     &ldquo;{review.quote}&rdquo;
                   </p>
                   <div className="mt-3 flex items-center gap-3 sm:mt-4">
@@ -547,10 +594,10 @@ export default async function LoginPage({
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-foreground sm:text-sm">{review.name}</p>
-                      <p className="text-xs text-muted-foreground sm:text-xs">{review.role}</p>
+                      <p className="text-xs text-muted-foreground">{review.role}</p>
                     </div>
                   </div>
-                  <p className="mt-3 rounded-full bg-primary/10 px-3 py-1 text-center text-xs font-bold text-primary sm:text-xs">
+                  <p className="mt-3 rounded-full bg-primary/10 px-3 py-1 text-center text-xs font-bold text-primary">
                     {review.highlight}
                   </p>
                 </CardContent>
@@ -618,6 +665,9 @@ export default async function LoginPage({
           </p>
           <div className="mt-6 flex flex-col items-center gap-3 sm:mt-8">
             {kakaoButton3}
+            <Suspense fallback={<div className="h-10" />}>
+              <DemoButton />
+            </Suspense>
             <p className="text-xs text-muted-foreground">
               무료 · 광고 없음 · 카카오 계정으로 바로 시작
             </p>
@@ -627,14 +677,19 @@ export default async function LoginPage({
 
       {/* Sticky Mobile CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/30 bg-background/95 p-3 backdrop-blur-sm lg:hidden">
-        <Button
-          className="h-12 w-full rounded-xl bg-[hsl(var(--kakao))] text-sm font-bold text-[hsl(var(--kakao-foreground))] shadow-lg shadow-[hsl(var(--kakao))]/25 hover:bg-[hsl(var(--kakao))]/90"
-          asChild
-        >
-          <a href={kakaoEnabled ? (inviteCode ? `/api/auth/kakao?inviteCode=${encodeURIComponent(inviteCode)}` : "/api/auth/kakao") : "#"}>
-            무료로 시작
-          </a>
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            className="h-12 flex-1 rounded-xl bg-[hsl(var(--kakao))] text-sm font-bold text-[hsl(var(--kakao-foreground))] shadow-lg shadow-[hsl(var(--kakao))]/25 hover:bg-[hsl(var(--kakao))]/90"
+            asChild
+          >
+            <a href={kakaoEnabled ? (inviteCode ? `/api/auth/kakao?inviteCode=${encodeURIComponent(inviteCode)}` : "/api/auth/kakao") : "#"}>
+              무료로 시작
+            </a>
+          </Button>
+          <Suspense fallback={null}>
+            <DemoButton compact />
+          </Suspense>
+        </div>
       </div>
 
       {/* ── Footer ── */}
