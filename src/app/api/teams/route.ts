@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getApiContext,
   requireRole,
+  demoGuard,
   apiError,
   apiSuccess,
 } from "@/lib/api-helpers";
@@ -55,6 +56,9 @@ export async function PUT(request: NextRequest) {
 export async function DELETE() {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
+
+  const demo = demoGuard(ctx);
+  if (demo) return demo;
 
   const roleCheck = requireRole(ctx, PERMISSIONS.TEAM_DELETE);
   if (roleCheck) return roleCheck;

@@ -389,6 +389,17 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
         {/* Main Content */}
         <main className="min-w-0 space-y-4 pb-16 lg:pb-0">
+          {session.user.isDemo && (
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5">
+              <p className="text-xs font-medium text-primary">
+                <span className="mr-1.5 font-bold">데모 모드</span>
+                실제 데이터가 아닌 샘플 데이터입니다
+              </p>
+              <Link href="/login" className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90">
+                회원가입
+              </Link>
+            </div>
+          )}
           {isStaffOrAbove(displayRole) && (
             <Card className="hidden lg:block">
               <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">

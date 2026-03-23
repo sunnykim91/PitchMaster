@@ -9,6 +9,7 @@ export type ApiContext = {
   userId: string;
   teamId: string;
   teamRole: Role;
+  isDemo: boolean;
 };
 
 /** Extract and validate session for API routes */
@@ -30,6 +31,7 @@ export async function getApiContext(): Promise<ApiContext | NextResponse> {
     userId,
     teamId,
     teamRole,
+    isDemo: !!session.user.isDemo,
   };
 }
 
@@ -50,6 +52,17 @@ export function requireRole(
 /** Check if Supabase is available */
 export function isDbAvailable(): boolean {
   return !!getSupabaseAdmin();
+}
+
+/** Block demo users from specific actions */
+export function demoGuard(ctx: ApiContext): NextResponse | null {
+  if (ctx.isDemo) {
+    return NextResponse.json(
+      { error: "데모 모드에서는 사용할 수 없는 기능입니다" },
+      { status: 403 }
+    );
+  }
+  return null;
 }
 
 /** Standard error response */

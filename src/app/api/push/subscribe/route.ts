@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 export async function POST(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (session.user.isDemo) return NextResponse.json({ error: "데모 모드에서는 사용할 수 없는 기능입니다" }, { status: 403 });
 
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: "DB unavailable" }, { status: 500 });

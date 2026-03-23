@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
+import { getApiContext, demoGuard, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { updateSession } from "@/lib/auth";
 
@@ -23,6 +23,9 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
+
+  const demo = demoGuard(ctx);
+  if (demo) return demo;
 
   const body = await request.json();
   const db = getSupabaseAdmin();
