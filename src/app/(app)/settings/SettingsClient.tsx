@@ -275,7 +275,13 @@ export default function SettingsClient({
     try {
       if (next) {
         // 푸시 활성화 시 구독도 시도
-        await subscribeToPush();
+        const sub = await subscribeToPush();
+        if (!sub) {
+          setMessage("알림 권한이 거부되었거나 이 브라우저에서 지원하지 않습니다");
+          setPushLoading(false);
+          setTimeout(() => setMessage(null), 3000);
+          return;
+        }
       }
       await fetch("/api/notification-settings", {
         method: "PUT",
