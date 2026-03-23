@@ -73,7 +73,7 @@ function mapPost(raw: Record<string, unknown>): Post {
     content: raw.content as string,
     authorId: raw.author_id as string,
     author: (raw.author as { name: string })?.name ?? "",
-    createdAt: (raw.created_at as string)?.slice(0, 10) ?? "",
+    createdAt: (raw.created_at as string) ?? "",
     likes: (raw.likes_count as number) ?? 0,
     comments: (raw.comments_count as number) ?? 0,
     imageUrls: (raw.image_urls as string[]) ?? [],
@@ -98,7 +98,7 @@ function mapComment(raw: Record<string, unknown>): Comment {
     authorId: raw.author_id as string,
     authorName: (raw.author as { name: string })?.name ?? "",
     content: raw.content as string,
-    createdAt: (raw.created_at as string)?.slice(0, 10) ?? "",
+    createdAt: (raw.created_at as string) ?? "",
   };
 }
 

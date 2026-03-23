@@ -87,5 +87,7 @@ export function relativeTime(dateStr: string): string {
   if (diffHr < 24) return `${diffHr}시간 전`;
   const diffDay = Math.floor(diffHr / 24);
   if (diffDay < 7) return `${diffDay}일 전`;
-  return dateStr;
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  return `${m}월 ${day}일`;
 }
