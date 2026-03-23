@@ -668,8 +668,17 @@ export default function MatchDetailClient({
     await refetchMvp();
   }
 
-  /* ── 참석투표 대리 관리 (운영진 이상) ── */
+  /* ── 본인 참석투표 ── */
+  async function handleMyVote(vote: "ATTEND" | "ABSENT" | "MAYBE") {
+    const { error: err } = await apiMutate("/api/attendance", "POST", { matchId, vote });
+    if (err) {
+      showToast("투표에 실패했습니다. 다시 시도해주세요.", "error");
+    } else {
+      await refetchVote();
+    }
+  }
 
+  /* ── 참석투표 대리 관리 (운영진 이상) ── */
   async function handleProxyVote(memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
     const { error: err } = await apiMutate("/api/attendance", "POST", { matchId, vote, memberId });
     if (err) {
@@ -905,7 +914,7 @@ export default function MatchDetailClient({
                           "rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-105 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                           isSelected ? voteStyles[opt.value].active : voteStyles[opt.value].inactive
                         )}
-                        onClick={() => handleProxyVote(myMember.memberId, opt.value)}
+                        onClick={() => handleMyVote(opt.value)}
                       >
                         {opt.label}
                       </button>
@@ -1025,6 +1034,73 @@ export default function MatchDetailClient({
           </CardContent>
         </Card>
       )}
+
+      {/* ── 참석 현황 (모든 회원, 운영진 투표 관리가 없을 때) ── */}
+      {!canManage && match.status !== "COMPLETED" && baseRoster.length > 0 && (() => {
+        const attend = baseRoster.filter((m) => memberVoteMap[m.memberId] === "ATTEND");
+        const absent = baseRoster.filter((m) => memberVoteMap[m.memberId] === "ABSENT");
+        const maybe = baseRoster.filter((m) => memberVoteMap[m.memberId] === "MAYBE");
+        const noVote = baseRoster.filter((m) => !memberVoteMap[m.memberId]);
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
+                참석 현황
+              </CardTitle>
+              <div className="mt-2 flex flex-wrap gap-3 text-xs font-semibold">
+                <span className="text-[hsl(var(--success))]">참석 {attend.length}</span>
+                <span className="text-[hsl(var(--loss))]">불참 {absent.length}</span>
+                <span className="text-[hsl(var(--warning))]">미정 {maybe.length}</span>
+                <span className="text-muted-foreground">미투표 {noVote.length}</span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {attend.length > 0 && (
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold text-[hsl(var(--success))]">참석</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {attend.map((m) => (
+                        <span key={m.id} className="rounded-full bg-[hsl(var(--success)/0.1)] px-2.5 py-1 text-xs font-medium text-[hsl(var(--success))]">{m.name}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {maybe.length > 0 && (
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold text-[hsl(var(--warning))]">미정</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {maybe.map((m) => (
+                        <span key={m.id} className="rounded-full bg-[hsl(var(--warning)/0.1)] px-2.5 py-1 text-xs font-medium text-[hsl(var(--warning))]">{m.name}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {absent.length > 0 && (
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold text-[hsl(var(--loss))]">불참</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {absent.map((m) => (
+                        <span key={m.id} className="rounded-full bg-[hsl(var(--loss)/0.1)] px-2.5 py-1 text-xs font-medium text-[hsl(var(--loss))]">{m.name}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {noVote.length > 0 && (
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold text-muted-foreground">미투표</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {noVote.map((m) => (
+                        <span key={m.id} className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">{m.name}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* ── 용병(게스트) 관리 (운영진 이상) ── */}
       {canManage && (

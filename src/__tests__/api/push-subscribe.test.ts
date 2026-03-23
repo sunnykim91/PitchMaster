@@ -48,9 +48,12 @@ describe("POST /api/push/subscribe", () => {
     expect(json.error).toBe("Invalid subscription");
   });
 
-  it("200: 구독 upsert 성공", async () => {
+  it("200: 구독 등록 성공 (delete+insert)", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["push_subscriptions", null]);
+    const db = createMockDb(
+      ["push_subscriptions", null],  // delete
+      ["push_subscriptions", null]   // insert
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(
@@ -64,9 +67,13 @@ describe("POST /api/push/subscribe", () => {
     expect(json.ok).toBe(true);
   });
 
-  it("500: DB 에러 시 500 반환", async () => {
+  it("500: DB insert 에러 시 500 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["push_subscriptions", null, { message: "upsert failed" }]);
+    // delete 성공 후 insert 실패
+    const db = createMockDb(
+      ["push_subscriptions", null],  // delete
+      ["push_subscriptions", null, { message: "insert failed" }]  // insert
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(
@@ -74,7 +81,7 @@ describe("POST /api/push/subscribe", () => {
     );
     expect(res.status).toBe(500);
     const json = await res.json();
-    expect(json.error).toBe("upsert failed");
+    expect(json.error).toBe("insert failed");
   });
 });
 
