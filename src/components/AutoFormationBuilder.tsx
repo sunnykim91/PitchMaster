@@ -229,8 +229,12 @@ function scheduleQuarters(
     }
   }
 
-  // 필요 쿼터가 많은 선수 먼저 (동률이면 선호포지션 순)
-  reqs.sort((a, b) => b.needed - a.needed);
+  // 제약이 큰 선수 먼저: assignedQs가 있으면 선택지가 적으므로 우선 배정
+  // (하프쿼터 선수가 fullQ 선수보다 먼저 처리되어야 빈 슬롯 방지)
+  reqs.sort((a, b) => {
+    if (a.assignedQs.size !== b.assignedQs.size) return b.assignedQs.size - a.assignedQs.size;
+    return b.needed - a.needed;
+  });
 
   for (const req of reqs) {
     // 남은 용량이 있고 아직 배정 안 된 쿼터만 후보
