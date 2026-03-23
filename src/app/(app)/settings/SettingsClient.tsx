@@ -274,23 +274,21 @@ export default function SettingsClient({
     setPushLoading(true);
     try {
       if (next) {
-        // 디버그: 브라우저 지원 여부 확인
         const hasSW = "serviceWorker" in navigator;
         const hasPM = "PushManager" in window;
         const hasNoti = typeof Notification !== "undefined";
         if (!hasSW || !hasPM || !hasNoti) {
-          setMessage(`지원 안 됨: SW=${hasSW} PM=${hasPM} Noti=${hasNoti}`);
+          setMessage("홈 화면에 추가(앱 설치) 후 푸시 알림을 사용할 수 있습니다");
           setPushLoading(false);
-          setTimeout(() => setMessage(null), 5000);
+          setTimeout(() => setMessage(null), 4000);
           return;
         }
 
         const sub = await subscribeToPush();
         if (!sub) {
-          const perm = typeof Notification !== "undefined" ? Notification.permission : "없음";
-          setMessage(`구독 실패 — 권한: ${perm}`);
+          setMessage("알림 권한이 거부되었습니다. 브라우저 설정에서 알림을 허용해주세요");
           setPushLoading(false);
-          setTimeout(() => setMessage(null), 5000);
+          setTimeout(() => setMessage(null), 4000);
           return;
         }
       }
@@ -301,8 +299,8 @@ export default function SettingsClient({
       });
       setPushEnabled(next);
       setMessage(next ? "푸시 알림이 활성화되었습니다" : "푸시 알림이 비활성화되었습니다");
-    } catch (err) {
-      setMessage(`오류: ${err instanceof Error ? err.message : String(err)}`);
+    } catch {
+      setMessage("알림 설정 변경에 실패했습니다");
     }
     setPushLoading(false);
     setTimeout(() => setMessage(null), 2000);
