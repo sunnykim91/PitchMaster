@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   }
 
   // Get subscriptions for target users (or all team members)
-  let query = db.from("push_subscriptions").select("endpoint, p256dh, auth, user_id");
+  let query = db.from("push_subscriptions").select("endpoint, keys, user_id");
 
   if (userIds && Array.isArray(userIds) && userIds.length > 0) {
     query = query.in("user_id", userIds);
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
         await webpush.sendNotification(
           {
             endpoint: sub.endpoint,
-            keys: { p256dh: sub.p256dh, auth: sub.auth },
+            keys: { p256dh: sub.keys?.p256dh, auth: sub.keys?.auth },
           },
           payload
         );

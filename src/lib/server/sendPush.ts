@@ -46,7 +46,7 @@ export async function sendTeamPush(
   // 푸시 구독 조회 & 발송
   const { data: subs } = await db
     .from("push_subscriptions")
-    .select("endpoint, p256dh, auth")
+    .select("endpoint, keys")
     .in("user_id", targetUserIds);
 
   if (!subs || subs.length === 0) return { sent: 0, failed: 0 };
@@ -54,7 +54,7 @@ export async function sendTeamPush(
   const payload = JSON.stringify({
     title: opts.title,
     body: opts.body,
-    url: opts.url ?? "/notifications",
+    url: opts.url ?? "/dashboard",
   });
 
   let sent = 0;
@@ -64,7 +64,7 @@ export async function sendTeamPush(
     subs.map(async (sub) => {
       try {
         await webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          { endpoint: sub.endpoint, keys: { p256dh: sub.keys?.p256dh, auth: sub.keys?.auth } },
           payload
         );
         sent++;

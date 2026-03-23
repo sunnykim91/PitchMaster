@@ -21,8 +21,7 @@ export async function POST(req: Request) {
       {
         user_id: session.user.id,
         endpoint: subscription.endpoint,
-        p256dh: subscription.keys?.p256dh ?? null,
-        auth: subscription.keys?.auth ?? null,
+        keys: subscription.keys ?? {},
         created_at: new Date().toISOString(),
       },
       { onConflict: "endpoint" }
