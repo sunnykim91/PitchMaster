@@ -33,8 +33,14 @@ export default function PWAInstallPrompt() {
   const [showIosGuide, setShowIosGuide] = useState(false);
 
   useEffect(() => {
-    // 이미 PWA로 실행 중이면 표시 안 함
+    // 이미 PWA로 실행 중이면 표시 안 함 (standalone 또는 fullscreen)
     if (window.matchMedia("(display-mode: standalone)").matches) return;
+    if (window.matchMedia("(display-mode: fullscreen)").matches) return;
+    // @ts-expect-error -- navigator.standalone은 iOS Safari 전용
+    if (navigator.standalone === true) return;
+
+    // 이미 설치 완료한 경우 표시 안 함
+    if (localStorage.getItem("pwa-installed") === "true") return;
 
     // 이전에 닫았으면 7일간 숨김
     const dismissed = localStorage.getItem("pwa-install-dismissed");
@@ -87,6 +93,7 @@ export default function PWAInstallPrompt() {
     await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === "accepted") {
+      localStorage.setItem("pwa-installed", "true");
       setShowBanner(false);
     }
     setDeferredPrompt(null);
