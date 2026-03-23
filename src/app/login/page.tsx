@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import { isKakaoConfigured } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import AppScreenSlider from "./AppScreenSlider";
 import ScrollRevealInit from "./ScrollRevealInit";
+import DemoButton from "./DemoButton";
 
 export default async function LoginPage({
   searchParams,
@@ -91,11 +93,11 @@ export default async function LoginPage({
 
           <div className="flex flex-col items-center gap-3 lg:items-start">
             {kakaoButton}
+            <Suspense fallback={<div className="h-10" />}>
+              <DemoButton />
+            </Suspense>
             <p className="text-xs text-muted-foreground">
               무료 · 광고 없음 · 1분이면 팀 세팅 완료
-            </p>
-            <p className="text-xs text-muted-foreground/60">
-              현재 37명 규모 팀이 3개월째 사용 중
             </p>
           </div>
         </div>
