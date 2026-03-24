@@ -95,10 +95,14 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
                   </div>
                   <div>
                     <p className="mb-2 text-xs font-semibold text-muted-foreground">미드필더</p>
-                    <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="grid gap-2 sm:grid-cols-3">
                       <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
                         <input type="checkbox" name="preferredPositions" value="CDM" className="h-4 w-4 accent-primary" />
                         CDM · 수비형 미드필더
+                      </label>
+                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
+                        <input type="checkbox" name="preferredPositions" value="CM" className="h-4 w-4 accent-primary" />
+                        CM · 중앙 미드필더
                       </label>
                       <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
                         <input type="checkbox" name="preferredPositions" value="CAM" className="h-4 w-4 accent-primary" />

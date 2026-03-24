@@ -2,13 +2,14 @@ export type Role = "PRESIDENT" | "STAFF" | "MEMBER";
 export type PreferredFoot = "RIGHT" | "LEFT" | "BOTH";
 export type Position = "GK" | "DF" | "MF" | "FW";
 
-/** 세분화된 선호 포지션 (9개) */
+/** 세분화된 선호 포지션 (10개) */
 export type PreferredPosition =
   | "GK"   // 골키퍼
   | "CB"   // 센터백 (Centre Back)
   | "LB"   // 좌측 윙백 (Left Back)
   | "RB"   // 우측 윙백 (Right Back)
   | "CDM"  // 수비형 미드필더 (Central Defensive Midfielder)
+  | "CM"   // 중앙 미드필더 (Central Midfielder)
   | "CAM"  // 공격형 미드필더 (Central Attacking Midfielder)
   | "LW"   // 좌측 윙어 (Left Winger)
   | "RW"   // 우측 윙어 (Right Winger)
@@ -21,6 +22,7 @@ export const PREF_TO_POSITION: Record<PreferredPosition, Position> = {
   LB: "DF",
   RB: "DF",
   CDM: "MF",
+  CM: "MF",
   CAM: "MF",
   LW: "FW",
   RW: "FW",
@@ -34,6 +36,7 @@ export const PREF_POSITION_LABEL: Record<PreferredPosition, string> = {
   LB: "좌측 윙백",
   RB: "우측 윙백",
   CDM: "수비형 미드필더",
+  CM: "중앙 미드필더",
   CAM: "공격형 미드필더",
   LW: "좌측 윙어",
   RW: "우측 윙어",
@@ -47,6 +50,7 @@ export const PREF_POSITION_SHORT: Record<PreferredPosition, string> = {
   LB: "LB",
   RB: "RB",
   CDM: "CDM",
+  CM: "CM",
   CAM: "CAM",
   LW: "LW",
   RW: "RW",
@@ -57,7 +61,7 @@ export const PREF_POSITION_SHORT: Record<PreferredPosition, string> = {
 export const POSITION_GROUPS: { group: string; positions: PreferredPosition[] }[] = [
   { group: "골키퍼", positions: ["GK"] },
   { group: "수비", positions: ["CB", "LB", "RB"] },
-  { group: "미드필더", positions: ["CDM", "CAM"] },
+  { group: "미드필더", positions: ["CDM", "CM", "CAM"] },
   { group: "공격", positions: ["LW", "RW", "ST"] },
 ];
 

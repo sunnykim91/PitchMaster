@@ -70,7 +70,8 @@ function getSlotSubPosition(slot: FormationSlot): PreferredPosition {
   if (["LB", "LWB"].includes(slot.role)) return "LB";
   if (["RB", "RWB"].includes(slot.role)) return "RB";
   if (["CDM", "LDM", "RDM"].includes(slot.role)) return "CDM";
-  if (["CAM", "LAM", "RAM", "CM", "LCM", "RCM", "LM", "RM"].includes(slot.role)) return "CAM";
+  if (["CM", "LCM", "RCM", "LM", "RM"].includes(slot.role)) return "CM";
+  if (["CAM", "LAM", "RAM"].includes(slot.role)) return "CAM";
   if (slot.role === "LW") return "LW";
   if (slot.role === "RW") return "RW";
   return "ST"; // ST, CF, LS, RS
@@ -87,6 +88,7 @@ const POS_LABEL: Record<PreferredPosition, string> = {
   LB: "LB",
   RB: "RB",
   CDM: "CDM",
+  CM: "CM",
   CAM: "CAM",
   LW: "LW",
   RW: "RW",
@@ -98,6 +100,7 @@ const POS_COLOR: Record<PreferredPosition, string> = {
   LB: "bg-sky-500/20 text-sky-400 border-sky-500/30",
   RB: "bg-sky-500/20 text-sky-400 border-sky-500/30",
   CDM: "bg-green-500/20 text-green-400 border-green-500/30",
+  CM: "bg-teal-500/20 text-teal-400 border-teal-500/30",
   CAM: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
   LW: "bg-orange-500/20 text-orange-400 border-orange-500/30",
   RW: "bg-orange-500/20 text-orange-400 border-orange-500/30",
@@ -287,7 +290,7 @@ function scheduleQuarters(
     };
     const slotReqs: SlotReq[] = [];
 
-    const validPositions = new Set<string>(["GK", "CB", "LB", "RB", "CDM", "CAM", "LW", "RW", "ST"]);
+    const validPositions = new Set<string>(["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"]);
 
     /** 선수의 유효한 선호 포지션 목록 반환 */
     const getAllPos = (id: string): PreferredPosition[] => {
@@ -344,13 +347,13 @@ function scheduleQuarters(
     // 슬롯을 세분화 포지션별로 분류
     const fieldSlots = formation.slots.filter((s) => s.role !== "GK");
     const slotsBySubPos: Record<PreferredPosition, FormationSlot[]> = {
-      GK: [], CB: [], LB: [], RB: [], CDM: [], CAM: [], LW: [], RW: [], ST: [],
+      GK: [], CB: [], LB: [], RB: [], CDM: [], CM: [], CAM: [], LW: [], RW: [], ST: [],
     };
     fieldSlots.forEach((s) => slotsBySubPos[getSlotSubPosition(s)].push(s));
 
     // 슬롯 요청을 선호 포지션별로 분류
     const reqsBySubPos: Record<PreferredPosition, SlotReq[]> = {
-      GK: [], CB: [], LB: [], RB: [], CDM: [], CAM: [], LW: [], RW: [], ST: [],
+      GK: [], CB: [], LB: [], RB: [], CDM: [], CM: [], CAM: [], LW: [], RW: [], ST: [],
     };
     for (const sr of slotReqs) {
       const bucket = reqsBySubPos[sr.preferredPos];
@@ -393,7 +396,7 @@ function scheduleQuarters(
     }));
 
     // 1차: 정확한 세분화 포지션 매칭 (주 포지션 기준)
-    for (const subPos of ["CB", "LB", "RB", "CDM", "CAM", "LW", "RW", "ST"] as PreferredPosition[]) {
+    for (const subPos of ["CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"] as PreferredPosition[]) {
       const slots = slotsBySubPos[subPos].filter((s) => !usedSlots.has(s.id));
       const reqs = enrichedReqs.filter((sr) => !assignedReqs.has(sr) && sr.preferredPos === subPos);
       for (let i = 0; i < Math.min(slots.length, reqs.length); i++) {
@@ -667,7 +670,7 @@ export default function AutoFormationBuilder({
     const order: Record<PreferredPosition, number> = {
       GK: 0,
       CB: 1, LB: 2, RB: 2,
-      CDM: 3, CAM: 4,
+      CDM: 3, CM: 3.5, CAM: 4,
       LW: 5, RW: 5, ST: 6,
     };
     return [...assignments].sort((a, b) => {

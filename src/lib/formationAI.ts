@@ -40,7 +40,8 @@ function slotToPreferred(slot: FormationSlot): PreferredPosition {
   if (["LB", "LWB"].includes(slot.role)) return "LB";
   if (["RB", "RWB"].includes(slot.role)) return "RB";
   if (["CDM", "LDM", "RDM"].includes(slot.role)) return "CDM";
-  if (["CAM", "LAM", "RAM", "CM", "LCM", "RCM", "LM", "RM"].includes(slot.role)) return "CAM";
+  if (["CM", "LCM", "RCM", "LM", "RM"].includes(slot.role)) return "CM";
+  if (["CAM", "LAM", "RAM"].includes(slot.role)) return "CAM";
   if (slot.role === "LW") return "LW";
   if (slot.role === "RW") return "RW";
   return "ST";
