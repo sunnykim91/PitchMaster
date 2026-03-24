@@ -20,21 +20,11 @@ const menuItems = [
 
 export default function MoreClient() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState(true); // 기본 숨김, 체크 후 표시
   const [isIos, setIsIos] = useState(false);
   const [isInApp, setIsInApp] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
 
   useEffect(() => {
-    // 이미 PWA로 실행 중이면 표시 안 함
-    if (window.matchMedia("(display-mode: standalone)").matches) return;
-    if (window.matchMedia("(display-mode: fullscreen)").matches) return;
-    // @ts-expect-error -- navigator.standalone은 iOS Safari 전용
-    if (navigator.standalone === true) return;
-    if (localStorage.getItem("pwa-installed") === "true") return;
-
-    setIsInstalled(false);
-
     const ua = navigator.userAgent;
     if (/KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line/i.test(ua)) {
       setIsInApp(true);
@@ -69,7 +59,6 @@ export default function MoreClient() {
     const { outcome } = await installPrompt.userChoice;
     if (outcome === "accepted") {
       localStorage.setItem("pwa-installed", "true");
-      setIsInstalled(true);
     }
     setInstallPrompt(null);
   }
@@ -102,26 +91,24 @@ export default function MoreClient() {
           );
         })}
 
-        {/* 홈 화면에 추가 */}
-        {!isInstalled && (
-          <button onClick={handleInstall}>
-            <Card className="transition-colors hover:bg-secondary/50 border-primary/20">
-              <CardContent className="flex items-center gap-4 p-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  {isInApp ? <ExternalLink className="h-5 w-5" /> : <Smartphone className="h-5 w-5" />}
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-bold text-foreground">
-                    {isInApp ? "브라우저에서 열기" : "홈 화면에 추가"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {isInApp ? "외부 브라우저에서 열면 앱 설치가 가능해요" : "앱처럼 바로 접속하고 푸시 알림도 받을 수 있어요"}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </button>
-        )}
+        {/* 홈 화면에 추가 — 항상 표시 */}
+        <button onClick={handleInstall}>
+          <Card className="transition-colors hover:bg-secondary/50 border-primary/20">
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                {isInApp ? <ExternalLink className="h-5 w-5" /> : <Smartphone className="h-5 w-5" />}
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-bold text-foreground">
+                  {isInApp ? "브라우저에서 열기" : "홈 화면에 추가"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {isInApp ? "외부 브라우저에서 열면 앱 설치가 가능해요" : "앱처럼 바로 접속하고 푸시 알림도 받을 수 있어요"}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </button>
       </div>
 
       {/* iOS 설치 가이드 모달 */}
