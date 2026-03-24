@@ -64,6 +64,90 @@ export async function createTeam(formData: FormData) {
   redirect("/dashboard");
 }
 
+export async function requestJoinTeam(formData: FormData) {
+  const session = await auth();
+  if (!session) redirect("/login");
+
+  const teamId = String(formData.get("teamId") || "").trim();
+  const message = String(formData.get("message") || "").trim();
+
+  if (!teamId) redirect("/team");
+
+  const db = getSupabaseAdmin();
+  if (!db) throw new Error("Database not configured");
+
+  // 사용자 정보 조회
+  const { data: user } = await db
+    .from("users")
+    .select("name, phone, preferred_positions")
+    .eq("id", session.user.id)
+    .single();
+
+  if (!user) redirect("/login");
+
+  // 이미 소속인지 체크
+  const { data: existingMember } = await db
+    .from("team_members")
+    .select("id")
+    .eq("team_id", teamId)
+    .eq("user_id", session.user.id)
+    .eq("status", "ACTIVE")
+    .single();
+
+  if (existingMember) {
+    redirect("/team?error=already_member");
+    return;
+  }
+
+  // 기존 PENDING 신청 체크
+  const { data: existingRequest } = await db
+    .from("team_join_requests")
+    .select("id, status")
+    .eq("team_id", teamId)
+    .eq("user_id", session.user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (existingRequest?.status === "PENDING") {
+    redirect("/team?error=already_requested");
+    return;
+  }
+
+  const userName = user.name ?? session.user.name ?? "사용자";
+  const userPhone = user.phone ?? null;
+  const position = user.preferred_positions?.[0] ?? null;
+
+  if (existingRequest?.status === "REJECTED") {
+    // 재신청: PENDING으로 업데이트
+    await db
+      .from("team_join_requests")
+      .update({
+        status: "PENDING",
+        name: userName,
+        phone: userPhone,
+        position,
+        message: message || null,
+        reviewed_by: null,
+        reviewed_at: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existingRequest.id);
+  } else {
+    // 신규 신청
+    await db.from("team_join_requests").insert({
+      team_id: teamId,
+      user_id: session.user.id,
+      name: userName,
+      phone: userPhone,
+      position,
+      message: message || null,
+    });
+  }
+
+  redirect("/team?pending=true");
+}
+
 export async function joinTeam(formData: FormData) {
   const session = await auth();
   if (!session) redirect("/login");

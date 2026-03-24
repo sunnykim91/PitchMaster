@@ -354,6 +354,15 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                           >
                             <p className="font-semibold">{n.title}</p>
                             <p className="mt-0.5 text-xs text-muted-foreground">{n.message}</p>
+                            {n.title.includes("가입") && (
+                              <Link
+                                href="/settings"
+                                onClick={() => setNotiOpen(false)}
+                                className="mt-1 inline-block text-xs text-primary hover:underline"
+                              >
+                                설정에서 확인
+                              </Link>
+                            )}
                             <p className="mt-1 text-xs text-muted-foreground/50">
                               {new Date(n.created_at).toLocaleDateString("ko-KR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                             </p>

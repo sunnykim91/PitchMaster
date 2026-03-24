@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createTeam, joinTeam } from "@/app/team/actions";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,21 @@ export default function TeamClient({ hasExistingTeam = false }: { hasExistingTea
   const [teamName, setTeamName] = useState("");
   const [nameStatus, setNameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 팀 검색 상태
+  type SearchResult = {
+    id: string;
+    name: string;
+    sportType: string;
+    memberCount: number;
+    hasPendingRequest: boolean;
+  };
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [joiningTeamId, setJoiningTeamId] = useState<string | null>(null);
+  const [joinError, setJoinError] = useState<string | null>(null);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -44,6 +60,67 @@ export default function TeamClient({ hasExistingTeam = false }: { hasExistingTea
     };
   }, [teamName]);
 
+  // 팀 검색 debounce
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+
+    const trimmed = searchQuery.trim();
+    if (!trimmed || trimmed.length < 2) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+
+    setSearching(true);
+    searchDebounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/teams/search?q=${encodeURIComponent(trimmed)}`);
+        const data = await res.json();
+        setSearchResults(data.teams ?? []);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 500);
+
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [searchQuery]);
+
+  // 가입 신청 핸들러
+  async function handleJoinRequest(teamId: string) {
+    setJoiningTeamId(teamId);
+    setJoinError(null);
+    try {
+      const res = await fetch("/api/teams/join-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamId }),
+      });
+      if (res.ok) {
+        // 검색 결과에서 해당 팀을 "신청 대기 중"으로 업데이트
+        setSearchResults((prev) =>
+          prev.map((t) => (t.id === teamId ? { ...t, hasPendingRequest: true } : t))
+        );
+      } else {
+        const data = await res.json();
+        const msg =
+          data.error === "already_member"
+            ? "이미 해당 팀에 소속되어 있습니다."
+            : data.error === "already_requested" || res.status === 409
+              ? "이미 가입 신청한 팀입니다."
+              : data.error ?? "가입 신청에 실패했습니다.";
+        setJoinError(msg);
+      }
+    } catch {
+      setJoinError("네트워크 오류가 발생했습니다.");
+    } finally {
+      setJoiningTeamId(null);
+    }
+  }
+
   const errorMessage =
     error === "duplicate_name"
       ? "이미 사용 중인 팀명입니다. 다른 이름을 입력해주세요."
@@ -51,7 +128,11 @@ export default function TeamClient({ hasExistingTeam = false }: { hasExistingTea
         ? "유효하지 않은 초대 코드입니다."
         : error === "expired_code"
           ? "만료된 초대 코드입니다."
-          : null;
+          : error === "already_member"
+            ? "이미 해당 팀에 소속되어 있습니다."
+            : error === "already_requested"
+              ? "이미 가입 신청한 팀입니다."
+              : null;
 
   return (
     <main className="min-h-screen px-6 py-16">
@@ -164,6 +245,63 @@ export default function TeamClient({ hasExistingTeam = false }: { hasExistingTea
             </CardContent>
           </Card>
         </div>
+
+        {/* 팀 검색해서 가입 */}
+        <Card className="mt-8">
+          <CardHeader>
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Search</p>
+            <CardTitle className="font-heading text-2xl font-bold uppercase">팀 검색해서 가입</CardTitle>
+            <CardDescription>팀 이름을 검색하면 가입 신청할 수 있습니다. 운영진 승인 후 가입됩니다.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Input
+                placeholder="팀 이름 검색..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+
+              {searching && (
+                <p className="text-sm text-muted-foreground animate-pulse text-center py-2">검색 중...</p>
+              )}
+
+              {joinError && (
+                <p className="text-sm font-semibold text-destructive text-center py-2">{joinError}</p>
+              )}
+
+              {searchResults.map((team) => (
+                <div
+                  key={team.id}
+                  className="flex items-center justify-between rounded-lg border border-border p-4"
+                >
+                  <div>
+                    <p className="font-semibold">{team.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {team.sportType === "SOCCER" ? "축구" : "풋살"} · {team.memberCount}명
+                    </p>
+                  </div>
+                  {team.hasPendingRequest ? (
+                    <Badge variant="secondary">신청 대기 중</Badge>
+                  ) : (
+                    <Button
+                      size="sm"
+                      disabled={joiningTeamId === team.id}
+                      onClick={() => handleJoinRequest(team.id)}
+                    >
+                      {joiningTeamId === team.id ? "신청 중..." : "가입 신청"}
+                    </Button>
+                  )}
+                </div>
+              ))}
+
+              {searchQuery.trim().length >= 2 && searchResults.length === 0 && !searching && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  검색 결과가 없습니다. 초대 코드로 가입하거나 새 팀을 만들어보세요.
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </main>
   );

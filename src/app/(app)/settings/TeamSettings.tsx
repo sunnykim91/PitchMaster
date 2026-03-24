@@ -1,9 +1,9 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { apiMutate } from "@/lib/useApi";
-import { isPresident } from "@/lib/permissions";
+import { isPresident, isStaffOrAbove } from "@/lib/permissions";
 import type { Role } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,17 @@ type TeamSettingsData = {
   uniformPrimary: string;
   uniformSecondary: string;
   uniformPattern: "SOLID" | "STRIPES_VERTICAL" | "STRIPES_HORIZONTAL" | "STRIPES_DIAGONAL";
+  isSearchable: boolean;
+};
+
+type JoinRequest = {
+  id: string;
+  name: string;
+  phone: string | null;
+  position: string | null;
+  message: string | null;
+  status: string;
+  created_at: string;
 };
 
 interface TeamSettingsProps {
@@ -33,6 +44,17 @@ interface TeamSettingsProps {
   deleteConfirmName: string;
   setDeleteConfirmName: (name: string) => void;
   onDeleteTeam: () => void;
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "방금 전";
+  if (mins < 60) return `${mins}분 전`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}시간 전`;
+  const days = Math.floor(hours / 24);
+  return `${days}일 전`;
 }
 
 function getUniformStyle(primary: string, secondary: string, pattern: string) {
@@ -80,6 +102,7 @@ function TeamSettingsComponent({
   onDeleteTeam,
 }: TeamSettingsProps) {
   const canEditTeam = isPresident(role);
+  const canManageRequests = isStaffOrAbove(role);
 
   const uniformPrimary = team.uniformPrimary ?? "#2563eb";
   const uniformSecondary = team.uniformSecondary ?? "#f97316";
@@ -94,6 +117,76 @@ function TeamSettingsComponent({
     () => getJerseyStyle(uniformSecondary, uniformPrimary, uniformPattern),
     [uniformPrimary, uniformSecondary, uniformPattern]
   );
+
+  // ── 검색 허용 토글 ──
+  const [searchableLoading, setSearchableLoading] = useState(false);
+
+  async function handleToggleSearchable() {
+    if (!canEditTeam) return;
+    setSearchableLoading(true);
+    const newVal = !team.isSearchable;
+    const { error } = await apiMutate("/api/teams", "PUT", { isSearchable: newVal });
+    setSearchableLoading(false);
+    if (error) {
+      setMessage(`오류: ${error}`);
+    } else {
+      setTeam({ ...team, isSearchable: newVal });
+      setMessage(newVal ? "팀 검색이 허용되었습니다." : "팀 검색이 비허용되었습니다.");
+      teamSyncedRef.current = false;
+      await refetchTeam();
+    }
+    setTimeout(() => setMessage(null), 2000);
+  }
+
+  // ── 가입 신청 관리 ──
+  const [pendingRequests, setPendingRequests] = useState<JoinRequest[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(false);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+
+  const fetchJoinRequests = useCallback(async () => {
+    if (!canManageRequests) return;
+    setRequestsLoading(true);
+    try {
+      const res = await fetch("/api/teams/join-requests", { credentials: "include" });
+      if (res.ok) {
+        const json = await res.json();
+        setPendingRequests(
+          (json.requests ?? []).filter((r: JoinRequest) => r.status === "PENDING")
+        );
+      }
+    } catch {
+      // ignore
+    } finally {
+      setRequestsLoading(false);
+    }
+  }, [canManageRequests]);
+
+  useEffect(() => {
+    fetchJoinRequests();
+  }, [fetchJoinRequests]);
+
+  async function handleRequestAction(reqId: string, action: "APPROVED" | "REJECTED") {
+    setProcessingId(reqId);
+    try {
+      const res = await fetch(`/api/teams/join-requests/${reqId}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: action }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage(`오류: ${json.error || "처리 실패"}`);
+      } else {
+        setMessage(action === "APPROVED" ? "가입 신청이 승인되었습니다." : "가입 신청이 거절되었습니다.");
+        await fetchJoinRequests();
+      }
+    } catch {
+      setMessage("오류: 네트워크 오류");
+    }
+    setProcessingId(null);
+    setTimeout(() => setMessage(null), 2000);
+  }
 
   async function handleTeamSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -153,6 +246,40 @@ function TeamSettingsComponent({
                 placeholder="https://..."
                 disabled={!canEditTeam}
               />
+            </div>
+
+            {/* 검색 허용 토글 */}
+            <div className="rounded-xl border border-border/50 p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <p className="text-sm font-semibold">팀 검색 허용</p>
+                  <p className="text-xs text-muted-foreground">
+                    허용하면 다른 사용자가 팀을 검색하고 가입 신청할 수 있습니다.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={team.isSearchable}
+                  disabled={!canEditTeam || searchableLoading}
+                  onClick={handleToggleSearchable}
+                  className={`
+                    relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full
+                    transition-colors duration-200 ease-in-out
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
+                    disabled:cursor-not-allowed disabled:opacity-50
+                    ${team.isSearchable ? "bg-primary" : "bg-muted"}
+                  `}
+                >
+                  <span
+                    className={`
+                      pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg
+                      ring-0 transition-transform duration-200 ease-in-out
+                      ${team.isSearchable ? "translate-x-5" : "translate-x-0.5"}
+                    `}
+                  />
+                </button>
+              </div>
             </div>
 
             {/* 유니폼 */}
@@ -234,6 +361,60 @@ function TeamSettingsComponent({
           </form>
         </CardContent>
       </Card>
+
+      {/* ── 가입 신청 관리 ── */}
+      {canManageRequests && (
+        <Card>
+          <CardContent className="p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-bold">가입 신청</p>
+              {pendingRequests.length > 0 && (
+                <Badge variant="secondary">{pendingRequests.length}건 대기</Badge>
+              )}
+            </div>
+
+            {requestsLoading ? (
+              <p className="text-sm text-muted-foreground">로딩 중...</p>
+            ) : pendingRequests.length === 0 ? (
+              <p className="text-sm text-muted-foreground">대기 중인 가입 신청이 없습니다.</p>
+            ) : (
+              <div className="space-y-2">
+                {pendingRequests.map((req) => (
+                  <div key={req.id} className="flex items-center justify-between rounded-lg border border-border p-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">{req.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {req.position && `${req.position}`}
+                        {req.position && req.message && " · "}
+                        {req.message && `"${req.message}"`}
+                        {(req.position || req.message) && " · "}
+                        {timeAgo(req.created_at)}
+                      </p>
+                    </div>
+                    <div className="ml-3 flex shrink-0 gap-2">
+                      <Button
+                        size="sm"
+                        disabled={processingId === req.id}
+                        onClick={() => handleRequestAction(req.id, "APPROVED")}
+                      >
+                        승인
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={processingId === req.id}
+                        onClick={() => handleRequestAction(req.id, "REJECTED")}
+                      >
+                        거절
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── 팀 삭제 ── */}
       {canEditTeam && (

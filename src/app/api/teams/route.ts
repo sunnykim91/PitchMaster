@@ -18,7 +18,7 @@ export async function GET() {
 
   const { data: team, error } = await db
     .from("teams")
-    .select("id, name, logo_url, invite_code, invite_expires_at, join_mode, sport_type, uniform_primary, uniform_secondary, uniform_pattern")
+    .select("id, name, logo_url, invite_code, invite_expires_at, join_mode, sport_type, uniform_primary, uniform_secondary, uniform_pattern, is_searchable")
     .eq("id", ctx.teamId)
     .single();
 
@@ -47,6 +47,7 @@ export async function PUT(request: NextRequest) {
   if (body.uniformSecondary !== undefined) updates.uniform_secondary = body.uniformSecondary;
   if (body.uniformPattern !== undefined) updates.uniform_pattern = body.uniformPattern;
   if (body.sportType !== undefined) updates.sport_type = body.sportType;
+  if (body.isSearchable !== undefined) updates.is_searchable = body.isSearchable;
 
   const { error } = await db.from("teams").update(updates).eq("id", ctx.teamId);
   if (error) return apiError(error.message);
