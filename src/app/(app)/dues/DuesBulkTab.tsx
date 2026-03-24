@@ -297,9 +297,18 @@ function DuesBulkTabInner({
         <h3 className="font-heading text-base sm:text-lg font-bold uppercase text-foreground">
           엑셀 파일 업로드
         </h3>
-        <p className="mt-1 text-xs text-muted-foreground">
-          은행 앱에서 다운로드한 거래 내역 엑셀을 올려주세요. 날짜·금액·내용이 자동으로 분류됩니다. (카카오뱅크 형식에 최적화)
+        <p className="mt-1 text-sm text-muted-foreground">
+          은행 앱에서 다운로드한 거래 내역 엑셀을 그대로 올려주세요.
         </p>
+        <details className="mt-2 text-sm text-muted-foreground">
+          <summary className="cursor-pointer text-sm font-medium text-primary hover:underline">지원 형식 안내</summary>
+          <div className="mt-2 space-y-1.5 rounded-lg bg-secondary/50 p-3 text-sm">
+            <p><strong>지원 은행:</strong> 카카오뱅크, 토스뱅크, 국민, 신한, 우리, 하나 등</p>
+            <p><strong>필수 컬럼:</strong> 거래일시, 거래금액(또는 금액)</p>
+            <p><strong>선택 컬럼:</strong> 구분(입금/출금), 잔액, 내용, 메모</p>
+            <p className="text-muted-foreground">은행 앱 → 거래내역 → 엑셀 다운로드 → 그대로 업로드하면 됩니다. 파일 편집은 필요 없습니다.</p>
+          </div>
+        </details>
         <div className="mt-4">
           <input
             type="file"
