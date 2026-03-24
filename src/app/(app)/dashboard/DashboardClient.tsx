@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Calendar, Check, Copy, Link2, Trophy, Users, Vote } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
@@ -133,10 +134,20 @@ function CardSkeleton() {
 export default function DashboardClient({ userId, userRole, initialData, inviteCode }: { userId: string; userRole?: Role; initialData?: DashboardData; inviteCode?: string }) {
   const { data, loading, error, refetch } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
   const { showToast } = useToast();
+  const searchParams = useSearchParams();
   const [voting, setVoting] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
+
+  // 팀 생성 후 환영 토스트
+  useEffect(() => {
+    if (searchParams.get("welcome") === "created") {
+      const team = searchParams.get("team") ?? "";
+      showToast(`${team} 팀이 생성되었습니다! 초대 코드를 팀원에게 공유해보세요.`, "success");
+      window.history.replaceState(null, "", "/dashboard");
+    }
+  }, [searchParams]);
 
   async function handleQuickVote(matchId: string, memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
     if (data.upcomingMatch?.myVote === vote) return;

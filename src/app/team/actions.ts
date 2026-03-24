@@ -61,7 +61,7 @@ export async function createTeam(formData: FormData) {
     teamRole: "PRESIDENT",
     inviteCode: team.invite_code,
   });
-  redirect("/dashboard");
+  redirect(`/dashboard?welcome=created&team=${encodeURIComponent(team.name)}&code=${encodeURIComponent(team.invite_code)}`);
 }
 
 export async function requestJoinTeam(formData: FormData) {
