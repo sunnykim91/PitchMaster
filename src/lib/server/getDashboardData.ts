@@ -9,6 +9,12 @@ export type TeamRecord = {
   recent5: ("W" | "D" | "L")[];
 };
 
+export type TeamUniformInfo = {
+  uniformPrimary: string | null;
+  uniformSecondary: string | null;
+  uniformPattern: string | null;
+};
+
 export type DashboardData = {
   upcomingMatch: {
     id: string;
@@ -16,6 +22,7 @@ export type DashboardData = {
     match_time: string | null;
     opponent_name: string | null;
     location: string | null;
+    uniform_type: string | null;
     voteCounts: { attend: number; absent: number; undecided: number };
     myVote: "ATTEND" | "ABSENT" | "MAYBE" | null;
     myMemberId: string | null;
@@ -30,12 +37,13 @@ export type DashboardData = {
   activeVotes: { id: string; title: string; due: string }[];
   tasks: string[];
   teamRecord: TeamRecord;
+  teamUniform: TeamUniformInfo | null;
 };
 
 export async function getDashboardData(teamId: string, userId: string): Promise<DashboardData> {
   const db = getSupabaseAdmin();
   const emptyRecord: TeamRecord = { wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, recent5: [] };
-  if (!db) return { upcomingMatch: null, recentResult: null, activeVotes: [], tasks: [], teamRecord: emptyRecord };
+  if (!db) return { upcomingMatch: null, recentResult: null, activeVotes: [], tasks: [], teamRecord: emptyRecord, teamUniform: null };
 
   const now = new Date().toISOString();
   const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
@@ -51,7 +59,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
 
   const [upcomingRes, recentRes, activeVotesRes] = await Promise.all([
     db.from("matches")
-      .select("id, match_date, match_time, vote_deadline, opponent_name, status, location")
+      .select("id, match_date, match_time, vote_deadline, opponent_name, status, location, uniform_type")
       .eq("team_id", teamId)
       .eq("status", "SCHEDULED")
       .gte("match_date", new Date().toISOString().split("T")[0])
@@ -209,5 +217,20 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
     };
   }
 
-  return { upcomingMatch, recentResult, activeVotes, tasks, teamRecord };
+  // 팀 유니폼 정보
+  const { data: teamInfoData } = await db
+    .from("teams")
+    .select("uniform_primary, uniform_secondary, uniform_pattern")
+    .eq("id", teamId)
+    .single();
+
+  const teamUniform: TeamUniformInfo | null = teamInfoData
+    ? {
+        uniformPrimary: teamInfoData.uniform_primary ?? null,
+        uniformSecondary: teamInfoData.uniform_secondary ?? null,
+        uniformPattern: teamInfoData.uniform_pattern ?? null,
+      }
+    : null;
+
+  return { upcomingMatch, recentResult, activeVotes, tasks, teamRecord, teamUniform };
 }

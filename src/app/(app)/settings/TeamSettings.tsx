@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
 
 type TeamSettingsData = {
   teamName: string;
@@ -57,36 +58,6 @@ function timeAgo(dateStr: string): string {
   return `${days}일 전`;
 }
 
-function getUniformStyle(primary: string, secondary: string, pattern: string) {
-  if (pattern === "STRIPES_VERTICAL") {
-    return {
-      backgroundColor: primary,
-      backgroundImage: `repeating-linear-gradient(90deg, ${primary} 0 10px, ${secondary} 10px 20px)`,
-    };
-  }
-  if (pattern === "STRIPES_HORIZONTAL") {
-    return {
-      backgroundColor: primary,
-      backgroundImage: `repeating-linear-gradient(180deg, ${primary} 0 10px, ${secondary} 10px 20px)`,
-    };
-  }
-  if (pattern === "STRIPES_DIAGONAL") {
-    return {
-      backgroundColor: primary,
-      backgroundImage: `repeating-linear-gradient(135deg, ${primary} 0 10px, ${secondary} 10px 20px)`,
-    };
-  }
-  return { backgroundColor: primary };
-}
-
-function getJerseyStyle(primary: string, secondary: string, pattern: string) {
-  return {
-    ...getUniformStyle(primary, secondary, pattern),
-    clipPath:
-      "polygon(12% 12%, 30% 12%, 34% 0%, 66% 0%, 70% 12%, 88% 12%, 100% 34%, 86% 48%, 86% 100%, 14% 100%, 14% 48%, 0% 34%)",
-    borderRadius: "8px",
-  } as const;
-}
 
 function TeamSettingsComponent({
   team,

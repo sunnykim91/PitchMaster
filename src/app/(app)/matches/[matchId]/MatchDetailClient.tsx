@@ -110,9 +110,12 @@ export default function MatchDetailClient({
 
   const {
     data: teamData,
-  } = useApi<{ team: { sport_type?: SportType; player_count?: number } }>("/api/teams", { team: {} });
+  } = useApi<{ team: { sport_type?: SportType; player_count?: number; uniform_primary?: string; uniform_secondary?: string; uniform_pattern?: string } }>("/api/teams", { team: {} });
 
   const sportType: SportType = teamData.team?.sport_type ?? "SOCCER";
+  const uniformPrimary = teamData.team?.uniform_primary ?? "#2563eb";
+  const uniformSecondary = teamData.team?.uniform_secondary ?? "#f97316";
+  const uniformPattern = teamData.team?.uniform_pattern ?? "SOLID";
 
   const {
     data: voteData,
@@ -381,6 +384,9 @@ export default function MatchDetailClient({
           refetchMatches={refetchMatches}
           handleProxyVote={handleProxyVote}
           handleRemoveGuest={handleRemoveGuest}
+          uniformPrimary={uniformPrimary}
+          uniformSecondary={uniformSecondary}
+          uniformPattern={uniformPattern}
         />
       )}
 

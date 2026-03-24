@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
 
 type Player = {
   id: string;
@@ -448,37 +449,6 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     const b = (c1.b + c2.b) / 2;
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return luminance > 0.62 ? "hsl(var(--background))" : "hsl(var(--foreground))";
-  }
-
-  function getUniformStyle(primary: string, secondary: string, pattern: string) {
-    if (pattern === "STRIPES_VERTICAL") {
-      return {
-        backgroundColor: primary,
-        backgroundImage: `repeating-linear-gradient(90deg, ${primary} 0 10px, ${secondary} 10px 20px)`
-      };
-    }
-    if (pattern === "STRIPES_HORIZONTAL") {
-      return {
-        backgroundColor: primary,
-        backgroundImage: `repeating-linear-gradient(180deg, ${primary} 0 10px, ${secondary} 10px 20px)`
-      };
-    }
-    if (pattern === "STRIPES_DIAGONAL") {
-      return {
-        backgroundColor: primary,
-        backgroundImage: `repeating-linear-gradient(135deg, ${primary} 0 10px, ${secondary} 10px 20px)`
-      };
-    }
-    return { backgroundColor: primary };
-  }
-
-  function getJerseyStyle(primary: string, secondary: string, pattern: string) {
-    return {
-      ...getUniformStyle(primary, secondary, pattern),
-      clipPath:
-        "polygon(12% 12%, 30% 12%, 34% 0%, 66% 0%, 70% 12%, 88% 12%, 100% 34%, 86% 48%, 86% 100%, 14% 100%, 14% 48%, 0% 34%)",
-      borderRadius: "8px",
-    } as const;
   }
 
   useEffect(() => {

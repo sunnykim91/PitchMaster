@@ -37,6 +37,28 @@ export interface MatchInfoTabProps {
   handleProxyVote: (memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") => Promise<void>;
   /** 용병 삭제 */
   handleRemoveGuest: (guestId: string) => Promise<void>;
+  /** 팀 유니폼 홈 색상 */
+  uniformPrimary?: string;
+  /** 팀 유니폼 원정 색상 */
+  uniformSecondary?: string;
+  /** 팀 유니폼 패턴 */
+  uniformPattern?: string;
+}
+
+/* ── 유니폼 스타일 헬퍼 ── */
+const JERSEY_CLIP = "polygon(12% 12%, 30% 12%, 34% 0%, 66% 0%, 70% 12%, 88% 12%, 100% 34%, 86% 48%, 86% 100%, 14% 100%, 14% 48%, 0% 34%)";
+
+function getUniformBg(primary: string, secondary: string, pattern: string) {
+  if (pattern === "STRIPES_VERTICAL") {
+    return { backgroundColor: primary, backgroundImage: `repeating-linear-gradient(90deg, ${primary} 0 10px, ${secondary} 10px 20px)` };
+  }
+  if (pattern === "STRIPES_HORIZONTAL") {
+    return { backgroundColor: primary, backgroundImage: `repeating-linear-gradient(180deg, ${primary} 0 10px, ${secondary} 10px 20px)` };
+  }
+  if (pattern === "STRIPES_DIAGONAL") {
+    return { backgroundColor: primary, backgroundImage: `repeating-linear-gradient(135deg, ${primary} 0 10px, ${secondary} 10px 20px)` };
+  }
+  return { backgroundColor: primary };
 }
 
 function MatchInfoTabInner({
@@ -52,8 +74,60 @@ function MatchInfoTabInner({
   refetchMatches,
   handleProxyVote,
   handleRemoveGuest,
+  uniformPrimary: _uniformPrimary,
+  uniformSecondary: _uniformSecondary,
+  uniformPattern: _uniformPattern,
 }: MatchInfoTabProps) {
   const { showToast } = useToast();
+
+  /* ── 유니폼 스타일 ── */
+  const uniformPrimary = _uniformPrimary ?? "#2563eb";
+  const uniformSecondary = _uniformSecondary ?? "#f97316";
+  const uniformPattern = _uniformPattern ?? "SOLID";
+
+  const homeJerseyStyle = useMemo(
+    () => ({ ...getUniformBg(uniformPrimary, uniformSecondary, uniformPattern), clipPath: JERSEY_CLIP }),
+    [uniformPrimary, uniformSecondary, uniformPattern],
+  );
+  const awayJerseyStyle = useMemo(
+    () => ({ ...getUniformBg(uniformSecondary, uniformPrimary, uniformPattern), clipPath: JERSEY_CLIP }),
+    [uniformPrimary, uniformSecondary, uniformPattern],
+  );
+
+  /* ── 유니폼 변경 ── */
+  async function handleUniformChange(type: "HOME" | "AWAY") {
+    if (match.uniformType === type) return;
+    const { error } = await apiMutate("/api/matches", "PUT", { id: matchId, uniformType: type });
+    if (!error) {
+      showToast(type === "HOME" ? "홈 유니폼으로 변경" : "원정 유니폼으로 변경");
+      await refetchMatches();
+    }
+  }
+
+  /* ── 경기 일정 수정 ── */
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  async function handleSaveEdit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSaving(true);
+    const fd = new FormData(e.currentTarget);
+    const { error } = await apiMutate("/api/matches", "PUT", {
+      id: matchId,
+      date: fd.get("date"),
+      time: fd.get("time"),
+      location: fd.get("location"),
+      opponent: fd.get("opponent"),
+    });
+    setSaving(false);
+    if (!error) {
+      showToast("경기 정보가 수정되었습니다.");
+      setEditing(false);
+      await refetchMatches();
+    } else {
+      showToast("수정에 실패했습니다.", "error");
+    }
+  }
 
   /* ── 경기 완료 처리 ── */
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
@@ -116,6 +190,111 @@ function MatchInfoTabInner({
 
   return (
     <>
+      {/* ── 경기 정보 카드 ── */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <p className="type-overline text-[hsl(var(--info))]">Match Info</p>
+            <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
+              경기 정보
+            </CardTitle>
+          </div>
+          {canManage && match.status === "SCHEDULED" && !editing && (
+            <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+              수정
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {editing ? (
+            <form onSubmit={handleSaveEdit} className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <Label className="text-sm">날짜</Label>
+                  <Input type="date" name="date" defaultValue={match.date} required />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-sm">시간</Label>
+                  <Input type="time" name="time" defaultValue={match.time} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-sm">장소</Label>
+                  <Input name="location" defaultValue={match.location} required />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-sm">상대팀</Label>
+                  <Input name="opponent" defaultValue={match.opponent ?? ""} />
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button type="button" variant="outline" size="sm" onClick={() => setEditing(false)}>취소</Button>
+                <Button type="submit" size="sm" disabled={saving}>{saving ? "저장 중..." : "저장"}</Button>
+              </div>
+            </form>
+          ) : (
+            <div className="grid gap-2 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground w-14 shrink-0">날짜</span>
+                <span className="font-medium">{match.date}</span>
+              </div>
+              {match.time && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-14 shrink-0">시간</span>
+                  <span className="font-medium">{match.time}</span>
+                </div>
+              )}
+              {match.location && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-14 shrink-0">장소</span>
+                  <span className="font-medium">{match.location}</span>
+                </div>
+              )}
+              {match.opponent && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-14 shrink-0">상대팀</span>
+                  <span className="font-medium">{match.opponent}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 유니폼 선택 */}
+          <div className="flex items-center gap-3 pt-1">
+            <span className="text-sm text-muted-foreground">유니폼</span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => handleUniformChange("HOME")}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
+                  match.uniformType === "HOME"
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:bg-secondary"
+                )}
+                disabled={!canManage}
+              >
+                <div className="h-5 w-5 shrink-0 rounded" style={homeJerseyStyle} />
+                홈
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUniformChange("AWAY")}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
+                  match.uniformType === "AWAY"
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:bg-secondary"
+                )}
+                disabled={!canManage}
+              >
+                <div className="h-5 w-5 shrink-0 rounded" style={awayJerseyStyle} />
+                원정
+              </button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* ── 경기 완료 처리 (운영진 이상, SCHEDULED + 경기일 오늘 이전/오늘) ── */}
       {canManage && match.status === "SCHEDULED" && isMatchDatePastOrToday && (
         <Card className="border-[hsl(var(--success))]/20 bg-[hsl(var(--success))]/5">

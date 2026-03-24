@@ -15,6 +15,7 @@ export type MatchRow = {
   quarter_duration: number;
   break_duration: number;
   status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
+  uniform_type?: "HOME" | "AWAY";
 };
 
 export type GoalRow = {
@@ -90,6 +91,7 @@ export type Match = {
   quarterDuration: number;
   breakDuration: number;
   status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
+  uniformType: "HOME" | "AWAY";
 };
 
 export type GoalEvent = {
@@ -174,6 +176,7 @@ export const emptyMatch: Match = {
   quarterDuration: 25,
   breakDuration: 5,
   status: "SCHEDULED",
+  uniformType: "HOME",
 };
 
 export function mapMatch(row: MatchRow): Match {
@@ -187,6 +190,7 @@ export function mapMatch(row: MatchRow): Match {
     quarterDuration: row.quarter_duration,
     breakDuration: row.break_duration,
     status: row.status,
+    uniformType: row.uniform_type ?? "HOME",
   };
 }
 

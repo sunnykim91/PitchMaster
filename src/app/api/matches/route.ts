@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
       quarter_duration: body.quarterDuration ?? 25,
       break_duration: body.breakDuration ?? 5,
       player_count: body.playerCount ?? 11,
+      uniform_type: body.uniformType ?? "HOME",
       status: "SCHEDULED",
       vote_deadline: body.voteDeadline || null,
       created_by: ctx.userId,
@@ -122,6 +123,7 @@ export async function PUT(request: NextRequest) {
   if (body.playerCount !== undefined) updates.player_count = body.playerCount;
   if (body.status !== undefined) updates.status = body.status;
   if (body.voteDeadline !== undefined) updates.vote_deadline = body.voteDeadline || null;
+  if (body.uniformType !== undefined) updates.uniform_type = body.uniformType;
 
   const { data, error } = await db
     .from("matches")

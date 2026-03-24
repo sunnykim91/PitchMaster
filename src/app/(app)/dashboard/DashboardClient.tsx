@@ -26,6 +26,7 @@ type UpcomingMatch = {
   voteCounts: { attend: number; absent: number; undecided: number };
   myVote: "ATTEND" | "ABSENT" | "MAYBE" | null;
   myMemberId: string | null;
+  uniform_type?: string | null;
 };
 
 type RecentResult = {
@@ -51,12 +52,19 @@ type TeamRecord = {
   recent5: ("W" | "D" | "L")[];
 };
 
+type TeamUniform = {
+  uniformPrimary: string | null;
+  uniformSecondary: string | null;
+  uniformPattern: string | null;
+};
+
 type DashboardData = {
   upcomingMatch: UpcomingMatch | null;
   recentResult: RecentResult | null;
   activeVotes: ActiveVote[];
   tasks: string[];
   teamRecord: TeamRecord;
+  teamUniform?: TeamUniform | null;
 };
 
 const emptyData: DashboardData = {
@@ -304,6 +312,24 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
             <p className="mt-1 truncate text-sm text-muted-foreground">
               {upcomingMatch.location ?? "장소 미정"}
             </p>
+            {(() => {
+              const uniformType = upcomingMatch.uniform_type ?? "HOME";
+              const isHome = uniformType !== "AWAY";
+              const bgColor = data.teamUniform
+                ? (isHome ? data.teamUniform.uniformPrimary : data.teamUniform.uniformSecondary) ?? (isHome ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))")
+                : (isHome ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))");
+              return (
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  <div
+                    className="h-4 w-4 rounded-full border border-border/60 shrink-0"
+                    style={{ backgroundColor: bgColor }}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {isHome ? "홈" : "원정"} 유니폼
+                  </span>
+                </div>
+              );
+            })()}
             <p className="mt-2 truncate text-sm text-foreground/70">
               상대팀:{" "}
               <span className="font-semibold text-foreground">

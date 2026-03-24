@@ -38,6 +38,7 @@ type Match = {
   status: MatchStatus;
   voteDeadline?: string;
   score?: string | null;
+  uniformType: "HOME" | "AWAY";
 };
 
 type DbMatch = {
@@ -53,6 +54,7 @@ type DbMatch = {
   status: MatchStatus;
   vote_deadline: string | null;
   score?: string | null;
+  uniform_type?: string | null;
   created_by: string;
   created_at: string;
 };
@@ -86,6 +88,7 @@ function mapDbMatchToMatch(db: DbMatch): Match {
     status: db.status,
     voteDeadline: db.vote_deadline || undefined,
     score: db.score ?? null,
+    uniformType: (db.uniform_type === "AWAY" ? "AWAY" : "HOME") as "HOME" | "AWAY",
   };
 }
 
@@ -518,6 +521,15 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     <p className="text-sm text-muted-foreground truncate max-w-[280px] sm:max-w-none">
                       {match.location} {match.opponent ? `· ${match.opponent}` : ""}
                     </p>
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <div
+                        className="h-3 w-3 rounded-full border border-border/60 shrink-0"
+                        style={{ backgroundColor: match.uniformType === "HOME" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        {match.uniformType === "HOME" ? "홈" : "원정"} 유니폼
+                      </span>
+                    </div>
                     {match.voteDeadline && (
                       <p className="mt-1 text-xs text-muted-foreground">
                         투표 마감: {formatDateTime(match.voteDeadline ?? "")}
