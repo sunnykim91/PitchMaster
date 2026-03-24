@@ -123,7 +123,7 @@ export default function MembersClient({
   const [tempCoachPos, setTempCoachPos] = useState<string[]>([]);
   const [savingCoachPos, setSavingCoachPos] = useState(false);
 
-  const POSITIONS = ["GK", "CB", "LB", "RB", "CDM", "CAM", "LW", "RW", "ST"];
+  const POSITIONS = ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"];
 
   const activeMembers = useMemo(() => members.filter((m) => m.status === "ACTIVE"), [members]);
   const dormantMembers = useMemo(() => members.filter((m) => m.status === "DORMANT"), [members]);

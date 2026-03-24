@@ -582,7 +582,7 @@ function MatchInfoTabInner({
                       <fieldset>
                         <legend className="text-xs font-semibold text-muted-foreground mb-1">선호 포지션 (복수 선택)</legend>
                         <div className="flex flex-wrap gap-2">
-                          {(["GK","CB","LB","RB","CDM","CAM","LW","RW","ST"] as const).map((pos) => (
+                          {(["GK","CB","LB","RB","CDM","CM","CAM","LW","RW","ST"] as const).map((pos) => (
                             <label key={pos} className="flex items-center gap-1 text-xs cursor-pointer">
                               <input type="checkbox" name="guestPositions" value={pos} className="rounded" id={`guest-pos-${pos}`} />
                               {pos}
