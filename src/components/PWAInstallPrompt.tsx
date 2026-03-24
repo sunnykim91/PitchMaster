@@ -2,51 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { Download, ExternalLink, X } from "lucide-react";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
-type PromptMode = "install" | "ios" | "inapp";
-
-function detectMode(): PromptMode {
-  const ua = navigator.userAgent;
-
-  // 카카오/라인/인스타 등 인앱 브라우저 감지
-  if (/KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line/i.test(ua)) {
-    return "inapp";
-  }
-
-  // iOS
-  if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) {
-    return "ios";
-  }
-
-  return "install";
-}
+import { getInstallPrompt, triggerInstall, detectInstallMode, onPromptChange, type InstallMode } from "@/lib/pwaInstall";
 
 export default function PWAInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
-  const [mode, setMode] = useState<PromptMode>("install");
+  const [mode, setMode] = useState<InstallMode>("none");
   const [showIosGuide, setShowIosGuide] = useState(false);
 
   useEffect(() => {
-    // 이미 PWA로 실행 중이면 표시 안 함 (standalone 또는 fullscreen)
-    if (window.matchMedia("(display-mode: standalone)").matches) return;
-    if (window.matchMedia("(display-mode: fullscreen)").matches) return;
-    // @ts-expect-error -- navigator.standalone은 iOS Safari 전용
-    if (navigator.standalone === true) return;
-
-    // 이미 설치 완료한 경우 표시 안 함
-    if (localStorage.getItem("pwa-installed") === "true") return;
-
-    // 이전에 닫았으면 7일간 숨김
+    // 이미 닫았으면 7일간 숨김
     const dismissed = localStorage.getItem("pwa-install-dismissed");
     if (dismissed && Date.now() - Number(dismissed) < 7 * 24 * 60 * 60 * 1000) return;
 
-    const detected = detectMode();
+    const detected = detectInstallMode();
+    if (detected === "none") return;
     setMode(detected);
 
     if (detected === "inapp" || detected === "ios") {
@@ -54,31 +23,27 @@ export default function PWAInstallPrompt() {
       return;
     }
 
-    // Android/Desktop: beforeinstallprompt 이벤트 캡처
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    // Android/Desktop: 프롬프트가 준비되면 배너 표시
+    if (getInstallPrompt()) {
       setTimeout(() => setShowBanner(true), 3000);
-    };
-
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    } else {
+      const unsub = onPromptChange(() => {
+        if (getInstallPrompt()) {
+          setTimeout(() => setShowBanner(true), 3000);
+          unsub();
+        }
+      });
+      return unsub;
+    }
   }, []);
 
   const handleInstall = async () => {
     if (mode === "inapp") {
-      // 인앱 브라우저 → 외부 브라우저로 열기
       const currentUrl = window.location.href;
-
-      // Android 인텐트로 외부 브라우저 열기 시도
       if (/Android/i.test(navigator.userAgent)) {
         window.location.href = `intent://${currentUrl.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`;
-        // 크롬이 없으면 삼성브라우저 등 기본 브라우저로 열림
-        setTimeout(() => {
-          window.open(currentUrl, "_system");
-        }, 500);
+        setTimeout(() => { window.open(currentUrl, "_system"); }, 500);
       } else {
-        // iOS 카카오 인앱 등
         window.open(currentUrl, "_blank");
       }
       return;
@@ -89,14 +54,8 @@ export default function PWAInstallPrompt() {
       return;
     }
 
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") {
-      localStorage.setItem("pwa-installed", "true");
-      setShowBanner(false);
-    }
-    setDeferredPrompt(null);
+    const accepted = await triggerInstall();
+    if (accepted) setShowBanner(false);
   };
 
   const handleDismiss = () => {
@@ -107,7 +66,7 @@ export default function PWAInstallPrompt() {
   if (!showBanner) return null;
 
   const content = {
-    install: {
+    prompt: {
       desc: "설치하면 앱처럼 바로 접속하고 푸시 알림도 받을 수 있어요",
       btn: "홈 화면에 추가",
       icon: <Download className="h-5 w-5 text-primary" />,
@@ -122,6 +81,7 @@ export default function PWAInstallPrompt() {
       btn: "브라우저에서 열기",
       icon: <ExternalLink className="h-5 w-5 text-primary" />,
     },
+    none: { desc: "", btn: "", icon: null },
   }[mode];
 
   return (

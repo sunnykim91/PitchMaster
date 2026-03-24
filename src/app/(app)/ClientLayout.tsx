@@ -11,11 +11,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { Check, Copy, Link2, Menu, ChevronDown, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone } from "lucide-react";
+import { Check, Copy, Link2, Menu, ChevronDown, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import { initInstallPromptCapture, triggerInstall, getInstallPrompt, detectInstallMode, onPromptChange, type InstallMode } from "@/lib/pwaInstall";
 
 type ClientLayoutProps = {
   session: Session;
@@ -55,6 +56,35 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const [notiOpen, setNotiOpen] = useState(false);
   const [notifications, setNotifications] = useState<{ id: string; title: string; message: string; is_read: boolean; created_at: string }[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [installMode, setInstallMode] = useState<InstallMode>("none");
+  const [hasPrompt, setHasPrompt] = useState(false);
+  const [showIosGuide, setShowIosGuide] = useState(false);
+
+  // PWA 설치 프롬프트 전역 초기화
+  useEffect(() => {
+    initInstallPromptCapture();
+    setInstallMode(detectInstallMode());
+    setHasPrompt(!!getInstallPrompt());
+    return onPromptChange(() => setHasPrompt(!!getInstallPrompt()));
+  }, []);
+
+  async function handlePwaInstall() {
+    setMoreSheetOpen(false);
+    if (installMode === "inapp") {
+      const url = window.location.origin + "/dashboard";
+      if (/Android/i.test(navigator.userAgent)) {
+        window.location.href = `intent://${url.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`;
+      } else {
+        window.open(url, "_blank");
+      }
+      return;
+    }
+    if (installMode === "ios") {
+      setShowIosGuide(true);
+      return;
+    }
+    await triggerInstall();
+  }
 
   // 알림 데이터 로드
   const fetchNotifications = useCallback(async () => {
@@ -520,16 +550,48 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                   {item.label}
                 </Link>
               ))}
-              <Separator className="my-1" />
-              <Link
-                href="/more"
-                onClick={closeSheet}
-                className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-              >
-                <Smartphone className="h-5 w-5" />
-                홈 화면에 추가
-              </Link>
+              {installMode !== "none" && (
+                <>
+                  <Separator className="my-1" />
+                  <button
+                    onClick={handlePwaInstall}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-primary hover:bg-secondary transition-colors"
+                  >
+                    {installMode === "inapp" ? <ExternalLink className="h-5 w-5" /> : <Smartphone className="h-5 w-5" />}
+                    {installMode === "inapp" ? "브라우저에서 열기" : "홈 화면에 추가"}
+                  </button>
+                </>
+              )}
             </nav>
+          </div>
+        </div>
+      )}
+
+      {/* iOS 홈 화면 추가 가이드 모달 */}
+      {showIosGuide && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={() => setShowIosGuide(false)}>
+          <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-bold">홈 화면에 추가하기</h3>
+            <div className="mt-4 space-y-4">
+              <div className="flex items-start gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">1</span>
+                <p className="text-sm text-muted-foreground">하단의 <span className="font-semibold text-foreground">공유 버튼(□↑)</span>을 탭하세요</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">2</span>
+                <p className="text-sm text-muted-foreground">메뉴에서 <span className="font-semibold text-foreground">&quot;홈 화면에 추가&quot;</span>를 선택하세요</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">3</span>
+                <p className="text-sm text-muted-foreground">우측 상단의 <span className="font-semibold text-foreground">&quot;추가&quot;</span>를 탭하세요</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowIosGuide(false)}
+              className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              확인
+            </button>
           </div>
         </div>
       )}
