@@ -92,7 +92,9 @@ function mapDbMatchToMatch(db: DbMatch): Match {
   };
 }
 
-export default function MatchesClient({ userId, userRole, initialMatches, sportType = "SOCCER" }: { userId: string; userRole?: Role; initialMatches?: { matches: DbMatch[] }; sportType?: SportType }) {
+type TeamUniform = { primary: string | null; secondary: string | null; pattern: string | null };
+
+export default function MatchesClient({ userId, userRole, initialMatches, sportType = "SOCCER", teamUniform }: { userId: string; userRole?: Role; initialMatches?: { matches: DbMatch[] }; sportType?: SportType; teamUniform?: TeamUniform }) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
   const { showToast } = useToast();
@@ -524,7 +526,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     <div className="mt-1 flex items-center gap-1.5">
                       <div
                         className="h-3 w-3 rounded-full border border-border/60 shrink-0"
-                        style={{ backgroundColor: match.uniformType === "HOME" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}
+                        style={{ backgroundColor: teamUniform ? (match.uniformType === "HOME" ? teamUniform.primary ?? "#2563eb" : teamUniform.secondary ?? "#f97316") : (match.uniformType === "HOME" ? "#2563eb" : "#f97316") }}
                       />
                       <span className="text-xs text-muted-foreground">
                         {match.uniformType === "HOME" ? "홈" : "원정"} 유니폼

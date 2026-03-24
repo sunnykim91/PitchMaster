@@ -10,12 +10,17 @@ export default async function MatchesPage() {
 
   // matches + sport_type 병렬 조회
   const db = getSupabaseAdmin();
-  const [initialMatches, sportType] = await Promise.all([
+  const [initialMatches, teamInfo] = await Promise.all([
     getMatchesData(session.user.teamId!),
-    (async (): Promise<SportType> => {
-      if (!db || !session.user.teamId) return "SOCCER";
-      const { data: team } = await db.from("teams").select("sport_type").eq("id", session.user.teamId).single();
-      return (team?.sport_type as SportType) ?? "SOCCER";
+    (async () => {
+      if (!db || !session.user.teamId) return { sportType: "SOCCER" as SportType, uniformPrimary: null as string | null, uniformSecondary: null as string | null, uniformPattern: null as string | null };
+      const { data: team } = await db.from("teams").select("sport_type, uniform_primary, uniform_secondary, uniform_pattern").eq("id", session.user.teamId).single();
+      return {
+        sportType: (team?.sport_type as SportType) ?? "SOCCER",
+        uniformPrimary: team?.uniform_primary ?? null,
+        uniformSecondary: team?.uniform_secondary ?? null,
+        uniformPattern: team?.uniform_pattern ?? null,
+      };
     })(),
   ]);
 
@@ -24,7 +29,8 @@ export default async function MatchesPage() {
       userId={session.user.id}
       userRole={session.user.teamRole}
       initialMatches={initialMatches}
-      sportType={sportType}
+      sportType={teamInfo.sportType}
+      teamUniform={{ primary: teamInfo.uniformPrimary, secondary: teamInfo.uniformSecondary, pattern: teamInfo.uniformPattern }}
     />
   );
 }
