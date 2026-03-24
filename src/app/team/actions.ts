@@ -8,6 +8,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 export async function createTeam(formData: FormData) {
   const session = await auth();
   if (!session) redirect("/login");
+  if (session.user.isDemo) redirect("/team?error=demo_blocked");
 
   const teamName = String(formData.get("teamName") || "").trim() || "우리 팀";
   const sportType = String(formData.get("sportType") || "SOCCER");
@@ -67,6 +68,7 @@ export async function createTeam(formData: FormData) {
 export async function requestJoinTeam(formData: FormData) {
   const session = await auth();
   if (!session) redirect("/login");
+  if (session.user.isDemo) redirect("/team?error=demo_blocked");
 
   const teamId = String(formData.get("teamId") || "").trim();
   const message = String(formData.get("message") || "").trim();
@@ -151,6 +153,7 @@ export async function requestJoinTeam(formData: FormData) {
 export async function joinTeam(formData: FormData) {
   const session = await auth();
   if (!session) redirect("/login");
+  if (session.user.isDemo) redirect("/team?error=demo_blocked");
 
   const inviteCode = String(formData.get("inviteCode") || "").trim().toUpperCase();
   if (!inviteCode) redirect("/team");

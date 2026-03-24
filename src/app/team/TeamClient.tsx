@@ -132,7 +132,9 @@ export default function TeamClient({ hasExistingTeam = false }: { hasExistingTea
             ? "이미 해당 팀에 소속되어 있습니다."
             : error === "already_requested"
               ? "이미 가입 신청한 팀입니다."
-              : null;
+              : error === "demo_blocked"
+                ? "데모 모드에서는 팀 생성/가입이 불가합니다. 카카오 로그인 후 이용해주세요."
+                : null;
 
   return (
     <main className="min-h-screen px-6 py-16">
