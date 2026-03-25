@@ -128,7 +128,7 @@
 ## 미완료 — HIGH (현재 28팀 운영에 직접 영향)
 
 - [x] OG 이미지 제작 (1200x630px) → 코드 자동 생성 (opengraph-image.tsx)
-- [ ] Google Search Console 등록 (Cloudflare DNS TXT) **[수동]**
+- [x] Google Search Console 등록 (소유권 인증 + sitemap 제출 완료)
 - [ ] 중복/테스트 팀 정리 (골드문FC/골드문, fc_libre/FC.LIBRE) **[수동 SQL]**
 - [ ] 활성 팀 CS 대응 — 용왕FC, FC Blue 등 피드백 수집 **[수동]**
 - [ ] 투표 Optimistic UI (가장 빈번한 사용자 행동, 현재 refetch 대기)
