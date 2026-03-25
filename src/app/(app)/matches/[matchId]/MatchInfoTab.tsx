@@ -384,8 +384,13 @@ function MatchInfoTabInner({
               placeholder="이름 검색..."
               value={voteSearch}
               onChange={(e) => setVoteSearch(e.target.value)}
+              list="vote-member-names"
+              autoComplete="off"
               className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
+            <datalist id="vote-member-names">
+              {baseRoster.map((m) => <option key={m.memberId} value={m.name} />)}
+            </datalist>
             {/* 미투표 필터 */}
             {(() => {
               const unvotedCount = baseRoster.filter((m) => !memberVoteMap[m.memberId]).length;

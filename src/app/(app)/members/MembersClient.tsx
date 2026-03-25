@@ -475,8 +475,13 @@ export default function MembersClient({
               placeholder="이름으로 검색"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              list="member-names"
+              autoComplete="off"
               className="w-full rounded-lg border border-border bg-secondary/50 py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
+            <datalist id="member-names">
+              {linkedMembers.map((m) => <option key={m.id} value={m.name} />)}
+            </datalist>
           </div>
           <div className="space-y-2">
             {filteredLinkedMembers.map((member) => (

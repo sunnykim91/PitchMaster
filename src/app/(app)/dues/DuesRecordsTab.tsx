@@ -332,13 +332,20 @@ function DuesRecordsTabInner({
           </div>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Input
-            type="text"
-            value={memberFilter}
-            onChange={(event) => setMemberFilter(event.target.value)}
-            placeholder="이름 검색"
-            className="w-full sm:w-40 text-xs"
-          />
+          <div className="w-full sm:w-40">
+            <Input
+              type="text"
+              value={memberFilter}
+              onChange={(event) => setMemberFilter(event.target.value)}
+              placeholder="이름 검색"
+              list="dues-member-names"
+              autoComplete="off"
+              className="text-xs"
+            />
+            <datalist id="dues-member-names">
+              {members.map((m) => <option key={m.id} value={m.name} />)}
+            </datalist>
+          </div>
           <div className="flex gap-1.5">
             {(["ALL", "INCOME", "EXPENSE"] as RecordFilter[]).map((value) => (
               <Button
