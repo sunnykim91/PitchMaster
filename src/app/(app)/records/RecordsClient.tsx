@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { BarChart3, ArrowUpDown, ArrowDown } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
@@ -410,7 +411,16 @@ export default function RecordsClient({
               ))}
             </div>
           ) : stats.length === 0 ? (
-            <EmptyState icon={BarChart3} title="아직 기록이 없습니다" description="경기를 진행해보세요." />
+            <EmptyState
+              icon={BarChart3}
+              title="아직 기록이 없습니다"
+              description="경기를 진행해보세요."
+              action={
+                <Button size="sm" variant="outline" asChild>
+                  <Link href="/matches">경기 일정 보기</Link>
+                </Button>
+              }
+            />
           ) : (
             <div className="grid gap-3 md:grid-cols-3">
               {[{

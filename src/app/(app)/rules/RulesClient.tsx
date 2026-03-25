@@ -380,7 +380,11 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
         <CardContent>
           <div className="space-y-3">
             {filteredRules.length === 0 ? (
-              <EmptyState icon={BookOpen} title="등록된 회칙이 없습니다" />
+              <EmptyState
+                icon={BookOpen}
+                title="등록된 회칙이 없습니다"
+                description={isStaffOrAbove(role) ? "위 양식으로 첫 회칙을 등록해보세요." : "아직 등록된 회칙이 없습니다."}
+              />
             ) : (
               filteredRules.map((rule) => (
                 <Card key={rule.id} className="border-0 bg-secondary transition-colors hover:bg-muted">

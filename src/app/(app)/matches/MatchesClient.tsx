@@ -484,7 +484,18 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
         {sortedMatches.length === 0 && (
           <Card className="rounded-md p-6">
             <CardContent className="p-0">
-              <EmptyState icon={Calendar} title="등록된 일정이 없습니다" description="새 일정을 등록해보세요." />
+              <EmptyState
+                icon={Calendar}
+                title="등록된 일정이 없습니다"
+                description="새 일정을 등록해보세요."
+                action={
+                  isStaffOrAbove(role) ? (
+                    <Button size="sm" onClick={() => setIsOpen(true)}>
+                      일정 등록하기
+                    </Button>
+                  ) : undefined
+                }
+              />
             </CardContent>
           </Card>
         )}

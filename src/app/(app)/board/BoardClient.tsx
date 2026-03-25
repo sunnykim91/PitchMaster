@@ -427,7 +427,16 @@ export default function BoardClient({
 
       {/* ── Post List ── */}
       {posts.length === 0 ? (
-        <EmptyState icon={MessageSquare} title="아직 게시글이 없습니다" />
+        <EmptyState
+          icon={MessageSquare}
+          title="아직 게시글이 없습니다"
+          description="첫 글을 작성해보세요."
+          action={
+            <Button size="sm" onClick={() => setShowForm(true)}>
+              글쓰기
+            </Button>
+          }
+        />
       ) : (
         <div className="space-y-3">
           {posts.map((post) => (

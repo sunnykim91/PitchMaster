@@ -560,7 +560,32 @@ export default async function LoginPage({
         </div>
       </section>
 
-      {/* ── Section 8: CTA ── */}
+      {/* ── Section 8: FAQ ── */}
+      <section aria-label="자주 묻는 질문" className="scroll-reveal relative border-t border-border/30 bg-card/50">
+        <div className="mx-auto max-w-3xl px-4 py-16 sm:py-20">
+          <h2 className="text-center font-heading text-2xl font-bold uppercase sm:text-3xl">
+            자주 묻는 질문
+          </h2>
+          <div className="mt-8 space-y-4">
+            {([
+              { q: "정말 무료인가요?", a: "네, 현재는 무료입니다. 추후 운영에 따라서 변동이 있을 수 있습니다." },
+              { q: "우리 팀 데이터는 안전한가요?", a: "한국 서울 리전에 암호화 저장됩니다." },
+              { q: "인원 제한이 있나요?", a: "없습니다. 몇 명이든 사용 가능합니다." },
+              { q: "풋살도 되나요?", a: "네, 축구와 풋살 모두 지원합니다." },
+            ] as const).map((faq, i) => (
+              <details key={i} className="group rounded-xl border border-border bg-card/50 px-5 py-4">
+                <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-foreground">
+                  {faq.q}
+                  <span className="text-muted-foreground transition-transform group-open:rotate-180">▼</span>
+                </summary>
+                <p className="mt-3 text-sm text-muted-foreground">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Section 9: CTA ── */}
       <section aria-label="시작하기" className="scroll-reveal relative border-t border-border/30 bg-gradient-to-b from-primary/5 via-primary/10 to-transparent">
         <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 sm:py-24">
           <h2 className="break-keep font-heading text-2xl font-bold sm:text-3xl md:text-4xl">

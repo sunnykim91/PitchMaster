@@ -17,7 +17,7 @@ import type {
   Guest,
   RosterPlayer,
 } from "./matchDetailTypes";
-import { voteStyles as styles } from "./matchDetailTypes";
+import { voteStyles as styles } from "@/lib/voteStyles";
 
 export interface MatchInfoTabProps {
   matchId: string;
@@ -168,6 +168,7 @@ function MatchInfoTabInner({
   /* ── 용병 관리 ── */
   const [isGuestFormOpen, setIsGuestFormOpen] = useState(false);
   const [voteSearch, setVoteSearch] = useState("");
+  const [voteFilter, setVoteFilter] = useState<"all" | "unvoted">("all");
 
   async function handleAddGuest(formData: FormData) {
     const name = String(formData.get("guestName") || "").trim();
@@ -385,6 +386,48 @@ function MatchInfoTabInner({
               onChange={(e) => setVoteSearch(e.target.value)}
               className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
+            {/* 미투표 필터 */}
+            {(() => {
+              const unvotedCount = baseRoster.filter((m) => !memberVoteMap[m.memberId]).length;
+              return (
+                <div className="mt-2 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setVoteFilter("all")}
+                    className={cn(
+                      "rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                      voteFilter === "all"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                    )}
+                  >
+                    전체
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVoteFilter("unvoted")}
+                    className={cn(
+                      "flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                      voteFilter === "unvoted"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                    )}
+                  >
+                    미투표
+                    {unvotedCount > 0 && (
+                      <span className={cn(
+                        "rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none",
+                        voteFilter === "unvoted"
+                          ? "bg-primary-foreground/20 text-primary-foreground"
+                          : "bg-destructive/15 text-destructive"
+                      )}>
+                        {unvotedCount}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              );
+            })()}
             {/* 투표 현황 카운터 */}
             {(() => {
               const attend = baseRoster.filter((m) => memberVoteMap[m.memberId] === "ATTEND").length;
@@ -412,9 +455,9 @@ function MatchInfoTabInner({
                             body: JSON.stringify({ matchId: match.id }),
                           });
                           const data = await res.json();
-                          alert(`미투표자 ${data.unvoted ?? 0}명에게 알림을 보냈습니다`);
+                          showToast(`미투표자 ${data.unvoted ?? 0}명에게 알림을 보냈습니다`);
                         } catch {
-                          alert("알림 발송에 실패했습니다");
+                          showToast("알림 발송에 실패했습니다", "error");
                         }
                       }}
                     >
@@ -428,7 +471,11 @@ function MatchInfoTabInner({
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {[...baseRoster].filter((m) => !voteSearch || m.name.includes(voteSearch)).sort((a, b) => {
+              {[...baseRoster].filter((m) => {
+                if (voteSearch && !m.name.includes(voteSearch)) return false;
+                if (voteFilter === "unvoted" && memberVoteMap[m.memberId]) return false;
+                return true;
+              }).sort((a, b) => {
                 const voteA = memberVoteMap[a.memberId];
                 const voteB = memberVoteMap[b.memberId];
                 const order: Record<string, number> = { ATTEND: 0, MAYBE: 1, ABSENT: 2 };
@@ -438,7 +485,10 @@ function MatchInfoTabInner({
               }).map((member) => {
                 const currentVote = memberVoteMap[member.memberId];
                 return (
-                  <div key={member.id} className="flex items-center justify-between rounded-lg bg-secondary px-4 py-3">
+                  <div key={member.id} className={cn(
+                    "flex items-center justify-between rounded-lg px-4 py-3",
+                    !currentVote ? "bg-destructive/5 ring-1 ring-destructive/20" : "bg-secondary"
+                  )}>
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-sm font-semibold truncate">{member.name}</span>
                       {!member.isLinked && (
