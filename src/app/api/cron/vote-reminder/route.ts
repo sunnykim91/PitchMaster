@@ -20,16 +20,33 @@ export async function GET(request: NextRequest) {
   const tomorrowStart = tomorrow.toISOString().split("T")[0] + "T00:00:00";
   const tomorrowEnd = tomorrow.toISOString().split("T")[0] + "T23:59:59";
 
-  // 내일 마감인 경기 조회
-  const { data: matches } = await db
+  // 1) 내일 마감인 경기 (vote_deadline 기준)
+  const { data: deadlineMatches } = await db
     .from("matches")
     .select("id, team_id, match_date, opponent_name, vote_deadline")
     .eq("status", "SCHEDULED")
     .gte("vote_deadline", tomorrowStart)
     .lte("vote_deadline", tomorrowEnd);
 
-  if (!matches || matches.length === 0) {
-    return NextResponse.json({ message: "No deadlines tomorrow", sent: 0 });
+  // 2) 마감일 미설정이지만 내일 경기인 경우 (경기 전날 = 오늘 리마인드)
+  const tomorrowDate = tomorrow.toISOString().split("T")[0];
+  const { data: noDeadlineMatches } = await db
+    .from("matches")
+    .select("id, team_id, match_date, opponent_name, vote_deadline")
+    .eq("status", "SCHEDULED")
+    .eq("match_date", tomorrowDate)
+    .is("vote_deadline", null);
+
+  // 중복 제거 후 합치기
+  const seenIds = new Set<string>();
+  const matches = [...(deadlineMatches ?? []), ...(noDeadlineMatches ?? [])].filter((m) => {
+    if (seenIds.has(m.id)) return false;
+    seenIds.add(m.id);
+    return true;
+  });
+
+  if (matches.length === 0) {
+    return NextResponse.json({ message: "No reminders needed", sent: 0 });
   }
 
   let totalSent = 0;
