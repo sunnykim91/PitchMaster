@@ -6,6 +6,11 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default function OgImage() {
+  const primary = "#e8613a";
+  const primaryLight = "rgba(232, 97, 58, 0.15)";
+  const primaryBorder = "rgba(232, 97, 58, 0.3)";
+  const pitch = "#1a6b32";
+
   return new ImageResponse(
     (
       <div
@@ -16,7 +21,7 @@ export default function OgImage() {
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          background: "linear-gradient(135deg, #0a0e14 0%, #1a2332 50%, #0a0e14 100%)",
+          background: "linear-gradient(145deg, #0e0f11 0%, #161819 40%, #0e0f11 100%)",
           fontFamily: "sans-serif",
           position: "relative",
           overflow: "hidden",
@@ -30,7 +35,7 @@ export default function OgImage() {
             left: 0,
             right: 0,
             bottom: 0,
-            opacity: 0.08,
+            opacity: 0.06,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -38,9 +43,9 @@ export default function OgImage() {
         >
           <div
             style={{
-              width: 600,
-              height: 400,
-              border: "4px solid #22c55e",
+              width: 700,
+              height: 440,
+              border: `4px solid ${pitch}`,
               borderRadius: 12,
               display: "flex",
               justifyContent: "center",
@@ -55,14 +60,14 @@ export default function OgImage() {
                 bottom: 0,
                 left: "50%",
                 width: 4,
-                background: "#22c55e",
+                background: pitch,
               }}
             />
             <div
               style={{
-                width: 120,
-                height: 120,
-                border: "4px solid #22c55e",
+                width: 140,
+                height: 140,
+                border: `4px solid ${pitch}`,
                 borderRadius: "50%",
               }}
             />
@@ -73,12 +78,12 @@ export default function OgImage() {
         <div
           style={{
             display: "flex",
-            fontSize: 16,
+            fontSize: 18,
             fontWeight: 800,
-            letterSpacing: 6,
-            color: "#22c55e",
+            letterSpacing: 8,
+            color: primary,
             textTransform: "uppercase",
-            marginBottom: 16,
+            marginBottom: 20,
           }}
         >
           PitchMaster
@@ -87,62 +92,52 @@ export default function OgImage() {
         {/* 메인 타이틀 */}
         <div
           style={{
+            fontSize: 54,
+            fontWeight: 900,
+            color: "#ffffff",
+            textAlign: "center",
+            lineHeight: 1.2,
             display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 8,
           }}
         >
-          <div
-            style={{
-              fontSize: 52,
-              fontWeight: 900,
-              color: "#ffffff",
-              textAlign: "center",
-              lineHeight: 1.2,
-              display: "flex",
-            }}
-          >
-            조기축구 · 풋살 팀 관리 플랫폼
-          </div>
+          조기축구 · 풋살 팀 관리
         </div>
 
         {/* 서브타이틀 */}
         <div
           style={{
-            fontSize: 22,
-            color: "rgba(255,255,255,0.6)",
-            marginTop: 20,
+            fontSize: 24,
+            color: "rgba(255,255,255,0.5)",
+            marginTop: 16,
             textAlign: "center",
             display: "flex",
           }}
         >
-          실시간 투표 · AI 라인업 · 회비 자동정리 · 기록 분석 · 카톡 공유
+          총무를 위한 올인원 관리 앱 — 무료
         </div>
 
-        {/* 기능 뱃지들 */}
+        {/* 기능 뱃지 */}
         <div
           style={{
             display: "flex",
             gap: 12,
-            marginTop: 40,
+            marginTop: 44,
           }}
         >
-          {["실시간 투표", "AI 라인업", "회비 자동정리", "카톡 공유"].map(
+          {["참석 투표", "스마트 라인업", "회비 자동정리", "경기 기록"].map(
             (text) => (
               <div
                 key={text}
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 6,
-                  padding: "8px 18px",
+                  padding: "10px 20px",
                   borderRadius: 24,
-                  backgroundColor: "rgba(34, 197, 94, 0.15)",
-                  border: "1px solid rgba(34, 197, 94, 0.3)",
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: "#22c55e",
+                  backgroundColor: primaryLight,
+                  border: `1px solid ${primaryBorder}`,
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: primary,
                 }}
               >
                 {text}
@@ -151,17 +146,21 @@ export default function OgImage() {
           )}
         </div>
 
-        {/* 하단 URL */}
+        {/* 하단 URL + 팀 수 */}
         <div
           style={{
             position: "absolute",
-            bottom: 30,
-            fontSize: 14,
-            color: "rgba(255,255,255,0.3)",
+            bottom: 32,
             display: "flex",
+            gap: 16,
+            alignItems: "center",
+            fontSize: 15,
+            color: "rgba(255,255,255,0.35)",
           }}
         >
-          pitch-master.app
+          <span style={{ display: "flex" }}>pitch-master.app</span>
+          <span style={{ display: "flex" }}>·</span>
+          <span style={{ display: "flex" }}>28개 팀이 사용 중</span>
         </div>
       </div>
     ),
