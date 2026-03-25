@@ -115,6 +115,21 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-optical-sizing: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 클릭 가능 요소 기본 커서 */
+button, [role="button"], [onclick], a, summary { cursor: pointer; }
+
+/* 스크롤 영역 최적화 */
+.overflow-auto, .overflow-y-auto, .overflow-x-auto, [role="tabpanel"] {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Safe area — 노치/홈바 대응 */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  body { padding-bottom: env(safe-area-inset-bottom); }
 }
 
 ::selection {

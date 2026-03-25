@@ -300,7 +300,7 @@ function DuesSettingsTabInner({
                     <button
                       type="button"
                       onClick={() => setConfirmAction({ message: "이 회비 기준을 삭제하시겠습니까?", onConfirm: () => handleDeleteSetting(setting.id) })}
-                      className="min-h-[36px] min-w-[36px] rounded px-2 text-xs bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] transition-colors"
+                      className="min-h-[44px] min-w-[44px] rounded px-2 text-xs bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] transition-colors active:scale-95"
                     >
                       삭제
                     </button>

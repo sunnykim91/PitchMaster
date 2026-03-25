@@ -413,14 +413,14 @@ function DuesRecordsTabInner({
                             document.querySelector(`[data-edit-id="${record.id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
                           }, 100);
                         }}
-                        className="min-h-[36px] rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                        className="min-h-[44px] rounded-lg px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors active:scale-95"
                       >
                         수정
                       </button>
                       <button
                         type="button"
                         onClick={() => setConfirmAction({ message: "이 내역을 삭제하시겠습니까?", onConfirm: () => handleDeleteRecord(record.id) })}
-                        className="min-h-[36px] rounded-lg px-3 py-1.5 text-xs font-medium bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] transition-colors"
+                        className="min-h-[44px] rounded-lg px-3 py-2 text-xs font-medium bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] transition-colors active:scale-95"
                       >
                         삭제
                       </button>

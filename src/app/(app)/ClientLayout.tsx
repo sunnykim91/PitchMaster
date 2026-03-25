@@ -477,7 +477,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       <PWAInstallPrompt />
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/85 backdrop-blur-xl backdrop-saturate-150 lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/85 backdrop-blur-xl backdrop-saturate-150 pb-[env(safe-area-inset-bottom)] lg:hidden">
         <div className="flex items-center justify-around">
           {[
             { href: "/dashboard", label: "홈", icon: Home },

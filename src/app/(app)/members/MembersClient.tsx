@@ -519,10 +519,10 @@ export default function MembersClient({
                                 )
                               }
                               className={cn(
-                                "rounded px-2 py-0.5 text-xs font-medium border transition-colors",
+                                "rounded px-2 py-1 text-xs font-medium border transition-colors",
                                 selected
                                   ? "bg-primary text-primary-foreground border-primary"
-                                  : "bg-secondary text-muted-foreground border-border hover:border-primary/50"
+                                  : "bg-secondary text-secondary-foreground border-border hover:border-primary/50 hover:bg-secondary/80"
                               )}
                             >
                               {pos}

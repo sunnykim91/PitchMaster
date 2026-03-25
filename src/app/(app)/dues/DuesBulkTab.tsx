@@ -530,7 +530,7 @@ function DuesBulkTabInner({
                     <button
                       type="button"
                       onClick={() => removeBulkRow(index)}
-                      className="min-h-[36px] min-w-[36px] rounded px-2 text-xs bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] transition-colors self-center"
+                      className="min-h-[44px] min-w-[44px] rounded px-2 text-xs bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] transition-colors active:scale-95 self-center"
                     >
                       삭제
                     </button>

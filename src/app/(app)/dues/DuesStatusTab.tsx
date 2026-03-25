@@ -164,7 +164,7 @@ function DuesStatusTabInner({
                 m.status === "UNPAID" ? "bg-[hsl(var(--loss)/0.1)] border border-[hsl(var(--loss)/0.2)]" : "bg-secondary/50"
               )}>
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className={cn("text-xs font-medium whitespace-nowrap", m.status === "UNPAID" ? "text-[hsl(var(--loss))]" : "text-foreground")}>{m.name}</span>
+                  <span className="text-xs font-semibold whitespace-nowrap text-foreground">{m.name}</span>
                   {ROLE_LABEL[m.role] && (
                     <span className={cn(
                       "shrink-0 rounded px-1 py-px text-xs font-bold",
@@ -195,14 +195,14 @@ function DuesStatusTabInner({
                           await refetchPaymentStatus();
                         }}
                         className={cn(
-                          "rounded-full px-2 py-2 min-h-[36px] text-xs font-bold transition-all active:scale-95",
+                          "rounded-full px-3 py-2 min-h-[44px] text-xs font-bold transition-all active:scale-95",
                           m.status === s
                             ? s === "PAID"
                               ? "bg-[hsl(var(--success))] text-white"
                               : s === "EXEMPT"
-                              ? "bg-[hsl(var(--warning))] text-background"
+                              ? "bg-[hsl(var(--warning))] text-white"
                               : "bg-[hsl(var(--loss))] text-white"
-                            : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                            : "bg-secondary/50 text-secondary-foreground hover:bg-secondary"
                         )}
                       >
                         {s === "PAID" ? "납부" : s === "EXEMPT" ? "면제" : "미납"}
