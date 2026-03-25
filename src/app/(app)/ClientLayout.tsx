@@ -368,13 +368,13 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                     </Button>
                   </SheetTrigger>
                   <SheetContent side="right" className="w-[320px] overflow-y-auto">
-                    <SheetTitle className="flex items-center justify-between text-sm font-bold">
-                      알림
-                      {unreadCount > 0 && (
-                        <button onClick={markAllRead} className="text-xs font-normal text-primary">모두 읽음</button>
-                      )}
-                    </SheetTitle>
+                    <SheetTitle className="text-sm font-bold pr-8">알림</SheetTitle>
                     <SheetDescription className="sr-only">알림 목록</SheetDescription>
+                    {unreadCount > 0 && (
+                      <button onClick={markAllRead} className="mt-2 text-xs font-medium text-primary hover:underline">
+                        전체 읽음 처리
+                      </button>
+                    )}
                     <div className="mt-4 space-y-2">
                       {notifications.length === 0 ? (
                         <p className="py-8 text-center text-sm text-muted-foreground">알림이 없습니다</p>

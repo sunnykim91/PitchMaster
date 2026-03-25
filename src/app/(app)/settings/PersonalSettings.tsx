@@ -43,14 +43,14 @@ function PersonalSettingsComponent({
   profileSyncedRef,
   onLogout,
 }: PersonalSettingsProps) {
-  const [pushEnabled, setPushEnabled] = useState(true);
+  const [pushEnabled, setPushEnabled] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
 
-  // 알림 설정 로드
+  // 알림 설정 로드 — DB에 설정이 없으면 OFF (구독 전)
   useEffect(() => {
     fetch("/api/notification-settings")
       .then((r) => r.json())
-      .then((j) => { if (j.settings) setPushEnabled(j.settings.push ?? true); })
+      .then((j) => { if (j.settings) setPushEnabled(j.settings.push ?? false); })
       .catch(() => {});
   }, []);
 
