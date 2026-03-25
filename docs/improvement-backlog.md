@@ -94,6 +94,9 @@
 - [x] PC Chrome 폰트 가독성 개선 (text-rendering, font-optical-sizing)
 - [x] UX 기본기 전면 개선 (cursor-pointer, 터치타겟 44px, safe-area, 스크롤)
 - [x] 전체 페이지 디테일 UX (회칙 버튼 일관성, 게시판 터치타겟, 설정 저장 전체 너비)
+- [x] WCAG 접근성 대비율 개선 (성공/경고 버튼 텍스트, 테두리 밝기)
+- [x] 폰트 가독성 개선 (text-[10px]/[11px] 제거, type-* line-height, overline 12px)
+- [x] 테이블 TOP3 하이라이트 정리 (지저분한 배경 제거)
 
 ### 접근성
 
