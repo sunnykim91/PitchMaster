@@ -540,26 +540,26 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                       </div>
                     ))}
                   </div>
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-                    <span>득점 {teamRecord.goalsFor} · 실점 {teamRecord.goalsAgainst} · 득실차 {teamRecord.goalsFor - teamRecord.goalsAgainst >= 0 ? "+" : ""}{teamRecord.goalsFor - teamRecord.goalsAgainst}</span>
-                    {teamRecord.recent5.length > 0 && (
-                      <div className="flex items-center gap-1">
-                        {teamRecord.recent5.map((r, i) => (
-                          <span
-                            key={i}
-                            className={cn(
-                              "flex h-6 w-6 items-center justify-center rounded text-xs font-bold",
-                              r === "W" && "bg-[hsl(var(--win)/0.15)] text-[hsl(var(--win))]",
-                              r === "D" && "bg-secondary text-muted-foreground",
-                              r === "L" && "bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))]"
-                            )}
-                          >
-                            {r === "W" ? "승" : r === "D" ? "무" : "패"}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    득점 {teamRecord.goalsFor} · 실점 {teamRecord.goalsAgainst} · 득실차 {teamRecord.goalsFor - teamRecord.goalsAgainst >= 0 ? "+" : ""}{teamRecord.goalsFor - teamRecord.goalsAgainst}
+                  </p>
+                  {teamRecord.recent5.length > 0 && (
+                    <div className="mt-2 flex items-center gap-1">
+                      {teamRecord.recent5.map((r, i) => (
+                        <span
+                          key={i}
+                          className={cn(
+                            "flex h-6 w-6 items-center justify-center rounded text-xs font-bold",
+                            r === "W" && "bg-[hsl(var(--win)/0.15)] text-[hsl(var(--win))]",
+                            r === "D" && "bg-secondary text-muted-foreground",
+                            r === "L" && "bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))]"
+                          )}
+                        >
+                          {r === "W" ? "승" : r === "D" ? "무" : "패"}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
