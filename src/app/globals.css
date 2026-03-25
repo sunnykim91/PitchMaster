@@ -27,7 +27,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans: "Pretendard Variable", var(--font-geist), system-ui, -apple-system, sans-serif;
-  --font-heading: var(--font-geist), "Pretendard Variable", system-ui, sans-serif;
+  --font-heading: "Pretendard Variable", var(--font-geist), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
 }
@@ -112,6 +112,9 @@ body {
   letter-spacing: -0.01em;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-optical-sizing: auto;
 }
 
 ::selection {
