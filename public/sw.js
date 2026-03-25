@@ -39,12 +39,19 @@ self.addEventListener("push", (event) => {
       renotify: true,
       vibrate: [200, 100, 200],
       data: { url: data.url },
+    }).then(() => {
+      if (self.navigator && "setAppBadge" in self.navigator) {
+        self.navigator.setAppBadge();
+      }
     })
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+  if (self.navigator && "clearAppBadge" in self.navigator) {
+    self.navigator.clearAppBadge();
+  }
   const url = event.notification.data?.url || "/dashboard";
   event.waitUntil(
     self.clients.matchAll({ type: "window" }).then((clients) => {

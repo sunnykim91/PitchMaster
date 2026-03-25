@@ -94,7 +94,12 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       const json = await res.json();
       const items = json.notifications ?? [];
       setNotifications(items);
-      setUnreadCount(items.filter((n: { is_read: boolean }) => !n.is_read).length);
+      const count = items.filter((n: { is_read: boolean }) => !n.is_read).length;
+      setUnreadCount(count);
+      // PWA 앱 아이콘 배지 숫자 업데이트
+      if ("setAppBadge" in navigator) {
+        count > 0 ? navigator.setAppBadge(count) : navigator.clearAppBadge();
+      }
     } catch {}
   }, []);
 

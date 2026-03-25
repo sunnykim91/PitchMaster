@@ -271,6 +271,67 @@ export default function PushTestPage() {
           </CardContent>
         </Card>
       )}
+      {/* 알림 지원 조건 안내 */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <AlertTriangle className="h-4 w-4 text-[hsl(var(--warning))]" />
+            푸시 알림 지원 조건
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">팀원에게 안내할 때 참고하세요</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Android */}
+          <div>
+            <p className="text-sm font-semibold mb-2">안드로이드</p>
+            <div className="space-y-1.5">
+              {[
+                { browser: "Chrome", ok: true, note: "홈 화면 추가 + 알림 허용" },
+                { browser: "삼성 인터넷", ok: true, note: "홈 화면 추가 + 알림 허용" },
+                { browser: "카카오톡 내 브라우저", ok: false, note: "PWA 미지원" },
+                { browser: "네이버/인스타 등 인앱", ok: false, note: "PWA 미지원" },
+              ].map((item) => (
+                <div key={item.browser} className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2">
+                  <span className="text-sm">{item.browser}</span>
+                  <span className={cn("text-xs font-semibold", item.ok ? "text-[hsl(var(--success))]" : "text-[hsl(var(--loss))]")}>
+                    {item.ok ? "지원" : "불가"} · {item.note}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* iOS */}
+          <div>
+            <p className="text-sm font-semibold mb-2">아이폰 (iOS)</p>
+            <div className="space-y-1.5">
+              {[
+                { cond: "iOS 16.4+ Safari → 홈 화면 추가", ok: true },
+                { cond: "iOS 16.3 이하", ok: false },
+                { cond: "Safari 브라우저 (홈 추가 안 함)", ok: false },
+                { cond: "Chrome / 카카오톡 / 네이버", ok: false },
+              ].map((item) => (
+                <div key={item.cond} className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2">
+                  <span className="text-sm">{item.cond}</span>
+                  <span className={cn("text-xs font-semibold", item.ok ? "text-[hsl(var(--success))]" : "text-[hsl(var(--loss))]")}>
+                    {item.ok ? "지원" : "불가"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 필수 조건 */}
+          <div className="rounded-xl border border-border/50 bg-secondary/30 p-3">
+            <p className="text-xs font-bold text-muted-foreground mb-2">팀원 안내 사항 (필수 3단계)</p>
+            <ol className="space-y-1 text-sm text-muted-foreground list-decimal list-inside">
+              <li><strong className="text-foreground">홈 화면에 추가</strong> (PWA 설치)</li>
+              <li><strong className="text-foreground">브라우저 알림 권한 허용</strong></li>
+              <li><strong className="text-foreground">앱 설정 → 푸시 알림 ON</strong></li>
+            </ol>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
