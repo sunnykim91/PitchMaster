@@ -198,9 +198,9 @@ function DuesStatusTabInner({
                           "rounded-full px-3 py-2 min-h-[44px] text-xs font-bold transition-all active:scale-95",
                           m.status === s
                             ? s === "PAID"
-                              ? "bg-[hsl(var(--success))] text-white"
+                              ? "bg-[hsl(var(--success))] text-[hsl(0_0%_10%)]"
                               : s === "EXEMPT"
-                              ? "bg-[hsl(var(--warning))] text-white"
+                              ? "bg-[hsl(var(--warning))] text-[hsl(0_0%_10%)]"
                               : "bg-[hsl(var(--loss))] text-white"
                             : "bg-secondary/50 text-secondary-foreground hover:bg-secondary"
                         )}
