@@ -20,12 +20,11 @@ export async function completeOnboarding(formData: FormData) {
     .map((value) => String(value))
     .filter((v) => VALID_POSITIONS.includes(v as PreferredPosition)) as PreferredPosition[];
 
-  // 서버 밸리데이션
+  // 서버 밸리데이션 (이름 + 포지션만 필수, 나머지 선택)
   const errors: string[] = [];
   if (!name || name.length < 1) errors.push("이름을 입력해주세요");
-  if (!birthDate || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) errors.push("생년월일을 선택해주세요");
-  if (!phone || phone.length < 10 || phone.length > 11) errors.push("올바른 전화번호를 입력해주세요");
-  if (!VALID_FEET.includes(preferredFoot)) errors.push("주발을 선택해주세요");
+  if (birthDate && !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) errors.push("올바른 생년월일 형식이 아닙니다");
+  if (phone && (phone.length < 10 || phone.length > 11)) errors.push("올바른 전화번호를 입력해주세요");
   if (preferredPositions.length === 0) errors.push("선호 포지션을 최소 1개 선택해주세요");
 
   if (errors.length > 0) {

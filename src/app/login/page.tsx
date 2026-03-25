@@ -616,6 +616,8 @@ export default async function LoginPage({
             <a href="/privacy" className="transition hover:text-foreground focus-visible:text-foreground focus-visible:underline focus-visible:outline-none">개인정보처리방침</a>
             <span aria-hidden="true">·</span>
             <a href="/terms" className="transition hover:text-foreground focus-visible:text-foreground focus-visible:underline focus-visible:outline-none">이용약관</a>
+            <span aria-hidden="true">·</span>
+            <a href="/guide.html" className="transition hover:text-foreground focus-visible:text-foreground focus-visible:underline focus-visible:outline-none">시작 가이드</a>
           </div>
           <p className="text-xs text-muted-foreground">
             데이터는 한국 리전(서울)에 안전하게 저장됩니다

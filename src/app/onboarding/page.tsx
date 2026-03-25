@@ -37,7 +37,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
           <CardHeader>
             <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">가입 정보</p>
             <CardTitle className="font-heading text-3xl font-bold uppercase">기본 정보를 입력해주세요</CardTitle>
-            <CardDescription>필수 정보를 입력해야 PitchMaster 기능을 이용할 수 있어요.</CardDescription>
+            <CardDescription>이름과 선호 포지션은 필수입니다. 나머지는 나중에 설정에서 추가할 수 있어요.</CardDescription>
           </CardHeader>
           <CardContent>
             <form action={completeOnboarding} className="space-y-6">
@@ -48,15 +48,15 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
                   <Input id="name" name="name" required />
                 </div>
                 <div className="space-y-2">
-                  <Label>생년월일</Label>
-                  <BirthDateSelect name="birthDate" defaultValue="1998-01-01" required />
+                  <Label>생년월일 <span className="text-muted-foreground font-normal">(선택)</span></Label>
+                  <BirthDateSelect name="birthDate" defaultValue="" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">연락처</Label>
-                  <PhoneInput id="phone" name="phone" required />
+                  <Label htmlFor="phone">연락처 <span className="text-muted-foreground font-normal">(선택)</span></Label>
+                  <PhoneInput id="phone" name="phone" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="preferredFoot">주발</Label>
+                  <Label htmlFor="preferredFoot">주발 <span className="text-muted-foreground font-normal">(선택)</span></Label>
                   <NativeSelect id="preferredFoot" name="preferredFoot">
                     <option value="RIGHT">오른발</option>
                     <option value="LEFT">왼발</option>

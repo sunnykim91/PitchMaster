@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/lib/ToastContext";
 import { EmptyState } from "@/components/EmptyState";
+import { shareTeamInvite } from "@/lib/kakaoShare";
 
 type UpcomingMatch = {
   id: string;
@@ -139,7 +140,7 @@ function CardSkeleton() {
   );
 }
 
-export default function DashboardClient({ userId, userRole, initialData, inviteCode }: { userId: string; userRole?: Role; initialData?: DashboardData; inviteCode?: string }) {
+export default function DashboardClient({ userId, userRole, initialData, inviteCode, teamName }: { userId: string; userRole?: Role; initialData?: DashboardData; inviteCode?: string; teamName?: string }) {
   const { data, loading, error, refetch } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
   const { showToast } = useToast();
   const searchParams = useSearchParams();
@@ -238,19 +239,14 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                     초대 코드를 팀원에게 공유하면 바로 가입할 수 있습니다.
                   </p>
                   {inviteCode ? (
-                    <Button size="sm" className="mt-2" onClick={handleCopyInviteCode}>
-                      {inviteCopied ? (
-                        <>
-                          <Check className="mr-1 h-3.5 w-3.5" />
-                          복사됨
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="mr-1 h-3.5 w-3.5" />
-                          초대 코드 복사
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex gap-2 mt-2">
+                      <Button size="sm" variant="secondary" onClick={handleCopyInviteCode}>
+                        {inviteCopied ? <><Check className="mr-1 h-3.5 w-3.5" />복사됨</> : <><Copy className="mr-1 h-3.5 w-3.5" />코드 복사</>}
+                      </Button>
+                      <Button size="sm" onClick={() => shareTeamInvite({ teamName: teamName || "우리 팀", inviteCode: inviteCode! })}>
+                        카카오톡으로 초대
+                      </Button>
+                    </div>
                   ) : (
                     <Button size="sm" className="mt-2" asChild>
                       <Link href="/settings">초대 코드 확인 &rarr;</Link>
@@ -411,22 +407,30 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
             </div>
             <div className="mt-2 flex items-center justify-between gap-2">
               <p className="text-sm text-muted-foreground truncate">초대 코드를 공유하면 바로 가입</p>
-              <Button
-                size="sm"
-                variant="outline"
-                className="shrink-0 gap-1 text-xs border-[hsl(var(--accent))]/30 text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/10"
-              onClick={() => {
-                const inviteUrl = `${window.location.origin}/team?code=${inviteCode}`;
-                navigator.clipboard.writeText(inviteUrl).then(() => {
-                  setInviteCopied(true);
-                  showToast("초대 링크가 복사되었습니다.");
-                  setTimeout(() => setInviteCopied(false), 2000);
-                });
-              }}
-            >
-              {inviteCopied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
-              {inviteCopied ? "복사됨!" : "초대 링크 복사"}
-              </Button>
+              <div className="flex gap-1.5 shrink-0">
+                <Button
+                  size="sm"
+                  className="gap-1 text-xs"
+                  onClick={() => shareTeamInvite({ teamName: teamName || "우리 팀", inviteCode: inviteCode! })}
+                >
+                  카카오톡 초대
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="px-2 border-[hsl(var(--accent))]/30 text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/10"
+                  onClick={() => {
+                    const inviteUrl = `${window.location.origin}/team?code=${inviteCode}`;
+                    navigator.clipboard.writeText(inviteUrl).then(() => {
+                      setInviteCopied(true);
+                      showToast("초대 링크가 복사되었습니다.");
+                      setTimeout(() => setInviteCopied(false), 2000);
+                    });
+                  }}
+                >
+                  {inviteCopied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
