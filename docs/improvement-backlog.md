@@ -88,7 +88,8 @@
 - [x] 푸시 알림 토글 기본값 OFF (구독 전 ON 표시 방지)
 - [x] 푸시 테스트 특정인 선택 발송 (김선휘/김윤식)
 - [x] Service Worker 캐시 v3 강제 업데이트
-- [x] GA4 (Google Analytics 4) 도입 (G-BTV500RKV8)
+- [x] GA4 (Google Analytics 4) 도입 (G-XWRB861513)
+- [x] 전체 가독성 개선 (색상 대비 강화 — 8개 파일)
 
 ### 접근성
 
