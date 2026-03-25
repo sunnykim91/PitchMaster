@@ -1,7 +1,7 @@
 # PitchMaster 개선 백로그
 
-최종 업데이트: 2026-03-25
-현재 점수 추정: Designer 78 / UX 84 / Dev 85 / Marketing 74 / Business 76 (평균 79.4)
+최종 업데이트: 2026-03-25 (2차)
+현재 점수 추정: Designer 78 / UX 84 / Dev 87 / Marketing 78 / Business 76 (평균 80.6)
 서비스 현황: 28팀 · 123명 · 14팀 활성
 
 ---
