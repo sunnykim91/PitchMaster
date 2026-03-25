@@ -567,21 +567,21 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
               {recentResult && (
                 <Card className="mt-3 border-0 border-l-2 border-l-primary/40 bg-secondary hover:bg-secondary/70 cursor-pointer transition-colors">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <p className="text-xs text-muted-foreground whitespace-nowrap shrink-0">{formatDateKo(recentResult.date)}</p>
+                    <div className="flex items-baseline justify-between">
+                      <p className="text-xs text-muted-foreground">{formatDateKo(recentResult.date)}</p>
                       {(() => {
                         const parts = recentResult.score?.split(":").map((s: string) => parseInt(s.trim(), 10));
                         const scoreColor = parts && parts.length === 2
                           ? parts[0] > parts[1] ? "text-[hsl(var(--win))]" : parts[0] < parts[1] ? "text-[hsl(var(--loss))]" : "text-muted-foreground"
                           : "text-primary";
-                        return <span className={cn("text-xl font-bold font-[family-name:var(--font-display)] whitespace-nowrap shrink-0", scoreColor)}>{recentResult.score}</span>;
+                        return <p className={cn("type-stat", scoreColor)}>{recentResult.score}</p>;
                       })()}
-                      <span className="truncate text-sm text-muted-foreground min-w-0">
-                        vs <span className="font-semibold text-foreground">{recentResult.opponent ?? "미정"}</span>
-                        {recentResult.mvp && <> · MVP <span className="font-semibold text-foreground">{recentResult.mvp}</span></>}
-                      </span>
                     </div>
-                    <div className="mt-2">
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      vs <span className="font-semibold text-foreground">{recentResult.opponent ?? "미정"}</span>
+                      {recentResult.mvp && <> · MVP <span className="font-semibold text-foreground">{recentResult.mvp}</span></>}
+                    </p>
+                    <div className="mt-3">
                       <Button variant="outline" size="sm" asChild>
                         <Link href={`/matches/${recentResult.id}`}>상세 기록 보기</Link>
                       </Button>
