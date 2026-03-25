@@ -5,7 +5,7 @@ import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
 
-const GA_ID = "G-BTV500RKV8";
+const GA_ID = "G-XWRB861513";
 
 const geist = Geist({
   variable: "--font-geist",
