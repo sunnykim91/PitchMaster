@@ -88,6 +88,7 @@
 - [x] 푸시 알림 토글 기본값 OFF (구독 전 ON 표시 방지)
 - [x] 푸시 테스트 특정인 선택 발송 (김선휘/김윤식)
 - [x] Service Worker 캐시 v3 강제 업데이트
+- [x] GA4 (Google Analytics 4) 도입 (G-BTV500RKV8)
 
 ### 접근성
 
@@ -135,6 +136,7 @@
 
 ## 미완료 — MEDIUM (팀 50개 이상 시)
 
+- [ ] Play Store 등록 (TWA로 PWA 감싸기, 개발자 계정 $25) **[추후 과제]**
 - [ ] 회원 벌크 사전등록 (CSV/다중 입력)
 - [ ] 팀 로고 파일 업로드 (URL → 업로드)
 - [ ] 차트 색상 토큰화 (PlayerRadarChart 등 하드코딩 hex)
