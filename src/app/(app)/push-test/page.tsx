@@ -2,17 +2,29 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Bell, Send, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Bell, Send, AlertTriangle, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/lib/ToastContext";
+import { cn } from "@/lib/utils";
 
 type SendResult = {
   sent: number;
   failed: number;
   timestamp: string;
   title: string;
+  target: string;
 };
+
+type TargetUser = {
+  id: string;
+  name: string;
+};
+
+const TARGET_USERS: TargetUser[] = [
+  { id: "7bc8a1b2-7844-41f3-b592-05a2c38f8085", name: "김선휘" },
+  { id: "76d2f722-7996-4b6e-b4ba-908e50762552", name: "김윤식" },
+];
 
 export default function PushTestPage() {
   const { showToast } = useToast();
@@ -20,29 +32,52 @@ export default function PushTestPage() {
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [history, setHistory] = useState<SendResult[]>([]);
+  const [targetMode, setTargetMode] = useState<"all" | "select">("all");
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+
+  function toggleUser(userId: string) {
+    setSelectedUsers((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+    );
+  }
 
   async function handleSend() {
     if (!title.trim() || !body.trim()) {
       showToast("제목과 내용을 입력해주세요.", "error");
       return;
     }
+    if (targetMode === "select" && selectedUsers.length === 0) {
+      showToast("발송 대상을 선택해주세요.", "error");
+      return;
+    }
     setSending(true);
     try {
+      const payload: Record<string, unknown> = {
+        title: title.trim(),
+        body: body.trim(),
+        url: "/dashboard",
+      };
+      if (targetMode === "select") {
+        payload.userIds = selectedUsers;
+      }
       const res = await fetch("/api/push/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: title.trim(), body: body.trim(), url: "/dashboard" }),
+        body: JSON.stringify(payload),
       });
       const result = await res.json();
       if (!res.ok) {
         showToast(result.error || "발송에 실패했습니다.", "error");
       } else {
+        const targetLabel = targetMode === "all"
+          ? "전체"
+          : selectedUsers.map((id) => TARGET_USERS.find((u) => u.id === id)?.name).join(", ");
         const msg = result.sent > 0
           ? `${result.sent}명에게 푸시 알림을 보냈습니다.${result.failed ? ` (실패 ${result.failed}건)` : ""}`
-          : "푸시 구독된 팀원이 없어 발송하지 못했습니다.";
+          : "푸시 구독된 대상이 없어 발송하지 못했습니다.";
         showToast(msg, result.sent > 0 ? "success" : "error");
         setHistory((prev) => [
-          { sent: result.sent, failed: result.failed, timestamp: new Date().toLocaleTimeString("ko-KR"), title: title.trim() },
+          { sent: result.sent, failed: result.failed, timestamp: new Date().toLocaleTimeString("ko-KR"), title: title.trim(), target: targetLabel },
           ...prev,
         ]);
         setTitle("");
@@ -67,7 +102,7 @@ export default function PushTestPage() {
             </Link>
             <div>
               <h1 className="font-heading text-lg font-bold">푸시 알림 테스트</h1>
-              <p className="text-xs text-muted-foreground">전체 팀원에게 푸시 알림을 보냅니다 (운영진 전용)</p>
+              <p className="text-xs text-muted-foreground">팀원에게 푸시 알림을 보냅니다 (운영진 전용)</p>
             </div>
           </div>
         </CardContent>
@@ -91,6 +126,65 @@ export default function PushTestPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
+          {/* Target Selection */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-muted-foreground">발송 대상</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setTargetMode("all"); setSelectedUsers([]); }}
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-xs font-semibold transition-all",
+                  targetMode === "all"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
+                )}
+              >
+                전체 팀원
+              </button>
+              <button
+                type="button"
+                onClick={() => setTargetMode("select")}
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-xs font-semibold transition-all",
+                  targetMode === "select"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
+                )}
+              >
+                특정 인원
+              </button>
+            </div>
+            {targetMode === "select" && (
+              <div className="flex flex-wrap gap-2 mt-1">
+                {TARGET_USERS.map((user) => {
+                  const isSelected = selectedUsers.includes(user.id);
+                  return (
+                    <button
+                      key={user.id}
+                      type="button"
+                      onClick={() => toggleUser(user.id)}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all active:scale-95",
+                        isSelected
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-background text-muted-foreground hover:border-primary/30"
+                      )}
+                    >
+                      <div className={cn(
+                        "flex h-4 w-4 items-center justify-center rounded border transition-colors",
+                        isSelected ? "border-primary bg-primary" : "border-muted-foreground/30"
+                      )}>
+                        {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                      </div>
+                      {user.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-muted-foreground">제목</label>
             <input
@@ -133,7 +227,7 @@ export default function PushTestPage() {
 
           <Button
             className="w-full gap-2"
-            disabled={sending || !title.trim() || !body.trim()}
+            disabled={sending || !title.trim() || !body.trim() || (targetMode === "select" && selectedUsers.length === 0)}
             onClick={handleSend}
           >
             {sending ? (
@@ -144,7 +238,9 @@ export default function PushTestPage() {
             ) : (
               <>
                 <Send className="h-4 w-4" />
-                전체 팀원에게 알림 보내기
+                {targetMode === "all"
+                  ? "전체 팀원에게 알림 보내기"
+                  : `${selectedUsers.length}명에게 알림 보내기`}
               </>
             )}
           </Button>
@@ -162,7 +258,7 @@ export default function PushTestPage() {
               <div key={i} className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2">
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{h.title}</p>
-                  <p className="text-xs text-muted-foreground">{h.timestamp}</p>
+                  <p className="text-xs text-muted-foreground">{h.timestamp} · {h.target}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-xs font-semibold text-[hsl(var(--success))]">{h.sent}명 발송</span>
