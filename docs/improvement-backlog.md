@@ -97,6 +97,10 @@
 - [x] WCAG 접근성 대비율 개선 (성공/경고 버튼 텍스트, 테두리 밝기)
 - [x] 폰트 가독성 개선 (text-[10px]/[11px] 제거, type-* line-height, overline 12px)
 - [x] 테이블 TOP3 하이라이트 정리 (지저분한 배경 제거)
+- [x] 전체 섹션 제목 크기 통일 (11개 파일 sm:text-2xl)
+- [x] MatchInfoTab 날짜/시간 포맷 통일 (formatDateKo/formatTime)
+- [x] 시즌 전적 승률 가운데정렬 + 득점/최근5경기 배치 개선
+- [x] 테이블 본인 행 하이라이트 전체 셀 통일
 
 ### 접근성
 
