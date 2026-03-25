@@ -85,7 +85,7 @@ export const PollBlock = memo(function PollBlock({ poll, onVote, votingOptionId 
         })}
       </div>
 
-      <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <span>{poll.totalVotes}명 투표</span>
         {poll.endsAt && (
           <>

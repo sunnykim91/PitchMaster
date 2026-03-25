@@ -69,7 +69,7 @@ export const PostCard = memo(function PostCard({
     <Card
       className={cn(
         "overflow-hidden transition-colors",
-        post.isPinned && "border-primary/30 bg-primary/[0.03]"
+        post.isPinned && "border-primary/30 bg-primary/[0.06]"
       )}
     >
       <CardContent className="p-4">
@@ -86,13 +86,13 @@ export const PostCard = memo(function PostCard({
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-semibold truncate">{post.author}</span>
                 {post.isPinned && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 gap-0.5 text-primary border-primary/30">
+                  <Badge variant="outline" className="text-xs px-1.5 py-0 h-4 gap-0.5 text-primary border-primary/30">
                     <Pin className="h-2.5 w-2.5" />
                     고정
                   </Badge>
                 )}
               </div>
-              <p className="text-[11px] text-muted-foreground">{relativeTime(post.createdAt)}</p>
+              <p className="text-xs text-muted-foreground">{relativeTime(post.createdAt)}</p>
             </div>
           </div>
 

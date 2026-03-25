@@ -416,7 +416,7 @@ function MatchInfoTabInner({
                     미투표
                     {unvotedCount > 0 && (
                       <span className={cn(
-                        "rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none",
+                        "rounded-full px-1.5 py-0.5 text-xs font-bold leading-tight",
                         voteFilter === "unvoted"
                           ? "bg-primary-foreground/20 text-primary-foreground"
                           : "bg-destructive/15 text-destructive"

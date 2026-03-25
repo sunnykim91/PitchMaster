@@ -55,14 +55,14 @@ export const CommentSection = memo(function CommentSection({
             return (
               <div key={comment.id} className="flex items-start gap-2 py-1.5 group">
                 <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="text-[10px] font-bold text-muted-foreground">
+                  <span className="text-xs font-bold text-muted-foreground">
                     {comment.authorName?.charAt(0) || "?"}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-xs font-semibold">{comment.authorName}</span>
-                    <span className="text-[10px] text-muted-foreground">{relativeTime(comment.createdAt)}</span>
+                    <span className="text-xs text-muted-foreground">{relativeTime(comment.createdAt)}</span>
                   </div>
                   <p className="text-sm text-muted-foreground leading-snug">{comment.content}</p>
                 </div>
@@ -86,7 +86,7 @@ export const CommentSection = memo(function CommentSection({
       {/* Comment input */}
       <div className="flex items-center gap-2 pt-1">
         <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-          <span className="text-[10px] font-bold text-primary">나</span>
+          <span className="text-xs font-bold text-primary">나</span>
         </div>
         <div className="flex-1 flex items-center gap-1.5 bg-muted/50 rounded-full px-3 py-1">
           <input

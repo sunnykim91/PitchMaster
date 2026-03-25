@@ -315,11 +315,11 @@ function TeamSettingsComponent({
               <div className="flex items-center gap-6 pt-2">
                 <div className="flex flex-col items-center gap-1.5">
                   <div className="h-14 w-14 rounded-lg border border-border shadow-sm" style={homeJerseyStyle} />
-                  <span className="text-[11px] font-medium text-muted-foreground">홈</span>
+                  <span className="text-xs font-medium text-muted-foreground">홈</span>
                 </div>
                 <div className="flex flex-col items-center gap-1.5">
                   <div className="h-14 w-14 rounded-lg border border-border shadow-sm" style={awayJerseyStyle} />
-                  <span className="text-[11px] font-medium text-muted-foreground">원정</span>
+                  <span className="text-xs font-medium text-muted-foreground">원정</span>
                 </div>
               </div>
             </div>

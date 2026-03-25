@@ -503,8 +503,7 @@ export default function RecordsClient({
                       key={s.memberId}
                       className={cn(
                         "rounded-xl px-4 py-3 border border-border/20",
-                        isMe && "bg-primary/5 border-primary/20",
-                        isTop3 && !isMe && "bg-[hsl(var(--warning)/0.05)]"
+                        isMe && "bg-primary/8 border-primary/20"
                       )}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -585,10 +584,10 @@ export default function RecordsClient({
                       {allStats.map((s, i) => {
                         const isMe = s.memberId === userId;
                         const isTop3 = i < 3 && s.points > 0;
-                        const rowBg = isMe ? "bg-primary/5" : isTop3 ? "bg-[hsl(var(--warning)/0.05)]" : "bg-card";
+                        const rowBg = isMe ? "bg-primary/8" : "bg-card";
                         return (
-                          <tr key={s.memberId} className={cn(isMe && "bg-primary/5", isTop3 && !isMe && "bg-[hsl(var(--warning)/0.05)]")}>
-                            <td className={cn("sticky left-0 z-1 py-2.5", rowBg, isTop3 ? "text-[hsl(var(--warning))] font-bold" : "text-muted-foreground")}>{i + 1}</td>
+                          <tr key={s.memberId} className={cn(isMe && "bg-primary/8")}>
+                            <td className={cn("sticky left-0 z-1 py-2.5", rowBg, isTop3 ? "text-primary font-bold" : "text-muted-foreground")}>{i + 1}</td>
                             <td className={cn("sticky left-8 z-1 py-2.5 font-semibold max-w-[120px] truncate", rowBg)}>{s.memberName || "-"}</td>
                             <td className="py-2.5 text-center font-bold text-primary">{s.points}</td>
                             <td className="py-2.5 text-center text-[hsl(var(--success))]">{s.goals}</td>

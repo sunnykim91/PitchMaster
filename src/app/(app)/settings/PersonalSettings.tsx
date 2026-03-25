@@ -179,7 +179,7 @@ function PersonalSettingsComponent({
               <div className="space-y-3">
                 {POSITION_GROUPS.map((group) => (
                   <div key={group.group}>
-                    <p className="mb-1.5 text-[11px] font-semibold text-muted-foreground/70">{group.group}</p>
+                    <p className="mb-1.5 text-xs font-semibold text-muted-foreground">{group.group}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {group.positions.map((pos) => (
                         <button

@@ -164,7 +164,7 @@ function DuesStatusTabInner({
                 m.status === "UNPAID" ? "bg-[hsl(var(--loss)/0.1)] border border-[hsl(var(--loss)/0.2)]" : "bg-secondary/50"
               )}>
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-xs font-semibold whitespace-nowrap text-foreground">{m.name}</span>
+                  <span className="text-sm font-semibold whitespace-nowrap text-foreground">{m.name}</span>
                   {ROLE_LABEL[m.role] && (
                     <span className={cn(
                       "shrink-0 rounded px-1 py-px text-xs font-bold",
