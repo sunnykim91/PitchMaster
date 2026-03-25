@@ -79,6 +79,24 @@ export function useApi<T>(
     };
   }, [fetchData, options?.skip]);
 
+  // 앱이 다시 포커스/활성화되면 데이터 자동 갱신 (PWA 복귀, 탭 전환 등)
+  useEffect(() => {
+    if (options?.skip) return;
+
+    let lastRefresh = Date.now();
+
+    function handleVisibilityChange() {
+      if (document.visibilityState !== "visible") return;
+      // 최소 30초 경과해야 refetch (불필요한 중복 방지)
+      if (Date.now() - lastRefresh < 30_000) return;
+      lastRefresh = Date.now();
+      fetchData();
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [fetchData, options?.skip]);
+
   return { data, setData, loading, error, refetch: fetchData };
 }
 
