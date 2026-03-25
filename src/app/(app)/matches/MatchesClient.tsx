@@ -506,7 +506,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
           const absentCount = matchVotes.filter((v) => v === "ABSENT").length;
           const maybeCount = matchVotes.filter((v) => v === "MAYBE").length;
           return (
-            <Card key={match.id} className="rounded-md hover:bg-secondary/30 hover:border-border cursor-pointer transition-all">
+            <Card key={match.id} className="rounded-md hover:bg-secondary/60 hover:border-border cursor-pointer transition-all">
               <CardHeader>
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>

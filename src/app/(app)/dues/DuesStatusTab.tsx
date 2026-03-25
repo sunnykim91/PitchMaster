@@ -161,7 +161,7 @@ function DuesStatusTabInner({
             {duesStatus.map((m) => (
               <div key={m.id} className={cn(
                 "flex items-center justify-between gap-2 rounded-lg px-3 py-2.5",
-                m.status === "UNPAID" ? "bg-[hsl(var(--loss)/0.08)] border border-[hsl(var(--loss)/0.15)]" : "bg-secondary/50"
+                m.status === "UNPAID" ? "bg-[hsl(var(--loss)/0.1)] border border-[hsl(var(--loss)/0.2)]" : "bg-secondary/50"
               )}>
                 <div className="flex items-center gap-1.5 min-w-0">
                   <span className={cn("text-xs font-medium whitespace-nowrap", m.status === "UNPAID" ? "text-[hsl(var(--loss))]" : "text-foreground")}>{m.name}</span>

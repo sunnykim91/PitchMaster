@@ -534,7 +534,7 @@ export default function RecordsClient({
                         </div>
                         <div>
                           <p className="text-muted-foreground">출석</p>
-                          <p className="font-semibold text-accent">{Math.round(s.attendanceRate * 100)}%</p>
+                          <p className="font-semibold text-primary">{Math.round(s.attendanceRate * 100)}%</p>
                         </div>
                       </div>
                     </div>
@@ -594,7 +594,7 @@ export default function RecordsClient({
                             <td className="py-2.5 text-center text-[hsl(var(--success))]">{s.goals}</td>
                             <td className="py-2.5 text-center text-[hsl(var(--info))]">{s.assists}</td>
                             <td className="py-2.5 text-center text-[hsl(var(--warning))]">{s.mvp}</td>
-                            <td className="py-2.5 text-center text-accent">{Math.round(s.attendanceRate * 100)}%</td>
+                            <td className="py-2.5 text-center text-primary">{Math.round(s.attendanceRate * 100)}%</td>
                           </tr>
                         );
                       })}

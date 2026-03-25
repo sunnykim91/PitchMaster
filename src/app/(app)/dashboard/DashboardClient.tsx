@@ -326,7 +326,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                 </div>
               );
             })()}
-            <p className="mt-2 truncate text-sm text-foreground/70">
+            <p className="mt-2 truncate text-sm text-muted-foreground">
               상대팀:{" "}
               <span className="font-semibold text-foreground">
                 {upcomingMatch.opponent_name ?? "미정"}
@@ -497,9 +497,9 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                 </Card>
               ))
             ) : (
-              <div className="flex items-center gap-3 rounded-lg bg-[hsl(var(--success)/0.05)] px-4 py-3">
+              <div className="flex items-center gap-3 rounded-lg bg-[hsl(var(--success)/0.1)] px-4 py-3">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--success))]" />
-                <p className="text-sm text-[hsl(var(--success)/0.8)]">모든 할 일을 완료했습니다!</p>
+                <p className="text-sm text-[hsl(var(--success))]">모든 할 일을 완료했습니다!</p>
               </div>
             )}
           </CardContent>
@@ -577,7 +577,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                         return <p className={cn("type-stat", scoreColor)}>{recentResult.score}</p>;
                       })()}
                     </div>
-                    <p className="mt-1 truncate text-sm text-foreground/70">
+                    <p className="mt-1 truncate text-sm text-muted-foreground">
                       vs <span className="font-semibold text-foreground">{recentResult.opponent ?? "미정"}</span>
                       {recentResult.mvp && <> · MVP <span className="font-semibold text-foreground">{recentResult.mvp}</span></>}
                     </p>

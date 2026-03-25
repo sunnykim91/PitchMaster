@@ -157,7 +157,7 @@ function PersonalSettingsComponent({
           </div>
 
           {/* 플레이 스타일 */}
-          <div className="rounded-xl border border-border/50 p-4 space-y-4">
+          <div className="rounded-xl border border-border p-4 space-y-4">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">플레이 스타일</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
@@ -214,7 +214,7 @@ function PersonalSettingsComponent({
         </form>
 
         {/* 알림 설정 */}
-        <div className="rounded-xl border border-border/50 p-4">
+        <div className="rounded-xl border border-border p-4">
           <p className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">알림</p>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">

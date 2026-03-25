@@ -374,7 +374,7 @@ export default function MembersClient({
               {unlinkedMembers.map((member) => (
                 <Card
                   key={member.id}
-                  className="flex flex-wrap items-center justify-between gap-4 border-[hsl(var(--warning))]/20 bg-[hsl(var(--warning))]/5 px-4 py-3"
+                  className="flex flex-wrap items-center justify-between gap-4 border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10 px-4 py-3"
                 >
                   <div>
                     <div className="flex items-center gap-2">

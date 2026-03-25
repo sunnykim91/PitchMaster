@@ -220,7 +220,7 @@ function TeamSettingsComponent({
             </div>
 
             {/* 검색 허용 토글 */}
-            <div className="rounded-xl border border-border/50 p-4">
+            <div className="rounded-xl border border-border p-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <p className="text-sm font-semibold">팀 검색 허용</p>
@@ -254,7 +254,7 @@ function TeamSettingsComponent({
             </div>
 
             {/* 유니폼 */}
-            <div className="rounded-xl border border-border/50 p-4 space-y-4">
+            <div className="rounded-xl border border-border p-4 space-y-4">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">유니폼</p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
