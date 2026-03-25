@@ -206,7 +206,7 @@ function TeamSettingsComponent({
               </div>
               <div className="space-y-1.5">
                 <Label className="text-sm font-semibold text-muted-foreground">초대 코드</Label>
-                <Input value={team.inviteCode} readOnly className="font-mono tracking-wider" />
+                <Input value={team.inviteCode} readOnly className="font-mono tracking-wider bg-secondary/50 text-muted-foreground" />
               </div>
             </div>
             <div className="space-y-1.5">
@@ -325,7 +325,7 @@ function TeamSettingsComponent({
             </div>
 
             {canEditTeam && (
-              <Button type="submit" size="sm" disabled={saving} className="w-full sm:w-auto">
+              <Button type="submit" disabled={saving} className="w-full">
                 {saving ? "저장 중..." : "저장"}
               </Button>
             )}

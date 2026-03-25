@@ -98,13 +98,13 @@ export const PostCard = memo(function PostCard({
 
           {/* Actions menu */}
           {(canModifyPost || isStaff) && (
-            <div className="flex items-center gap-0.5 shrink-0">
+            <div className="flex items-center gap-1 shrink-0">
               {isStaff && (
                 <button
                   type="button"
                   onClick={() => onPin(post.id)}
                   className={cn(
-                    "p-1.5 rounded-md transition-colors",
+                    "p-2.5 rounded-md transition-colors active:scale-95",
                     post.isPinned
                       ? "text-primary hover:bg-primary/10"
                       : "text-muted-foreground hover:bg-muted"
@@ -119,17 +119,17 @@ export const PostCard = memo(function PostCard({
                   <button
                     type="button"
                     onClick={() => onEdit(post)}
-                    className="p-1.5 rounded-md text-muted-foreground hover:bg-muted transition-colors"
+                    className="p-2.5 rounded-md text-muted-foreground hover:bg-muted transition-colors active:scale-95"
                   >
-                    <Pencil className="h-3.5 w-3.5" />
+                    <Pencil className="h-4 w-4" />
                   </button>
                   <button
                     type="button"
                     onClick={() => onSetConfirmAction({ message: "게시글을 삭제하시겠습니까?", onConfirm: () => onDelete(post.id) })}
                     disabled={deletingPostIds.has(post.id)}
-                    className="p-1.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                    className="p-2.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors active:scale-95"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </>
               )}
@@ -177,7 +177,7 @@ export const PostCard = memo(function PostCard({
             type="button"
             onClick={() => onLike(post.id)}
             disabled={likingPostIds.has(post.id)}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-primary/5"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-primary/5 active:scale-95"
           >
             <Heart className={cn("h-4 w-4", post.likes > 0 && "fill-primary/20 text-primary")} />
             {post.likes > 0 && <span>{post.likes}</span>}
@@ -186,7 +186,7 @@ export const PostCard = memo(function PostCard({
           <button
             type="button"
             onClick={() => onToggleExpand(post.id)}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-md hover:bg-muted active:scale-95"
           >
             <MessageSquare className="h-4 w-4" />
             {post.comments > 0 && <span>{post.comments}</span>}

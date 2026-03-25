@@ -195,7 +195,7 @@ function PersonalSettingsComponent({
                             "rounded-full border px-2.5 py-1 text-xs font-medium transition-all active:scale-95",
                             profile.preferredPositions.includes(pos)
                               ? "border-primary bg-primary/15 text-primary"
-                              : "border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                              : "border-border bg-transparent text-secondary-foreground hover:border-primary/30 hover:text-foreground"
                           )}
                         >
                           {PREF_POSITION_SHORT[pos]}
@@ -208,7 +208,7 @@ function PersonalSettingsComponent({
             </div>
           </div>
 
-          <Button type="submit" size="sm" disabled={saving} className="w-full sm:w-auto">
+          <Button type="submit" disabled={saving} className="w-full">
             {saving ? "저장 중..." : "저장"}
           </Button>
         </form>

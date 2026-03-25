@@ -389,29 +389,27 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
               filteredRules.map((rule) => (
                 <Card key={rule.id} className="border-0 bg-secondary transition-colors hover:bg-muted">
                   <CardContent className="p-4">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <Badge variant="default" className="text-xs uppercase tracking-[0.2em]">
-                          {rule.category}
-                        </Badge>
-                        <h4 className="mt-2 text-lg font-bold text-foreground truncate">{rule.title}</h4>
-                        <p className="mt-2 text-sm text-foreground/80 whitespace-pre-line">{rule.content}</p>
-                        {rule.fileUrl && (
-                          <a
-                            href={rule.fileUrl}
-                            download={rule.fileName || true}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
-                          >
-                            <Download className="h-3.5 w-3.5" />
-                            {rule.fileName || "첨부파일 다운로드"}
-                          </a>
-                        )}
-                        <p className="mt-3 text-xs text-muted-foreground">
-                          등록: {formatDateTime(rule.createdAt)} · 수정: {formatDateTime(rule.updatedAt)}
-                        </p>
-                      </div>
+                    <Badge variant="default" className="text-xs uppercase tracking-[0.2em]">
+                      {rule.category}
+                    </Badge>
+                    <h4 className="mt-2 text-lg font-bold text-foreground truncate">{rule.title}</h4>
+                    <p className="mt-2 text-sm text-foreground/80 whitespace-pre-line">{rule.content}</p>
+                    {rule.fileUrl && (
+                      <a
+                        href={rule.fileUrl}
+                        download={rule.fileName || true}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        {rule.fileName || "첨부파일 다운로드"}
+                      </a>
+                    )}
+                    <div className="mt-3 flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">
+                        등록: {formatDateTime(rule.createdAt)} · 수정: {formatDateTime(rule.updatedAt)}
+                      </p>
                       {isStaffOrAbove(role) && (
                         <div className="flex gap-2">
                           <Button type="button" variant="outline" size="sm" onClick={() => handleEdit(rule)}>

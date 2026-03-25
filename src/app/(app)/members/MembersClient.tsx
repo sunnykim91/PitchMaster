@@ -387,7 +387,7 @@ export default function MembersClient({
                       <p className="text-xs text-muted-foreground">{formatPhone(member.phone)}</p>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     {canChangeRole && (
                       <>
                         {linkingMemberId === member.id ? (
