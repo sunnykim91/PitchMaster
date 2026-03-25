@@ -528,7 +528,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         );
                       })()}
                     </div>
-                    <CardTitle className="mt-2 font-heading text-lg sm:text-xl font-bold uppercase">
+                    <CardTitle className="mt-2 font-heading text-lg sm:text-2xl font-bold uppercase">
                       {formatMatchDate(match.date)} · {formatTime(match.time)}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground truncate max-w-[280px] sm:max-w-none">

@@ -296,7 +296,7 @@ function DuesRecordsTabInner({
       <Card className="p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 className="font-heading text-lg sm:text-xl font-bold uppercase text-foreground">
+            <h3 className="font-heading text-lg sm:text-2xl font-bold uppercase text-foreground">
               입출금 내역
             </h3>
           </div>

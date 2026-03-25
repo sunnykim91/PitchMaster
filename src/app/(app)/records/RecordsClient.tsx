@@ -359,7 +359,7 @@ export default function RecordsClient({
         {/* 시즌 요약 + 레이더 차트 */}
         <Card>
           <CardHeader>
-            <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
+            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
               {isAllTime ? "통합 기록" : "시즌 요약"}
             </CardTitle>
           </CardHeader>
@@ -389,7 +389,7 @@ export default function RecordsClient({
       {/* ── Row 2: 팀 랭킹 (PC: 3열 가로 배치) ── */}
       <Card>
         <CardHeader>
-          <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
+          <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
             팀 랭킹
           </CardTitle>
         </CardHeader>
@@ -476,7 +476,7 @@ export default function RecordsClient({
       {/* ── Row 3: 전체 회원 기록 (풀와이드 테이블) ── */}
       <Card>
         <CardHeader>
-          <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
+          <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
             전체 회원 기록
           </CardTitle>
         </CardHeader>

@@ -273,7 +273,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
       {isStaffOrAbove(role) && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase text-foreground">
+            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase text-foreground">
               회칙 등록/수정
             </CardTitle>
           </CardHeader>
@@ -373,7 +373,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
       {/* Rules List */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase text-foreground">
+          <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase text-foreground">
             회칙 목록
           </CardTitle>
         </CardHeader>

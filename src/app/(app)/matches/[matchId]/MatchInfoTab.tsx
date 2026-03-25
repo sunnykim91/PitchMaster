@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { cn, formatPhone } from "@/lib/utils";
+import { cn, formatPhone, formatDateKo, formatTime } from "@/lib/utils";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Bell } from "lucide-react";
@@ -196,7 +196,7 @@ function MatchInfoTabInner({
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <p className="type-overline text-[hsl(var(--info))]">Match Info</p>
-            <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
+            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
               경기 정보
             </CardTitle>
           </div>
@@ -236,12 +236,12 @@ function MatchInfoTabInner({
             <div className="grid gap-2 text-sm">
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground w-14 shrink-0">날짜</span>
-                <span className="font-medium">{match.date}</span>
+                <span className="font-medium">{formatDateKo(match.date)}</span>
               </div>
               {match.time && (
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground w-14 shrink-0">시간</span>
-                  <span className="font-medium">{match.time}</span>
+                  <span className="font-medium">{formatTime(match.time)}</span>
                 </div>
               )}
               {match.location && (
@@ -375,7 +375,7 @@ function MatchInfoTabInner({
             <p className="type-overline text-[hsl(var(--info))]">
               Attendance
             </p>
-            <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
+            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
               참석 투표 관리
             </CardTitle>
             <p className="text-xs text-muted-foreground">멤버별 참석/불참/미정을 대리 설정할 수 있습니다.</p>
@@ -534,7 +534,7 @@ function MatchInfoTabInner({
         return (
           <Card>
             <CardHeader>
-              <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
+              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
                 참석 현황
               </CardTitle>
               <div className="mt-2 flex flex-wrap gap-3 text-xs font-semibold">
@@ -600,7 +600,7 @@ function MatchInfoTabInner({
             <p className="type-overline text-[hsl(var(--accent))]">
               Guests
             </p>
-            <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
+            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
               용병 관리
             </CardTitle>
           </div>

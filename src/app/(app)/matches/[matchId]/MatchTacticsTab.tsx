@@ -68,7 +68,7 @@ function MatchTacticsTabInner({
               <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">
                 AI Recommendation
               </p>
-              <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
+              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
                 AI 포메이션 추천
               </CardTitle>
             </CardHeader>

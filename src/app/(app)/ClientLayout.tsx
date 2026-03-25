@@ -448,7 +448,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             <Card className="hidden lg:block">
               <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
                 <div>
-                  <h2 className="font-heading text-lg sm:text-xl font-bold uppercase">빠른 작업</h2>
+                  <h2 className="font-heading text-lg sm:text-2xl font-bold uppercase">빠른 작업</h2>
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" asChild>

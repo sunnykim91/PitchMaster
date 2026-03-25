@@ -166,7 +166,7 @@ function DuesSettingsTabInner({
       <Card className="p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 className="font-heading text-lg sm:text-xl font-bold uppercase text-foreground">
+            <h3 className="font-heading text-lg sm:text-2xl font-bold uppercase text-foreground">
               회비 기준 설정
             </h3>
           </div>

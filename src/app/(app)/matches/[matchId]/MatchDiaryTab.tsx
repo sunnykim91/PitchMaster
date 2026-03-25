@@ -94,7 +94,7 @@ function MatchDiaryTabInner({
           <p className="type-overline">
             Share
           </p>
-          <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
+          <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
             경기 결과 공유
           </CardTitle>
         </CardHeader>
@@ -157,7 +157,7 @@ function MatchDiaryTabInner({
             <p className="type-overline text-[hsl(var(--info))]">
               Match Diary
             </p>
-            <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
+            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
               경기 일지
             </CardTitle>
           </div>

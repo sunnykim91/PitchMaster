@@ -362,7 +362,7 @@ export default function MembersClient({
       {unlinkedMembers.length > 0 && canViewAll && (
         <Card>
           <CardHeader>
-            <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase">
+            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">
               미가입 멤버 ({unlinkedMembers.length}명)
             </CardTitle>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -458,7 +458,7 @@ export default function MembersClient({
       {/* ── Section 3: 멤버 목록 ── */}
       <Card>
         <CardHeader>
-          <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase">
+          <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">
             멤버 목록
           </CardTitle>
           {!canViewAll && (
@@ -621,7 +621,7 @@ export default function MembersClient({
       {dormantMembers.length > 0 && canViewAll && (
         <Card>
           <CardHeader>
-            <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase">
+            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">
               휴면 회원 ({dormantMembers.length}명)
             </CardTitle>
             <p className="mt-1 text-xs text-muted-foreground">

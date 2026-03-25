@@ -256,7 +256,7 @@ function MatchRecordTabInner({
         {/* ── 상세 골 기록 (접기/펼치기) ── */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="font-heading text-lg sm:text-xl font-bold uppercase">
+            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">
               상세 기록
             </CardTitle>
             <button
@@ -475,7 +475,7 @@ function MatchRecordTabInner({
               <p className="type-overline text-[hsl(var(--info))]">
                 MVP
               </p>
-              <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
+              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
                 MVP 투표
               </CardTitle>
             </CardHeader>
@@ -516,7 +516,7 @@ function MatchRecordTabInner({
                   <p className="type-overline">
                     Attendance
                   </p>
-                  <CardTitle className="mt-1 font-heading text-lg sm:text-xl font-bold uppercase">
+                  <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
                     출석 체크
                   </CardTitle>
                 </div>
