@@ -224,25 +224,34 @@ function PersonalSettingsComponent({
                 <p className="text-sm text-muted-foreground">경기 등록, 투표 마감 알림</p>
               </div>
             </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={pushEnabled}
-              onClick={handlePushToggle}
-              disabled={pushLoading}
-              className={cn(
-                "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-                pushEnabled ? "bg-primary" : "bg-muted-foreground/25"
+            <div className="flex items-center gap-2 shrink-0">
+              {pushLoading && (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               )}
-            >
-              <span
+              <button
+                type="button"
+                role="switch"
+                aria-checked={pushEnabled}
+                onClick={handlePushToggle}
+                disabled={pushLoading}
                 className={cn(
-                  "pointer-events-none block h-5 w-5 rounded-full bg-white shadow-md ring-0 transition-transform duration-200",
-                  pushEnabled ? "translate-x-[22px]" : "translate-x-[2px]"
+                  "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                  pushLoading && "opacity-50 cursor-wait",
+                  pushEnabled ? "bg-primary" : "bg-muted-foreground/25"
                 )}
-              />
-            </button>
+              >
+                <span
+                  className={cn(
+                    "pointer-events-none block h-5 w-5 rounded-full bg-white shadow-md ring-0 transition-transform duration-200",
+                    pushEnabled ? "translate-x-[22px]" : "translate-x-[2px]"
+                  )}
+                />
+              </button>
+            </div>
           </div>
+          {pushLoading && (
+            <p className="mt-2 text-xs text-muted-foreground animate-pulse">알림 권한을 확인하고 있습니다...</p>
+          )}
         </div>
       </CardContent>
     </Card>

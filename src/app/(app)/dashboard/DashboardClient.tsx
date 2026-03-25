@@ -158,10 +158,10 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
     }
   }, [searchParams]);
 
-  async function handleQuickVote(matchId: string, memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
+  async function handleQuickVote(matchId: string, _memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
     if (data.upcomingMatch?.myVote === vote) return;
     setVoting(true);
-    const { error: err } = await apiMutate("/api/attendance", "POST", { matchId, vote, memberId });
+    const { error: err } = await apiMutate("/api/attendance", "POST", { matchId, vote });
     if (err) {
       showToast("투표에 실패했습니다. 다시 시도해주세요.", "error");
     } else {
