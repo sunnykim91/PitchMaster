@@ -591,6 +591,7 @@ export default function MembersClient({
                       <Button
                         variant="outline"
                         size="sm"
+                        className="hidden sm:inline-flex"
                         onClick={() => handleStatusChange(member.id, "DORMANT")}
                       >
                         휴면
@@ -598,10 +599,33 @@ export default function MembersClient({
                       <Button
                         variant="outline"
                         size="sm"
+                        className="hidden sm:inline-flex"
                         onClick={() => setConfirmAction({ message: `${member.name} 님을 제명하시겠습니까?`, onConfirm: () => handleKick(member.id) })}
                       >
                         제명
                       </Button>
+                      {/* 모바일: 더보기 메뉴 */}
+                      <details className="relative sm:hidden">
+                        <summary className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-2 text-xs font-medium cursor-pointer hover:bg-accent transition-colors">
+                          ···
+                        </summary>
+                        <div className="absolute right-0 top-full z-10 mt-1 flex flex-col gap-1 rounded-lg border border-border bg-popover p-1.5 shadow-lg">
+                          <button
+                            type="button"
+                            className="rounded-md px-3 py-2 text-left text-xs hover:bg-secondary transition-colors"
+                            onClick={() => handleStatusChange(member.id, "DORMANT")}
+                          >
+                            휴면 처리
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded-md px-3 py-2 text-left text-xs text-destructive hover:bg-destructive/10 transition-colors"
+                            onClick={() => setConfirmAction({ message: `${member.name} 님을 제명하시겠습니까?`, onConfirm: () => handleKick(member.id) })}
+                          >
+                            제명
+                          </button>
+                        </div>
+                      </details>
                     </>
                   ) : null}
                 </div>

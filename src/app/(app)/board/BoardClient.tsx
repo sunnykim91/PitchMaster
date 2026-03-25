@@ -163,6 +163,15 @@ export default function BoardClient({
     }
   }, [editingPostId, showForm]);
 
+  /* ── 작성 중 이탈 경고 ── */
+  useEffect(() => {
+    const hasContent = form.title.trim() || form.content.trim();
+    if (!hasContent) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [form.title, form.content]);
+
   /* ── Per-post comments ── */
   const [expandedPostIds, setExpandedPostIds] = useState<Set<string>>(new Set());
   const [commentsByPost, setCommentsByPost] = useState<Record<string, Comment[]>>({});

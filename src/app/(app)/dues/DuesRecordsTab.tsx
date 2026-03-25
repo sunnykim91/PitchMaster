@@ -301,43 +301,45 @@ function DuesRecordsTabInner({
             </h3>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                aria-label="이전 달"
-                onClick={() => {
-                  const [y, m] = monthFilter.split("-").map(Number);
-                  const prev = new Date(y, m - 2);
-                  setMonthFilter(`${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`);
-                }}
-                className="rounded-lg p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary transition-colors focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <span className="min-w-[80px] text-center text-sm font-medium">
-                {monthFilter.replace("-", "년 ")}월
-              </span>
-              <button
-                type="button"
-                aria-label="다음 달"
-                onClick={() => {
-                  const [y, m] = monthFilter.split("-").map(Number);
-                  const next = new Date(y, m);
-                  setMonthFilter(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`);
-                }}
-                className="rounded-lg p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary transition-colors focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-            <Input
-              type="text"
-              value={memberFilter}
-              onChange={(event) => setMemberFilter(event.target.value)}
-              placeholder="이름 검색"
-              className="w-28 text-xs"
-            />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="이전 달"
+              onClick={() => {
+                const [y, m] = monthFilter.split("-").map(Number);
+                const prev = new Date(y, m - 2);
+                setMonthFilter(`${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`);
+              }}
+              className="rounded-lg p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary transition-colors focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="min-w-[80px] text-center text-sm font-medium">
+              {monthFilter.replace("-", "년 ")}월
+            </span>
+            <button
+              type="button"
+              aria-label="다음 달"
+              onClick={() => {
+                const [y, m] = monthFilter.split("-").map(Number);
+                const next = new Date(y, m);
+                setMonthFilter(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`);
+              }}
+              className="rounded-lg p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary transition-colors focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <Input
+            type="text"
+            value={memberFilter}
+            onChange={(event) => setMemberFilter(event.target.value)}
+            placeholder="이름 검색"
+            className="w-full sm:w-40 text-xs"
+          />
+          <div className="flex gap-1.5">
             {(["ALL", "INCOME", "EXPENSE"] as RecordFilter[]).map((value) => (
               <Button
                 key={value}

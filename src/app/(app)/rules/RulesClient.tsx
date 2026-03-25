@@ -186,6 +186,15 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
     }
   }, [editingId]);
 
+  /* ── 작성 중 이탈 경고 ── */
+  useEffect(() => {
+    const hasContent = formState.title.trim() || formState.content.trim();
+    if (!hasContent) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [formState.title, formState.content]);
+
   async function handleDelete(id: string) {
     const { error } = await apiMutate("/api/rules", "DELETE", { id });
     if (error) {

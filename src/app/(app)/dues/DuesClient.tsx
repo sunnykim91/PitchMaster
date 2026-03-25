@@ -507,7 +507,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
               role="tab"
               aria-selected={duesTab === tab.key}
               aria-controls={`tabpanel-${tab.key}`}
-              onClick={() => setDuesTab(tab.key as typeof duesTab)}
+              onClick={() => { setDuesTab(tab.key as typeof duesTab); window.scrollTo({ top: 0, behavior: "smooth" }); }}
               className={cn(
                 "flex-1 py-3 text-sm font-medium transition-colors border-b-2",
                 duesTab === tab.key
