@@ -29,11 +29,15 @@ self.addEventListener("push", (event) => {
   } catch {
     // fallback to defaults
   }
+  const baseUrl = self.location.origin;
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
+      icon: baseUrl + "/icons/icon-192.png",
+      badge: baseUrl + "/icons/icon-192.png",
+      tag: "pitchmaster-" + Date.now(),
+      renotify: true,
+      vibrate: [200, 100, 200],
       data: { url: data.url },
     })
   );
