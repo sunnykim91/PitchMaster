@@ -90,6 +90,10 @@
 - [x] Service Worker 캐시 v3 강제 업데이트
 - [x] GA4 (Google Analytics 4) 도입 (G-XWRB861513)
 - [x] 전체 가독성 개선 (색상 대비 강화 — 8개 파일)
+- [x] primary/warning 버튼 텍스트 흰색 변경 (가독성 대폭 개선)
+- [x] PC Chrome 폰트 가독성 개선 (text-rendering, font-optical-sizing)
+- [x] UX 기본기 전면 개선 (cursor-pointer, 터치타겟 44px, safe-area, 스크롤)
+- [x] 전체 페이지 디테일 UX (회칙 버튼 일관성, 게시판 터치타겟, 설정 저장 전체 너비)
 
 ### 접근성
 
