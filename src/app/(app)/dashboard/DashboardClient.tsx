@@ -527,16 +527,16 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
               {/* 시즌 전적 스탯 */}
               {recordTotal > 0 && (
                 <div className="mb-4">
-                  <div className="grid grid-cols-4 gap-1">
+                  <div className="grid grid-cols-4 gap-2">
                     {[
                       { label: "승", value: String(teamRecord.wins), color: "text-[hsl(var(--win))]" },
                       { label: "무", value: String(teamRecord.draws), color: "text-[hsl(var(--draw))]" },
                       { label: "패", value: String(teamRecord.losses), color: "text-[hsl(var(--loss))]" },
                       { label: "승률", value: `${Math.round((teamRecord.wins / recordTotal) * 100)}%`, color: "text-primary" },
                     ].map((stat) => (
-                      <div key={stat.label} className="card-stat text-center px-1 py-2">
-                        <div className={`text-base font-bold font-[family-name:var(--font-display)] whitespace-nowrap ${stat.color}`}>{stat.value}</div>
-                        <div className="type-overline mt-0.5">{stat.label}</div>
+                      <div key={stat.label} className="card-stat text-center px-2 py-2">
+                        <div className={`text-lg font-bold font-[family-name:var(--font-display)] whitespace-nowrap ${stat.color}`}>{stat.value}</div>
+                        <div className="text-xs font-semibold text-muted-foreground mt-0.5 whitespace-nowrap">{stat.label}</div>
                       </div>
                     ))}
                   </div>
