@@ -584,11 +584,11 @@ export default function RecordsClient({
                       {allStats.map((s, i) => {
                         const isMe = s.memberId === userId;
                         const isTop3 = i < 3 && s.points > 0;
-                        const rowBg = isMe ? "bg-primary/8" : "bg-card";
+                        const stickyBg = isMe ? "bg-primary/8" : "bg-card";
                         return (
-                          <tr key={s.memberId} className={cn(isMe && "bg-primary/8")}>
-                            <td className={cn("sticky left-0 z-1 py-2.5", rowBg, isTop3 ? "text-primary font-bold" : "text-muted-foreground")}>{i + 1}</td>
-                            <td className={cn("sticky left-8 z-1 py-2.5 font-semibold max-w-[120px] truncate", rowBg)}>{s.memberName || "-"}</td>
+                          <tr key={s.memberId} className={cn(isMe && "[&>td]:bg-primary/8")}>
+                            <td className={cn("sticky left-0 z-1 py-2.5", stickyBg, isTop3 ? "text-primary font-bold" : "text-muted-foreground")}>{i + 1}</td>
+                            <td className={cn("sticky left-8 z-1 py-2.5 font-semibold max-w-[120px] truncate", stickyBg)}>{s.memberName || "-"}</td>
                             <td className="py-2.5 text-center font-bold text-primary">{s.points}</td>
                             <td className="py-2.5 text-center text-[hsl(var(--success))]">{s.goals}</td>
                             <td className="py-2.5 text-center text-[hsl(var(--info))]">{s.assists}</td>
