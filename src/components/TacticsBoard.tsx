@@ -641,7 +641,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                 <SelectContent>
                   {futsalFieldCounts.map((count) => (
                     <SelectItem key={count} value={String(count)}>
-                      {count}인제
+                      {count}vs{count}
                     </SelectItem>
                   ))}
                 </SelectContent>
