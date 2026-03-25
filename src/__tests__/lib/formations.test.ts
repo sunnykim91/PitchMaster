@@ -1,17 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { formationTemplates, getFormationsForSport } from "@/lib/formations";
+import { formationTemplates, getFormationsForSport, getFormationsForSportAndCount, getFutsalFieldCounts } from "@/lib/formations";
 
 describe("formationTemplates", () => {
-  it("8개 포메이션 정의 (축구 5 + 풋살 3)", () => {
-    expect(formationTemplates).toHaveLength(8);
-  });
-
-  it("축구 포메이션 5개", () => {
+  it("축구 5개 + 풋살 다수 포메이션 정의", () => {
     expect(getFormationsForSport("SOCCER")).toHaveLength(5);
-  });
-
-  it("풋살 포메이션 3개", () => {
-    expect(getFormationsForSport("FUTSAL")).toHaveLength(3);
+    expect(getFormationsForSport("FUTSAL").length).toBeGreaterThanOrEqual(3);
+    expect(formationTemplates.length).toBe(
+      getFormationsForSport("SOCCER").length + getFormationsForSport("FUTSAL").length
+    );
   });
 
   it("각 포메이션은 고유 id와 name 보유", () => {
@@ -26,9 +22,10 @@ describe("formationTemplates", () => {
     }
   });
 
-  it("풋살 포메이션은 정확히 5개 슬롯 보유", () => {
+  it("풋살 포메이션 슬롯 수 = fieldCount", () => {
     for (const formation of getFormationsForSport("FUTSAL")) {
-      expect(formation.slots).toHaveLength(5);
+      expect(formation.fieldCount).toBeDefined();
+      expect(formation.slots).toHaveLength(formation.fieldCount!);
     }
   });
 
@@ -91,5 +88,37 @@ describe("formationTemplates", () => {
     const f = formationTemplates.find((f) => f.id === "futsal-1-1-2");
     expect(f).toBeDefined();
     expect(f!.sportType).toBe("FUTSAL");
+  });
+});
+
+describe("getFormationsForSportAndCount", () => {
+  it("풋살 5인제 포메이션 3개", () => {
+    const formations = getFormationsForSportAndCount("FUTSAL", 5);
+    expect(formations).toHaveLength(3);
+    formations.forEach((f) => expect(f.fieldCount).toBe(5));
+  });
+
+  it("인원수별 포메이션이 각각 존재", () => {
+    for (const count of getFutsalFieldCounts()) {
+      const formations = getFormationsForSportAndCount("FUTSAL", count);
+      expect(formations.length).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it("축구에서는 fieldCount 무시하고 전체 반환", () => {
+    const formations = getFormationsForSportAndCount("SOCCER", 11);
+    expect(formations).toHaveLength(5);
+  });
+});
+
+describe("getFutsalFieldCounts", () => {
+  it("3~8 인원수 지원", () => {
+    const counts = getFutsalFieldCounts();
+    expect(counts).toContain(3);
+    expect(counts).toContain(4);
+    expect(counts).toContain(5);
+    expect(counts).toContain(6);
+    expect(counts).toContain(7);
+    expect(counts).toContain(8);
   });
 });

@@ -12,6 +12,8 @@ export type FormationTemplate = {
   id: string;
   name: string;
   sportType: SportType;
+  /** 풋살 전용: 필드 인원 수 (GK 포함). 축구는 항상 11. */
+  fieldCount?: number;
   slots: FormationSlot[];
 };
 
@@ -106,11 +108,72 @@ export const formationTemplates: FormationTemplate[] = [
       { id: "rw", role: "RW", label: "RW", x: 76, y: 26 },
     ],
   },
-  // Futsal 1-2-1 Diamond (5 players)
+  // ── Futsal 3인 (GK + 2 필드) ──
+  {
+    id: "futsal-3-1-1",
+    name: "1-1",
+    sportType: "FUTSAL",
+    fieldCount: 3,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
+      { id: "fixo", role: "CB", label: "FIXO", x: 50, y: 60 },
+      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 30 },
+    ],
+  },
+  {
+    id: "futsal-3-2-0",
+    name: "2-0",
+    sportType: "FUTSAL",
+    fieldCount: 3,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
+      { id: "fixo-l", role: "LCB", label: "FIXO", x: 30, y: 55 },
+      { id: "fixo-r", role: "RCB", label: "FIXO", x: 70, y: 55 },
+    ],
+  },
+  // ── Futsal 4인 (GK + 3 필드) ──
+  {
+    id: "futsal-4-1-2",
+    name: "1-2",
+    sportType: "FUTSAL",
+    fieldCount: 4,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
+      { id: "fixo", role: "CB", label: "FIXO", x: 50, y: 65 },
+      { id: "ala-l", role: "LW", label: "ALA", x: 25, y: 35 },
+      { id: "ala-r", role: "RW", label: "ALA", x: 75, y: 35 },
+    ],
+  },
+  {
+    id: "futsal-4-2-1",
+    name: "2-1",
+    sportType: "FUTSAL",
+    fieldCount: 4,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
+      { id: "fixo-l", role: "LCB", label: "FIXO", x: 30, y: 62 },
+      { id: "fixo-r", role: "RCB", label: "FIXO", x: 70, y: 62 },
+      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 30 },
+    ],
+  },
+  {
+    id: "futsal-4-1-1-1",
+    name: "1-1-1",
+    sportType: "FUTSAL",
+    fieldCount: 4,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
+      { id: "fixo", role: "CB", label: "FIXO", x: 50, y: 65 },
+      { id: "ala", role: "CAM", label: "ALA", x: 50, y: 45 },
+      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 25 },
+    ],
+  },
+  // ── Futsal 5인 (GK + 4 필드) — 기본 풋살 ──
   {
     id: "futsal-1-2-1",
     name: "1-2-1",
     sportType: "FUTSAL",
+    fieldCount: 5,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
       { id: "fixo", role: "CB", label: "FIXO", x: 50, y: 68 },
@@ -119,11 +182,11 @@ export const formationTemplates: FormationTemplate[] = [
       { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 22 },
     ],
   },
-  // Futsal 2-1-1 Pyramid (5 players)
   {
     id: "futsal-2-1-1",
     name: "2-1-1",
     sportType: "FUTSAL",
+    fieldCount: 5,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
       { id: "fixo-l", role: "LCB", label: "FIXO", x: 30, y: 65 },
@@ -132,11 +195,11 @@ export const formationTemplates: FormationTemplate[] = [
       { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 22 },
     ],
   },
-  // Futsal 1-1-2 Offensive (5 players)
   {
     id: "futsal-1-1-2",
     name: "1-1-2",
     sportType: "FUTSAL",
+    fieldCount: 5,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
       { id: "fixo", role: "CB", label: "FIXO", x: 50, y: 65 },
@@ -145,8 +208,132 @@ export const formationTemplates: FormationTemplate[] = [
       { id: "pivo-r", role: "RS", label: "PIVO", x: 70, y: 22 },
     ],
   },
+  // ── Futsal 6인 (GK + 5 필드) ──
+  {
+    id: "futsal-6-2-2-1",
+    name: "2-2-1",
+    sportType: "FUTSAL",
+    fieldCount: 6,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
+      { id: "fixo-l", role: "LCB", label: "FIXO", x: 28, y: 68 },
+      { id: "fixo-r", role: "RCB", label: "FIXO", x: 72, y: 68 },
+      { id: "ala-l", role: "LW", label: "ALA", x: 22, y: 42 },
+      { id: "ala-r", role: "RW", label: "ALA", x: 78, y: 42 },
+      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 22 },
+    ],
+  },
+  {
+    id: "futsal-6-1-3-1",
+    name: "1-3-1",
+    sportType: "FUTSAL",
+    fieldCount: 6,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
+      { id: "fixo", role: "CB", label: "FIXO", x: 50, y: 68 },
+      { id: "ala-l", role: "LW", label: "ALA", x: 20, y: 45 },
+      { id: "ala-c", role: "CAM", label: "ALA", x: 50, y: 42 },
+      { id: "ala-r", role: "RW", label: "ALA", x: 80, y: 45 },
+      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 22 },
+    ],
+  },
+  {
+    id: "futsal-6-2-1-2",
+    name: "2-1-2",
+    sportType: "FUTSAL",
+    fieldCount: 6,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
+      { id: "fixo-l", role: "LCB", label: "FIXO", x: 28, y: 68 },
+      { id: "fixo-r", role: "RCB", label: "FIXO", x: 72, y: 68 },
+      { id: "ala", role: "CAM", label: "ALA", x: 50, y: 45 },
+      { id: "pivo-l", role: "LS", label: "PIVO", x: 30, y: 22 },
+      { id: "pivo-r", role: "RS", label: "PIVO", x: 70, y: 22 },
+    ],
+  },
+  // ── Futsal 7인 (GK + 6 필드) ──
+  {
+    id: "futsal-7-2-3-1",
+    name: "2-3-1",
+    sportType: "FUTSAL",
+    fieldCount: 7,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
+      { id: "fixo-l", role: "LCB", label: "FIXO", x: 28, y: 70 },
+      { id: "fixo-r", role: "RCB", label: "FIXO", x: 72, y: 70 },
+      { id: "ala-l", role: "LW", label: "ALA", x: 18, y: 48 },
+      { id: "ala-c", role: "CAM", label: "ALA", x: 50, y: 45 },
+      { id: "ala-r", role: "RW", label: "ALA", x: 82, y: 48 },
+      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 22 },
+    ],
+  },
+  {
+    id: "futsal-7-3-2-1",
+    name: "3-2-1",
+    sportType: "FUTSAL",
+    fieldCount: 7,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
+      { id: "fixo-l", role: "LCB", label: "FIXO", x: 25, y: 70 },
+      { id: "fixo-c", role: "CB", label: "FIXO", x: 50, y: 72 },
+      { id: "fixo-r", role: "RCB", label: "FIXO", x: 75, y: 70 },
+      { id: "ala-l", role: "LW", label: "ALA", x: 25, y: 45 },
+      { id: "ala-r", role: "RW", label: "ALA", x: 75, y: 45 },
+      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 22 },
+    ],
+  },
+  // ── Futsal 8인 (GK + 7 필드) ──
+  {
+    id: "futsal-8-3-3-1",
+    name: "3-3-1",
+    sportType: "FUTSAL",
+    fieldCount: 8,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
+      { id: "fixo-l", role: "LCB", label: "FIXO", x: 25, y: 72 },
+      { id: "fixo-c", role: "CB", label: "FIXO", x: 50, y: 74 },
+      { id: "fixo-r", role: "RCB", label: "FIXO", x: 75, y: 72 },
+      { id: "ala-l", role: "LW", label: "ALA", x: 18, y: 48 },
+      { id: "ala-c", role: "CAM", label: "ALA", x: 50, y: 45 },
+      { id: "ala-r", role: "RW", label: "ALA", x: 82, y: 48 },
+      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 22 },
+    ],
+  },
+  {
+    id: "futsal-8-2-3-2",
+    name: "2-3-2",
+    sportType: "FUTSAL",
+    fieldCount: 8,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
+      { id: "fixo-l", role: "LCB", label: "FIXO", x: 30, y: 72 },
+      { id: "fixo-r", role: "RCB", label: "FIXO", x: 70, y: 72 },
+      { id: "ala-l", role: "LW", label: "ALA", x: 18, y: 48 },
+      { id: "ala-c", role: "CAM", label: "ALA", x: 50, y: 48 },
+      { id: "ala-r", role: "RW", label: "ALA", x: 82, y: 48 },
+      { id: "pivo-l", role: "LS", label: "PIVO", x: 35, y: 22 },
+      { id: "pivo-r", role: "RS", label: "PIVO", x: 65, y: 22 },
+    ],
+  },
 ];
 
 export function getFormationsForSport(sportType: SportType): FormationTemplate[] {
   return formationTemplates.filter((f) => f.sportType === sportType);
+}
+
+/** 풋살: 스포츠 타입 + 필드 인원 수로 포메이션 필터 */
+export function getFormationsForSportAndCount(sportType: SportType, fieldCount?: number): FormationTemplate[] {
+  if (sportType !== "FUTSAL" || fieldCount == null) {
+    return getFormationsForSport(sportType);
+  }
+  return formationTemplates.filter((f) => f.sportType === sportType && f.fieldCount === fieldCount);
+}
+
+/** 풋살에서 지원하는 필드 인원 수 목록 (중복 제거, 정렬) */
+export function getFutsalFieldCounts(): number[] {
+  const counts = new Set<number>();
+  formationTemplates
+    .filter((f) => f.sportType === "FUTSAL" && f.fieldCount != null)
+    .forEach((f) => counts.add(f.fieldCount!));
+  return [...counts].sort((a, b) => a - b);
 }

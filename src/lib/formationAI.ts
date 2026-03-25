@@ -1,4 +1,4 @@
-import { getFormationsForSport, type FormationTemplate, type FormationSlot } from "@/lib/formations";
+import { getFormationsForSport, getFormationsForSportAndCount, type FormationTemplate, type FormationSlot } from "@/lib/formations";
 import type { PreferredPosition, Position, SportType } from "@/lib/types";
 import { PREF_TO_POSITION } from "@/lib/types";
 
@@ -81,7 +81,11 @@ export function recommendFormation(
   const defaultPlayerCount = sportType === "FUTSAL" ? 5 : 11;
   const targetCount = fieldPlayerCount ?? Math.min(players.length, defaultPlayerCount);
 
-  const formations = getFormationsForSport(sportType);
+  // 풋살: targetCount에 맞는 포메이션 필터 (없으면 전체 폴백)
+  let formations = sportType === "FUTSAL"
+    ? getFormationsForSportAndCount(sportType, targetCount)
+    : getFormationsForSport(sportType);
+  if (formations.length === 0) formations = getFormationsForSport(sportType);
 
   // Rank players by performance score
   const rankedPlayers = [...players].sort((a, b) => playerScore(b) - playerScore(a));

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toPng } from "html-to-image";
-import { formationTemplates, getFormationsForSport } from "@/lib/formations";
+import { formationTemplates, getFormationsForSportAndCount, getFutsalFieldCounts } from "@/lib/formations";
 import { useApi, apiMutate } from "@/lib/useApi";
 import type { DetailedPosition, SportType } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -74,7 +74,14 @@ const SAVE_DEBOUNCE_MS = 300;
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 export default function TacticsBoard({ matchId, roster, quarterCount, sportType = "SOCCER", teamSettings: teamSettingsProp, initialSquads, readOnly = false }: TacticsBoardProps) {
-  const filteredFormations = getFormationsForSport(sportType);
+  const isFutsal = sportType === "FUTSAL";
+  const futsalFieldCounts = useMemo(() => (isFutsal ? getFutsalFieldCounts() : []), [isFutsal]);
+  const [futsalFieldCount, setFutsalFieldCount] = useState(isFutsal ? 5 : 0);
+
+  const filteredFormations = useMemo(
+    () => getFormationsForSportAndCount(sportType, isFutsal ? futsalFieldCount : undefined),
+    [sportType, isFutsal, futsalFieldCount]
+  );
   const defaultFormation = filteredFormations[0] ?? formationTemplates[0];
   const quarters = useMemo(
     () => Array.from({ length: Math.max(1, quarterCount) }, (_, index) => index + 1),
@@ -144,6 +151,10 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     const row = squadsData.squads.find((s) => s.quarter_number === activeQuarter);
     if (row) {
       const formation = formationTemplates.find((f) => f.id === row.formation) ?? defaultFormation;
+      // 풋살: 저장된 포메이션의 fieldCount로 인원수 복원
+      if (isFutsal && formation.fieldCount) {
+        setFutsalFieldCount(formation.fieldCount);
+      }
       const normalizedPlacements: Record<string, Placement | null> = {};
       formation.slots.forEach((slot) => {
         normalizedPlacements[slot.id] = row.positions?.[slot.id] ?? null;
@@ -536,6 +547,15 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     setActiveSlotId(null);
   }
 
+  /** 풋살 인원수 변경 → 해당 인원의 첫 번째 포메이션으로 전환 */
+  function handleFutsalFieldCountChange(count: number) {
+    setFutsalFieldCount(count);
+    const formations = getFormationsForSportAndCount("FUTSAL", count);
+    if (formations.length > 0) {
+      handleFormationChange(formations[0].id);
+    }
+  }
+
   function handleSelectSlot(slotId: string) {
     if (readOnly) return;
     setActiveSlotId(slotId);
@@ -612,6 +632,26 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                 </Button>
               ))}
             </div>
+            {/* 풋살 인원 수 선택 */}
+            {isFutsal && !readOnly && (
+              <Select value={String(futsalFieldCount)} onValueChange={(v) => handleFutsalFieldCountChange(Number(v))}>
+                <SelectTrigger className="w-auto min-w-[90px] rounded-xl text-xs font-semibold">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {futsalFieldCounts.map((count) => (
+                    <SelectItem key={count} value={String(count)}>
+                      {count}인제
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {isFutsal && readOnly && (
+              <Badge variant="secondary" className="rounded-xl px-3 py-1 text-xs font-semibold">
+                {futsalFieldCount}인제
+              </Badge>
+            )}
             {!readOnly && (
               <Select value={formation.id} onValueChange={handleFormationChange}>
                 <SelectTrigger className="w-auto min-w-[140px] rounded-xl text-xs font-semibold">

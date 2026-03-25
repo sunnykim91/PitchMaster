@@ -59,7 +59,7 @@ function MatchTacticsTabInner({
           name: p.name,
           preferredPositions: p.preferredPositions ?? [p.preferredPosition],
         }));
-        const maxPlayers = sportType === "FUTSAL" ? 5 : 11;
+        const maxPlayers = sportType === "FUTSAL" ? Math.min(attendingPlayers.length, 8) : 11;
         const rec = recommendFormation(aiPlayers, Math.min(attendingPlayers.length, maxPlayers), sportType);
         if (!rec) return null;
         return (

@@ -276,10 +276,10 @@ describe("recommendFormation() — FUTSAL", () => {
       makePlayer("fixo", "CB"),
       makePlayer("pivo", "ST"),
     ];
-    // 3명은 5인 풋살 포메이션에 맞지 않으므로 null
     const rec = recommendFormation(small, 3, "FUTSAL");
-    // 풋살 포메이션이 모두 5인이므로 3명에 맞는 건 없음
-    expect(rec).toBeNull();
+    // 3인제 포메이션이 존재하므로 추천 가능
+    expect(rec).not.toBeNull();
+    expect(rec!.formation.slots).toHaveLength(3);
   });
 
   it("축구 sportType이면 풋살 포메이션 안 나옴", () => {
