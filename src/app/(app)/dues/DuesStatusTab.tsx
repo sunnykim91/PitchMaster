@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -153,8 +154,10 @@ function DuesStatusTabInner({
             ))}
           </div>
         ) : duesStatus.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
+            <Users className="h-8 w-8 text-muted-foreground/50" />
             <p className="text-sm text-muted-foreground">팀원이 없습니다.</p>
+            <Link href="/members" className="text-xs text-primary hover:underline">회원 관리에서 팀원을 추가하세요 &rarr;</Link>
           </div>
         ) : (
           <div className="mt-3 space-y-1">

@@ -324,7 +324,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
             >
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="date">날짜</Label>
+                  <Label htmlFor="date">날짜 <span className="text-destructive">*</span></Label>
                   <Input
                     id="date"
                     name="date"
@@ -367,7 +367,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="voteDeadline">투표 마감</Label>
+                  <Label htmlFor="voteDeadline">투표 마감 <span className="text-xs font-normal text-muted-foreground">(기본: 경기 전날 17시)</span></Label>
                   <Input
                     id="voteDeadline"
                     name="voteDeadline"
@@ -390,7 +390,8 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   />
                   {formErrors.location && <p className="text-xs text-destructive mt-1">{formErrors.location}</p>}
                   {recentLocations.length > 0 && !location && (
-                    <div className="flex flex-wrap gap-1.5 pt-1">
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-xs text-muted-foreground mr-0.5">최근 장소:</span>
                       {recentLocations.slice(0, 5).map((loc) => (
                         <button
                           key={loc}

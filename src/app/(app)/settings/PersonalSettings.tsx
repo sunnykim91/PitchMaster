@@ -175,7 +175,12 @@ function PersonalSettingsComponent({
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-sm font-semibold text-muted-foreground">선호 포지션</Label>
+              <Label className="text-sm font-semibold text-muted-foreground">
+                선호 포지션
+                {profile.preferredPositions.length > 0 && (
+                  <span className="ml-1.5 text-xs font-normal text-primary">{profile.preferredPositions.length}개 선택</span>
+                )}
+              </Label>
               <div className="space-y-3">
                 {POSITION_GROUPS.map((group) => (
                   <div key={group.group}>

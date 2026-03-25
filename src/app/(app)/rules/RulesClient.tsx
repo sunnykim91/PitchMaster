@@ -283,7 +283,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
                 <CardContent className="p-5 grid gap-4">
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold text-foreground/80">카테고리</Label>
+                      <Label className="text-sm font-semibold text-foreground/80">카테고리 <span className="text-destructive">*</span></Label>
                       <Select value={formState.category} onValueChange={(value) => setFormState({ ...formState, category: value as RuleCategory })}>
                         <SelectTrigger>
                           <SelectValue />
@@ -298,7 +298,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold text-foreground/80">제목</Label>
+                      <Label className="text-sm font-semibold text-foreground/80">제목 <span className="text-destructive">*</span></Label>
                       <Input
                         value={formState.title}
                         onChange={(event) => { setFormState({ ...formState, title: event.target.value }); setFormErrors((prev) => ({ ...prev, title: "" })); }}
@@ -309,7 +309,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-foreground/80">내용</Label>
+                    <Label className="text-sm font-semibold text-foreground/80">내용 <span className="text-destructive">*</span></Label>
                     <Textarea
                       value={formState.content}
                       onChange={(event) => { setFormState({ ...formState, content: event.target.value }); setFormErrors((prev) => ({ ...prev, content: "" })); }}
