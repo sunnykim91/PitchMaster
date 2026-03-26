@@ -49,6 +49,10 @@ export interface MatchInfoTabProps {
   internalTeams?: InternalTeamAssignment[];
   /** 자체전 팀 편성 refetch */
   refetchInternalTeams?: () => Promise<unknown>;
+  /** 댓글 데이터 */
+  comments?: { id: string; user_id: string; content: string; created_at: string; users: { name: string } | null }[];
+  /** 댓글 refetch */
+  refetchComments?: () => Promise<unknown>;
 }
 
 /* ── 유니폼 스타일 헬퍼 ── */
@@ -86,10 +90,14 @@ function MatchInfoTabInner({
   internalTeams,
   refetchInternalTeams,
   memberVoteTimeMap,
+  comments,
+  refetchComments,
 }: MatchInfoTabProps) {
   const { showToast } = useToast();
   const [savingTeams, setSavingTeams] = useState(false);
   const [teamSheetOpen, setTeamSheetOpen] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [sendingComment, setSendingComment] = useState(false);
   const isInternal = match.matchType === "INTERNAL";
 
   /* ── 유니폼 스타일 ── */
@@ -683,121 +691,72 @@ function MatchInfoTabInner({
         );
       })()}
 
-      {/* ── 용병(게스트) 관리 (운영진 이상) ── */}
-      {canManage && (
+      {/* 용병 관리는 전술판 탭으로 이동 */}
+
+      {/* ── 댓글 ── */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <p className="type-overline text-[hsl(var(--accent))]">
-              Guests
-            </p>
-            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
-              용병 관리
-            </CardTitle>
-          </div>
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => setIsGuestFormOpen((prev) => !prev)}
-          >
-            {isGuestFormOpen ? "닫기" : "용병 등록"}
-          </Button>
+        <CardHeader className="pb-2">
+          <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">댓글</CardTitle>
         </CardHeader>
+        <CardContent className="space-y-3">
+          {/* 댓글 입력 */}
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            if (!commentText.trim() || sendingComment) return;
+            setSendingComment(true);
+            const { error: err } = await apiMutate("/api/match-comments", "POST", { matchId, content: commentText });
+            setSendingComment(false);
+            if (err) { showToast("댓글 작성에 실패했습니다.", "error"); return; }
+            setCommentText("");
+            refetchComments?.();
+          }} className="flex gap-2">
+            <input
+              type="text"
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="댓글을 입력하세요..."
+              maxLength={200}
+              className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+            <Button type="submit" size="sm" disabled={sendingComment || !commentText.trim()}>
+              {sendingComment ? "..." : "전송"}
+            </Button>
+          </form>
 
-        <CardContent>
-          {isGuestFormOpen && (
-            <form
-              className="mb-4"
-              action={(formData) => handleAddGuest(formData)}
-            >
-              <Card className="border-0 bg-secondary shadow-none">
-                <CardContent className="p-4">
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-muted-foreground">
-                        이름 *
-                      </Label>
-                      <Input name="guestName" required placeholder="홍길동" />
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <fieldset>
-                        <legend className="text-xs font-semibold text-muted-foreground mb-1">선호 포지션 (복수 선택)</legend>
-                        <div className="flex flex-wrap gap-2">
-                          {(["GK","CB","LB","RB","CDM","CM","CAM","LW","RW","ST"] as const).map((pos) => (
-                            <label key={pos} className="flex items-center gap-1 text-xs cursor-pointer">
-                              <input type="checkbox" name="guestPositions" value={pos} className="rounded" id={`guest-pos-${pos}`} />
-                              {pos}
-                            </label>
-                          ))}
-                        </div>
-                      </fieldset>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-muted-foreground">
-                        연락처
-                      </Label>
-                      <PhoneInput name="guestPhone" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-muted-foreground">
-                        메모
-                      </Label>
-                      <Input name="guestNote" placeholder="소속팀, 실력 등" />
-                    </div>
-                  </div>
-                  <Button type="submit" className="mt-3 w-full" size="sm">
-                    등록
-                  </Button>
-                </CardContent>
-              </Card>
-            </form>
-          )}
-
-          {guests.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              등록된 용병이 없습니다. 용병을 등록하면 전술판과 골 기록에서 선택할 수 있습니다.
-            </p>
+          {/* 댓글 목록 */}
+          {(comments ?? []).length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-3">아직 댓글이 없습니다</p>
           ) : (
             <div className="space-y-2">
-              {guests.map((guest) => (
-                <Card
-                  key={guest.id}
-                  className="border-0 bg-secondary shadow-none"
-                >
-                  <CardContent className="flex items-center justify-between px-4 py-3">
-                    <div>
-                      <p className="text-sm font-semibold truncate">
-                        {guest.name}
-                        {guest.position && (
-                          <Badge variant="outline" className="ml-2 text-xs">
-                            {guest.position}
-                          </Badge>
-                        )}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {[guest.phone ? formatPhone(guest.phone) : "", guest.note].filter(Boolean).join(" · ") || "용병"}
-                      </p>
+              {(comments ?? []).map((c) => (
+                <div key={c.id} className="flex items-start gap-2 rounded-lg bg-secondary/50 px-3 py-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold">{c.users?.name ?? "알 수 없음"}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(c.created_at).toLocaleDateString("ko-KR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </span>
                     </div>
+                    <p className="mt-0.5 text-sm text-foreground/90">{c.content}</p>
+                  </div>
+                  {c.user_id === userId && (
                     <button
                       type="button"
-                      onClick={() => handleRemoveGuest(guest.id)}
-                      className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                      onClick={async () => {
+                        await apiMutate(`/api/match-comments?id=${c.id}`, "DELETE");
+                        refetchComments?.();
+                      }}
+                      className="shrink-0 text-xs text-muted-foreground hover:text-destructive transition-colors"
                     >
                       삭제
                     </button>
-                  </CardContent>
-                </Card>
+                  )}
+                </div>
               ))}
-              <p className="text-xs text-muted-foreground">
-                총 {guests.length}명의 용병이 등록되었습니다.
-              </p>
             </div>
           )}
         </CardContent>
       </Card>
-      )}
-
-      {/* 자체전 팀 편성은 전술판 탭으로 이동 */}
     </>
   );
 }

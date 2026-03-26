@@ -9,7 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { recommendFormation, type PlayerInput } from "@/lib/formationAI";
-import type { Match, SimpleRosterPlayer, InternalTeamAssignment } from "./matchDetailTypes";
+import type { Match, SimpleRosterPlayer, InternalTeamAssignment, Guest } from "./matchDetailTypes";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { formatPhone } from "@/lib/utils";
 import type { SportType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/lib/ToastContext";
@@ -41,6 +44,9 @@ export interface MatchTacticsTabProps {
   sportType: SportType;
   internalTeams?: InternalTeamAssignment[];
   refetchInternalTeams?: () => Promise<unknown>;
+  guests?: Guest[];
+  refetchGuests?: () => Promise<unknown>;
+  handleRemoveGuest?: (guestId: string) => Promise<void>;
 }
 
 function MatchTacticsTabInner({
@@ -52,6 +58,9 @@ function MatchTacticsTabInner({
   sportType,
   internalTeams,
   refetchInternalTeams,
+  guests,
+  refetchGuests,
+  handleRemoveGuest,
 }: MatchTacticsTabProps) {
   const [tacticsKey, setTacticsKey] = useState(0);
   const [generatedSquads, setGeneratedSquads] = useState<GeneratedSquad[]>([]);
@@ -59,6 +68,7 @@ function MatchTacticsTabInner({
   const [activeSide, setActiveSide] = useState<"A" | "B">("A");
   const [savingTeams, setSavingTeams] = useState(false);
   const [showTeamSplit, setShowTeamSplit] = useState(false);
+  const [showGuestForm, setShowGuestForm] = useState(false);
   const { showToast } = useToast();
 
   // 자체전: 팀별 roster 필터링
@@ -324,6 +334,54 @@ function MatchTacticsTabInner({
           positions: sq.positions,
         })) : undefined}
       />
+
+      {/* ── 용병 관리 ── */}
+      {canManage && (
+        <Card>
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-bold">용병 ({(guests ?? []).length}명)</p>
+              <Button size="sm" variant="outline" onClick={() => setShowGuestForm(!showGuestForm)}>
+                {showGuestForm ? "닫기" : "용병 등록"}
+              </Button>
+            </div>
+            {showGuestForm && (
+              <form className="mb-3 space-y-2" action={async (formData) => {
+                const name = String(formData.get("guestName") || "").trim();
+                if (!name) return;
+                const positions = formData.getAll("guestPositions").map(String);
+                await apiMutate("/api/guests", "POST", {
+                  matchId,
+                  name,
+                  position: positions.join(",") || null,
+                  phone: String(formData.get("guestPhone") || "") || null,
+                  note: String(formData.get("guestNote") || "") || null,
+                });
+                setShowGuestForm(false);
+                refetchGuests?.();
+              }}>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Input name="guestName" required placeholder="이름 *" />
+                  <Input name="guestNote" placeholder="메모 (소속팀 등)" />
+                </div>
+                <Button type="submit" size="sm" className="w-full">등록</Button>
+              </form>
+            )}
+            {(guests ?? []).length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {(guests ?? []).map((g) => (
+                  <div key={g.id} className="flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs">
+                    <span className="font-medium">{g.name}</span>
+                    {g.position && <span className="text-muted-foreground">({g.position})</span>}
+                    <button type="button" onClick={() => handleRemoveGuest?.(g.id)}
+                      className="ml-0.5 text-muted-foreground hover:text-destructive">×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </>
   );
 }

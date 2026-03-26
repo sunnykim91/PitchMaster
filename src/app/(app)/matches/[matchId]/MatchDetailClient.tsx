@@ -90,6 +90,12 @@ export default function MatchDetailClient({
     refetch: refetchInternalTeams,
   } = useApi<{ teams: { player_id: string; side: "A" | "B" }[] }>(`/api/internal-teams?matchId=${matchId}`, initialData?.internalTeams ?? { teams: [] }, { skip: !!initialData?.internalTeams });
 
+  // 댓글
+  const {
+    data: commentsData,
+    refetch: refetchComments,
+  } = useApi<{ comments: { id: string; user_id: string; content: string; created_at: string; users: { name: string } | null }[] }>(`/api/match-comments?matchId=${matchId}`, { comments: [] });
+
   // 실시간 동기화: 참석투표, 골 기록, MVP 투표
   useRealtimeSubscription({
     table: "match_attendance",
@@ -422,6 +428,8 @@ export default function MatchDetailClient({
           uniformPattern={uniformPattern}
           internalTeams={internalTeams}
           refetchInternalTeams={refetchInternalTeams}
+          comments={commentsData.comments}
+          refetchComments={refetchComments}
         />
       </div>
 
@@ -436,6 +444,9 @@ export default function MatchDetailClient({
           sportType={sportType}
           internalTeams={internalTeams}
           refetchInternalTeams={refetchInternalTeams}
+          guests={guests}
+          refetchGuests={refetchGuests}
+          handleRemoveGuest={handleRemoveGuest}
         />
       </div>
 
