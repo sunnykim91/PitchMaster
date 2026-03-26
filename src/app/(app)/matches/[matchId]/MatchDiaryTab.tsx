@@ -79,11 +79,33 @@ function MatchDiaryTabInner({
     });
   }
 
-  function handleShareCardDownload() {
-    const link = document.createElement("a");
-    link.href = `/api/matches/${matchId}/share-card`;
-    link.download = `match-${matchId}-card.png`;
-    link.click();
+  async function handleShareCardDownload() {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    try {
+      const res = await fetch(`/api/share-card?matchId=${matchId}`);
+      if (!res.ok) throw new Error("fail");
+      const blob = await res.blob();
+
+      if (!isMobile && navigator.clipboard?.write) {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        setShareMessage("카드 이미지가 클립보드에 복사되었습니다.");
+      } else {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "match-card.png";
+        link.click();
+        URL.revokeObjectURL(url);
+        setShareMessage("카드 이미지가 저장되었습니다.");
+      }
+    } catch {
+      const link = document.createElement("a");
+      link.href = `/api/share-card?matchId=${matchId}`;
+      link.download = "match-card.png";
+      link.click();
+      setShareMessage("카드 이미지가 저장되었습니다.");
+    }
+    setTimeout(() => setShareMessage(null), 2000);
   }
 
   return (
@@ -140,7 +162,7 @@ function MatchDiaryTabInner({
               size="sm"
               onClick={handleShareCardDownload}
             >
-              카드 이미지 저장
+              카드 이미지 복사
             </Button>
           </div>
 
