@@ -18,6 +18,7 @@ export type MatchRow = {
   uniform_type?: "HOME" | "AWAY";
   match_type?: "REGULAR" | "INTERNAL";
   stats_included?: boolean;
+  vote_deadline?: string | null;
 };
 
 export type GoalRow = {
@@ -100,6 +101,7 @@ export type Match = {
   uniformType: "HOME" | "AWAY";
   matchType: MatchType;
   statsIncluded: boolean;
+  voteDeadline?: string | null;
 };
 
 export type GoalEvent = {
@@ -181,6 +183,7 @@ export const emptyMatch: Match = {
   uniformType: "HOME",
   matchType: "REGULAR",
   statsIncluded: true,
+  voteDeadline: null,
 };
 
 export function mapMatch(row: MatchRow): Match {
@@ -197,6 +200,7 @@ export function mapMatch(row: MatchRow): Match {
     uniformType: row.uniform_type ?? "HOME",
     matchType: row.match_type ?? "REGULAR",
     statsIncluded: row.stats_included ?? true,
+    voteDeadline: row.vote_deadline ?? null,
   };
 }
 

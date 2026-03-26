@@ -367,40 +367,45 @@ function MatchInfoTabInner({
         const myMember = baseRoster.find((m) => m.id === userId);
         if (!myMember) return null;
         const myVote = memberVoteMap[myMember.memberId];
+        const isExpired = match.voteDeadline ? new Date(match.voteDeadline) < new Date() : false;
         return (
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
                   <p className="text-xs font-bold text-muted-foreground">내 참석 투표</p>
-                  <p className={cn("mt-1 text-sm font-semibold",
+                  <p className={cn("mt-0.5 text-sm font-semibold",
                     !myVote && "text-[hsl(var(--warning))]"
                   )}>
                     {myVote === "ATTEND" ? "참석" : myVote === "ABSENT" ? "불참" : myVote === "MAYBE" ? "미정" : "미투표"}
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  {([
-                    { value: "ATTEND" as const, label: "참석" },
-                    { value: "MAYBE" as const, label: "미정" },
-                    { value: "ABSENT" as const, label: "불참" },
-                  ]).map((opt) => {
-                    const isSelected = myVote === opt.value;
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        className={cn(
-                          "rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-105 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                          isSelected ? styles[opt.value].active : styles[opt.value].inactive
-                        )}
-                        onClick={() => handleMyVote(opt.value)}
-                      >
-                        {opt.label}
-                      </button>
-                    );
-                  })}
-                </div>
+                {isExpired ? (
+                  <p className="text-xs text-muted-foreground shrink-0">투표 마감됨</p>
+                ) : (
+                  <div className="flex gap-1.5 shrink-0">
+                    {([
+                      { value: "ATTEND" as const, label: "참석" },
+                      { value: "MAYBE" as const, label: "미정" },
+                      { value: "ABSENT" as const, label: "불참" },
+                    ]).map((opt) => {
+                      const isSelected = myVote === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          className={cn(
+                            "rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200 active:scale-95",
+                            isSelected ? styles[opt.value].active : styles[opt.value].inactive
+                          )}
+                          onClick={() => handleMyVote(opt.value)}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
