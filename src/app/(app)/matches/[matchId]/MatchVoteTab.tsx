@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,7 +51,10 @@ function MatchVoteTabInner({
 
   const myMember = baseRoster.find((m) => m.id === userId);
   const myVote = myMember ? memberVoteMap[myMember.memberId] : undefined;
-  const isExpired = match.voteDeadline ? new Date(match.voteDeadline) < new Date() : false;
+  const [isExpired, setIsExpired] = useState(false);
+  useEffect(() => {
+    setIsExpired(match.voteDeadline ? new Date(match.voteDeadline) < new Date() : false);
+  }, [match.voteDeadline]);
 
   const attend = baseRoster.filter((m) => memberVoteMap[m.memberId] === "ATTEND");
   const absent = baseRoster.filter((m) => memberVoteMap[m.memberId] === "ABSENT");
