@@ -152,13 +152,13 @@ export default function MembersClient({
     return { ...counts, DORMANT: dormantMembers.length };
   }, [activeMembers, dormantMembers]);
 
-  async function handleRoleChange(memberId: string, newRole: Role) {
-    if (!canChangeRole) return;
+  async function doRoleChange(memberId: string, newRole: Role) {
     setChangingRoleId(memberId);
     try {
       const { error: err } = await apiMutate("/api/members", "PUT", { memberId, role: newRole });
       if (!err) {
-        showToast("역할이 변경되었습니다.");
+        const msg = newRole === "PRESIDENT" ? "회장이 이임되었습니다." : "역할이 변경되었습니다.";
+        showToast(msg);
         await refetch();
       } else {
         showToast("역할 변경에 실패했습니다.", "error");
@@ -166,6 +166,19 @@ export default function MembersClient({
     } finally {
       setChangingRoleId(null);
     }
+  }
+
+  function handleRoleChange(memberId: string, newRole: Role) {
+    if (!canChangeRole) return;
+    if (newRole === "PRESIDENT") {
+      const target = members.find((m) => m.id === memberId);
+      setConfirmAction({
+        message: `${target?.name ?? "해당 회원"}에게 회장을 이임하시겠습니까?\n이임 후 본인은 운영진으로 변경됩니다.`,
+        onConfirm: () => doRoleChange(memberId, newRole),
+      });
+      return;
+    }
+    doRoleChange(memberId, newRole);
   }
 
   async function handleKick(memberId: string) {

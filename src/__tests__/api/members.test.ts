@@ -338,6 +338,21 @@ describe("PUT /api/members", () => {
     expect(json.error).toContain("유효하지 않은");
   });
 
+  it("200: 회장 이임 — 대상을 PRESIDENT로, 기존 회장을 STAFF로", async () => {
+    vi.mocked(auth).mockResolvedValue(presidentSession);
+    const db = createMockDb(
+      ["team_members", { user_id: "other-user" }], // self-check select
+      ["team_members", null],                        // demote current president
+      ["team_members", null],                        // promote target
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await PUT(makeRequest({ memberId: "mem-1", role: "PRESIDENT" }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+  });
+
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(presidentSession);
     const db = createMockDb(

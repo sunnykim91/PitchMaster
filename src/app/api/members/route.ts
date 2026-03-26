@@ -205,6 +205,17 @@ export async function PUT(request: NextRequest) {
     return apiError("자신의 역할은 변경할 수 없습니다");
   }
 
+  // 회장 이임: 다른 회원을 PRESIDENT로 변경 시 기존 회장을 STAFF로 강등
+  if (body.role === "PRESIDENT") {
+    const { error: demoteError } = await db
+      .from("team_members")
+      .update({ role: "STAFF" })
+      .eq("team_id", ctx.teamId)
+      .eq("user_id", ctx.userId);
+
+    if (demoteError) return apiError(demoteError.message);
+  }
+
   const { error } = await db
     .from("team_members")
     .update({ role: body.role })
