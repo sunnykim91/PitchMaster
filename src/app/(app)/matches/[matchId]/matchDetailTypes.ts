@@ -58,6 +58,7 @@ export type AttendanceVoteRow = {
   user_id: string | null;
   member_id: string | null;
   vote: "ATTEND" | "ABSENT" | "MAYBE";
+  voted_at?: string | null;
   users: { id: string; name: string; preferred_positions?: string[] } | null;
   member: { id: string; pre_name: string | null; user_id: string | null; coach_positions?: string[] | null; users: { id: string; name: string; preferred_positions?: string[] } | null } | null;
 };

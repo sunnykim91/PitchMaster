@@ -121,7 +121,7 @@ export default function MembersClient({
   const [linkingId, setLinkingId] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "joined" | "role">("role");
+  const [sortBy, setSortBy] = useState<"none" | "name-asc" | "name-desc" | "joined-asc" | "joined-desc">("none");
   const [roleFilter, setRoleFilter] = useState<"ALL" | Role>("ALL");
 
   // 감독 지정 포지션 편집
@@ -152,9 +152,11 @@ export default function MembersClient({
 
     // 정렬
     return [...list].sort((a, b) => {
-      if (sortBy === "name") return a.name.localeCompare(b.name, "ko");
-      if (sortBy === "joined") return b.joinedAt.localeCompare(a.joinedAt); // 최근 가입 먼저
-      // role (기본): 회장 → 운영진 → 평회원, 같은 역할이면 이름순
+      if (sortBy === "name-asc") return a.name.localeCompare(b.name, "ko");
+      if (sortBy === "name-desc") return b.name.localeCompare(a.name, "ko");
+      if (sortBy === "joined-asc") return a.joinedAt.localeCompare(b.joinedAt);
+      if (sortBy === "joined-desc") return b.joinedAt.localeCompare(a.joinedAt);
+      // none (기본): 회장 → 운영진 → 평회원, 같은 역할이면 이름순
       return (roleOrder[a.role] - roleOrder[b.role]) || a.name.localeCompare(b.name, "ko");
     });
   }, [linkedMembers, searchQuery, sortBy, roleFilter]);
@@ -523,24 +525,31 @@ export default function MembersClient({
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <div className="flex gap-1">
               {([
-                { value: "role" as const, label: "역할순" },
-                { value: "name" as const, label: "이름순" },
-                { value: "joined" as const, label: "최근가입순" },
-              ]).map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setSortBy(opt.value)}
-                  className={cn(
-                    "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                    sortBy === opt.value
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {opt.label}
-                </button>
-              ))}
+                { key: "name", cycle: ["none", "name-asc", "name-desc"] as string[], labels: ["이름", "이름 ↑", "이름 ↓"] },
+                { key: "joined", cycle: ["none", "joined-asc", "joined-desc"] as string[], labels: ["가입", "가입 ↑", "가입 ↓"] },
+              ]).map(({ key, cycle, labels }) => {
+                const idx = cycle.indexOf(sortBy);
+                const isActive = idx > 0;
+                const label = isActive ? labels[idx] : labels[0];
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => {
+                      const nextIdx = idx < 0 ? 1 : (idx + 1) % 3;
+                      setSortBy(cycle[nextIdx] as typeof sortBy);
+                    }}
+                    className={cn(
+                      "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
             <div className="flex gap-1">
               {([

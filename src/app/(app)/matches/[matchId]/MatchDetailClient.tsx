@@ -299,6 +299,21 @@ export default function MatchDetailClient({
     return map;
   }, [voteData.attendance, membersData.members]);
 
+  /** 멤버별 투표 시간 */
+  const memberVoteTimeMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const a of voteData.attendance) {
+      const votedAt = a.voted_at ?? "";
+      if (a.member_id) {
+        map[a.member_id] = votedAt;
+      } else if (a.user_id) {
+        const member = membersData.members.find((m) => m.users?.id === a.user_id);
+        if (member) map[member.id] = votedAt;
+      }
+    }
+    return map;
+  }, [voteData.attendance, membersData.members]);
+
   const voteCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     Object.values(votes).forEach((id) => {
@@ -389,6 +404,7 @@ export default function MatchDetailClient({
           canManage={canManage}
           baseRoster={baseRoster}
           memberVoteMap={memberVoteMap}
+          memberVoteTimeMap={memberVoteTimeMap}
           guests={guests}
           refetchVote={refetchVote}
           refetchGuests={refetchGuests}

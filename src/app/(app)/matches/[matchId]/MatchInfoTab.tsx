@@ -27,6 +27,7 @@ export interface MatchInfoTabProps {
   canManage: boolean;
   baseRoster: RosterPlayer[];
   memberVoteMap: Record<string, "ATTEND" | "ABSENT" | "MAYBE">;
+  memberVoteTimeMap?: Record<string, string>;
   guests: Guest[];
   /** 참석투표 refetch */
   refetchVote: () => Promise<unknown>;
@@ -84,6 +85,7 @@ function MatchInfoTabInner({
   uniformPattern: _uniformPattern,
   internalTeams,
   refetchInternalTeams,
+  memberVoteTimeMap,
 }: MatchInfoTabProps) {
   const { showToast } = useToast();
   const [savingTeams, setSavingTeams] = useState(false);
@@ -178,7 +180,7 @@ function MatchInfoTabInner({
   const [isGuestFormOpen, setIsGuestFormOpen] = useState(false);
   const [voteSearch, setVoteSearch] = useState("");
   const [voteFilter, setVoteFilter] = useState<"all" | "unvoted">("all");
-  const [voteSortBy, setVoteSortBy] = useState<"vote" | "name">("vote");
+  const [voteSortBy, setVoteSortBy] = useState<"none" | "name-asc" | "name-desc" | "time-asc" | "time-desc">("none");
 
   async function handleAddGuest(formData: FormData) {
     const name = String(formData.get("guestName") || "").trim();
@@ -444,23 +446,29 @@ function MatchInfoTabInner({
                   </div>
                   <div className="flex gap-1 border-l border-border pl-2">
                     {([
-                      { value: "vote" as const, label: "투표순" },
-                      { value: "name" as const, label: "이름순" },
-                    ]).map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => setVoteSortBy(opt.value)}
-                        className={cn(
-                          "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                          voteSortBy === opt.value
-                            ? "bg-secondary text-foreground"
-                            : "text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
+                      { key: "name", cycle: ["none", "name-asc", "name-desc"] as string[], labels: ["이름", "이름 ↑", "이름 ↓"] },
+                      { key: "time", cycle: ["none", "time-asc", "time-desc"] as string[], labels: ["투표시간", "투표 ↑", "투표 ↓"] },
+                    ]).map(({ key, cycle, labels }) => {
+                      const idx = cycle.indexOf(voteSortBy);
+                      const isActive = idx > 0;
+                      const label = isActive ? labels[idx] : labels[0];
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => {
+                            const nextIdx = idx < 0 ? 1 : (idx + 1) % 3;
+                            setVoteSortBy(cycle[nextIdx] as typeof voteSortBy);
+                          }}
+                          className={cn(
+                            "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                            isActive ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -513,8 +521,19 @@ function MatchInfoTabInner({
                 if (voteFilter === "unvoted" && memberVoteMap[m.memberId]) return false;
                 return true;
               }).sort((a, b) => {
-                if (voteSortBy === "name") return a.name.localeCompare(b.name, "ko");
-                // 투표순: 참석→미정→불참→미투표
+                if (voteSortBy === "name-asc") return a.name.localeCompare(b.name, "ko");
+                if (voteSortBy === "name-desc") return b.name.localeCompare(a.name, "ko");
+                if (voteSortBy === "time-asc") {
+                  const tA = memberVoteTimeMap?.[a.memberId] ?? "";
+                  const tB = memberVoteTimeMap?.[b.memberId] ?? "";
+                  return tA.localeCompare(tB) || a.name.localeCompare(b.name, "ko");
+                }
+                if (voteSortBy === "time-desc") {
+                  const tA = memberVoteTimeMap?.[a.memberId] ?? "";
+                  const tB = memberVoteTimeMap?.[b.memberId] ?? "";
+                  return tB.localeCompare(tA) || a.name.localeCompare(b.name, "ko");
+                }
+                // 기본(none): 참석→미정→불참→미투표
                 const voteA = memberVoteMap[a.memberId];
                 const voteB = memberVoteMap[b.memberId];
                 const order: Record<string, number> = { ATTEND: 0, MAYBE: 1, ABSENT: 2 };
@@ -819,30 +838,43 @@ function MatchInfoTabInner({
                   {attending.length === 0 ? (
                     <p className="text-sm text-muted-foreground py-4 text-center">참석 확정된 인원이 없습니다.</p>
                   ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                       {attending.map((m) => {
                         const current = teamMap[m.id] ?? null;
                         return (
-                          <button
-                            key={m.id}
-                            type="button"
-                            disabled={savingTeams}
-                            onClick={() => assignSide(m.id, current === null ? "A" : current === "A" ? "B" : null)}
-                            className={cn(
-                              "flex items-center justify-between gap-1 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors",
-                              current === "A" && "bg-primary/15 text-primary border border-primary/30",
-                              current === "B" && "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))] border border-[hsl(var(--info))]/30",
-                              current === null && "bg-secondary text-muted-foreground border border-border hover:border-primary/30"
-                            )}
-                          >
-                            <span className="truncate">{m.name}</span>
-                            {current && <span className="shrink-0 font-bold">{current}</span>}
-                          </button>
+                          <div key={m.id} className="flex items-center gap-1.5 rounded-lg bg-secondary/50 px-2.5 py-1.5">
+                            <span className="text-sm font-medium truncate flex-1">{m.name}</span>
+                            <button
+                              type="button"
+                              disabled={savingTeams}
+                              onClick={() => assignSide(m.id, current === "A" ? null : "A")}
+                              className={cn(
+                                "min-w-[32px] rounded-md px-2 py-1 text-xs font-bold transition-colors",
+                                current === "A"
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-secondary text-muted-foreground/50 hover:bg-primary/10 hover:text-primary"
+                              )}
+                            >
+                              A
+                            </button>
+                            <button
+                              type="button"
+                              disabled={savingTeams}
+                              onClick={() => assignSide(m.id, current === "B" ? null : "B")}
+                              className={cn(
+                                "min-w-[32px] rounded-md px-2 py-1 text-xs font-bold transition-colors",
+                                current === "B"
+                                  ? "bg-[hsl(var(--info))] text-primary-foreground"
+                                  : "bg-secondary text-muted-foreground/50 hover:bg-[hsl(var(--info))]/10 hover:text-[hsl(var(--info))]"
+                              )}
+                            >
+                              B
+                            </button>
+                          </div>
                         );
                       })}
                     </div>
                   )}
-                  <p className="text-xs text-muted-foreground">클릭: 미배정 → A → B → 미배정</p>
                 </div>
               );
             })()}
