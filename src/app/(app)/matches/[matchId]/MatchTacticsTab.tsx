@@ -106,62 +106,83 @@ function MatchTacticsTabInner({
 
         return (
           <>
-            {/* 팀 편성 접기/펼치기 */}
+            {/* 팀 편성 */}
             <Card className={hasTeams ? "border-[hsl(var(--success))]/20" : "border-[hsl(var(--warning))]/20"}>
               <CardContent className="p-3">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 mb-2">
                   <div className="text-xs">
                     <span className="font-bold text-sm">팀 편성</span>
-                    {hasTeams ? (
-                      <span className="ml-2">
-                        <span className="text-primary font-semibold">A {teamACount}</span>
-                        <span className="text-muted-foreground mx-1">vs</span>
-                        <span className="text-[hsl(var(--info))] font-semibold">B {teamBCount}</span>
-                        {unassignedCount > 0 && <span className="text-[hsl(var(--warning))] ml-1">· 미배정 {unassignedCount}</span>}
-                      </span>
-                    ) : (
-                      <span className="ml-2 text-[hsl(var(--warning))]">편성 필요</span>
-                    )}
+                    {unassignedCount > 0 && <span className="text-[hsl(var(--warning))] ml-2 font-medium">미배정 {unassignedCount}명</span>}
                   </div>
                   <div className="flex gap-1.5">
                     {canManage && (
                       <Button size="sm" variant="outline" onClick={handleRandomSplit} disabled={savingTeams || attendingPlayers.length < 2}>
-                        랜덤
+                        {savingTeams ? "..." : "랜덤"}
                       </Button>
                     )}
-                    {canManage && (
-                      <Button size="sm" variant={showTeamSplit ? "default" : "outline"} onClick={() => setShowTeamSplit(!showTeamSplit)}>
-                        {showTeamSplit ? "접기" : "편성"}
-                      </Button>
-                    )}
+                    <Button size="sm" variant={showTeamSplit ? "default" : "outline"} onClick={() => setShowTeamSplit(!showTeamSplit)}>
+                      {showTeamSplit ? "접기" : "편성"}
+                    </Button>
                   </div>
                 </div>
-                {/* 편성 그리드 */}
-                {showTeamSplit && canManage && (
-                  <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 gap-1 max-h-[50vh] overflow-y-auto">
-                    {attendingPlayers.map((m) => {
-                      const cur = teamMap[m.id] ?? null;
-                      return (
-                        <div key={m.id} className={cn(
-                          "flex items-center gap-0.5 rounded-md px-1.5 py-1 text-xs",
-                          cur === "A" && "bg-primary/15",
-                          cur === "B" && "bg-[hsl(var(--info))]/15",
-                          !cur && "bg-secondary/50"
-                        )}>
-                          <span className="truncate flex-1 font-medium text-[11px]">{m.name}</span>
-                          <button type="button" disabled={savingTeams}
-                            onClick={() => assignSide(m.id, cur === "A" ? null : "A")}
-                            className={cn("w-5 h-5 rounded text-[9px] font-bold transition-colors",
-                              cur === "A" ? "bg-primary text-primary-foreground" : "bg-secondary/80 text-muted-foreground hover:text-primary"
-                            )}>A</button>
-                          <button type="button" disabled={savingTeams}
-                            onClick={() => assignSide(m.id, cur === "B" ? null : "B")}
-                            className={cn("w-5 h-5 rounded text-[9px] font-bold transition-colors",
-                              cur === "B" ? "bg-[hsl(var(--info))] text-primary-foreground" : "bg-secondary/80 text-muted-foreground hover:text-[hsl(var(--info))]"
-                            )}>B</button>
+
+                {showTeamSplit && (
+                  <div className="max-h-[55vh] overflow-y-auto">
+                    {/* 미배정 */}
+                    {unassignedCount > 0 && canManage && (
+                      <div className="mb-2 p-2 rounded-lg bg-[hsl(var(--warning))]/5 border border-[hsl(var(--warning))]/20">
+                        <p className="text-xs font-semibold text-[hsl(var(--warning))] mb-1.5">미배정</p>
+                        <div className="flex flex-wrap gap-1">
+                          {attendingPlayers.filter((m) => !teamMap[m.id]).map((m) => (
+                            <button key={m.id} type="button" disabled={savingTeams}
+                              onClick={() => assignSide(m.id, "A")}
+                              className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
+                              {m.name}
+                            </button>
+                          ))}
                         </div>
-                      );
-                    })}
+                        <p className="text-xs text-muted-foreground mt-1">탭하면 A팀으로 배정</p>
+                      </div>
+                    )}
+
+                    {/* A팀 / B팀 2열 */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="rounded-lg border border-primary/30 bg-primary/5 p-2">
+                        <p className="text-xs font-bold text-primary mb-1.5">A팀 ({teamACount}명)</p>
+                        <div className="space-y-0.5">
+                          {attendingPlayers.filter((m) => teamMap[m.id] === "A").map((m) => (
+                            <button key={m.id} type="button" disabled={savingTeams || !canManage}
+                              onClick={() => assignSide(m.id, "B")}
+                              className="flex w-full items-center rounded px-2 py-1 text-xs font-medium text-foreground hover:bg-[hsl(var(--info))]/10 transition-colors">
+                              <span className="truncate">{m.name}</span>
+                              {canManage && <span className="ml-auto text-[10px] text-muted-foreground/50">→B</span>}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="rounded-lg border border-[hsl(var(--info))]/30 bg-[hsl(var(--info))]/5 p-2">
+                        <p className="text-xs font-bold text-[hsl(var(--info))] mb-1.5">B팀 ({teamBCount}명)</p>
+                        <div className="space-y-0.5">
+                          {attendingPlayers.filter((m) => teamMap[m.id] === "B").map((m) => (
+                            <button key={m.id} type="button" disabled={savingTeams || !canManage}
+                              onClick={() => assignSide(m.id, "A")}
+                              className="flex w-full items-center rounded px-2 py-1 text-xs font-medium text-foreground hover:bg-primary/10 transition-colors">
+                              <span className="truncate">{m.name}</span>
+                              {canManage && <span className="ml-auto text-[10px] text-muted-foreground/50">→A</span>}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 접힌 상태에서 요약 */}
+                {!showTeamSplit && hasTeams && (
+                  <div className="flex items-center justify-center gap-4 py-1 text-sm font-semibold">
+                    <span className="text-primary">A팀 {teamACount}명</span>
+                    <span className="text-muted-foreground">vs</span>
+                    <span className="text-[hsl(var(--info))]">B팀 {teamBCount}명</span>
                   </div>
                 )}
               </CardContent>
