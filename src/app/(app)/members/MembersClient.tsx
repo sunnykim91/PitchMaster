@@ -94,7 +94,7 @@ export default function MembersClient({
     { skip: !!initialData },
   );
   const members = useMemo(() => mapApiMembers(membersData.members), [membersData.members]);
-  const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void; variant?: "default" | "destructive"; confirmLabel?: string } | null>(null);
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
   const { showToast } = useToast();
@@ -175,6 +175,8 @@ export default function MembersClient({
       setConfirmAction({
         message: `${target?.name ?? "해당 회원"}에게 회장을 이임하시겠습니까?\n이임 후 본인은 운영진으로 변경됩니다.`,
         onConfirm: () => doRoleChange(memberId, newRole),
+        variant: "default",
+        confirmLabel: "이임",
       });
       return;
     }
@@ -709,8 +711,8 @@ export default function MembersClient({
       <ConfirmDialog
         open={!!confirmAction}
         title={confirmAction?.message ?? ""}
-        variant="destructive"
-        confirmLabel="제명"
+        variant={confirmAction?.variant ?? "destructive"}
+        confirmLabel={confirmAction?.confirmLabel ?? "제명"}
         onConfirm={() => { confirmAction?.onConfirm(); setConfirmAction(null); }}
         onCancel={() => setConfirmAction(null)}
       />
