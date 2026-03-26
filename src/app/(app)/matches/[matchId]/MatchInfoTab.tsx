@@ -89,6 +89,7 @@ function MatchInfoTabInner({
 }: MatchInfoTabProps) {
   const { showToast } = useToast();
   const [savingTeams, setSavingTeams] = useState(false);
+  const [teamSheetOpen, setTeamSheetOpen] = useState(false);
   const isInternal = match.matchType === "INTERNAL";
 
   /* ── 유니폼 스타일 ── */
@@ -766,121 +767,128 @@ function MatchInfoTabInner({
       )}
 
       {/* ── 자체전 팀 편성 ── */}
-      {isInternal && canManage && (
-        <Card>
-          <CardHeader>
-            <p className="text-xs font-bold uppercase tracking-wider text-primary">TEAM SPLIT</p>
-            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
-              팀 편성
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">참석 확정 인원을 A팀/B팀으로 나눕니다.</p>
-          </CardHeader>
-          <CardContent>
-            {(() => {
-              const attending = baseRoster.filter((m) => memberVoteMap[m.memberId] === "ATTEND");
-              const teamMap: Record<string, "A" | "B"> = {};
-              for (const t of internalTeams ?? []) {
-                teamMap[t.playerId] = t.side;
-              }
-              const teamA = attending.filter((m) => teamMap[m.id] === "A");
-              const teamB = attending.filter((m) => teamMap[m.id] === "B");
-              const unassigned = attending.filter((m) => !teamMap[m.id]);
+      {isInternal && canManage && (() => {
+        const attending = baseRoster.filter((m) => memberVoteMap[m.memberId] === "ATTEND");
+        const teamMap: Record<string, "A" | "B"> = {};
+        for (const t of internalTeams ?? []) teamMap[t.playerId] = t.side;
+        const teamA = attending.filter((m) => teamMap[m.id] === "A");
+        const teamB = attending.filter((m) => teamMap[m.id] === "B");
+        const unassigned = attending.filter((m) => !teamMap[m.id]);
+        const isDone = unassigned.length === 0 && attending.length > 0;
 
-              async function handleRandomSplit() {
-                const shuffled = [...attending].sort(() => Math.random() - 0.5);
-                const half = Math.ceil(shuffled.length / 2);
-                const a = shuffled.slice(0, half).map((m) => m.id);
-                const b = shuffled.slice(half).map((m) => m.id);
-                setSavingTeams(true);
-                const { error } = await apiMutate("/api/internal-teams", "POST", {
-                  matchId, teams: { A: a, B: b },
-                });
-                setSavingTeams(false);
-                if (error) { showToast("팀 편성 저장에 실패했습니다.", "error"); return; }
-                showToast("랜덤 팀 편성이 완료되었습니다.");
-                refetchInternalTeams?.();
-              }
+        async function handleRandomSplit() {
+          const shuffled = [...attending].sort(() => Math.random() - 0.5);
+          const half = Math.ceil(shuffled.length / 2);
+          setSavingTeams(true);
+          await apiMutate("/api/internal-teams", "POST", {
+            matchId, teams: { A: shuffled.slice(0, half).map((m) => m.id), B: shuffled.slice(half).map((m) => m.id) },
+          });
+          setSavingTeams(false);
+          showToast("랜덤 팀 편성이 완료되었습니다.");
+          refetchInternalTeams?.();
+        }
 
-              async function assignSide(playerId: string, side: "A" | "B" | null) {
-                const newMap = { ...teamMap };
-                if (side === null) delete newMap[playerId];
-                else newMap[playerId] = side;
+        async function assignSide(playerId: string, side: "A" | "B" | null) {
+          const newMap = { ...teamMap };
+          if (side === null) delete newMap[playerId]; else newMap[playerId] = side;
+          setSavingTeams(true);
+          await apiMutate("/api/internal-teams", "POST", {
+            matchId, teams: { A: Object.entries(newMap).filter(([, s]) => s === "A").map(([id]) => id), B: Object.entries(newMap).filter(([, s]) => s === "B").map(([id]) => id) },
+          });
+          setSavingTeams(false);
+          refetchInternalTeams?.();
+        }
 
-                const a = Object.entries(newMap).filter(([, s]) => s === "A").map(([id]) => id);
-                const b = Object.entries(newMap).filter(([, s]) => s === "B").map(([id]) => id);
-                setSavingTeams(true);
-                await apiMutate("/api/internal-teams", "POST", { matchId, teams: { A: a, B: b } });
-                setSavingTeams(false);
-                refetchInternalTeams?.();
-              }
+        return (
+          <>
+            {/* 요약 카드 */}
+            <Card className={isDone ? "border-[hsl(var(--success))]/20" : "border-[hsl(var(--warning))]/20"}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-bold">팀 편성</p>
+                    {isDone ? (
+                      <p className="text-xs text-muted-foreground">
+                        <span className="text-primary font-semibold">A {teamA.length}</span>
+                        <span className="mx-1">vs</span>
+                        <span className="text-[hsl(var(--info))] font-semibold">B {teamB.length}</span>
+                      </p>
+                    ) : (
+                      <p className="text-xs text-[hsl(var(--warning))]">
+                        {attending.length === 0 ? "참석 확정 인원 없음" : `미배정 ${unassigned.length}명`}
+                      </p>
+                    )}
+                  </div>
+                  <Button size="sm" onClick={() => setTeamSheetOpen(true)} disabled={attending.length === 0}>
+                    {isDone ? "수정" : "편성하기"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
-              return (
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button size="sm" onClick={handleRandomSplit} disabled={savingTeams || attending.length < 2}>
-                      {savingTeams ? "배정 중..." : "랜덤 배정"}
-                    </Button>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                      <span className="text-muted-foreground">참석 {attending.length}명</span>
-                      {(teamA.length > 0 || teamB.length > 0) && (
-                        <span className="font-medium">
-                          <span className="text-primary">A {teamA.length}</span>
-                          <span className="text-muted-foreground mx-1">vs</span>
-                          <span className="text-[hsl(var(--info))]">B {teamB.length}</span>
-                        </span>
-                      )}
-                      {unassigned.length > 0 && (
-                        <span className="text-[hsl(var(--warning))] font-medium">미배정 {unassigned.length}명</span>
-                      )}
+            {/* 팀 편성 시트 (모달) */}
+            {teamSheetOpen && (
+              <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50" onClick={() => setTeamSheetOpen(false)}>
+                <div
+                  className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-card p-5 shadow-xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold">팀 편성</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        참석 {attending.length}명 ·{" "}
+                        <span className="text-primary font-semibold">A {teamA.length}</span>
+                        {" vs "}
+                        <span className="text-[hsl(var(--info))] font-semibold">B {teamB.length}</span>
+                        {unassigned.length > 0 && <span className="text-[hsl(var(--warning))] ml-1">· 미배정 {unassigned.length}</span>}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={handleRandomSplit} disabled={savingTeams || attending.length < 2}>
+                        랜덤
+                      </Button>
+                      <button type="button" onClick={() => setTeamSheetOpen(false)} className="text-muted-foreground hover:text-foreground text-xl leading-none px-1">×</button>
                     </div>
                   </div>
 
-                  {attending.length === 0 ? (
-                    <p className="text-sm text-muted-foreground py-4 text-center">참석 확정된 인원이 없습니다.</p>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                      {attending.map((m) => {
-                        const current = teamMap[m.id] ?? null;
-                        return (
-                          <div key={m.id} className="flex items-center gap-1.5 rounded-lg bg-secondary/50 px-2.5 py-1.5">
-                            <span className="text-sm font-medium truncate flex-1">{m.name}</span>
-                            <button
-                              type="button"
-                              disabled={savingTeams}
-                              onClick={() => assignSide(m.id, current === "A" ? null : "A")}
-                              className={cn(
-                                "min-w-[32px] rounded-md px-2 py-1 text-xs font-bold transition-colors",
-                                current === "A"
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-secondary text-muted-foreground/50 hover:bg-primary/10 hover:text-primary"
-                              )}
-                            >
-                              A
-                            </button>
-                            <button
-                              type="button"
-                              disabled={savingTeams}
-                              onClick={() => assignSide(m.id, current === "B" ? null : "B")}
-                              className={cn(
-                                "min-w-[32px] rounded-md px-2 py-1 text-xs font-bold transition-colors",
-                                current === "B"
-                                  ? "bg-[hsl(var(--info))] text-primary-foreground"
-                                  : "bg-secondary text-muted-foreground/50 hover:bg-[hsl(var(--info))]/10 hover:text-[hsl(var(--info))]"
-                              )}
-                            >
-                              B
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
+                    {attending.map((m) => {
+                      const cur = teamMap[m.id] ?? null;
+                      return (
+                        <div key={m.id} className={cn(
+                          "flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs",
+                          cur === "A" && "bg-primary/10",
+                          cur === "B" && "bg-[hsl(var(--info))]/10",
+                          !cur && "bg-secondary/50"
+                        )}>
+                          <span className="truncate flex-1 font-medium">{m.name}</span>
+                          <button
+                            type="button" disabled={savingTeams}
+                            onClick={() => assignSide(m.id, cur === "A" ? null : "A")}
+                            className={cn("w-6 h-6 rounded text-[10px] font-bold transition-colors",
+                              cur === "A" ? "bg-primary text-primary-foreground" : "text-muted-foreground/40 hover:text-primary"
+                            )}>A</button>
+                          <button
+                            type="button" disabled={savingTeams}
+                            onClick={() => assignSide(m.id, cur === "B" ? null : "B")}
+                            className={cn("w-6 h-6 rounded text-[10px] font-bold transition-colors",
+                              cur === "B" ? "bg-[hsl(var(--info))] text-primary-foreground" : "text-muted-foreground/40 hover:text-[hsl(var(--info))]"
+                            )}>B</button>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <Button className="w-full mt-4" onClick={() => setTeamSheetOpen(false)}>
+                    완료
+                  </Button>
                 </div>
-              );
-            })()}
-          </CardContent>
-        </Card>
-      )}
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {/* 자체전 팀 편성 조회 (평회원용) */}
       {isInternal && !canManage && (internalTeams ?? []).length > 0 && (

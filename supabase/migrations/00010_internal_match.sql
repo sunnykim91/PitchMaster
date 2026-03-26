@@ -26,3 +26,6 @@ CREATE TABLE IF NOT EXISTS match_internal_teams (
   UNIQUE(match_id, player_id)
 );
 CREATE INDEX IF NOT EXISTS idx_internal_teams_match ON match_internal_teams(match_id);
+
+-- RLS 활성화
+ALTER TABLE match_internal_teams ENABLE ROW LEVEL SECURITY;
