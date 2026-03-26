@@ -39,6 +39,7 @@ import {
 
 /* ── 탭 컴포넌트 ── */
 import { MatchInfoTab } from "./MatchInfoTab";
+import { MatchVoteTab } from "./MatchVoteTab";
 import { MatchTacticsTab } from "./MatchTacticsTab";
 import { MatchRecordTab } from "./MatchRecordTab";
 import { MatchDiaryTab } from "./MatchDiaryTab";
@@ -216,7 +217,7 @@ export default function MatchDetailClient({
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const validTabs = ["info", "tactics", "record", "diary"] as const;
+  const validTabs = ["info", "vote", "tactics", "record", "diary"] as const;
   type TabKey = (typeof validTabs)[number];
   const tabFromUrl = searchParams.get("tab") as TabKey | null;
   const [activeTab, setActiveTabState] = useState<TabKey>(
@@ -384,9 +385,10 @@ export default function MatchDetailClient({
       <div className="sticky top-0 z-10 -mx-1 px-1 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="flex" role="tablist">
           {([
-            { key: "info", label: "기본 정보" },
-            { key: "tactics", label: "전술판" },
-            { key: "record", label: "경기 기록" },
+            { key: "info", label: "정보" },
+            { key: "vote", label: "투표" },
+            { key: "tactics", label: "전술" },
+            { key: "record", label: "기록" },
             { key: "diary", label: "일지" },
           ] as const).map((tab) => (
             <button
@@ -430,6 +432,21 @@ export default function MatchDetailClient({
           refetchInternalTeams={refetchInternalTeams}
           comments={commentsData.comments}
           refetchComments={refetchComments}
+        />
+      </div>
+
+      {/* ── Tab: 투표 ── */}
+      <div className={activeTab === "vote" ? "" : "hidden"}>
+        <MatchVoteTab
+          matchId={matchId}
+          userId={userId}
+          match={match}
+          canManage={canManage}
+          baseRoster={baseRoster}
+          memberVoteMap={memberVoteMap}
+          memberVoteTimeMap={memberVoteTimeMap}
+          refetchVote={refetchVote}
+          handleProxyVote={handleProxyVote}
         />
       </div>
 
