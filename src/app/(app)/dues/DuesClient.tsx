@@ -522,7 +522,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       </div>
 
       {/* ── Tab Content ── */}
-      {duesTab === "records" && (
+      <div className={duesTab === "records" ? "" : "hidden"}>
         <DuesRecordsTab
           role={role}
           monthFilter={monthFilter}
@@ -536,9 +536,9 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           autoMatchMember={autoMatchMember}
           summaryBalance={summaryData.balance}
         />
-      )}
+      </div>
 
-      {duesTab === "status" && (
+      <div className={duesTab === "status" ? "" : "hidden"}>
         <DuesStatusTab
           role={role}
           monthFilter={monthFilter}
@@ -553,9 +553,9 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           syncPaymentStatus={syncPaymentStatus}
           setDuesTab={setDuesTab}
         />
-      )}
+      </div>
 
-      {duesTab === "bulk" && (
+      <div className={duesTab === "bulk" ? "" : "hidden"}>
         <DuesBulkTab
           records={records}
           members={members}
@@ -566,9 +566,9 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           showToast={showToast}
           autoMatchMember={autoMatchMember}
         />
-      )}
+      </div>
 
-      {duesTab === "settings" && (
+      <div className={duesTab === "settings" ? "" : "hidden"}>
         <DuesSettingsTab
           role={role}
           monthFilter={monthFilter}
@@ -579,7 +579,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           showToast={showToast}
           setConfirmAction={setConfirmAction}
         />
-      )}
+      </div>
 
       <ConfirmDialog
         open={!!confirmAction}
