@@ -148,27 +148,27 @@ function MatchTacticsTabInner({
                     {/* A팀 / B팀 2열 */}
                     <div className="grid grid-cols-2 gap-2">
                       <div className="rounded-lg border border-primary/30 bg-primary/5 p-2">
-                        <p className="text-xs font-bold text-primary mb-1.5">A팀 ({teamACount}명)</p>
-                        <div className="space-y-0.5">
+                        <p className="text-xs font-bold text-primary mb-1 sticky top-0 bg-primary/5 py-1 z-1">A팀 ({teamACount}명)</p>
+                        <div className="space-y-px">
                           {attendingPlayers.filter((m) => teamMap[m.id] === "A").map((m) => (
                             <button key={m.id} type="button" disabled={savingTeams || !canManage}
                               onClick={() => assignSide(m.id, "B")}
-                              className="flex w-full items-center rounded px-2 py-1 text-xs font-medium text-foreground hover:bg-[hsl(var(--info))]/10 transition-colors">
+                              className="flex w-full items-center rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-[hsl(var(--info))]/15 active:bg-[hsl(var(--info))]/25 transition-colors min-h-[36px]">
                               <span className="truncate">{m.name}</span>
-                              {canManage && <span className="ml-auto text-[10px] text-muted-foreground/50">→B</span>}
+                              {canManage && <span className="ml-auto shrink-0 text-xs text-[hsl(var(--info))]/70">→B</span>}
                             </button>
                           ))}
                         </div>
                       </div>
                       <div className="rounded-lg border border-[hsl(var(--info))]/30 bg-[hsl(var(--info))]/5 p-2">
-                        <p className="text-xs font-bold text-[hsl(var(--info))] mb-1.5">B팀 ({teamBCount}명)</p>
-                        <div className="space-y-0.5">
+                        <p className="text-xs font-bold text-[hsl(var(--info))] mb-1 sticky top-0 bg-[hsl(var(--info))]/5 py-1 z-1">B팀 ({teamBCount}명)</p>
+                        <div className="space-y-px">
                           {attendingPlayers.filter((m) => teamMap[m.id] === "B").map((m) => (
                             <button key={m.id} type="button" disabled={savingTeams || !canManage}
                               onClick={() => assignSide(m.id, "A")}
-                              className="flex w-full items-center rounded px-2 py-1 text-xs font-medium text-foreground hover:bg-primary/10 transition-colors">
+                              className="flex w-full items-center rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-primary/15 active:bg-primary/25 transition-colors min-h-[36px]">
                               <span className="truncate">{m.name}</span>
-                              {canManage && <span className="ml-auto text-[10px] text-muted-foreground/50">→A</span>}
+                              {canManage && <span className="ml-auto shrink-0 text-xs text-primary/70">→A</span>}
                             </button>
                           ))}
                         </div>
