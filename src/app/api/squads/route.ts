@@ -18,11 +18,20 @@ export async function GET(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  const { data, error } = await db
+  const side = request.nextUrl.searchParams.get("side");
+
+  let query = db
     .from("match_squads")
     .select("*")
-    .eq("match_id", matchId)
-    .order("quarter_number");
+    .eq("match_id", matchId);
+
+  if (side) {
+    query = query.eq("side", side);
+  } else {
+    query = query.is("side", null);
+  }
+
+  const { data, error } = await query.order("quarter_number");
 
   if (error) return apiError(error.message);
   return apiSuccess({ squads: data });
@@ -39,17 +48,31 @@ export async function POST(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  const side = body.side ?? null;
+
+  // partial unique index 사용으로 upsert 대신 delete+insert
+  let deleteQuery = db
+    .from("match_squads")
+    .delete()
+    .eq("match_id", body.matchId)
+    .eq("quarter_number", body.quarterNumber);
+
+  if (side) {
+    deleteQuery = deleteQuery.eq("side", side);
+  } else {
+    deleteQuery = deleteQuery.is("side", null);
+  }
+  await deleteQuery;
+
   const { data, error } = await db
     .from("match_squads")
-    .upsert(
-      {
-        match_id: body.matchId,
-        quarter_number: body.quarterNumber,
-        formation: body.formation,
-        positions: body.positions,
-      },
-      { onConflict: "match_id,quarter_number" }
-    )
+    .insert({
+      match_id: body.matchId,
+      quarter_number: body.quarterNumber,
+      formation: body.formation,
+      positions: body.positions,
+      side,
+    })
     .select()
     .single();
 

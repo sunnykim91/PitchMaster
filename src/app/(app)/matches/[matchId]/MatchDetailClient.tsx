@@ -412,6 +412,7 @@ export default function MatchDetailClient({
           attendingPlayers={attendingPlayers}
           roster={roster}
           sportType={sportType}
+          internalTeams={internalTeams}
         />
       )}
 
@@ -432,6 +433,7 @@ export default function MatchDetailClient({
           refetchGoals={refetchGoals}
           refetchMvp={refetchMvp}
           refetchAttendance={refetchAttendance}
+          internalTeams={internalTeams}
         />
       )}
 

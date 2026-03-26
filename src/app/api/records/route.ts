@@ -60,8 +60,8 @@ export async function GET(request: NextRequest) {
       nameMap.set(name, cur);
     }
 
-    // 2. 실제 경기 통계
-    const { data: allMatches } = await db.from("matches").select("id").eq("team_id", ctx.teamId).eq("status", "COMPLETED");
+    // 2. 실제 경기 통계 (stats_included=false 제외)
+    const { data: allMatches } = await db.from("matches").select("id").eq("team_id", ctx.teamId).eq("status", "COMPLETED").neq("stats_included", false);
     const allMatchIds = (allMatches ?? []).map((m) => m.id);
 
     if (allMatchIds.length > 0) {
@@ -124,8 +124,8 @@ export async function GET(request: NextRequest) {
 
   if (!members) return apiSuccess({ records: [] });
 
-  // Get matches: 시즌 날짜 범위 또는 직접 날짜로 필터
-  let matchQuery = db.from("matches").select("id").eq("team_id", ctx.teamId).eq("status", "COMPLETED");
+  // Get matches: 시즌 날짜 범위 또는 직접 날짜로 필터 (stats_included=false 제외)
+  let matchQuery = db.from("matches").select("id").eq("team_id", ctx.teamId).eq("status", "COMPLETED").neq("stats_included", false);
   if (startDate && endDate) {
     // 직접 날짜 범위 지정 (기간 필터)
     matchQuery = matchQuery.gte("match_date", startDate).lte("match_date", endDate);

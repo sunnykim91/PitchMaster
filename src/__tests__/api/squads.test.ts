@@ -152,10 +152,13 @@ describe("POST /api/squads", () => {
     expect(res.status).toBe(503);
   });
 
-  it("200: STAFF — 스쿼드 upsert 성공", async () => {
+  it("200: STAFF — 스쿼드 저장 성공", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
-    const upsertedSquad = { id: "sq-1", match_id: "m1", quarter_number: 1, formation: "4-3-3" };
-    const db = createMockDb(["match_squads", upsertedSquad]);
+    const savedSquad = { id: "sq-1", match_id: "m1", quarter_number: 1, formation: "4-3-3" };
+    const db = createMockDb(
+      ["match_squads", null],        // delete (기존 삭제)
+      ["match_squads", savedSquad],  // insert (새로 저장)
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(squadBody));
@@ -164,10 +167,13 @@ describe("POST /api/squads", () => {
     expect(json.match_id).toBe("m1");
   });
 
-  it("200: PRESIDENT — 스쿼드 upsert 성공", async () => {
+  it("200: PRESIDENT — 스쿼드 저장 성공", async () => {
     vi.mocked(auth).mockResolvedValue(presidentSession);
-    const upsertedSquad = { id: "sq-2", match_id: "m1", quarter_number: 2, formation: "4-4-2" };
-    const db = createMockDb(["match_squads", upsertedSquad]);
+    const savedSquad = { id: "sq-2", match_id: "m1", quarter_number: 2, formation: "4-4-2" };
+    const db = createMockDb(
+      ["match_squads", null],        // delete
+      ["match_squads", savedSquad],  // insert
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ ...squadBody, quarterNumber: 2, formation: "4-4-2" }));
@@ -176,12 +182,15 @@ describe("POST /api/squads", () => {
 
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
-    const db = createMockDb(["match_squads", null, { message: "upsert failed" }]);
+    const db = createMockDb(
+      ["match_squads", null],                                    // delete 성공
+      ["match_squads", null, { message: "insert failed" }],      // insert 실패
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(squadBody));
     expect(res.status).toBe(400);
     const json = await res.json();
-    expect(json.error).toBe("upsert failed");
+    expect(json.error).toBe("insert failed");
   });
 });

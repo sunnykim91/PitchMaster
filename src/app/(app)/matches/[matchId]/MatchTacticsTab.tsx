@@ -9,8 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { recommendFormation, type PlayerInput } from "@/lib/formationAI";
-import type { Match, SimpleRosterPlayer } from "./matchDetailTypes";
+import type { Match, SimpleRosterPlayer, InternalTeamAssignment } from "./matchDetailTypes";
 import type { SportType } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 /* ── Dynamic imports with loading UI ── */
 const TacticsBoardSkeleton = () => (
@@ -37,6 +38,7 @@ export interface MatchTacticsTabProps {
   attendingPlayers: AttendingPlayer[];
   roster: SimpleRosterPlayer[];
   sportType: SportType;
+  internalTeams?: InternalTeamAssignment[];
 }
 
 function MatchTacticsTabInner({
@@ -46,13 +48,54 @@ function MatchTacticsTabInner({
   attendingPlayers,
   roster,
   sportType,
+  internalTeams,
 }: MatchTacticsTabProps) {
   const [tacticsKey, setTacticsKey] = useState(0);
   const [generatedSquads, setGeneratedSquads] = useState<GeneratedSquad[]>([]);
+  const isInternal = match.matchType === "INTERNAL";
+  const [activeSide, setActiveSide] = useState<"A" | "B">("A");
+
+  // 자체전: 팀별 roster 필터링
+  const filteredRoster = isInternal && internalTeams
+    ? roster.filter((p) => internalTeams.some((t) => t.playerId === p.id && t.side === activeSide))
+    : roster;
+  const filteredAttending = isInternal && internalTeams
+    ? attendingPlayers.filter((p) => internalTeams.some((t) => t.playerId === p.id && t.side === activeSide))
+    : attendingPlayers;
 
   return (
     <>
       {/* ── AI 포메이션 추천 ── */}
+      {/* 자체전 A/B 팀 토글 */}
+      {isInternal && (
+        <div className="flex gap-2 mb-2">
+          <button
+            type="button"
+            onClick={() => { setActiveSide("A"); setTacticsKey((k) => k + 1); }}
+            className={cn(
+              "flex-1 rounded-lg border px-4 py-2.5 text-sm font-bold transition-colors",
+              activeSide === "A"
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-muted-foreground hover:border-primary/30"
+            )}
+          >
+            A팀 전술
+          </button>
+          <button
+            type="button"
+            onClick={() => { setActiveSide("B"); setTacticsKey((k) => k + 1); }}
+            className={cn(
+              "flex-1 rounded-lg border px-4 py-2.5 text-sm font-bold transition-colors",
+              activeSide === "B"
+                ? "border-[hsl(var(--info))] bg-[hsl(var(--info))]/10 text-[hsl(var(--info))]"
+                : "border-border text-muted-foreground hover:border-[hsl(var(--info))]/30"
+            )}
+          >
+            B팀 전술
+          </button>
+        </div>
+      )}
+
       {canManage && attendingPlayers.length >= 5 && (() => {
         const aiPlayers: PlayerInput[] = attendingPlayers.map((p) => ({
           id: p.id,
@@ -131,8 +174,9 @@ function MatchTacticsTabInner({
         <AutoFormationBuilder
           matchId={matchId}
           quarterCount={match.quarterCount}
-          attendingPlayers={attendingPlayers}
+          attendingPlayers={filteredAttending}
           sportType={sportType}
+          side={isInternal ? activeSide : undefined}
           onGenerated={(squads) => {
             setGeneratedSquads(squads);
             setTacticsKey((k) => k + 1);
@@ -141,12 +185,13 @@ function MatchTacticsTabInner({
       )}
 
       <TacticsBoard
-        key={tacticsKey}
+        key={`${tacticsKey}-${activeSide}`}
         matchId={matchId}
-        roster={roster}
+        roster={filteredRoster}
         quarterCount={match.quarterCount}
         sportType={sportType}
         readOnly={!canManage}
+        side={isInternal ? activeSide : undefined}
         initialSquads={generatedSquads.length > 0 ? generatedSquads.map((sq) => ({
           id: `gen-${sq.quarter_number}`,
           match_id: matchId,

@@ -11,8 +11,8 @@ import { auth } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 const mockMatches = [
-  { id: "m1", match_date: "2025-03-20", status: "SCHEDULED", location: "구장A" },
-  { id: "m2", match_date: "2025-02-10", status: "COMPLETED", location: "구장B" },
+  { id: "m1", match_date: "2025-03-20", status: "SCHEDULED", location: "구장A", match_type: "REGULAR" },
+  { id: "m2", match_date: "2025-02-10", status: "COMPLETED", location: "구장B", match_type: "REGULAR" },
 ];
 
 // ─── GET /api/matches ─────────────────────────────────────────────────────────
@@ -55,7 +55,10 @@ describe("GET /api/matches", () => {
     const res = await GET();
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.matches).toEqual(mockMatches.map((m: Record<string, unknown>) => ({ ...m, score: null })));
+    expect(json.matches).toEqual(mockMatches.map((m: Record<string, unknown>) => ({
+      ...m,
+      score: m.status === "COMPLETED" ? "0 : 0" : null,
+    })));
   });
 
   it("400: DB 에러 발생시 에러 반환", async () => {

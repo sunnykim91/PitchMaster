@@ -58,6 +58,7 @@ type Props = {
   quarterCount: number;
   attendingPlayers: AttendingPlayer[];
   sportType?: SportType;
+  side?: "A" | "B";
   onGenerated?: (squads: GeneratedSquad[]) => void;
 };
 
@@ -457,6 +458,7 @@ export default function AutoFormationBuilder({
   quarterCount,
   attendingPlayers,
   sportType = "SOCCER",
+  side,
   onGenerated,
 }: Props) {
   const filteredFormations = getFormationsForSport(sportType);
@@ -627,6 +629,7 @@ export default function AutoFormationBuilder({
       await apiMutate("/api/squads", "POST", {
         matchId, quarterNumber: sq.quarter_number,
         formation: sq.formation, positions: sq.positions,
+        side: side ?? null,
       });
     }
 

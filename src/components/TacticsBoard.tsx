@@ -26,6 +26,7 @@ type TacticsBoardProps = {
   teamSettings?: TeamSettings;
   initialSquads?: SquadRow[]; // 외부에서 주입 시 API fetch skip
   readOnly?: boolean; // MEMBER: 조회만 가능
+  side?: "A" | "B"; // 자체전 팀 구분
 };
 
 type Placement = {
@@ -73,7 +74,7 @@ const SAVE_DEBOUNCE_MS = 300;
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
-export default function TacticsBoard({ matchId, roster, quarterCount, sportType = "SOCCER", teamSettings: teamSettingsProp, initialSquads, readOnly = false }: TacticsBoardProps) {
+export default function TacticsBoard({ matchId, roster, quarterCount, sportType = "SOCCER", teamSettings: teamSettingsProp, initialSquads, readOnly = false, side }: TacticsBoardProps) {
   const isFutsal = sportType === "FUTSAL";
   const futsalFieldCounts = useMemo(() => (isFutsal ? getFutsalFieldCounts() : []), [isFutsal]);
   const [futsalFieldCount, setFutsalFieldCount] = useState(isFutsal ? 5 : 0);
@@ -95,7 +96,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     setData: setSquadsApiData,
     loading: squadsApiLoading,
   } = useApi<SquadsApiResponse>(
-    `/api/squads?matchId=${matchId}`,
+    `/api/squads?matchId=${matchId}${side ? `&side=${side}` : ""}`,
     initialSquads ? { squads: initialSquads } : { squads: [] },
     { skip: Boolean(initialSquads) }
   );
@@ -183,6 +184,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       quarterNumber: quarterNum,
       formation: state.formationId,
       positions: state.placements,
+      side: side ?? null,
     });
     // 로컬 squadsData도 동기화 (쿼터 전환 시 즉시 반영)
     setSquadsApiData((prev) => {

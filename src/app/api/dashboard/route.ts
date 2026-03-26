@@ -135,6 +135,7 @@ export async function GET() {
     .select("id")
     .eq("team_id", ctx.teamId)
     .eq("status", "COMPLETED")
+    .eq("match_type", "REGULAR")
     .order("match_date", { ascending: false });
 
   if (currentSeason) {

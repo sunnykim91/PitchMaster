@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
       scorer_id: body.scorerId,
       assist_id: body.assistId || null,
       is_own_goal: body.isOwnGoal ?? false,
+      side: body.side ?? null,
       recorded_by: ctx.userId,
     })
     .select()
@@ -85,6 +86,7 @@ export async function PUT(request: NextRequest) {
       scorer_id: body.scorerId,
       assist_id: body.assistId || null,
       is_own_goal: body.isOwnGoal ?? false,
+      side: body.side ?? null,
     })
     .eq("id", body.id)
     .select()

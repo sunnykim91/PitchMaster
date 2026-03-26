@@ -19,6 +19,7 @@ import type {
   AttendanceState,
   RosterPlayer,
   SimpleRosterPlayer,
+  InternalTeamAssignment,
 } from "./matchDetailTypes";
 import { SPECIAL_PLAYERS as specialPlayers } from "./matchDetailTypes";
 
@@ -40,6 +41,8 @@ export interface MatchRecordTabProps {
   refetchMvp: () => Promise<unknown>;
   /** 출석 refetch */
   refetchAttendance: () => Promise<unknown>;
+  /** 자체전 팀 편성 */
+  internalTeams?: InternalTeamAssignment[];
 }
 
 function MatchRecordTabInner({
@@ -57,8 +60,10 @@ function MatchRecordTabInner({
   refetchGoals,
   refetchMvp,
   refetchAttendance,
+  internalTeams,
 }: MatchRecordTabProps) {
   const { showToast } = useToast();
+  const isInternal = match.matchType === "INTERNAL";
 
   /* ── Local UI state ── */
   const [showDetailForm, setShowDetailForm] = useState(false);
@@ -104,6 +109,13 @@ function MatchRecordTabInner({
       scorerId = "UNKNOWN";
     }
 
+    // 자체전: 득점자의 소속팀(side) 자동 결정
+    let side: "A" | "B" | null = null;
+    if (isInternal && internalTeams) {
+      const assignment = internalTeams.find((t) => t.playerId === scorerId);
+      side = assignment?.side ?? null;
+    }
+
     if (editingGoalId) {
       const { error: err } = await apiMutate("/api/goals", "PUT", {
         id: editingGoalId,
@@ -112,6 +124,7 @@ function MatchRecordTabInner({
         quarter,
         minute,
         isOwnGoal,
+        side,
       });
       setEditingGoalId(null);
       if (err) { showToast("수정에 실패했습니다.", "error"); return; }
@@ -124,6 +137,7 @@ function MatchRecordTabInner({
         quarter,
         minute,
         isOwnGoal,
+        side,
       });
       if (err) { showToast("기록 추가에 실패했습니다.", "error"); return; }
     }
@@ -210,19 +224,39 @@ function MatchRecordTabInner({
           <div className="text-center">
             <p className="type-overline">경기 스코어</p>
             <div className="mt-3 flex items-center justify-center gap-6">
-              <div>
-                <p className="type-overline">우리팀</p>
-                <p className="type-score text-foreground">
-                  {goals.filter((g) => g.scorerId !== "OPPONENT" && !g.isOwnGoal).length}
-                </p>
-              </div>
-              <span className="text-2xl text-muted-foreground/40">:</span>
-              <div>
-                <p className="type-overline">상대팀</p>
-                <p className="type-score text-muted-foreground/60">
-                  {goals.filter((g) => g.scorerId === "OPPONENT" || g.isOwnGoal).length}
-                </p>
-              </div>
+              {isInternal ? (
+                <>
+                  <div>
+                    <p className="type-overline text-primary">A팀</p>
+                    <p className="type-score text-primary">
+                      {goals.filter((g) => g.side === "A").length}
+                    </p>
+                  </div>
+                  <span className="text-2xl text-muted-foreground/40">:</span>
+                  <div>
+                    <p className="type-overline text-[hsl(var(--info))]">B팀</p>
+                    <p className="type-score text-[hsl(var(--info))]">
+                      {goals.filter((g) => g.side === "B").length}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <p className="type-overline">우리팀</p>
+                    <p className="type-score text-foreground">
+                      {goals.filter((g) => g.scorerId !== "OPPONENT" && !g.isOwnGoal).length}
+                    </p>
+                  </div>
+                  <span className="text-2xl text-muted-foreground/40">:</span>
+                  <div>
+                    <p className="type-overline">상대팀</p>
+                    <p className="type-score text-muted-foreground/60">
+                      {goals.filter((g) => g.scorerId === "OPPONENT" || g.isOwnGoal).length}
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
             {canRecord && (
               <div className="mt-4 flex flex-wrap justify-center gap-2">
