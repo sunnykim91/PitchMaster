@@ -157,10 +157,10 @@ function MatchInfoTabInner({
     setCompleting(true);
     try {
       await apiMutate("/api/matches", "PUT", { id: matchId, status: "COMPLETED" });
-      showToast("경기가 완료 처리되었습니다.");
+      showToast("경기가 완료되었습니다. 기록 탭에서 골/MVP/출석을 기록하세요.");
       await refetchMatches();
     } catch {
-      showToast("경기 완료 처리에 실패했습니다.", "error");
+      showToast("처리에 실패했습니다.", "error");
     } finally {
       setCompleting(false);
       setShowCompleteConfirm(false);
@@ -314,8 +314,8 @@ function MatchInfoTabInner({
         <Card className="border-[hsl(var(--success))]/20 bg-[hsl(var(--success))]/5">
           <CardContent className="flex items-center justify-between gap-4 p-4">
             <div>
-              <p className="text-sm font-semibold text-foreground">경기를 완료 처리하시겠습니까?</p>
-              <p className="text-xs text-muted-foreground">완료 처리하면 전적과 기록에 반영됩니다.</p>
+              <p className="text-sm font-semibold text-foreground">경기가 끝났나요? 기록을 시작하세요</p>
+              <p className="text-xs text-muted-foreground">완료 처리 후 골 기록, MVP 투표, 출석 체크가 가능합니다.</p>
             </div>
             <Button
               size="sm"
@@ -323,16 +323,16 @@ function MatchInfoTabInner({
               disabled={completing}
               onClick={() => setShowCompleteConfirm(true)}
             >
-              {completing ? "처리 중..." : "경기 완료"}
+              {completing ? "처리 중..." : "경기 기록 시작"}
             </Button>
           </CardContent>
         </Card>
       )}
       <ConfirmDialog
         open={showCompleteConfirm}
-        title="경기 완료 처리"
-        description="이 경기를 완료 상태로 변경합니다. 완료된 경기의 기록만 시즌 전적에 반영됩니다."
-        confirmLabel="완료 처리"
+        title="경기 기록을 시작하시겠습니까?"
+        description="완료 처리 후 골 기록, MVP 투표, 출석 체크를 할 수 있습니다. 시즌 전적에도 반영됩니다."
+        confirmLabel="경기 기록 시작"
         cancelLabel="취소"
         onConfirm={handleCompleteMatch}
         onCancel={() => setShowCompleteConfirm(false)}
