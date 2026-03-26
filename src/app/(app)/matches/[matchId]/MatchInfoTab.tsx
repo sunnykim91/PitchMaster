@@ -769,45 +769,9 @@ function MatchInfoTabInner({
                 refetchInternalTeams?.();
               }
 
-              function PlayerRow({ m, current }: { m: typeof attending[0]; current: "A" | "B" | null }) {
-                return (
-                  <div className="flex items-center justify-between gap-2 rounded-lg bg-secondary/50 px-3 py-2.5">
-                    <span className="text-sm font-medium truncate">{m.name}</span>
-                    <div className="flex gap-1.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => assignSide(m.id, current === "A" ? null : "A")}
-                        disabled={savingTeams}
-                        className={cn(
-                          "min-h-[36px] min-w-[36px] rounded-lg text-sm font-bold transition-colors",
-                          current === "A"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-secondary text-muted-foreground hover:bg-primary/10 hover:text-primary"
-                        )}
-                      >
-                        A
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => assignSide(m.id, current === "B" ? null : "B")}
-                        disabled={savingTeams}
-                        className={cn(
-                          "min-h-[36px] min-w-[36px] rounded-lg text-sm font-bold transition-colors",
-                          current === "B"
-                            ? "bg-[hsl(var(--info))] text-primary-foreground"
-                            : "bg-secondary text-muted-foreground hover:bg-[hsl(var(--info))]/10 hover:text-[hsl(var(--info))]"
-                        )}
-                      >
-                        B
-                      </button>
-                    </div>
-                  </div>
-                );
-              }
-
               return (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Button size="sm" onClick={handleRandomSplit} disabled={savingTeams || attending.length < 2}>
                       {savingTeams ? "배정 중..." : "랜덤 배정"}
                     </Button>
@@ -829,12 +793,30 @@ function MatchInfoTabInner({
                   {attending.length === 0 ? (
                     <p className="text-sm text-muted-foreground py-4 text-center">참석 확정된 인원이 없습니다.</p>
                   ) : (
-                    <div className="space-y-1.5">
-                      {attending.map((m) => (
-                        <PlayerRow key={m.id} m={m} current={teamMap[m.id] ?? null} />
-                      ))}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
+                      {attending.map((m) => {
+                        const current = teamMap[m.id] ?? null;
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            disabled={savingTeams}
+                            onClick={() => assignSide(m.id, current === null ? "A" : current === "A" ? "B" : null)}
+                            className={cn(
+                              "flex items-center justify-between gap-1 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors",
+                              current === "A" && "bg-primary/15 text-primary border border-primary/30",
+                              current === "B" && "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))] border border-[hsl(var(--info))]/30",
+                              current === null && "bg-secondary text-muted-foreground border border-border hover:border-primary/30"
+                            )}
+                          >
+                            <span className="truncate">{m.name}</span>
+                            {current && <span className="shrink-0 font-bold">{current}</span>}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
+                  <p className="text-xs text-muted-foreground">클릭: 미배정 → A → B → 미배정</p>
                 </div>
               );
             })()}
