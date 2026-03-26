@@ -260,28 +260,49 @@ function MatchRecordTabInner({
             </div>
             {canRecord && (
               <div className="mt-4 flex flex-wrap justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowDetailForm(true)}
-                  className="rounded-full bg-[hsl(var(--success))] px-5 py-2 text-xs font-bold text-white shadow-[0_2px_8px_-2px_hsl(var(--success)/0.4)] transition-all hover:bg-[hsl(var(--success))]/90 active:scale-95"
-                >
-                  + 득점
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const formData = new FormData();
-                    formData.set("scorerId", "OPPONENT");
-                    formData.set("assistId", "");
-                    formData.set("quarter", "0");
-                    formData.set("minute", "0");
-                    formData.set("isOwnGoal", "");
-                    await handleAddGoal(formData);
-                  }}
-                  className="rounded-full bg-[hsl(var(--loss))] px-5 py-2 text-xs font-bold text-white shadow-[0_2px_8px_-2px_hsl(var(--loss)/0.4)] transition-all hover:bg-[hsl(var(--loss))]/90 active:scale-95"
-                >
-                  + 실점
-                </button>
+                {isInternal ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => { setShowDetailForm(true); /* A팀 골 기록 시 side는 선수 선택에서 자동 결정 */ }}
+                      className="rounded-full bg-primary px-5 py-2 text-xs font-bold text-primary-foreground shadow-[0_2px_8px_-2px_hsl(16_85%_58%/0.4)] transition-all hover:bg-primary/90 active:scale-95"
+                    >
+                      + A팀 골
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowDetailForm(true)}
+                      className="rounded-full bg-[hsl(var(--info))] px-5 py-2 text-xs font-bold text-primary-foreground shadow-[0_2px_8px_-2px_hsl(var(--info)/0.4)] transition-all hover:bg-[hsl(var(--info))]/90 active:scale-95"
+                    >
+                      + B팀 골
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setShowDetailForm(true)}
+                      className="rounded-full bg-[hsl(var(--success))] px-5 py-2 text-xs font-bold text-white shadow-[0_2px_8px_-2px_hsl(var(--success)/0.4)] transition-all hover:bg-[hsl(var(--success))]/90 active:scale-95"
+                    >
+                      + 득점
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const formData = new FormData();
+                        formData.set("scorerId", "OPPONENT");
+                        formData.set("assistId", "");
+                        formData.set("quarter", "0");
+                        formData.set("minute", "0");
+                        formData.set("isOwnGoal", "");
+                        await handleAddGoal(formData);
+                      }}
+                      className="rounded-full bg-[hsl(var(--loss))] px-5 py-2 text-xs font-bold text-white shadow-[0_2px_8px_-2px_hsl(var(--loss)/0.4)] transition-all hover:bg-[hsl(var(--loss))]/90 active:scale-95"
+                    >
+                      + 실점
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>

@@ -98,14 +98,23 @@ function MatchTacticsTabInner({
         </div>
       )}
 
-      {canManage && attendingPlayers.length >= 5 && (() => {
-        const aiPlayers: PlayerInput[] = attendingPlayers.map((p) => ({
+      {/* 자체전: 팀 편성이 안 되어 있으면 안내 */}
+      {isInternal && filteredAttending.length === 0 && (
+        <Card className="border-[hsl(var(--warning))]/20 bg-[hsl(var(--warning))]/5">
+          <CardContent className="p-4 text-sm text-[hsl(var(--warning))]">
+            기본 정보 탭에서 먼저 A팀/B팀 편성을 완료해주세요.
+          </CardContent>
+        </Card>
+      )}
+
+      {canManage && filteredAttending.length >= 5 && (() => {
+        const aiPlayers: PlayerInput[] = filteredAttending.map((p) => ({
           id: p.id,
           name: p.name,
           preferredPositions: p.preferredPositions ?? [p.preferredPosition],
         }));
-        const maxPlayers = sportType === "FUTSAL" ? Math.min(attendingPlayers.length, 8) : 11;
-        const rec = recommendFormation(aiPlayers, Math.min(attendingPlayers.length, maxPlayers), sportType);
+        const maxPlayers = sportType === "FUTSAL" ? Math.min(filteredAttending.length, 8) : 11;
+        const rec = recommendFormation(aiPlayers, Math.min(filteredAttending.length, maxPlayers), sportType);
         if (!rec) return null;
         return (
           <Card className="border-primary/20 bg-primary/5">
