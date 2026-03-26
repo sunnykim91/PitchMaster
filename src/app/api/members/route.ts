@@ -186,8 +186,24 @@ export async function PUT(request: NextRequest) {
   if (!body.memberId || !body.role)
     return apiError("memberId and role required");
 
+  const validRoles = ["PRESIDENT", "STAFF", "MEMBER"];
+  if (!validRoles.includes(body.role))
+    return apiError("유효하지 않은 역할입니다");
+
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  // 자기 자신 역할 변경 차단 (회장이 스스로 강등하면 복구 불가)
+  const { data: targetMember } = await db
+    .from("team_members")
+    .select("user_id")
+    .eq("id", body.memberId)
+    .eq("team_id", ctx.teamId)
+    .single();
+
+  if (targetMember?.user_id === ctx.userId) {
+    return apiError("자신의 역할은 변경할 수 없습니다");
+  }
 
   const { error } = await db
     .from("team_members")

@@ -302,7 +302,10 @@ describe("PUT /api/members", () => {
 
   it("200: PRESIDENT — 역할 변경 성공", async () => {
     vi.mocked(auth).mockResolvedValue(presidentSession);
-    const db = createMockDb(["team_members", null]);
+    const db = createMockDb(
+      ["team_members", { user_id: "other-user" }], // self-check select
+      ["team_members", null],                        // update
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ memberId: "mem-1", role: "STAFF" }));
@@ -311,9 +314,36 @@ describe("PUT /api/members", () => {
     expect(json.ok).toBe(true);
   });
 
+  it("400: 자기 자신 역할 변경 차단", async () => {
+    vi.mocked(auth).mockResolvedValue(presidentSession);
+    const db = createMockDb(
+      ["team_members", { user_id: presidentSession.user.id }], // self-check: 본인
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await PUT(makeRequest({ memberId: "mem-1", role: "STAFF" }));
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain("자신의 역할");
+  });
+
+  it("400: 유효하지 않은 역할 값 거부", async () => {
+    vi.mocked(auth).mockResolvedValue(presidentSession);
+    const db = createMockDb();
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await PUT(makeRequest({ memberId: "mem-1", role: "ADMIN" }));
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain("유효하지 않은");
+  });
+
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(presidentSession);
-    const db = createMockDb(["team_members", null, { message: "update failed" }]);
+    const db = createMockDb(
+      ["team_members", { user_id: "other-user" }],              // self-check select
+      ["team_members", null, { message: "update failed" }],     // update error
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ memberId: "mem-1", role: "STAFF" }));

@@ -22,6 +22,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 type Member = {
   id: string;
+  userIdRaw: string | null; // team_members.user_id (본인 식별용)
   name: string;
   role: Role;
   preferredPositions: DetailedPosition[];
@@ -57,6 +58,7 @@ type ApiMemberRow = {
 function mapApiMembers(rows: ApiMemberRow[]): Member[] {
   return rows.map((row) => ({
     id: row.id,
+    userIdRaw: row.user_id,
     name: row.users?.name ?? row.pre_name ?? "이름 없음",
     role: row.role,
     preferredPositions: (row.users?.preferred_positions ?? []) as DetailedPosition[],
@@ -571,7 +573,7 @@ export default function MembersClient({
                       포지션 지정
                     </Button>
                   )}
-                  {canChangeRole ? (
+                  {canChangeRole && member.userIdRaw !== userId ? (
                     <Select
                       value={member.role}
                       onValueChange={(value) => handleRoleChange(member.id, value as Role)}
