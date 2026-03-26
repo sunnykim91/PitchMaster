@@ -120,7 +120,7 @@ export default function MatchDetailClient({
   const {
     data: diaryData,
     refetch: refetchDiary,
-  } = useApi<{ diary: DiaryRow }>(`/api/diary?matchId=${matchId}`, initialData?.diary ?? { diary: null }, { skip: !!initialData?.diary });
+  } = useApi<{ diary: DiaryRow }>(`/api/diary?matchId=${matchId}`, initialData?.diary ?? { diary: null });
 
   const {
     data: membersData,
