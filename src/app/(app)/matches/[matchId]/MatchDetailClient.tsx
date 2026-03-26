@@ -429,6 +429,7 @@ export default function MatchDetailClient({
           roster={roster}
           sportType={sportType}
           internalTeams={internalTeams}
+          refetchInternalTeams={refetchInternalTeams}
         />
       )}
 

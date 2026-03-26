@@ -12,6 +12,7 @@ import { recommendFormation, type PlayerInput } from "@/lib/formationAI";
 import type { Match, SimpleRosterPlayer, InternalTeamAssignment } from "./matchDetailTypes";
 import type { SportType } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/lib/ToastContext";
 
 /* ── Dynamic imports with loading UI ── */
 const TacticsBoardSkeleton = () => (
@@ -39,6 +40,7 @@ export interface MatchTacticsTabProps {
   roster: SimpleRosterPlayer[];
   sportType: SportType;
   internalTeams?: InternalTeamAssignment[];
+  refetchInternalTeams?: () => Promise<unknown>;
 }
 
 function MatchTacticsTabInner({
@@ -49,11 +51,15 @@ function MatchTacticsTabInner({
   roster,
   sportType,
   internalTeams,
+  refetchInternalTeams,
 }: MatchTacticsTabProps) {
   const [tacticsKey, setTacticsKey] = useState(0);
   const [generatedSquads, setGeneratedSquads] = useState<GeneratedSquad[]>([]);
   const isInternal = match.matchType === "INTERNAL";
   const [activeSide, setActiveSide] = useState<"A" | "B">("A");
+  const [savingTeams, setSavingTeams] = useState(false);
+  const [showTeamSplit, setShowTeamSplit] = useState(false);
+  const { showToast } = useToast();
 
   // 자체전: 팀별 roster 필터링
   const filteredRoster = isInternal && internalTeams
@@ -66,46 +72,132 @@ function MatchTacticsTabInner({
   return (
     <>
       {/* ── AI 포메이션 추천 ── */}
-      {/* 자체전 A/B 팀 토글 */}
-      {isInternal && (
-        <div className="flex gap-2 mb-3">
-          <button
-            type="button"
-            onClick={() => { setActiveSide("A"); setTacticsKey((k) => k + 1); }}
-            className={cn(
-              "flex-1 min-h-[44px] rounded-lg border px-4 text-sm font-bold transition-colors",
-              activeSide === "A"
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border text-muted-foreground hover:border-primary/30"
-            )}
-          >
-            <span className="sm:hidden">A팀</span>
-            <span className="hidden sm:inline">A팀 전술</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => { setActiveSide("B"); setTacticsKey((k) => k + 1); }}
-            className={cn(
-              "flex-1 min-h-[44px] rounded-lg border px-4 text-sm font-bold transition-colors",
-              activeSide === "B"
-                ? "border-[hsl(var(--info))] bg-[hsl(var(--info))]/10 text-[hsl(var(--info))]"
-                : "border-border text-muted-foreground hover:border-[hsl(var(--info))]/30"
-            )}
-          >
-            <span className="sm:hidden">B팀</span>
-            <span className="hidden sm:inline">B팀 전술</span>
-          </button>
-        </div>
-      )}
+      {/* 자체전: 팀 편성 + A/B 토글 통합 */}
+      {isInternal && (() => {
+        const teamMap: Record<string, "A" | "B"> = {};
+        for (const t of internalTeams ?? []) teamMap[t.playerId] = t.side;
+        const teamACount = Object.values(teamMap).filter((s) => s === "A").length;
+        const teamBCount = Object.values(teamMap).filter((s) => s === "B").length;
+        const unassignedCount = attendingPlayers.filter((p) => !teamMap[p.id]).length;
+        const hasTeams = teamACount > 0 || teamBCount > 0;
 
-      {/* 자체전: 팀 편성이 안 되어 있으면 안내 */}
-      {isInternal && filteredAttending.length === 0 && (
-        <Card className="border-[hsl(var(--warning))]/20 bg-[hsl(var(--warning))]/5">
-          <CardContent className="p-4 text-sm text-[hsl(var(--warning))]">
-            기본 정보 탭에서 먼저 A팀/B팀 편성을 완료해주세요.
-          </CardContent>
-        </Card>
-      )}
+        async function assignSide(playerId: string, side: "A" | "B" | null) {
+          const newMap = { ...teamMap };
+          if (side === null) delete newMap[playerId]; else newMap[playerId] = side;
+          setSavingTeams(true);
+          await apiMutate("/api/internal-teams", "POST", {
+            matchId, teams: { A: Object.entries(newMap).filter(([, s]) => s === "A").map(([id]) => id), B: Object.entries(newMap).filter(([, s]) => s === "B").map(([id]) => id) },
+          });
+          setSavingTeams(false);
+          refetchInternalTeams?.();
+        }
+
+        async function handleRandomSplit() {
+          const shuffled = [...attendingPlayers].sort(() => Math.random() - 0.5);
+          const half = Math.ceil(shuffled.length / 2);
+          setSavingTeams(true);
+          await apiMutate("/api/internal-teams", "POST", {
+            matchId, teams: { A: shuffled.slice(0, half).map((m) => m.id), B: shuffled.slice(half).map((m) => m.id) },
+          });
+          setSavingTeams(false);
+          showToast("랜덤 팀 편성 완료");
+          refetchInternalTeams?.();
+        }
+
+        return (
+          <>
+            {/* 팀 편성 접기/펼치기 */}
+            <Card className={hasTeams ? "border-[hsl(var(--success))]/20" : "border-[hsl(var(--warning))]/20"}>
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-xs">
+                    <span className="font-bold text-sm">팀 편성</span>
+                    {hasTeams ? (
+                      <span className="ml-2">
+                        <span className="text-primary font-semibold">A {teamACount}</span>
+                        <span className="text-muted-foreground mx-1">vs</span>
+                        <span className="text-[hsl(var(--info))] font-semibold">B {teamBCount}</span>
+                        {unassignedCount > 0 && <span className="text-[hsl(var(--warning))] ml-1">· 미배정 {unassignedCount}</span>}
+                      </span>
+                    ) : (
+                      <span className="ml-2 text-[hsl(var(--warning))]">편성 필요</span>
+                    )}
+                  </div>
+                  <div className="flex gap-1.5">
+                    {canManage && (
+                      <Button size="sm" variant="outline" onClick={handleRandomSplit} disabled={savingTeams || attendingPlayers.length < 2}>
+                        랜덤
+                      </Button>
+                    )}
+                    {canManage && (
+                      <Button size="sm" variant={showTeamSplit ? "default" : "outline"} onClick={() => setShowTeamSplit(!showTeamSplit)}>
+                        {showTeamSplit ? "접기" : "편성"}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                {/* 편성 그리드 */}
+                {showTeamSplit && canManage && (
+                  <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-1">
+                    {attendingPlayers.map((m) => {
+                      const cur = teamMap[m.id] ?? null;
+                      return (
+                        <div key={m.id} className={cn(
+                          "flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs",
+                          cur === "A" && "bg-primary/10",
+                          cur === "B" && "bg-[hsl(var(--info))]/10",
+                          !cur && "bg-secondary/50"
+                        )}>
+                          <span className="truncate flex-1 font-medium">{m.name}</span>
+                          <button type="button" disabled={savingTeams}
+                            onClick={() => assignSide(m.id, cur === "A" ? null : "A")}
+                            className={cn("w-6 h-6 rounded text-[10px] font-bold transition-colors",
+                              cur === "A" ? "bg-primary text-primary-foreground" : "text-muted-foreground/40 hover:text-primary"
+                            )}>A</button>
+                          <button type="button" disabled={savingTeams}
+                            onClick={() => assignSide(m.id, cur === "B" ? null : "B")}
+                            className={cn("w-6 h-6 rounded text-[10px] font-bold transition-colors",
+                              cur === "B" ? "bg-[hsl(var(--info))] text-primary-foreground" : "text-muted-foreground/40 hover:text-[hsl(var(--info))]"
+                            )}>B</button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* A/B 탭 토글 */}
+            {hasTeams && (
+              <div className="flex gap-2">
+                <button type="button"
+                  onClick={() => { setActiveSide("A"); setTacticsKey((k) => k + 1); }}
+                  className={cn("flex-1 min-h-[44px] rounded-lg border px-4 text-sm font-bold transition-colors",
+                    activeSide === "A" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30"
+                  )}>
+                  A팀 ({teamACount}명)
+                </button>
+                <button type="button"
+                  onClick={() => { setActiveSide("B"); setTacticsKey((k) => k + 1); }}
+                  className={cn("flex-1 min-h-[44px] rounded-lg border px-4 text-sm font-bold transition-colors",
+                    activeSide === "B" ? "border-[hsl(var(--info))] bg-[hsl(var(--info))]/10 text-[hsl(var(--info))]" : "border-border text-muted-foreground hover:border-[hsl(var(--info))]/30"
+                  )}>
+                  B팀 ({teamBCount}명)
+                </button>
+              </div>
+            )}
+
+            {/* 편성 안 됐으면 안내 */}
+            {!hasTeams && !showTeamSplit && (
+              <Card className="border-[hsl(var(--warning))]/20 bg-[hsl(var(--warning))]/5">
+                <CardContent className="p-4 text-sm text-[hsl(var(--warning))] text-center">
+                  위 &quot;편성&quot; 버튼으로 A/B팀을 먼저 나눠주세요.
+                </CardContent>
+              </Card>
+            )}
+          </>
+        );
+      })()}
 
       {canManage && filteredAttending.length >= 5 && (() => {
         const aiPlayers: PlayerInput[] = filteredAttending.map((p) => ({
