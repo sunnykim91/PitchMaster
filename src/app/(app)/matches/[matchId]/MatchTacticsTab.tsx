@@ -12,6 +12,7 @@ import { recommendFormation, type PlayerInput } from "@/lib/formationAI";
 import type { Match, SimpleRosterPlayer, InternalTeamAssignment, Guest } from "./matchDetailTypes";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { formatPhone } from "@/lib/utils";
 import type { SportType } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -230,6 +231,96 @@ function MatchTacticsTabInner({
         );
       })()}
 
+      {/* ── 용병 관리 ── */}
+      {canManage && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <p className="type-overline text-[hsl(var(--accent))]">Guests</p>
+              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
+                용병 관리
+              </CardTitle>
+            </div>
+            <Button type="button" size="sm" onClick={() => setShowGuestForm(!showGuestForm)}>
+              {showGuestForm ? "닫기" : "용병 등록"}
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {showGuestForm && (
+              <form className="mb-4" action={async (formData) => {
+                const name = String(formData.get("guestName") || "").trim();
+                if (!name) return;
+                const positions = formData.getAll("guestPositions").map(String).filter(Boolean);
+                const phone = String(formData.get("guestPhone") || "") || undefined;
+                const note = String(formData.get("guestNote") || "") || undefined;
+                await apiMutate("/api/guests", "POST", { matchId, name, position: positions.join(",") || null, phone, note });
+                setShowGuestForm(false);
+                refetchGuests?.();
+              }}>
+                <Card className="border-0 bg-secondary shadow-none">
+                  <CardContent className="p-4">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-semibold text-muted-foreground">이름 <span className="text-destructive">*</span></Label>
+                        <Input name="guestName" required placeholder="홍길동" />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <fieldset>
+                          <legend className="text-xs font-semibold text-muted-foreground mb-1">선호 포지션 (복수 선택)</legend>
+                          <div className="flex flex-wrap gap-2">
+                            {(["GK","CB","LB","RB","CDM","CM","CAM","LW","RW","ST"] as const).map((pos) => (
+                              <label key={pos} className="flex items-center gap-1 text-xs cursor-pointer">
+                                <input type="checkbox" name="guestPositions" value={pos} className="rounded" />
+                                {pos}
+                              </label>
+                            ))}
+                          </div>
+                        </fieldset>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-semibold text-muted-foreground">연락처</Label>
+                        <PhoneInput name="guestPhone" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-semibold text-muted-foreground">메모</Label>
+                        <Input name="guestNote" placeholder="소속팀, 실력 등" />
+                      </div>
+                    </div>
+                    <Button type="submit" className="mt-3 w-full" size="sm">등록</Button>
+                  </CardContent>
+                </Card>
+              </form>
+            )}
+            {(guests ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground">등록된 용병이 없습니다.</p>
+            ) : (
+              <div className="space-y-2">
+                {(guests ?? []).map((g) => (
+                  <Card key={g.id} className="border-0 bg-secondary shadow-none">
+                    <CardContent className="flex items-center justify-between px-4 py-3">
+                      <div>
+                        <p className="text-sm font-semibold truncate">
+                          {g.name}
+                          {g.position && <Badge variant="outline" className="ml-2 text-xs">{g.position}</Badge>}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {[g.phone ? formatPhone(g.phone) : "", g.note].filter(Boolean).join(" · ") || "용병"}
+                        </p>
+                      </div>
+                      <button type="button" onClick={() => handleRemoveGuest?.(g.id)}
+                        className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors">
+                        삭제
+                      </button>
+                    </CardContent>
+                  </Card>
+                ))}
+                <p className="text-xs text-muted-foreground">총 {(guests ?? []).length}명의 용병이 등록되었습니다.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {canManage && filteredAttending.length >= 5 && (() => {
         const aiPlayers: PlayerInput[] = filteredAttending.map((p) => ({
           id: p.id,
@@ -335,53 +426,7 @@ function MatchTacticsTabInner({
         })) : undefined}
       />
 
-      {/* ── 용병 관리 ── */}
-      {canManage && (
-        <Card>
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-bold">용병 ({(guests ?? []).length}명)</p>
-              <Button size="sm" variant="outline" onClick={() => setShowGuestForm(!showGuestForm)}>
-                {showGuestForm ? "닫기" : "용병 등록"}
-              </Button>
-            </div>
-            {showGuestForm && (
-              <form className="mb-3 space-y-2" action={async (formData) => {
-                const name = String(formData.get("guestName") || "").trim();
-                if (!name) return;
-                const positions = formData.getAll("guestPositions").map(String);
-                await apiMutate("/api/guests", "POST", {
-                  matchId,
-                  name,
-                  position: positions.join(",") || null,
-                  phone: String(formData.get("guestPhone") || "") || null,
-                  note: String(formData.get("guestNote") || "") || null,
-                });
-                setShowGuestForm(false);
-                refetchGuests?.();
-              }}>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <Input name="guestName" required placeholder="이름 *" />
-                  <Input name="guestNote" placeholder="메모 (소속팀 등)" />
-                </div>
-                <Button type="submit" size="sm" className="w-full">등록</Button>
-              </form>
-            )}
-            {(guests ?? []).length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {(guests ?? []).map((g) => (
-                  <div key={g.id} className="flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs">
-                    <span className="font-medium">{g.name}</span>
-                    {g.position && <span className="text-muted-foreground">({g.position})</span>}
-                    <button type="button" onClick={() => handleRemoveGuest?.(g.id)}
-                      className="ml-0.5 text-muted-foreground hover:text-destructive">×</button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      {/* 용병 관리는 포메이션 위 상단에 배치 */}
     </>
   );
 }

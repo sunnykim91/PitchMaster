@@ -207,7 +207,7 @@ function MatchInfoTabInner({
   }
 
   return (
-    <>
+    <div className="grid gap-4">
       {/* ── 경기 정보 카드 ── */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -436,7 +436,7 @@ function MatchInfoTabInner({
           )}
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 }
 

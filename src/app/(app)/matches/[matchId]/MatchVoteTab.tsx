@@ -59,7 +59,7 @@ function MatchVoteTabInner({
   const noVote = baseRoster.filter((m) => !memberVoteMap[m.memberId]);
 
   return (
-    <>
+    <div className="grid gap-4">
       {/* ── 내 참석 투표 ── */}
       {match.status !== "COMPLETED" && myMember && (
         <Card>
@@ -246,7 +246,7 @@ function MatchVoteTabInner({
           </Card>
         )
       )}
-    </>
+    </div>
   );
 }
 
