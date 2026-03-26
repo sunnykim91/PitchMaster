@@ -138,26 +138,26 @@ function MatchTacticsTabInner({
                 </div>
                 {/* 편성 그리드 */}
                 {showTeamSplit && canManage && (
-                  <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-1">
+                  <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 gap-1 max-h-[50vh] overflow-y-auto">
                     {attendingPlayers.map((m) => {
                       const cur = teamMap[m.id] ?? null;
                       return (
                         <div key={m.id} className={cn(
-                          "flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs",
-                          cur === "A" && "bg-primary/10",
-                          cur === "B" && "bg-[hsl(var(--info))]/10",
+                          "flex items-center gap-0.5 rounded-md px-1.5 py-1 text-xs",
+                          cur === "A" && "bg-primary/15",
+                          cur === "B" && "bg-[hsl(var(--info))]/15",
                           !cur && "bg-secondary/50"
                         )}>
-                          <span className="truncate flex-1 font-medium">{m.name}</span>
+                          <span className="truncate flex-1 font-medium text-[11px]">{m.name}</span>
                           <button type="button" disabled={savingTeams}
                             onClick={() => assignSide(m.id, cur === "A" ? null : "A")}
-                            className={cn("w-6 h-6 rounded text-[10px] font-bold transition-colors",
-                              cur === "A" ? "bg-primary text-primary-foreground" : "text-muted-foreground/40 hover:text-primary"
+                            className={cn("w-5 h-5 rounded text-[9px] font-bold transition-colors",
+                              cur === "A" ? "bg-primary text-primary-foreground" : "bg-secondary/80 text-muted-foreground hover:text-primary"
                             )}>A</button>
                           <button type="button" disabled={savingTeams}
                             onClick={() => assignSide(m.id, cur === "B" ? null : "B")}
-                            className={cn("w-6 h-6 rounded text-[10px] font-bold transition-colors",
-                              cur === "B" ? "bg-[hsl(var(--info))] text-primary-foreground" : "text-muted-foreground/40 hover:text-[hsl(var(--info))]"
+                            className={cn("w-5 h-5 rounded text-[9px] font-bold transition-colors",
+                              cur === "B" ? "bg-[hsl(var(--info))] text-primary-foreground" : "bg-secondary/80 text-muted-foreground hover:text-[hsl(var(--info))]"
                             )}>B</button>
                         </div>
                       );
