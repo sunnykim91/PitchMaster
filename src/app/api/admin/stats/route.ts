@@ -43,9 +43,14 @@ export async function GET() {
         ),
     ]);
 
-  const teams = teamsRes.data ?? [];
-  const users = usersRes.data ?? [];
-  const matches = matchesRes.data ?? [];
+  // 데모 팀/유저 제외
+  const DEMO_TEAM_ID = "192127c0-e2be-46b4-b340-7583730467da";
+  const teams = (teamsRes.data ?? []).filter((t) => t.id !== DEMO_TEAM_ID);
+  const demoMemberIds = new Set<string>();
+  const { data: demoMembers } = await db.from("team_members").select("user_id").eq("team_id", DEMO_TEAM_ID).not("user_id", "is", null);
+  for (const m of demoMembers ?? []) if (m.user_id) demoMemberIds.add(m.user_id);
+  const users = (usersRes.data ?? []).filter((u: { id: string }) => !demoMemberIds.has(u.id));
+  const matches = (matchesRes.data ?? []).filter((m: { team_id: string }) => m.team_id !== DEMO_TEAM_ID);
   const posts = postsRes.data ?? [];
   const pendingRequests = joinReqRes.data ?? [];
 
