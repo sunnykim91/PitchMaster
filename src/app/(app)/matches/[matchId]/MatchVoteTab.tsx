@@ -38,19 +38,44 @@ function MatchVoteTabInner({
   const [voteSearch, setVoteSearch] = useState("");
   const [voteFilter, setVoteFilter] = useState<"all" | "unvoted">("all");
   const [voteSortBy, setVoteSortBy] = useState<"none" | "name-asc" | "name-desc" | "time-asc" | "time-desc">("none");
+  // Optimistic UI: undefined = 서버 데이터 사용, null | 값 = 즉시 반영된 낙관적 상태
+  const [optimisticMyVote, setOptimisticMyVote] = useState<"ATTEND" | "ABSENT" | "MAYBE" | null | undefined>(undefined);
+  // 연속 클릭 방지용 (300ms)
+  const [pendingVote, setPendingVote] = useState(false);
+
+  const myMember = baseRoster.find((m) => m.id === userId);
+  const serverMyVote = myMember ? memberVoteMap[myMember.memberId] : undefined;
+  // 낙관적 상태가 있으면 우선 사용
+  const myVote = optimisticMyVote !== undefined ? (optimisticMyVote ?? undefined) : serverMyVote;
 
   async function handleMyVote(vote: "ATTEND" | "ABSENT" | "MAYBE") {
+    if (myVote === vote) return;
+    if (pendingVote) return;
+
+    // 이전 상태 저장 (롤백용) — optimisticMyVote 타입과 동일하게 유지
+    const prevVote: "ATTEND" | "ABSENT" | "MAYBE" | null | undefined =
+      optimisticMyVote !== undefined ? optimisticMyVote : (serverMyVote ?? null);
+
+    // 즉시 UI 반영 (낙관적 업데이트)
+    setOptimisticMyVote(vote);
+
+    // 연속 클릭 방지 (300ms)
+    setPendingVote(true);
+    setTimeout(() => setPendingVote(false), 300);
+
+    // 백그라운드 API 호출
     const { error: err } = await apiMutate("/api/attendance", "POST", { matchId, vote });
     if (err) {
+      // 실패 시 롤백
+      setOptimisticMyVote(prevVote);
       showToast("투표에 실패했습니다. 다시 시도해주세요.", "error");
     } else {
       showToast(vote === "ATTEND" ? "참석으로 투표했습니다." : vote === "ABSENT" ? "불참으로 투표했습니다." : "미정으로 투표했습니다.");
+      // 성공 시 백그라운드 refetch 후 낙관적 상태 초기화
       await refetchVote();
+      setOptimisticMyVote(undefined);
     }
   }
-
-  const myMember = baseRoster.find((m) => m.id === userId);
-  const myVote = myMember ? memberVoteMap[myMember.memberId] : undefined;
   const [isExpired, setIsExpired] = useState(false);
   useEffect(() => {
     setIsExpired(match.voteDeadline ? new Date(match.voteDeadline) < new Date() : false);
@@ -80,7 +105,8 @@ function MatchVoteTabInner({
                 <div className="flex gap-1.5 shrink-0">
                   {([ { value: "ATTEND" as const, label: "참석" }, { value: "MAYBE" as const, label: "미정" }, { value: "ABSENT" as const, label: "불참" } ]).map((opt) => (
                     <button key={opt.value} type="button"
-                      className={cn("rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200 active:scale-95",
+                      disabled={pendingVote}
+                      className={cn("rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
                         myVote === opt.value ? styles[opt.value].active : styles[opt.value].inactive
                       )}
                       onClick={() => handleMyVote(opt.value)}>

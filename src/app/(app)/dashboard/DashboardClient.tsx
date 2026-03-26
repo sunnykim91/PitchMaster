@@ -144,7 +144,11 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
   const { data, loading, error, refetch } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
   const { showToast } = useToast();
   const searchParams = useSearchParams();
-  const [voting, setVoting] = useState(false);
+  // Optimistic UI: null = 서버 데이터 사용, 값 있으면 즉시 반영된 낙관적 상태
+  const [optimisticVote, setOptimisticVote] = useState<"ATTEND" | "ABSENT" | "MAYBE" | null | undefined>(undefined);
+  const [optimisticCounts, setOptimisticCounts] = useState<{ attend: number; absent: number; undecided: number } | null>(null);
+  // 연속 클릭 방지용 (300ms)
+  const [pendingVote, setPendingVote] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
@@ -159,16 +163,46 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
   }, [searchParams]);
 
   async function handleQuickVote(matchId: string, _memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
-    if (data.upcomingMatch?.myVote === vote) return;
-    setVoting(true);
+    // 현재 표시 중인 투표(낙관적 or 서버) 기준으로 중복 클릭 방지
+    const currentVote = optimisticVote !== undefined ? optimisticVote : data.upcomingMatch?.myVote;
+    if (currentVote === vote) return;
+    if (pendingVote) return;
+
+    // 이전 상태 저장 (롤백용) — optimisticVote 타입과 동일하게 유지
+    const prevVote: "ATTEND" | "ABSENT" | "MAYBE" | null | undefined =
+      optimisticVote !== undefined ? optimisticVote : (data.upcomingMatch?.myVote ?? null);
+    const prevCounts = optimisticCounts ?? data.upcomingMatch?.voteCounts ?? { attend: 0, absent: 0, undecided: 0 };
+
+    // 즉시 UI 반영 (낙관적 업데이트)
+    const newCounts = { ...prevCounts };
+    if (prevVote === "ATTEND") newCounts.attend = Math.max(0, newCounts.attend - 1);
+    else if (prevVote === "ABSENT") newCounts.absent = Math.max(0, newCounts.absent - 1);
+    else if (prevVote === "MAYBE") newCounts.undecided = Math.max(0, newCounts.undecided - 1);
+    if (vote === "ATTEND") newCounts.attend += 1;
+    else if (vote === "ABSENT") newCounts.absent += 1;
+    else if (vote === "MAYBE") newCounts.undecided += 1;
+
+    setOptimisticVote(vote);
+    setOptimisticCounts(newCounts);
+
+    // 연속 클릭 방지 (300ms)
+    setPendingVote(true);
+    setTimeout(() => setPendingVote(false), 300);
+
+    // 백그라운드 API 호출
     const { error: err } = await apiMutate("/api/attendance", "POST", { matchId, vote });
     if (err) {
+      // 실패 시 롤백
+      setOptimisticVote(prevVote);
+      setOptimisticCounts(prevCounts);
       showToast("투표에 실패했습니다. 다시 시도해주세요.", "error");
     } else {
       showToast(vote === "ATTEND" ? "참석으로 투표했습니다." : vote === "ABSENT" ? "불참으로 투표했습니다." : "미정으로 투표했습니다.");
+      // 성공 시 백그라운드 refetch 후 낙관적 상태 초기화
       await refetch();
+      setOptimisticVote(undefined);
+      setOptimisticCounts(null);
     }
-    setVoting(false);
   }
 
   if (error) {
@@ -188,8 +222,10 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
 
   const { upcomingMatch, activeVotes, tasks, recentResult, teamRecord } = data;
 
+  // 낙관적 상태가 있으면 우선 사용
+  const displayVote = optimisticVote !== undefined ? optimisticVote : upcomingMatch?.myVote;
   // Attendance bar percentages
-  const voteCounts = upcomingMatch?.voteCounts ?? { attend: 0, absent: 0, undecided: 0 };
+  const voteCounts = optimisticCounts ?? upcomingMatch?.voteCounts ?? { attend: 0, absent: 0, undecided: 0 };
   const voteTotal = voteCounts.attend + voteCounts.absent + voteCounts.undecided;
   const attendPercent = voteTotal > 0 ? (voteCounts.attend / voteTotal) * 100 : 0;
   const absentPercent = voteTotal > 0 ? (voteCounts.absent / voteTotal) * 100 : 0;
@@ -342,20 +378,19 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                   { value: "MAYBE" as const, label: "미정" },
                   { value: "ABSENT" as const, label: "불참" },
                 ]).map((opt) => {
-                  const isSelected = upcomingMatch.myVote === opt.value;
+                  const isSelected = displayVote === opt.value;
                   return (
                     <button
                       key={opt.value}
                       type="button"
-                      disabled={voting}
-                      aria-pressed={upcomingMatch.myVote === opt.value}
+                      disabled={pendingVote}
+                      aria-pressed={displayVote === opt.value}
                       className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-105 disabled:opacity-50 disabled:cursor-wait focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                        "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-105 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                         isSelected ? voteStyles[opt.value].active : voteStyles[opt.value].inactive
                       )}
                       onClick={() => handleQuickVote(upcomingMatch.id, upcomingMatch.myMemberId!, opt.value)}
                     >
-                      {voting && <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />}
                       {opt.label}
                     </button>
                   );

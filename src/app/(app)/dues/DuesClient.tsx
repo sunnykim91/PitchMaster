@@ -9,7 +9,7 @@ import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { useToast } from "@/lib/ToastContext";
 import type { Role } from "@/lib/types";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -240,6 +240,23 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
 
   const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void; variant?: "default" | "destructive"; confirmLabel?: string } | null>(null);
   const [selfReporting, setSelfReporting] = useState(false);
+
+  /* ── 온보딩 가이드 상태 ── */
+  const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("dues-onboarding-dismissed") === "true";
+  });
+
+  const dismissOnboarding = useCallback(() => {
+    localStorage.setItem("dues-onboarding-dismissed", "true");
+    setOnboardingDismissed(true);
+  }, []);
+
+  /** 온보딩 표시 조건: 운영진 이상 + 회비 설정 없거나 금액 0 + 닫기 누른 적 없음 */
+  const showOnboarding =
+    isStaffOrAbove(role) &&
+    !onboardingDismissed &&
+    (settings.length === 0 || settings.every((s) => s.monthlyAmount === 0));
 
   const loading = loadingSummary || loadingMembers;
 
@@ -520,6 +537,79 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           ))}
         </div>
       </div>
+
+      {/* ── 온보딩 가이드 ── */}
+      {showOnboarding && (
+        <Card className="p-4 sm:p-6 border-primary/20 bg-primary/5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">💰</span>
+              <h3 className="font-semibold text-base text-foreground">회비 관리 시작하기</h3>
+            </div>
+            <button
+              type="button"
+              onClick={dismissOnboarding}
+              className="rounded-md p-1 hover:bg-primary/10 transition-colors focus-visible:ring-2 focus-visible:ring-primary"
+              aria-label="온보딩 가이드 닫기"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-4">
+            {/* 단계 1 */}
+            <div className="flex gap-3">
+              <span className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">
+                1
+              </span>
+              <div className="flex-1">
+                <p className="font-medium text-sm text-foreground">금액 설정</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  월 회비 금액과 납부 기준일을 설정 탭에서 설정하세요
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 h-7 text-xs"
+                  onClick={() => {
+                    setDuesTab("settings");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                >
+                  설정하러 가기 →
+                </Button>
+              </div>
+            </div>
+
+            {/* 단계 2 */}
+            <div className="flex gap-3">
+              <span className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">
+                2
+              </span>
+              <div>
+                <p className="font-medium text-sm text-foreground">내역 올리기</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  통장 스크린샷(OCR) 또는 엑셀로 입출금 내역을 한 번에 올리세요
+                </p>
+              </div>
+            </div>
+
+            {/* 단계 3 */}
+            <div className="flex gap-3">
+              <span className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">
+                3
+              </span>
+              <div>
+                <p className="font-medium text-sm text-foreground">납부 확인</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  자동으로 팀원별 납부 현황이 정리됩니다
+                </p>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* ── Tab Content ── */}
       <div className={duesTab === "records" ? "" : "hidden"}>
