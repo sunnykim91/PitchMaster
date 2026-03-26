@@ -93,6 +93,9 @@ export default async function LoginPage({
             <p className="text-xs text-muted-foreground">
               무료 · 광고 없음 · 1분이면 팀 세팅 완료
             </p>
+            <p className="text-xs font-medium text-primary/70">
+              → 가입 없이 모든 기능을 체험할 수 있어요
+            </p>
           </div>
 
           <p className="mt-6 text-xs text-muted-foreground">
@@ -236,6 +239,30 @@ export default async function LoginPage({
             ))}
           </div>
 
+          {/* Mini stats preview */}
+          <div className="mx-auto mt-8 w-full max-w-xs rounded-2xl border border-border/30 bg-card/50 p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground">시즌 랭킹</span>
+              <span className="text-xs text-foreground/50">2026</span>
+            </div>
+            <div className="mt-3 space-y-2">
+              {[
+                { rank: "1", name: "김OO", stat: "12골 8도움", bar: 95 },
+                { rank: "2", name: "이OO", stat: "9골 11도움", bar: 80 },
+                { rank: "3", name: "박OO", stat: "7골 5도움", bar: 60 },
+              ].map((p) => (
+                <div key={p.rank} className="flex items-center gap-2">
+                  <span className="w-4 text-xs font-bold text-primary">{p.rank}</span>
+                  <span className="w-12 truncate text-xs font-semibold text-foreground">{p.name}</span>
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary/50">
+                    <div className="h-full rounded-full bg-primary/60" style={{ width: `${p.bar}%` }} />
+                  </div>
+                  <span className="text-xs text-muted-foreground">{p.stat}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Mini tactical board */}
           <div className="mx-auto mt-10 w-full max-w-xs rounded-2xl bg-background p-2">
             <div className="flex items-center justify-between px-1">
@@ -310,8 +337,8 @@ export default async function LoginPage({
             <p className="mt-2 text-sm text-muted-foreground">팀 운영에 필요한 모든 것이 여기에.</p>
           </div>
 
-          {/* Primary 4 features: 2x2 grid with left border accent */}
-          <div className="mt-10 grid gap-5 grid-cols-1 sm:mt-12 sm:grid-cols-2">
+          {/* Primary 6 features: 2x3 grid with left border accent */}
+          <div className="mt-10 grid gap-5 grid-cols-1 sm:mt-12 sm:grid-cols-2 lg:grid-cols-3">
             {[
               {
                 title: "원탭 득점 기록",
@@ -329,6 +356,14 @@ export default async function LoginPage({
                 title: "팀 게시판",
                 desc: "공지사항, 자유글, 투표까지 팀 전용 소통 공간",
               },
+              {
+                title: "자체전 (A팀 vs B팀)",
+                desc: "팀 내 홍백전 — 랜덤 편성, 팀별 스코어보드, 쿼터별 기록",
+              },
+              {
+                title: "유니폼 안내",
+                desc: "경기별 홈/원정 유니폼 선택, 대시보드에서 한눈에 확인",
+              },
             ].map((item) => (
               <div
                 key={item.title}
@@ -344,9 +379,9 @@ export default async function LoginPage({
             ))}
           </div>
 
-          {/* Secondary 4 features: inline list */}
+          {/* Secondary features: inline list */}
           <p className="mt-8 text-center text-sm text-muted-foreground">
-            푸시 알림 · 회칙 관리 · 축구 & 풋살 지원 · 데모 체험
+            푸시 알림 · 회칙 관리 · 축구 & 풋살 지원 · 데모 체험 · 카카오톡 공유
           </p>
         </div>
       </section>
