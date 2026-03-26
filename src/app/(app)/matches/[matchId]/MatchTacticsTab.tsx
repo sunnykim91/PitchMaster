@@ -171,14 +171,14 @@ function MatchTacticsTabInner({
             {hasTeams && (
               <div className="flex gap-2">
                 <button type="button"
-                  onClick={() => { setActiveSide("A"); setTacticsKey((k) => k + 1); }}
+                  onClick={() => { setActiveSide("A"); setGeneratedSquads([]); setTacticsKey((k) => k + 1); }}
                   className={cn("flex-1 min-h-[44px] rounded-lg border px-4 text-sm font-bold transition-colors",
                     activeSide === "A" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30"
                   )}>
                   A팀 ({teamACount}명)
                 </button>
                 <button type="button"
-                  onClick={() => { setActiveSide("B"); setTacticsKey((k) => k + 1); }}
+                  onClick={() => { setActiveSide("B"); setGeneratedSquads([]); setTacticsKey((k) => k + 1); }}
                   className={cn("flex-1 min-h-[44px] rounded-lg border px-4 text-sm font-bold transition-colors",
                     activeSide === "B" ? "border-[hsl(var(--info))] bg-[hsl(var(--info))]/10 text-[hsl(var(--info))]" : "border-border text-muted-foreground hover:border-[hsl(var(--info))]/30"
                   )}>
