@@ -148,7 +148,7 @@ function MatchTacticsTabInner({
                     {/* A팀 / B팀 2열 */}
                     <div className="grid grid-cols-2 gap-2">
                       <div className="rounded-lg border border-primary/30 bg-primary/5 p-2">
-                        <p className="text-xs font-bold text-primary mb-1 sticky top-0 bg-primary/5 py-1 z-1">A팀 ({teamACount}명)</p>
+                        <p className="text-xs font-bold text-primary mb-1 sticky top-0 bg-[hsl(var(--card))] py-1.5 z-1 border-b border-primary/20">A팀 ({teamACount}명)</p>
                         <div className="space-y-px">
                           {attendingPlayers.filter((m) => teamMap[m.id] === "A").map((m) => (
                             <button key={m.id} type="button" disabled={savingTeams || !canManage}
@@ -161,7 +161,7 @@ function MatchTacticsTabInner({
                         </div>
                       </div>
                       <div className="rounded-lg border border-[hsl(var(--info))]/30 bg-[hsl(var(--info))]/5 p-2">
-                        <p className="text-xs font-bold text-[hsl(var(--info))] mb-1 sticky top-0 bg-[hsl(var(--info))]/5 py-1 z-1">B팀 ({teamBCount}명)</p>
+                        <p className="text-xs font-bold text-[hsl(var(--info))] mb-1 sticky top-0 bg-[hsl(var(--card))] py-1.5 z-1 border-b border-[hsl(var(--info))]/20">B팀 ({teamBCount}명)</p>
                         <div className="space-y-px">
                           {attendingPlayers.filter((m) => teamMap[m.id] === "B").map((m) => (
                             <button key={m.id} type="button" disabled={savingTeams || !canManage}
