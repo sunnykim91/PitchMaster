@@ -210,7 +210,7 @@ function MatchInfoTabInner({
             </CardTitle>
           </div>
           {canManage && !editing && (
-            <div className="flex gap-1">
+            <div className="flex items-center gap-2">
               {match.status === "SCHEDULED" && (
                 <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
                   수정
@@ -219,7 +219,7 @@ function MatchInfoTabInner({
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-destructive hover:text-destructive"
+                className="text-muted-foreground hover:text-destructive"
                 onClick={() => setShowDeleteConfirm(true)}
               >
                 삭제
@@ -317,10 +317,12 @@ function MatchInfoTabInner({
 
           {/* 전적 반영 토글 (운영진 이상) */}
           {canManage && (
-            <div className="flex items-center justify-between rounded-lg border border-border p-3">
-              <div>
+            <div className="flex items-center justify-between gap-4 rounded-lg border border-border p-3">
+              <div className="min-w-0">
                 <p className="text-sm font-medium">전적 반영</p>
-                <p className="text-xs text-muted-foreground">OFF 시 시즌 전적·개인 통계에서 제외됩니다</p>
+                <p className="text-xs text-muted-foreground">
+                  {match.statsIncluded ? "시즌 전적·개인 통계에 반영됩니다" : "시즌 전적·개인 통계에서 제외됩니다"}
+                </p>
               </div>
               <button
                 type="button"
@@ -371,8 +373,10 @@ function MatchInfoTabInner({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-muted-foreground">내 참석 투표</p>
-                  <p className="mt-1 text-sm font-semibold">
-                    {myVote === "ATTEND" ? "참석" : myVote === "ABSENT" ? "불참" : myVote === "MAYBE" ? "미정" : "미투표"}
+                  <p className={cn("mt-1 text-sm font-semibold",
+                    myVote === "ATTEND" ? "text-[hsl(var(--success))]" : myVote === "ABSENT" ? "text-[hsl(var(--loss))]" : myVote === "MAYBE" ? "text-[hsl(var(--warning))]" : "text-destructive"
+                  )}>
+                    {myVote === "ATTEND" ? "참석" : myVote === "ABSENT" ? "불참" : myVote === "MAYBE" ? "미정" : "아직 투표하지 않았습니다"}
                   </p>
                 </div>
                 <div className="flex gap-2">
