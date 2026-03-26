@@ -15,25 +15,50 @@ export async function POST(request: NextRequest) {
   if (roleCheck) return roleCheck;
 
   const body = await request.json();
-  const { matchId, userId, attended } = body;
-  if (!matchId || !userId) return apiError("matchId and userId required");
+  const { matchId, userId, memberId, attended } = body;
+  if (!matchId || (!userId && !memberId)) return apiError("matchId and (userId or memberId) required");
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  // Upsert attendance with actually_attended
-  const { error } = await db.from("match_attendance").upsert(
-    {
-      match_id: matchId,
-      user_id: userId,
-      vote: "ATTEND",
-      actually_attended: attended ?? true,
-      voted_at: new Date().toISOString(),
-    },
-    { onConflict: "match_id,user_id" }
-  );
+  // 기존 레코드 찾기: user_id 또는 member_id로 검색
+  let query = db
+    .from("match_attendance")
+    .select("id")
+    .eq("match_id", matchId);
 
-  if (error) return apiError(error.message);
+  if (userId) {
+    query = query.eq("user_id", userId);
+  } else {
+    query = query.eq("member_id", memberId);
+  }
+
+  const { data: existing } = await query.limit(1).maybeSingle();
+
+  if (existing) {
+    // 기존 레코드 업데이트 (vote는 건드리지 않음)
+    const { error } = await db
+      .from("match_attendance")
+      .update({ actually_attended: attended ?? true })
+      .eq("id", existing.id);
+
+    if (error) return apiError(error.message);
+  } else {
+    // 투표 레코드 없으면 새로 생성
+    const { error } = await db
+      .from("match_attendance")
+      .insert({
+        match_id: matchId,
+        user_id: userId || null,
+        member_id: memberId || null,
+        vote: "ATTEND",
+        actually_attended: attended ?? true,
+        voted_at: new Date().toISOString(),
+      });
+
+    if (error) return apiError(error.message);
+  }
+
   return apiSuccess({ ok: true });
 }
 

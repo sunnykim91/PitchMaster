@@ -205,11 +205,11 @@ function MatchRecordTabInner({
   }
 
   /* ── Attendance handler ── */
-  async function handleAttendance(playerId: string, status: "PRESENT" | "ABSENT" | "LATE") {
+  async function handleAttendance(player: RosterPlayer, status: "PRESENT" | "ABSENT" | "LATE") {
     const attended = status === "PRESENT" || status === "LATE";
     await apiMutate("/api/attendance-check", "POST", {
       matchId,
-      userId: playerId,
+      ...(player.isLinked ? { userId: player.id } : { memberId: player.memberId }),
       attended,
     });
     await refetchAttendance();
@@ -608,7 +608,7 @@ function MatchRecordTabInner({
                               }
                               size="sm"
                               onClick={() =>
-                                handleAttendance(player.id, "PRESENT")
+                                handleAttendance(player, "PRESENT")
                               }
                             >
                               참석
@@ -620,7 +620,7 @@ function MatchRecordTabInner({
                               }
                               size="sm"
                               onClick={() =>
-                                handleAttendance(player.id, "LATE")
+                                handleAttendance(player, "LATE")
                               }
                             >
                               지각
@@ -632,7 +632,7 @@ function MatchRecordTabInner({
                               }
                               size="sm"
                               onClick={() =>
-                                handleAttendance(player.id, "ABSENT")
+                                handleAttendance(player, "ABSENT")
                               }
                             >
                               불참
@@ -679,7 +679,7 @@ function MatchRecordTabInner({
         onConfirm={async () => {
           await Promise.all(
             attendingMembers.map((player) =>
-              handleAttendance(player.id, "PRESENT")
+              handleAttendance(player, "PRESENT")
             )
           );
           setShowBulkAttendConfirm(false);

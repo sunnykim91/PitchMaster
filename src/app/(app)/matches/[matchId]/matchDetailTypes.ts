@@ -40,7 +40,8 @@ export type MvpVoteRow = {
 };
 
 export type AttendanceRow = {
-  user_id: string;
+  user_id: string | null;
+  member_id: string | null;
   actually_attended: boolean | null;
 };
 
@@ -247,12 +248,11 @@ export function mapVotes(rows: MvpVoteRow[]): VoteState {
 export function mapAttendance(rows: AttendanceRow[]): AttendanceState {
   const state: AttendanceState = {};
   for (const a of rows) {
-    if (a.actually_attended === true) {
-      state[a.user_id] = "PRESENT";
-    } else if (a.actually_attended === false) {
-      state[a.user_id] = "ABSENT";
-    }
-    // null → not checked yet, skip
+    // user_id와 member_id 모두 키로 매핑 (연동/미연동 멤버 모두 지원)
+    const status = a.actually_attended === true ? "PRESENT" : a.actually_attended === false ? "ABSENT" : undefined;
+    if (!status) continue;
+    if (a.user_id) state[a.user_id] = status;
+    if (a.member_id) state[a.member_id] = status;
   }
   return state;
 }
