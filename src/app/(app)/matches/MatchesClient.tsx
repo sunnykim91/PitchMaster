@@ -39,6 +39,8 @@ type Match = {
   voteDeadline?: string;
   score?: string | null;
   uniformType: "HOME" | "AWAY";
+  matchType: "REGULAR" | "INTERNAL";
+  statsIncluded: boolean;
 };
 
 type DbMatch = {
@@ -55,6 +57,8 @@ type DbMatch = {
   vote_deadline: string | null;
   score?: string | null;
   uniform_type?: string | null;
+  match_type?: string | null;
+  stats_included?: boolean | null;
   created_by: string;
   created_at: string;
 };
@@ -89,6 +93,8 @@ function mapDbMatchToMatch(db: DbMatch): Match {
     voteDeadline: db.vote_deadline || undefined,
     score: db.score ?? null,
     uniformType: (db.uniform_type === "AWAY" ? "AWAY" : "HOME") as "HOME" | "AWAY",
+    matchType: (db.match_type === "INTERNAL" ? "INTERNAL" : "REGULAR") as "REGULAR" | "INTERNAL",
+    statsIncluded: db.stats_included ?? true,
   };
 }
 
@@ -141,6 +147,8 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     return `${yyyy}-${mm}-${dd}T17:00`;
   });
   const [playerCount, setPlayerCount] = useState(defaults.playerCount);
+  const [matchType, setMatchType] = useState<"REGULAR" | "INTERNAL">("REGULAR");
+  const [statsIncluded, setStatsIncluded] = useState(true);
 
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -215,12 +223,14 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
       date: String(formData.get("date") || ""),
       time: String(formData.get("time") || ""),
       location: String(formData.get("location") || ""),
-      opponent: String(formData.get("opponent") || ""),
+      opponent: matchType === "INTERNAL" ? null : String(formData.get("opponent") || ""),
       quarterCount: Number(formData.get("quarterCount") || defaults.quarters),
       quarterDuration: Number(formData.get("quarterDuration") || defaults.duration),
       breakDuration: Number(formData.get("breakDuration") || defaults.breakTime),
       playerCount,
       voteDeadline: String(formData.get("voteDeadline") || "") || undefined,
+      matchType,
+      statsIncluded,
     };
     const { error, data } = await apiMutate<{ id: string }>("/api/matches", "POST", body);
     setSubmitting(false);
@@ -405,13 +415,59 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     </div>
                   )}
                 </div>
+                {/* 경기 유형 */}
                 <div className="space-y-2">
-                  <Label htmlFor="opponent">상대팀</Label>
-                  <Input
-                    id="opponent"
-                    name="opponent"
-                  />
+                  <Label>경기 유형</Label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setMatchType("REGULAR")}
+                      className={cn(
+                        "flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+                        matchType === "REGULAR"
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-muted-foreground hover:border-primary/30"
+                      )}
+                    >
+                      일반 경기
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMatchType("INTERNAL")}
+                      className={cn(
+                        "flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+                        matchType === "INTERNAL"
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-muted-foreground hover:border-primary/30"
+                      )}
+                    >
+                      자체전
+                    </button>
+                  </div>
                 </div>
+                {matchType === "REGULAR" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="opponent">상대팀</Label>
+                    <Input
+                      id="opponent"
+                      name="opponent"
+                    />
+                  </div>
+                )}
+                {matchType === "INTERNAL" && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="statsIncluded"
+                      checked={statsIncluded}
+                      onChange={(e) => setStatsIncluded(e.target.checked)}
+                      className="h-4 w-4 rounded border-border accent-primary"
+                    />
+                    <Label htmlFor="statsIncluded" className="text-sm text-muted-foreground cursor-pointer">
+                      개인 기록 통계에 반영
+                    </Label>
+                  </div>
+                )}
               </div>
               <button
                 type="button"
@@ -515,15 +571,27 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       <Badge variant={match.status === "COMPLETED" ? "secondary" : "default"}>
                         {match.status === "COMPLETED" ? "완료" : "예정"}
                       </Badge>
+                      {match.matchType === "INTERNAL" && (
+                        <Badge variant="outline" className="text-xs border-[hsl(var(--warning))] text-[hsl(var(--warning))]">자체전</Badge>
+                      )}
                       {match.status === "COMPLETED" && match.score && (() => {
-                        const [our, opp] = match.score.split(":").map((s) => parseInt(s.trim(), 10));
-                        const color = our > opp ? "text-[hsl(var(--win))]" : our === opp ? "text-muted-foreground" : "text-[hsl(var(--loss))]";
-                        const label = our > opp ? "승" : our === opp ? "무" : "패";
+                        const [left, right] = match.score.split(":").map((s) => parseInt(s.trim(), 10));
+                        if (match.matchType === "INTERNAL") {
+                          return (
+                            <span className="flex items-center gap-1">
+                              <span className="text-xs text-muted-foreground">A</span>
+                              <span className="type-stat font-heading font-bold text-foreground">{match.score}</span>
+                              <span className="text-xs text-muted-foreground">B</span>
+                            </span>
+                          );
+                        }
+                        const color = left > right ? "text-[hsl(var(--win))]" : left === right ? "text-muted-foreground" : "text-[hsl(var(--loss))]";
+                        const label = left > right ? "승" : left === right ? "무" : "패";
                         return (
                           <span className="flex items-center gap-1.5">
                             <span className={cn("type-stat font-heading font-bold", color)}>{match.score}</span>
                             <span className={cn("rounded-full px-1.5 py-0.5 text-xs font-bold",
-                              our > opp ? "bg-[hsl(var(--win)/0.15)] text-[hsl(var(--win))]" : our === opp ? "bg-muted text-muted-foreground" : "bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))]"
+                              left > right ? "bg-[hsl(var(--win)/0.15)] text-[hsl(var(--win))]" : left === right ? "bg-muted text-muted-foreground" : "bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))]"
                             )}>{label}</span>
                           </span>
                         );
@@ -533,7 +601,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       {formatMatchDate(match.date)} · {formatTime(match.time)}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground truncate max-w-[280px] sm:max-w-none">
-                      {match.location} {match.opponent ? `· ${match.opponent}` : ""}
+                      {match.location} {match.matchType === "INTERNAL" ? "· 자체전" : match.opponent ? `· ${match.opponent}` : ""}
                     </p>
                     <div className="mt-1 flex items-center gap-1.5">
                       <div

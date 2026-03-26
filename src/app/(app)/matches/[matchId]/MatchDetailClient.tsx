@@ -79,6 +79,12 @@ export default function MatchDetailClient({
     refetch: refetchGuests,
   } = useApi<{ guests: GuestRow[] }>(`/api/guests?matchId=${matchId}`, { guests: [] });
 
+  // 자체전 팀 편성 데이터
+  const {
+    data: internalTeamsData,
+    refetch: refetchInternalTeams,
+  } = useApi<{ teams: { player_id: string; side: "A" | "B" }[] }>(`/api/internal-teams?matchId=${matchId}`, { teams: [] });
+
   // 실시간 동기화: 참석투표, 골 기록, MVP 투표
   useRealtimeSubscription({
     table: "match_attendance",
@@ -149,6 +155,11 @@ export default function MatchDetailClient({
   const guests = useMemo(
     () => guestsData.guests.map(mapGuest),
     [guestsData.guests],
+  );
+
+  const internalTeams = useMemo(
+    () => internalTeamsData.teams.map((t) => ({ playerId: t.player_id, side: t.side })),
+    [internalTeamsData.teams],
   );
 
   const diary = useMemo(
@@ -387,6 +398,8 @@ export default function MatchDetailClient({
           uniformPrimary={uniformPrimary}
           uniformSecondary={uniformSecondary}
           uniformPattern={uniformPattern}
+          internalTeams={internalTeams}
+          refetchInternalTeams={refetchInternalTeams}
         />
       )}
 

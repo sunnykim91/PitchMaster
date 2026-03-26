@@ -33,21 +33,34 @@ export async function GET() {
   type MatchRow = { id: string; status: string; [key: string]: unknown };
   const rows = (data ?? []) as MatchRow[];
   const completedIds = rows.filter((m) => m.status === "COMPLETED").map((m) => m.id);
-  let scoreMap: Record<string, { our: number; opp: number }> = {};
+  let scoreMap: Record<string, string> = {};
   if (completedIds.length > 0) {
-    const { data: goals } = await db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", completedIds);
-    const map: Record<string, { our: number; opp: number }> = {};
-    for (const g of goals ?? []) {
-      if (!map[g.match_id]) map[g.match_id] = { our: 0, opp: 0 };
-      if (g.scorer_id === "OPPONENT" || g.is_own_goal) map[g.match_id].opp++;
-      else map[g.match_id].our++;
+    const { data: goals } = await db.from("match_goals").select("match_id, scorer_id, is_own_goal, side").in("match_id", completedIds);
+    const internalIds = new Set(rows.filter((m) => m.match_type === "INTERNAL").map((m) => m.id));
+    const map: Record<string, string> = {};
+    for (const matchId of completedIds) {
+      const matchGoals = (goals ?? []).filter((g) => g.match_id === matchId);
+      if (internalIds.has(matchId)) {
+        // 자체전: A팀 vs B팀 스코어
+        const a = matchGoals.filter((g) => g.side === "A").length;
+        const b = matchGoals.filter((g) => g.side === "B").length;
+        map[matchId] = `${a} : ${b}`;
+      } else {
+        // 일반 경기: 우리팀 vs 상대팀
+        let our = 0, opp = 0;
+        for (const g of matchGoals) {
+          if (g.scorer_id === "OPPONENT" || g.is_own_goal) opp++;
+          else our++;
+        }
+        map[matchId] = `${our} : ${opp}`;
+      }
     }
     scoreMap = map;
   }
 
   const matches = rows.map((m) => ({
     ...m,
-    score: scoreMap[m.id] ? `${scoreMap[m.id].our} : ${scoreMap[m.id].opp}` : null,
+    score: scoreMap[m.id] ?? null,
   }));
 
   return apiSuccess({ matches });
@@ -78,6 +91,8 @@ export async function POST(request: NextRequest) {
       break_duration: body.breakDuration ?? 5,
       player_count: body.playerCount ?? 11,
       uniform_type: body.uniformType ?? "HOME",
+      match_type: body.matchType ?? "REGULAR",
+      stats_included: body.statsIncluded ?? true,
       status: "SCHEDULED",
       vote_deadline: body.voteDeadline || null,
       created_by: ctx.userId,
@@ -89,10 +104,11 @@ export async function POST(request: NextRequest) {
 
   // 경기 등록 알림 발송 (비동기, 응답 차단 안 함)
   const matchDate = body.date;
-  const opponent = body.opponent || "상대 미정";
+  const isInternal = body.matchType === "INTERNAL";
+  const pushBody = isInternal ? `${matchDate} 자체전` : `${matchDate} vs ${body.opponent || "상대 미정"}`;
   sendTeamPush(ctx.teamId!, {
     title: "새 경기 일정이 등록되었습니다",
-    body: `${matchDate} vs ${opponent}`,
+    body: pushBody,
     url: `/matches/${data.id}`,
   }).catch(() => {});
 
@@ -124,6 +140,8 @@ export async function PUT(request: NextRequest) {
   if (body.status !== undefined) updates.status = body.status;
   if (body.voteDeadline !== undefined) updates.vote_deadline = body.voteDeadline || null;
   if (body.uniformType !== undefined) updates.uniform_type = body.uniformType;
+  if (body.matchType !== undefined) updates.match_type = body.matchType;
+  if (body.statsIncluded !== undefined) updates.stats_included = body.statsIncluded;
 
   const { data, error } = await db
     .from("matches")

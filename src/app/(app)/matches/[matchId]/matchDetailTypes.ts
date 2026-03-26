@@ -16,6 +16,8 @@ export type MatchRow = {
   break_duration: number;
   status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
   uniform_type?: "HOME" | "AWAY";
+  match_type?: "REGULAR" | "INTERNAL";
+  stats_included?: boolean;
 };
 
 export type GoalRow = {
@@ -27,6 +29,7 @@ export type GoalRow = {
   assist_id: string | null;
   is_own_goal: boolean;
   recorded_by: string;
+  side?: "A" | "B" | null;
 };
 
 export type MvpVoteRow = {
@@ -81,6 +84,8 @@ export type MemberRow = {
 
 /* ── Client-side types (camelCase) ── */
 
+export type MatchType = "REGULAR" | "INTERNAL";
+
 export type Match = {
   id: string;
   date: string;
@@ -92,6 +97,8 @@ export type Match = {
   breakDuration: number;
   status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
   uniformType: "HOME" | "AWAY";
+  matchType: MatchType;
+  statsIncluded: boolean;
 };
 
 export type GoalEvent = {
@@ -101,6 +108,7 @@ export type GoalEvent = {
   quarter: number;
   minute: number;
   isOwnGoal?: boolean;
+  side?: "A" | "B" | null;
 };
 
 export type Guest = {
@@ -116,6 +124,12 @@ export type MatchDiary = {
   condition?: string;
   memo?: string;
   photos?: string[];
+};
+
+/** 자체전 팀 편성 */
+export type InternalTeamAssignment = {
+  playerId: string;
+  side: "A" | "B";
 };
 
 export type VoteState = Record<string, string>;
@@ -164,6 +178,8 @@ export const emptyMatch: Match = {
   breakDuration: 5,
   status: "SCHEDULED",
   uniformType: "HOME",
+  matchType: "REGULAR",
+  statsIncluded: true,
 };
 
 export function mapMatch(row: MatchRow): Match {
@@ -178,6 +194,8 @@ export function mapMatch(row: MatchRow): Match {
     breakDuration: row.break_duration,
     status: row.status,
     uniformType: row.uniform_type ?? "HOME",
+    matchType: row.match_type ?? "REGULAR",
+    statsIncluded: row.stats_included ?? true,
   };
 }
 
@@ -189,6 +207,7 @@ export function mapGoal(row: GoalRow): GoalEvent {
     quarter: row.quarter_number,
     minute: row.minute ?? 0,
     isOwnGoal: row.is_own_goal,
+    side: row.side ?? null,
   };
 }
 

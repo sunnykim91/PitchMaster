@@ -16,6 +16,7 @@ import type {
   Match,
   Guest,
   RosterPlayer,
+  InternalTeamAssignment,
 } from "./matchDetailTypes";
 import { voteStyles as styles } from "@/lib/voteStyles";
 
@@ -43,6 +44,10 @@ export interface MatchInfoTabProps {
   uniformSecondary?: string;
   /** 팀 유니폼 패턴 */
   uniformPattern?: string;
+  /** 자체전 팀 편성 데이터 */
+  internalTeams?: InternalTeamAssignment[];
+  /** 자체전 팀 편성 refetch */
+  refetchInternalTeams?: () => Promise<unknown>;
 }
 
 /* ── 유니폼 스타일 헬퍼 ── */
@@ -77,8 +82,12 @@ function MatchInfoTabInner({
   uniformPrimary: _uniformPrimary,
   uniformSecondary: _uniformSecondary,
   uniformPattern: _uniformPattern,
+  internalTeams,
+  refetchInternalTeams,
 }: MatchInfoTabProps) {
   const { showToast } = useToast();
+  const [savingTeams, setSavingTeams] = useState(false);
+  const isInternal = match.matchType === "INTERNAL";
 
   /* ── 유니폼 스타일 ── */
   const uniformPrimary = _uniformPrimary ?? "#2563eb";
@@ -709,6 +718,165 @@ function MatchInfoTabInner({
           )}
         </CardContent>
       </Card>
+      )}
+
+      {/* ── 자체전 팀 편성 ── */}
+      {isInternal && canManage && (
+        <Card>
+          <CardHeader>
+            <p className="text-xs font-bold uppercase tracking-wider text-primary">TEAM SPLIT</p>
+            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
+              팀 편성
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">참석 확정 인원을 A팀/B팀으로 나눕니다.</p>
+          </CardHeader>
+          <CardContent>
+            {(() => {
+              const attending = baseRoster.filter((m) => memberVoteMap[m.memberId] === "ATTEND");
+              const teamMap: Record<string, "A" | "B"> = {};
+              for (const t of internalTeams ?? []) {
+                teamMap[t.playerId] = t.side;
+              }
+              const teamA = attending.filter((m) => teamMap[m.id] === "A");
+              const teamB = attending.filter((m) => teamMap[m.id] === "B");
+              const unassigned = attending.filter((m) => !teamMap[m.id]);
+
+              async function handleRandomSplit() {
+                const shuffled = [...attending].sort(() => Math.random() - 0.5);
+                const half = Math.ceil(shuffled.length / 2);
+                const a = shuffled.slice(0, half).map((m) => m.id);
+                const b = shuffled.slice(half).map((m) => m.id);
+                setSavingTeams(true);
+                const { error } = await apiMutate("/api/internal-teams", "POST", {
+                  matchId, teams: { A: a, B: b },
+                });
+                setSavingTeams(false);
+                if (error) { showToast("팀 편성 저장에 실패했습니다.", "error"); return; }
+                showToast("랜덤 팀 편성이 완료되었습니다.");
+                refetchInternalTeams?.();
+              }
+
+              async function toggleSide(playerId: string) {
+                const current = teamMap[playerId];
+                const newMap = { ...teamMap };
+                if (!current) newMap[playerId] = "A";
+                else if (current === "A") newMap[playerId] = "B";
+                else delete newMap[playerId];
+
+                const a = Object.entries(newMap).filter(([, s]) => s === "A").map(([id]) => id);
+                const b = Object.entries(newMap).filter(([, s]) => s === "B").map(([id]) => id);
+                setSavingTeams(true);
+                await apiMutate("/api/internal-teams", "POST", { matchId, teams: { A: a, B: b } });
+                setSavingTeams(false);
+                refetchInternalTeams?.();
+              }
+
+              return (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" onClick={handleRandomSplit} disabled={savingTeams || attending.length < 2}>
+                      {savingTeams ? "배정 중..." : "랜덤 배정"}
+                    </Button>
+                    <span className="text-xs text-muted-foreground">참석 {attending.length}명</span>
+                  </div>
+
+                  {attending.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-4 text-center">참석 확정된 인원이 없습니다.</p>
+                  ) : (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {/* A팀 */}
+                      <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+                        <p className="text-sm font-bold text-primary mb-2">A팀 ({teamA.length}명)</p>
+                        <div className="space-y-1">
+                          {teamA.map((m) => (
+                            <button key={m.id} type="button" onClick={() => toggleSide(m.id)}
+                              className="flex w-full items-center justify-between rounded-lg bg-primary/10 px-3 py-2 text-sm hover:bg-primary/20 transition-colors">
+                              <span className="font-medium">{m.name}</span>
+                              <span className="text-xs text-primary">A</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {/* B팀 */}
+                      <div className="rounded-xl border border-[hsl(var(--info))]/30 bg-[hsl(var(--info))]/5 p-3">
+                        <p className="text-sm font-bold text-[hsl(var(--info))] mb-2">B팀 ({teamB.length}명)</p>
+                        <div className="space-y-1">
+                          {teamB.map((m) => (
+                            <button key={m.id} type="button" onClick={() => toggleSide(m.id)}
+                              className="flex w-full items-center justify-between rounded-lg bg-[hsl(var(--info))]/10 px-3 py-2 text-sm hover:bg-[hsl(var(--info))]/20 transition-colors">
+                              <span className="font-medium">{m.name}</span>
+                              <span className="text-xs text-[hsl(var(--info))]">B</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 미배정 */}
+                  {unassigned.length > 0 && (
+                    <div className="rounded-xl border border-border bg-secondary/50 p-3">
+                      <p className="text-sm font-semibold text-muted-foreground mb-2">미배정 ({unassigned.length}명)</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {unassigned.map((m) => (
+                          <button key={m.id} type="button" onClick={() => toggleSide(m.id)}
+                            className="rounded-full border border-border bg-secondary px-3 py-1.5 text-xs font-medium hover:border-primary/30 hover:text-primary transition-colors">
+                            {m.name}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">클릭하면 A팀 → B팀 → 미배정 순으로 변경됩니다.</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 자체전 팀 편성 조회 (평회원용) */}
+      {isInternal && !canManage && (internalTeams ?? []).length > 0 && (
+        <Card>
+          <CardHeader>
+            <p className="text-xs font-bold uppercase tracking-wider text-primary">TEAM SPLIT</p>
+            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">팀 편성</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+                <p className="text-sm font-bold text-primary mb-2">
+                  A팀 ({(internalTeams ?? []).filter((t) => t.side === "A").length}명)
+                </p>
+                <div className="space-y-1">
+                  {(internalTeams ?? []).filter((t) => t.side === "A").map((t) => {
+                    const player = baseRoster.find((m) => m.id === t.playerId);
+                    return (
+                      <div key={t.playerId} className="rounded-lg bg-primary/10 px-3 py-2 text-sm font-medium">
+                        {player?.name ?? t.playerId}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="rounded-xl border border-[hsl(var(--info))]/30 bg-[hsl(var(--info))]/5 p-3">
+                <p className="text-sm font-bold text-[hsl(var(--info))] mb-2">
+                  B팀 ({(internalTeams ?? []).filter((t) => t.side === "B").length}명)
+                </p>
+                <div className="space-y-1">
+                  {(internalTeams ?? []).filter((t) => t.side === "B").map((t) => {
+                    const player = baseRoster.find((m) => m.id === t.playerId);
+                    return (
+                      <div key={t.playerId} className="rounded-lg bg-[hsl(var(--info))]/10 px-3 py-2 text-sm font-medium">
+                        {player?.name ?? t.playerId}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </>
   );
