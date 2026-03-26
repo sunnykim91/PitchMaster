@@ -154,7 +154,7 @@ function MatchInfoTabInner({
         return;
       }
       showToast("경기가 삭제되었습니다.");
-      window.location.href = "/matches";
+      window.location.replace("/matches");
     } catch {
       showToast("삭제에 실패했습니다.", "error");
     } finally {

@@ -96,7 +96,7 @@ export default function RootLayout({
         {children}
         <ServiceWorkerRegister />
         <Script id="chunk-error-handler" strategy="beforeInteractive">
-          {`window.addEventListener('error',function(e){if(e.message&&e.message.includes('ChunkLoadError')){window.location.reload();}},true);`}
+          {`function _cr(e){var m=e&&(e.message||e.reason&&e.reason.message||'');if(m.includes('ChunkLoadError')||m.includes('Loading chunk')||m.includes('Failed to fetch')){window.location.reload();}}window.addEventListener('error',_cr,true);window.addEventListener('unhandledrejection',function(e){_cr(e.reason);});`}
         </Script>
         <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
         <Script id="gtag-init" strategy="afterInteractive">
