@@ -756,12 +756,10 @@ function MatchInfoTabInner({
                 refetchInternalTeams?.();
               }
 
-              async function toggleSide(playerId: string) {
-                const current = teamMap[playerId];
+              async function assignSide(playerId: string, side: "A" | "B" | null) {
                 const newMap = { ...teamMap };
-                if (!current) newMap[playerId] = "A";
-                else if (current === "A") newMap[playerId] = "B";
-                else delete newMap[playerId];
+                if (side === null) delete newMap[playerId];
+                else newMap[playerId] = side;
 
                 const a = Object.entries(newMap).filter(([, s]) => s === "A").map(([id]) => id);
                 const b = Object.entries(newMap).filter(([, s]) => s === "B").map(([id]) => id);
@@ -771,6 +769,42 @@ function MatchInfoTabInner({
                 refetchInternalTeams?.();
               }
 
+              function PlayerRow({ m, current }: { m: typeof attending[0]; current: "A" | "B" | null }) {
+                return (
+                  <div className="flex items-center justify-between gap-2 rounded-lg bg-secondary/50 px-3 py-2">
+                    <span className="text-sm font-medium truncate">{m.name}</span>
+                    <div className="flex gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => assignSide(m.id, current === "A" ? null : "A")}
+                        disabled={savingTeams}
+                        className={cn(
+                          "rounded-md px-2.5 py-1 text-xs font-bold transition-colors",
+                          current === "A"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                        )}
+                      >
+                        A
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => assignSide(m.id, current === "B" ? null : "B")}
+                        disabled={savingTeams}
+                        className={cn(
+                          "rounded-md px-2.5 py-1 text-xs font-bold transition-colors",
+                          current === "B"
+                            ? "bg-[hsl(var(--info))] text-white"
+                            : "bg-secondary text-muted-foreground hover:bg-[hsl(var(--info))]/10 hover:text-[hsl(var(--info))]"
+                        )}
+                      >
+                        B
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
@@ -778,54 +812,22 @@ function MatchInfoTabInner({
                       {savingTeams ? "배정 중..." : "랜덤 배정"}
                     </Button>
                     <span className="text-xs text-muted-foreground">참석 {attending.length}명</span>
+                    {(teamA.length > 0 || teamB.length > 0) && (
+                      <span className="text-xs font-medium">
+                        <span className="text-primary">A {teamA.length}</span>
+                        <span className="text-muted-foreground mx-1">vs</span>
+                        <span className="text-[hsl(var(--info))]">B {teamB.length}</span>
+                      </span>
+                    )}
                   </div>
 
                   {attending.length === 0 ? (
                     <p className="text-sm text-muted-foreground py-4 text-center">참석 확정된 인원이 없습니다.</p>
                   ) : (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {/* A팀 */}
-                      <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
-                        <p className="text-sm font-bold text-primary mb-2">A팀 ({teamA.length}명)</p>
-                        <div className="space-y-1">
-                          {teamA.map((m) => (
-                            <button key={m.id} type="button" onClick={() => toggleSide(m.id)}
-                              className="flex w-full items-center justify-between rounded-lg bg-primary/10 px-3 py-2 text-sm hover:bg-primary/20 transition-colors">
-                              <span className="font-medium">{m.name}</span>
-                              <span className="text-xs text-primary">A</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      {/* B팀 */}
-                      <div className="rounded-xl border border-[hsl(var(--info))]/30 bg-[hsl(var(--info))]/5 p-3">
-                        <p className="text-sm font-bold text-[hsl(var(--info))] mb-2">B팀 ({teamB.length}명)</p>
-                        <div className="space-y-1">
-                          {teamB.map((m) => (
-                            <button key={m.id} type="button" onClick={() => toggleSide(m.id)}
-                              className="flex w-full items-center justify-between rounded-lg bg-[hsl(var(--info))]/10 px-3 py-2 text-sm hover:bg-[hsl(var(--info))]/20 transition-colors">
-                              <span className="font-medium">{m.name}</span>
-                              <span className="text-xs text-[hsl(var(--info))]">B</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 미배정 */}
-                  {unassigned.length > 0 && (
-                    <div className="rounded-xl border border-border bg-secondary/50 p-3">
-                      <p className="text-sm font-semibold text-muted-foreground mb-2">미배정 ({unassigned.length}명)</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {unassigned.map((m) => (
-                          <button key={m.id} type="button" onClick={() => toggleSide(m.id)}
-                            className="rounded-full border border-border bg-secondary px-3 py-1.5 text-xs font-medium hover:border-primary/30 hover:text-primary transition-colors">
-                            {m.name}
-                          </button>
-                        ))}
-                      </div>
-                      <p className="mt-2 text-xs text-muted-foreground">클릭하면 A팀 → B팀 → 미배정 순으로 변경됩니다.</p>
+                    <div className="space-y-1.5">
+                      {attending.map((m) => (
+                        <PlayerRow key={m.id} m={m} current={teamMap[m.id] ?? null} />
+                      ))}
                     </div>
                   )}
                 </div>
