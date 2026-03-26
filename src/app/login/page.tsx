@@ -358,7 +358,7 @@ export default async function LoginPage({
               },
               {
                 title: "자체전 (A팀 vs B팀)",
-                desc: "팀 내 홍백전 — 랜덤 편성, 팀별 스코어보드, 쿼터별 기록",
+                desc: "팀 내 자체전 — 랜덤 편성, 팀별 스코어보드, 쿼터별 기록",
               },
               {
                 title: "유니폼 안내",
