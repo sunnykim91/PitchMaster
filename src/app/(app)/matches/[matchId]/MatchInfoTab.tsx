@@ -178,6 +178,7 @@ function MatchInfoTabInner({
   const [isGuestFormOpen, setIsGuestFormOpen] = useState(false);
   const [voteSearch, setVoteSearch] = useState("");
   const [voteFilter, setVoteFilter] = useState<"all" | "unvoted">("all");
+  const [voteSortBy, setVoteSortBy] = useState<"vote" | "name">("vote");
 
   async function handleAddGuest(formData: FormData) {
     const name = String(formData.get("guestName") || "").trim();
@@ -404,41 +405,63 @@ function MatchInfoTabInner({
             {(() => {
               const unvotedCount = baseRoster.filter((m) => !memberVoteMap[m.memberId]).length;
               return (
-                <div className="mt-2 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setVoteFilter("all")}
-                    className={cn(
-                      "rounded-full px-3 py-1 text-xs font-medium transition-colors",
-                      voteFilter === "all"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                    )}
-                  >
-                    전체
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setVoteFilter("unvoted")}
-                    className={cn(
-                      "flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors",
-                      voteFilter === "unvoted"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                    )}
-                  >
-                    미투표
-                    {unvotedCount > 0 && (
-                      <span className={cn(
-                        "rounded-full px-1.5 py-0.5 text-xs font-bold leading-tight",
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setVoteFilter("all")}
+                      className={cn(
+                        "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                        voteFilter === "all"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                      )}
+                    >
+                      전체
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVoteFilter("unvoted")}
+                      className={cn(
+                        "flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
                         voteFilter === "unvoted"
-                          ? "bg-primary-foreground/20 text-primary-foreground"
-                          : "bg-destructive/15 text-destructive"
-                      )}>
-                        {unvotedCount}
-                      </span>
-                    )}
-                  </button>
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                      )}
+                    >
+                      미투표
+                      {unvotedCount > 0 && (
+                        <span className={cn(
+                          "rounded-full px-1.5 py-0.5 text-xs font-bold leading-tight",
+                          voteFilter === "unvoted"
+                            ? "bg-primary-foreground/20 text-primary-foreground"
+                            : "bg-destructive/15 text-destructive"
+                        )}>
+                          {unvotedCount}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                  <div className="flex gap-1 border-l border-border pl-2">
+                    {([
+                      { value: "vote" as const, label: "투표순" },
+                      { value: "name" as const, label: "이름순" },
+                    ]).map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setVoteSortBy(opt.value)}
+                        className={cn(
+                          "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                          voteSortBy === opt.value
+                            ? "bg-secondary text-foreground"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               );
             })()}
@@ -490,12 +513,15 @@ function MatchInfoTabInner({
                 if (voteFilter === "unvoted" && memberVoteMap[m.memberId]) return false;
                 return true;
               }).sort((a, b) => {
+                if (voteSortBy === "name") return a.name.localeCompare(b.name, "ko");
+                // 투표순: 참석→미정→불참→미투표
                 const voteA = memberVoteMap[a.memberId];
                 const voteB = memberVoteMap[b.memberId];
                 const order: Record<string, number> = { ATTEND: 0, MAYBE: 1, ABSENT: 2 };
                 const orderA = voteA ? (order[voteA] ?? 3) : 4;
                 const orderB = voteB ? (order[voteB] ?? 3) : 4;
-                return orderA - orderB;
+                if (orderA !== orderB) return orderA - orderB;
+                return a.name.localeCompare(b.name, "ko");
               }).map((member) => {
                 const currentVote = memberVoteMap[member.memberId];
                 return (
