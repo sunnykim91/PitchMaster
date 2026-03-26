@@ -995,9 +995,16 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                         className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       >
                         <option value="">미배정</option>
-                        {restingPlayers.map((p) => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
+                        {(() => {
+                          // 쉬는 선수 + 현재 이 역할에 배정된 선수도 옵션에 포함
+                          const currentPlayer = current ? roster.find((r) => r.id === current) : null;
+                          const options = currentPlayer && !restingPlayers.some((p) => p.id === current)
+                            ? [currentPlayer, ...restingPlayers]
+                            : restingPlayers;
+                          return options.map((p) => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ));
+                        })()}
                       </select>
                     </div>
                   ))}
