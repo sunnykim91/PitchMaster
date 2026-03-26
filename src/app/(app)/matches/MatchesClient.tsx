@@ -134,7 +134,9 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   const [submitting, setSubmitting] = useState(false);
   const [votingMatchId, setVotingMatchId] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const today = new Date().toISOString().split("T")[0];
+  const [now, setNow] = useState<number>(0);
+  useEffect(() => { setNow(Date.now()); }, []);
+  const today = now ? new Date(now).toISOString().split("T")[0] : "";
   const [matchDate, setMatchDate] = useState(today);
   const [matchTime, setMatchTime] = useState("09:00");
   const [location, setLocation] = useState("");
@@ -619,7 +621,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     )}
                   </div>
                   <div className="flex gap-2">
-                    {match.status !== "COMPLETED" && match.voteDeadline && new Date(match.voteDeadline) > new Date() && (
+                    {match.status !== "COMPLETED" && match.voteDeadline && now > 0 && new Date(match.voteDeadline).getTime() > now && (
                       <Button
                         type="button"
                         size="sm"
