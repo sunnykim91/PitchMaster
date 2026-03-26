@@ -16,10 +16,9 @@ export async function GET(request: NextRequest) {
   const { data: matchCheck } = await db.from("matches").select("id").eq("id", matchId).eq("team_id", ctx.teamId).single();
   if (!matchCheck) return apiError("Match not found", 404);
 
-  // select("*") intentional: all goal columns are returned to the client
   const { data, error } = await db
     .from("match_goals")
-    .select("*")
+    .select("id, match_id, quarter_number, minute, scorer_id, assist_id, is_own_goal, recorded_by, side")
     .eq("match_id", matchId)
     .order("quarter_number")
     .order("minute");

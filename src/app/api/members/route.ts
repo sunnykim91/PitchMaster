@@ -170,15 +170,15 @@ export async function PUT(request: NextRequest) {
     const db = getSupabaseAdmin();
     if (!db) return apiError("Database not available", 503);
 
-    let count = 0;
-    for (const u of updates) {
-      const { error } = await db
-        .from("team_members")
-        .update({ dues_type: u.duesType || null })
-        .eq("id", u.memberId)
-        .eq("team_id", ctx.teamId);
-      if (!error) count++;
-    }
+    const results = await Promise.all(
+      updates.map((u) =>
+        db.from("team_members")
+          .update({ dues_type: u.duesType || null })
+          .eq("id", u.memberId)
+          .eq("team_id", ctx.teamId)
+      )
+    );
+    const count = results.filter((r) => !r.error).length;
     return apiSuccess({ updated: count });
   }
 

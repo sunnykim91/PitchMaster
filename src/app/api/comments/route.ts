@@ -62,14 +62,11 @@ export async function DELETE(request: NextRequest) {
 
   const { data: comment } = await db
     .from("post_comments")
-    .select("author_id, post_id")
+    .select("author_id, posts!inner(team_id)")
     .eq("id", id)
+    .eq("posts.team_id", ctx.teamId)
     .single();
   if (!comment) return apiError("Comment not found", 404);
-
-  // Verify the post belongs to this team
-  const { data: postCheck } = await db.from("posts").select("id").eq("id", comment.post_id).eq("team_id", ctx.teamId).single();
-  if (!postCheck) return apiError("Post not found", 404);
 
   const isAuthor = comment.author_id === ctx.userId;
   const isStaff = isStaffOrAbove(ctx.teamRole);

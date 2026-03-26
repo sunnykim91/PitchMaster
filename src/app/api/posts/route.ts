@@ -215,9 +215,7 @@ export async function DELETE(request: NextRequest) {
   const isStaff = isStaffOrAbove(ctx.teamRole);
   if (!isAuthor && !isStaff) return apiError("Forbidden", 403);
 
-  // Delete related records first, then post (polls cascade via FK)
-  await db.from("post_comments").delete().eq("post_id", id);
-  await db.from("post_likes").delete().eq("post_id", id);
+  // FK CASCADE로 댓글/좋아요/투표 자동 삭제
   const { error } = await db.from("posts").delete().eq("id", id);
   if (error) return apiError(error.message, 500);
 
