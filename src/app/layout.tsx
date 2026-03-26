@@ -72,7 +72,7 @@ export default function RootLayout({
         {/* Pretendard: npm 패키지에서 로컬 로드 (CORS 이슈 해결) */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://t1.kakaocdn.net" />
         <link rel="preconnect" href="https://t1.kakaocdn.net" crossOrigin="anonymous" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
