@@ -374,9 +374,9 @@ function MatchInfoTabInner({
                 <div>
                   <p className="text-xs font-bold text-muted-foreground">내 참석 투표</p>
                   <p className={cn("mt-1 text-sm font-semibold",
-                    myVote === "ATTEND" ? "text-[hsl(var(--success))]" : myVote === "ABSENT" ? "text-[hsl(var(--loss))]" : myVote === "MAYBE" ? "text-[hsl(var(--warning))]" : "text-destructive"
+                    !myVote && "text-[hsl(var(--warning))]"
                   )}>
-                    {myVote === "ATTEND" ? "참석" : myVote === "ABSENT" ? "불참" : myVote === "MAYBE" ? "미정" : "아직 투표하지 않았습니다"}
+                    {myVote === "ATTEND" ? "참석" : myVote === "ABSENT" ? "불참" : myVote === "MAYBE" ? "미정" : "미투표"}
                   </p>
                 </div>
                 <div className="flex gap-2">
