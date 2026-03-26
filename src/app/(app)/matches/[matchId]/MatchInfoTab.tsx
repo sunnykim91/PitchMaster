@@ -306,37 +306,40 @@ function MatchInfoTabInner({
               </button>
             </div>
           </div>
+
+          {/* 전적 반영 토글 (운영진 이상) */}
+          {canManage && (
+            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+              <div>
+                <p className="text-sm font-medium">전적 반영</p>
+                <p className="text-xs text-muted-foreground">OFF 시 시즌 전적·개인 통계에서 제외됩니다</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={match.statsIncluded}
+                onClick={async () => {
+                  const next = !match.statsIncluded;
+                  const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, statsIncluded: next });
+                  if (!err) {
+                    showToast(next ? "전적에 반영됩니다." : "전적에서 제외됩니다.");
+                    await refetchMatches();
+                  }
+                }}
+                className={cn(
+                  "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200",
+                  match.statsIncluded ? "bg-[hsl(var(--success))]" : "bg-muted-foreground/25"
+                )}
+              >
+                <span className={cn(
+                  "pointer-events-none block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200",
+                  match.statsIncluded ? "translate-x-[22px]" : "translate-x-[2px]"
+                )} />
+              </button>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {/* ── 경기 완료 처리 (운영진 이상, SCHEDULED + 경기일 오늘 이전/오늘) ── */}
-      {canManage && match.status === "SCHEDULED" && isMatchDatePastOrToday && (
-        <Card className="border-[hsl(var(--success))]/20 bg-[hsl(var(--success))]/5">
-          <CardContent className="flex items-center justify-between gap-4 p-4">
-            <div>
-              <p className="text-sm font-semibold text-foreground">경기가 끝났나요? 기록을 시작하세요</p>
-              <p className="text-xs text-muted-foreground">완료 처리 후 골 기록, MVP 투표, 출석 체크가 가능합니다.</p>
-            </div>
-            <Button
-              size="sm"
-              className="shrink-0"
-              disabled={completing}
-              onClick={() => setShowCompleteConfirm(true)}
-            >
-              {completing ? "처리 중..." : "경기 기록 시작"}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-      <ConfirmDialog
-        open={showCompleteConfirm}
-        title="경기 기록을 시작하시겠습니까?"
-        description="완료 처리 후 골 기록, MVP 투표, 출석 체크를 할 수 있습니다. 시즌 전적에도 반영됩니다."
-        confirmLabel="경기 기록 시작"
-        cancelLabel="취소"
-        onConfirm={handleCompleteMatch}
-        onCancel={() => setShowCompleteConfirm(false)}
-      />
 
       {/* ── 내 참석 투표 (모든 멤버, 진행 전 경기만) ── */}
       {match.status !== "COMPLETED" && (() => {
