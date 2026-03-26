@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { getMatchDetailData } from "@/lib/server/getMatchDetailData";
 import MatchDetailClient from "@/app/(app)/matches/[matchId]/MatchDetailClient";
 
 export default async function MatchDetailPage({
@@ -13,11 +14,14 @@ export default async function MatchDetailPage({
     return null;
   }
 
+  const initialData = await getMatchDetailData(matchId, session.user.teamId!);
+
   return (
     <MatchDetailClient
       matchId={matchId}
       userId={session.user.id}
       userRole={session.user.teamRole}
+      initialData={initialData}
     />
   );
 }

@@ -7,9 +7,17 @@ type UseApiOptions = {
   skip?: boolean;
 };
 
+/** 글로벌 URL 캐시 (60초 TTL) */
+const urlCache = new Map<string, { data: unknown; ts: number }>();
+const CACHE_TTL = 60_000;
+
+/** 테스트용 캐시 초기화 */
+export function clearApiCache() { urlCache.clear(); }
+
 /**
  * Generic hook for fetching data from API routes.
- * Replaces useLocalStorage with server-backed state.
+ * - SSR initialData 지원 (skip=true 시 fetch 안 함)
+ * - 글로벌 캐시로 같은 URL 중복 요청 방지
  */
 export function useApi<T>(
   url: string,
@@ -26,17 +34,27 @@ export function useApi<T>(
   const [loading, setLoading] = useState(!options?.skip);
   const [error, setError] = useState<string | null>(null);
 
-  // Abort controller로 stale fetch 정리
   const abortRef = useRef<AbortController | null>(null);
   const hasFetchedUrlRef = useRef<string | null>(null);
 
-  const fetchData = useCallback(async () => {
-    // 이전 fetch 취소
+  const fetchData = useCallback(async (ignoreCache = false) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
-    // 같은 URL로 이미 fetch한 경우 loading 표시하지 않음 (refetch 시 깜빡임 방지)
+    // 캐시 확인 (강제 refetch가 아닌 경우)
+    if (!ignoreCache) {
+      const cached = urlCache.get(url);
+      if (cached && Date.now() - cached.ts < CACHE_TTL) {
+        if (!controller.signal.aborted) {
+          setData(cached.data as T);
+          setLoading(false);
+          hasFetchedUrlRef.current = url;
+        }
+        return;
+      }
+    }
+
     if (hasFetchedUrlRef.current !== url) {
       setLoading(true);
     }
@@ -45,7 +63,6 @@ export function useApi<T>(
     try {
       const res = await fetch(url, { signal: controller.signal, credentials: "include" });
       if (!res.ok) {
-        // 401 → 세션 만료, 로그인 페이지로 리다이렉트
         if (res.status === 401 && typeof window !== "undefined") {
           window.location.href = "/login";
           return;
@@ -57,6 +74,7 @@ export function useApi<T>(
       if (!controller.signal.aborted) {
         setData(json);
         hasFetchedUrlRef.current = url;
+        urlCache.set(url, { data: json, ts: Date.now() });
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
@@ -70,6 +88,9 @@ export function useApi<T>(
     }
   }, [url]);
 
+  // refetch는 캐시 무시
+  const refetch = useCallback(() => fetchData(true), [fetchData]);
+
   useEffect(() => {
     if (!options?.skip) {
       fetchData();
@@ -79,7 +100,7 @@ export function useApi<T>(
     };
   }, [fetchData, options?.skip]);
 
-  // 앱이 다시 포커스/활성화되면 데이터 자동 갱신 (PWA 복귀, 탭 전환 등)
+  // 앱 복귀 시 자동 갱신 (30초 이내면 skip)
   useEffect(() => {
     if (options?.skip) return;
 
@@ -87,20 +108,19 @@ export function useApi<T>(
 
     function handleVisibilityChange() {
       if (document.visibilityState !== "visible") return;
-      // 최소 30초 경과해야 refetch (불필요한 중복 방지)
       if (Date.now() - lastRefresh < 30_000) return;
       lastRefresh = Date.now();
-      fetchData();
+      fetchData(true);
     }
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [fetchData, options?.skip]);
 
-  return { data, setData, loading, error, refetch: fetchData };
+  return { data, setData, loading, error, refetch };
 }
 
-/** Helper for POST/PUT/DELETE mutations */
+/** Helper for POST/PUT/DELETE mutations — 관련 캐시 무효화 */
 export async function apiMutate<T = unknown>(
   url: string,
   method: "POST" | "PUT" | "DELETE",
@@ -115,12 +135,18 @@ export async function apiMutate<T = unknown>(
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
-      // 401 → 세션 만료, 로그인 페이지로 리다이렉트
       if (res.status === 401 && typeof window !== "undefined") {
         window.location.href = "/login";
         return { data: null, error: "세션이 만료되었습니다. 다시 로그인해주세요." };
       }
       return { data: null, error: json.error || `HTTP ${res.status}` };
+    }
+    // mutation 성공 시 해당 URL 기반 캐시 무효화
+    const baseUrl = url.split("?")[0];
+    for (const key of urlCache.keys()) {
+      if (key.startsWith(baseUrl)) {
+        urlCache.delete(key);
+      }
     }
     return { data: json as T, error: null };
   } catch (err) {

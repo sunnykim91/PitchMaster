@@ -43,47 +43,52 @@ import { MatchTacticsTab } from "./MatchTacticsTab";
 import { MatchRecordTab } from "./MatchRecordTab";
 import { MatchDiaryTab } from "./MatchDiaryTab";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type InitialData = Record<string, any> | null;
+
 export default function MatchDetailClient({
   matchId,
   userId,
   userRole,
+  initialData,
 }: {
   matchId: string;
   userId: string;
   userRole?: Role;
+  initialData?: InitialData;
 }) {
-  /* ── API fetches ── */
+  /* ── API fetches (SSR initialData가 있으면 skip) ── */
   const {
     data: matchesData,
     loading: matchesLoading,
     refetch: refetchMatches,
-  } = useApi<{ matches: MatchRow[] }>("/api/matches", { matches: [] });
+  } = useApi<{ matches: MatchRow[] }>("/api/matches", initialData?.matches ?? { matches: [] }, { skip: !!initialData?.matches });
 
   const {
     data: goalsData,
     refetch: refetchGoals,
-  } = useApi<{ goals: GoalRow[] }>(`/api/goals?matchId=${matchId}`, { goals: [] });
+  } = useApi<{ goals: GoalRow[] }>(`/api/goals?matchId=${matchId}`, initialData?.goals ?? { goals: [] }, { skip: !!initialData?.goals });
 
   const {
     data: mvpData,
     refetch: refetchMvp,
-  } = useApi<{ votes: MvpVoteRow[] }>(`/api/mvp?matchId=${matchId}`, { votes: [] });
+  } = useApi<{ votes: MvpVoteRow[] }>(`/api/mvp?matchId=${matchId}`, initialData?.mvp ?? { votes: [] }, { skip: !!initialData?.mvp });
 
   const {
     data: attendanceData,
     refetch: refetchAttendance,
-  } = useApi<{ attendance: AttendanceRow[] }>(`/api/attendance-check?matchId=${matchId}`, { attendance: [] });
+  } = useApi<{ attendance: AttendanceRow[] }>(`/api/attendance-check?matchId=${matchId}`, initialData?.attendanceCheck ?? { attendance: [] }, { skip: !!initialData?.attendanceCheck });
 
   const {
     data: guestsData,
     refetch: refetchGuests,
-  } = useApi<{ guests: GuestRow[] }>(`/api/guests?matchId=${matchId}`, { guests: [] });
+  } = useApi<{ guests: GuestRow[] }>(`/api/guests?matchId=${matchId}`, initialData?.guests ?? { guests: [] }, { skip: !!initialData?.guests });
 
   // 자체전 팀 편성 데이터
   const {
     data: internalTeamsData,
     refetch: refetchInternalTeams,
-  } = useApi<{ teams: { player_id: string; side: "A" | "B" }[] }>(`/api/internal-teams?matchId=${matchId}`, { teams: [] });
+  } = useApi<{ teams: { player_id: string; side: "A" | "B" }[] }>(`/api/internal-teams?matchId=${matchId}`, initialData?.internalTeams ?? { teams: [] }, { skip: !!initialData?.internalTeams });
 
   // 실시간 동기화: 참석투표, 골 기록, MVP 투표
   useRealtimeSubscription({
@@ -108,15 +113,15 @@ export default function MatchDetailClient({
   const {
     data: diaryData,
     refetch: refetchDiary,
-  } = useApi<{ diary: DiaryRow }>(`/api/diary?matchId=${matchId}`, { diary: null });
+  } = useApi<{ diary: DiaryRow }>(`/api/diary?matchId=${matchId}`, initialData?.diary ?? { diary: null }, { skip: !!initialData?.diary });
 
   const {
     data: membersData,
-  } = useApi<{ members: MemberRow[] }>("/api/members", { members: [] });
+  } = useApi<{ members: MemberRow[] }>("/api/members", initialData?.members ?? { members: [] }, { skip: !!initialData?.members });
 
   const {
     data: teamData,
-  } = useApi<{ team: { sport_type?: SportType; player_count?: number; uniform_primary?: string; uniform_secondary?: string; uniform_pattern?: string } }>("/api/teams", { team: {} });
+  } = useApi<{ team: { sport_type?: SportType; player_count?: number; uniform_primary?: string; uniform_secondary?: string; uniform_pattern?: string } }>("/api/teams", initialData?.team ?? { team: {} }, { skip: !!initialData?.team });
 
   const sportType: SportType = teamData.team?.sport_type ?? "SOCCER";
   const uniformPrimary = teamData.team?.uniform_primary ?? "#2563eb";
@@ -128,7 +133,8 @@ export default function MatchDetailClient({
     refetch: refetchVote,
   } = useApi<{ attendance: AttendanceVoteRow[] }>(
     `/api/attendance?matchId=${matchId}`,
-    { attendance: [] },
+    initialData?.vote ?? { attendance: [] },
+    { skip: !!initialData?.vote },
   );
 
   /* ── Map API data to client types ── */

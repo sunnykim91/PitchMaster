@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useApi, apiMutate } from "@/lib/useApi";
+import { useApi, apiMutate, clearApiCache } from "@/lib/useApi";
 
 // fetch 전역 모킹
 const mockFetch = vi.fn();
@@ -16,7 +16,7 @@ function mockJsonResponse(data: unknown, status = 200) {
 
 // ─── useApi ──────────────────────────────────────────────────────────────────
 describe("useApi", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => { vi.clearAllMocks(); clearApiCache(); });
 
   it("초기에 initialData를 data로 사용", () => {
     const initialData = { items: [1, 2, 3] };
@@ -137,7 +137,7 @@ describe("useApi", () => {
 
 // ─── apiMutate ───────────────────────────────────────────────────────────────
 describe("apiMutate", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => { vi.clearAllMocks(); clearApiCache(); });
 
   it("POST 성공 — data 반환, error null", async () => {
     const responseData = { id: "new-match" };
