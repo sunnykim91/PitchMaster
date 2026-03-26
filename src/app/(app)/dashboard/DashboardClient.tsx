@@ -462,7 +462,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                       <p className="truncate text-xs text-muted-foreground">마감: {formatDue(vote.due)}</p>
                     </div>
                     <Button variant="link" size="sm" className="text-primary" asChild>
-                      <Link href={`/matches/${vote.id}`}>참여 &rarr;</Link>
+                      <Link href={`/matches/${vote.id}?tab=vote`}>참여 &rarr;</Link>
                     </Button>
                   </CardContent>
                 </Card>
