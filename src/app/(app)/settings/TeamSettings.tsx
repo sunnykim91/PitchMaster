@@ -21,6 +21,7 @@ type TeamSettingsData = {
   uniformSecondary: string;
   uniformPattern: "SOLID" | "STRIPES_VERTICAL" | "STRIPES_HORIZONTAL" | "STRIPES_DIAGONAL";
   isSearchable: boolean;
+  joinMode: "AUTO" | "MANUAL";
 };
 
 type JoinRequest = {
@@ -103,6 +104,26 @@ function TeamSettingsComponent({
     } else {
       setTeam({ ...team, isSearchable: newVal });
       setMessage(newVal ? "팀 검색이 허용되었습니다." : "팀 검색이 비허용되었습니다.");
+      teamSyncedRef.current = false;
+      await refetchTeam();
+    }
+    setTimeout(() => setMessage(null), 2000);
+  }
+
+  // ── 가입 모드 토글 ──
+  const [joinModeLoading, setJoinModeLoading] = useState(false);
+
+  async function handleToggleJoinMode() {
+    if (!canEditTeam) return;
+    setJoinModeLoading(true);
+    const newVal = team.joinMode === "MANUAL" ? "AUTO" : "MANUAL";
+    const { error } = await apiMutate("/api/teams", "PUT", { joinMode: newVal });
+    setJoinModeLoading(false);
+    if (error) {
+      setMessage(`오류: ${error}`);
+    } else {
+      setTeam({ ...team, joinMode: newVal });
+      setMessage(newVal === "MANUAL" ? "가입 시 승인이 필요합니다." : "가입 시 자동 승인됩니다.");
       teamSyncedRef.current = false;
       await refetchTeam();
     }
@@ -247,6 +268,42 @@ function TeamSettingsComponent({
                       pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg
                       ring-0 transition-transform duration-200 ease-in-out
                       ${team.isSearchable ? "translate-x-5" : "translate-x-0.5"}
+                    `}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* 가입 승인 모드 */}
+            <div className="rounded-xl border border-border p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <p className="text-sm font-semibold">가입 승인 필요</p>
+                  <p className="text-xs text-muted-foreground">
+                    {team.joinMode === "MANUAL"
+                      ? "초대링크/팀검색 가입 시 운영진 승인이 필요합니다."
+                      : "초대링크/팀검색 가입 시 즉시 가입됩니다."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={team.joinMode === "MANUAL"}
+                  disabled={!canEditTeam || joinModeLoading}
+                  onClick={handleToggleJoinMode}
+                  className={`
+                    relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full
+                    transition-colors duration-200 ease-in-out
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
+                    disabled:cursor-not-allowed disabled:opacity-50
+                    ${team.joinMode === "MANUAL" ? "bg-primary" : "bg-muted"}
+                  `}
+                >
+                  <span
+                    className={`
+                      pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg
+                      ring-0 transition-transform duration-200 ease-in-out
+                      ${team.joinMode === "MANUAL" ? "translate-x-5" : "translate-x-0.5"}
                     `}
                   />
                 </button>

@@ -28,6 +28,7 @@ export default async function SettingsPage() {
         uniformSecondary: "#f97316",
         uniformPattern: "SOLID",
         isSearchable: false,
+        joinMode: "MANUAL",
       }}
       userRole={session.user.teamRole}
       initialData={initialData}

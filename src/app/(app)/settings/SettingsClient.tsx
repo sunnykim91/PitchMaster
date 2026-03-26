@@ -36,6 +36,7 @@ type TeamSettingsData = {
   uniformSecondary: string;
   uniformPattern: "SOLID" | "STRIPES_VERTICAL" | "STRIPES_HORIZONTAL" | "STRIPES_DIAGONAL";
   isSearchable: boolean;
+  joinMode: "AUTO" | "MANUAL";
 };
 
 type ProfileApiResponse = {
@@ -58,6 +59,7 @@ type TeamApiResponse = {
     uniform_secondary: string;
     uniform_pattern: TeamSettingsData["uniformPattern"];
     is_searchable: boolean;
+    join_mode: "AUTO" | "MANUAL";
   };
 };
 
@@ -82,6 +84,7 @@ function mapTeamResponse(res: TeamApiResponse, fallback: TeamSettingsData): Team
     uniformSecondary: t.uniform_secondary ?? fallback.uniformSecondary,
     uniformPattern: t.uniform_pattern ?? fallback.uniformPattern,
     isSearchable: t.is_searchable ?? fallback.isSearchable,
+    joinMode: t.join_mode ?? fallback.joinMode,
   };
 }
 
@@ -131,6 +134,7 @@ export default function SettingsClient({
         uniformSecondary: (t.uniform_secondary as string) ?? sessionTeam.uniformSecondary,
         uniformPattern: (t.uniform_pattern as TeamSettingsData["uniformPattern"]) ?? sessionTeam.uniformPattern,
         isSearchable: (t.is_searchable as boolean) ?? sessionTeam.isSearchable,
+        joinMode: (t.join_mode as TeamSettingsData["joinMode"]) ?? sessionTeam.joinMode,
       };
     }
     return sessionTeam;
@@ -168,6 +172,7 @@ export default function SettingsClient({
       uniform_secondary: defaultTeam.uniformSecondary,
       uniform_pattern: defaultTeam.uniformPattern,
       is_searchable: defaultTeam.isSearchable,
+      join_mode: defaultTeam.joinMode,
     },
   }, { skip: hasInitialData });
 
