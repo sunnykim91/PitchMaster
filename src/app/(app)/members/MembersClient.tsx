@@ -157,8 +157,12 @@ export default function MembersClient({
     try {
       const { error: err } = await apiMutate("/api/members", "PUT", { memberId, role: newRole });
       if (!err) {
-        const msg = newRole === "PRESIDENT" ? "회장이 이임되었습니다." : "역할이 변경되었습니다.";
-        showToast(msg);
+        if (newRole === "PRESIDENT") {
+          showToast("회장이 이임되었습니다. 페이지를 새로고침합니다.");
+          setTimeout(() => window.location.reload(), 1000);
+          return;
+        }
+        showToast("역할이 변경되었습니다.");
         await refetch();
       } else {
         showToast("역할 변경에 실패했습니다.", "error");
