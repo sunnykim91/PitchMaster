@@ -396,7 +396,7 @@ export default function MatchDetailClient({
       </div>
 
       {/* ── Tab: 기본 정보 ── */}
-      {activeTab === "info" && (
+      <div className={activeTab === "info" ? "" : "hidden"}>
         <MatchInfoTab
           matchId={matchId}
           userId={userId}
@@ -417,10 +417,10 @@ export default function MatchDetailClient({
           internalTeams={internalTeams}
           refetchInternalTeams={refetchInternalTeams}
         />
-      )}
+      </div>
 
       {/* ── Tab: 전술판 ── */}
-      {activeTab === "tactics" && (
+      <div className={activeTab === "tactics" ? "" : "hidden"}>
         <MatchTacticsTab
           matchId={matchId}
           match={match}
@@ -431,10 +431,10 @@ export default function MatchDetailClient({
           internalTeams={internalTeams}
           refetchInternalTeams={refetchInternalTeams}
         />
-      )}
+      </div>
 
       {/* ── Tab: 경기 기록 ── */}
-      {activeTab === "record" && (
+      <div className={activeTab === "record" ? "" : "hidden"}>
         <MatchRecordTab
           matchId={matchId}
           userId={userId}
@@ -452,10 +452,10 @@ export default function MatchDetailClient({
           refetchAttendance={refetchAttendance}
           internalTeams={internalTeams}
         />
-      )}
+      </div>
 
       {/* ── Tab: 일지 ── */}
-      {activeTab === "diary" && (
+      <div className={activeTab === "diary" ? "" : "hidden"}>
         <MatchDiaryTab
           matchId={matchId}
           match={match}
@@ -466,7 +466,7 @@ export default function MatchDetailClient({
           voteCounts={voteCounts}
           refetchDiary={refetchDiary}
         />
-      )}
+      </div>
     </div>
   );
 }
