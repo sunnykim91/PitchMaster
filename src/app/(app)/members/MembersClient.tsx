@@ -34,6 +34,7 @@ type Member = {
   preName: string | null;
   prePhone: string | null;
   coachPositions: string[];
+  joinedAt: string;
 };
 
 type ApiMemberRow = {
@@ -70,6 +71,7 @@ function mapApiMembers(rows: ApiMemberRow[]): Member[] {
     preName: row.pre_name,
     prePhone: row.pre_phone,
     coachPositions: row.coach_positions ?? [],
+    joinedAt: row.joined_at,
   }));
 }
 
@@ -119,6 +121,8 @@ export default function MembersClient({
   const [linkingId, setLinkingId] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "joined" | "role">("role");
+  const [roleFilter, setRoleFilter] = useState<"ALL" | Role>("ALL");
 
   // 감독 지정 포지션 편집
   const [editingCoachPos, setEditingCoachPos] = useState<string | null>(null);
@@ -132,17 +136,28 @@ export default function MembersClient({
   const linkedMembers = useMemo(() => activeMembers.filter((m) => m.isLinked), [activeMembers]);
   const unlinkedMembers = useMemo(() => activeMembers.filter((m) => !m.isLinked), [activeMembers]);
 
-  const filteredLinkedMembers = useMemo(
-    () =>
-      searchQuery.trim() === ""
-        ? linkedMembers
-        : linkedMembers.filter(
-            (m) =>
-              m.name.includes(searchQuery) ||
-              m.preName?.includes(searchQuery)
-          ),
-    [linkedMembers, searchQuery]
-  );
+  const filteredLinkedMembers = useMemo(() => {
+    const roleOrder: Record<Role, number> = { PRESIDENT: 0, STAFF: 1, MEMBER: 2 };
+    let list = linkedMembers;
+
+    // 역할 필터
+    if (roleFilter !== "ALL") {
+      list = list.filter((m) => m.role === roleFilter);
+    }
+
+    // 검색
+    if (searchQuery.trim()) {
+      list = list.filter((m) => m.name.includes(searchQuery) || m.preName?.includes(searchQuery));
+    }
+
+    // 정렬
+    return [...list].sort((a, b) => {
+      if (sortBy === "name") return a.name.localeCompare(b.name, "ko");
+      if (sortBy === "joined") return b.joinedAt.localeCompare(a.joinedAt); // 최근 가입 먼저
+      // role (기본): 회장 → 운영진 → 평회원, 같은 역할이면 이름순
+      return (roleOrder[a.role] - roleOrder[b.role]) || a.name.localeCompare(b.name, "ko");
+    });
+  }, [linkedMembers, searchQuery, sortBy, roleFilter]);
 
   const stats = useMemo(() => {
     const counts = { PRESIDENT: 0, STAFF: 0, MEMBER: 0 } as Record<Role, number>;
@@ -503,6 +518,53 @@ export default function MembersClient({
             <datalist id="member-names">
               {linkedMembers.map((m) => <option key={m.id} value={m.name} />)}
             </datalist>
+          </div>
+          {/* 정렬 + 역할 필터 */}
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <div className="flex gap-1">
+              {([
+                { value: "role" as const, label: "역할순" },
+                { value: "name" as const, label: "이름순" },
+                { value: "joined" as const, label: "최근가입순" },
+              ]).map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setSortBy(opt.value)}
+                  className={cn(
+                    "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                    sortBy === opt.value
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-1">
+              {([
+                { value: "ALL" as const, label: "전체" },
+                { value: "PRESIDENT" as const, label: "회장" },
+                { value: "STAFF" as const, label: "운영진" },
+                { value: "MEMBER" as const, label: "평회원" },
+              ]).map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setRoleFilter(opt.value)}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    roleFilter === opt.value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:border-primary/30"
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <span className="text-xs text-muted-foreground ml-auto">{filteredLinkedMembers.length}명</span>
           </div>
           <div className="space-y-2">
             {filteredLinkedMembers.map((member) => (
