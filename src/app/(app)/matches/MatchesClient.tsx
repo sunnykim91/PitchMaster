@@ -423,7 +423,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       type="button"
                       onClick={() => setMatchType("REGULAR")}
                       className={cn(
-                        "flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+                        "flex-1 min-h-[44px] rounded-lg border px-3 text-sm font-medium transition-colors",
                         matchType === "REGULAR"
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border text-muted-foreground hover:border-primary/30"
@@ -435,7 +435,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       type="button"
                       onClick={() => setMatchType("INTERNAL")}
                       className={cn(
-                        "flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+                        "flex-1 min-h-[44px] rounded-lg border px-3 text-sm font-medium transition-colors",
                         matchType === "INTERNAL"
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border text-muted-foreground hover:border-primary/30"

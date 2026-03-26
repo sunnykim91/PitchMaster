@@ -68,30 +68,32 @@ function MatchTacticsTabInner({
       {/* ── AI 포메이션 추천 ── */}
       {/* 자체전 A/B 팀 토글 */}
       {isInternal && (
-        <div className="flex gap-2 mb-2">
+        <div className="flex gap-2 mb-3">
           <button
             type="button"
             onClick={() => { setActiveSide("A"); setTacticsKey((k) => k + 1); }}
             className={cn(
-              "flex-1 rounded-lg border px-4 py-2.5 text-sm font-bold transition-colors",
+              "flex-1 min-h-[44px] rounded-lg border px-4 text-sm font-bold transition-colors",
               activeSide === "A"
                 ? "border-primary bg-primary/10 text-primary"
                 : "border-border text-muted-foreground hover:border-primary/30"
             )}
           >
-            A팀 전술
+            <span className="sm:hidden">A팀</span>
+            <span className="hidden sm:inline">A팀 전술</span>
           </button>
           <button
             type="button"
             onClick={() => { setActiveSide("B"); setTacticsKey((k) => k + 1); }}
             className={cn(
-              "flex-1 rounded-lg border px-4 py-2.5 text-sm font-bold transition-colors",
+              "flex-1 min-h-[44px] rounded-lg border px-4 text-sm font-bold transition-colors",
               activeSide === "B"
                 ? "border-[hsl(var(--info))] bg-[hsl(var(--info))]/10 text-[hsl(var(--info))]"
                 : "border-border text-muted-foreground hover:border-[hsl(var(--info))]/30"
             )}
           >
-            B팀 전술
+            <span className="sm:hidden">B팀</span>
+            <span className="hidden sm:inline">B팀 전술</span>
           </button>
         </div>
       )}

@@ -771,15 +771,15 @@ function MatchInfoTabInner({
 
               function PlayerRow({ m, current }: { m: typeof attending[0]; current: "A" | "B" | null }) {
                 return (
-                  <div className="flex items-center justify-between gap-2 rounded-lg bg-secondary/50 px-3 py-2">
+                  <div className="flex items-center justify-between gap-2 rounded-lg bg-secondary/50 px-3 py-2.5">
                     <span className="text-sm font-medium truncate">{m.name}</span>
-                    <div className="flex gap-1 shrink-0">
+                    <div className="flex gap-1.5 shrink-0">
                       <button
                         type="button"
                         onClick={() => assignSide(m.id, current === "A" ? null : "A")}
                         disabled={savingTeams}
                         className={cn(
-                          "rounded-md px-2.5 py-1 text-xs font-bold transition-colors",
+                          "min-h-[36px] min-w-[36px] rounded-lg text-sm font-bold transition-colors",
                           current === "A"
                             ? "bg-primary text-primary-foreground"
                             : "bg-secondary text-muted-foreground hover:bg-primary/10 hover:text-primary"
@@ -792,9 +792,9 @@ function MatchInfoTabInner({
                         onClick={() => assignSide(m.id, current === "B" ? null : "B")}
                         disabled={savingTeams}
                         className={cn(
-                          "rounded-md px-2.5 py-1 text-xs font-bold transition-colors",
+                          "min-h-[36px] min-w-[36px] rounded-lg text-sm font-bold transition-colors",
                           current === "B"
-                            ? "bg-[hsl(var(--info))] text-white"
+                            ? "bg-[hsl(var(--info))] text-primary-foreground"
                             : "bg-secondary text-muted-foreground hover:bg-[hsl(var(--info))]/10 hover:text-[hsl(var(--info))]"
                         )}
                       >
@@ -811,14 +811,19 @@ function MatchInfoTabInner({
                     <Button size="sm" onClick={handleRandomSplit} disabled={savingTeams || attending.length < 2}>
                       {savingTeams ? "배정 중..." : "랜덤 배정"}
                     </Button>
-                    <span className="text-xs text-muted-foreground">참석 {attending.length}명</span>
-                    {(teamA.length > 0 || teamB.length > 0) && (
-                      <span className="text-xs font-medium">
-                        <span className="text-primary">A {teamA.length}</span>
-                        <span className="text-muted-foreground mx-1">vs</span>
-                        <span className="text-[hsl(var(--info))]">B {teamB.length}</span>
-                      </span>
-                    )}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                      <span className="text-muted-foreground">참석 {attending.length}명</span>
+                      {(teamA.length > 0 || teamB.length > 0) && (
+                        <span className="font-medium">
+                          <span className="text-primary">A {teamA.length}</span>
+                          <span className="text-muted-foreground mx-1">vs</span>
+                          <span className="text-[hsl(var(--info))]">B {teamB.length}</span>
+                        </span>
+                      )}
+                      {unassigned.length > 0 && (
+                        <span className="text-[hsl(var(--warning))] font-medium">미배정 {unassigned.length}명</span>
+                      )}
+                    </div>
                   </div>
 
                   {attending.length === 0 ? (
