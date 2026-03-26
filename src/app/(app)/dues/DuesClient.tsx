@@ -642,6 +642,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           refetchPaymentStatus={refetchPaymentStatus}
           syncPaymentStatus={syncPaymentStatus}
           setDuesTab={setDuesTab}
+          showToast={showToast}
         />
       </div>
 

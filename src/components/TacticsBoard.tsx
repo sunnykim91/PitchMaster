@@ -743,7 +743,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
           </div>
           <div
             ref={boardRef}
-            className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border-2 border-white/10 shadow-xl shadow-black/30"
+            className={cn("relative w-full overflow-hidden rounded-2xl border-2 border-white/10 shadow-xl shadow-black/30", isFutsal ? "aspect-[3/2]" : "aspect-[4/5]")}
             style={{
               touchAction: "none",
               background: "hsl(var(--pitch))",
@@ -1068,7 +1068,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               <div
                 style={{
                   position: "relative",
-                  aspectRatio: "4/5",
+                  aspectRatio: isFutsal ? "3/2" : "4/5",
                   width: "100%",
                   background: "hsl(var(--pitch))",
                   backgroundImage: [

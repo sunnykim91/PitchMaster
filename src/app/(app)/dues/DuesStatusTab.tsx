@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -44,6 +44,7 @@ export type DuesStatusTabProps = {
   refetchPaymentStatus: () => Promise<void>;
   syncPaymentStatus: () => Promise<void>;
   setDuesTab: (tab: DuesTabKey) => void;
+  showToast?: (msg: string, type?: "success" | "error" | "info") => void;
 };
 
 const ROLE_LABEL: Record<string, string> = { OWNER: "회장", MANAGER: "운영진", STAFF: "스태프" };
@@ -61,7 +62,29 @@ function DuesStatusTabInner({
   refetchPaymentStatus,
   syncPaymentStatus,
   setDuesTab,
+  showToast,
 }: DuesStatusTabProps) {
+  const [sendingNudge, setSendingNudge] = useState(false);
+
+  async function handleUnpaidNudge() {
+    const unpaidMembers = duesStatus.filter((m) => m.status === "UNPAID");
+    if (unpaidMembers.length === 0) return;
+    const unpaidMemberIds = unpaidMembers.map((m) => m.memberId);
+    setSendingNudge(true);
+    const { error } = await apiMutate("/api/push/send", "POST", {
+      title: "회비 납부 안내",
+      body: `${monthFilter.replace("-", "년 ")}월 회비가 미납 상태입니다. 확인 부탁드립니다.`,
+      url: "/dues?tab=status",
+      userIds: unpaidMemberIds,
+    });
+    setSendingNudge(false);
+    if (error) {
+      showToast?.("알림 발송에 실패했습니다.", "error");
+    } else {
+      showToast?.(`미납자 ${unpaidMembers.length}명에게 알림을 보냈습니다.`);
+    }
+  }
+
   return (
     <div role="tabpanel" id="tabpanel-status" aria-labelledby="tab-status">
       <Card className="p-4">
@@ -107,13 +130,26 @@ function DuesStatusTabInner({
               );
             })()}
             {isStaffOrAbove(role) && (
-              <button
-                type="button"
-                onClick={() => syncPaymentStatus()}
-                className="rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-colors"
-              >
-                납부 자동 확인
-              </button>
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => syncPaymentStatus()}
+                  className="rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-colors"
+                >
+                  납부 자동 확인
+                </button>
+                {duesStatus.filter((m) => m.status === "UNPAID").length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleUnpaidNudge}
+                    disabled={sendingNudge}
+                    className="flex items-center gap-1 rounded-lg bg-[hsl(var(--loss))]/10 px-2.5 py-1.5 text-xs font-bold text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss))]/20 transition-colors disabled:opacity-50"
+                  >
+                    <Bell className="h-3 w-3" />
+                    {sendingNudge ? "발송 중..." : "미납 알림"}
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
