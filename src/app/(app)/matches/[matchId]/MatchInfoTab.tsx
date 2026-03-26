@@ -142,28 +142,24 @@ function MatchInfoTabInner({
   }
 
   /* ── 경기 완료 처리 ── */
-  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
-  const [completing, setCompleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  /** 경기 날짜가 오늘 이전 또는 오늘인지 확인 (KST 기준) */
-  const isMatchDatePastOrToday = useMemo(() => {
-    if (!match.date) return false;
-    const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
-    const todayStr = kstNow.toISOString().split("T")[0];
-    return match.date <= todayStr;
-  }, [match.date]);
-
-  async function handleCompleteMatch() {
-    setCompleting(true);
+  async function handleDeleteMatch() {
+    setDeleting(true);
     try {
-      await apiMutate("/api/matches", "PUT", { id: matchId, status: "COMPLETED" });
-      showToast("경기가 완료되었습니다. 기록 탭에서 골/MVP/출석을 기록하세요.");
-      await refetchMatches();
+      const { error: err } = await apiMutate("/api/matches", "DELETE", { id: matchId });
+      if (err) {
+        showToast("삭제에 실패했습니다.", "error");
+        return;
+      }
+      showToast("경기가 삭제되었습니다.");
+      window.location.href = "/matches";
     } catch {
-      showToast("처리에 실패했습니다.", "error");
+      showToast("삭제에 실패했습니다.", "error");
     } finally {
-      setCompleting(false);
-      setShowCompleteConfirm(false);
+      setDeleting(false);
+      setShowDeleteConfirm(false);
     }
   }
 
@@ -213,10 +209,22 @@ function MatchInfoTabInner({
               경기 정보
             </CardTitle>
           </div>
-          {canManage && match.status === "SCHEDULED" && !editing && (
-            <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
-              수정
-            </Button>
+          {canManage && !editing && (
+            <div className="flex gap-1">
+              {match.status === "SCHEDULED" && (
+                <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+                  수정
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                삭제
+              </Button>
+            </div>
           )}
         </CardHeader>
         <CardContent className="space-y-4">
@@ -340,6 +348,17 @@ function MatchInfoTabInner({
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="경기를 삭제하시겠습니까?"
+        description="삭제된 경기의 모든 기록(골, MVP, 투표, 전술)이 함께 삭제되며 복구할 수 없습니다."
+        variant="destructive"
+        confirmLabel="삭제"
+        cancelLabel="취소"
+        onConfirm={handleDeleteMatch}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
 
       {/* ── 내 참석 투표 (모든 멤버, 진행 전 경기만) ── */}
       {match.status !== "COMPLETED" && (() => {
