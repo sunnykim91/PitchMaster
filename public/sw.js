@@ -1,4 +1,4 @@
-const CACHE_NAME = "pitchmaster-v3";
+const CACHE_NAME = "pitchmaster-v4";
 const PRECACHE_URLS = ["/dashboard", "/offline"];
 
 self.addEventListener("install", (event) => {
@@ -91,27 +91,23 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 페이지 네비게이션 → Stale-While-Revalidate (캐시 먼저 보여주고 백그라운드 업데이트)
+  // 페이지 네비게이션 → Network-First (네트워크 우선, 실패 시 캐시)
   if (event.request.mode === "navigate") {
     event.respondWith(
-      caches.match(event.request).then((cached) => {
-        const fetchPromise = fetch(event.request)
-          .then((response) => {
-            if (response.ok) {
-              const clone = response.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-            }
-            return response;
-          })
-          .catch(() => {
-            // 네트워크 실패 시 캐시 또는 오프라인 페이지
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cached) => {
             if (cached) return cached;
             return caches.match("/offline");
           });
-
-        // 캐시가 있으면 즉시 반환, 없으면 네트워크 대기
-        return cached || fetchPromise;
-      })
+        })
     );
     return;
   }
