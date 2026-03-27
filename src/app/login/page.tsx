@@ -338,7 +338,7 @@ export default async function LoginPage({
           </div>
 
           {/* Primary 6 features: 2x3 grid with left border accent */}
-          <div className="mt-10 grid gap-5 grid-cols-1 sm:mt-12 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 grid gap-4 grid-cols-1 sm:mt-12 sm:grid-cols-2 lg:grid-cols-3">
             {[
               {
                 title: "원탭 득점 기록",
@@ -353,16 +353,40 @@ export default async function LoginPage({
                 desc: "경기 후 팀원이 직접 뽑는 MVP",
               },
               {
+                title: "자체전 (A팀 vs B팀)",
+                desc: "랜덤 편성, 팀별 스코어보드, 전적 반영 ON/OFF 선택",
+              },
+              {
+                title: "경기별 댓글",
+                desc: "\"오늘 좀 늦어요\", \"용병 가능?\" — 경기마다 팀원 소통",
+              },
+              {
+                title: "용병 관리",
+                desc: "경기별 용병 등록, 포지션 지정, 전술판에서 바로 배치",
+              },
+              {
+                title: "회비 미납 알림",
+                desc: "미납자에게 푸시 알림 발송 + 매월 자동 리마인더",
+              },
+              {
+                title: "풋살 전용 지원",
+                desc: "3~8인제 포메이션, 풋살 포지션(피소·아라·피벗), 풋살 코트 전술판",
+              },
+              {
+                title: "경기 일지",
+                desc: "날씨, 컨디션, 경기 후기 기록 + 결과 카드 카카오톡 공유",
+              },
+              {
                 title: "팀 게시판",
                 desc: "공지사항, 자유글, 투표까지 팀 전용 소통 공간",
               },
               {
-                title: "자체전 (A팀 vs B팀)",
-                desc: "팀 내 자체전 — 랜덤 편성, 팀별 스코어보드, 쿼터별 기록",
+                title: "투표 마감 리마인더",
+                desc: "마감 전날 미투표자에게 자동 푸시 알림, 마감 후 투표 잠금",
               },
               {
-                title: "유니폼 안내",
-                desc: "경기별 홈/원정 유니폼 선택, 대시보드에서 한눈에 확인",
+                title: "회장 이임 & 승인제 가입",
+                desc: "회장 권한 이양, 팀 가입 승인 모드(자동/수동) 선택",
               },
             ].map((item) => (
               <div
@@ -381,7 +405,7 @@ export default async function LoginPage({
 
           {/* Secondary features: inline list */}
           <p className="mt-8 text-center text-sm text-muted-foreground">
-            푸시 알림 · 회칙 관리 · 축구 & 풋살 지원 · 데모 체험 · 카카오톡 공유
+            회칙 관리 · 유니폼 안내 · 시즌 관리 · 라인업 이미지 공유 · 데모 체험
           </p>
         </div>
       </section>
