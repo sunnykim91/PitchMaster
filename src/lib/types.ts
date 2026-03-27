@@ -1,4 +1,5 @@
 export type Role = "PRESIDENT" | "STAFF" | "MEMBER";
+export type TeamRole = "CAPTAIN" | "VICE_CAPTAIN";
 export type PreferredFoot = "RIGHT" | "LEFT" | "BOTH";
 export type Position = "GK" | "DF" | "MF" | "FW";
 

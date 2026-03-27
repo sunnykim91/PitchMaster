@@ -49,6 +49,8 @@ type RecordStat = {
   mvp: number;
   attendanceRate: number;
   preferredPositions: string[];
+  jerseyNumber: number | null;
+  teamRole: string | null;
 };
 
 function mapSeason(raw: Record<string, unknown>): Season {
@@ -74,6 +76,8 @@ function mapRecord(raw: Record<string, unknown>): RecordStat {
     preferredPositions: Array.isArray(raw.preferredPositions ?? raw.preferred_positions)
       ? (raw.preferredPositions ?? raw.preferred_positions) as string[]
       : [],
+    jerseyNumber: (raw.jerseyNumber as number) ?? null,
+    teamRole: (raw.teamRole as string) ?? null,
   };
 }
 
@@ -175,7 +179,39 @@ export default function RecordsClient({
     mvp: 0,
     attendanceRate: 0,
     preferredPositions: [],
+    jerseyNumber: null,
+    teamRole: null,
   };
+
+  // 드릴다운 상태
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailType, setDetailType] = useState<"goals" | "assists" | "mvp" | "attendance" | null>(null);
+  const [detailMemberId, setDetailMemberId] = useState<string | null>(null);
+  const [detailMemberName, setDetailMemberName] = useState("");
+  const [detailData, setDetailData] = useState<{ matchId: string; matchDate: string; opponentName: string; count: number }[]>([]);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  async function openDetail(memberId: string, memberName: string, type: "goals" | "assists" | "mvp" | "attendance") {
+    setDetailMemberId(memberId);
+    setDetailMemberName(memberName);
+    setDetailType(type);
+    setDetailOpen(true);
+    setDetailLoading(true);
+    try {
+      const params = new URLSearchParams({ memberId, type });
+      if (isAllTime) { /* 전체 통합은 시즌 필터 없이 */ }
+      else if (seasonId) params.set("seasonId", seasonId);
+      const res = await fetch(`/api/records/detail?${params}`, { credentials: "include" });
+      const json = await res.json();
+      setDetailData(json.details ?? []);
+    } catch {
+      setDetailData([]);
+    } finally {
+      setDetailLoading(false);
+    }
+  }
+
+  const typeLabels: Record<string, string> = { goals: "골", assists: "어시스트", mvp: "MVP", attendance: "출석" };
 
   const topGoals = useMemo(() => [...stats].sort((a, b) => b.goals - a.goals).slice(0, 3), [stats]);
   const topAssists = useMemo(() => [...stats].sort((a, b) => b.assists - a.assists).slice(0, 3), [stats]);
@@ -514,27 +550,33 @@ export default function RecordsClient({
                           )}>
                             {i + 1}
                           </span>
+                          {s.jerseyNumber !== null && (
+                            <span className="shrink-0 rounded bg-primary/10 px-1 py-0.5 text-[10px] font-bold text-primary">#{s.jerseyNumber}</span>
+                          )}
                           <span className="font-semibold text-sm truncate">{s.memberName || "-"}</span>
+                          {s.teamRole === "CAPTAIN" && <Badge variant="warning" className="text-[9px] px-1 py-0 shrink-0">C</Badge>}
+                          {s.teamRole === "VICE_CAPTAIN" && <Badge variant="secondary" className="text-[9px] px-1 py-0 shrink-0">VC</Badge>}
                         </div>
                         <span className="text-sm font-bold text-primary shrink-0">G+A {s.points}</span>
                       </div>
                       <div className="grid grid-cols-4 gap-1 text-center text-xs">
-                        <div>
-                          <p className="text-muted-foreground">골</p>
-                          <p className="font-semibold text-[hsl(var(--success))]">{s.goals}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">어시</p>
-                          <p className="font-semibold text-[hsl(var(--info))]">{s.assists}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">MVP</p>
-                          <p className="font-semibold text-[hsl(var(--warning))]">{s.mvp}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">출석</p>
-                          <p className="font-semibold text-primary">{Math.round(s.attendanceRate * 100)}%</p>
-                        </div>
+                        {([
+                          { key: "goals" as const, label: "골", value: s.goals, color: "text-[hsl(var(--success))]" },
+                          { key: "assists" as const, label: "어시", value: s.assists, color: "text-[hsl(var(--info))]" },
+                          { key: "mvp" as const, label: "MVP", value: s.mvp, color: "text-[hsl(var(--warning))]" },
+                          { key: "attendance" as const, label: "출석", value: Math.round(s.attendanceRate * 100), color: "text-primary", suffix: "%" },
+                        ] as const).map((stat) => (
+                          <button
+                            key={stat.key}
+                            type="button"
+                            disabled={stat.key !== "attendance" ? stat.value === 0 : false}
+                            onClick={() => openDetail(s.memberId, s.memberName, stat.key)}
+                            className="hover:bg-secondary/50 rounded-lg py-1 transition-colors disabled:opacity-50 disabled:cursor-default"
+                          >
+                            <p className="text-muted-foreground">{stat.label}</p>
+                            <p className={cn("font-semibold", stat.color)}>{stat.value}{"suffix" in stat ? stat.suffix : ""}</p>
+                          </button>
+                        ))}
                       </div>
                     </div>
                   );
@@ -588,12 +630,19 @@ export default function RecordsClient({
                         return (
                           <tr key={s.memberId} className={cn(isMe && "[&>td]:bg-primary/8")}>
                             <td className={cn("sticky left-0 z-1 py-2.5", stickyBg, isTop3 ? "text-primary font-bold" : "text-muted-foreground")}>{i + 1}</td>
-                            <td className={cn("sticky left-8 z-1 py-2.5 font-semibold max-w-[120px] truncate", stickyBg)}>{s.memberName || "-"}</td>
+                            <td className={cn("sticky left-8 z-1 py-2.5 font-semibold max-w-[120px] truncate", stickyBg)}>
+                              <span className="flex items-center gap-1">
+                                {s.jerseyNumber !== null && <span className="text-[10px] text-primary font-bold">#{s.jerseyNumber}</span>}
+                                {s.memberName || "-"}
+                                {s.teamRole === "CAPTAIN" && <Badge variant="warning" className="text-[9px] px-1 py-0">C</Badge>}
+                                {s.teamRole === "VICE_CAPTAIN" && <Badge variant="secondary" className="text-[9px] px-1 py-0">VC</Badge>}
+                              </span>
+                            </td>
                             <td className="py-2.5 text-center font-bold text-primary">{s.points}</td>
-                            <td className="py-2.5 text-center text-[hsl(var(--success))]">{s.goals}</td>
-                            <td className="py-2.5 text-center text-[hsl(var(--info))]">{s.assists}</td>
-                            <td className="py-2.5 text-center text-[hsl(var(--warning))]">{s.mvp}</td>
-                            <td className="py-2.5 text-center text-primary">{Math.round(s.attendanceRate * 100)}%</td>
+                            <td className="py-2.5 text-center"><button type="button" disabled={s.goals === 0} onClick={() => openDetail(s.memberId, s.memberName, "goals")} className="text-[hsl(var(--success))] hover:underline disabled:no-underline disabled:cursor-default">{s.goals}</button></td>
+                            <td className="py-2.5 text-center"><button type="button" disabled={s.assists === 0} onClick={() => openDetail(s.memberId, s.memberName, "assists")} className="text-[hsl(var(--info))] hover:underline disabled:no-underline disabled:cursor-default">{s.assists}</button></td>
+                            <td className="py-2.5 text-center"><button type="button" disabled={s.mvp === 0} onClick={() => openDetail(s.memberId, s.memberName, "mvp")} className="text-[hsl(var(--warning))] hover:underline disabled:no-underline disabled:cursor-default">{s.mvp}</button></td>
+                            <td className="py-2.5 text-center"><button type="button" onClick={() => openDetail(s.memberId, s.memberName, "attendance")} className="text-primary hover:underline">{Math.round(s.attendanceRate * 100)}%</button></td>
                           </tr>
                         );
                       })}
@@ -606,6 +655,46 @@ export default function RecordsClient({
           )}
         </CardContent>
       </Card>
+      {/* ── 드릴다운 모달 ── */}
+      {detailOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="fixed inset-0 bg-black/60" onClick={() => setDetailOpen(false)} />
+          <div className="relative w-full max-w-md max-h-[70vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-card border border-border p-5 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-xs text-muted-foreground">{detailMemberName}</p>
+                <p className="text-lg font-bold">{detailType ? typeLabels[detailType] : ""} 상세</p>
+              </div>
+              <button type="button" onClick={() => setDetailOpen(false)} className="rounded-lg p-2 hover:bg-secondary transition-colors text-muted-foreground">✕</button>
+            </div>
+            {detailLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+            ) : detailData.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">해당 기록이 없습니다.</p>
+            ) : (
+              <div className="space-y-1.5">
+                {detailData.map((d) => (
+                  <Link
+                    key={d.matchId}
+                    href={`/matches/${d.matchId}`}
+                    className="flex items-center justify-between rounded-lg px-3 py-2.5 hover:bg-secondary transition-colors"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">{d.opponentName || "경기"}</p>
+                      <p className="text-xs text-muted-foreground">{d.matchDate}</p>
+                    </div>
+                    {detailType !== "attendance" && (
+                      <span className="text-sm font-bold text-primary">{d.count}{detailType === "goals" ? "골" : detailType === "assists" ? "어시" : "표"}</span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

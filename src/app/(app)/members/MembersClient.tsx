@@ -35,6 +35,8 @@ type Member = {
   prePhone: string | null;
   coachPositions: string[];
   joinedAt: string;
+  jerseyNumber: number | null;
+  teamRole: string | null;
 };
 
 type ApiMemberRow = {
@@ -46,6 +48,8 @@ type ApiMemberRow = {
   pre_name: string | null;
   pre_phone: string | null;
   coach_positions?: string[] | null;
+  jersey_number?: number | null;
+  team_role?: string | null;
   users: {
     id: string;
     name: string;
@@ -72,6 +76,8 @@ function mapApiMembers(rows: ApiMemberRow[]): Member[] {
     prePhone: row.pre_phone,
     coachPositions: row.coach_positions ?? [],
     joinedAt: row.joined_at,
+    jerseyNumber: row.jersey_number ?? null,
+    teamRole: row.team_role ?? null,
   }));
 }
 
@@ -128,6 +134,10 @@ export default function MembersClient({
   const [editingCoachPos, setEditingCoachPos] = useState<string | null>(null);
   const [tempCoachPos, setTempCoachPos] = useState<string[]>([]);
   const [savingCoachPos, setSavingCoachPos] = useState(false);
+
+  // 등번호 편집
+  const [editingJerseyId, setEditingJerseyId] = useState<string | null>(null);
+  const [tempJersey, setTempJersey] = useState<string>("");
 
   const POSITIONS = ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"];
 
@@ -265,6 +275,36 @@ export default function MembersClient({
       await refetch();
     } else {
       showToast("상태 변경에 실패했습니다.", "error");
+    }
+  }
+
+  async function handleSaveJersey(memberId: string) {
+    const num = tempJersey.trim() === "" ? null : Number(tempJersey);
+    const { error: err } = await apiMutate("/api/members", "PUT", {
+      action: "update_jersey_number",
+      memberId,
+      jerseyNumber: num,
+    });
+    if (!err) {
+      showToast("등번호가 변경되었습니다.");
+      setEditingJerseyId(null);
+      await refetch();
+    } else {
+      showToast(err, "error");
+    }
+  }
+
+  async function handleTeamRoleChange(memberId: string, teamRole: string | null) {
+    const { error: err } = await apiMutate("/api/members", "PUT", {
+      action: "update_team_role",
+      memberId,
+      teamRole,
+    });
+    if (!err) {
+      showToast(teamRole === "CAPTAIN" ? "주장으로 지정되었습니다." : teamRole === "VICE_CAPTAIN" ? "부주장으로 지정되었습니다." : "해제되었습니다.");
+      await refetch();
+    } else {
+      showToast(err, "error");
     }
   }
 
@@ -582,7 +622,18 @@ export default function MembersClient({
                 className="card-list-item flex flex-wrap items-center justify-between gap-4"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold truncate">{member.name}</p>
+                  <p className="text-sm font-semibold truncate flex items-center gap-1.5">
+                    {member.jerseyNumber !== null && (
+                      <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">#{member.jerseyNumber}</span>
+                    )}
+                    {member.name}
+                    {member.teamRole === "CAPTAIN" && (
+                      <Badge variant="warning" className="text-[10px] px-1.5 py-0 shrink-0">주장</Badge>
+                    )}
+                    {member.teamRole === "VICE_CAPTAIN" && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">부주장</Badge>
+                    )}
+                  </p>
                   {canViewAll ? (
                     <p className="text-xs text-muted-foreground">
                       {formatPhone(member.phone)} · {member.birthDate}
@@ -591,6 +642,22 @@ export default function MembersClient({
                   <p className="text-xs text-muted-foreground">
                     선호 포지션: {member.preferredPositions.join(" · ") || "미설정"}
                   </p>
+                  {/* 등번호 인라인 편집 */}
+                  {editingJerseyId === member.id && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={99}
+                        value={tempJersey}
+                        onChange={(e) => setTempJersey(e.target.value)}
+                        placeholder="번호"
+                        className="w-20 h-7 text-xs"
+                      />
+                      <Button size="sm" className="h-6 px-2 text-xs" onClick={() => handleSaveJersey(member.id)}>저장</Button>
+                      <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => setEditingJerseyId(null)}>취소</Button>
+                    </div>
+                  )}
                   {/* 감독 지정 포지션 표시 */}
                   {(canChangeRole || isStaffOrAbove(role)) && member.coachPositions.length > 0 && editingCoachPos !== member.id && (
                     <p className="text-xs text-primary font-medium mt-0.5">
@@ -650,6 +717,34 @@ export default function MembersClient({
                   )}
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5">
+                  {isStaffOrAbove(role) && editingJerseyId !== member.id && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setEditingJerseyId(member.id);
+                        setTempJersey(member.jerseyNumber !== null ? String(member.jerseyNumber) : "");
+                      }}
+                      className="h-6 px-2 text-xs hidden sm:inline-flex"
+                    >
+                      등번호
+                    </Button>
+                  )}
+                  {isStaffOrAbove(role) && (
+                    <Select
+                      value={member.teamRole ?? "NONE"}
+                      onValueChange={(v) => handleTeamRoleChange(member.id, v === "NONE" ? null : v)}
+                    >
+                      <SelectTrigger className="w-auto min-w-[70px] text-xs h-6 hidden sm:inline-flex">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="NONE">-</SelectItem>
+                        <SelectItem value="CAPTAIN">주장</SelectItem>
+                        <SelectItem value="VICE_CAPTAIN">부주장</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                   {(canChangeRole || isStaffOrAbove(role)) && editingCoachPos !== member.id && (
                     <Button
                       size="sm"
@@ -706,7 +801,28 @@ export default function MembersClient({
                         <summary className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-2 text-xs font-medium cursor-pointer hover:bg-accent transition-colors">
                           ···
                         </summary>
-                        <div className="absolute right-0 top-full z-10 mt-1 flex flex-col gap-1 rounded-lg border border-border bg-popover p-1.5 shadow-lg">
+                        <div className="absolute right-0 top-full z-10 mt-1 flex flex-col gap-1 rounded-lg border border-border bg-popover p-1.5 shadow-lg min-w-[120px]">
+                          <button
+                            type="button"
+                            className="rounded-md px-3 py-2 text-left text-xs hover:bg-secondary transition-colors"
+                            onClick={() => { setEditingJerseyId(member.id); setTempJersey(member.jerseyNumber !== null ? String(member.jerseyNumber) : ""); }}
+                          >
+                            등번호 설정
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded-md px-3 py-2 text-left text-xs hover:bg-secondary transition-colors"
+                            onClick={() => handleTeamRoleChange(member.id, member.teamRole === "CAPTAIN" ? null : "CAPTAIN")}
+                          >
+                            {member.teamRole === "CAPTAIN" ? "주장 해제" : "주장 지정"}
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded-md px-3 py-2 text-left text-xs hover:bg-secondary transition-colors"
+                            onClick={() => handleTeamRoleChange(member.id, member.teamRole === "VICE_CAPTAIN" ? null : "VICE_CAPTAIN")}
+                          >
+                            {member.teamRole === "VICE_CAPTAIN" ? "부주장 해제" : "부주장 지정"}
+                          </button>
                           <button
                             type="button"
                             className="rounded-md px-3 py-2 text-left text-xs hover:bg-secondary transition-colors"

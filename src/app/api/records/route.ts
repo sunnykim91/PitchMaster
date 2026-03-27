@@ -6,6 +6,8 @@ type MemberRow = {
   id: string;
   user_id: string | null;
   pre_name: string | null;
+  jersey_number?: number | null;
+  team_role?: string | null;
   users: { id: string; name: string; preferred_positions: string[] } | { id: string; name: string; preferred_positions: string[] }[] | null;
 };
 
@@ -26,7 +28,7 @@ export async function GET(request: NextRequest) {
     // 멤버 전체 조회 (ACTIVE + DORMANT — ID→이름 매핑용)
     const { data: allMembers } = await db
       .from("team_members")
-      .select("id, user_id, pre_name, users(id, name, preferred_positions)")
+      .select("id, user_id, pre_name, jersey_number, team_role, users(id, name, preferred_positions)")
       .eq("team_id", ctx.teamId)
       .in("status", ["ACTIVE", "DORMANT"]);
 
@@ -118,7 +120,7 @@ export async function GET(request: NextRequest) {
   // Get team members (연동 + 미연동)
   const { data: members } = await db
     .from("team_members")
-    .select("id, user_id, pre_name, users(id, name, preferred_positions)")
+    .select("id, user_id, pre_name, jersey_number, team_role, users(id, name, preferred_positions)")
     .eq("team_id", ctx.teamId)
     .eq("status", "ACTIVE");
 
@@ -187,6 +189,8 @@ export async function GET(request: NextRequest) {
           name: user?.name ?? m.pre_name ?? "",
           goals: 0, assists: 0, mvp: 0, attendanceRate: 0,
           preferredPositions: user?.preferred_positions ?? [],
+          jerseyNumber: m.jersey_number ?? null,
+          teamRole: m.team_role ?? null,
         };
       }),
     });
@@ -247,6 +251,8 @@ export async function GET(request: NextRequest) {
       mvp,
       attendanceRate: matchIds.length > 0 ? attended / matchIds.length : 0,
       preferredPositions: user?.preferred_positions ?? [],
+      jerseyNumber: m.jersey_number ?? null,
+      teamRole: m.team_role ?? null,
     };
   });
 

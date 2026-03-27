@@ -19,8 +19,8 @@ export async function GET() {
 
   // Staff+ see all info, members see limited info
   const select = isStaff
-    ? "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, coach_positions, users(id, name, birth_date, phone, preferred_positions, preferred_foot, profile_image_url)"
-    : "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, coach_positions, users(id, name, preferred_positions)";
+    ? "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, coach_positions, jersey_number, team_role, users(id, name, birth_date, phone, preferred_positions, preferred_foot, profile_image_url)"
+    : "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, coach_positions, jersey_number, team_role, users(id, name, preferred_positions)";
 
   // ACTIVE + DORMANT 멤버 모두 조회
   const { data, error } = await db
@@ -180,6 +180,74 @@ export async function PUT(request: NextRequest) {
     );
     const count = results.filter((r) => !r.error).length;
     return apiSuccess({ updated: count });
+  }
+
+  // 등번호 변경 (본인 또는 운영진)
+  if (body.action === "update_jersey_number") {
+    const { memberId, jerseyNumber } = body;
+    if (!memberId) return apiError("memberId required");
+
+    const db = getSupabaseAdmin();
+    if (!db) return apiError("Database not available", 503);
+
+    // 본인이 아니면 STAFF+ 권한 필요
+    const { data: target } = await db
+      .from("team_members")
+      .select("user_id")
+      .eq("id", memberId)
+      .eq("team_id", ctx.teamId)
+      .single();
+
+    if (target?.user_id !== ctx.userId && !hasMinRole(ctx.teamRole, "STAFF")) {
+      return apiError("권한이 없습니다", 403);
+    }
+
+    const num = jerseyNumber === null || jerseyNumber === "" ? null : Number(jerseyNumber);
+    if (num !== null && (isNaN(num) || num < 0 || num > 99)) {
+      return apiError("등번호는 0~99 사이 숫자입니다");
+    }
+
+    const { error } = await db
+      .from("team_members")
+      .update({ jersey_number: num })
+      .eq("id", memberId)
+      .eq("team_id", ctx.teamId);
+
+    if (error) {
+      if (error.code === "23505") return apiError("이미 사용 중인 등번호입니다");
+      return apiError(error.message);
+    }
+    return apiSuccess({ ok: true });
+  }
+
+  // 주장/부주장 지정 (운영진 전용)
+  if (body.action === "update_team_role") {
+    const { memberId, teamRole } = body;
+    if (!memberId) return apiError("memberId required");
+    if (teamRole !== null && teamRole !== "CAPTAIN" && teamRole !== "VICE_CAPTAIN") {
+      return apiError("유효하지 않은 팀 역할입니다");
+    }
+
+    const db = getSupabaseAdmin();
+    if (!db) return apiError("Database not available", 503);
+
+    // 기존 동일 역할 해제
+    if (teamRole) {
+      await db
+        .from("team_members")
+        .update({ team_role: null })
+        .eq("team_id", ctx.teamId)
+        .eq("team_role", teamRole);
+    }
+
+    const { error } = await db
+      .from("team_members")
+      .update({ team_role: teamRole })
+      .eq("id", memberId)
+      .eq("team_id", ctx.teamId);
+
+    if (error) return apiError(error.message);
+    return apiSuccess({ ok: true });
   }
 
   // 기존 역할 변경

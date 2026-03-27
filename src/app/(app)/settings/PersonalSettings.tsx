@@ -51,6 +51,9 @@ function PersonalSettingsComponent({
   const posShort = isFutsal ? FUTSAL_POSITION_SHORT : PREF_POSITION_SHORT;
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
+  const [myMemberId, setMyMemberId] = useState<string | null>(null);
+  const [jerseyNumber, setJerseyNumber] = useState<string>("");
+  const [jerseySaving, setJerseySaving] = useState(false);
 
   // 알림 설정 로드 — DB에 설정이 없으면 OFF (구독 전)
   useEffect(() => {
@@ -59,6 +62,32 @@ function PersonalSettingsComponent({
       .then((j) => { if (j.settings) setPushEnabled(j.settings.push ?? false); })
       .catch(() => {});
   }, []);
+
+  // 등번호 로드
+  useEffect(() => {
+    fetch("/api/members", { credentials: "include" })
+      .then((r) => r.json())
+      .then((j) => {
+        const me = j.members?.find((m: { user_id: string; jersey_number?: number }) =>
+          m.user_id && j.members.some(() => true) // find my member row
+        );
+        // userId 기반으로 본인 찾기 — profile API에서 user_id를 얻을 수 없으므로
+        // 모든 멤버에서 jersey_number를 가진 내 row를 찾는 대안
+        for (const m of j.members ?? []) {
+          // PersonalSettings는 본인만 수정 → user_id가 있는 row 중 하나
+          if (m.user_id) {
+            // API context의 userId와 비교 불가 → 대신 내 이름으로 매칭
+            const userName = m.users?.name ?? m.pre_name;
+            if (userName === profile.name) {
+              setMyMemberId(m.id);
+              setJerseyNumber(m.jersey_number != null ? String(m.jersey_number) : "");
+              break;
+            }
+          }
+        }
+      })
+      .catch(() => {});
+  }, [profile.name]);
 
   async function handleProfileSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -161,6 +190,47 @@ function PersonalSettingsComponent({
               />
             </div>
           </div>
+
+          {/* 등번호 */}
+          {myMemberId && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold text-muted-foreground">등번호</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={99}
+                    value={jerseyNumber}
+                    onChange={(e) => setJerseyNumber(e.target.value)}
+                    placeholder="미설정"
+                    className="w-24"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={jerseySaving}
+                    onClick={async () => {
+                      setJerseySaving(true);
+                      const num = jerseyNumber.trim() === "" ? null : Number(jerseyNumber);
+                      const { error } = await apiMutate("/api/members", "PUT", {
+                        action: "update_jersey_number",
+                        memberId: myMemberId,
+                        jerseyNumber: num,
+                      });
+                      setJerseySaving(false);
+                      if (error) setMessage(`오류: ${error}`);
+                      else setMessage("등번호가 저장되었습니다.");
+                      setTimeout(() => setMessage(null), 2000);
+                    }}
+                  >
+                    {jerseySaving ? "저장 중..." : "저장"}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">0~99 사이 숫자, 팀 내 중복 불가</p>
+              </div>
+            </div>
+          )}
 
           {/* 플레이 스타일 */}
           <div className="rounded-xl border border-border p-4 space-y-4">
