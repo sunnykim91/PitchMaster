@@ -60,6 +60,7 @@ type TeamApiResponse = {
     uniform_pattern: TeamSettingsData["uniformPattern"];
     is_searchable: boolean;
     join_mode: "AUTO" | "MANUAL";
+    sport_type?: string;
   };
 };
 
@@ -259,6 +260,7 @@ export default function SettingsClient({
         refetchProfile={refetchProfile}
         profileSyncedRef={profileSynced}
         onLogout={handleLogout}
+        sportType={(teamApiData.team?.sport_type === "FUTSAL" ? "FUTSAL" : "SOCCER") as import("@/lib/types").SportType}
       />
 
       {/* ── 팀 설정 (운영진 이상) ── */}

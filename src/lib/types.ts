@@ -13,7 +13,11 @@ export type PreferredPosition =
   | "CAM"  // 공격형 미드필더 (Central Attacking Midfielder)
   | "LW"   // 좌측 윙어 (Left Winger)
   | "RW"   // 우측 윙어 (Right Winger)
-  | "ST";  // 스트라이커 (Striker)
+  | "ST"   // 스트라이커 (Striker)
+  // 풋살 포지션
+  | "FIXO" // 피소 (수비)
+  | "ALA"  // 아라 (측면)
+  | "PIVO"; // 피벗 (공격)
 
 /** PreferredPosition → Position 매핑 */
 export const PREF_TO_POSITION: Record<PreferredPosition, Position> = {
@@ -27,6 +31,9 @@ export const PREF_TO_POSITION: Record<PreferredPosition, Position> = {
   LW: "FW",
   RW: "FW",
   ST: "FW",
+  FIXO: "DF",
+  ALA: "MF",
+  PIVO: "FW",
 };
 
 /** PreferredPosition 한국어 라벨 */
@@ -41,6 +48,9 @@ export const PREF_POSITION_LABEL: Record<PreferredPosition, string> = {
   LW: "좌측 윙어",
   RW: "우측 윙어",
   ST: "스트라이커",
+  FIXO: "피소 (수비)",
+  ALA: "아라 (측면)",
+  PIVO: "피벗 (공격)",
 };
 
 /** PreferredPosition 짧은 라벨 */
@@ -55,6 +65,9 @@ export const PREF_POSITION_SHORT: Record<PreferredPosition, string> = {
   LW: "LW",
   RW: "RW",
   ST: "ST",
+  FIXO: "FIXO",
+  ALA: "ALA",
+  PIVO: "PIVO",
 };
 
 /** 포지션 그룹 (UI 표시용) */

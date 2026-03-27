@@ -93,6 +93,21 @@ export default function RootLayout({
             })
           }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "mainEntity": [
+                { "@type": "Question", "name": "정말 무료인가요?", "acceptedAnswer": { "@type": "Answer", "text": "네, 현재는 무료입니다. 추후 운영에 따라서 변동이 있을 수 있습니다." } },
+                { "@type": "Question", "name": "우리 팀 데이터는 안전한가요?", "acceptedAnswer": { "@type": "Answer", "text": "한국 서울 리전에 암호화 저장됩니다." } },
+                { "@type": "Question", "name": "인원 제한이 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "없습니다. 몇 명이든 사용 가능합니다." } },
+                { "@type": "Question", "name": "풋살도 되나요?", "acceptedAnswer": { "@type": "Answer", "text": "네, 축구와 풋살 모두 지원합니다. 3~8인제 포메이션까지 지원합니다." } },
+              ]
+            })
+          }}
+        />
         {children}
         <ServiceWorkerRegister />
         <Script id="chunk-error-handler" strategy="beforeInteractive">

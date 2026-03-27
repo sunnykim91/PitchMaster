@@ -6,7 +6,8 @@ import { Bell } from "lucide-react";
 import { subscribeToPush } from "@/lib/pushSubscription";
 import { apiMutate } from "@/lib/useApi";
 import type { PreferredPosition, PreferredFoot } from "@/lib/types";
-import { POSITION_GROUPS, PREF_POSITION_SHORT } from "@/lib/types";
+import { POSITION_GROUPS, PREF_POSITION_SHORT, FUTSAL_POSITION_GROUPS, FUTSAL_POSITION_SHORT } from "@/lib/types";
+import type { SportType } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ interface PersonalSettingsProps {
   refetchProfile: () => void;
   profileSyncedRef: React.MutableRefObject<boolean>;
   onLogout: () => void;
+  sportType?: SportType;
 }
 
 function PersonalSettingsComponent({
@@ -42,7 +44,11 @@ function PersonalSettingsComponent({
   refetchProfile,
   profileSyncedRef,
   onLogout,
+  sportType,
 }: PersonalSettingsProps) {
+  const isFutsal = sportType === "FUTSAL";
+  const posGroups = isFutsal ? FUTSAL_POSITION_GROUPS : POSITION_GROUPS;
+  const posShort = isFutsal ? FUTSAL_POSITION_SHORT : PREF_POSITION_SHORT;
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
 
@@ -182,7 +188,7 @@ function PersonalSettingsComponent({
                 )}
               </Label>
               <div className="space-y-3">
-                {POSITION_GROUPS.map((group) => (
+                {posGroups.map((group) => (
                   <div key={group.group}>
                     <p className="mb-1.5 text-xs font-semibold text-muted-foreground">{group.group}</p>
                     <div className="flex flex-wrap gap-1.5">
@@ -203,7 +209,7 @@ function PersonalSettingsComponent({
                               : "border-border bg-transparent text-secondary-foreground hover:border-primary/30 hover:text-foreground"
                           )}
                         >
-                          {PREF_POSITION_SHORT[pos]}
+                          {(posShort as Record<string, string>)[pos] ?? pos}
                         </button>
                       ))}
                     </div>
