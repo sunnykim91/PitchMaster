@@ -445,6 +445,7 @@ export default function MatchDetailClient({
           baseRoster={baseRoster}
           memberVoteMap={memberVoteMap}
           memberVoteTimeMap={memberVoteTimeMap}
+          guestCount={guests.length}
           refetchVote={refetchVote}
           handleProxyVote={handleProxyVote}
         />

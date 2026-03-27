@@ -19,6 +19,7 @@ export interface MatchVoteTabProps {
   baseRoster: RosterPlayer[];
   memberVoteMap: Record<string, "ATTEND" | "ABSENT" | "MAYBE">;
   memberVoteTimeMap?: Record<string, string>;
+  guestCount?: number;
   refetchVote: () => Promise<unknown>;
   handleProxyVote: (memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") => Promise<void>;
 }
@@ -31,6 +32,7 @@ function MatchVoteTabInner({
   baseRoster,
   memberVoteMap,
   memberVoteTimeMap,
+  guestCount = 0,
   refetchVote,
   handleProxyVote,
 }: MatchVoteTabProps) {
@@ -128,7 +130,8 @@ function MatchVoteTabInner({
             <span className="text-[hsl(var(--loss))]">불참 {absent.length}</span>
             <span className="text-[hsl(var(--warning))]">미정 {maybe.length}</span>
             <span className="text-muted-foreground">미투표 {noVote.length}</span>
-            <span className="text-muted-foreground/50">· 총 {baseRoster.length}명</span>
+            {guestCount > 0 && <span className="text-[hsl(var(--info))]">용병 {guestCount}</span>}
+            <span className="text-muted-foreground/50">· 총 {baseRoster.length + guestCount}명</span>
           </div>
         </CardContent>
       </Card>

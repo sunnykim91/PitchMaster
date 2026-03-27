@@ -80,6 +80,8 @@ function MatchRecordTabInner({
     return counts;
   }, [votes]);
 
+  const guestIds = new Set(guests.map((g) => g.id));
+
   /** 득점자/어시스트 ID → 화면 표시용 이름 */
   function resolvePlayerName(playerId: string | undefined): string {
     if (!playerId) return "";
@@ -87,7 +89,9 @@ function MatchRecordTabInner({
     if (playerId === "UNKNOWN") return "득점";
     const special = specialPlayers.find((s) => s.id === playerId);
     if (special) return special.name;
-    return fullRoster.find((p) => p.id === playerId)?.name ?? "모름";
+    const player = fullRoster.find((p) => p.id === playerId);
+    const name = player?.name ?? "모름";
+    return guestIds.has(playerId) ? `${name}(용병)` : name;
   }
 
   /* ── Goal handlers ── */
