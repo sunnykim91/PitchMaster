@@ -122,9 +122,13 @@ body {
 button, [role="button"], [onclick], a, summary { cursor: pointer; }
 
 /* 스크롤 영역 최적화 */
-.overflow-auto, .overflow-y-auto, .overflow-x-auto, [role="tabpanel"] {
+.overflow-auto, .overflow-y-auto, [role="tabpanel"] {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+}
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }
 
 /* Safe area — 노치/홈바 대응 */
