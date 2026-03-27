@@ -67,7 +67,6 @@ function DuesRecordsTabInner({
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [editingRecord, setEditingRecord] = useState<DuesRecord | null>(null);
-  const [screenshotUrl, setScreenshotUrl] = useState("");
 
   const filteredRecords = useMemo(() => {
     let list = filter === "ALL" ? monthRecords : monthRecords.filter((item) => item.type === filter);
@@ -86,7 +85,6 @@ function DuesRecordsTabInner({
     const description = String(formData.get("description"));
     const recordedAt = String(formData.get("recordedAt") || "");
     const userId = autoMatchMember(description);
-    const screenshotUrlValue = screenshotUrl || undefined;
 
     const errors: Record<string, string> = {};
     if (!amount || amount <= 0) errors.amount = "금액을 입력해주세요.";
@@ -104,20 +102,18 @@ function DuesRecordsTabInner({
         amount,
         description,
         userId,
-        screenshotUrl: screenshotUrlValue,
         recordedAt: recordedAt || undefined,
       });
       if (!error) {
         await refetchSummary();
         await syncPaymentStatus();
         setIsFormOpen(false);
-        setScreenshotUrl("");
         setFormErrors({});
       }
     } finally {
       setSaving(false);
     }
-  }, [autoMatchMember, screenshotUrl, refetchSummary, syncPaymentStatus]);
+  }, [autoMatchMember, refetchSummary, syncPaymentStatus]);
 
   const handleUpdateRecord = useCallback(async (formData: FormData) => {
     if (!editingRecord) return;
@@ -163,13 +159,6 @@ function DuesRecordsTabInner({
       await refetchSummary();
     }
   }, [monthRecords, summaryBalance, refetchSummary]);
-
-  function handleScreenshotChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (file) {
-      setScreenshotUrl(URL.createObjectURL(file));
-    }
-  }
 
   return (
     <div role="tabpanel" id="tabpanel-records" aria-labelledby="tab-records">
@@ -260,29 +249,6 @@ function DuesRecordsTabInner({
                 </Label>
                 <Input name="method" placeholder="예: 카카오뱅크, 현금" />
               </div>
-
-              <div className="mt-4 space-y-2">
-                <Label className="font-semibold text-muted-foreground">
-                  스크린샷 첨부
-                </Label>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleScreenshotChange}
-                  className="text-xs"
-                />
-              </div>
-
-              {screenshotUrl && (
-                <Card className="mt-4 border-0 bg-secondary p-3">
-                  <p className="mb-2 text-xs text-muted-foreground">미리보기</p>
-                  <img
-                    src={screenshotUrl}
-                    alt="스크린샷 미리보기"
-                    className="max-h-40 rounded-xl object-contain"
-                  />
-                </Card>
-              )}
             </Card>
 
             <Button type="submit" className="w-full" size="lg" disabled={saving}>
