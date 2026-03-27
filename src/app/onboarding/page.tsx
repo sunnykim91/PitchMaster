@@ -26,6 +26,23 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   return (
     <main className="min-h-screen px-6 py-16">
       <div className="mx-auto max-w-3xl">
+        {/* 프로그레스 바 */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-2">
+            {["프로필 입력", "팀 선택", "시작!"].map((label, i) => (
+              <div key={label} className="flex flex-col items-center gap-1">
+                <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${i === 0 ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
+                  {i + 1}
+                </div>
+                <span className={`text-xs font-medium ${i === 0 ? "text-primary" : "text-muted-foreground"}`}>{label}</span>
+              </div>
+            ))}
+          </div>
+          <div className="relative h-1 rounded-full bg-secondary">
+            <div className="absolute h-1 rounded-full bg-primary" style={{ width: "16%" }} />
+          </div>
+        </div>
+
         {errorMsg && (
           <Card className="mb-6 border-destructive/30 bg-destructive/5">
             <CardContent className="p-4 text-sm font-semibold text-destructive">
