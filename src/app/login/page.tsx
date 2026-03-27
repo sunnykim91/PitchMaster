@@ -86,15 +86,17 @@ export default async function LoginPage({
           </div>
 
           <div className="flex flex-col items-center gap-3 lg:items-start">
-            {kakaoButton}
             <Suspense fallback={<div className="h-10" />}>
               <DemoButton />
             </Suspense>
+            <div className="flex items-center gap-3">
+              <div className="h-px w-8 bg-border" />
+              <span className="text-xs text-muted-foreground">또는</span>
+              <div className="h-px w-8 bg-border" />
+            </div>
+            {kakaoButton}
             <p className="text-xs text-muted-foreground">
               무료 · 광고 없음 · 1분이면 팀 세팅 완료
-            </p>
-            <p className="text-xs font-medium text-primary/70">
-              → 가입 없이 모든 기능을 체험할 수 있어요
             </p>
           </div>
 
@@ -337,76 +339,45 @@ export default async function LoginPage({
             <p className="mt-2 text-sm text-muted-foreground">팀 운영에 필요한 모든 것이 여기에.</p>
           </div>
 
-          {/* Primary 6 features: 2x3 grid with left border accent */}
+          {/* Primary 6 features */}
           <div className="mt-10 grid gap-4 grid-cols-1 sm:mt-12 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              {
-                title: "원탭 득점 기록",
-                desc: "쿼터별 스코어보드로 득점·어시스트 즉시 기록",
-              },
-              {
-                title: "시즌 통계 & 랭킹",
-                desc: "승률, 출석률, 레이더 차트, 개인별 랭킹",
-              },
-              {
-                title: "MVP 투표",
-                desc: "경기 후 팀원이 직접 뽑는 MVP",
-              },
-              {
-                title: "자체전 (A팀 vs B팀)",
-                desc: "랜덤 편성, 팀별 스코어보드, 전적 반영 ON/OFF 선택",
-              },
-              {
-                title: "경기별 댓글",
-                desc: "\"오늘 좀 늦어요\", \"용병 가능?\" — 경기마다 팀원 소통",
-              },
-              {
-                title: "용병 관리",
-                desc: "경기별 용병 등록, 포지션 지정, 전술판에서 바로 배치",
-              },
-              {
-                title: "회비 미납 알림",
-                desc: "미납자에게 푸시 알림 발송 + 매월 자동 리마인더",
-              },
-              {
-                title: "풋살 전용 지원",
-                desc: "3~8인제 포메이션, 풋살 포지션(피소·아라·피벗), 풋살 코트 전술판",
-              },
-              {
-                title: "경기 일지",
-                desc: "날씨, 컨디션, 경기 후기 기록 + 결과 카드 카카오톡 공유",
-              },
-              {
-                title: "팀 게시판",
-                desc: "공지사항, 자유글, 투표까지 팀 전용 소통 공간",
-              },
-              {
-                title: "투표 마감 리마인더",
-                desc: "마감 전날 미투표자에게 자동 푸시 알림, 마감 후 투표 잠금",
-              },
-              {
-                title: "회장 이임 & 승인제 가입",
-                desc: "회장 권한 이양, 팀 가입 승인 모드(자동/수동) 선택",
-              },
+              { title: "원탭 득점 기록", desc: "쿼터별 스코어보드로 득점·어시스트 즉시 기록" },
+              { title: "시즌 통계 & 랭킹", desc: "승률, 출석률, 레이더 차트, 개인별 랭킹" },
+              { title: "MVP 투표", desc: "경기 후 팀원이 직접 뽑는 MVP" },
+              { title: "자체전 (A팀 vs B팀)", desc: "랜덤 편성, 팀별 스코어보드, 전적 반영 ON/OFF" },
+              { title: "풋살 전용 지원", desc: "3~8인제, 풋살 포지션·전술판, 풋살 코트 비율" },
+              { title: "경기 일지 & 공유", desc: "결과 카드 카카오톡 공유 + 경기별 댓글 소통" },
             ].map((item) => (
-              <div
-                key={item.title}
-                className="border-l-2 border-primary pl-4 py-2"
-              >
-                <p className="text-sm font-bold text-foreground">
-                  {item.title}
-                </p>
-                <p className="mt-1 break-keep text-xs leading-relaxed text-muted-foreground sm:text-sm">
-                  {item.desc}
-                </p>
+              <div key={item.title} className="border-l-2 border-primary pl-4 py-2">
+                <p className="text-sm font-bold text-foreground">{item.title}</p>
+                <p className="mt-1 break-keep text-xs leading-relaxed text-muted-foreground sm:text-sm">{item.desc}</p>
               </div>
             ))}
           </div>
 
-          {/* Secondary features: inline list */}
-          <p className="mt-8 text-center text-sm text-muted-foreground">
-            회칙 관리 · 유니폼 안내 · 시즌 관리 · 라인업 이미지 공유 · 데모 체험
-          </p>
+          {/* More features (collapsible) */}
+          <details className="mt-6 group">
+            <summary className="flex cursor-pointer items-center justify-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+              <span>더 많은 기능 보기</span>
+              <span className="transition-transform group-open:rotate-180">▼</span>
+            </summary>
+            <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                { title: "용병 관리", desc: "경기별 용병 등록, 포지션 지정, 전술판 배치" },
+                { title: "회비 미납 알림", desc: "미납자 푸시 알림 + 매월 자동 리마인더" },
+                { title: "투표 마감 리마인더", desc: "마감 전날 미투표자에게 자동 푸시 알림" },
+                { title: "팀 게시판", desc: "공지사항, 자유글, 투표까지 팀 전용 소통 공간" },
+                { title: "회장 이임 & 승인제", desc: "회장 권한 이양, 가입 승인 모드 선택" },
+                { title: "회칙 · 유니폼 · 시즌 관리", desc: "팀 운영에 필요한 부가 기능 일체" },
+              ].map((item) => (
+                <div key={item.title} className="border-l-2 border-border pl-4 py-2">
+                  <p className="text-sm font-bold text-foreground">{item.title}</p>
+                  <p className="mt-1 break-keep text-xs leading-relaxed text-muted-foreground sm:text-sm">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </details>
         </div>
       </section>
 
@@ -627,10 +598,9 @@ export default async function LoginPage({
           </h2>
           <div className="mt-8 space-y-4">
             {([
-              { q: "정말 무료인가요?", a: "네, 현재는 무료입니다. 추후 운영에 따라서 변동이 있을 수 있습니다." },
-              { q: "우리 팀 데이터는 안전한가요?", a: "한국 서울 리전에 암호화 저장됩니다." },
-              { q: "인원 제한이 있나요?", a: "없습니다. 몇 명이든 사용 가능합니다." },
-              { q: "풋살도 되나요?", a: "네, 축구와 풋살 모두 지원합니다." },
+              { q: "정말 무료인가요?", a: "네, 현재는 무료입니다. 인원 제한도 없습니다. 추후 운영에 따라 변동이 있을 수 있습니다." },
+              { q: "우리 팀 데이터는 안전한가요?", a: "한국 서울 리전에 암호화 저장됩니다. 카카오 로그인만 사용하며, 별도 비밀번호를 보관하지 않습니다." },
+              { q: "축구와 풋살 둘 다 되나요?", a: "네, 팀 생성 시 종목을 선택하면 포지션·전술판·코트 비율이 자동으로 맞춰집니다." },
             ] as const).map((faq, i) => (
               <details key={i} className="group rounded-xl border border-border bg-card/50 px-5 py-4">
                 <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-foreground">
