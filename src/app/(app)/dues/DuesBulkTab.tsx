@@ -198,13 +198,12 @@ function DuesBulkTabInner({
         await refetchSummary();
       }
 
-      // 기존 DB 레코드와 비교하여 중복 제거
+      // 기존 DB 레코드와 비교하여 중복 제거 (날짜 + 금액 + 타입으로 판단, description은 수정될 수 있으므로 제외)
       const newRows = parsed.filter((row) => {
         return !records.some(
           (r) =>
             r.recordedAt.startsWith(row.date) &&
             r.amount === Number(row.amount) &&
-            r.description === row.description &&
             r.type === row.type
         );
       });
