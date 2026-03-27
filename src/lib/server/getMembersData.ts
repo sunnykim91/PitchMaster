@@ -8,14 +8,14 @@ export async function getMembersData(teamId: string, teamRole?: Role) {
 
   const isStaff = hasMinRole(teamRole, "STAFF");
   const select = isStaff
-    ? "id, user_id, role, status, joined_at, pre_name, pre_phone, users(id, name, birth_date, phone, preferred_positions, preferred_foot, profile_image_url)"
-    : "id, user_id, role, status, joined_at, pre_name, pre_phone, users(id, name, preferred_positions)";
+    ? "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, coach_positions, jersey_number, team_role, users(id, name, birth_date, phone, preferred_positions, preferred_foot, profile_image_url)"
+    : "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, coach_positions, jersey_number, team_role, users(id, name, preferred_positions)";
 
   const { data } = await db
     .from("team_members")
     .select(select)
     .eq("team_id", teamId)
-    .eq("status", "ACTIVE");
+    .in("status", ["ACTIVE", "DORMANT"]);
 
   return { members: data ?? [], isStaff };
 }
