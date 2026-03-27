@@ -432,6 +432,7 @@ export default function MatchDetailClient({
           refetchInternalTeams={refetchInternalTeams}
           comments={commentsData.comments}
           refetchComments={refetchComments}
+          goals={goals}
         />
       </div>
 

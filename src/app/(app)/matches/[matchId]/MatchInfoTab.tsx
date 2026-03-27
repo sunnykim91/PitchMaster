@@ -49,6 +49,8 @@ export interface MatchInfoTabProps {
   internalTeams?: InternalTeamAssignment[];
   /** 자체전 팀 편성 refetch */
   refetchInternalTeams?: () => Promise<unknown>;
+  /** 골 데이터 (스코어 표시용) */
+  goals?: import("./matchDetailTypes").GoalEvent[];
   /** 댓글 데이터 */
   comments?: { id: string; user_id: string; content: string; created_at: string; users: { name: string } | null }[];
   /** 댓글 refetch */
@@ -90,6 +92,7 @@ function MatchInfoTabInner({
   internalTeams,
   refetchInternalTeams,
   memberVoteTimeMap,
+  goals: goalsProp,
   comments,
   refetchComments,
 }: MatchInfoTabProps) {
@@ -285,6 +288,32 @@ function MatchInfoTabInner({
                   <span className="font-medium">{match.opponent}</span>
                 </div>
               )}
+              {goalsProp && goalsProp.length > 0 && (() => {
+                const isInternal = match.matchType === "INTERNAL";
+                if (isInternal) {
+                  const aGoals = goalsProp.filter((g) => g.side === "A" && g.scorerId !== "OPPONENT").length;
+                  const bGoals = goalsProp.filter((g) => g.side === "B" && g.scorerId !== "OPPONENT").length;
+                  return (
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground w-14 shrink-0">스코어</span>
+                      <span className="font-bold text-lg">A {aGoals} : {bGoals} B</span>
+                    </div>
+                  );
+                }
+                const ourGoals = goalsProp.filter((g) => g.scorerId !== "OPPONENT" && !g.isOwnGoal).length
+                  + goalsProp.filter((g) => g.scorerId === "OPPONENT" && g.isOwnGoal).length;
+                const theirGoals = goalsProp.filter((g) => g.scorerId === "OPPONENT" && !g.isOwnGoal).length
+                  + goalsProp.filter((g) => g.scorerId !== "OPPONENT" && g.isOwnGoal).length;
+                return (
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground w-14 shrink-0">스코어</span>
+                    <span className="font-bold text-lg">{ourGoals} : {theirGoals}</span>
+                    {ourGoals > theirGoals && <Badge variant="success" className="text-xs">승</Badge>}
+                    {ourGoals === theirGoals && <Badge variant="secondary" className="text-xs">무</Badge>}
+                    {ourGoals < theirGoals && <Badge variant="destructive" className="text-xs">패</Badge>}
+                  </div>
+                );
+              })()}
             </div>
           )}
 

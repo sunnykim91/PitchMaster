@@ -529,6 +529,7 @@ export default function RecordsClient({
             </div>
           ) : (
             <>
+              <p className="text-xs text-muted-foreground mb-2">숫자를 탭하면 해당 경기 목록을 볼 수 있습니다.</p>
               {/* 모바일 카드 레이아웃 (sm 미만) */}
               <div className="block sm:hidden space-y-2">
                 {allStats.map((s, i) => {
@@ -571,10 +572,10 @@ export default function RecordsClient({
                             type="button"
                             disabled={stat.key !== "attendance" ? stat.value === 0 : false}
                             onClick={() => openDetail(s.memberId, s.memberName, stat.key)}
-                            className="hover:bg-secondary/50 rounded-lg py-1 transition-colors disabled:opacity-50 disabled:cursor-default"
+                            className="hover:bg-secondary/50 rounded-lg py-1 transition-colors disabled:opacity-50 disabled:cursor-default cursor-pointer"
                           >
                             <p className="text-muted-foreground">{stat.label}</p>
-                            <p className={cn("font-semibold", stat.color)}>{stat.value}{"suffix" in stat ? stat.suffix : ""}</p>
+                            <p className={cn("font-semibold underline decoration-dotted underline-offset-2", stat.color)}>{stat.value}{"suffix" in stat ? stat.suffix : ""}</p>
                           </button>
                         ))}
                       </div>
@@ -657,9 +658,9 @@ export default function RecordsClient({
       </Card>
       {/* ── 드릴다운 모달 ── */}
       {detailOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
           <div className="fixed inset-0 bg-black/60" onClick={() => setDetailOpen(false)} />
-          <div className="relative w-full max-w-md max-h-[70vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-card border border-border p-5 shadow-2xl">
+          <div className="relative w-full sm:max-w-md max-h-[80vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-card border border-border p-5 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-xs text-muted-foreground">{detailMemberName}</p>
