@@ -160,7 +160,7 @@ export default function OgImage() {
         >
           <span style={{ display: "flex" }}>pitch-master.app</span>
           <span style={{ display: "flex" }}>·</span>
-          <span style={{ display: "flex" }}>28개 팀이 사용 중</span>
+          <span style={{ display: "flex" }}>42개 팀이 사용 중</span>
         </div>
       </div>
     ),

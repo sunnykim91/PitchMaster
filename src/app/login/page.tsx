@@ -99,7 +99,7 @@ export default async function LoginPage({
           </div>
 
           <p className="mt-6 text-xs text-muted-foreground">
-            28개 팀 · 120+ 회원 · 서비스 운영 중
+            42개 팀 · 180+ 회원 · 서비스 운영 중
           </p>
         </div>
 
