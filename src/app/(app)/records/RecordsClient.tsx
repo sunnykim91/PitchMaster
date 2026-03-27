@@ -659,12 +659,17 @@ export default function RecordsClient({
       </Card>
       {/* ── 드릴다운 Sheet ── */}
       <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
-        <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto rounded-t-2xl">
-          <SheetHeader className="text-left">
+        <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto rounded-t-2xl px-0">
+          <SheetHeader className="text-left px-5 pb-3 border-b border-border/30">
             <p className="text-xs text-muted-foreground">{detailMemberName}</p>
-            <SheetTitle>{detailType ? typeLabels[detailType] : ""} 상세</SheetTitle>
+            <SheetTitle className="flex items-center gap-2">
+              {detailType ? typeLabels[detailType] : ""} 상세
+              {!detailLoading && detailData.length > 0 && (
+                <Badge variant="secondary" className="text-xs">{detailData.length}경기</Badge>
+              )}
+            </SheetTitle>
           </SheetHeader>
-          <div className="mt-4">
+          <div className="mt-2 px-3">
             {detailLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -673,25 +678,49 @@ export default function RecordsClient({
               <p className="py-8 text-center text-sm text-muted-foreground">해당 기록이 없습니다.</p>
             ) : (
               <div className="space-y-1">
-                {detailData.map((d) => (
-                  <Link
-                    key={d.matchId}
-                    href={`/matches/${d.matchId}`}
-                    onClick={() => setDetailOpen(false)}
-                    className="flex items-center justify-between rounded-lg px-3 py-2.5 hover:bg-secondary transition-colors"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">{d.opponentName || "경기"}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {d.matchDate}
-                        {d.score && <span className="ml-2 font-medium text-foreground">{d.score}</span>}
-                      </p>
-                    </div>
-                    {detailType !== "attendance" && (
-                      <span className="text-sm font-bold text-primary shrink-0 ml-2">{d.count}{detailType === "goals" ? "골" : detailType === "assists" ? "어시" : "표"}</span>
-                    )}
-                  </Link>
-                ))}
+                {detailData.map((d) => {
+                  const [our, their] = (d.score ?? "0:0").split(":").map(Number);
+                  const result = our > their ? "W" : our < their ? "L" : "D";
+                  return (
+                    <Link
+                      key={d.matchId}
+                      href={`/matches/${d.matchId}`}
+                      onClick={() => setDetailOpen(false)}
+                      className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-secondary/50 transition-colors"
+                    >
+                      {/* 승/무/패 인디케이터 */}
+                      <span className={cn(
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
+                        result === "W" ? "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"
+                          : result === "L" ? "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]"
+                          : "bg-secondary text-muted-foreground"
+                      )}>
+                        {result === "W" ? "승" : result === "L" ? "패" : "무"}
+                      </span>
+                      {/* 경기 정보 */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold truncate">{d.opponentName || "경기"}</span>
+                          {d.score && (
+                            <span className="shrink-0 text-xs font-bold text-muted-foreground">{d.score}</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">{d.matchDate}</p>
+                      </div>
+                      {/* 기록 수 */}
+                      {detailType !== "attendance" && (
+                        <span className={cn(
+                          "shrink-0 rounded-lg px-2.5 py-1 text-xs font-bold",
+                          detailType === "goals" ? "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"
+                            : detailType === "assists" ? "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]"
+                            : "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]"
+                        )}>
+                          {d.count}{detailType === "goals" ? "골" : detailType === "assists" ? "어시" : "표"}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </div>

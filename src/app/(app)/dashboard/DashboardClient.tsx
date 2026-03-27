@@ -408,6 +408,9 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                 <span>참석 <strong className="text-[hsl(var(--success))]">{voteCounts.attend}</strong></span>
                 <span>불참 <strong className="text-[hsl(var(--loss))]">{voteCounts.absent}</strong></span>
                 <span>미정 <strong>{voteCounts.undecided}</strong></span>
+                {(upcomingMatch as any)?.guestCount > 0 && (
+                  <span>용병 <strong className="text-[hsl(var(--info))]">{(upcomingMatch as any).guestCount}</strong></span>
+                )}
               </div>
             </div>
 

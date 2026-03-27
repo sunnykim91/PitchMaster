@@ -26,6 +26,7 @@ export type DashboardData = {
     voteCounts: { attend: number; absent: number; undecided: number };
     myVote: "ATTEND" | "ABSENT" | "MAYBE" | null;
     myMemberId: string | null;
+    guestCount: number;
   } | null;
   recentResult: {
     id: string;
@@ -88,9 +89,10 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
   // 예정 경기 투표 현황
   let upcomingMatch: DashboardData["upcomingMatch"] = null;
   if (upcomingRaw) {
-    const [votesRes, myMemberRes] = await Promise.all([
+    const [votesRes, myMemberRes, guestsRes] = await Promise.all([
       db.from("match_attendance").select("vote, user_id, member_id").eq("match_id", upcomingRaw.id),
       db.from("team_members").select("id").eq("user_id", userId).limit(1).maybeSingle(),
+      db.from("match_guests").select("id").eq("match_id", upcomingRaw.id),
     ]);
     const voteList = (votesRes.data ?? []) as { vote: string; user_id: string | null; member_id: string | null }[];
     const voteCounts = {
@@ -101,7 +103,8 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
     const myMemberId = myMemberRes.data?.id ?? null;
     const myVoteRow = voteList.find((v) => v.user_id === userId || v.member_id === myMemberId);
     const myVote = myVoteRow ? (myVoteRow.vote as "ATTEND" | "ABSENT" | "MAYBE") : null;
-    upcomingMatch = { ...upcomingRaw, voteCounts, myVote, myMemberId };
+    const guestCount = guestsRes.data?.length ?? 0;
+    upcomingMatch = { ...upcomingRaw, voteCounts, myVote, myMemberId, guestCount };
   }
 
   let recentResult = null;

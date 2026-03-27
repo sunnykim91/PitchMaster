@@ -54,9 +54,10 @@ export async function GET() {
   // 예정 경기 투표 현황 + 내 투표
   let upcomingMatch: any = null;
   if (upcomingRaw) {
-    const [votesRes, myMemberRes] = await Promise.all([
+    const [votesRes, myMemberRes, guestsRes] = await Promise.all([
       db.from("match_attendance").select("vote, user_id, member_id").eq("match_id", upcomingRaw.id),
       db.from("team_members").select("id").eq("user_id", ctx.userId).limit(1).maybeSingle(),
+      db.from("match_guests").select("id").eq("match_id", upcomingRaw.id),
     ]);
     const voteList = (votesRes.data ?? []) as { vote: string; user_id: string | null; member_id: string | null }[];
     const voteCounts = {
@@ -67,7 +68,8 @@ export async function GET() {
     const myMemberId = myMemberRes.data?.id ?? null;
     const myVoteRow = voteList.find((v) => v.user_id === ctx.userId || v.member_id === myMemberId);
     const myVote = myVoteRow ? myVoteRow.vote : null;
-    upcomingMatch = { ...upcomingRaw, voteCounts, myVote, myMemberId };
+    const guestCount = guestsRes.data?.length ?? 0;
+    upcomingMatch = { ...upcomingRaw, voteCounts, myVote, myMemberId, guestCount };
   }
 
   // 최근 경기 결과
