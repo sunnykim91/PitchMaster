@@ -63,7 +63,23 @@ export async function GET(request: NextRequest) {
   const matchIds = matches.map((m) => m.id);
   const matchMap = new Map(matches.map((m) => [m.id, m]));
 
-  type DetailRow = { matchId: string; matchDate: string; opponentName: string; count: number };
+  // 각 경기 스코어 계산용 전체 골 조회
+  const { data: allGoals } = await db
+    .from("match_goals")
+    .select("match_id, scorer_id, is_own_goal")
+    .in("match_id", matchIds);
+
+  const scoreMap = new Map<string, { our: number; their: number }>();
+  for (const g of allGoals ?? []) {
+    const s = scoreMap.get(g.match_id) ?? { our: 0, their: 0 };
+    if (g.scorer_id === "OPPONENT" && !g.is_own_goal) s.their++;
+    else if (g.scorer_id !== "OPPONENT" && g.is_own_goal) s.their++;
+    else if (g.scorer_id !== "OPPONENT" && !g.is_own_goal) s.our++;
+    else if (g.scorer_id === "OPPONENT" && g.is_own_goal) s.our++;
+    scoreMap.set(g.match_id, s);
+  }
+
+  type DetailRow = { matchId: string; matchDate: string; opponentName: string; count: number; score?: string };
   const details: DetailRow[] = [];
 
   if (type === "goals") {
@@ -80,7 +96,7 @@ export async function GET(request: NextRequest) {
     }
     for (const [matchId, count] of countMap) {
       const m = matchMap.get(matchId);
-      if (m) details.push({ matchId, matchDate: m.match_date, opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""), count });
+      if (m) { const sc = scoreMap.get(matchId); details.push({ matchId, matchDate: m.match_date, opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""), count, score: sc ? `${sc.our}:${sc.their}` : undefined }); }
     }
   } else if (type === "assists") {
     const { data: assists } = await db
@@ -95,7 +111,7 @@ export async function GET(request: NextRequest) {
     }
     for (const [matchId, count] of countMap) {
       const m = matchMap.get(matchId);
-      if (m) details.push({ matchId, matchDate: m.match_date, opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""), count });
+      if (m) { const sc = scoreMap.get(matchId); details.push({ matchId, matchDate: m.match_date, opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""), count, score: sc ? `${sc.our}:${sc.their}` : undefined }); }
     }
   } else if (type === "mvp") {
     const { data: mvps } = await db
@@ -110,7 +126,7 @@ export async function GET(request: NextRequest) {
     }
     for (const [matchId, count] of countMap) {
       const m = matchMap.get(matchId);
-      if (m) details.push({ matchId, matchDate: m.match_date, opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""), count });
+      if (m) { const sc = scoreMap.get(matchId); details.push({ matchId, matchDate: m.match_date, opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""), count, score: sc ? `${sc.our}:${sc.their}` : undefined }); }
     }
   } else if (type === "attendance") {
     const { data: attendance } = await db
@@ -127,7 +143,7 @@ export async function GET(request: NextRequest) {
     }
     for (const matchId of attendedSet) {
       const m = matchMap.get(matchId);
-      if (m) details.push({ matchId, matchDate: m.match_date, opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""), count: 1 });
+      if (m) { const sc = scoreMap.get(matchId); details.push({ matchId, matchDate: m.match_date, opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""), count: 1, score: sc ? `${sc.our}:${sc.their}` : undefined }); }
     }
   } else {
     return apiError("type must be goals, assists, mvp, or attendance");

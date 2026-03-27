@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/EmptyState";
 import dynamic from "next/dynamic";
 
@@ -188,7 +189,7 @@ export default function RecordsClient({
   const [detailType, setDetailType] = useState<"goals" | "assists" | "mvp" | "attendance" | null>(null);
   const [detailMemberId, setDetailMemberId] = useState<string | null>(null);
   const [detailMemberName, setDetailMemberName] = useState("");
-  const [detailData, setDetailData] = useState<{ matchId: string; matchDate: string; opponentName: string; count: number }[]>([]);
+  const [detailData, setDetailData] = useState<{ matchId: string; matchDate: string; opponentName: string; count: number; score?: string }[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
 
   async function openDetail(memberId: string, memberName: string, type: "goals" | "assists" | "mvp" | "attendance") {
@@ -656,18 +657,14 @@ export default function RecordsClient({
           )}
         </CardContent>
       </Card>
-      {/* ── 드릴다운 모달 ── */}
-      {detailOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
-          <div className="fixed inset-0 bg-black/60" onClick={() => setDetailOpen(false)} />
-          <div className="relative w-full sm:max-w-md max-h-[80vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-card border border-border p-5 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-xs text-muted-foreground">{detailMemberName}</p>
-                <p className="text-lg font-bold">{detailType ? typeLabels[detailType] : ""} 상세</p>
-              </div>
-              <button type="button" onClick={() => setDetailOpen(false)} className="rounded-lg p-2 hover:bg-secondary transition-colors text-muted-foreground">✕</button>
-            </div>
+      {/* ── 드릴다운 Sheet ── */}
+      <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
+        <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto rounded-t-2xl">
+          <SheetHeader className="text-left">
+            <p className="text-xs text-muted-foreground">{detailMemberName}</p>
+            <SheetTitle>{detailType ? typeLabels[detailType] : ""} 상세</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4">
             {detailLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -675,27 +672,31 @@ export default function RecordsClient({
             ) : detailData.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted-foreground">해당 기록이 없습니다.</p>
             ) : (
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 {detailData.map((d) => (
                   <Link
                     key={d.matchId}
                     href={`/matches/${d.matchId}`}
+                    onClick={() => setDetailOpen(false)}
                     className="flex items-center justify-between rounded-lg px-3 py-2.5 hover:bg-secondary transition-colors"
                   >
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-medium">{d.opponentName || "경기"}</p>
-                      <p className="text-xs text-muted-foreground">{d.matchDate}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {d.matchDate}
+                        {d.score && <span className="ml-2 font-medium text-foreground">{d.score}</span>}
+                      </p>
                     </div>
                     {detailType !== "attendance" && (
-                      <span className="text-sm font-bold text-primary">{d.count}{detailType === "goals" ? "골" : detailType === "assists" ? "어시" : "표"}</span>
+                      <span className="text-sm font-bold text-primary shrink-0 ml-2">{d.count}{detailType === "goals" ? "골" : detailType === "assists" ? "어시" : "표"}</span>
                     )}
                   </Link>
                 ))}
               </div>
             )}
           </div>
-        </div>
-      )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
