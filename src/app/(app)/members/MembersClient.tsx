@@ -139,6 +139,9 @@ export default function MembersClient({
   const [editingJerseyId, setEditingJerseyId] = useState<string | null>(null);
   const [tempJersey, setTempJersey] = useState<string>("");
 
+  // 카드 확장 상태
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   const POSITIONS = ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"];
 
   const activeMembers = useMemo(() => members.filter((m) => m.status === "ACTIVE"), [members]);
@@ -616,234 +619,185 @@ export default function MembersClient({
             <span className="text-xs text-muted-foreground ml-auto">{filteredLinkedMembers.length}명</span>
           </div>
           <div className="space-y-2">
-            {filteredLinkedMembers.map((member) => (
+            {filteredLinkedMembers.map((member) => {
+              const isExpanded = expandedId === member.id;
+              const isEditing = editingCoachPos === member.id || editingJerseyId === member.id;
+              return (
               <div
                 key={member.id}
-                className="card-list-item flex flex-wrap items-center justify-between gap-4"
+                className={cn(
+                  "rounded-xl border border-border/30 transition-colors",
+                  isExpanded && "border-primary/30 bg-primary/3"
+                )}
               >
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold truncate flex items-center gap-1.5">
-                    {member.jerseyNumber !== null && (
-                      <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">#{member.jerseyNumber}</span>
-                    )}
-                    {member.name}
-                    {member.teamRole === "CAPTAIN" && (
-                      <Badge variant="warning" className="text-[10px] px-1.5 py-0 shrink-0">주장</Badge>
-                    )}
-                    {member.teamRole === "VICE_CAPTAIN" && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">부주장</Badge>
-                    )}
-                  </p>
-                  {canViewAll ? (
-                    <p className="text-xs text-muted-foreground">
-                      {formatPhone(member.phone)} · {member.birthDate}
+                {/* ── 기본 행: 항상 표시 ── */}
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+                  onClick={() => { if (!isEditing) setExpandedId(isExpanded ? null : member.id); }}
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold truncate flex items-center gap-1.5">
+                      {member.jerseyNumber !== null && (
+                        <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">#{member.jerseyNumber}</span>
+                      )}
+                      <span className="truncate">{member.name}</span>
+                      {member.teamRole === "CAPTAIN" && (
+                        <Badge variant="warning" className="text-[10px] px-1.5 py-0 shrink-0">주장</Badge>
+                      )}
+                      {member.teamRole === "VICE_CAPTAIN" && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">부주장</Badge>
+                      )}
                     </p>
-                  ) : null}
-                  <p className="text-xs text-muted-foreground">
-                    선호 포지션: {member.preferredPositions.join(" · ") || "미설정"}
-                  </p>
-                  {/* 등번호 인라인 편집 */}
-                  {editingJerseyId === member.id && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <Input
-                        type="number"
-                        min={0}
-                        max={99}
-                        value={tempJersey}
-                        onChange={(e) => setTempJersey(e.target.value)}
-                        placeholder="번호"
-                        className="w-20 h-7 text-xs"
-                      />
-                      <Button size="sm" className="h-6 px-2 text-xs" onClick={() => handleSaveJersey(member.id)}>저장</Button>
-                      <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => setEditingJerseyId(null)}>취소</Button>
-                    </div>
-                  )}
-                  {/* 감독 지정 포지션 표시 */}
-                  {(canChangeRole || isStaffOrAbove(role)) && member.coachPositions.length > 0 && editingCoachPos !== member.id && (
-                    <p className="text-xs text-primary font-medium mt-0.5">
-                      감독 지정: {member.coachPositions.join(" · ")}
+                    <p className="mt-0.5 text-xs text-muted-foreground truncate">
+                      {member.preferredPositions.join(" · ") || "포지션 미설정"}
                     </p>
-                  )}
-                  {/* 인라인 편집기 */}
-                  {editingCoachPos === member.id && (
-                    <div className="mt-2 space-y-2">
-                      <p className="text-xs font-medium text-muted-foreground">감독 지정 포지션 선택</p>
-                      <div className="flex flex-wrap gap-1">
-                        {POSITIONS.map((pos) => {
-                          const selected = tempCoachPos.includes(pos);
-                          return (
-                            <button
-                              key={pos}
-                              type="button"
-                              aria-label={`${pos} ${selected ? "선택됨" : "미선택"}`}
-                              aria-pressed={selected}
-                              onClick={() =>
-                                setTempCoachPos((prev) =>
-                                  selected ? prev.filter((p) => p !== pos) : [...prev, pos]
-                                )
-                              }
-                              className={cn(
-                                "rounded px-2 py-1 text-xs font-medium border transition-colors",
-                                selected
-                                  ? "bg-primary text-primary-foreground border-primary"
-                                  : "bg-secondary text-secondary-foreground border-border hover:border-primary/50 hover:bg-secondary/80"
-                              )}
-                            >
-                              {pos}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <div className="flex gap-1.5">
-                        <Button
-                          size="sm"
-                          onClick={() => handleSaveCoachPositions(member.id)}
-                          disabled={savingCoachPos}
-                          className="h-6 px-2 text-xs"
-                        >
-                          {savingCoachPos ? "저장 중..." : "저장"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setEditingCoachPos(null)}
-                          disabled={savingCoachPos}
-                          className="h-6 px-2 text-xs"
-                        >
-                          취소
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {isStaffOrAbove(role) && editingJerseyId !== member.id && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setEditingJerseyId(member.id);
-                        setTempJersey(member.jerseyNumber !== null ? String(member.jerseyNumber) : "");
-                      }}
-                      className="h-6 px-2 text-xs hidden sm:inline-flex"
-                    >
-                      등번호
-                    </Button>
-                  )}
-                  {isStaffOrAbove(role) && (
-                    <Select
-                      value={member.teamRole ?? "NONE"}
-                      onValueChange={(v) => handleTeamRoleChange(member.id, v === "NONE" ? null : v)}
-                    >
-                      <SelectTrigger className="w-auto min-w-[70px] text-xs h-6 hidden sm:inline-flex">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="NONE">-</SelectItem>
-                        <SelectItem value="CAPTAIN">주장</SelectItem>
-                        <SelectItem value="VICE_CAPTAIN">부주장</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                  {(canChangeRole || isStaffOrAbove(role)) && editingCoachPos !== member.id && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setEditingCoachPos(member.id);
-                        setTempCoachPos(member.coachPositions);
-                      }}
-                      className="h-6 px-2 text-xs"
-                    >
-                      포지션 지정
-                    </Button>
-                  )}
-                  {canChangeRole && member.userIdRaw !== userId ? (
-                    <Select
-                      value={member.role}
-                      onValueChange={(value) => handleRoleChange(member.id, value as Role)}
-                      disabled={changingRoleId === member.id}
-                    >
-                      <SelectTrigger className="w-auto min-w-[80px] text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="PRESIDENT">회장</SelectItem>
-                        <SelectItem value="STAFF">운영진</SelectItem>
-                        <SelectItem value="MEMBER">평회원</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
                     <Badge variant="secondary" className="px-2 py-0.5 text-xs">
                       {roleLabels[member.role]}
                     </Badge>
-                  )}
-                  {canKick && member.id !== userId ? (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="hidden sm:inline-flex"
-                        onClick={() => handleStatusChange(member.id, "DORMANT")}
-                      >
-                        휴면
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="hidden sm:inline-flex"
-                        onClick={() => setConfirmAction({ message: `${member.name} 님을 제명하시겠습니까?`, onConfirm: () => handleKick(member.id) })}
-                      >
-                        제명
-                      </Button>
-                      {/* 모바일: 더보기 메뉴 */}
-                      <details className="relative sm:hidden">
-                        <summary className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-2 text-xs font-medium cursor-pointer hover:bg-accent transition-colors">
-                          ···
-                        </summary>
-                        <div className="absolute right-0 top-full z-10 mt-1 flex flex-col gap-1 rounded-lg border border-border bg-popover p-1.5 shadow-lg min-w-[120px]">
-                          <button
-                            type="button"
-                            className="rounded-md px-3 py-2 text-left text-xs hover:bg-secondary transition-colors"
-                            onClick={() => { setEditingJerseyId(member.id); setTempJersey(member.jerseyNumber !== null ? String(member.jerseyNumber) : ""); }}
-                          >
-                            등번호 설정
-                          </button>
-                          <button
-                            type="button"
-                            className="rounded-md px-3 py-2 text-left text-xs hover:bg-secondary transition-colors"
-                            onClick={() => handleTeamRoleChange(member.id, member.teamRole === "CAPTAIN" ? null : "CAPTAIN")}
-                          >
-                            {member.teamRole === "CAPTAIN" ? "주장 해제" : "주장 지정"}
-                          </button>
-                          <button
-                            type="button"
-                            className="rounded-md px-3 py-2 text-left text-xs hover:bg-secondary transition-colors"
-                            onClick={() => handleTeamRoleChange(member.id, member.teamRole === "VICE_CAPTAIN" ? null : "VICE_CAPTAIN")}
-                          >
-                            {member.teamRole === "VICE_CAPTAIN" ? "부주장 해제" : "부주장 지정"}
-                          </button>
-                          <button
-                            type="button"
-                            className="rounded-md px-3 py-2 text-left text-xs hover:bg-secondary transition-colors"
-                            onClick={() => handleStatusChange(member.id, "DORMANT")}
-                          >
-                            휴면 처리
-                          </button>
-                          <button
-                            type="button"
-                            className="rounded-md px-3 py-2 text-left text-xs text-destructive hover:bg-destructive/10 transition-colors"
-                            onClick={() => setConfirmAction({ message: `${member.name} 님을 제명하시겠습니까?`, onConfirm: () => handleKick(member.id) })}
-                          >
-                            제명
-                          </button>
+                    <span className={cn(
+                      "text-muted-foreground transition-transform text-xs",
+                      isExpanded && "rotate-180"
+                    )}>▼</span>
+                  </div>
+                </button>
+
+                {/* ── 확장 영역: 탭 시 표시 ── */}
+                {isExpanded && (
+                  <div className="border-t border-border/20 px-4 py-3 space-y-3">
+                    {/* 상세 정보 */}
+                    {canViewAll && (
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        {member.phone && (
+                          <div>
+                            <span className="text-muted-foreground">연락처</span>
+                            <p className="font-medium">{formatPhone(member.phone)}</p>
+                          </div>
+                        )}
+                        {member.birthDate && (
+                          <div>
+                            <span className="text-muted-foreground">생년월일</span>
+                            <p className="font-medium">{member.birthDate}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 감독 지정 포지션 */}
+                    {member.coachPositions.length > 0 && editingCoachPos !== member.id && (
+                      <p className="text-xs text-primary font-medium">
+                        감독 지정: {member.coachPositions.join(" · ")}
+                      </p>
+                    )}
+
+                    {/* 등번호 인라인 편집 */}
+                    {editingJerseyId === member.id && (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={0}
+                          max={99}
+                          value={tempJersey}
+                          onChange={(e) => setTempJersey(e.target.value)}
+                          placeholder="번호"
+                          className="w-20 h-8 text-xs"
+                        />
+                        <Button size="sm" className="h-7 px-3 text-xs" onClick={() => handleSaveJersey(member.id)}>저장</Button>
+                        <Button size="sm" variant="outline" className="h-7 px-3 text-xs" onClick={() => setEditingJerseyId(null)}>취소</Button>
+                      </div>
+                    )}
+
+                    {/* 감독 포지션 편집기 */}
+                    {editingCoachPos === member.id && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground">감독 지정 포지션 선택</p>
+                        <div className="flex flex-wrap gap-1">
+                          {POSITIONS.map((pos) => {
+                            const selected = tempCoachPos.includes(pos);
+                            return (
+                              <button
+                                key={pos}
+                                type="button"
+                                aria-label={`${pos} ${selected ? "선택됨" : "미선택"}`}
+                                aria-pressed={selected}
+                                onClick={() =>
+                                  setTempCoachPos((prev) =>
+                                    selected ? prev.filter((p) => p !== pos) : [...prev, pos]
+                                  )
+                                }
+                                className={cn(
+                                  "rounded px-2 py-1 text-xs font-medium border transition-colors",
+                                  selected
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-secondary text-secondary-foreground border-border hover:border-primary/50"
+                                )}
+                              >
+                                {pos}
+                              </button>
+                            );
+                          })}
                         </div>
-                      </details>
-                    </>
-                  ) : null}
-                </div>
+                        <div className="flex gap-1.5">
+                          <Button size="sm" onClick={() => handleSaveCoachPositions(member.id)} disabled={savingCoachPos} className="h-7 px-3 text-xs">
+                            {savingCoachPos ? "저장 중..." : "저장"}
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setEditingCoachPos(null)} disabled={savingCoachPos} className="h-7 px-3 text-xs">취소</Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 관리 버튼들 */}
+                    {(isStaffOrAbove(role) || canChangeRole) && (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {isStaffOrAbove(role) && editingJerseyId !== member.id && (
+                          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setEditingJerseyId(member.id); setTempJersey(member.jerseyNumber !== null ? String(member.jerseyNumber) : ""); }}>
+                            등번호
+                          </Button>
+                        )}
+                        {(canChangeRole || isStaffOrAbove(role)) && editingCoachPos !== member.id && (
+                          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setEditingCoachPos(member.id); setTempCoachPos(member.coachPositions); }}>
+                            포지션 지정
+                          </Button>
+                        )}
+                        {isStaffOrAbove(role) && (
+                          <Select value={member.teamRole ?? "NONE"} onValueChange={(v) => handleTeamRoleChange(member.id, v === "NONE" ? null : v)}>
+                            <SelectTrigger className="w-auto min-w-[80px] text-xs h-8">
+                              <SelectValue placeholder="주장/부주장" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="NONE">역할 없음</SelectItem>
+                              <SelectItem value="CAPTAIN">주장</SelectItem>
+                              <SelectItem value="VICE_CAPTAIN">부주장</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                        {canChangeRole && member.userIdRaw !== userId && (
+                          <Select value={member.role} onValueChange={(value) => handleRoleChange(member.id, value as Role)} disabled={changingRoleId === member.id}>
+                            <SelectTrigger className="w-auto min-w-[80px] text-xs h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="PRESIDENT">회장</SelectItem>
+                              <SelectItem value="STAFF">운영진</SelectItem>
+                              <SelectItem value="MEMBER">평회원</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                        {canKick && member.userIdRaw !== userId && (
+                          <>
+                            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => handleStatusChange(member.id, "DORMANT")}>휴면</Button>
+                            <Button size="sm" variant="outline" className="h-8 text-xs text-destructive hover:bg-destructive/10" onClick={() => setConfirmAction({ message: `${member.name} 님을 제명하시겠습니까?`, onConfirm: () => handleKick(member.id) })}>제명</Button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            ))}
+              );
+            })}
             {linkedMembers.length === 0 && (
               <EmptyState icon={Users} title="가입된 멤버가 없습니다" description="초대 코드를 공유해보세요." />
             )}
