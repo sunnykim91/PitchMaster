@@ -11,16 +11,14 @@ import { BirthDateSelect } from "@/components/ui/birth-date-select";
 import { PhoneInput } from "@/components/ui/phone-input";
 import type { SportType } from "@/lib/types";
 
-export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ code?: string; error?: string }> }) {
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ code?: string; error?: string; preview?: string }> }) {
   const params = await searchParams;
-  const session = await auth();
+  const isPreview = params.preview === "true";
 
-  if (!session) {
-    redirect("/login");
-  }
-
-  if (session.user.isProfileComplete) {
-    redirect("/team");
+  if (!isPreview) {
+    const session = await auth();
+    if (!session) redirect("/login");
+    if (session.user.isProfileComplete) redirect("/team");
   }
 
   const errorMsg = params.error;
