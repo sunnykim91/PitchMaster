@@ -210,6 +210,11 @@ function PersonalSettingsComponent({
                           )}
                         >
                           {(posShort as Record<string, string>)[pos] ?? pos}
+                          {isFutsal && pos !== "GK" && (
+                            <span className="ml-1 text-muted-foreground font-normal">
+                              {pos === "FIXO" ? "(수비)" : pos === "ALA" ? "(측면)" : pos === "PIVO" ? "(공격)" : ""}
+                            </span>
+                          )}
                         </button>
                       ))}
                     </div>

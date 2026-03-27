@@ -5,7 +5,7 @@ import { auth, updateSession } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type { PreferredPosition, PreferredFoot } from "@/lib/types";
 
-const VALID_POSITIONS: PreferredPosition[] = ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"];
+const VALID_POSITIONS: PreferredPosition[] = ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST", "FIXO", "ALA", "PIVO"];
 const VALID_FEET: PreferredFoot[] = ["RIGHT", "LEFT", "BOTH"];
 
 export async function completeOnboarding(formData: FormData) {

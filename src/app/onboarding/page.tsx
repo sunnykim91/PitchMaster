@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { completeOnboarding } from "@/app/onboarding/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { BirthDateSelect } from "@/components/ui/birth-date-select";
 import { PhoneInput } from "@/components/ui/phone-input";
+import type { SportType } from "@/lib/types";
 
 export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ code?: string; error?: string }> }) {
   const params = await searchParams;
@@ -22,6 +24,21 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   }
 
   const errorMsg = params.error;
+
+  // 초대코드가 있으면 해당 팀의 스포츠 타입 조회
+  let sportType: SportType = "SOCCER";
+  if (params.code) {
+    const db = getSupabaseAdmin();
+    if (db) {
+      const { data: team } = await db
+        .from("teams")
+        .select("sport_type")
+        .eq("invite_code", params.code.toUpperCase())
+        .single();
+      if (team?.sport_type === "FUTSAL") sportType = "FUTSAL";
+    }
+  }
+  const isFutsal = sportType === "FUTSAL";
 
   return (
     <main className="min-h-screen px-6 py-16">
@@ -83,68 +100,71 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
               </div>
               <div className="space-y-3">
                 <Label>선호 포지션 (복수 선택)</Label>
-                <div className="space-y-4">
-                  <div>
-                    <p className="mb-2 text-xs font-semibold text-muted-foreground">골키퍼</p>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
-                        <input type="checkbox" name="preferredPositions" value="GK" className="h-4 w-4 accent-primary" />
-                        GK · 골키퍼
+                {isFutsal ? (
+                  /* ── 풋살 포지션 ── */
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {([
+                      { value: "GK", name: "골레이루 (GK)", desc: "골키퍼 — 골문을 지키는 역할" },
+                      { value: "FIXO", name: "피소 (FIXO)", desc: "수비 — 축구의 센터백과 유사, 수비 조율" },
+                      { value: "ALA", name: "아라 (ALA)", desc: "측면 — 축구의 윙어와 유사, 측면 공수 전환" },
+                      { value: "PIVO", name: "피벗 (PIVO)", desc: "공격 — 축구의 스트라이커와 유사, 최전방 공격" },
+                    ]).map((pos) => (
+                      <label key={pos.value} className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3 cursor-pointer hover:bg-accent transition-colors">
+                        <input type="checkbox" name="preferredPositions" value={pos.value} className="h-4 w-4 accent-primary mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium">{pos.name}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{pos.desc}</p>
+                        </div>
                       </label>
+                    ))}
+                  </div>
+                ) : (
+                  /* ── 축구 포지션 ── */
+                  <div className="space-y-4">
+                    <div>
+                      <p className="mb-2 text-xs font-semibold text-muted-foreground">골키퍼</p>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
+                          <input type="checkbox" name="preferredPositions" value="GK" className="h-4 w-4 accent-primary" />
+                          GK · 골키퍼
+                        </label>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="mb-2 text-xs font-semibold text-muted-foreground">수비</p>
+                      <div className="grid gap-2 sm:grid-cols-3">
+                        {([["CB", "센터백"], ["LB", "좌측 윙백"], ["RB", "우측 윙백"]] as const).map(([v, l]) => (
+                          <label key={v} className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
+                            <input type="checkbox" name="preferredPositions" value={v} className="h-4 w-4 accent-primary" />
+                            {v} · {l}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="mb-2 text-xs font-semibold text-muted-foreground">미드필더</p>
+                      <div className="grid gap-2 sm:grid-cols-3">
+                        {([["CDM", "수비형 미드필더"], ["CM", "중앙 미드필더"], ["CAM", "공격형 미드필더"]] as const).map(([v, l]) => (
+                          <label key={v} className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
+                            <input type="checkbox" name="preferredPositions" value={v} className="h-4 w-4 accent-primary" />
+                            {v} · {l}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="mb-2 text-xs font-semibold text-muted-foreground">공격</p>
+                      <div className="grid gap-2 sm:grid-cols-3">
+                        {([["LW", "좌측 윙어"], ["RW", "우측 윙어"], ["ST", "스트라이커"]] as const).map(([v, l]) => (
+                          <label key={v} className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
+                            <input type="checkbox" name="preferredPositions" value={v} className="h-4 w-4 accent-primary" />
+                            {v} · {l}
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <p className="mb-2 text-xs font-semibold text-muted-foreground">수비</p>
-                    <div className="grid gap-2 sm:grid-cols-3">
-                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
-                        <input type="checkbox" name="preferredPositions" value="CB" className="h-4 w-4 accent-primary" />
-                        CB · 센터백
-                      </label>
-                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
-                        <input type="checkbox" name="preferredPositions" value="LB" className="h-4 w-4 accent-primary" />
-                        LB · 좌측 윙백
-                      </label>
-                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
-                        <input type="checkbox" name="preferredPositions" value="RB" className="h-4 w-4 accent-primary" />
-                        RB · 우측 윙백
-                      </label>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="mb-2 text-xs font-semibold text-muted-foreground">미드필더</p>
-                    <div className="grid gap-2 sm:grid-cols-3">
-                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
-                        <input type="checkbox" name="preferredPositions" value="CDM" className="h-4 w-4 accent-primary" />
-                        CDM · 수비형 미드필더
-                      </label>
-                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
-                        <input type="checkbox" name="preferredPositions" value="CM" className="h-4 w-4 accent-primary" />
-                        CM · 중앙 미드필더
-                      </label>
-                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
-                        <input type="checkbox" name="preferredPositions" value="CAM" className="h-4 w-4 accent-primary" />
-                        CAM · 공격형 미드필더
-                      </label>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="mb-2 text-xs font-semibold text-muted-foreground">공격</p>
-                    <div className="grid gap-2 sm:grid-cols-3">
-                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
-                        <input type="checkbox" name="preferredPositions" value="LW" className="h-4 w-4 accent-primary" />
-                        LW · 좌측 윙어
-                      </label>
-                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
-                        <input type="checkbox" name="preferredPositions" value="RW" className="h-4 w-4 accent-primary" />
-                        RW · 우측 윙어
-                      </label>
-                      <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
-                        <input type="checkbox" name="preferredPositions" value="ST" className="h-4 w-4 accent-primary" />
-                        ST · 스트라이커
-                      </label>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
               <Button type="submit" className="w-full">다음 단계로</Button>
             </form>
