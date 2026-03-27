@@ -59,6 +59,9 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const recordedAtValue = body.recordedAt ? `${body.recordedAt}T${body.recordedTime || "00:00"}:00` : new Date().toISOString();
+  console.log("[DUES POST] recordedAt input:", body.recordedAt, "time:", body.recordedTime, "→ saved as:", recordedAtValue);
+
   const { data, error } = await db
     .from("dues_records")
     .insert({
@@ -69,12 +72,13 @@ export async function POST(request: NextRequest) {
       description: body.description || null,
       screenshot_url: body.screenshotUrl || null,
       recorded_by: ctx.userId,
-      recorded_at: body.recordedAt ? `${body.recordedAt}T${body.recordedTime || "00:00"}:00` : new Date().toISOString(),
+      recorded_at: recordedAtValue,
     })
     .select()
     .single();
 
   if (error) return apiError(error.message);
+  console.log("[DUES POST] DB returned recorded_at:", data.recorded_at);
   return apiSuccess(data, 201);
 }
 

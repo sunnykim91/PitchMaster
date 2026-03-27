@@ -134,7 +134,7 @@ function MatchVoteTabInner({
       </Card>
 
       {/* ── 투표 관리 (운영진) 또는 현황 (평회원) ── */}
-      {canManage && match.status !== "COMPLETED" ? (
+      {canManage ? (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">투표 관리</CardTitle>

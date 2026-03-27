@@ -104,10 +104,10 @@ function DuesBulkTabInner({
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
-      // 날짜 줄: "03.12", "03.07" 등
-      const dateMatch = line.match(/^(\d{2})\.(\d{2})$/);
+      // 날짜 줄: "03.12", "03.07", "3.12", "3.7" 등
+      const dateMatch = line.match(/^(\d{1,2})\.(\d{1,2})$/);
       if (dateMatch) {
-        currentDate = `${year}-${dateMatch[1]}-${dateMatch[2]}`;
+        currentDate = `${year}-${dateMatch[1].padStart(2, "0")}-${dateMatch[2].padStart(2, "0")}`;
         continue;
       }
 
@@ -192,7 +192,9 @@ function DuesBulkTabInner({
         return;
       }
 
+      console.log("[OCR] raw text:", json.text);
       const { rows: parsed, latestBalance } = parseTransactions(json.text);
+      console.log("[OCR] parsed rows:", parsed.map((r) => ({ date: r.date, time: r.time, desc: r.description, amount: r.amount, type: r.type })));
       if (latestBalance !== null) {
         await apiMutate("/api/dues/balance", "POST", { balance: latestBalance });
         await refetchSummary();
@@ -329,7 +331,7 @@ function DuesBulkTabInner({
                 }
                 // 기존 회비 내역과 중복 체크
                 const existingKeys = new Set(
-                  summaryRecords.map((r) => `${r.recorded_at?.split("T")[0]}_${r.amount}_${r.type}`)
+                  summaryRecords.map((r) => `${r.recorded_at?.slice(0, 10)}_${r.amount}_${r.type}`)
                 );
                 const filtered = json.records.filter((r: { date: string; amount: number; type: string }) => {
                   const key = `${r.date}_${r.amount}_${r.type}`;

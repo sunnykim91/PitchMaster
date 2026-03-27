@@ -278,7 +278,7 @@ export default function AdminClient() {
           <CardTitle>팀별 현황</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto -mx-6 px-6">
+          <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[640px]">
               <thead>
                 <tr className="border-b border-border text-left text-muted-foreground">

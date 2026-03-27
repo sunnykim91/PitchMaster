@@ -342,7 +342,7 @@ function DuesRecordsTabInner({
                       <option value="EXPENSE">출금</option>
                     </NativeSelect>
                     <Input name="editAmount" type="number" defaultValue={record.amount} min={0} required placeholder="금액" />
-                    <Input name="editDate" type="date" defaultValue={record.recordedAt.split("T")[0]} />
+                    <Input name="editDate" type="date" defaultValue={record.recordedAt.slice(0, 10)} />
                     <Input name="editTime" type="time" defaultValue={record.recordedAt.includes("T") ? record.recordedAt.split("T")[1]?.slice(0, 5) : ""} />
                   </div>
                   <Input name="editDescription" defaultValue={record.description} required placeholder="내용" />
@@ -362,7 +362,7 @@ function DuesRecordsTabInner({
                     {record.description}
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {record.recordedAt.split("T")[0]}
+                    {record.recordedAt.slice(0, 10)}
                     {record.memberName ? ` · ${record.memberName}` : ""}
                   </p>
                 </div>

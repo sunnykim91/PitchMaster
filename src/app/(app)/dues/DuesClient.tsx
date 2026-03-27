@@ -289,7 +289,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     if (!monthFilter) return records;
     const { from, to } = getDuesPeriod(monthFilter, periodConfig.startDay);
     return records.filter((r) => {
-      const date = r.recordedAt.split("T")[0];
+      const date = r.recordedAt.slice(0, 10);
       return date >= from && date <= to;
     });
   }, [records, monthFilter, periodConfig.startDay, getDuesPeriod]);
