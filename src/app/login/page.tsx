@@ -346,8 +346,8 @@ export default async function LoginPage({
               { title: "시즌 통계 & 랭킹", desc: "승률, 출석률, 레이더 차트, 개인별 랭킹" },
               { title: "MVP 투표", desc: "경기 후 팀원이 직접 뽑는 MVP" },
               { title: "자체전 (A팀 vs B팀)", desc: "랜덤 편성, 팀별 스코어보드, 전적 반영 ON/OFF" },
-              { title: "풋살 전용 지원", desc: "3~8인제, 풋살 포지션·전술판, 풋살 코트 비율" },
-              { title: "경기 일지 & 공유", desc: "결과 카드 카카오톡 공유 + 경기별 댓글 소통" },
+              { title: "등번호 & 주장/부주장", desc: "등번호 자기 설정 + 주장·부주장 지정, 전술판 연동" },
+              { title: "기록 상세 드릴다운", desc: "골·어시·MVP·출석 숫자 탭 → 해당 경기 목록 확인" },
             ].map((item) => (
               <div key={item.title} className="border-l-2 border-primary pl-4 py-2">
                 <p className="text-sm font-bold text-foreground">{item.title}</p>
@@ -368,6 +368,8 @@ export default async function LoginPage({
                 { title: "회비 미납 알림", desc: "미납자 푸시 알림 + 매월 자동 리마인더" },
                 { title: "투표 마감 리마인더", desc: "마감 전날 미투표자에게 자동 푸시 알림" },
                 { title: "팀 게시판", desc: "공지사항, 자유글, 투표까지 팀 전용 소통 공간" },
+                { title: "풋살 전용 지원", desc: "3~8인제, 풋살 포지션·전술판, 풋살 코트 비율" },
+                { title: "경기 일지 & 공유", desc: "결과 카드 카카오톡 공유 + 경기별 댓글 소통" },
                 { title: "회장 이임 & 승인제", desc: "회장 권한 이양, 가입 승인 모드 선택" },
                 { title: "회칙 · 유니폼 · 시즌 관리", desc: "팀 운영에 필요한 부가 기능 일체" },
               ].map((item) => (

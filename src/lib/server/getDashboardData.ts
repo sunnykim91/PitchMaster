@@ -169,6 +169,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
     .select("id")
     .eq("team_id", teamId)
     .eq("status", "COMPLETED")
+    .eq("match_type", "REGULAR")
     .order("match_date", { ascending: false });
 
   if (activeSeason) {
