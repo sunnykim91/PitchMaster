@@ -758,7 +758,7 @@ export default function MembersClient({
                         )}
                         {(canChangeRole || isStaffOrAbove(role)) && editingCoachPos !== member.id && (
                           <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setEditingCoachPos(member.id); setTempCoachPos(member.coachPositions); }}>
-                            포지션 지정
+                            감독 지정
                           </Button>
                         )}
                         {isStaffOrAbove(role) && (
