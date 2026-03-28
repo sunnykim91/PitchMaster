@@ -42,8 +42,8 @@ export default async function LoginPage({
   const kakaoEnabled = isKakaoConfigured();
 
   // 실시간 소셜프루프: 팀 수 + 회원 수 (데모 제외)
-  let teamCount = 42;
-  let memberCount = 180;
+  let teamCount = 49;
+  let memberCount = 347;
   try {
     const db = getSupabaseAdmin();
     if (db) {
