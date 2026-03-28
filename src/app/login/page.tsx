@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { isKakaoConfigured } from "@/lib/auth";
-import { getSupabaseServer } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import AppScreenSlider from "./AppScreenSlider";
@@ -45,7 +45,7 @@ export default async function LoginPage({
   let teamCount = 42;
   let memberCount = 180;
   try {
-    const db = getSupabaseServer();
+    const db = getSupabaseAdmin();
     if (db) {
       const [teamsRes, membersRes] = await Promise.all([
         db.from("teams").select("id", { count: "exact", head: true }).neq("id", DEMO_TEAM_ID),
