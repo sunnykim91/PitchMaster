@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 
 const screens = [
-  { title: "대시보드", tag: "Dashboard", color: "text-[hsl(var(--info))]", src: "/screenshot/dashboard.png" },
-  { title: "참석 투표", tag: "실시간", color: "text-primary", src: "/screenshot/vote.png" },
-  { title: "내 기록 · 레이더 차트", tag: "Records", color: "text-[hsl(var(--accent))]", src: "/screenshot/records1.png" },
-  { title: "스마트 라인업", tag: "라인업", color: "text-[hsl(var(--accent))]", src: "/screenshot/tactics.png" },
-  { title: "전체 기록", tag: "통계", color: "text-primary", src: "/screenshot/records2.png" },
-  { title: "회비 관리", tag: "캡쳐 인식", color: "text-[hsl(var(--info))]", src: "/screenshot/dues.png" },
+  { title: "대시보드", src: "/screenshot/dashboard.png" },
+  { title: "참석 투표", src: "/screenshot/vote.png" },
+  { title: "내 기록 · 레이더 차트", src: "/screenshot/records1.png" },
+  { title: "스마트 라인업", src: "/screenshot/tactics.png" },
+  { title: "전체 기록", src: "/screenshot/records2.png" },
+  { title: "회비 관리", src: "/screenshot/dues.png" },
 ];
 
 export default function AppScreenSlider() {
@@ -44,18 +44,23 @@ export default function AppScreenSlider() {
         {/* Notch */}
         <div className="absolute left-1/2 top-0 z-10 h-5 w-24 -translate-x-1/2 rounded-b-2xl bg-background" />
 
-        {/* Screen */}
-        <div className="relative overflow-hidden rounded-[1.4rem] bg-card">
-          <div key={current} className="animate-fade-in">
+        {/* Screen — fixed aspect ratio, crop from top */}
+        <div className="relative overflow-hidden rounded-[1.4rem] bg-card" style={{ aspectRatio: "9 / 17" }}>
+          {/* Preload all images (hidden), show current */}
+          {screens.map((s, i) => (
             <Image
-              src={screen.src}
-              alt={screen.title}
-              width={430}
-              height={932}
-              className="w-full h-auto"
-              priority={current === 0}
+              key={s.src}
+              src={s.src}
+              alt={s.title}
+              fill
+              sizes="280px"
+              quality={75}
+              className={`object-cover object-top transition-opacity duration-300 ${
+                i === current ? "opacity-100" : "opacity-0"
+              }`}
+              priority={i === 0}
             />
-          </div>
+          ))}
         </div>
       </div>
 
