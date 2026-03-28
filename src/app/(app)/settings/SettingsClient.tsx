@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useApi } from "@/lib/useApi";
 import type { PreferredPosition, PreferredFoot, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
+import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { PersonalSettings } from "./PersonalSettings";
@@ -106,8 +107,31 @@ export default function SettingsClient({
   initialData?: InitialData;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
+
+  // ── Tab state ──
+  type SettingsTab = "personal" | "team" | "season";
+  const isStaff = isStaffOrAbove(role);
+  const validTabs: SettingsTab[] = isStaff ? ["personal", "team", "season"] : ["personal"];
+  const tabFromUrl = searchParams.get("tab") as SettingsTab | null;
+  const [activeTab, setActiveTabState] = useState<SettingsTab>(
+    tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : "personal"
+  );
+  function setActiveTab(tab: SettingsTab) {
+    setActiveTabState(tab);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", tab);
+    window.history.replaceState(null, "", url.toString());
+  }
+  const tabItems = [
+    { key: "personal" as const, label: "내 설정" },
+    ...(isStaff ? [
+      { key: "team" as const, label: "팀 설정" },
+      { key: "season" as const, label: "시즌 관리" },
+    ] : []),
+  ];
 
   // SSR initialData와 세션 fallback 병합
   const defaultProfile = useMemo((): Profile => {
@@ -244,6 +268,30 @@ export default function SettingsClient({
 
   return (
     <div className="grid gap-5 stagger-children">
+      {/* ── Tab Bar (운영진 이상만 표시) ── */}
+      {isStaff && (
+        <div className="sticky top-0 z-10 -mx-4 bg-background/95 backdrop-blur-sm border-b border-border/30 px-4">
+          <div role="tablist" aria-label="설정 탭" className="flex gap-1 overflow-x-auto scrollbar-hide py-2">
+            {tabItems.map((tab) => (
+              <button
+                key={tab.key}
+                role="tab"
+                aria-selected={activeTab === tab.key}
+                onClick={() => { setActiveTab(tab.key); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                className={cn(
+                  "shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors cursor-pointer",
+                  activeTab === tab.key
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-secondary"
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {message && (
         <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary animate-in fade-in duration-200">
           {message}
@@ -251,37 +299,45 @@ export default function SettingsClient({
       )}
 
       {/* ── 개인 설정 ── */}
-      <PersonalSettings
-        profile={profile}
-        setProfile={setProfile}
-        saving={saving}
-        setSaving={setSaving}
-        setMessage={setMessage}
-        refetchProfile={refetchProfile}
-        profileSyncedRef={profileSynced}
-        onLogout={handleLogout}
-        sportType={(teamApiData.team?.sport_type === "FUTSAL" ? "FUTSAL" : "SOCCER") as import("@/lib/types").SportType}
-      />
-
-      {/* ── 팀 설정 (운영진 이상) ── */}
-      {isStaffOrAbove(role) && (
-        <TeamSettings
-          team={team}
-          setTeam={setTeam}
+      <div className={activeTab === "personal" ? "" : "hidden"}>
+        <PersonalSettings
+          profile={profile}
+          setProfile={setProfile}
           saving={saving}
           setSaving={setSaving}
           setMessage={setMessage}
-          refetchTeam={refetchTeam}
-          teamSyncedRef={teamSynced}
-          role={role}
-          deleteConfirmName={deleteConfirmName}
-          setDeleteConfirmName={setDeleteConfirmName}
-          onDeleteTeam={handleDeleteTeam}
+          refetchProfile={refetchProfile}
+          profileSyncedRef={profileSynced}
+          onLogout={handleLogout}
+          sportType={(teamApiData.team?.sport_type === "FUTSAL" ? "FUTSAL" : "SOCCER") as import("@/lib/types").SportType}
         />
+      </div>
+
+      {/* ── 팀 설정 (운영진 이상) ── */}
+      {isStaff && (
+        <div className={activeTab === "team" ? "" : "hidden"}>
+          <TeamSettings
+            team={team}
+            setTeam={setTeam}
+            saving={saving}
+            setSaving={setSaving}
+            setMessage={setMessage}
+            refetchTeam={refetchTeam}
+            teamSyncedRef={teamSynced}
+            role={role}
+            deleteConfirmName={deleteConfirmName}
+            setDeleteConfirmName={setDeleteConfirmName}
+            onDeleteTeam={handleDeleteTeam}
+          />
+        </div>
       )}
 
       {/* ── 시즌 관리 ── */}
-      {canManageSeasons && <SeasonManagement />}
+      {canManageSeasons && (
+        <div className={activeTab === "season" ? "" : "hidden"}>
+          <SeasonManagement />
+        </div>
+      )}
     </div>
   );
 }

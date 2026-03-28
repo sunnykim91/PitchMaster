@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { BarChart3, ArrowUpDown, ArrowDown } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
@@ -109,6 +110,26 @@ export default function RecordsClient({
 }) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
+  const searchParams = useSearchParams();
+
+  // ── Tab state ──
+  type RecordsTab = "my" | "ranking" | "all";
+  const validTabs: RecordsTab[] = ["my", "ranking", "all"];
+  const tabFromUrl = searchParams.get("tab") as RecordsTab | null;
+  const [activeTab, setActiveTabState] = useState<RecordsTab>(
+    tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : "my"
+  );
+  function setActiveTab(tab: RecordsTab) {
+    setActiveTabState(tab);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", tab);
+    window.history.replaceState(null, "", url.toString());
+  }
+  const tabItems = [
+    { key: "my" as const, label: "내 기록" },
+    { key: "ranking" as const, label: "팀 랭킹" },
+    { key: "all" as const, label: "전체 기록" },
+  ];
 
   // ── Seasons (SSR 데이터 사용) ──
   const {
@@ -287,6 +308,47 @@ export default function RecordsClient({
 
   return (
     <div className="grid gap-5 stagger-children min-w-0">
+      {/* ── Tab Bar + Season Selector ── */}
+      <div className="sticky top-0 z-10 -mx-4 bg-background/95 backdrop-blur-sm border-b border-border/30 px-4">
+        <div className="flex items-center justify-between gap-2 py-2">
+          <div role="tablist" aria-label="기록 탭" className="flex gap-1 overflow-x-auto scrollbar-hide">
+            {tabItems.map((tab) => (
+              <button
+                key={tab.key}
+                role="tab"
+                aria-selected={activeTab === tab.key}
+                onClick={() => { setActiveTab(tab.key); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                className={cn(
+                  "shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors cursor-pointer",
+                  activeTab === tab.key
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-secondary"
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <Select value={seasonId} onValueChange={handleSeasonChange}>
+            <SelectTrigger className="w-auto min-w-[80px] text-xs shrink-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_TIME_KEY} className="font-bold">
+                전체 통합
+              </SelectItem>
+              {seasons.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                  {item.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* ── Tab: 내 기록 ── */}
+      <div className={activeTab === "my" ? "grid gap-5" : "hidden"}>
       {/* ── Row 0: 팀 전적 ── */}
       {initialData?.teamRecord && (initialData.teamRecord.wins + initialData.teamRecord.draws + initialData.teamRecord.losses) > 0 && (() => {
         const tr = initialData.teamRecord;
@@ -338,30 +400,10 @@ export default function RecordsClient({
       <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
         {/* 내 기록 */}
         <Card>
-          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 px-4 sm:px-6">
-            <div>
-              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
-                내 기록
-              </CardTitle>
-            </div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-              시즌
-              <Select value={seasonId} onValueChange={handleSeasonChange}>
-                <SelectTrigger className="w-auto min-w-[90px] text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL_TIME_KEY} className="font-bold">
-                    전체 통합
-                  </SelectItem>
-                  {seasons.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <CardHeader className="px-4 sm:px-6">
+            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
+              내 기록
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {loadingRecords ? (
@@ -423,6 +465,10 @@ export default function RecordsClient({
         </Card>
       </div>
 
+      </div>
+
+      {/* ── Tab: 팀 랭킹 ── */}
+      <div className={activeTab === "ranking" ? "grid gap-5" : "hidden"}>
       {/* ── Row 2: 팀 랭킹 (PC: 3열 가로 배치) ── */}
       <Card>
         <CardHeader>
@@ -510,6 +556,10 @@ export default function RecordsClient({
         </CardContent>
       </Card>
 
+      </div>
+
+      {/* ── Tab: 전체 기록 ── */}
+      <div className={activeTab === "all" ? "grid gap-5" : "hidden"}>
       {/* ── Row 3: 전체 회원 기록 (풀와이드 테이블) ── */}
       <Card>
         <CardHeader>
@@ -657,6 +707,8 @@ export default function RecordsClient({
           )}
         </CardContent>
       </Card>
+      </div>
+
       {/* ── 드릴다운 Sheet ── */}
       <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
         <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto rounded-t-2xl px-0">
