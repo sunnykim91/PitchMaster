@@ -4,12 +4,15 @@
 한국 조기축구(아마추어 축구팀)를 위한 팀 관리 웹 애플리케이션
 
 ## 기술 스택
-- **프론트엔드**: Next.js 14 (App Router) + TypeScript + Tailwind CSS
+- **프론트엔드**: Next.js 16 (App Router) + React 19 + TypeScript + TailwindCSS 4
 - **백엔드**: Next.js API Routes
 - **DB**: Supabase (PostgreSQL)
-- **인증**: NextAuth.js + 카카오 로그인 (프로필 정보 조회만 가능, 알림톡 불가)
+- **인증**: 카카오 OAuth (커스텀 구현)
 - **파일저장**: Supabase Storage
-- **배포**: Vercel
+- **테스트**: Vitest (37 파일, 600+ 케이스)
+- **배포**: Vercel (main push 시 자동 배포)
+- **도메인**: pitch-master.app (Cloudflare DNS)
+- **PWA**: Service Worker, Web Push (VAPID)
 
 ---
 

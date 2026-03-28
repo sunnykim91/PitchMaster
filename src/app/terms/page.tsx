@@ -221,7 +221,7 @@ export default function TermsPage() {
           <h2 className="text-lg font-bold text-foreground">제13조 (연락처)</h2>
           <ul className="mt-3 ml-5 list-disc space-y-1 text-muted-foreground">
             <li>서비스명: PitchMaster</li>
-            <li>이메일: tjsgnl2002@gmail.com</li>
+            <li>이메일: pitchmaster.app@gmail.com</li>
           </ul>
         </section>
 

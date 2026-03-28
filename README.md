@@ -18,13 +18,14 @@
 
 | 분류 | 기술 |
 |------|------|
-| Frontend | Next.js 15 (App Router), React 19, TailwindCSS 4 |
+| Frontend | Next.js 16 (App Router), React 19, TailwindCSS 4 |
 | Backend | Supabase (PostgreSQL), Next.js API Routes |
-| Auth | 카카오 OAuth (NextAuth) |
-| Testing | Vitest, Playwright |
+| Auth | 카카오 OAuth |
+| Testing | Vitest (37 파일, 615+ 테스트) |
 | Deploy | Vercel (main push 시 자동 배포) |
 | Domain | pitch-master.app (Cloudflare DNS) |
 | PWA | Service Worker, Web Push (VAPID) |
+| Analytics | GA4, Google Search Console |
 
 ## 시작하기
 
@@ -73,7 +74,7 @@ src/
 │   └── ...                 # 유틸, 훅, 컨텍스트
 └── __tests__/              # 테스트 (37 파일, 600+ 케이스)
 
-supabase/migrations/        # DB 마이그레이션 (6개)
+supabase/migrations/        # DB 마이그레이션
 public/
 ├── manifest.json           # PWA 매니페스트
 └── sw.js                   # 서비스 워커

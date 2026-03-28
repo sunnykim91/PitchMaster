@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Calendar, Check, Copy, Link2, Trophy, Users, Vote } from "lucide-react";
+import { Cake, Calendar, Check, Copy, Link2, Trophy, Users, Vote } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
@@ -59,6 +59,12 @@ type TeamUniform = {
   uniformPattern: string | null;
 };
 
+type BirthdayMember = {
+  name: string;
+  birthDate: string;
+  profileImageUrl: string | null;
+};
+
 type DashboardData = {
   upcomingMatch: UpcomingMatch | null;
   recentResult: RecentResult | null;
@@ -66,6 +72,7 @@ type DashboardData = {
   tasks: string[];
   teamRecord: TeamRecord;
   teamUniform?: TeamUniform | null;
+  birthdayMembers?: BirthdayMember[];
 };
 
 const emptyData: DashboardData = {
@@ -220,7 +227,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
     return <CardSkeleton />;
   }
 
-  const { upcomingMatch, activeVotes, tasks, recentResult, teamRecord } = data;
+  const { upcomingMatch, activeVotes, tasks, recentResult, teamRecord, birthdayMembers } = data;
 
   // 낙관적 상태가 있으면 우선 사용
   const displayVote = optimisticVote !== undefined ? optimisticVote : upcomingMatch?.myVote;
@@ -325,6 +332,39 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* ── Birthday Card ── */}
+      {birthdayMembers && birthdayMembers.length > 0 && (
+        <div className="relative overflow-hidden rounded-2xl border border-[hsl(var(--accent))]/20 bg-gradient-to-r from-[hsl(var(--accent))]/5 via-primary/5 to-[hsl(var(--info))]/5">
+          {/* Confetti decoration */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+            <div className="absolute -top-1 left-[10%] h-2 w-2 rotate-45 rounded-sm bg-primary/20" />
+            <div className="absolute -top-0.5 left-[30%] h-1.5 w-1.5 rounded-full bg-[hsl(var(--accent))]/25" />
+            <div className="absolute top-1 right-[20%] h-2 w-2 rotate-12 rounded-sm bg-[hsl(var(--info))]/20" />
+            <div className="absolute top-2 right-[40%] h-1.5 w-1.5 rounded-full bg-primary/15" />
+            <div className="absolute bottom-1 left-[25%] h-1.5 w-1.5 rotate-45 rounded-sm bg-[hsl(var(--accent))]/20" />
+            <div className="absolute bottom-2 right-[15%] h-2 w-2 rounded-full bg-[hsl(var(--info))]/15" />
+          </div>
+
+          <div className="relative px-4 py-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-[hsl(var(--accent))]/20">
+                <Cake className="h-5 w-5 text-primary" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-foreground">
+                  {birthdayMembers.length === 1
+                    ? `${birthdayMembers[0].name}님, 생일 축하합니다!`
+                    : `${birthdayMembers.map((m) => m.name).join(", ")}님, 생일 축하합니다!`}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  오늘은 우리 팀원의 특별한 날이에요
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Hero: Next Match (full width) ── */}

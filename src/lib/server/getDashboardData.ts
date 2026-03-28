@@ -15,6 +15,12 @@ export type TeamUniformInfo = {
   uniformPattern: string | null;
 };
 
+export type BirthdayMember = {
+  name: string;
+  birthDate: string;
+  profileImageUrl: string | null;
+};
+
 export type DashboardData = {
   upcomingMatch: {
     id: string;
@@ -39,12 +45,13 @@ export type DashboardData = {
   tasks: string[];
   teamRecord: TeamRecord;
   teamUniform: TeamUniformInfo | null;
+  birthdayMembers: BirthdayMember[];
 };
 
 export async function getDashboardData(teamId: string, userId: string): Promise<DashboardData> {
   const db = getSupabaseAdmin();
   const emptyRecord: TeamRecord = { wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, recent5: [] };
-  if (!db) return { upcomingMatch: null, recentResult: null, activeVotes: [], tasks: [], teamRecord: emptyRecord, teamUniform: null };
+  if (!db) return { upcomingMatch: null, recentResult: null, activeVotes: [], tasks: [], teamRecord: emptyRecord, teamUniform: null, birthdayMembers: [] };
 
   const now = new Date().toISOString();
   const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
@@ -236,5 +243,29 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
       }
     : null;
 
-  return { upcomingMatch, recentResult, activeVotes, tasks, teamRecord, teamUniform };
+  // ── 오늘 생일인 팀원 조회 (KST 기준) ──
+  const todayMD = today.slice(5); // "MM-DD"
+  const { data: birthdayRows } = await db
+    .from("team_members")
+    .select("users(name, birth_date, profile_image_url)")
+    .eq("team_id", teamId)
+    .eq("status", "ACTIVE");
+
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const birthdayMembers: BirthdayMember[] = ((birthdayRows ?? []) as any[])
+    .filter((row: any) => {
+      const u = Array.isArray(row.users) ? row.users[0] : row.users;
+      const bd = u?.birth_date;
+      return bd && bd.slice(5) === todayMD;
+    })
+    .map((row: any) => {
+      const u = Array.isArray(row.users) ? row.users[0] : row.users;
+      return {
+        name: u.name,
+        birthDate: u.birth_date,
+        profileImageUrl: u.profile_image_url ?? null,
+      };
+    });
+
+  return { upcomingMatch, recentResult, activeVotes, tasks, teamRecord, teamUniform, birthdayMembers };
 }
