@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { isKakaoConfigured } from "@/lib/auth";
+import { getSupabaseServer } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import AppScreenSlider from "./AppScreenSlider";
@@ -35,8 +36,28 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ code?: string }>;
 }) {
+  const DEMO_TEAM_ID = "192127c0-e2be-46b4-b340-7583730467da";
+
   const { code: inviteCode } = await searchParams;
   const kakaoEnabled = isKakaoConfigured();
+
+  // 실시간 소셜프루프: 팀 수 + 회원 수 (데모 제외)
+  let teamCount = 42;
+  let memberCount = 180;
+  try {
+    const db = getSupabaseServer();
+    if (db) {
+      const [teamsRes, membersRes] = await Promise.all([
+        db.from("teams").select("id", { count: "exact", head: true }).neq("id", DEMO_TEAM_ID),
+        db.from("team_members").select("user_id", { count: "exact", head: true }).neq("team_id", DEMO_TEAM_ID).eq("status", "ACTIVE"),
+      ]);
+      if (teamsRes.count != null) teamCount = teamsRes.count;
+      if (membersRes.count != null) memberCount = membersRes.count;
+    }
+  } catch {
+    // fallback to default values
+  }
+
   const kakaoHref = inviteCode
     ? `/api/auth/kakao?inviteCode=${encodeURIComponent(inviteCode)}`
     : "/api/auth/kakao";
@@ -141,8 +162,8 @@ export default async function LoginPage({
           <div className="flex items-center justify-center gap-2 lg:justify-start">
             <span className="h-2 w-2 animate-pulse rounded-full bg-[hsl(var(--success))]" />
             <p className="text-sm font-semibold text-foreground/80">
-              <span className="text-[hsl(var(--success))]">42</span>개 팀 ·{" "}
-              <span className="text-[hsl(var(--success))]">180+</span> 회원 · 서비스 운영 중
+              <span className="text-[hsl(var(--success))]">{teamCount}</span>개 팀 ·{" "}
+              <span className="text-[hsl(var(--success))]">{memberCount}+</span> 회원 · 서비스 운영 중
             </p>
           </div>
         </div>
