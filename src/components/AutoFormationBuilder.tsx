@@ -916,10 +916,10 @@ export default function AutoFormationBuilder({
 
             {/* Player × quarter grid */}
             <div className="overflow-x-auto">
-              <div className="min-w-[320px]">
+              <div className="min-w-[280px]">
                 {/* Header row */}
                 <div className="flex items-center gap-1 px-1 pb-1">
-                  <span className="w-20 text-xs font-bold text-muted-foreground">
+                  <span className="w-16 text-xs font-bold text-muted-foreground">
                     선수
                   </span>
                   <span className="w-8 shrink-0 text-center text-xs font-bold text-muted-foreground">
@@ -955,7 +955,7 @@ export default function AutoFormationBuilder({
                         key={player.id}
                         className="flex items-center gap-1 px-1 py-0.5"
                       >
-                        <span className="w-20 truncate text-xs font-medium">
+                        <span className="w-16 truncate text-xs font-medium">
                           {player.name}
                         </span>
                         {/* 총 쿼터 수 */}

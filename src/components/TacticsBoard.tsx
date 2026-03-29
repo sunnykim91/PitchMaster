@@ -637,7 +637,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             {/* 풋살 인원 수 선택 */}
             {isFutsal && !readOnly && (
               <Select value={String(futsalFieldCount)} onValueChange={(v) => handleFutsalFieldCountChange(Number(v))}>
-                <SelectTrigger className="w-auto min-w-[90px] rounded-xl text-xs font-semibold">
+                <SelectTrigger className="w-auto min-w-[70px] rounded-xl text-xs font-semibold">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -656,7 +656,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             )}
             {!readOnly && (
               <Select value={formation.id} onValueChange={handleFormationChange}>
-                <SelectTrigger className="w-auto min-w-[140px] rounded-xl text-xs font-semibold">
+                <SelectTrigger className="w-auto min-w-[100px] rounded-xl text-xs font-semibold">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
