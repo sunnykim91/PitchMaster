@@ -270,8 +270,8 @@ export default function SettingsClient({
     <div className="grid gap-5 stagger-children">
       {/* ── Tab Bar (운영진 이상만 표시) ── */}
       {isStaff && (
-        <div className="sticky top-0 z-10 -mx-4 bg-background/95 backdrop-blur-sm border-b border-border/30 px-4">
-          <div role="tablist" aria-label="설정 탭" className="flex gap-1 overflow-x-auto scrollbar-hide py-2">
+        <div className="sticky top-0 z-10 -mx-1 px-1 bg-background/95 backdrop-blur-sm border-b border-border">
+          <div role="tablist" aria-label="설정 탭" className="flex">
             {tabItems.map((tab) => (
               <button
                 key={tab.key}
@@ -279,10 +279,10 @@ export default function SettingsClient({
                 aria-selected={activeTab === tab.key}
                 onClick={() => { setActiveTab(tab.key); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                 className={cn(
-                  "shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors cursor-pointer",
+                  "flex-1 py-3 text-sm font-medium transition-colors border-b-2",
                   activeTab === tab.key
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-secondary"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
                 )}
               >
                 {tab.label}
