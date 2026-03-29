@@ -165,7 +165,7 @@ function MatchVoteTabInner({
               <div className="flex gap-1">
                 {([{ v: "all" as const, l: "전체" }, { v: "unvoted" as const, l: "미투표" }]).map(({ v, l }) => (
                   <button key={v} type="button" onClick={() => setVoteFilter(v)}
-                    className={cn("rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                    className={cn("rounded-full px-3.5 py-2 text-xs font-medium transition-colors",
                       voteFilter === v ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:bg-secondary/80"
                     )}>
                     {l}{v === "unvoted" && noVote.length > 0 && (
@@ -186,7 +186,7 @@ function MatchVoteTabInner({
                   return (
                     <button key={key} type="button"
                       onClick={() => { const next = idx < 0 ? 1 : (idx + 1) % 3; setVoteSortBy(cycle[next] as typeof voteSortBy); }}
-                      className={cn("rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                      className={cn("rounded-full px-3.5 py-2 text-xs font-medium transition-colors",
                         isActive ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
                       )}>
                       {isActive ? labels[idx] : labels[0]}

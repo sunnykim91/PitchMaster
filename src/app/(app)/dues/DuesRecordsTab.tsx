@@ -330,7 +330,7 @@ function DuesRecordsTabInner({
           </div>
         </div>
 
-        <div className="mt-4 space-y-2">
+        <div className="mt-4 space-y-2.5">
           {filteredRecords.length === 0 ? (
             <EmptyState
               icon={ChevronRight}

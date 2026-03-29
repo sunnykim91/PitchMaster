@@ -422,14 +422,17 @@ export default function RecordsClient({
                   { label: "어시스트", value: myStats.assists, color: "text-[hsl(var(--info))]", bg: "bg-[hsl(var(--info)/0.1)]" },
                   { label: "MVP", value: myStats.mvp, color: "text-[hsl(var(--warning))]", bg: "bg-[hsl(var(--warning)/0.1)]" },
                   { label: "출석률", value: `${Math.round(myStats.attendanceRate * 100)}%`, color: "text-[hsl(var(--accent))]", bg: "bg-[hsl(var(--accent)/0.1)]" },
-                ].map((item) => (
-                  <div key={item.label} className={cn("card-stat", item.bg)}>
-                    <p className="type-overline">{item.label}</p>
-                    <p className={cn("mt-1 type-stat", item.color)}>
-                      {item.value}
-                    </p>
-                  </div>
-                ))}
+                ].map((item) => {
+                  const isEmpty = item.value === 0 || item.value === "0%";
+                  return (
+                    <div key={item.label} className={cn("card-stat", isEmpty ? "" : item.bg)}>
+                      <p className="type-overline">{item.label}</p>
+                      <p className={cn("mt-1 type-stat", isEmpty ? "text-muted-foreground/40" : item.color)}>
+                        {isEmpty ? "-" : item.value}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </CardContent>
@@ -592,7 +595,7 @@ export default function RecordsClient({
                     <div
                       key={s.memberId}
                       className={cn(
-                        "rounded-xl px-4 py-3 border border-border/20",
+                        "rounded-xl px-4 py-3 border border-border/40",
                         isMe && "bg-primary/8 border-primary/20"
                       )}
                     >

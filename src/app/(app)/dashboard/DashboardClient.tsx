@@ -592,7 +592,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
               tasks.map((task) => (
                 <Card key={task} className="border-0 bg-secondary hover:bg-secondary/70">
                   <CardContent className="flex items-center gap-3 p-3 text-sm text-foreground/80">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--accent))]" />
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-[hsl(var(--warning))]" />
                     {task}
                   </CardContent>
                 </Card>
