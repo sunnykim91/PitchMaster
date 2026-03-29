@@ -16,6 +16,7 @@ import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import TeamLogo from "@/components/TeamLogo";
 import { initInstallPromptCapture, triggerInstall, getInstallPrompt, detectInstallMode, onPromptChange, type InstallMode } from "@/lib/pwaInstall";
 
 type ClientLayoutProps = {
@@ -219,11 +220,12 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
         <div className="relative" data-team-menu>
           <button
             type="button"
-            className="flex items-center gap-1 font-heading text-xl font-bold uppercase hover:text-primary transition-colors"
+            className="flex items-center gap-1.5 font-heading text-xl font-bold uppercase hover:text-primary transition-colors"
             onClick={() => setTeamMenuOpen(!teamMenuOpen)}
             aria-expanded={teamMenuOpen}
             aria-haspopup="listbox"
           >
+            <TeamLogo logoUrl={session.user.teamLogoUrl} teamName={session.user.teamName ?? "T"} size="sm" />
             {session.user.teamName}
             {(() => {
               const current = teams.find((t) => t.isCurrent);
@@ -338,7 +340,8 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             <CardContent className="flex items-center justify-between p-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">PitchMaster</p>
-                <p className="text-lg font-bold flex items-center gap-1">
+                <p className="text-lg font-bold flex items-center gap-1.5">
+                  <TeamLogo logoUrl={session.user.teamLogoUrl} teamName={session.user.teamName ?? "T"} size="sm" />
                   {session.user.teamName}
                   {(() => {
                     const current = teams.find((t) => t.isCurrent);

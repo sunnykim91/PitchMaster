@@ -142,6 +142,7 @@ export type SessionUser = {
   teamName?: string;
   teamRole?: Role;
   inviteCode?: string;
+  teamLogoUrl?: string | null;
   isDemo?: boolean;
 };
 

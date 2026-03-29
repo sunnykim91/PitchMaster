@@ -103,10 +103,12 @@ function MatchRecordTabInner({
     const quarterRaw = Number(formData.get("quarter") ?? 1);
     const quarter = quarterRaw || 0;
     const minute = 0;
-    let isOwnGoal = Boolean(formData.get("isOwnGoal"));
+    let goalType = String(formData.get("goalType") || "NORMAL");
+    let isOwnGoal = goalType === "OWN_GOAL";
 
     if (scorerId === "OWN_GOAL") {
       isOwnGoal = true;
+      goalType = "OWN_GOAL";
       scorerId = "UNKNOWN";
     }
     if (!scorerId) {
@@ -128,6 +130,7 @@ function MatchRecordTabInner({
         quarter,
         minute,
         isOwnGoal,
+        goalType,
         side,
       });
       setEditingGoalId(null);
@@ -141,6 +144,7 @@ function MatchRecordTabInner({
         quarter,
         minute,
         isOwnGoal,
+        goalType,
         side,
       });
       if (err) { showToast("기록 추가에 실패했습니다.", "error"); return; }
@@ -165,6 +169,8 @@ function MatchRecordTabInner({
       if (assistSelect) assistSelect.value = goal.assistId ?? "";
       if (quarterInput) quarterInput.value = String(goal.quarter);
       if (ownGoalInput) ownGoalInput.checked = !!goal.isOwnGoal;
+      const goalTypeSelect = form.elements.namedItem("goalType") as HTMLSelectElement;
+      if (goalTypeSelect) goalTypeSelect.value = goal.goalType ?? "NORMAL";
       const quarterBtns = quarterInput?.parentElement?.querySelectorAll("button");
       quarterBtns?.forEach((btn) => {
         btn.classList.remove("bg-primary", "text-white");
@@ -416,6 +422,19 @@ function MatchRecordTabInner({
                     </div>
                   </div>
 
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground">
+                      골 유형
+                    </Label>
+                    <NativeSelect name="goalType" defaultValue="NORMAL">
+                      <option value="NORMAL">일반</option>
+                      <option value="PK">PK (페널티킥)</option>
+                      <option value="FK">FK (프리킥)</option>
+                      <option value="HEADER">헤딩</option>
+                      <option value="OWN_GOAL">자책골</option>
+                    </NativeSelect>
+                  </div>
+
                   <div className="mt-3 space-y-1">
                     <Label className="text-xs font-semibold text-muted-foreground">쿼터 (선택사항)</Label>
                     <div className="flex flex-wrap gap-1">
@@ -492,7 +511,10 @@ function MatchRecordTabInner({
                       <p className="text-sm font-semibold truncate">
                         {label}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
+                        {goal.goalType && goal.goalType !== "NORMAL" && goal.goalType !== "OWN_GOAL" && (
+                          <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">{goal.goalType}</span>
+                        )}
                         {goal.quarter > 0 ? `Q${goal.quarter}` : ""}
                         {goal.assistId
                           ? `${goal.quarter > 0 ? " · " : ""}A: ${resolvePlayerName(goal.assistId)}`

@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await db
     .from("match_goals")
-    .select("id, match_id, quarter_number, minute, scorer_id, assist_id, is_own_goal, recorded_by, side")
+    .select("id, match_id, quarter_number, minute, scorer_id, assist_id, is_own_goal, goal_type, recorded_by, side")
     .eq("match_id", matchId)
     .order("quarter_number")
     .order("minute");
@@ -39,6 +39,9 @@ export async function POST(request: NextRequest) {
   const { data: matchCheck } = await db.from("matches").select("id").eq("id", body.matchId).eq("team_id", ctx.teamId).single();
   if (!matchCheck) return apiError("Match not found", 404);
 
+  const goalType = body.goalType ?? "NORMAL";
+  const isOwnGoal = goalType === "OWN_GOAL" || (body.isOwnGoal ?? false);
+
   const { data, error } = await db
     .from("match_goals")
     .insert({
@@ -47,7 +50,8 @@ export async function POST(request: NextRequest) {
       minute: body.minute ?? null,
       scorer_id: body.scorerId,
       assist_id: body.assistId || null,
-      is_own_goal: body.isOwnGoal ?? false,
+      is_own_goal: isOwnGoal,
+      goal_type: goalType,
       side: body.side ?? null,
       recorded_by: ctx.userId,
     })
@@ -77,6 +81,9 @@ export async function PUT(request: NextRequest) {
     .single();
   if (!goalCheck) return apiError("Match not found", 404);
 
+  const updGoalType = body.goalType ?? "NORMAL";
+  const updIsOwnGoal = updGoalType === "OWN_GOAL" || (body.isOwnGoal ?? false);
+
   const { data, error } = await db
     .from("match_goals")
     .update({
@@ -84,7 +91,8 @@ export async function PUT(request: NextRequest) {
       minute: body.minute ?? null,
       scorer_id: body.scorerId,
       assist_id: body.assistId || null,
-      is_own_goal: body.isOwnGoal ?? false,
+      is_own_goal: updIsOwnGoal,
+      goal_type: updGoalType,
       side: body.side ?? null,
     })
     .eq("id", body.id)

@@ -21,6 +21,16 @@ export type MatchRow = {
   vote_deadline?: string | null;
 };
 
+export type GoalType = "NORMAL" | "PK" | "FK" | "HEADER" | "OWN_GOAL";
+
+export const GOAL_TYPES: { value: GoalType; label: string }[] = [
+  { value: "NORMAL", label: "일반" },
+  { value: "PK", label: "PK" },
+  { value: "FK", label: "FK" },
+  { value: "HEADER", label: "헤딩" },
+  { value: "OWN_GOAL", label: "자책골" },
+];
+
 export type GoalRow = {
   id: string;
   match_id: string;
@@ -29,6 +39,7 @@ export type GoalRow = {
   scorer_id: string;
   assist_id: string | null;
   is_own_goal: boolean;
+  goal_type?: string;
   recorded_by: string;
   side?: "A" | "B" | null;
 };
@@ -112,6 +123,7 @@ export type GoalEvent = {
   quarter: number;
   minute: number;
   isOwnGoal?: boolean;
+  goalType: GoalType;
   side?: "A" | "B" | null;
 };
 
@@ -213,6 +225,7 @@ export function mapGoal(row: GoalRow): GoalEvent {
     quarter: row.quarter_number,
     minute: row.minute ?? 0,
     isOwnGoal: row.is_own_goal,
+    goalType: (row.goal_type as GoalType) ?? "NORMAL",
     side: row.side ?? null,
   };
 }

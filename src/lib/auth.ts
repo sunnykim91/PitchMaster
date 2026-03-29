@@ -113,13 +113,13 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
     // Load team memberships (여러 팀 가능 — 첫 번째를 활성 팀으로)
     const { data: memberships } = await db
       .from("team_members")
-      .select("team_id, role, teams(id, name, invite_code)")
+      .select("team_id, role, teams(id, name, invite_code, logo_url)")
       .eq("user_id", existing.id)
       .eq("status", "ACTIVE")
       .order("joined_at", { ascending: true });
 
     const firstMembership = memberships?.[0];
-    const team = firstMembership?.teams as { id: string; name: string; invite_code: string } | undefined;
+    const team = firstMembership?.teams as { id: string; name: string; invite_code: string; logo_url: string | null } | undefined;
 
     return {
       user: {
@@ -135,6 +135,7 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
         teamName: team?.name,
         teamRole: firstMembership?.role,
         inviteCode: team?.invite_code,
+        teamLogoUrl: team?.logo_url ?? null,
       },
     };
   }

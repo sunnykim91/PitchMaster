@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { apiMutate } from "@/lib/useApi";
 import { isPresident, isStaffOrAbove } from "@/lib/permissions";
@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
+import TeamLogo from "@/components/TeamLogo";
+import { Camera, X } from "lucide-react";
 
 type TeamSettingsData = {
   teamName: string;
@@ -231,12 +233,13 @@ function TeamSettingsComponent({
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold text-muted-foreground">팀 로고 URL</Label>
-              <Input
-                value={team.logoUrl}
-                onChange={(event) => setTeam({ ...team, logoUrl: event.target.value })}
-                placeholder="https://..."
+              <Label className="text-sm font-semibold text-muted-foreground">팀 로고</Label>
+              <LogoUpload
+                logoUrl={team.logoUrl}
+                teamName={team.teamName}
                 disabled={!canEditTeam}
+                onUploaded={(url) => setTeam({ ...team, logoUrl: url })}
+                onRemove={() => setTeam({ ...team, logoUrl: "" })}
               />
             </div>
 
@@ -477,3 +480,85 @@ function TeamSettingsComponent({
 }
 
 export const TeamSettings = memo(TeamSettingsComponent);
+
+/* ── LogoUpload sub-component ── */
+
+function LogoUpload({
+  logoUrl,
+  teamName,
+  disabled,
+  onUploaded,
+  onRemove,
+}: {
+  logoUrl: string;
+  teamName: string;
+  disabled: boolean;
+  onUploaded: (url: string) => void;
+  onRemove: () => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert("2MB 이하의 이미지만 업로드 가능합니다.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd, credentials: "include" });
+      const json = await res.json();
+      if (json.url) onUploaded(json.url);
+    } catch {
+      alert("업로드에 실패했습니다.");
+    }
+    setUploading(false);
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
+  return (
+    <div className="flex items-center gap-4">
+      <TeamLogo logoUrl={logoUrl || null} teamName={teamName} size="lg" />
+      <div className="flex flex-col gap-1.5">
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={handleFile}
+          disabled={disabled}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={disabled || uploading}
+          onClick={() => fileRef.current?.click()}
+          className="gap-1.5"
+        >
+          <Camera className="h-3.5 w-3.5" />
+          {uploading ? "업로드 중..." : "로고 변경"}
+        </Button>
+        {logoUrl && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={disabled}
+            onClick={onRemove}
+            className="gap-1.5 text-muted-foreground hover:text-destructive"
+          >
+            <X className="h-3.5 w-3.5" />
+            로고 삭제
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
