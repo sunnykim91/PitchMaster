@@ -17,7 +17,7 @@
   .sticky-nav { position: sticky; top: 0; z-index: 50; background: var(--bg)/95; backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
   .sticky-nav-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center; gap: 4px; padding: 8px 16px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .sticky-nav-inner::-webkit-scrollbar { display: none; }
-  .nav-pill { flex-shrink: 0; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--muted); text-decoration: none; transition: all 0.2s; white-space: nowrap; border: 1px solid transparent; }
+  .nav-pill { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; color: var(--muted); text-decoration: none; transition: all 0.2s; white-space: nowrap; border: 1px solid transparent; }
   .nav-pill:hover { color: var(--text); background: var(--card); text-decoration: none; }
   .nav-pill.active { color: var(--primary); background: #e8613a18; border-color: #e8613a40; }
 
@@ -37,7 +37,7 @@
   .toc-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
   .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   @media (min-width: 520px) { .toc-grid { grid-template-columns: 1fr 1fr 1fr; } }
-  .toc-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; background: var(--card); border: 1px solid var(--border); text-decoration: none; color: var(--text); font-size: 13px; font-weight: 600; transition: all 0.15s; }
+  .toc-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 10px; background: var(--card); border: 1px solid var(--border); text-decoration: none; color: var(--text); font-size: 14px; font-weight: 600; transition: all 0.15s; }
   .toc-item:hover { border-color: var(--primary); background: #e8613a0a; text-decoration: none; }
   .toc-item .toc-icon { font-size: 16px; flex-shrink: 0; width: 20px; text-align: center; }
   .toc-item .toc-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -112,12 +112,8 @@
 <nav class="sticky-nav" id="stickyNav">
   <div class="sticky-nav-inner" id="navInner">
     <a href="#start" class="nav-pill active" data-section="start">시작하기</a>
-    <a href="#team" class="nav-pill" data-section="team">팀 초대</a>
     <a href="#match-flow" class="nav-pill" data-section="match-flow">경기 운영</a>
-    <a href="#vote" class="nav-pill" data-section="vote">투표</a>
-    <a href="#dues" class="nav-pill" data-section="dues">회비</a>
-    <a href="#lineup" class="nav-pill" data-section="lineup">라인업</a>
-    <a href="#record" class="nav-pill" data-section="record">기록</a>
+    <a href="#vote" class="nav-pill" data-section="vote">핵심 기능</a>
     <a href="#more" class="nav-pill" data-section="more">더보기</a>
     <a href="#pwa" class="nav-pill" data-section="pwa">설치</a>
     <a href="#faq" class="nav-pill" data-section="faq">FAQ</a>
@@ -140,13 +136,10 @@
   <div class="toc">
     <div class="toc-title">바로가기</div>
     <div class="toc-grid">
-      <a href="#start" class="toc-item"><span class="toc-icon">👤</span><span class="toc-label">가입하기</span></a>
-      <a href="#team" class="toc-item"><span class="toc-icon">👥</span><span class="toc-label">팀 만들기 & 초대</span></a>
-      <a href="#match-flow" class="toc-item"><span class="toc-icon">⚽</span><span class="toc-label">경기 운영 흐름</span></a>
-      <a href="#vote" class="toc-item"><span class="toc-icon">🗳️</span><span class="toc-label">참석 투표</span></a>
-      <a href="#dues" class="toc-item"><span class="toc-icon">💰</span><span class="toc-label">회비 관리</span></a>
-      <a href="#lineup" class="toc-item"><span class="toc-icon">📋</span><span class="toc-label">스마트 라인업</span></a>
-      <a href="#record" class="toc-item"><span class="toc-icon">📊</span><span class="toc-label">기록 & 통계</span></a>
+      <a href="#start" class="toc-item"><span class="toc-icon">👤</span><span class="toc-label">가입 & 초대</span></a>
+      <a href="#match-flow" class="toc-item"><span class="toc-icon">⚽</span><span class="toc-label">경기 운영</span></a>
+      <a href="#vote" class="toc-item"><span class="toc-icon">🗳️</span><span class="toc-label">투표 · 회비 · 라인업</span></a>
+      <a href="#more" class="toc-item"><span class="toc-icon">📋</span><span class="toc-label">기타 기능</span></a>
       <a href="#pwa" class="toc-item"><span class="toc-icon">📱</span><span class="toc-label">홈 화면 추가</span></a>
       <a href="#faq" class="toc-item"><span class="toc-icon">❓</span><span class="toc-label">자주 묻는 질문</span></a>
     </div>

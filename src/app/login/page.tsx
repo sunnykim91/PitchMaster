@@ -159,11 +159,11 @@ export default async function LoginPage({
             </p>
           </div>
 
-          <div className="flex items-center justify-center gap-2 lg:justify-start">
+          <div className="flex items-center justify-center gap-2.5 rounded-full border border-[hsl(var(--success))]/20 bg-[hsl(var(--success))]/5 px-4 py-2 lg:justify-start lg:self-start">
             <span className="h-2 w-2 animate-pulse rounded-full bg-[hsl(var(--success))]" />
-            <p className="text-sm font-semibold text-foreground/80">
+            <p className="text-sm font-bold text-foreground">
               <span className="text-[hsl(var(--success))]">{teamCount}</span>개 팀 ·{" "}
-              <span className="text-[hsl(var(--success))]">{memberCount}+</span> 회원 · 서비스 운영 중
+              <span className="text-[hsl(var(--success))]">{memberCount}+</span> 회원이 사용 중
             </p>
           </div>
         </div>

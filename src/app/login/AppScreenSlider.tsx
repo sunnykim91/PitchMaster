@@ -44,8 +44,8 @@ export default function AppScreenSlider() {
         {/* Notch */}
         <div className="absolute left-1/2 top-0 z-10 h-5 w-24 -translate-x-1/2 rounded-b-2xl bg-background" />
 
-        {/* Screen — fixed aspect ratio, crop from top */}
-        <div className="relative overflow-hidden rounded-[1.4rem] bg-card" style={{ aspectRatio: "9 / 17" }}>
+        {/* Screen — iPhone 비율, 상단부터 크롭 */}
+        <div className="relative overflow-hidden rounded-[1.4rem] bg-card" style={{ aspectRatio: "9 / 19" }}>
           {/* Preload all images (hidden), show current */}
           {screens.map((s, i) => (
             <Image

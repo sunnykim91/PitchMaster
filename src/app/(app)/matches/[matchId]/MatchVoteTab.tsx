@@ -127,6 +127,18 @@ function MatchVoteTabInner({
       {/* ── 투표 현황 요약 ── */}
       <Card>
         <CardContent className="p-4">
+          {/* 프로그레스 바 */}
+          {(() => {
+            const voted = attend.length + absent.length + maybe.length;
+            const total = voted || 1;
+            return (
+              <div className="mb-3 flex h-2 overflow-hidden rounded-full bg-secondary/50">
+                <div className="bg-[hsl(var(--success))] transition-all duration-500" style={{ width: `${(attend.length / total) * 100}%` }} />
+                <div className="bg-[hsl(var(--loss))] transition-all duration-500" style={{ width: `${(absent.length / total) * 100}%` }} />
+                <div className="bg-[hsl(var(--warning))] transition-all duration-500" style={{ width: `${(maybe.length / total) * 100}%` }} />
+              </div>
+            );
+          })()}
           <div className="flex flex-wrap gap-3 text-sm font-semibold">
             <span className="text-[hsl(var(--success))]">참석 {attend.length}</span>
             <span className="text-[hsl(var(--loss))]">불참 {absent.length}</span>
