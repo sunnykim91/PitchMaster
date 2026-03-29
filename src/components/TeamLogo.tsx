@@ -3,7 +3,7 @@ import Image from "next/image";
 type Size = "sm" | "md" | "lg";
 
 const sizeMap: Record<Size, { px: number; text: string }> = {
-  sm: { px: 24, text: "text-[10px]" },
+  sm: { px: 24, text: "text-xs" },
   md: { px: 36, text: "text-sm" },
   lg: { px: 56, text: "text-xl" },
 };

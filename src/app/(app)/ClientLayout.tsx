@@ -365,7 +365,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                     <Button variant="ghost" size="icon" aria-label="알림" className="relative">
                       <Bell className="h-4 w-4" />
                       {unreadCount > 0 && (
-                        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[hsl(var(--loss))] px-1 text-[10px] font-bold text-white">
+                        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[hsl(var(--loss))] px-1 text-xs font-bold text-white">
                           {unreadCount > 9 ? "9+" : unreadCount}
                         </span>
                       )}

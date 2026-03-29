@@ -150,7 +150,7 @@ export default function AdminClient() {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold flex items-center gap-2">
+          <h1 className="font-heading text-lg sm:text-2xl font-bold uppercase flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
             관리자 대시보드
           </h1>
@@ -170,7 +170,7 @@ export default function AdminClient() {
     <div className="space-y-4">
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold flex items-center gap-2">
+        <h1 className="font-heading text-lg sm:text-2xl font-bold uppercase flex items-center gap-2">
           <Shield className="h-5 w-5 text-primary" />
           관리자 대시보드
         </h1>
@@ -303,13 +303,13 @@ export default function AdminClient() {
                         {team.name === DEMO_TEAM_NAME && (
                           <Badge
                             variant="outline"
-                            className="text-[10px] px-1.5 py-0"
+                            className="text-xs px-1.5 py-0"
                           >
                             데모
                           </Badge>
                         )}
                         {team.pendingRequests > 0 && (
-                          <Badge variant="warning" className="text-[10px] px-1.5 py-0">
+                          <Badge variant="warning" className="text-xs px-1.5 py-0">
                             가입 {team.pendingRequests}
                           </Badge>
                         )}

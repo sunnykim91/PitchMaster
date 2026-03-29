@@ -401,7 +401,7 @@ export default function BoardClient({
     <div className="space-y-4">
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">게시판</h1>
+        <h1 className="font-heading text-lg sm:text-2xl font-bold uppercase">게시판</h1>
         <Button
           size="sm"
           className="rounded-full gap-1.5"

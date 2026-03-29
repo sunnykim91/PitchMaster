@@ -611,7 +611,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     <div className="mt-1 flex items-center gap-1.5">
                       <div
                         className="h-3 w-3 rounded-full border border-border/60 shrink-0"
-                        style={{ backgroundColor: teamUniform ? (match.uniformType === "HOME" ? teamUniform.primary ?? "#2563eb" : teamUniform.secondary ?? "#f97316") : (match.uniformType === "HOME" ? "#2563eb" : "#f97316") }}
+                        style={{ backgroundColor: teamUniform ? (match.uniformType === "HOME" ? teamUniform.primary ?? "hsl(var(--primary))" : teamUniform.secondary ?? "hsl(var(--muted-foreground))") : (match.uniformType === "HOME" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))") }}
                       />
                       <span className="text-xs text-muted-foreground">
                         {match.uniformType === "HOME" ? "홈" : "원정"} 유니폼

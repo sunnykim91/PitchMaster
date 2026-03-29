@@ -603,11 +603,11 @@ export default function RecordsClient({
                             {i + 1}
                           </span>
                           {s.jerseyNumber !== null && (
-                            <span className="shrink-0 rounded bg-primary/10 px-1 py-0.5 text-[10px] font-bold text-primary">#{s.jerseyNumber}</span>
+                            <span className="shrink-0 rounded bg-primary/10 px-1 py-0.5 text-xs font-bold text-primary">#{s.jerseyNumber}</span>
                           )}
                           <span className="font-semibold text-sm truncate">{s.memberName || "-"}</span>
-                          {s.teamRole === "CAPTAIN" && <Badge variant="warning" className="text-[9px] px-1 py-0 shrink-0">C</Badge>}
-                          {s.teamRole === "VICE_CAPTAIN" && <Badge variant="secondary" className="text-[9px] px-1 py-0 shrink-0">VC</Badge>}
+                          {s.teamRole === "CAPTAIN" && <Badge variant="warning" className="text-xs px-1 py-0 shrink-0">C</Badge>}
+                          {s.teamRole === "VICE_CAPTAIN" && <Badge variant="secondary" className="text-xs px-1 py-0 shrink-0">VC</Badge>}
                         </div>
                         <span className="text-sm font-bold text-primary shrink-0">G+A {s.points}</span>
                       </div>
@@ -684,10 +684,10 @@ export default function RecordsClient({
                             <td className={cn("sticky left-0 z-1 py-2.5", stickyBg, isTop3 ? "text-primary font-bold" : "text-muted-foreground")}>{i + 1}</td>
                             <td className={cn("sticky left-8 z-1 py-2.5 font-semibold max-w-[120px] truncate", stickyBg)}>
                               <span className="flex items-center gap-1">
-                                {s.jerseyNumber !== null && <span className="text-[10px] text-primary font-bold">#{s.jerseyNumber}</span>}
+                                {s.jerseyNumber !== null && <span className="text-xs text-primary font-bold">#{s.jerseyNumber}</span>}
                                 {s.memberName || "-"}
-                                {s.teamRole === "CAPTAIN" && <Badge variant="warning" className="text-[9px] px-1 py-0">C</Badge>}
-                                {s.teamRole === "VICE_CAPTAIN" && <Badge variant="secondary" className="text-[9px] px-1 py-0">VC</Badge>}
+                                {s.teamRole === "CAPTAIN" && <Badge variant="warning" className="text-xs px-1 py-0">C</Badge>}
+                                {s.teamRole === "VICE_CAPTAIN" && <Badge variant="secondary" className="text-xs px-1 py-0">VC</Badge>}
                               </span>
                             </td>
                             <td className="py-2.5 text-center font-bold text-primary">{s.points}</td>

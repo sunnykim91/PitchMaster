@@ -104,8 +104,8 @@ function MatchInfoTabInner({
   const isInternal = match.matchType === "INTERNAL";
 
   /* ── 유니폼 스타일 ── */
-  const uniformPrimary = _uniformPrimary ?? "#2563eb";
-  const uniformSecondary = _uniformSecondary ?? "#f97316";
+  const uniformPrimary = _uniformPrimary ?? "hsl(var(--primary))";
+  const uniformSecondary = _uniformSecondary ?? "hsl(var(--muted-foreground))";
   const uniformPattern = _uniformPattern ?? "SOLID";
 
   const homeJerseyStyle = useMemo(

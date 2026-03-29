@@ -513,7 +513,7 @@ function MatchRecordTabInner({
                       </p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
                         {goal.goalType && goal.goalType !== "NORMAL" && goal.goalType !== "OWN_GOAL" && (
-                          <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">{goal.goalType}</span>
+                          <span className="rounded bg-primary/15 px-1.5 py-0.5 text-xs font-bold text-primary">{goal.goalType}</span>
                         )}
                         {goal.quarter > 0 ? `Q${goal.quarter}` : ""}
                         {goal.assistId

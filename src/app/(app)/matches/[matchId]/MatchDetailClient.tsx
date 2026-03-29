@@ -131,8 +131,8 @@ export default function MatchDetailClient({
   } = useApi<{ team: { sport_type?: SportType; player_count?: number; uniform_primary?: string; uniform_secondary?: string; uniform_pattern?: string } }>("/api/teams", initialData?.team ?? { team: {} }, { skip: !!initialData?.team });
 
   const sportType: SportType = teamData.team?.sport_type ?? "SOCCER";
-  const uniformPrimary = teamData.team?.uniform_primary ?? "#2563eb";
-  const uniformSecondary = teamData.team?.uniform_secondary ?? "#f97316";
+  const uniformPrimary = teamData.team?.uniform_primary ?? "hsl(var(--primary))";
+  const uniformSecondary = teamData.team?.uniform_secondary ?? "hsl(var(--muted-foreground))";
   const uniformPattern = teamData.team?.uniform_pattern ?? "SOLID";
 
   const {

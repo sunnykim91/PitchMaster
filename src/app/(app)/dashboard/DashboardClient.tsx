@@ -637,7 +637,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                     ].map((stat) => (
                       <div key={stat.label} className="card-stat flex flex-col items-center justify-center">
                         <div className={`text-base sm:text-lg font-bold font-[family-name:var(--font-display)] whitespace-nowrap ${stat.color}`}>{stat.value}</div>
-                        <div className="text-[11px] sm:text-xs font-semibold text-muted-foreground mt-0.5 whitespace-nowrap">{stat.label}</div>
+                        <div className="text-xs sm:text-xs font-semibold text-muted-foreground mt-0.5 whitespace-nowrap">{stat.label}</div>
                       </div>
                     ))}
                   </div>

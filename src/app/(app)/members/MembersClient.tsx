@@ -645,10 +645,10 @@ export default function MembersClient({
                       )}
                       <span className="truncate">{member.name}</span>
                       {member.teamRole === "CAPTAIN" && (
-                        <Badge variant="warning" className="text-[10px] px-1.5 py-0 shrink-0">주장</Badge>
+                        <Badge variant="warning" className="text-xs px-1.5 py-0 shrink-0">주장</Badge>
                       )}
                       {member.teamRole === "VICE_CAPTAIN" && (
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">부주장</Badge>
+                        <Badge variant="secondary" className="text-xs px-1.5 py-0 shrink-0">부주장</Badge>
                       )}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground truncate">

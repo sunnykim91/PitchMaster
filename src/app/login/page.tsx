@@ -293,7 +293,7 @@ export default async function LoginPage({
                     </div>
                     <div className="mt-2 flex items-center gap-2">
                       <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-                      <p className="text-[10px] text-primary">실시간 동기화 중</p>
+                      <p className="text-xs text-primary">실시간 동기화 중</p>
                     </div>
                   </div>
                 ),
@@ -314,7 +314,7 @@ export default async function LoginPage({
                         { date: "10/23", name: "박지훈", amount: "30,000" },
                       ].map((t, i) => (
                         <div key={i} className="flex items-center justify-between border-t border-foreground/5 px-3 py-2 first:border-t-0">
-                          <span className="text-[11px] text-foreground/60">{t.date} {t.name}</span>
+                          <span className="text-xs text-foreground/60">{t.date} {t.name}</span>
                           <span className="text-xs font-bold text-[hsl(var(--info))]">{t.amount}</span>
                         </div>
                       ))}
