@@ -368,7 +368,7 @@ function DuesRecordsTabInner({
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {record.recordedAt.slice(0, 10)}
-                    {record.memberName ? ` · ${record.memberName}` : ""}
+                    {record.memberName ? <> · <span className="font-semibold text-foreground/80">{record.memberName}</span></> : ""}
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">

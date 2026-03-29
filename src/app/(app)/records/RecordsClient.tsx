@@ -522,16 +522,15 @@ export default function RecordsClient({
                         className="flex items-center justify-between text-sm text-muted-foreground"
                       >
                         <span className="flex items-center gap-2 min-w-0">
-                          {index === 0 ? (
-                            <Badge variant="success" className="h-5 w-5 shrink-0 justify-center rounded-md px-0 py-0">
-                              {index + 1}
-                            </Badge>
-                          ) : (
-                            <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-secondary text-xs font-bold text-muted-foreground">
-                              {index + 1}
-                            </span>
-                          )}
-                          <span className="truncate">{item.memberName ?? "-"}</span>
+                          <span className={cn(
+                            "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-xs font-bold",
+                            index === 0 ? "bg-[hsl(var(--warning))]/20 text-[hsl(var(--warning))]"
+                              : index === 1 ? "bg-secondary text-foreground/60"
+                              : "bg-secondary text-muted-foreground"
+                          )}>
+                            {index + 1}
+                          </span>
+                          <span className={cn("truncate", index === 0 && "font-bold text-foreground")}>{item.memberName ?? "-"}</span>
                         </span>
                         <span className="shrink-0 text-lg font-bold font-[family-name:var(--font-display)] text-foreground">
                           {item[group.key]}

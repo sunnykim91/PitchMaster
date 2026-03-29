@@ -45,12 +45,12 @@ export default function PlayerRadarChart({
   ];
 
   return (
-    <ResponsiveContainer width="100%" height={220}>
-      <RadarChart data={data} cx="50%" cy="50%" outerRadius="72%">
+    <ResponsiveContainer width="100%" height={240}>
+      <RadarChart data={data} cx="50%" cy="50%" outerRadius="68%">
         <PolarGrid stroke="#334155" />
         <PolarAngleAxis
           dataKey="stat"
-          tick={{ fill: "#94a3b8", fontSize: 11 }}
+          tick={{ fill: "#94a3b8", fontSize: 13, fontWeight: 600 }}
         />
         <Radar
           dataKey="value"

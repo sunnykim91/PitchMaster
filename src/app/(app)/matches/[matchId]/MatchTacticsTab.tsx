@@ -331,16 +331,15 @@ function MatchTacticsTabInner({
         const rec = recommendFormation(aiPlayers, Math.min(filteredAttending.length, maxPlayers), sportType);
         if (!rec) return null;
         return (
-          <Card className="border-primary/20 bg-primary/5">
-            <CardHeader>
-              <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">
-                AI Recommendation
-              </p>
-              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
-                AI 포메이션 추천
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <details className="rounded-xl border border-primary/20 bg-primary/5 overflow-hidden">
+            <summary className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-primary/8 transition-colors">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">AI Recommendation</p>
+                <p className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">AI 포메이션 추천</p>
+              </div>
+              <span className="text-muted-foreground text-xs">▼</span>
+            </summary>
+            <div className="px-6 pb-5">
               <p className="text-sm text-foreground/80">{rec.reason}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {rec.formation.slots.map((slot) => {
@@ -390,8 +389,8 @@ function MatchTacticsTabInner({
               >
                 AI 추천 적용하기
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </details>
         );
       })()}
 
