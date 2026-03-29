@@ -340,7 +340,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
 
       {/* ── Birthday Card ── */}
       {birthdayMembers && birthdayMembers.length > 0 && (
-        <div className="relative overflow-hidden rounded-2xl border border-[hsl(var(--accent))]/20 bg-gradient-to-r from-[hsl(var(--accent))]/5 via-primary/5 to-[hsl(var(--info))]/5">
+        <div className="relative overflow-hidden rounded-xl border border-[hsl(var(--accent))]/20 bg-gradient-to-r from-[hsl(var(--accent))]/5 via-primary/5 to-[hsl(var(--info))]/5">
           {/* Confetti decoration */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
             <div className="absolute -top-1 left-[10%] h-2 w-2 rotate-45 rounded-sm bg-primary/20" />
