@@ -238,8 +238,14 @@ function TeamSettingsComponent({
                 logoUrl={team.logoUrl}
                 teamName={team.teamName}
                 disabled={!canEditTeam}
-                onUploaded={(url) => setTeam({ ...team, logoUrl: url })}
-                onRemove={() => setTeam({ ...team, logoUrl: "" })}
+                onSaved={async (url) => {
+                  setTeam({ ...team, logoUrl: url });
+                  await apiMutate("/api/teams", "PUT", { logoUrl: url });
+                  teamSyncedRef.current = false;
+                  await refetchTeam();
+                  // 세션 갱신을 위해 router.refresh (서버 컴포넌트 재실행)
+                  window.location.reload();
+                }}
               />
             </div>
 
@@ -481,45 +487,129 @@ function TeamSettingsComponent({
 
 export const TeamSettings = memo(TeamSettingsComponent);
 
-/* ── LogoUpload sub-component ── */
+/* ── LogoUpload sub-component (with crop) ── */
+
+import Cropper from "react-easy-crop";
+import type { Area } from "react-easy-crop";
+
+/** canvas에서 크롭된 이미지를 Blob으로 추출 */
+async function getCroppedBlob(src: string, crop: Area): Promise<Blob> {
+  const img = new window.Image();
+  img.crossOrigin = "anonymous";
+  await new Promise<void>((resolve, reject) => { img.onload = () => resolve(); img.onerror = reject; img.src = src; });
+  const canvas = document.createElement("canvas");
+  const size = 512; // 정사각형 512px
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(img, crop.x, crop.y, crop.width, crop.height, 0, 0, size, size);
+  return new Promise((resolve) => canvas.toBlob((b) => resolve(b!), "image/webp", 0.85));
+}
 
 function LogoUpload({
   logoUrl,
   teamName,
   disabled,
-  onUploaded,
-  onRemove,
+  onSaved,
 }: {
   logoUrl: string;
   teamName: string;
   disabled: boolean;
-  onUploaded: (url: string) => void;
-  onRemove: () => void;
+  onSaved: (url: string) => Promise<void>;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  // 크롭 상태
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedArea, setCroppedArea] = useState<Area | null>(null);
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (file.size > 2 * 1024 * 1024) {
-      alert("2MB 이하의 이미지만 업로드 가능합니다.");
+    if (file.size > 5 * 1024 * 1024) {
+      alert("5MB 이하의 이미지만 업로드 가능합니다.");
       return;
     }
+    const reader = new FileReader();
+    reader.onload = () => setImageSrc(reader.result as string);
+    reader.readAsDataURL(file);
+    if (fileRef.current) fileRef.current.value = "";
+  }
 
+  async function handleCropConfirm() {
+    if (!imageSrc || !croppedArea) return;
     setUploading(true);
     try {
+      const blob = await getCroppedBlob(imageSrc, croppedArea);
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", new File([blob], "logo.webp", { type: "image/webp" }));
       const res = await fetch("/api/upload", { method: "POST", body: fd, credentials: "include" });
       const json = await res.json();
-      if (json.url) onUploaded(json.url);
+      if (json.url) {
+        setImageSrc(null);
+        await onSaved(json.url);
+      }
     } catch {
       alert("업로드에 실패했습니다.");
     }
     setUploading(false);
-    if (fileRef.current) fileRef.current.value = "";
+  }
+
+  async function handleRemove() {
+    setUploading(true);
+    await onSaved("");
+    setUploading(false);
+  }
+
+  // 크롭 모달
+  if (imageSrc) {
+    return (
+      <div className="space-y-3">
+        <div className="relative h-64 w-full overflow-hidden rounded-xl bg-black">
+          <Cropper
+            image={imageSrc}
+            crop={crop}
+            zoom={zoom}
+            aspect={1}
+            cropShape="round"
+            onCropChange={setCrop}
+            onZoomChange={setZoom}
+            onCropComplete={(_croppedArea, croppedAreaPixels) => setCroppedArea(croppedAreaPixels)}
+          />
+        </div>
+        <input
+          type="range"
+          min={1}
+          max={3}
+          step={0.05}
+          value={zoom}
+          onChange={(e) => setZoom(Number(e.target.value))}
+          className="w-full accent-primary"
+        />
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            size="sm"
+            disabled={uploading}
+            onClick={handleCropConfirm}
+            className="flex-1"
+          >
+            {uploading ? "저장 중..." : "이 영역으로 저장"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setImageSrc(null)}
+          >
+            취소
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -531,7 +621,7 @@ function LogoUpload({
           type="file"
           accept="image/jpeg,image/png,image/webp"
           className="hidden"
-          onChange={handleFile}
+          onChange={handleFileSelect}
           disabled={disabled}
         />
         <Button
@@ -543,15 +633,15 @@ function LogoUpload({
           className="gap-1.5"
         >
           <Camera className="h-3.5 w-3.5" />
-          {uploading ? "업로드 중..." : "로고 변경"}
+          {uploading ? "저장 중..." : logoUrl ? "로고 변경" : "로고 등록"}
         </Button>
         {logoUrl && (
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            disabled={disabled}
-            onClick={onRemove}
+            disabled={disabled || uploading}
+            onClick={handleRemove}
             className="gap-1.5 text-muted-foreground hover:text-destructive"
           >
             <X className="h-3.5 w-3.5" />
