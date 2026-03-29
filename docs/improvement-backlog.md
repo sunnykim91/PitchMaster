@@ -1,8 +1,8 @@
 # PitchMaster 개선 백로그
 
-최종 업데이트: 2026-03-29 (5차)
-현재 점수 추정: Designer 86 / UX 92 / Dev 94 / Marketing 83 / Business 81 (평균 87.2)
-서비스 현황: 49팀 · 375명(가입 181 + 사전등록 194) · 24팀 활성(7일)
+최종 업데이트: 2026-03-29 (6차)
+현재 점수 추정: Designer 89 / UX 93 / Dev 94 / Marketing 84 / Business 81 (평균 88.2)
+서비스 현황: 50팀 · 375명(가입 181 + 사전등록 194) · 24팀 활성(7일)
 최근 가입: 일루전FC, FSB, 팀에이스, 동대문FC, 세교FS (3/27~28)
 
 ---
@@ -164,6 +164,28 @@
 - [x] 개인정보처리방침/이용약관 이메일 통일 (pitchmaster.app@gmail.com)
 - [x] DEVELOPMENT_INSTRUCTION.md 기술스택 Next.js 14→16 최신화
 - [x] 이력서 PitchMaster 섹션 수정안 (문제 해결 경험 중심 재구성)
+- [x] UI/UX 일관성 전면 개선 (text-[10px]/[9px]/[11px]→text-xs 16곳, 섹션 제목 통일, 하드코딩 색상 제거)
+- [x] EmptyState 컴포넌트 통일 (DuesStatus·DuesRecords·Records 3곳)
+- [x] 탭 바 underline 스타일 통일 (Dues·MatchDetail·Records·Settings 4곳)
+- [x] Card border-radius 통일 (rounded-2xl→rounded-xl)
+- [x] 색 대비 강화 (muted-foreground 58%→62%, WCAG 5.98→6.76)
+- [x] OG 이미지 + 소셜프루프 50팀/375명 업데이트
+- [x] 소셜프루프 pill 뱃지 스타일로 강조 (border + bg + bold)
+- [x] 투표 탭 프로그레스 바 추가 (대시보드와 통일)
+- [x] 가이드 네비 pill 10→6개 축소 + 크기 확대
+- [x] 가이드 기타 기능 17개→8+더보기 접기
+- [x] 가이드 섹션 디바이더 카드 스타일 구분 강화
+- [x] 기록 Top3 순위 금색 차별화 (1위 warning 배경 + bold)
+- [x] 레이더 차트 라벨 fontSize 11→13 + fontWeight 600
+- [x] 대시보드 시즌전적 카드 색상별 배경 tint
+- [x] 전술판 AI 추천 → details 접기 (전술판 바로 접근)
+- [x] 회비 거래 멤버 이름 bold 강조
+- [x] 미완료 항목 아이콘 2px + warning 색상
+- [x] 투표 필터/정렬 버튼 터치 타겟 확대
+- [x] 내 기록 0일 때 "-" + muted 색상 (허전함 해소)
+- [x] 전체 기록 멤버 카드 구분선 border/40 강화
+- [x] 회비 거래 내역 간격 space-y-2.5 확대
+- [x] 슬라이더 폰 프레임 비율 9:17→9:19
 
 ### 접근성
 
