@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useCallback } from "react";
 import { GA } from "@/lib/analytics";
+import { EmptyState } from "@/components/EmptyState";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -331,9 +332,11 @@ function DuesRecordsTabInner({
 
         <div className="mt-4 space-y-2">
           {filteredRecords.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-sm text-muted-foreground">아직 거래 내역이 없습니다.</p>
-            </div>
+            <EmptyState
+              icon={ChevronRight}
+              title="아직 거래 내역이 없습니다"
+              description="위에서 수기 입력하거나, 내역 올리기 탭에서 스크린샷/엑셀을 올려보세요."
+            />
           ) : filteredRecords.map((record) =>
             editingRecord?.id === record.id ? (
               <Card key={record.id} data-edit-id={record.id} className="border-0 bg-secondary p-4">

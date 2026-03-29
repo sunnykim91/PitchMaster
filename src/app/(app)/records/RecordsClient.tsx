@@ -575,9 +575,12 @@ export default function RecordsClient({
               ))}
             </div>
           ) : allStats.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-sm text-muted-foreground">아직 기록이 없습니다. 경기를 진행해보세요.</p>
-            </div>
+            <EmptyState
+              icon={BarChart3}
+              title="아직 기록이 없습니다"
+              description="경기를 진행하면 전체 회원 기록이 집계됩니다."
+              action={<Button size="sm" variant="outline" asChild><Link href="/matches">경기 일정 보기</Link></Button>}
+            />
           ) : (
             <>
               <p className="text-xs text-muted-foreground mb-2">숫자를 탭하면 해당 경기 목록을 볼 수 있습니다.</p>
