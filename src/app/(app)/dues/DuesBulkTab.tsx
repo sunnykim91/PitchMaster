@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useCallback } from "react";
+import { GA } from "@/lib/analytics";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -284,6 +285,7 @@ function DuesBulkTabInner({
     await refetchSummary();
     setBulkRows([{ date: "", time: "", type: "INCOME", amount: "", description: "", memberName: "" }]);
     setBulkImage(null);
+    if (saved > 0) GA.duesRecordAdd("ocr");
     if (skipped > 0) {
       showToast(`${saved}건 저장, ${skipped}건 중복 스킵`, "info");
     } else {

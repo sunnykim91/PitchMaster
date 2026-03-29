@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Cake, Calendar, Check, Copy, Link2, Trophy, Users, Vote } from "lucide-react";
+import { GA } from "@/lib/analytics";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
@@ -204,6 +205,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
       setOptimisticCounts(prevCounts);
       showToast("투표에 실패했습니다. 다시 시도해주세요.", "error");
     } else {
+      GA.voteComplete(vote, "dashboard");
       showToast(vote === "ATTEND" ? "참석으로 투표했습니다." : vote === "ABSENT" ? "불참으로 투표했습니다." : "미정으로 투표했습니다.");
       // 성공 시 백그라운드 refetch 후 낙관적 상태 초기화
       await refetch();
@@ -252,6 +254,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
     try {
       await navigator.clipboard.writeText(inviteCode);
       setInviteCopied(true);
+      GA.inviteSent("copy_code");
       showToast("초대 코드가 복사되었습니다.");
       setTimeout(() => setInviteCopied(false), 2000);
     } catch {

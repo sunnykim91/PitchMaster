@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import type { DetailedPosition, Role } from "@/lib/types";
 import { isPresident, isStaffOrAbove } from "@/lib/permissions";
+import { GA } from "@/lib/analytics";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { useToast } from "@/lib/ToastContext";
 import { Button } from "@/components/ui/button";
@@ -241,6 +242,7 @@ export default function MembersClient({
     });
     setRegSubmitting(false);
     if (!err) {
+      GA.memberPreRegister();
       showToast("팀원이 사전 등록되었습니다.");
       setRegName("");
       setRegPhone("");

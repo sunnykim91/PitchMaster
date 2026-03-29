@@ -8,6 +8,7 @@ import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { useToast } from "@/lib/ToastContext";
 import type { Role, SportType } from "@/lib/types";
+import { GA } from "@/lib/analytics";
 import { SPORT_DEFAULTS } from "@/lib/types";
 import { cn, formatTime, formatDateTime, formatMatchDate } from "@/lib/utils";
 import { voteStyles } from "@/lib/voteStyles";
@@ -237,6 +238,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     const { error, data } = await apiMutate<{ id: string }>("/api/matches", "POST", body);
     setSubmitting(false);
     if (!error) {
+      GA.matchCreate(body.matchType ?? "REGULAR");
       showToast("경기 일정이 등록되었습니다.");
       if (data?.id) {
         router.push(`/matches/${data.id}`);
@@ -254,6 +256,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     const { error } = await apiMutate("/api/attendance", "POST", { matchId, vote });
     setVotingMatchId(null);
     if (!error) {
+      GA.voteComplete(vote, "match_list");
       await refetchAttendance();
       showToast("참석 의사를 저장했습니다.");
     } else {

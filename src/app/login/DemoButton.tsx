@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye } from "lucide-react";
+import { GA } from "@/lib/analytics";
 
 export default function DemoButton({ compact }: { compact?: boolean } = {}) {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function DemoButton({ compact }: { compact?: boolean } = {}) {
       const res = await fetch("/api/auth/demo", { method: "POST" });
       const data = await res.json();
       if (data.ok) {
+        GA.demoStart();
         router.push("/dashboard");
       } else {
         setError("데모 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.");

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useCallback } from "react";
+import { GA } from "@/lib/analytics";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -105,6 +106,7 @@ function DuesRecordsTabInner({
         recordedAt: recordedAt || undefined,
       });
       if (!error) {
+        GA.duesRecordAdd("manual");
         await refetchSummary();
         await syncPaymentStatus();
         setIsFormOpen(false);

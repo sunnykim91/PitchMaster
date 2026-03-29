@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useEffect, useState } from "react";
+import { GA } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -72,6 +73,7 @@ function MatchVoteTabInner({
       setOptimisticMyVote(prevVote);
       showToast("투표에 실패했습니다. 다시 시도해주세요.", "error");
     } else {
+      GA.voteComplete(vote, "match_detail");
       showToast(vote === "ATTEND" ? "참석으로 투표했습니다." : vote === "ABSENT" ? "불참으로 투표했습니다." : "미정으로 투표했습니다.");
       // 성공 시 백그라운드 refetch 후 낙관적 상태 초기화
       await refetchVote();

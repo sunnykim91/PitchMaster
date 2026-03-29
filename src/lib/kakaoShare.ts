@@ -140,6 +140,8 @@ export async function shareTeamInvite({
   teamName: string;
   inviteCode: string;
 }) {
+  // GA4 이벤트
+  try { const { GA } = await import("@/lib/analytics"); GA.inviteSent("kakao_talk"); } catch { /* ignore */ }
   if (!(await ensureKakao())) {
     fallbackShare(`${APP_URL}/team?code=${inviteCode}`, `${teamName}에 합류하세요!`);
     return;
