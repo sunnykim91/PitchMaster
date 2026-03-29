@@ -512,12 +512,12 @@ function MatchRecordTabInner({
                         {label}
                       </p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
+                        {goal.quarter > 0 && <span>{goal.quarter}Q</span>}
                         {goal.goalType && goal.goalType !== "NORMAL" && goal.goalType !== "OWN_GOAL" && (
                           <span className="rounded bg-primary/15 px-1.5 py-0.5 text-xs font-bold text-primary">{goal.goalType}</span>
                         )}
-                        {goal.quarter > 0 ? `Q${goal.quarter}` : ""}
                         {goal.assistId
-                          ? `${goal.quarter > 0 ? " · " : ""}A: ${resolvePlayerName(goal.assistId)}`
+                          ? <span>{(goal.quarter > 0 || (goal.goalType && goal.goalType !== "NORMAL" && goal.goalType !== "OWN_GOAL")) ? " · " : ""}A: {resolvePlayerName(goal.assistId)}</span>
                           : ""}
                       </p>
                     </div>
