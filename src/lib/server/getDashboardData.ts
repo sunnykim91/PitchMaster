@@ -46,12 +46,13 @@ export type DashboardData = {
   teamRecord: TeamRecord;
   teamUniform: TeamUniformInfo | null;
   birthdayMembers: BirthdayMember[];
+  hasDuesSettings: boolean;
 };
 
 export async function getDashboardData(teamId: string, userId: string): Promise<DashboardData> {
   const db = getSupabaseAdmin();
   const emptyRecord: TeamRecord = { wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, recent5: [] };
-  if (!db) return { upcomingMatch: null, recentResult: null, activeVotes: [], tasks: [], teamRecord: emptyRecord, teamUniform: null, birthdayMembers: [] };
+  if (!db) return { upcomingMatch: null, recentResult: null, activeVotes: [], tasks: [], teamRecord: emptyRecord, teamUniform: null, birthdayMembers: [], hasDuesSettings: false };
 
   const now = new Date().toISOString();
   const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
@@ -267,5 +268,14 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
       };
     });
 
-  return { upcomingMatch, recentResult, activeVotes, tasks, teamRecord, teamUniform, birthdayMembers };
+  // ── 회비 설정 여부 ──
+  const { count: duesSettingsCount } = await db
+    .from("dues_settings")
+    .select("id", { count: "exact", head: true })
+    .eq("team_id", teamId)
+    .neq("member_type", "__PERIOD__");
+
+  const hasDuesSettings = (duesSettingsCount ?? 0) > 0;
+
+  return { upcomingMatch, recentResult, activeVotes, tasks, teamRecord, teamUniform, birthdayMembers, hasDuesSettings };
 }

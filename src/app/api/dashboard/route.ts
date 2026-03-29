@@ -203,6 +203,13 @@ export async function GET() {
       };
     });
 
+  // ── 회비 설정 여부 ──
+  const { count: duesSettingsCount } = await db
+    .from("dues_settings")
+    .select("id", { count: "exact", head: true })
+    .eq("team_id", ctx.teamId)
+    .neq("member_type", "__PERIOD__");
+
   return apiSuccess({
     upcomingMatch,
     recentResult,
@@ -210,5 +217,6 @@ export async function GET() {
     tasks,
     teamRecord,
     birthdayMembers,
+    hasDuesSettings: (duesSettingsCount ?? 0) > 0,
   });
 }

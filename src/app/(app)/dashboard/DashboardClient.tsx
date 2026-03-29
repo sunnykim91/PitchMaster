@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Cake, Calendar, Check, Copy, Link2, Trophy, Users, Vote } from "lucide-react";
+import { Cake, Calendar, Check, Copy, DollarSign, Link2, Trophy, Users, Vote } from "lucide-react";
 import { GA } from "@/lib/analytics";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
@@ -74,6 +74,7 @@ type DashboardData = {
   teamRecord: TeamRecord;
   teamUniform?: TeamUniform | null;
   birthdayMembers?: BirthdayMember[];
+  hasDuesSettings?: boolean;
 };
 
 const emptyData: DashboardData = {
@@ -317,18 +318,18 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                 </div>
               </div>
 
-              {/* Step 3: Create first match */}
-              <div className="flex items-start gap-3 rounded-xl bg-secondary/50 p-4">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">
+              {/* Step 3: Create first match — 강조 CTA */}
+              <div className="flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
                   3
                 </span>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">첫 경기 등록</p>
+                  <p className="text-sm font-semibold text-foreground">첫 경기를 등록하세요!</p>
                   <p className="mt-0.5 text-sm text-muted-foreground">
-                    경기를 등록하면 팀원에게 참석 투표를 받을 수 있습니다.
+                    경기를 등록하면 팀원에게 자동으로 참석 투표 알림이 갑니다.
                   </p>
-                  <Button size="sm" variant="outline" className="mt-2" asChild>
-                    <Link href="/matches">일정 등록 &rarr;</Link>
+                  <Button size="sm" className="mt-2" asChild>
+                    <Link href="/matches">지금 바로 등록하기 &rarr;</Link>
                   </Button>
                 </div>
               </div>
@@ -513,6 +514,24 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                   {inviteCopied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
                 </Button>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Dues nudge (회비 미설정 팀, 운영진 이상) ── */}
+      {isStaffOrAbove(role) && data.hasDuesSettings === false && !showWizard && (
+        <Card className="border-[hsl(var(--info))]/20 bg-[hsl(var(--info))]/5">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4 shrink-0 text-[hsl(var(--info))]" />
+              <p className="text-sm font-semibold text-foreground">회비 관리를 시작해보세요</p>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <p className="text-sm text-muted-foreground">통장 캡쳐 한 장이면 회비가 자동 정리됩니다</p>
+              <Button size="sm" className="shrink-0 gap-1 text-xs" asChild>
+                <Link href="/dues?tab=settings">설정하기</Link>
+              </Button>
             </div>
           </CardContent>
         </Card>
