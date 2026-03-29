@@ -21,21 +21,31 @@ export async function auth(): Promise<Session | null> {
   const session = parseSession(cookie);
   if (!session) return null;
 
-  // DB에서 최신 역할을 확인하여 세션과 동기화
+  // DB에서 최신 역할 + 팀 로고를 확인하여 세션과 동기화
   if (session.user.teamId) {
     const db = getSupabaseAdmin();
     if (db) {
       const { data: membership } = await db
         .from("team_members")
-        .select("role")
+        .select("role, teams(logo_url)")
         .eq("user_id", session.user.id)
         .eq("team_id", session.user.teamId)
         .eq("status", "ACTIVE")
         .single();
 
+      let needSync = false;
       if (membership && membership.role !== session.user.teamRole) {
         session.user.teamRole = membership.role;
-        // 쿠키도 업데이트 (다음 요청부터 DB 조회 불필요)
+        needSync = true;
+      }
+      const teamsRaw = membership?.teams as unknown;
+      const teamData = Array.isArray(teamsRaw) ? teamsRaw[0] as { logo_url: string | null } | undefined : teamsRaw as { logo_url: string | null } | null;
+      const dbLogoUrl = teamData?.logo_url ?? null;
+      if (membership && dbLogoUrl !== (session.user.teamLogoUrl ?? null)) {
+        session.user.teamLogoUrl = dbLogoUrl;
+        needSync = true;
+      }
+      if (needSync) {
         try {
           cookieStore.set(SESSION_COOKIE, JSON.stringify(session), {
             httpOnly: true,
