@@ -481,10 +481,31 @@ function scheduleQuarters(
       }
     }
 
-    // 3차: 그래도 남은 요청 → 아무 빈 슬롯에 배정
+    // 3차: 그래도 남은 요청 → 인접 카테고리 슬롯 우선 배정
+    // DF→CDM→CM, FW→CAM→CM, MF→아무 순서로 가까운 슬롯 우선
+    const posProximity: Record<string, PreferredPosition[]> = {
+      DF: ["CDM", "CM", "CAM", "LW", "RW", "ST"],
+      MF: ["LW", "RW", "CB", "LB", "RB", "ST"],
+      FW: ["CAM", "CM", "CDM", "LW", "RW", "CB"],
+    };
     const finalRemReqs = enrichedReqs.filter((sr) => !assignedReqs.has(sr));
+    for (const sr of finalRemReqs) {
+      const cat = PREF_TO_POSITION[sr.preferredPos] ?? "MF";
+      const nearby = posProximity[cat] ?? [];
+      let placed = false;
+      for (const pos of nearby) {
+        const slot = slotsBySubPos[pos]?.find((s) => !usedSlots.has(s.id));
+        if (slot) { assignSlotReq(slot, sr); placed = true; break; }
+      }
+      if (!placed) {
+        const anySlot = fieldSlots.find((s) => !usedSlots.has(s.id));
+        if (anySlot) assignSlotReq(anySlot, sr);
+      }
+    }
+    // 혹시 남은 미배정 (거의 없음)
     const finalRemSlots = fieldSlots.filter((s) => !usedSlots.has(s.id));
-    for (let i = 0; i < Math.min(finalRemSlots.length, finalRemReqs.length); i++) {
+    const stillRemReqs = enrichedReqs.filter((sr) => !assignedReqs.has(sr));
+    for (let i = 0; i < Math.min(finalRemSlots.length, stillRemReqs.length); i++) {
       assignSlotReq(finalRemSlots[i], finalRemReqs[i]);
     }
 
