@@ -751,9 +751,9 @@ export default function MembersClient({
                     )}
 
                     {/* 관리 버튼들 */}
-                    {(isStaffOrAbove(role) || canChangeRole) && (
+                    {(isStaffOrAbove(role) || canChangeRole || member.userIdRaw === userId) && (
                       <div className="flex flex-wrap gap-2 pt-1">
-                        {isStaffOrAbove(role) && editingJerseyId !== member.id && (
+                        {(isStaffOrAbove(role) || member.userIdRaw === userId) && editingJerseyId !== member.id && (
                           <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setEditingJerseyId(member.id); setTempJersey(member.jerseyNumber !== null ? String(member.jerseyNumber) : ""); }}>
                             등번호
                           </Button>

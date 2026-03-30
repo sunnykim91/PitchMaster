@@ -102,10 +102,13 @@ export async function PUT(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
 
-  const roleCheck = requireRole(ctx, PERMISSIONS.MEMBER_ROLE_CHANGE);
-  if (roleCheck) return roleCheck;
-
   const body = await request.json();
+
+  // 등번호 변경은 본인도 가능하므로 별도 권한 체크
+  if (body.action !== "update_jersey_number") {
+    const roleCheck = requireRole(ctx, PERMISSIONS.MEMBER_ROLE_CHANGE);
+    if (roleCheck) return roleCheck;
+  }
 
   // 감독 지정 포지션 변경
   if (body.action === "update_coach_positions") {
