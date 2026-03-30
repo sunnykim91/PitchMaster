@@ -370,7 +370,7 @@ export default function MatchDetailClient({
   }
 
   return (
-    <div className="grid gap-5 stagger-children">
+    <div className="grid gap-5 stagger-children min-w-0 overflow-x-hidden">
       {/* ── Back Navigation ── */}
       <div className="flex items-center gap-2 -mt-1 mb-1">
         <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" asChild>
@@ -453,7 +453,7 @@ export default function MatchDetailClient({
       </div>
 
       {/* ── Tab: 전술판 ── */}
-      <div className={activeTab === "tactics" ? "" : "hidden"}>
+      <div className={activeTab === "tactics" ? "min-w-0" : "hidden"}>
         <MatchTacticsTab
           matchId={matchId}
           match={match}

@@ -81,7 +81,7 @@ function MatchTacticsTabInner({
     : attendingPlayers;
 
   return (
-    <>
+    <div className="grid gap-5 min-w-0 overflow-x-hidden">
       {/* ── AI 포메이션 추천 ── */}
       {/* 자체전: 팀 편성 + A/B 토글 통합 */}
       {isInternal && (() => {
@@ -426,7 +426,7 @@ function MatchTacticsTabInner({
       />
 
       {/* 용병 관리는 포메이션 위 상단에 배치 */}
-    </>
+    </div>
   );
 }
 
