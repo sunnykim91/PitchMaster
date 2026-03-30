@@ -267,11 +267,18 @@ function scheduleQuarters(
         }
       };
       pick(0, []);
-      // 간격 점수: 인접 쿼터 간 최소 간격이 클수록 좋고, 같으면 remaining 합이 큰 쪽
+      // 균등 간격 우선: 이상적 간격 = quarterCount / needed (예: 4Q/2명 = 간격2 → 1,3 또는 2,4)
+      const idealGap = quarterCount / req.needed;
       selected = combos.sort((a, b) => {
-        const minGapA = Math.min(...a.slice(1).map((v, i) => v - a[i]));
-        const minGapB = Math.min(...b.slice(1).map((v, i) => v - b[i]));
-        if (minGapA !== minGapB) return minGapB - minGapA; // 간격 큰 쪽 우선
+        // 각 조합의 실제 간격들의 표준편차가 이상적 간격에 가까울수록 좋음
+        const scoreCombo = (c: number[]) => {
+          const gaps = c.slice(1).map((v, i) => v - c[i]);
+          // 모든 간격이 idealGap에 가까운지 (차이 합산)
+          return gaps.reduce((s, g) => s + Math.abs(g - idealGap), 0);
+        };
+        const scoreA = scoreCombo(a);
+        const scoreB = scoreCombo(b);
+        if (scoreA !== scoreB) return scoreA - scoreB; // 이상적 간격에 가까운 쪽 우선
         const remA = a.reduce((s, qi) => s + remaining[qi], 0);
         const remB = b.reduce((s, qi) => s + remaining[qi], 0);
         return remB - remA; // 남은 슬롯 많은 쪽 우선
