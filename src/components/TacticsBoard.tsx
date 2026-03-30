@@ -592,6 +592,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   }
 
   function clearBoard() {
+    if (!window.confirm("이 쿼터의 배치를 초기화할까요? 되돌릴 수 없습니다.")) return;
     const reset: Record<string, Placement | null> = {};
     formation.slots.forEach((slot) => {
       reset[slot.id] = null;
