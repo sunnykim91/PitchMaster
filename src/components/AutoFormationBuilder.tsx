@@ -439,45 +439,33 @@ function scheduleQuarters(
       allPositions: getAllPos(sr.ids[0]),
     }));
 
-    // 1차: 정확한 세분화 포지션 매칭 (주 포지션 기준)
-    for (const subPos of ["CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"] as PreferredPosition[]) {
-      const slots = slotsBySubPos[subPos].filter((s) => !usedSlots.has(s.id));
-      const reqs = enrichedReqs.filter((sr) => !assignedReqs.has(sr) && sr.preferredPos === subPos);
-      for (let i = 0; i < Math.min(slots.length, reqs.length); i++) {
-        assignSlotReq(slots[i], reqs[i]);
-      }
-    }
+    // 선택지가 적은 선수부터 배정 (포지션 1개인 선수가 밀리지 않도록)
+    const sortedReqs = [...enrichedReqs].sort((a, b) => a.allPositions.length - b.allPositions.length);
 
-    // 2차: 복수 포지션 매칭 — 히스토리 기반 우선순위로 다른 포지션 슬롯 시도
-    const rem2 = enrichedReqs.filter((sr) => !assignedReqs.has(sr));
-    for (const sr of rem2) {
+    // 1차: 선호 포지션 정확 매칭 (선택지 적은 순)
+    for (const sr of sortedReqs) {
+      if (assignedReqs.has(sr)) continue;
       const history = playerPosHistory[sr.ids[0]] ?? {};
-      // 선호 포지션을 히스토리 적은 순으로 정렬 (이미 많이 한 포지션은 뒤로)
       const sortedPositions = [...sr.allPositions].sort(
         (a, b) => (history[a] ?? 0) - (history[b] ?? 0)
       );
-
-      let matched = false;
-      // 정확한 포지션 매칭 (히스토리 적은 순)
       for (const pos of sortedPositions) {
         const slot = slotsBySubPos[pos]?.find((s) => !usedSlots.has(s.id));
-        if (slot) {
-          assignSlotReq(slot, sr);
-          matched = true;
-          break;
-        }
+        if (slot) { assignSlotReq(slot, sr); break; }
       }
-      // 같은 카테고리 매칭 (히스토리 적은 순)
-      if (!matched) {
-        for (const pos of sortedPositions) {
-          const cat = PREF_TO_POSITION[pos];
-          const slot = fieldSlots.find((s) => !usedSlots.has(s.id) && getSlotCategory(s) === cat);
-          if (slot) {
-            assignSlotReq(slot, sr);
-            matched = true;
-            break;
-          }
-        }
+    }
+
+    // 2차: 같은 카테고리 매칭 (선택지 적은 순)
+    for (const sr of sortedReqs) {
+      if (assignedReqs.has(sr)) continue;
+      const history = playerPosHistory[sr.ids[0]] ?? {};
+      const sortedPositions = [...sr.allPositions].sort(
+        (a, b) => (history[a] ?? 0) - (history[b] ?? 0)
+      );
+      for (const pos of sortedPositions) {
+        const cat = PREF_TO_POSITION[pos];
+        const slot = fieldSlots.find((s) => !usedSlots.has(s.id) && getSlotCategory(s) === cat);
+        if (slot) { assignSlotReq(slot, sr); break; }
       }
     }
 
