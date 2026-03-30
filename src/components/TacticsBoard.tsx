@@ -25,6 +25,7 @@ type TacticsBoardProps = {
   sportType?: SportType;
   teamSettings?: TeamSettings;
   initialSquads?: SquadRow[]; // 외부에서 주입 시 API fetch skip
+  defaultFormationId?: string; // 팀 기본 포메이션
   readOnly?: boolean; // MEMBER: 조회만 가능
   side?: "A" | "B"; // 자체전 팀 구분
 };
@@ -74,7 +75,7 @@ const SAVE_DEBOUNCE_MS = 300;
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
-export default function TacticsBoard({ matchId, roster, quarterCount, sportType = "SOCCER", teamSettings: teamSettingsProp, initialSquads, readOnly = false, side }: TacticsBoardProps) {
+export default function TacticsBoard({ matchId, roster, quarterCount, sportType = "SOCCER", teamSettings: teamSettingsProp, initialSquads, defaultFormationId: teamDefaultFormationId, readOnly = false, side }: TacticsBoardProps) {
   const isFutsal = sportType === "FUTSAL";
   const futsalFieldCounts = useMemo(() => (isFutsal ? getFutsalFieldCounts() : []), [isFutsal]);
   const [futsalFieldCount, setFutsalFieldCount] = useState(isFutsal ? 5 : 0);
@@ -83,7 +84,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     () => getFormationsForSportAndCount(sportType, isFutsal ? futsalFieldCount : undefined),
     [sportType, isFutsal, futsalFieldCount]
   );
-  const defaultFormation = filteredFormations[0] ?? formationTemplates[0];
+  const defaultFormation = (teamDefaultFormationId ? filteredFormations.find(f => f.id === teamDefaultFormationId) : null) ?? filteredFormations[0] ?? formationTemplates[0];
   const quarters = useMemo(
     () => Array.from({ length: Math.max(1, quarterCount) }, (_, index) => index + 1),
     [quarterCount]

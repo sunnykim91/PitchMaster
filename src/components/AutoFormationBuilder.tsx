@@ -58,6 +58,7 @@ type Props = {
   quarterCount: number;
   attendingPlayers: AttendingPlayer[];
   sportType?: SportType;
+  defaultFormationId?: string;
   side?: "A" | "B";
   onGenerated?: (squads: GeneratedSquad[]) => void;
 };
@@ -514,14 +515,14 @@ export default function AutoFormationBuilder({
   quarterCount,
   attendingPlayers,
   sportType = "SOCCER",
+  defaultFormationId,
   side,
   onGenerated,
 }: Props) {
   const filteredFormations = getFormationsForSport(sportType);
   const [isOpen, setIsOpen] = useState(false);
-  const [formationId, setFormationId] = useState(
-    filteredFormations[0]?.id ?? "",
-  );
+  const defaultId = (defaultFormationId && filteredFormations.some(f => f.id === defaultFormationId)) ? defaultFormationId : (filteredFormations[0]?.id ?? "");
+  const [formationId, setFormationId] = useState(defaultId);
   const [assignments, setAssignments] = useState<PlayerAssignment[]>(
     [],
   );

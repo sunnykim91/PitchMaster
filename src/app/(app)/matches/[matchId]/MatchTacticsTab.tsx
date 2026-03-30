@@ -43,6 +43,7 @@ export interface MatchTacticsTabProps {
   attendingPlayers: AttendingPlayer[];
   roster: SimpleRosterPlayer[];
   sportType: SportType;
+  defaultFormationId?: string;
   internalTeams?: InternalTeamAssignment[];
   refetchInternalTeams?: () => Promise<unknown>;
   guests?: Guest[];
@@ -57,6 +58,7 @@ function MatchTacticsTabInner({
   attendingPlayers,
   roster,
   sportType,
+  defaultFormationId,
   internalTeams,
   refetchInternalTeams,
   guests,
@@ -400,6 +402,7 @@ function MatchTacticsTabInner({
           quarterCount={match.quarterCount}
           attendingPlayers={filteredAttending}
           sportType={sportType}
+          defaultFormationId={defaultFormationId}
           side={isInternal ? activeSide : undefined}
           onGenerated={(squads) => {
             setGeneratedSquads(squads);
@@ -414,6 +417,7 @@ function MatchTacticsTabInner({
         roster={filteredRoster}
         quarterCount={match.quarterCount}
         sportType={sportType}
+        defaultFormationId={defaultFormationId}
         readOnly={!canManage}
         side={isInternal ? activeSide : undefined}
         initialSquads={generatedSquads.length > 0 ? generatedSquads.map((sq) => ({

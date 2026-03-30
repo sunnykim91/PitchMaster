@@ -38,6 +38,7 @@ type TeamSettingsData = {
   uniformPattern: "SOLID" | "STRIPES_VERTICAL" | "STRIPES_HORIZONTAL" | "STRIPES_DIAGONAL";
   isSearchable: boolean;
   joinMode: "AUTO" | "MANUAL";
+  defaultFormationId: string;
 };
 
 type ProfileApiResponse = {
@@ -62,6 +63,7 @@ type TeamApiResponse = {
     is_searchable: boolean;
     join_mode: "AUTO" | "MANUAL";
     sport_type?: string;
+    default_formation_id?: string;
   };
 };
 
@@ -87,6 +89,7 @@ function mapTeamResponse(res: TeamApiResponse, fallback: TeamSettingsData): Team
     uniformPattern: t.uniform_pattern ?? fallback.uniformPattern,
     isSearchable: t.is_searchable ?? fallback.isSearchable,
     joinMode: t.join_mode ?? fallback.joinMode,
+    defaultFormationId: t.default_formation_id ?? fallback.defaultFormationId,
   };
 }
 
@@ -160,6 +163,7 @@ export default function SettingsClient({
         uniformPattern: (t.uniform_pattern as TeamSettingsData["uniformPattern"]) ?? sessionTeam.uniformPattern,
         isSearchable: (t.is_searchable as boolean) ?? sessionTeam.isSearchable,
         joinMode: (t.join_mode as TeamSettingsData["joinMode"]) ?? sessionTeam.joinMode,
+        defaultFormationId: (t.default_formation_id as string) ?? sessionTeam.defaultFormationId,
       };
     }
     return sessionTeam;
@@ -198,6 +202,7 @@ export default function SettingsClient({
       uniform_pattern: defaultTeam.uniformPattern,
       is_searchable: defaultTeam.isSearchable,
       join_mode: defaultTeam.joinMode,
+      default_formation_id: defaultTeam.defaultFormationId,
     },
   }, { skip: hasInitialData });
 

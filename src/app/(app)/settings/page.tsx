@@ -29,6 +29,7 @@ export default async function SettingsPage() {
         uniformPattern: "SOLID",
         isSearchable: false,
         joinMode: "MANUAL",
+        defaultFormationId: "",
       }}
       userRole={session.user.teamRole}
       initialData={initialData}
