@@ -156,7 +156,9 @@ function scheduleQuarters(
 ): QuarterResult[] {
   const slotsPerQ = formation.slots.length - 1; // GK 제외 필드 슬롯
   const gks = players.filter((p) => p.isGK);
-  const field = players.filter((p) => !p.isGK && p.quarters > 0);
+  // 필드 선수 셔플 — 같은 조건이면 순서에 따라 결과가 달라지므로 매번 다른 편성 생성
+  const field = players.filter((p) => !p.isGK && p.quarters > 0)
+    .sort(() => Math.random() - 0.5);
 
   // ── GK per quarter ──
   const gkPerQ: Record<number, { playerId: string; name: string }> = {};
@@ -908,7 +910,7 @@ export default function AutoFormationBuilder({
           onClick={generate}
           disabled={!isBalanced || fieldPlayers.length === 0}
         >
-          편성 생성
+          {results ? "다시 생성" : "편성 생성"}
         </Button>
 
         {/* ── Results ── */}
