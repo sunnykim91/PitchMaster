@@ -68,6 +68,7 @@ function MatchRecordTabInner({
   /* ── Local UI state ── */
   const [showDetailForm, setShowDetailForm] = useState(false);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
+  const [editingIsOpponent, setEditingIsOpponent] = useState(false);
   const [confirmGoalDelete, setConfirmGoalDelete] = useState<string | null>(null);
   const [showBulkAttendConfirm, setShowBulkAttendConfirm] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -156,6 +157,7 @@ function MatchRecordTabInner({
 
   function handleEditGoal(goal: GoalEvent) {
     setEditingGoalId(goal.id);
+    setEditingIsOpponent(goal.scorerId === "OPPONENT" && !isInternal);
     setShowDetailForm(true);
     const setFormValues = () => {
       const form = formRef.current;
@@ -205,6 +207,7 @@ function MatchRecordTabInner({
 
   function handleCancelEdit() {
     setEditingGoalId(null);
+    setEditingIsOpponent(false);
     formRef.current?.reset();
   }
 
@@ -355,6 +358,18 @@ function MatchRecordTabInner({
                     </div>
                   )}
 
+                  {/* 실점 수정 시 득점자/어시스트/골유형 숨김 (쿼터만 표시) */}
+                  {editingIsOpponent && (
+                    <>
+                      <input name="scorerId" type="hidden" value="OPPONENT" />
+                      <input name="assistId" type="hidden" value="" />
+                      <input name="goalType" type="hidden" value="NORMAL" />
+                      <p className="text-sm font-semibold text-[hsl(var(--loss))]">실점 기록 수정</p>
+                    </>
+                  )}
+
+                  {!editingIsOpponent && (
+                  <>
                   <div className="grid gap-3 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label className="text-xs font-semibold text-muted-foreground">
@@ -434,6 +449,8 @@ function MatchRecordTabInner({
                       <option value="OWN_GOAL">자책골</option>
                     </NativeSelect>
                   </div>
+                  </>
+                  )}
 
                   <div className="mt-3 space-y-1">
                     <Label className="text-xs font-semibold text-muted-foreground">쿼터 (선택사항)</Label>
