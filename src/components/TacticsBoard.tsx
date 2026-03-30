@@ -8,6 +8,7 @@ import type { DetailedPosition, SportType } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useConfirm } from "@/lib/ConfirmContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
@@ -76,6 +77,7 @@ const SAVE_DEBOUNCE_MS = 300;
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 export default function TacticsBoard({ matchId, roster, quarterCount, sportType = "SOCCER", teamSettings: teamSettingsProp, initialSquads, defaultFormationId: teamDefaultFormationId, readOnly = false, side }: TacticsBoardProps) {
+  const confirm = useConfirm();
   const isFutsal = sportType === "FUTSAL";
   const futsalFieldCounts = useMemo(() => (isFutsal ? getFutsalFieldCounts() : []), [isFutsal]);
   const [futsalFieldCount, setFutsalFieldCount] = useState(isFutsal ? 5 : 0);
@@ -591,8 +593,9 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     setActiveSlotId(null);
   }
 
-  function clearBoard() {
-    if (!window.confirm("이 쿼터의 배치를 초기화할까요? 되돌릴 수 없습니다.")) return;
+  async function clearBoard() {
+    const ok = await confirm({ title: "전술판 초기화", description: "이 쿼터의 배치를 초기화할까요? 되돌릴 수 없습니다.", variant: "destructive", confirmLabel: "초기화" });
+    if (!ok) return;
     const reset: Record<string, Placement | null> = {};
     formation.slots.forEach((slot) => {
       reset[slot.id] = null;
