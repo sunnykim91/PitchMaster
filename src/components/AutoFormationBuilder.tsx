@@ -788,13 +788,9 @@ export default function AutoFormationBuilder({
             자동 분배
           </Button>
 
-          <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-            <span>참석 {attendingPlayers.length}명</span>
-            <span>·</span>
-            <span>GK {gks.length}</span>
-            <span>·</span>
-            <span>필드 {fieldPlayers.length}</span>
-          </div>
+          <p className="text-xs text-muted-foreground whitespace-nowrap">
+            참석 {attendingPlayers.length}명 · GK {gks.length} · 필드 {fieldPlayers.length}
+          </p>
         </div>
 
         {/* ── Balance indicator ── */}
@@ -848,7 +844,7 @@ export default function AutoFormationBuilder({
               </span>
 
               {/* Position badge */}
-              <div className="flex shrink-0 gap-0.5">
+              <div className="flex flex-wrap gap-0.5 justify-end max-w-[140px]">
                 {(player.preferredPositions ?? [player.preferredPosition]).map((pos) => (
                   <Badge
                     key={pos}
