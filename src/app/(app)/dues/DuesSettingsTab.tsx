@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { apiMutate } from "@/lib/useApi";
+import { useConfirm } from "@/lib/ConfirmContext";
 import type { Role } from "@/lib/types";
 
 /* ── 타입 정의 ── */
@@ -26,7 +27,6 @@ export type DuesSettingsTabProps = {
   getDuesPeriod: (month: string, startDay: number) => { from: string; to: string };
   refetchSummary: () => Promise<void>;
   showToast: (msg: string, type?: "success" | "error" | "info") => void;
-  setConfirmAction: (v: { message: string; onConfirm: () => void; variant?: "default" | "destructive"; confirmLabel?: string } | null) => void;
 };
 
 function DuesSettingsTabInner({
@@ -37,8 +37,8 @@ function DuesSettingsTabInner({
   getDuesPeriod,
   refetchSummary,
   showToast,
-  setConfirmAction,
 }: DuesSettingsTabProps) {
+  const confirm = useConfirm();
   /* ── 탭 전용 state ── */
   const [isSettingOpen, setIsSettingOpen] = useState(false);
   const [savingSetting, setSavingSetting] = useState(false);
@@ -299,7 +299,10 @@ function DuesSettingsTabInner({
                     </button>
                     <button
                       type="button"
-                      onClick={() => setConfirmAction({ message: "이 회비 기준을 삭제하시겠습니까?", onConfirm: () => handleDeleteSetting(setting.id) })}
+                      onClick={async () => {
+                        const ok = await confirm({ title: "이 회비 기준을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
+                        if (ok) handleDeleteSetting(setting.id);
+                      }}
                       className="min-h-[44px] min-w-[44px] rounded px-2 text-xs bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] transition-colors active:scale-95"
                     >
                       삭제

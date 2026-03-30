@@ -12,6 +12,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { apiMutate } from "@/lib/useApi";
+import { useConfirm } from "@/lib/ConfirmContext";
 import type { Role } from "@/lib/types";
 
 /* ── 타입 정의 ── */
@@ -44,7 +45,6 @@ export type DuesRecordsTabProps = {
   refetchSummary: () => Promise<void>;
   syncPaymentStatus: () => Promise<void>;
   showToast: (msg: string, type?: "success" | "error" | "info") => void;
-  setConfirmAction: (v: { message: string; onConfirm: () => void; variant?: "default" | "destructive"; confirmLabel?: string } | null) => void;
   autoMatchMember: (description: string) => string | undefined;
   summaryBalance: number | null;
 };
@@ -58,10 +58,10 @@ function DuesRecordsTabInner({
   refetchSummary,
   syncPaymentStatus,
   showToast,
-  setConfirmAction,
   autoMatchMember,
   summaryBalance,
 }: DuesRecordsTabProps) {
+  const confirm = useConfirm();
   /* ── 탭 전용 state ── */
   const [filter, setFilter] = useState<RecordFilter>("ALL");
   const [memberFilter, setMemberFilter] = useState("");
@@ -399,7 +399,10 @@ function DuesRecordsTabInner({
                       </button>
                       <button
                         type="button"
-                        onClick={() => setConfirmAction({ message: "이 내역을 삭제하시겠습니까?", onConfirm: () => handleDeleteRecord(record.id) })}
+                        onClick={async () => {
+                          const ok = await confirm({ title: "이 내역을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
+                          if (ok) handleDeleteRecord(record.id);
+                        }}
                         className="min-h-[44px] rounded-lg px-3 py-2 text-xs font-medium bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] transition-colors active:scale-95"
                       >
                         삭제

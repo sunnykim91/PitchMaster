@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ImageLightbox } from "@/components/ImageLightbox";
 
 import { PostCard } from "@/components/board/PostCard";
@@ -148,7 +147,6 @@ export default function BoardClient({
   const [commentingPostId, setCommentingPostId] = useState<string | null>(null);
   const [deletingPostIds, setDeletingPostIds] = useState<Set<string>>(new Set());
   const [deletingCommentIds, setDeletingCommentIds] = useState<Set<string>>(new Set());
-  const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
 
@@ -475,20 +473,10 @@ export default function BoardClient({
               onCommentDelete={handleDeleteComment}
               commentingPostId={commentingPostId}
               deletingCommentIds={deletingCommentIds}
-              onSetConfirmAction={setConfirmAction}
             />
           ))}
         </div>
       )}
-
-      <ConfirmDialog
-        open={!!confirmAction}
-        title={confirmAction?.message ?? ""}
-        variant="destructive"
-        confirmLabel="삭제"
-        onConfirm={() => { confirmAction?.onConfirm(); setConfirmAction(null); }}
-        onCancel={() => setConfirmAction(null)}
-      />
 
       <ImageLightbox
         src={lightboxSrc}

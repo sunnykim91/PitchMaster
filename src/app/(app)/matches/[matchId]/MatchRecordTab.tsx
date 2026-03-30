@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useConfirm } from "@/lib/ConfirmContext";
 import { EmptyState } from "@/components/EmptyState";
 import { Target } from "lucide-react";
 import { useToast } from "@/lib/ToastContext";
@@ -65,12 +65,12 @@ function MatchRecordTabInner({
   const { showToast } = useToast();
   const isInternal = match.matchType === "INTERNAL";
 
+  const confirm = useConfirm();
+
   /* ── Local UI state ── */
   const [showDetailForm, setShowDetailForm] = useState(false);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [editingIsOpponent, setEditingIsOpponent] = useState(false);
-  const [confirmGoalDelete, setConfirmGoalDelete] = useState<string | null>(null);
-  const [showBulkAttendConfirm, setShowBulkAttendConfirm] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   const voteCounts = useMemo(() => {
@@ -549,7 +549,17 @@ function MatchRecordTabInner({
                         </button>
                         <button
                           type="button"
-                          onClick={(e) => { e.stopPropagation(); setConfirmGoalDelete(goal.id); }}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            const ok = await confirm({
+                              title: "골 기록 삭제",
+                              description: "이 골 기록을 삭제하시겠습니까? 삭제된 기록은 복구할 수 없습니다.",
+                              variant: "destructive",
+                              confirmLabel: "삭제",
+                              cancelLabel: "취소",
+                            });
+                            if (ok) handleDeleteGoal(goal.id);
+                          }}
                           className="rounded-lg bg-[hsl(var(--loss)/0.15)] min-h-[44px] px-4 py-2 text-xs font-semibold text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] active:bg-[hsl(var(--loss)/0.35)] active:scale-95 transition-all cursor-pointer select-none"
                         >
                           삭제
@@ -623,7 +633,19 @@ function MatchRecordTabInner({
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() => setShowBulkAttendConfirm(true)}
+                    onClick={async () => {
+                      const ok = await confirm({
+                        title: "전원 참석 처리",
+                        description: `참석 투표한 ${attendingMembers.length}명 전원을 출석으로 처리합니다.`,
+                        confirmLabel: "전원 참석 처리",
+                        cancelLabel: "취소",
+                      });
+                      if (ok) {
+                        await Promise.all(
+                          attendingMembers.map((player) => handleAttendance(player, "PRESENT"))
+                        );
+                      }
+                    }}
                   >
                     전원 참석 처리
                   </Button>
@@ -695,40 +717,6 @@ function MatchRecordTabInner({
         </div>
       </section>
 
-      {/* ── 골 삭제 확인 다이얼로그 ── */}
-      <ConfirmDialog
-        open={confirmGoalDelete !== null}
-        title="골 기록 삭제"
-        description="이 골 기록을 삭제하시겠습니까? 삭제된 기록은 복구할 수 없습니다."
-        confirmLabel="삭제"
-        cancelLabel="취소"
-        variant="destructive"
-        onConfirm={async () => {
-          if (confirmGoalDelete) {
-            await handleDeleteGoal(confirmGoalDelete);
-          }
-          setConfirmGoalDelete(null);
-        }}
-        onCancel={() => setConfirmGoalDelete(null)}
-      />
-
-      {/* ── 전원 출석 확인 다이얼로그 ── */}
-      <ConfirmDialog
-        open={showBulkAttendConfirm}
-        title="전원 참석 처리"
-        description={`참석 투표한 ${attendingMembers.length}명 전원을 출석으로 처리합니다.`}
-        confirmLabel="전원 참석 처리"
-        cancelLabel="취소"
-        onConfirm={async () => {
-          await Promise.all(
-            attendingMembers.map((player) =>
-              handleAttendance(player, "PRESENT")
-            )
-          );
-          setShowBulkAttendConfirm(false);
-        }}
-        onCancel={() => setShowBulkAttendConfirm(false)}
-      />
     </>
   );
 }

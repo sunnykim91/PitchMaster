@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useConfirm } from "@/lib/ConfirmContext";
 import { toKoreanError } from "@/lib/errorMessages";
 import { formatDateTime } from "@/lib/utils";
 
@@ -77,12 +77,12 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
   );
   const rules = useMemo(() => data.rules.map(mapRule), [data.rules]);
 
+  const confirm = useConfirm();
   const [selectedCategory, setSelectedCategory] = useState<RuleCategory | "ALL">("ALL");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formState, setFormState] = useState({ title: "", content: "", category: "일반" as RuleCategory, fileUrl: "" as string, fileName: "" as string });
   const [submitting, setSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -429,7 +429,10 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
                             variant="outline"
                             size="sm"
                             className="text-destructive hover:text-destructive"
-                            onClick={() => setConfirmAction({ message: "회칙을 삭제하시겠습니까?", onConfirm: () => handleDelete(rule.id) })}
+                            onClick={async () => {
+                              const ok = await confirm({ title: "회칙을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
+                              if (ok) handleDelete(rule.id);
+                            }}
                           >
                             삭제
                           </Button>
@@ -444,14 +447,6 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
         </CardContent>
       </Card>
 
-      <ConfirmDialog
-        open={!!confirmAction}
-        title={confirmAction?.message ?? ""}
-        variant="destructive"
-        confirmLabel="삭제"
-        onConfirm={() => { confirmAction?.onConfirm(); setConfirmAction(null); }}
-        onCancel={() => setConfirmAction(null)}
-      />
     </div>
   );
 }

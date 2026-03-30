@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatPhone, formatDateKo, formatTime } from "@/lib/utils";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useConfirm } from "@/lib/ConfirmContext";
 import { Bell } from "lucide-react";
 import { useToast } from "@/lib/ToastContext";
 import type {
@@ -97,6 +97,7 @@ function MatchInfoTabInner({
   refetchComments,
 }: MatchInfoTabProps) {
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const [savingTeams, setSavingTeams] = useState(false);
   const [teamSheetOpen, setTeamSheetOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -152,11 +153,18 @@ function MatchInfoTabInner({
     }
   }
 
-  /* ── 경기 완료 처리 ── */
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  /* ── 경기 삭제 처리 ── */
   const [deleting, setDeleting] = useState(false);
 
   async function handleDeleteMatch() {
+    const ok = await confirm({
+      title: "경기를 삭제하시겠습니까?",
+      description: "삭제된 경기의 모든 기록(골, MVP, 투표, 전술)이 함께 삭제되며 복구할 수 없습니다.",
+      variant: "destructive",
+      confirmLabel: "삭제",
+      cancelLabel: "취소",
+    });
+    if (!ok) return;
     setDeleting(true);
     try {
       const { error: err } = await apiMutate("/api/matches", "DELETE", { id: matchId });
@@ -170,7 +178,6 @@ function MatchInfoTabInner({
       showToast("삭제에 실패했습니다.", "error");
     } finally {
       setDeleting(false);
-      setShowDeleteConfirm(false);
     }
   }
 
@@ -231,9 +238,10 @@ function MatchInfoTabInner({
                 variant="ghost"
                 size="sm"
                 className="text-muted-foreground hover:text-destructive"
-                onClick={() => setShowDeleteConfirm(true)}
+                disabled={deleting}
+                onClick={handleDeleteMatch}
               >
-                삭제
+                {deleting ? "삭제 중..." : "삭제"}
               </Button>
             </div>
           )}
@@ -387,17 +395,6 @@ function MatchInfoTabInner({
           )}
         </CardContent>
       </Card>
-
-      <ConfirmDialog
-        open={showDeleteConfirm}
-        title="경기를 삭제하시겠습니까?"
-        description="삭제된 경기의 모든 기록(골, MVP, 투표, 전술)이 함께 삭제되며 복구할 수 없습니다."
-        variant="destructive"
-        confirmLabel="삭제"
-        cancelLabel="취소"
-        onConfirm={handleDeleteMatch}
-        onCancel={() => setShowDeleteConfirm(false)}
-      />
 
       {/* 투표는 투표 탭으로 이동, 용병은 전술판 탭으로 이동 */}
 

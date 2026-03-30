@@ -4,6 +4,7 @@ import { memo } from "react";
 import { X, Send } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { relativeTime } from "@/lib/utils";
+import { useConfirm } from "@/lib/ConfirmContext";
 import type { Comment } from "@/app/(app)/board/BoardClient";
 
 export interface CommentSectionProps {
@@ -19,7 +20,6 @@ export interface CommentSectionProps {
   onDelete: (commentId: string, postId: string) => void;
   commentingPostId: string | null;
   deletingCommentIds: Set<string>;
-  onSetConfirmAction: (action: { message: string; onConfirm: () => void }) => void;
 }
 
 export const CommentSection = memo(function CommentSection({
@@ -35,8 +35,8 @@ export const CommentSection = memo(function CommentSection({
   onDelete,
   commentingPostId,
   deletingCommentIds,
-  onSetConfirmAction,
 }: CommentSectionProps) {
+  const confirm = useConfirm();
   if (!isExpanded) return null;
 
   return (
@@ -70,7 +70,10 @@ export const CommentSection = memo(function CommentSection({
                   <button
                     type="button"
                     aria-label="댓글 삭제"
-                    onClick={() => onSetConfirmAction({ message: "댓글을 삭제하시겠습니까?", onConfirm: () => onDelete(comment.id, postId) })}
+                    onClick={async () => {
+                      const ok = await confirm({ title: "댓글을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
+                      if (ok) onDelete(comment.id, postId);
+                    }}
                     disabled={deletingCommentIds.has(comment.id)}
                     className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-all shrink-0"
                   >

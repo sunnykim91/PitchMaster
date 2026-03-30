@@ -19,7 +19,7 @@ import { cn, formatPhone } from "@/lib/utils";
 import { Search } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { Users } from "lucide-react";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useConfirm } from "@/lib/ConfirmContext";
 
 type Member = {
   id: string;
@@ -103,7 +103,7 @@ export default function MembersClient({
     { skip: !!initialData },
   );
   const members = useMemo(() => mapApiMembers(membersData.members), [membersData.members]);
-  const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void; variant?: "default" | "destructive"; confirmLabel?: string } | null>(null);
+  const confirm = useConfirm();
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
   const { showToast } = useToast();
@@ -203,16 +203,17 @@ export default function MembersClient({
     }
   }
 
-  function handleRoleChange(memberId: string, newRole: Role) {
+  async function handleRoleChange(memberId: string, newRole: Role) {
     if (!canChangeRole) return;
     if (newRole === "PRESIDENT") {
       const target = members.find((m) => m.id === memberId);
-      setConfirmAction({
-        message: `${target?.name ?? "해당 회원"}에게 회장을 이임하시겠습니까?\n이임 후 본인은 운영진으로 변경됩니다.`,
-        onConfirm: () => doRoleChange(memberId, newRole),
+      const ok = await confirm({
+        title: `${target?.name ?? "해당 회원"}에게 회장을 이임하시겠습니까?`,
+        description: "이임 후 본인은 운영진으로 변경됩니다.",
         variant: "default",
         confirmLabel: "이임",
       });
+      if (ok) doRoleChange(memberId, newRole);
       return;
     }
     doRoleChange(memberId, newRole);
@@ -524,7 +525,10 @@ export default function MembersClient({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setConfirmAction({ message: `${member.name} 님을 제명하시겠습니까?`, onConfirm: () => handleKick(member.id) })}
+                          onClick={async () => {
+                            const ok = await confirm({ title: `${member.name} 님을 제명하시겠습니까?`, variant: "destructive", confirmLabel: "제명" });
+                            if (ok) handleKick(member.id);
+                          }}
                         >
                           제명
                         </Button>
@@ -790,7 +794,7 @@ export default function MembersClient({
                         {canKick && member.userIdRaw !== userId && (
                           <>
                             <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => handleStatusChange(member.id, "DORMANT")}>휴면</Button>
-                            <Button size="sm" variant="outline" className="h-8 text-xs text-destructive hover:bg-destructive/10" onClick={() => setConfirmAction({ message: `${member.name} 님을 제명하시겠습니까?`, onConfirm: () => handleKick(member.id) })}>제명</Button>
+                            <Button size="sm" variant="outline" className="h-8 text-xs text-destructive hover:bg-destructive/10" onClick={async () => { const ok = await confirm({ title: `${member.name} 님을 제명하시겠습니까?`, variant: "destructive", confirmLabel: "제명" }); if (ok) handleKick(member.id); }}>제명</Button>
                           </>
                         )}
                       </div>
@@ -855,14 +859,6 @@ export default function MembersClient({
         </Card>
       )}
 
-      <ConfirmDialog
-        open={!!confirmAction}
-        title={confirmAction?.message ?? ""}
-        variant={confirmAction?.variant ?? "destructive"}
-        confirmLabel={confirmAction?.confirmLabel ?? "제명"}
-        onConfirm={() => { confirmAction?.onConfirm(); setConfirmAction(null); }}
-        onCancel={() => setConfirmAction(null)}
-      />
     </div>
   );
 }

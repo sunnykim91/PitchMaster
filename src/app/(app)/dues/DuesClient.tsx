@@ -2,8 +2,8 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useApi, apiMutate } from "@/lib/useApi";
+import { useConfirm } from "@/lib/ConfirmContext";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { useToast } from "@/lib/ToastContext";
@@ -238,7 +238,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     return map;
   }, [paymentStatusRaw]);
 
-  const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void; variant?: "default" | "destructive"; confirmLabel?: string } | null>(null);
+  const confirm = useConfirm();
   const [selfReporting, setSelfReporting] = useState(false);
 
   /* ── 온보딩 가이드 상태 ── */
@@ -447,29 +447,30 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                     variant="outline"
                     className="mt-2"
                     disabled={selfReporting}
-                    onClick={() => setConfirmAction({
-                      message: "입금 사실을 운영진에게 알리시겠습니까?",
-                      variant: "default",
-                      confirmLabel: "신고하기",
-                      onConfirm: async () => {
-                        setSelfReporting(true);
-                        const { error } = await apiMutate("/api/dues/payment-status", "POST", {
-                          memberId: _userId,
-                          month: monthFilter,
-                          status: "PAID",
-                          paidAmount: settings.length > 0 ? settings[0].monthlyAmount : 0,
-                          note: "회원 자기 신고 (확인 필요)",
-                          selfReport: true,
-                        });
-                        setSelfReporting(false);
-                        if (!error) {
-                          await refetchPaymentStatus();
-                          showToast("납부 신고 완료. 운영진이 확인 후 처리합니다.", "success");
-                        } else {
-                          showToast(error, "error");
-                        }
-                      },
-                    })}
+                    onClick={async () => {
+                      const ok = await confirm({
+                        title: "입금 사실을 운영진에게 알리시겠습니까?",
+                        variant: "default",
+                        confirmLabel: "신고하기",
+                      });
+                      if (!ok) return;
+                      setSelfReporting(true);
+                      const { error } = await apiMutate("/api/dues/payment-status", "POST", {
+                        memberId: _userId,
+                        month: monthFilter,
+                        status: "PAID",
+                        paidAmount: settings.length > 0 ? settings[0].monthlyAmount : 0,
+                        note: "회원 자기 신고 (확인 필요)",
+                        selfReport: true,
+                      });
+                      setSelfReporting(false);
+                      if (!error) {
+                        await refetchPaymentStatus();
+                        showToast("납부 신고 완료. 운영진이 확인 후 처리합니다.", "success");
+                      } else {
+                        showToast(error, "error");
+                      }
+                    }}
                   >
                     {selfReporting ? "신고 중..." : "입금했어요"}
                   </Button>
@@ -622,7 +623,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           refetchSummary={refetchSummary}
           syncPaymentStatus={syncPaymentStatus}
           showToast={showToast}
-          setConfirmAction={setConfirmAction}
           autoMatchMember={autoMatchMember}
           summaryBalance={summaryData.balance}
         />
@@ -668,18 +668,9 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           getDuesPeriod={getDuesPeriod}
           refetchSummary={refetchSummary}
           showToast={showToast}
-          setConfirmAction={setConfirmAction}
         />
       </div>
 
-      <ConfirmDialog
-        open={!!confirmAction}
-        title={confirmAction?.message ?? ""}
-        variant={confirmAction?.variant ?? "destructive"}
-        confirmLabel={confirmAction?.confirmLabel ?? "삭제"}
-        onConfirm={() => { confirmAction?.onConfirm(); setConfirmAction(null); }}
-        onCancel={() => setConfirmAction(null)}
-      />
     </div>
   );
 }

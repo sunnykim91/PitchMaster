@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { relativeTime } from "@/lib/utils";
 import { PollBlock } from "@/components/board/PollBlock";
 import { CommentSection } from "@/components/board/CommentSection";
+import { useConfirm } from "@/lib/ConfirmContext";
 import type { Post, Comment } from "@/app/(app)/board/BoardClient";
 
 export interface PostCardProps {
@@ -35,7 +36,6 @@ export interface PostCardProps {
   onCommentDelete: (commentId: string, postId: string) => void;
   commentingPostId: string | null;
   deletingCommentIds: Set<string>;
-  onSetConfirmAction: (action: { message: string; onConfirm: () => void }) => void;
 }
 
 export const PostCard = memo(function PostCard({
@@ -61,8 +61,8 @@ export const PostCard = memo(function PostCard({
   onCommentDelete,
   commentingPostId,
   deletingCommentIds,
-  onSetConfirmAction,
 }: PostCardProps) {
+  const confirm = useConfirm();
   const canModifyPost = post.authorId === userId || isStaff;
 
   return (
@@ -125,7 +125,10 @@ export const PostCard = memo(function PostCard({
                   </button>
                   <button
                     type="button"
-                    onClick={() => onSetConfirmAction({ message: "게시글을 삭제하시겠습니까?", onConfirm: () => onDelete(post.id) })}
+                    onClick={async () => {
+                      const ok = await confirm({ title: "게시글을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
+                      if (ok) onDelete(post.id);
+                    }}
                     disabled={deletingPostIds.has(post.id)}
                     className="p-2.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors active:scale-95"
                   >
@@ -208,7 +211,6 @@ export const PostCard = memo(function PostCard({
           onDelete={onCommentDelete}
           commentingPostId={commentingPostId}
           deletingCommentIds={deletingCommentIds}
-          onSetConfirmAction={onSetConfirmAction}
         />
       </CardContent>
     </Card>
