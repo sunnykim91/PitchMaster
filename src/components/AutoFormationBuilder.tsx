@@ -249,10 +249,36 @@ function scheduleQuarters(
   for (const req of reqs) {
     // 남은 용량이 있고 아직 배정 안 된 쿼터만 후보
     const available = Array.from({ length: quarterCount }, (_, i) => i)
-      .filter((qi) => remaining[qi] > 0 && !req.assignedQs.has(qi))
-      .sort((a, b) => remaining[b] - remaining[a]); // 남은 슬롯 많은 쿼터 우선
+      .filter((qi) => remaining[qi] > 0 && !req.assignedQs.has(qi));
 
-    const selected = available.slice(0, req.needed);
+    // 최대 분산 배치: 쿼터를 균등 간격으로 선택 (예: 2/4쿼터 → 0,2 또는 1,3)
+    let selected: number[];
+    if (req.needed < available.length && req.needed >= 2) {
+      // 가능한 조합 중 최대 간격(spread)을 가진 조합 선택
+      const combos: number[][] = [];
+      const pick = (start: number, chosen: number[]) => {
+        if (chosen.length === req.needed) { combos.push([...chosen]); return; }
+        for (let i = start; i < available.length; i++) {
+          chosen.push(available[i]);
+          pick(i + 1, chosen);
+          chosen.pop();
+        }
+      };
+      pick(0, []);
+      // 간격 점수: 인접 쿼터 간 최소 간격이 클수록 좋고, 같으면 remaining 합이 큰 쪽
+      selected = combos.sort((a, b) => {
+        const minGapA = Math.min(...a.slice(1).map((v, i) => v - a[i]));
+        const minGapB = Math.min(...b.slice(1).map((v, i) => v - b[i]));
+        if (minGapA !== minGapB) return minGapB - minGapA; // 간격 큰 쪽 우선
+        const remA = a.reduce((s, qi) => s + remaining[qi], 0);
+        const remB = b.reduce((s, qi) => s + remaining[qi], 0);
+        return remB - remA; // 남은 슬롯 많은 쪽 우선
+      })[0] ?? available.slice(0, req.needed);
+    } else {
+      // 1쿼터만 뛰거나 전부 뛰는 경우: 남은 슬롯 많은 쿼터 우선
+      selected = available.sort((a, b) => remaining[b] - remaining[a]).slice(0, req.needed);
+    }
+
     for (const qi of selected) {
       playerQMap.get(req.playerId)!.push({ quarter: qi + 1, type: "full" });
       remaining[qi] -= 1;
