@@ -239,11 +239,13 @@ function scheduleQuarters(
     }
   }
 
-  // 제약이 큰 선수 먼저: assignedQs가 있으면 선택지가 적으므로 우선 배정
-  // (하프쿼터 선수가 fullQ 선수보다 먼저 처리되어야 빈 슬롯 방지)
+  // 분산이 필요한 선수(2Q) 먼저, 그 다음 제약이 큰 선수(assignedQs 있는 하프), 마지막 3Q+
   reqs.sort((a, b) => {
+    // 하프쿼터로 이미 배정된 선수 우선 (선택지가 적으므로)
     if (a.assignedQs.size !== b.assignedQs.size) return b.assignedQs.size - a.assignedQs.size;
-    return b.needed - a.needed;
+    // 적게 뛰는 선수(2Q) 먼저 배정해야 분산 배치 가능
+    if (a.needed !== b.needed) return a.needed - b.needed;
+    return 0;
   });
 
   for (const req of reqs) {
