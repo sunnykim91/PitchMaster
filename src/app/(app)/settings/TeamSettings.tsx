@@ -321,32 +321,6 @@ function TeamSettingsComponent({
               </div>
             </div>
 
-            {/* 기본 포메이션 */}
-            <div className="rounded-xl border border-border p-4 space-y-3">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">기본 포메이션</p>
-              <p className="text-xs text-muted-foreground">자동 편성과 전술판에서 기본으로 사용할 포메이션입니다.</p>
-              <Select
-                value={team.defaultFormationId || "__none__"}
-                onValueChange={(v) => {
-                  const val = v === "__none__" ? "" : v;
-                  setTeam({ ...team, defaultFormationId: val });
-                }}
-                disabled={!canEditTeam}
-              >
-                <SelectTrigger className="w-auto min-w-[120px] text-sm">
-                  <SelectValue placeholder="선택 안 함" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">선택 안 함</SelectItem>
-                  <SelectItem value="4-4-2">4-4-2</SelectItem>
-                  <SelectItem value="4-2-3-1">4-2-3-1</SelectItem>
-                  <SelectItem value="4-3-3">4-3-3</SelectItem>
-                  <SelectItem value="3-5-2">3-5-2</SelectItem>
-                  <SelectItem value="3-4-3">3-4-3</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* 유니폼 */}
             <div className="rounded-xl border border-border p-4 space-y-4">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">유니폼</p>
@@ -416,6 +390,32 @@ function TeamSettingsComponent({
                   <span className="text-xs font-medium text-muted-foreground">원정</span>
                 </div>
               </div>
+            </div>
+
+            {/* 기본 포메이션 */}
+            <div className="rounded-xl border border-border p-4 space-y-3">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">기본 포메이션</p>
+              <p className="text-xs text-muted-foreground">자동 편성과 전술판에서 기본으로 사용됩니다.</p>
+              <Select
+                value={team.defaultFormationId || "__none__"}
+                onValueChange={(v) => {
+                  const val = v === "__none__" ? "" : v;
+                  setTeam({ ...team, defaultFormationId: val });
+                }}
+                disabled={!canEditTeam}
+              >
+                <SelectTrigger className="w-full text-sm">
+                  <SelectValue placeholder="선택 안 함" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">선택 안 함</SelectItem>
+                  <SelectItem value="4-4-2">4-4-2</SelectItem>
+                  <SelectItem value="4-2-3-1">4-2-3-1</SelectItem>
+                  <SelectItem value="4-3-3">4-3-3</SelectItem>
+                  <SelectItem value="3-5-2">3-5-2</SelectItem>
+                  <SelectItem value="3-4-3">3-4-3</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {canEditTeam && (
