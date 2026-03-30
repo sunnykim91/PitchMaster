@@ -71,7 +71,9 @@ function getSlotSubPosition(slot: FormationSlot): PreferredPosition {
   if (["LB", "LWB"].includes(slot.role)) return "LB";
   if (["RB", "RWB"].includes(slot.role)) return "RB";
   if (["CDM", "LDM", "RDM"].includes(slot.role)) return "CDM";
-  if (["CM", "LCM", "RCM", "LM", "RM"].includes(slot.role)) return "CM";
+  if (["CM", "LCM", "RCM"].includes(slot.role)) return "CM";
+  if (slot.role === "LM") return "LW";
+  if (slot.role === "RM") return "RW";
   if (slot.role === "CAM") return "CAM";
   if (slot.role === "LAM") return "LW";
   if (slot.role === "RAM") return "RW";
