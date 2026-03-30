@@ -156,14 +156,6 @@ function MatchDiaryTabInner({
             >
               결과 요약 복사
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleShareCardDownload}
-            >
-              카드 이미지 복사
-            </Button>
           </div>
 
           {shareMessage ? (
