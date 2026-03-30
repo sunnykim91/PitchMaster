@@ -253,10 +253,15 @@ function scheduleQuarters(
     const available = Array.from({ length: quarterCount }, (_, i) => i)
       .filter((qi) => remaining[qi] > 0 && !req.assignedQs.has(qi));
 
-    // 최대 분산 배치: 쿼터를 균등 간격으로 선택 (예: 2/4쿼터 → 0,2 또는 1,3)
     let selected: number[];
-    if (req.needed < available.length && req.needed >= 2) {
-      // 가능한 조합 중 최대 간격(spread)을 가진 조합 선택
+    const skip = available.length - req.needed; // 빠질 쿼터 수
+
+    if (skip === 0 || req.needed <= 1) {
+      // 전부 뛰거나 1쿼터: remaining 많은 순
+      selected = available.sort((a, b) => remaining[b] - remaining[a]).slice(0, req.needed);
+    } else if (skip >= req.needed) {
+      // 절반 이하만 뛰는 경우 (예: 2Q/4Q) → 균등 간격 분산
+      const idealGap = quarterCount / req.needed;
       const combos: number[][] = [];
       const pick = (start: number, chosen: number[]) => {
         if (chosen.length === req.needed) { combos.push([...chosen]); return; }
@@ -267,25 +272,20 @@ function scheduleQuarters(
         }
       };
       pick(0, []);
-      // 균등 간격 우선: 이상적 간격 = quarterCount / needed (예: 4Q/2명 = 간격2 → 1,3 또는 2,4)
-      const idealGap = quarterCount / req.needed;
       selected = combos.sort((a, b) => {
-        // 각 조합의 실제 간격들의 표준편차가 이상적 간격에 가까울수록 좋음
         const scoreCombo = (c: number[]) => {
           const gaps = c.slice(1).map((v, i) => v - c[i]);
-          // 모든 간격이 idealGap에 가까운지 (차이 합산)
           return gaps.reduce((s, g) => s + Math.abs(g - idealGap), 0);
         };
-        const scoreA = scoreCombo(a);
-        const scoreB = scoreCombo(b);
-        if (scoreA !== scoreB) return scoreA - scoreB; // 이상적 간격에 가까운 쪽 우선
-        const remA = a.reduce((s, qi) => s + remaining[qi], 0);
-        const remB = b.reduce((s, qi) => s + remaining[qi], 0);
-        return remB - remA; // 남은 슬롯 많은 쪽 우선
+        const diff = scoreCombo(a) - scoreCombo(b);
+        if (diff !== 0) return diff;
+        return b.reduce((s, qi) => s + remaining[qi], 0) - a.reduce((s, qi) => s + remaining[qi], 0);
       })[0] ?? available.slice(0, req.needed);
     } else {
-      // 1쿼터만 뛰거나 전부 뛰는 경우: 남은 슬롯 많은 쿼터 우선
-      selected = available.sort((a, b) => remaining[b] - remaining[a]).slice(0, req.needed);
+      // 대부분 뛰고 1~2개만 빠지는 경우 (예: 3Q/4Q) → remaining 가장 적은 쿼터를 빼기
+      const sorted = [...available].sort((a, b) => remaining[a] - remaining[b]);
+      const toSkip = new Set(sorted.slice(0, skip));
+      selected = available.filter((qi) => !toSkip.has(qi));
     }
 
     for (const qi of selected) {
