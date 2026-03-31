@@ -63,6 +63,17 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const [installMode, setInstallMode] = useState<InstallMode>("none");
   const [hasPrompt, setHasPrompt] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+
+  // 오프라인 감지
+  useEffect(() => {
+    const goOffline = () => setIsOffline(true);
+    const goOnline = () => setIsOffline(false);
+    setIsOffline(!navigator.onLine);
+    window.addEventListener("offline", goOffline);
+    window.addEventListener("online", goOnline);
+    return () => { window.removeEventListener("offline", goOffline); window.removeEventListener("online", goOnline); };
+  }, []);
 
   // PWA 설치 프롬프트 전역 초기화
   useEffect(() => {
@@ -337,11 +348,18 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   return (
     <div className="min-h-screen overflow-x-hidden">
       <div className="mx-auto grid max-w-7xl gap-4 px-4 py-4 lg:grid-cols-[260px_1fr]">
+        {/* Offline Banner */}
+        {isOffline && (
+          <div className="rounded-xl bg-[hsl(var(--loss))]/15 px-4 py-2.5 text-center text-sm font-semibold text-[hsl(var(--loss))] lg:col-span-2">
+            인터넷 연결이 끊겼습니다. 일부 기능이 제한될 수 있습니다.
+          </div>
+        )}
+
         {/* Mobile Header */}
         <header className="lg:hidden">
           <Card className="backdrop-blur-sm bg-card/95">
             <CardContent className="flex items-center justify-between p-4">
-              <div>
+              <Link href="/dashboard" className="block">
                 <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">PitchMaster</p>
                 <p className="text-lg font-bold flex items-center gap-1.5">
                   <TeamLogo logoUrl={session.user.teamLogoUrl} teamName={session.user.teamName ?? "T"} size="sm" />
@@ -361,7 +379,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                     </Badge>
                   )}
                 </p>
-              </div>
+              </Link>
               <div className="flex items-center gap-2">
                 <Sheet open={notiOpen} onOpenChange={(open) => { setNotiOpen(open); if (open) fetchNotifications(); }}>
                   <SheetTrigger asChild>
