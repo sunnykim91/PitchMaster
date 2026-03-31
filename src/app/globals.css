@@ -238,6 +238,12 @@ select optgroup {
   50% { box-shadow: 0 0 16px 4px hsl(var(--primary) / 0.15); }
 }
 
+@keyframes loading-bar {
+  0% { width: 0%; margin-left: 0%; }
+  50% { width: 60%; margin-left: 20%; }
+  100% { width: 0%; margin-left: 100%; }
+}
+
 @keyframes step-connector {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }

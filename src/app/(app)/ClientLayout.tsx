@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import SidebarNav from "@/components/SidebarNav";
@@ -52,6 +52,16 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [navigating, setNavigating] = useState(false);
+  const prevPathname = useRef(pathname);
+
+  // 페이지 전환 로딩 표시
+  useEffect(() => {
+    if (prevPathname.current !== pathname) {
+      setNavigating(false);
+      prevPathname.current = pathname;
+    }
+  }, [pathname]);
   const { viewAsRole, setViewAsRole } = useViewAsRole();
   const canSwitchRole = session.user.name === "김선휘";
   const [copied, setCopied] = useState(false);
@@ -347,6 +357,12 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
   return (
     <div className="min-h-screen overflow-x-hidden">
+      {/* 페이지 전환 로딩 바 */}
+      {navigating && (
+        <div className="fixed top-0 left-0 right-0 z-[100] h-0.5">
+          <div className="h-full bg-primary animate-[loading-bar_1.5s_ease-in-out_infinite]" />
+        </div>
+      )}
       <div className="mx-auto grid max-w-7xl gap-4 px-4 py-4 lg:grid-cols-[260px_1fr]">
         {/* Offline Banner */}
         {isOffline && (
@@ -516,6 +532,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
               <Link
                 key={tab.href}
                 href={tab.href}
+                onClick={() => { if (!isActive) setNavigating(true); }}
                 className={cn(
                   "relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-xs active:scale-95 transition-all",
                   isActive ? "text-primary" : "text-muted-foreground"

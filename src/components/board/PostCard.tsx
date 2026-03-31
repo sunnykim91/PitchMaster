@@ -160,7 +160,8 @@ export const PostCard = memo(function PostCard({
               alt={post.title}
               width={480}
               height={240}
-              className="w-full max-h-56 rounded-lg object-cover"
+              className="w-full max-h-56 rounded-lg object-cover bg-secondary animate-pulse"
+              onLoad={(e) => (e.currentTarget.classList.remove("animate-pulse", "bg-secondary"))}
             />
           </button>
         )}

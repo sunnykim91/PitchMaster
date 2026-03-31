@@ -165,9 +165,11 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") setIsOpen(false);
     };
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => { e.preventDefault(); };
     if (isOpen) {
       window.addEventListener("keydown", handleEsc);
-      return () => window.removeEventListener("keydown", handleEsc);
+      window.addEventListener("beforeunload", handleBeforeUnload);
+      return () => { window.removeEventListener("keydown", handleEsc); window.removeEventListener("beforeunload", handleBeforeUnload); };
     }
   }, [isOpen]);
 
