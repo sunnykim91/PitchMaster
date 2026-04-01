@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { apiMutate } from "@/lib/useApi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -104,6 +104,33 @@ function MatchInfoTabInner({
   const [sendingComment, setSendingComment] = useState(false);
   const isInternal = match.matchType === "INTERNAL";
 
+  /* ── 날씨 데이터 ── */
+  const [weather, setWeather] = useState<{
+    temp: number | null;
+    description: string;
+    humidity: number | null;
+    windSpeed: number | null;
+    icon: string;
+  } | null>(null);
+
+  useEffect(() => {
+    // 완료된 경기이면 날씨 표시 안 함
+    if (match.status === "COMPLETED") return;
+    if (!match.date) return;
+
+    const params = new URLSearchParams({ date: match.date });
+    if (match.location) params.set("location", match.location);
+
+    fetch(`/api/weather?${params}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.icon) setWeather(data);
+      })
+      .catch(() => {
+        // 날씨 조회 실패 시 무시
+      });
+  }, [match.date, match.location, match.status]);
+
   /* ── 유니폼 스타일 ── */
   const uniformPrimary = _uniformPrimary ?? "hsl(var(--primary))";
   const uniformSecondary = _uniformSecondary ?? "hsl(var(--muted-foreground))";
@@ -140,6 +167,7 @@ function MatchInfoTabInner({
       id: matchId,
       date: fd.get("date"),
       time: fd.get("time"),
+      endTime: fd.get("endTime") || null,
       location: fd.get("location"),
       opponent: fd.get("opponent"),
     });
@@ -256,7 +284,11 @@ function MatchInfoTabInner({
                 </div>
                 <div className="space-y-1">
                   <Label className="text-sm">시간</Label>
-                  <Input type="time" name="time" defaultValue={match.time} />
+                  <div className="flex items-center gap-2">
+                    <Input type="time" name="time" defaultValue={match.time} />
+                    <span className="text-muted-foreground shrink-0">~</span>
+                    <Input type="time" name="endTime" defaultValue={match.endTime ?? ""} />
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-sm">장소</Label>
@@ -281,13 +313,32 @@ function MatchInfoTabInner({
               {match.time && (
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground w-14 shrink-0">시간</span>
-                  <span className="font-medium">{formatTime(match.time)}</span>
+                  <span className="font-medium">
+                    {formatTime(match.time)}
+                    {match.endTime && (
+                      <span className="text-muted-foreground"> ~ {formatTime(match.endTime)}</span>
+                    )}
+                  </span>
                 </div>
               )}
               {match.location && (
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground w-14 shrink-0">장소</span>
                   <span className="font-medium">{match.location}</span>
+                </div>
+              )}
+              {/* 날씨 */}
+              {weather && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-14 shrink-0">날씨</span>
+                  <span className="font-medium">
+                    {weather.icon} {weather.description}{weather.temp != null ? ` ${weather.temp}\u00B0C` : ""}
+                    {weather.humidity != null && weather.windSpeed != null && (
+                      <span className="text-muted-foreground text-xs ml-1">
+                        습도 {weather.humidity}% · 풍속 {weather.windSpeed}m/s
+                      </span>
+                    )}
+                  </span>
                 </div>
               )}
               {match.opponent && (

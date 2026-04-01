@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import Image from "next/image";
-import { MessageSquare, Heart, Pin, ChevronDown, ChevronUp, Pencil, Trash2 } from "lucide-react";
+import { MessageSquare, Heart, Pin, ChevronDown, ChevronUp, Pencil, Trash2, Share2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,7 @@ export interface PostCardProps {
   onPin: (postId: string) => void;
   onImageClick: (src: string) => void;
   onVote: (pollId: string, optionId: string) => void;
+  onShare: (post: Post) => void;
   onToggleExpand: (postId: string) => void;
   likingPostIds: Set<string>;
   deletingPostIds: Set<string>;
@@ -48,6 +49,7 @@ export const PostCard = memo(function PostCard({
   onPin,
   onImageClick,
   onVote,
+  onShare,
   onToggleExpand,
   likingPostIds,
   deletingPostIds,
@@ -195,6 +197,14 @@ export const PostCard = memo(function PostCard({
             <MessageSquare className="h-4 w-4" />
             {post.comments > 0 && <span>{post.comments}</span>}
             {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onShare(post)}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-md hover:bg-muted active:scale-95 ml-auto"
+          >
+            <Share2 className="h-4 w-4" />
           </button>
         </div>
 

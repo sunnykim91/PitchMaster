@@ -376,8 +376,8 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           <Card className="backdrop-blur-sm bg-card/95">
             <CardContent className="flex items-center justify-between p-4">
               <Link href="/dashboard" className="block">
-                <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">PitchMaster</p>
-                <p className="text-lg font-bold flex items-center gap-1.5">
+                <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary block">PitchMaster</span>
+                <span className="text-lg font-bold flex items-center gap-1.5">
                   <TeamLogo logoUrl={session.user.teamLogoUrl} teamName={session.user.teamName ?? "T"} size="sm" />
                   {session.user.teamName}
                   {(() => {
@@ -394,7 +394,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                       {teams.length}팀
                     </Badge>
                   )}
-                </p>
+                </span>
               </Link>
               <div className="flex items-center gap-2">
                 <Sheet open={notiOpen} onOpenChange={(open) => { setNotiOpen(open); if (open) fetchNotifications(); }}>

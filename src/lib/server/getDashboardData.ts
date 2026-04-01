@@ -26,6 +26,7 @@ export type DashboardData = {
     id: string;
     match_date: string;
     match_time: string | null;
+    match_end_time: string | null;
     opponent_name: string | null;
     location: string | null;
     uniform_type: string | null;
@@ -68,7 +69,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
 
   const [upcomingRes, recentRes, activeVotesRes] = await Promise.all([
     db.from("matches")
-      .select("id, match_date, match_time, vote_deadline, opponent_name, status, location, uniform_type")
+      .select("id, match_date, match_time, match_end_time, vote_deadline, opponent_name, status, location, uniform_type")
       .eq("team_id", teamId)
       .eq("status", "SCHEDULED")
       .gte("match_date", new Date().toISOString().split("T")[0])

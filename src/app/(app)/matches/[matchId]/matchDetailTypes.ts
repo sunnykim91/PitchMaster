@@ -9,6 +9,7 @@ export type MatchRow = {
   id: string;
   match_date: string;
   match_time: string | null;
+  match_end_time: string | null;
   location: string | null;
   opponent_name: string | null;
   quarter_count: number;
@@ -104,6 +105,7 @@ export type Match = {
   id: string;
   date: string;
   time: string;
+  endTime?: string | null;
   location: string;
   opponent?: string;
   quarterCount: number;
@@ -204,6 +206,7 @@ export function mapMatch(row: MatchRow): Match {
     id: row.id,
     date: row.match_date,
     time: row.match_time ?? "",
+    endTime: row.match_end_time ?? null,
     location: row.location ?? "",
     opponent: row.opponent_name ?? undefined,
     quarterCount: row.quarter_count,

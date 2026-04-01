@@ -31,6 +31,7 @@ type Match = {
   id: string;
   date: string;
   time: string;
+  endTime?: string | null;
   location: string;
   opponent?: string;
   quarterCount: number;
@@ -50,6 +51,7 @@ type DbMatch = {
   opponent_name: string;
   match_date: string;
   match_time: string;
+  match_end_time: string | null;
   location: string;
   quarter_count: number;
   quarter_duration: number;
@@ -85,6 +87,7 @@ function mapDbMatchToMatch(db: DbMatch): Match {
     id: db.id,
     date: db.match_date,
     time: db.match_time,
+    endTime: db.match_end_time,
     location: db.location,
     opponent: db.opponent_name || undefined,
     quarterCount: db.quarter_count,
@@ -140,6 +143,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   const today = now ? new Date(now).toISOString().split("T")[0] : "";
   const [matchDate, setMatchDate] = useState(today);
   const [matchTime, setMatchTime] = useState("09:00");
+  const [matchEndTime, setMatchEndTime] = useState("11:00");
   const [location, setLocation] = useState("");
   const [voteDeadline, setVoteDeadline] = useState(() => {
     const prev = new Date(today + "T00:00:00");
@@ -227,6 +231,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     const body = {
       date: String(formData.get("date") || ""),
       time: String(formData.get("time") || ""),
+      endTime: String(formData.get("endTime") || "") || undefined,
       location: String(formData.get("location") || ""),
       opponent: matchType === "INTERNAL" ? null : String(formData.get("opponent") || ""),
       quarterCount: Number(formData.get("quarterCount") || defaults.quarters),
@@ -367,21 +372,44 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   {formErrors.matchDate && <p className="text-xs text-destructive mt-1">{formErrors.matchDate}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="time">시간</Label>
-                  <select
-                    id="time"
-                    name="time"
-                    required
-                    value={matchTime}
-                    onChange={(e) => setMatchTime(e.target.value)}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    {Array.from({ length: 48 }, (_, i) => {
-                      const h = String(Math.floor(i / 2)).padStart(2, "0");
-                      const m = i % 2 === 0 ? "00" : "30";
-                      return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
-                    })}
-                  </select>
+                  <Label>시간</Label>
+                  <div className="flex items-center gap-2">
+                    <select
+                      id="time"
+                      name="time"
+                      required
+                      value={matchTime}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setMatchTime(val);
+                        // 종료시간 자동 계산: +2시간
+                        const [hh, mm] = val.split(":").map(Number);
+                        const endH = String((hh + 2) % 24).padStart(2, "0");
+                        setMatchEndTime(`${endH}:${String(mm).padStart(2, "0")}`);
+                      }}
+                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    >
+                      {Array.from({ length: 48 }, (_, i) => {
+                        const h = String(Math.floor(i / 2)).padStart(2, "0");
+                        const m = i % 2 === 0 ? "00" : "30";
+                        return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
+                      })}
+                    </select>
+                    <span className="text-muted-foreground shrink-0">~</span>
+                    <select
+                      id="endTime"
+                      name="endTime"
+                      value={matchEndTime}
+                      onChange={(e) => setMatchEndTime(e.target.value)}
+                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    >
+                      {Array.from({ length: 48 }, (_, i) => {
+                        const h = String(Math.floor(i / 2)).padStart(2, "0");
+                        const m = i % 2 === 0 ? "00" : "30";
+                        return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
+                      })}
+                    </select>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="voteDeadline">투표 마감 <span className="text-xs font-normal text-muted-foreground">(기본: 경기 전날 17시)</span></Label>
@@ -605,7 +633,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       })()}
                     </div>
                     <CardTitle className="mt-2 font-heading text-lg sm:text-2xl font-bold uppercase">
-                      {formatMatchDate(match.date)} · {formatTime(match.time)}
+                      {formatMatchDate(match.date)} · {formatTime(match.time)}{match.endTime ? ` ~ ${formatTime(match.endTime)}` : ""}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground truncate max-w-[280px] sm:max-w-none">
                       {match.location} {match.matchType === "INTERNAL" ? "· 자체전" : match.opponent ? `· ${match.opponent}` : ""}

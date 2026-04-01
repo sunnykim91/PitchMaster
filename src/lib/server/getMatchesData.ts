@@ -6,6 +6,7 @@ export type DbMatchRow = {
   opponent_name: string;
   match_date: string;
   match_time: string;
+  match_end_time: string | null;
   location: string;
   quarter_count: number;
   quarter_duration: number;

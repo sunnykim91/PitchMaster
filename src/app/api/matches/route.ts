@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
       opponent_name: body.opponent || null,
       match_date: body.date,
       match_time: body.time || null,
+      match_end_time: body.endTime || null,
       location: body.location || null,
       quarter_count: body.quarterCount ?? 4,
       quarter_duration: body.quarterDuration ?? 25,
@@ -131,6 +132,7 @@ export async function PUT(request: NextRequest) {
   const updates: Record<string, unknown> = {};
   if (body.date !== undefined) updates.match_date = body.date;
   if (body.time !== undefined) updates.match_time = body.time || null;
+  if (body.endTime !== undefined) updates.match_end_time = body.endTime || null;
   if (body.location !== undefined) updates.location = body.location || null;
   if (body.opponent !== undefined) updates.opponent_name = body.opponent || null;
   if (body.quarterCount !== undefined) updates.quarter_count = body.quarterCount;

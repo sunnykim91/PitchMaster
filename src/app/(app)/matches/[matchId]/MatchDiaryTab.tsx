@@ -60,7 +60,8 @@ function MatchDiaryTabInner({
   }
 
   async function handleShare() {
-    const message = `PitchMaster 경기 결과\n${match.date} ${formatTime(match.time)}\n${match.location}\n스코어 ${score}`;
+    const timeStr = match.endTime ? `${formatTime(match.time)} ~ ${formatTime(match.endTime)}` : formatTime(match.time);
+    const message = `PitchMaster 경기 결과\n${match.date} ${timeStr}\n${match.location}\n스코어 ${score}`;
     await navigator.clipboard.writeText(message);
     setShareMessage("경기 결과 요약이 클립보드에 복사되었습니다.");
     setTimeout(() => setShareMessage(null), 2000);

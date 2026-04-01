@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { BarChart3, ArrowUpDown, ArrowDown } from "lucide-react";
+import { BarChart3, ArrowUpDown, ArrowDown, Download, Share2, Trophy } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role } from "@/lib/types";
@@ -436,6 +436,13 @@ export default function RecordsClient({
               </div>
             )}
           </CardContent>
+          {/* 선수 카드 버튼 — TODO: 디자인 개선 후 활성화
+          {!loadingRecords && !isAllTime && (
+            <div className="px-4 sm:px-6 pb-4">
+              <PlayerCardButton userId={userId} seasonId={seasonId} />
+            </div>
+          )}
+          */}
         </Card>
 
         {/* 시즌 요약 + 레이더 차트 */}
@@ -472,6 +479,11 @@ export default function RecordsClient({
 
       {/* ── Tab: 팀 랭킹 ── */}
       <div className={activeTab === "ranking" ? "grid gap-5" : "hidden"}>
+
+      {/* 시즌 어워드 — TODO: 디자인 개선 후 활성화
+      {!isAllTime && <SeasonAwardsCard seasonId={seasonId} />}
+      */}
+
       {/* ── Row 2: 팀 랭킹 (PC: 3열 가로 배치) ── */}
       <Card>
         <CardHeader>
@@ -715,7 +727,7 @@ export default function RecordsClient({
       </div>
 
       {/* ── 드릴다운 Sheet ── */}
-      <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
+      <Sheet open={detailOpen} onOpenChange={setDetailOpen} key="detail-sheet">
         <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto rounded-t-2xl px-0">
           <SheetHeader className="text-left px-5 pb-3 border-b border-border/30">
             <p className="text-xs text-muted-foreground">{detailMemberName}</p>
@@ -784,5 +796,195 @@ export default function RecordsClient({
         </SheetContent>
       </Sheet>
     </div>
+  );
+}
+
+// ── 선수 카드 버튼 컴포넌트 ──
+function PlayerCardButton({ userId, seasonId }: { userId: string; seasonId: string }) {
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function handleDownload() {
+    setLoading(true);
+    try {
+      const url = `/api/player-card?memberId=${userId}&seasonId=${seasonId}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("fail");
+      const blob = await res.blob();
+
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (!isMobile && navigator.clipboard?.write) {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        setMessage("선수 카드가 클립보드에 복사되었습니다");
+      } else {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "player-card.png";
+        link.click();
+        URL.revokeObjectURL(link.href);
+        setMessage("선수 카드가 저장되었습니다");
+      }
+    } catch {
+      setMessage("카드 생성에 실패했습니다");
+    } finally {
+      setLoading(false);
+      setTimeout(() => setMessage(null), 2500);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1 gap-2"
+          onClick={handleDownload}
+          disabled={loading}
+        >
+          {loading ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          ) : (
+            <Download className="h-4 w-4" />
+          )}
+          선수 카드
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1 gap-2"
+          onClick={() => {
+            const url = `${window.location.origin}/player/${userId}`;
+            navigator.clipboard.writeText(url);
+            setMessage("프로필 링크가 복사되었습니다");
+          }}
+        >
+          <Share2 className="h-4 w-4" />
+          프로필 공유
+        </Button>
+      </div>
+      {message && (
+        <p className="text-xs text-center text-muted-foreground animate-in fade-in">{message}</p>
+      )}
+    </div>
+  );
+}
+
+// ── 시즌 어워드 카드 컴포넌트 ──
+type Award = { name: string; value: string | number; label: string };
+type AwardsData = {
+  awards: Record<string, Award | null>;
+  seasonName: string;
+  teamName: string;
+  totalMatches: number;
+  record: { wins: number; draws: number; losses: number };
+};
+
+function SeasonAwardsCard({ seasonId }: { seasonId: string }) {
+  const { data, loading } = useApi<AwardsData>(
+    seasonId ? `/api/season-awards?seasonId=${seasonId}` : "",
+    { awards: {}, seasonName: "", teamName: "", totalMatches: 0, record: { wins: 0, draws: 0, losses: 0 } },
+    { skip: !seasonId }
+  );
+
+  const [cardLoading, setCardLoading] = useState(false);
+  const [cardMessage, setCardMessage] = useState<string | null>(null);
+
+  const awards = data.awards;
+  const hasAwards = awards && Object.values(awards).some((a) => a !== null);
+
+  async function handleDownloadCard() {
+    setCardLoading(true);
+    try {
+      const res = await fetch(`/api/season-award-card?seasonId=${seasonId}`);
+      if (!res.ok) throw new Error("fail");
+      const blob = await res.blob();
+
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (!isMobile && navigator.clipboard?.write) {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        setCardMessage("시상식 카드가 클립보드에 복사되었습니다");
+      } else {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "season-awards.png";
+        link.click();
+        URL.revokeObjectURL(link.href);
+        setCardMessage("시상식 카드가 저장되었습니다");
+      }
+    } catch {
+      setCardMessage("카드 생성에 실패했습니다");
+    } finally {
+      setCardLoading(false);
+      setTimeout(() => setCardMessage(null), 2500);
+    }
+  }
+
+  if (loading || !hasAwards) return null;
+
+  const awardItems: { key: string; emoji: string; fallbackLabel: string }[] = [
+    { key: "topScorer", emoji: "⚽", fallbackLabel: "득점왕" },
+    { key: "topAssist", emoji: "🅰️", fallbackLabel: "도움왕" },
+    { key: "ironWall", emoji: "🛡️", fallbackLabel: "철벽수비" },
+    { key: "topAttendance", emoji: "🏃", fallbackLabel: "출석왕" },
+    { key: "luckyCharm", emoji: "🍀", fallbackLabel: "승리요정" },
+    { key: "topMvp", emoji: "⭐", fallbackLabel: "MOM" },
+    { key: "bestMatch", emoji: "⚡", fallbackLabel: "베스트매치" },
+  ];
+
+  return (
+    <Card>
+      <CardHeader className="px-4 sm:px-6">
+        <div className="flex items-center gap-2">
+          <Trophy className="h-5 w-5 text-[hsl(var(--warning))]" />
+          <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
+            {data.seasonName} 시즌 어워드
+          </CardTitle>
+        </div>
+        {data.totalMatches > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {data.totalMatches}경기 · {data.record.wins}승 {data.record.draws}무 {data.record.losses}패
+          </p>
+        )}
+      </CardHeader>
+      <CardContent className="px-4 sm:px-6">
+        <div className="space-y-2.5">
+          {awardItems.map(({ key, emoji, fallbackLabel }) => {
+            const award = awards[key] as Award | null;
+            if (!award) return null;
+            return (
+              <div key={key} className="flex items-center gap-3 rounded-xl bg-secondary/50 px-3 py-2.5">
+                <span className="text-lg shrink-0">{emoji}</span>
+                <span className="text-sm font-medium text-muted-foreground w-16 shrink-0">
+                  {award.label || fallbackLabel}
+                </span>
+                <span className="text-sm font-bold flex-1 truncate">{award.name}</span>
+                <span className="text-sm font-bold text-primary shrink-0">{award.value}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 space-y-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full gap-2"
+            onClick={handleDownloadCard}
+            disabled={cardLoading}
+          >
+            {cardLoading ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            ) : (
+              <Share2 className="h-4 w-4" />
+            )}
+            시상식 카드 저장
+          </Button>
+          {cardMessage && (
+            <p className="text-xs text-center text-muted-foreground animate-in fade-in">{cardMessage}</p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

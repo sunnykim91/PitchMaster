@@ -130,9 +130,21 @@ export default function BoardClient({
     { skip: !!initialData },
   );
 
-  const posts: Post[] = useMemo(
+  const rawPosts: Post[] = useMemo(
     () => postsPayload.posts.map(mapPost),
     [postsPayload],
+  );
+
+  // Optimistic 투표 오버라이드 (pollId → 변경된 Poll)
+  const [optimisticPolls, setOptimisticPolls] = useState<Record<string, Poll>>({});
+
+  const posts: Post[] = useMemo(
+    () => rawPosts.map((p) =>
+      p.poll && optimisticPolls[p.poll.id]
+        ? { ...p, poll: optimisticPolls[p.poll.id] }
+        : p
+    ),
+    [rawPosts, optimisticPolls],
   );
 
   /* ── Local UI state ── */
@@ -335,14 +347,65 @@ export default function BoardClient({
   }, [refetchPosts, showToast]);
 
   const handleVote = useCallback(async (pollId: string, optionId: string) => {
-    setVotingOptionId(optionId);
+    // 현재 poll 찾기
+    const post = posts.find((p) => p.poll?.id === pollId);
+    if (!post?.poll) return;
+    const poll = optimisticPolls[pollId] ?? post.poll;
+    const prevVote = poll.myVote;
+    const isSameOption = prevVote === optionId;
+
+    // Optimistic UI: 즉시 반영
+    const newOptions = poll.options.map((opt) => {
+      let votes = opt.votes;
+      if (prevVote === opt.id) votes--;
+      if (!isSameOption && opt.id === optionId) votes++;
+      return { ...opt, votes: Math.max(0, votes) };
+    });
+    setOptimisticPolls((prev) => ({
+      ...prev,
+      [pollId]: {
+        ...poll,
+        options: newOptions,
+        totalVotes: newOptions.reduce((s, o) => s + o.votes, 0),
+        myVote: isSameOption ? null : optionId,
+      },
+    }));
+
+    // 백그라운드 API 호출
     try {
       await apiMutate("/api/posts/vote", "POST", { pollId, optionId });
       await refetchPosts();
-    } finally {
-      setVotingOptionId(null);
+      // 서버 데이터 반영 후 optimistic 제거
+      setOptimisticPolls((prev) => { const n = { ...prev }; delete n[pollId]; return n; });
+    } catch {
+      // 롤백
+      setOptimisticPolls((prev) => { const n = { ...prev }; delete n[pollId]; return n; });
+      await refetchPosts();
     }
-  }, [refetchPosts]);
+  }, [posts, optimisticPolls, refetchPosts]);
+
+  const handleShare = useCallback(async (post: Post) => {
+    const url = `${window.location.origin}/board`;
+    const title = post.title;
+    const text = post.poll
+      ? `📊 ${post.poll.question}\n${post.poll.options.map((o) => `• ${o.label}`).join("\n")}`
+      : post.content.slice(0, 100);
+
+    // Web Share API 시도
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+        return;
+      } catch {
+        // 취소 등 무시
+      }
+    }
+
+    // fallback: 클립보드 복사
+    const shareText = `${title}\n${text}\n\n${url}`;
+    await navigator.clipboard.writeText(shareText);
+    showToast("게시글 링크가 복사되었습니다.");
+  }, [showToast]);
 
   const handleAddComment = useCallback(async (postId: string) => {
     const content = commentInputs[postId]?.trim();
@@ -458,6 +521,7 @@ export default function BoardClient({
               onPin={handlePin}
               onImageClick={setLightboxSrc}
               onVote={handleVote}
+              onShare={handleShare}
               onToggleExpand={toggleExpand}
               likingPostIds={likingPostIds}
               deletingPostIds={deletingPostIds}

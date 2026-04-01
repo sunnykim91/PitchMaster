@@ -23,6 +23,7 @@ type UpcomingMatch = {
   id: string;
   match_date: string;
   match_time: string | null;
+  match_end_time: string | null;
   opponent_name: string | null;
   location: string | null;
   voteCounts: { attend: number; absent: number; undecided: number };
@@ -384,34 +385,37 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
             <p className="type-overline">{formatDateKo(upcomingMatch.match_date)}</p>
             <p className="mt-2 type-score text-foreground">
               {upcomingMatch.match_time ? formatTime(upcomingMatch.match_time) : "시간 미정"}
+              {upcomingMatch.match_end_time && (
+                <span className="text-muted-foreground"> ~ {formatTime(upcomingMatch.match_end_time)}</span>
+              )}
             </p>
             <p className="mt-1 truncate text-sm text-muted-foreground">
               {upcomingMatch.location ?? "장소 미정"}
             </p>
-            {(() => {
-              const uniformType = upcomingMatch.uniform_type ?? "HOME";
-              const isHome = uniformType !== "AWAY";
-              const bgColor = data.teamUniform
-                ? (isHome ? data.teamUniform.uniformPrimary : data.teamUniform.uniformSecondary) ?? (isHome ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))")
-                : (isHome ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))");
-              return (
-                <div className="mt-1.5 flex items-center gap-1.5">
-                  <div
-                    className="h-4 w-4 rounded-full border border-border/60 shrink-0"
-                    style={{ backgroundColor: bgColor }}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {isHome ? "홈" : "원정"} 유니폼
+
+            {/* 날씨 + 유니폼 + 상대팀 정보 묶음 */}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {(() => {
+                const uniformType = upcomingMatch.uniform_type ?? "HOME";
+                const isHome = uniformType !== "AWAY";
+                const bgColor = data.teamUniform
+                  ? (isHome ? data.teamUniform.uniformPrimary : data.teamUniform.uniformSecondary) ?? (isHome ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))")
+                  : (isHome ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))");
+                return (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/50 px-2.5 py-1 text-xs text-muted-foreground">
+                    <span
+                      className="h-3 w-3 rounded-full border border-border/60 shrink-0"
+                      style={{ backgroundColor: bgColor }}
+                    />
+                    {isHome ? "홈" : "원정"}
                   </span>
-                </div>
-              );
-            })()}
-            <p className="mt-2 truncate text-sm text-muted-foreground">
-              상대팀:{" "}
-              <span className="font-semibold text-foreground">
-                {upcomingMatch.opponent_name ?? "미정"}
+                );
+              })()}
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted/50 px-2.5 py-1 text-xs text-muted-foreground">
+                vs <span className="font-semibold text-foreground">{upcomingMatch.opponent_name ?? "미정"}</span>
               </span>
-            </p>
+              <DashboardWeather date={upcomingMatch.match_date} location={upcomingMatch.location} />
+            </div>
 
             {/* Vote buttons */}
             {upcomingMatch.myMemberId && (
@@ -715,5 +719,40 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
         ))}
       </div>
     </div>
+  );
+}
+
+// ── 대시보드 날씨 컴포넌트 ──
+function DashboardWeather({ date, location }: { date: string; location: string | null }) {
+  const [weather, setWeather] = useState<{
+    temp: number | null;
+    description: string;
+    icon: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!date) return;
+    const params = new URLSearchParams({ date });
+    if (location) params.set("location", location);
+
+    fetch(`/api/weather?${params}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.icon) setWeather(data);
+      })
+      .catch(() => {});
+  }, [date, location]);
+
+  if (!weather) return null;
+
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-muted/50 px-2.5 py-1 text-xs text-muted-foreground">
+      <span className="text-sm">{weather.icon}</span>
+      {weather.temp != null ? (
+        <span className="font-semibold text-foreground">{weather.temp}°C</span>
+      ) : (
+        <span>{weather.description}</span>
+      )}
+    </span>
   );
 }
