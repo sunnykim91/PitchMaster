@@ -62,7 +62,7 @@ export function formatDue(iso: string): string {
     const day = d.getDate();
     const h = String(d.getHours()).padStart(2, "0");
     const min = String(d.getMinutes()).padStart(2, "0");
-    return `마감: ${m}월 ${day}일 ${h}:${min}`;
+    return `${m}월 ${day}일 ${h}:${min}`;
   } catch {
     return iso;
   }
