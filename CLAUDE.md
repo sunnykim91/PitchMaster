@@ -8,10 +8,11 @@
 ## 기술 스택
 - **Frontend**: Next.js 16 (App Router), React 19, TailwindCSS 4
 - **Backend**: Supabase (PostgreSQL), Next.js API Routes
-- **Testing**: Vitest (608+ 테스트)
+- **Testing**: Vitest (615+ 테스트)
 - **Language**: TypeScript (strict mode)
 - **PWA**: Service Worker + Web Push (VAPID)
 - **인증**: 카카오 OAuth + 데모 모드
+- **테마**: 라이트/다크 모드 (ThemeProvider, 기본 다크)
 
 ## 코드 작업 후 필수 워크플로우
 
