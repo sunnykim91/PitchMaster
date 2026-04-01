@@ -7,13 +7,13 @@ import SidebarNav from "@/components/SidebarNav";
 import { ViewAsRoleProvider, useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { ToastProvider } from "@/lib/ToastContext";
 import { ConfirmProvider } from "@/lib/ConfirmContext";
-import { ThemeProvider } from "@/lib/ThemeContext";
+import { ThemeProvider, useTheme } from "@/lib/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { Check, Copy, Link2, Menu, ChevronDown, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle } from "lucide-react";
+import { Check, Copy, Link2, Menu, ChevronDown, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Sun, Moon } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
@@ -399,7 +399,8 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                   )}
                 </span>
               </Link>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <ThemeToggleButton />
                 <Sheet open={notiOpen} onOpenChange={(open) => { setNotiOpen(open); if (open) fetchNotifications(); }}>
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" aria-label="알림" className="relative">
@@ -646,5 +647,27 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
         </div>
       )}
     </div>
+  );
+}
+
+// ── 테마 토글 버튼 ──
+function ThemeToggleButton() {
+  const { resolvedTheme, setTheme, theme } = useTheme();
+
+  function handleToggle() {
+    // 순환: system → light → dark → system
+    if (theme === "system") setTheme("light");
+    else if (theme === "light") setTheme("dark");
+    else setTheme("system");
+  }
+
+  return (
+    <Button variant="ghost" size="icon" aria-label="테마 변경" onClick={handleToggle} className="relative">
+      {resolvedTheme === "dark" ? (
+        <Moon className="h-4 w-4" />
+      ) : (
+        <Sun className="h-4 w-4" />
+      )}
+    </Button>
   );
 }
