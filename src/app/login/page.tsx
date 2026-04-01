@@ -29,6 +29,12 @@ import {
   Rocket,
   ArrowDown,
   ChevronDown,
+  CloudSun,
+  Moon,
+  Share2,
+  Crosshair,
+  Trash2,
+  Image,
 } from "lucide-react";
 
 export default async function LoginPage({
@@ -507,6 +513,11 @@ export default async function LoginPage({
                 { icon: <FileText className="h-4.5 w-4.5" />, title: "경기 일지 & 공유", desc: "결과 카드 카카오톡 공유 + 경기별 댓글 소통" },
                 { icon: <ShieldCheck className="h-4.5 w-4.5" />, title: "회장 이임 & 승인제", desc: "회장 권한 이양, 가입 승인 모드 선택" },
                 { icon: <Settings2 className="h-4.5 w-4.5" />, title: "회칙 · 유니폼 · 시즌 관리", desc: "팀 운영에 필요한 부가 기능 일체" },
+                { icon: <CloudSun className="h-4.5 w-4.5" />, title: "경기일 날씨 예보", desc: "경기 5일 전부터 대시보드에 자동 날씨 표시" },
+                { icon: <Moon className="h-4.5 w-4.5" />, title: "라이트/다크 모드", desc: "야외에선 밝게, 실내에선 어둡게 — 토글 전환" },
+                { icon: <Share2 className="h-4.5 w-4.5" />, title: "게시판 글 공유", desc: "게시글·투표를 카톡이나 링크로 즉시 공유" },
+                { icon: <Crosshair className="h-4.5 w-4.5" />, title: "PK/FK 골 유형 분류", desc: "일반골·PK·FK·헤딩·자책골 세분화 기록" },
+                { icon: <Image className="h-4.5 w-4.5" />, title: "경기 결과 공유 카드", desc: "경기 일지에서 이미지 카드로 결과 공유" },
               ].map((item) => (
                 <div key={item.title} className="flex items-start gap-3 rounded-xl border border-border/20 bg-background/50 p-4 transition-colors hover:border-border/40">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-foreground/5 text-foreground/60">
