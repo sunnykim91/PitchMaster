@@ -292,14 +292,9 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                     초대 코드를 팀원에게 공유하면 바로 가입할 수 있습니다.
                   </p>
                   {inviteCode ? (
-                    <div className="flex gap-2 mt-2">
-                      <Button size="sm" variant="secondary" onClick={handleCopyInviteCode}>
-                        {inviteCopied ? <><Check className="mr-1 h-3.5 w-3.5" />복사됨</> : <><Copy className="mr-1 h-3.5 w-3.5" />코드 복사</>}
-                      </Button>
-                      <Button size="sm" onClick={() => shareTeamInvite({ teamName: teamName || "우리 팀", inviteCode: inviteCode! })}>
-                        카카오톡으로 초대
-                      </Button>
-                    </div>
+                    <Button size="sm" className="mt-2 w-full" onClick={() => shareTeamInvite({ teamName: teamName || "우리 팀", inviteCode: inviteCode! })}>
+                      카카오톡으로 초대하기
+                    </Button>
                   ) : (
                     <Button size="sm" className="mt-2" asChild>
                       <Link href="/settings">초대 코드 확인 &rarr;</Link>
@@ -491,20 +486,22 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
               </Button>
             </div>
           </div>
-        ) : (
+        ) : !showWizard ? (
           <div className="mt-4">
             <EmptyState
               icon={Calendar}
               title="예정된 경기가 없습니다"
               description="새 경기를 등록해보세요."
               action={
-                <Button size="sm" asChild>
-                  <Link href="/matches">일정 등록하기</Link>
-                </Button>
+                isStaffOrAbove(role) ? (
+                  <Button size="sm" asChild>
+                    <Link href="/matches">일정 등록하기</Link>
+                  </Button>
+                ) : undefined
               }
             />
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* ── Invite card (staff/president only) ── */}
@@ -564,7 +561,8 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
         </Card>
       )}
 
-      {/* ── Bento section: votes + tasks + season record ── */}
+      {/* ── Bento section: votes + tasks + season record (위자드 보일 때 숨김) ── */}
+      {!showWizard && (
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {/* Votes */}
         <Card>
@@ -722,6 +720,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
         </CardContent>
       </Card>
       </div>
+      )}
 
       {/* Quick Navigation — PC only */}
       <div className="hidden lg:grid grid-cols-4 gap-2">

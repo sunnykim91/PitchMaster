@@ -143,7 +143,7 @@ export async function shareTeamInvite({
   // GA4 이벤트
   try { const { GA } = await import("@/lib/analytics"); GA.inviteSent("kakao_talk"); } catch { /* ignore */ }
   if (!(await ensureKakao())) {
-    fallbackShare(`${APP_URL}/team?code=${inviteCode}`, `${teamName}에 합류하세요!`);
+    fallbackShare(`${APP_URL}/team?code=${inviteCode}`, `${teamName} 팀 참석투표/회비관리 앱이에요!\n아래 링크 눌러서 카카오 로그인하면 바로 가입돼요 👇`);
     return;
   }
 
@@ -151,7 +151,7 @@ export async function shareTeamInvite({
     objectType: "feed",
     content: {
       title: `⚽ ${teamName}에 합류하세요!`,
-      description: `PitchMaster에서 팀을 관리하고 경기에 참여하세요.\n초대 코드: ${inviteCode}`,
+      description: `링크를 누르면 바로 가입됩니다.\n참석투표 · 회비관리 · 라인업 — 팀 운영을 한 곳에서.`,
       imageUrl: `${APP_URL}/icons/icon-512.png`,
       link: {
         mobileWebUrl: `${APP_URL}/team?code=${inviteCode}`,
@@ -173,9 +173,9 @@ export async function shareTeamInvite({
 /** Kakao SDK 없을 때 Web Share API / 클립보드 fallback */
 function fallbackShare(url: string, text: string) {
   if (typeof navigator !== "undefined" && navigator.share) {
-    navigator.share({ title: "PitchMaster", text, url }).catch(() => {});
+    navigator.share({ title: "PitchMaster", text: `${text}\n${url}`, url }).catch(() => {});
   } else if (typeof navigator !== "undefined" && navigator.clipboard) {
-    navigator.clipboard.writeText(url).catch(() => {});
-    alert("링크가 클립보드에 복사되었습니다.");
+    navigator.clipboard.writeText(`${text}\n${url}`).catch(() => {});
+    alert("초대 링크가 클립보드에 복사되었습니다. 카카오톡에 붙여넣기 해주세요!");
   }
 }
