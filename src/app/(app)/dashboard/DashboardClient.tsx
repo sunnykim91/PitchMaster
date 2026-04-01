@@ -743,7 +743,21 @@ function DashboardWeather({ date, location }: { date: string; location: string |
       .catch(() => {});
   }, [date, location]);
 
-  if (!weather) return null;
+  if (!weather) {
+    // 날씨 데이터 없음 = 5일 초과 또는 과거 경기
+    if (!date) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    if (date <= today) return null;
+    const diff = Math.ceil((new Date(date).getTime() - new Date(today).getTime()) / 86400000);
+    if (diff > 5) {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-muted/30 px-2.5 py-1 text-xs text-muted-foreground/60">
+          🌤️ D-{diff} 예보 대기
+        </span>
+      );
+    }
+    return null;
+  }
 
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-muted/50 px-2.5 py-1 text-xs text-muted-foreground">

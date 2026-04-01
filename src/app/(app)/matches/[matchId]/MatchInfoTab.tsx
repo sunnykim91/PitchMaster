@@ -328,7 +328,7 @@ function MatchInfoTabInner({
                 </div>
               )}
               {/* 날씨 */}
-              {weather && (
+              {weather ? (
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground w-14 shrink-0">날씨</span>
                   <span className="font-medium">
@@ -339,6 +339,11 @@ function MatchInfoTabInner({
                       </span>
                     )}
                   </span>
+                </div>
+              ) : match.status !== "COMPLETED" && match.date > new Date().toISOString().slice(0, 10) && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-14 shrink-0">날씨</span>
+                  <span className="text-xs text-muted-foreground/60">경기 5일 전부터 표시됩니다</span>
                 </div>
               )}
               {match.opponent && (
