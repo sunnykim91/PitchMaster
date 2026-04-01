@@ -419,7 +419,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
 
             {/* Vote buttons */}
             {upcomingMatch.myMemberId && (
-              <div className="mt-4 flex flex-wrap items-center gap-2">
+              <div className="mt-4 pt-3 border-t border-border/30 flex flex-wrap items-center gap-2">
                 <span className="text-sm text-muted-foreground mr-1">내 투표:</span>
                 {([
                   { value: "ATTEND" as const, label: "참석" },
@@ -434,7 +434,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                       disabled={pendingVote}
                       aria-pressed={displayVote === opt.value}
                       className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-105 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                        "inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 min-h-[44px] text-xs font-semibold transition-all duration-200 active:scale-105 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                         isSelected ? voteStyles[opt.value].active : voteStyles[opt.value].inactive
                       )}
                       onClick={() => handleQuickVote(upcomingMatch.id, upcomingMatch.myMemberId!, opt.value)}
@@ -594,8 +594,8 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
           <CardContent className="space-y-2">
             {tasks.length > 0 ? (
               tasks.map((task) => (
-                <Card key={task} className="border-0 bg-secondary hover:bg-secondary/70">
-                  <CardContent className="flex items-center gap-3 p-3 text-sm text-foreground/80">
+                <Card key={task} className="border border-[hsl(var(--warning)/0.2)] bg-[hsl(var(--warning)/0.05)] hover:bg-[hsl(var(--warning)/0.1)]">
+                  <CardContent className="flex items-center gap-3 p-3 text-sm font-medium text-foreground">
                     <span className="h-2 w-2 shrink-0 rounded-full bg-[hsl(var(--warning))]" />
                     {task}
                   </CardContent>
@@ -670,7 +670,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
 
               {/* 최근 경기 결과 */}
               {recentResult && (
-                <Card className="mt-3 border-0 border-l-2 border-l-primary/40 bg-secondary hover:bg-secondary/70 cursor-pointer transition-colors">
+                <Card className="mt-3 border border-border/50 border-l-2 border-l-primary/40 bg-secondary/50 hover:bg-secondary/70 cursor-pointer transition-colors">
                   <CardContent className="p-4">
                     <div className="flex items-baseline justify-between">
                       <p className="text-xs text-muted-foreground">{formatDateKo(recentResult.date)}</p>

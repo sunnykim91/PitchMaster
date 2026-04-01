@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Bell, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { Bell, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Users } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -198,73 +198,125 @@ function DuesStatusTabInner({
             action={<Link href="/members" className="text-xs text-primary hover:underline">회원 관리 &rarr;</Link>}
           />
         ) : (
-          <div className="mt-3 space-y-1">
-            {duesStatus.map((m) => (
-              <div key={m.id} className={cn(
-                "flex items-center justify-between gap-2 rounded-lg px-3 py-2.5",
-                m.status === "UNPAID" ? "bg-[hsl(var(--loss)/0.1)] border border-[hsl(var(--loss)/0.2)]" : "bg-secondary/50"
-              )}>
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-sm font-semibold whitespace-nowrap text-foreground">{m.name}</span>
-                  {ROLE_LABEL[m.role] && (
-                    <span className={cn(
-                      "shrink-0 rounded px-1 py-px text-xs font-bold",
-                      m.role === "OWNER" ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"
-                    )}>
-                      {ROLE_LABEL[m.role]}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-1">
-                  {m.paidAmount > 0 && (
-                    <span className="mr-1 text-xs font-medium text-[hsl(var(--success))]">
-                      {m.paidAmount.toLocaleString()}원
-                    </span>
-                  )}
-                  {isStaffOrAbove(role) ? (
-                    (["PAID", "UNPAID", "EXEMPT"] as const).map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={async () => {
-                          await apiMutate("/api/dues/payment-status", "POST", {
-                            memberId: m.id,
-                            month: monthFilter,
-                            status: s,
-                            paidAmount: s === "PAID" ? m.paidAmount : 0,
-                          });
-                          await refetchPaymentStatus();
-                        }}
-                        className={cn(
-                          "rounded-full px-3 py-2 min-h-[44px] text-xs font-bold transition-all active:scale-95",
-                          m.status === s
-                            ? s === "PAID"
-                              ? "bg-[hsl(var(--success))] text-[hsl(0_0%_10%)]"
-                              : s === "EXEMPT"
-                              ? "bg-[hsl(var(--warning))] text-[hsl(0_0%_10%)]"
-                              : "bg-[hsl(var(--loss))] text-white"
-                            : "bg-secondary/50 text-secondary-foreground hover:bg-secondary"
-                        )}
-                      >
-                        {s === "PAID" ? "납부" : s === "EXEMPT" ? "면제" : "미납"}
-                      </button>
-                    ))
-                  ) : (
-                    <span className={cn(
-                      "rounded-full px-2.5 py-1 text-xs font-bold",
-                      m.status === "PAID" ? "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"
-                        : m.status === "EXEMPT" ? "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]"
-                        : "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]"
-                    )}>
-                      {m.status === "PAID" ? "납부" : m.status === "EXEMPT" ? "면제" : "미납"}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+          <DuesStatusList duesStatus={duesStatus} role={role} monthFilter={monthFilter} refetchPaymentStatus={refetchPaymentStatus} />
         )}
       </Card>
+    </div>
+  );
+}
+
+// ── 납부현황 목록 (미납→면제→납부 그룹, 납부자 접기) ──
+function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus }: {
+  duesStatus: DuesStatusMember[];
+  role?: Role;
+  monthFilter: string;
+  refetchPaymentStatus: () => Promise<unknown>;
+}) {
+  const [paidExpanded, setPaidExpanded] = useState(false);
+  const unpaid = duesStatus.filter((m) => m.status === "UNPAID");
+  const exempt = duesStatus.filter((m) => m.status === "EXEMPT");
+  const paid = duesStatus.filter((m) => m.status === "PAID");
+
+  function renderRow(m: DuesStatusMember) {
+    return (
+      <div key={m.id} className={cn(
+        "flex items-center justify-between gap-2 rounded-lg px-3 py-2.5",
+        m.status === "UNPAID" ? "bg-[hsl(var(--loss)/0.1)] border border-[hsl(var(--loss)/0.2)]" : "bg-secondary/50"
+      )}>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-sm font-semibold whitespace-nowrap text-foreground">{m.name}</span>
+          {ROLE_LABEL[m.role] && (
+            <span className={cn(
+              "shrink-0 rounded px-1 py-px text-xs font-bold",
+              m.role === "OWNER" ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"
+            )}>
+              {ROLE_LABEL[m.role]}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          {m.paidAmount > 0 && (
+            <span className="mr-1 text-xs font-medium text-[hsl(var(--success))]">
+              {m.paidAmount.toLocaleString()}원
+            </span>
+          )}
+          {isStaffOrAbove(role) ? (
+            (["PAID", "UNPAID", "EXEMPT"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={async () => {
+                  await apiMutate("/api/dues/payment-status", "POST", {
+                    memberId: m.id,
+                    month: monthFilter,
+                    status: s,
+                    paidAmount: s === "PAID" ? m.paidAmount : 0,
+                  });
+                  await refetchPaymentStatus();
+                }}
+                className={cn(
+                  "rounded-full px-3 py-2 min-h-[44px] text-xs font-bold transition-all active:scale-95",
+                  m.status === s
+                    ? s === "PAID"
+                      ? "bg-[hsl(var(--success))] text-[hsl(0_0%_10%)]"
+                      : s === "EXEMPT"
+                      ? "bg-[hsl(var(--warning))] text-[hsl(0_0%_10%)]"
+                      : "bg-[hsl(var(--loss))] text-white"
+                    : "bg-secondary/50 text-secondary-foreground hover:bg-secondary"
+                )}
+              >
+                {s === "PAID" ? "납부" : s === "EXEMPT" ? "면제" : "미납"}
+              </button>
+            ))
+          ) : (
+            <span className={cn(
+              "rounded-full px-2.5 py-1 text-xs font-bold",
+              m.status === "PAID" ? "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"
+                : m.status === "EXEMPT" ? "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]"
+                : "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]"
+            )}>
+              {m.status === "PAID" ? "납부" : m.status === "EXEMPT" ? "면제" : "미납"}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 space-y-3">
+      {/* 미납자 (항상 펼침) */}
+      {unpaid.length > 0 && (
+        <div className="space-y-1">
+          {unpaid.map(renderRow)}
+        </div>
+      )}
+
+      {/* 면제자 */}
+      {exempt.length > 0 && (
+        <div className="space-y-1">
+          {exempt.map(renderRow)}
+        </div>
+      )}
+
+      {/* 납부자 (접기/펼치기) */}
+      {paid.length > 0 && (
+        <div>
+          <button
+            type="button"
+            onClick={() => setPaidExpanded((p) => !p)}
+            className="flex w-full items-center justify-between rounded-lg bg-[hsl(var(--success)/0.08)] px-3 py-2.5 text-sm font-medium text-[hsl(var(--success))] transition-colors hover:bg-[hsl(var(--success)/0.12)]"
+          >
+            <span>납부 완료 ({paid.length}명)</span>
+            {paidExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+          {paidExpanded && (
+            <div className="mt-1 space-y-1">
+              {paid.map(renderRow)}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

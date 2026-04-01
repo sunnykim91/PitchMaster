@@ -268,7 +268,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
                   variant={selectedCategory === category ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedCategory(category as RuleCategory | "ALL")}
-                  className="text-xs font-semibold rounded-full px-4"
+                  className="text-xs font-semibold rounded-full px-4 min-h-[44px]"
                 >
                   {category === "ALL" ? "전체" : category}
                 </Button>

@@ -673,7 +673,7 @@ export default function RecordsClient({
                             tabIndex={0}
                             aria-sort={sortKey === col.key ? "descending" : "none"}
                             className={cn(
-                              "cursor-pointer pb-3 text-center font-medium transition hover:text-foreground",
+                              "cursor-pointer py-3 min-h-[44px] text-center font-medium transition hover:text-foreground",
                               sortKey === col.key ? "text-primary" : "text-muted-foreground"
                             )}
                             onClick={() => setSortKey(col.key)}
