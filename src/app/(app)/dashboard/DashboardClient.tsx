@@ -752,7 +752,7 @@ function DashboardWeather({ date, location }: { date: string; location: string |
     if (diff > 5) {
       return (
         <span className="inline-flex items-center gap-1 rounded-full bg-muted/30 px-2.5 py-1 text-xs text-muted-foreground/60">
-          🌤️ D-{diff} 예보 대기
+          🌤️ D-5부터 날씨 확인
         </span>
       );
     }
