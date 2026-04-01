@@ -748,7 +748,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
           </div>
           <div
             ref={boardRef}
-            className={cn("relative w-full overflow-hidden rounded-2xl border-2 border-white/10 shadow-xl shadow-black/30", isFutsal ? "aspect-[3/2]" : "aspect-[4/5]")}
+            className={cn("relative w-full overflow-hidden rounded-2xl border-2 border-white/20 shadow-xl shadow-black/30", isFutsal ? "aspect-[3/2]" : "aspect-[4/5]")}
             style={{
               touchAction: "none",
               background: "hsl(var(--pitch))",
@@ -763,30 +763,30 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             }}
           >
             {/* 경기장 외곽선 */}
-            <div className="absolute inset-3 rounded-sm border-2 border-white/30" />
+            <div className="absolute inset-3 rounded-sm border-2 border-white/50" />
             {/* 센터라인 */}
             <div className="absolute inset-x-3 top-1/2 h-0.5 -translate-y-px bg-white/30" />
             {/* 센터서클 */}
-            <div className="absolute left-1/2 top-1/2 h-[18%] w-[28%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/30" />
+            <div className="absolute left-1/2 top-1/2 h-[18%] w-[28%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/50" />
             {/* 센터스팟 */}
             <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/40" />
             {/* 상단 페널티 박스 */}
-            <div className="absolute inset-x-[20%] top-3 h-[16%] border-2 border-t-0 border-white/30" />
+            <div className="absolute inset-x-[20%] top-3 h-[16%] border-2 border-t-0 border-white/50" />
             {/* 상단 골 에어리어 */}
-            <div className="absolute inset-x-[32%] top-3 h-[8%] border-2 border-t-0 border-white/30" />
+            <div className="absolute inset-x-[32%] top-3 h-[8%] border-2 border-t-0 border-white/50" />
             {/* 상단 페널티 아크 */}
-            <div className="absolute left-1/2 top-[18.5%] h-[6%] w-[16%] -translate-x-1/2 rounded-b-full border-2 border-t-0 border-white/30" />
+            <div className="absolute left-1/2 top-[18.5%] h-[6%] w-[16%] -translate-x-1/2 rounded-b-full border-2 border-t-0 border-white/50" />
             {/* 하단 페널티 박스 */}
-            <div className="absolute inset-x-[20%] bottom-3 h-[16%] border-2 border-b-0 border-white/30" />
+            <div className="absolute inset-x-[20%] bottom-3 h-[16%] border-2 border-b-0 border-white/50" />
             {/* 하단 골 에어리어 */}
-            <div className="absolute inset-x-[32%] bottom-3 h-[8%] border-2 border-b-0 border-white/30" />
+            <div className="absolute inset-x-[32%] bottom-3 h-[8%] border-2 border-b-0 border-white/50" />
             {/* 하단 페널티 아크 */}
-            <div className="absolute left-1/2 bottom-[18.5%] h-[6%] w-[16%] -translate-x-1/2 rounded-t-full border-2 border-b-0 border-white/30" />
+            <div className="absolute left-1/2 bottom-[18.5%] h-[6%] w-[16%] -translate-x-1/2 rounded-t-full border-2 border-b-0 border-white/50" />
             {/* 코너 아크 (4개) */}
-            <div className="absolute left-3 top-3 h-4 w-4 rounded-br-full border-b-2 border-r-2 border-white/30" />
-            <div className="absolute right-3 top-3 h-4 w-4 rounded-bl-full border-b-2 border-l-2 border-white/30" />
-            <div className="absolute bottom-3 left-3 h-4 w-4 rounded-tr-full border-r-2 border-t-2 border-white/30" />
-            <div className="absolute bottom-3 right-3 h-4 w-4 rounded-tl-full border-l-2 border-t-2 border-white/30" />
+            <div className="absolute left-3 top-3 h-4 w-4 rounded-br-full border-b-2 border-r-2 border-white/50" />
+            <div className="absolute right-3 top-3 h-4 w-4 rounded-bl-full border-b-2 border-l-2 border-white/50" />
+            <div className="absolute bottom-3 left-3 h-4 w-4 rounded-tr-full border-r-2 border-t-2 border-white/50" />
+            <div className="absolute bottom-3 right-3 h-4 w-4 rounded-tl-full border-l-2 border-t-2 border-white/50" />
 
             {formation.slots.map((slot) => {
               const placement = placements[slot.id];
@@ -800,7 +800,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                       "absolute flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border text-xs font-bold text-white transition",
                       activeSlotId === slot.id
                         ? "border-primary/60 bg-primary/20 shadow-lg shadow-primary/20"
-                        : "border-white/25 bg-black/25"
+                        : "border-white/40 bg-black/25"
                     )}
                     style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
                   >
@@ -837,7 +837,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                   style={{ left: `${placement.x}%`, top: `${placement.y}%`, touchAction: "none" }}
                 >
                   <span className="flex flex-col items-center gap-0.5">
-                    <span className="block h-10 w-10 rounded-sm border border-white/25 shadow-md shadow-black/30" style={uniformStyle} />
+                    <span className="block h-10 w-10 rounded-sm border border-white/40 shadow-md shadow-black/30" style={uniformStyle} />
                     {secondPlayer ? (
                       <span className="flex flex-col items-center rounded-md bg-black/70 px-1.5 py-0.5 shadow-sm">
                         <span className="flex items-center gap-0.5 text-xs font-bold text-[hsl(var(--info))]">

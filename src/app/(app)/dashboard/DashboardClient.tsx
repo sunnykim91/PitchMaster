@@ -558,7 +558,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
               activeVotes.map((vote) => (
                 <Card
                   key={vote.id}
-                  className="cursor-pointer border-0 border-l-2 border-l-primary/40 bg-secondary hover:bg-secondary/70 transition-colors"
+                  className="cursor-pointer border border-border/50 border-l-2 border-l-primary/40 bg-secondary/50 hover:bg-secondary/70 transition-colors"
                 >
                   <CardContent className="flex items-center justify-between p-3">
                     <div>

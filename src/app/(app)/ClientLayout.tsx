@@ -376,7 +376,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
         {/* Mobile Header */}
         <header className="lg:hidden">
-          <Card className="backdrop-blur-sm bg-card/95">
+          <Card className="backdrop-blur-sm bg-card/95 shadow-sm">
             <CardContent className="flex items-center justify-between p-4">
               <Link href="/dashboard" className="block">
                 <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary block">PitchMaster</span>
@@ -522,7 +522,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       <PWAInstallPrompt />
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/85 backdrop-blur-xl backdrop-saturate-150 pb-[env(safe-area-inset-bottom)] lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/85 backdrop-blur-xl backdrop-saturate-150 shadow-[0_-1px_3px_0_rgb(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)] lg:hidden">
         <div className="flex items-center justify-around">
           {[
             { href: "/dashboard", label: "홈", icon: Home },

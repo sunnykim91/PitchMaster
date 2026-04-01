@@ -632,7 +632,7 @@ export default function MembersClient({
               <div
                 key={member.id}
                 className={cn(
-                  "rounded-xl border border-border/30 transition-colors",
+                  "rounded-xl border border-border/50 transition-colors",
                   isExpanded && "border-primary/30 bg-primary/3"
                 )}
               >
