@@ -20,7 +20,7 @@ type TeamDetail = {
   lastMatch: string | null;
   postCount: number;
   pendingRequests: number;
-  isActive: boolean;
+  status: "active" | "dormant" | "unused";
 };
 
 type PendingRequest = {
@@ -223,7 +223,7 @@ export default function AdminClient() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <Activity className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">활성 팀 (7일)</p>
+              <p className="text-sm text-muted-foreground">활성 팀 (14일)</p>
             </div>
             <p className="mt-1 text-2xl font-bold">{overview.activeTeams}</p>
           </CardContent>
@@ -332,9 +332,10 @@ export default function AdminClient() {
                     </td>
                     <td className="py-2.5 text-center">
                       <Badge
-                        variant={team.isActive ? "success" : "secondary"}
+                        variant={team.status === "active" ? "success" : team.status === "dormant" ? "warning" : "secondary"}
+                        className={team.status === "unused" ? "text-destructive border-destructive/30" : ""}
                       >
-                        {team.isActive ? "활성" : "비활성"}
+                        {team.status === "active" ? "활성" : team.status === "dormant" ? "휴면" : "미사용"}
                       </Badge>
                     </td>
                   </tr>

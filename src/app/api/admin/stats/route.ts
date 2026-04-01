@@ -14,10 +14,11 @@ export async function GET() {
   }
 
   const DEMO_TEAM_ID = "192127c0-e2be-46b4-b340-7583730467da";
+  const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   // 전체 병렬 쿼리 (개별 팀 쿼리 제거)
-  const [teamsRes, usersRes, matchesRes, postsRes, joinReqRes, recentUsersRes, membersRes, demoMembersRes, recentVotesRes] =
+  const [teamsRes, usersRes, matchesRes, postsRes, joinReqRes, recentUsersRes, membersRes, demoMembersRes, recentVotesRes, recentGoalsRes, recentPostsRes, recentDuesRes] =
     await Promise.all([
       db.from("teams").select("id, name, sport_type, created_at, is_searchable"),
       db.from("users").select("id, name, created_at, is_profile_complete", { count: "exact" }),
@@ -29,8 +30,14 @@ export async function GET() {
       db.from("team_members").select("team_id, status"),
       // 데모 멤버
       db.from("team_members").select("user_id").eq("team_id", DEMO_TEAM_ID).not("user_id", "is", null),
-      // 최근 투표
-      db.from("match_attendance").select("match_id").gte("created_at", sevenDaysAgo),
+      // 최근 투표 (14일)
+      db.from("match_attendance").select("match_id").gte("created_at", fourteenDaysAgo),
+      // 최근 골 기록 (14일)
+      db.from("match_goals").select("match_id").gte("created_at", fourteenDaysAgo),
+      // 최근 게시글 (14일)
+      db.from("posts").select("team_id").gte("created_at", fourteenDaysAgo),
+      // 최근 회비 내역 (14일)
+      db.from("dues_records").select("team_id").gte("created_at", fourteenDaysAgo),
     ]);
 
   // 데모 제외
@@ -69,15 +76,40 @@ export async function GET() {
     teamPostCounts[p.team_id] = (teamPostCounts[p.team_id] ?? 0) + 1;
   }
 
-  // 활성 팀 (경기 등록 or 투표)
-  const recentMatches = matches.filter((m: { created_at: string }) => m.created_at >= sevenDaysAgo);
+  // 활성 팀 판단 (14일 내: 경기 등록 / 투표 / 골 기록 / 게시글 / 회비 내역)
+  const recentMatches = matches.filter((m: { created_at: string }) => m.created_at >= fourteenDaysAgo);
   const activeTeamIds = new Set(recentMatches.map((m: { team_id: string }) => m.team_id));
 
+  // 투표 활동
   if (recentVotesRes.data) {
     const voteMatchIds = new Set(recentVotesRes.data.map((v: { match_id: string }) => v.match_id));
     for (const m of matches) {
       if (voteMatchIds.has(m.id)) activeTeamIds.add(m.team_id);
     }
+  }
+  // 골 기록 활동
+  if (recentGoalsRes.data) {
+    const goalMatchIds = new Set(recentGoalsRes.data.map((g: { match_id: string }) => g.match_id));
+    for (const m of matches) {
+      if (goalMatchIds.has(m.id)) activeTeamIds.add(m.team_id);
+    }
+  }
+  // 게시글 활동
+  for (const p of recentPostsRes.data ?? []) {
+    activeTeamIds.add(p.team_id);
+  }
+  // 회비 활동
+  for (const d of recentDuesRes.data ?? []) {
+    activeTeamIds.add(d.team_id);
+  }
+
+  // 팀 상태: 활성 / 휴면 / 미사용
+  function getTeamStatus(teamId: string): "active" | "dormant" | "unused" {
+    if (activeTeamIds.has(teamId)) return "active";
+    const info = teamMatchInfo[teamId];
+    const hasActivity = (info?.count ?? 0) > 0 || (teamPostCounts[teamId] ?? 0) > 0;
+    if (hasActivity) return "dormant";
+    return "unused";
   }
 
   // 팀별 대기 가입 신청 수
@@ -98,7 +130,7 @@ export async function GET() {
       lastMatch: teamMatchInfo[team.id]?.lastMatch ?? null,
       postCount: teamPostCounts[team.id] ?? 0,
       pendingRequests: teamPendingCounts[team.id] ?? 0,
-      isActive: activeTeamIds.has(team.id),
+      status: getTeamStatus(team.id),
     }))
     .sort((a, b) => b.memberCount - a.memberCount);
 
