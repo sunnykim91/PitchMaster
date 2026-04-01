@@ -127,8 +127,8 @@ button, [role="button"], [onclick], a, summary { cursor: pointer; }
 }
 
 ::selection {
-  background: hsl(16 85% 58%);
-  color: white;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
 }
 
 /* 다크 모드에서만 은은한 그라디언트 배경 */
