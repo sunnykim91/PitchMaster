@@ -137,16 +137,17 @@ export const PollBlock = memo(function PollBlock({ poll, onVote, votingOptionId 
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setDetailOpen(false)}>
           <div className="fixed inset-0 bg-black/50" />
           <div
-            className="relative w-full max-w-md max-h-[70vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-card p-5 shadow-lg animate-in slide-in-from-bottom-4"
+            className="relative w-full max-w-md max-h-[80vh] rounded-t-2xl sm:rounded-2xl bg-card shadow-lg animate-in slide-in-from-bottom-4 flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between p-5 pb-3 shrink-0">
               <h3 className="text-base font-bold">투표 현황</h3>
               <button type="button" onClick={() => setDetailOpen(false)} className="p-1 rounded-md hover:bg-muted">
                 <X className="h-4 w-4" />
               </button>
             </div>
 
+            <div className="overflow-y-auto overscroll-contain px-5 pb-5">
             {detailLoading ? (
               <div className="flex justify-center py-8">
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -197,6 +198,7 @@ export const PollBlock = memo(function PollBlock({ poll, onVote, votingOptionId 
             ) : (
               <p className="py-8 text-center text-sm text-muted-foreground">데이터를 불러올 수 없습니다.</p>
             )}
+            </div>
           </div>
         </div>
       )}
