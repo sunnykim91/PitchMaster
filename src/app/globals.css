@@ -94,7 +94,7 @@
   --radius-card-inner: 0.875rem;
 }
 
-.dark {
+html.dark {
   /* Dark mode palette */
   --background: 240 6% 6%;
   --foreground: 40 10% 92%;
