@@ -65,15 +65,15 @@
   --accent-foreground: 40 10% 92%;
   --destructive: 0 72% 55%;
   --destructive-foreground: 0 0% 100%;
-  --border: 240 4% 25%;
-  --input: 240 4% 25%;
+  --border: 240 4% 30%;
+  --input: 240 4% 30%;
   --ring: 16 85% 58%;
   --success: 152 55% 55%;
   --warning: 38 85% 58%;
   --info: 210 70% 60%;
   --win: 152 55% 55%;
   --draw: 40 30% 62%;
-  --loss: 0 65% 60%;
+  --loss: 0 68% 52%;
   --pitch: 152 40% 28%;
   --sidebar-background: 240 5% 8%;
   --sidebar-foreground: 40 10% 92%;
