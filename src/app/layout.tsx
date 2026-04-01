@@ -70,7 +70,7 @@ export default function RootLayout({
     <html lang="ko" suppressHydrationWarning>
       <head>
         {/* FOUC 방지: 페이지 로드 전 테마 즉시 적용 */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme');var d;if(t==='dark')d=true;else if(t==='light')d=false;else d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(d)document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark')}catch(e){}})()` }} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme');var d;if(t==='dark')d=true;else if(t==='light')d=false;else d=window.matchMedia('(prefers-color-scheme: dark)').matches;var e=document.documentElement;if(d){e.classList.add('dark');e.classList.remove('light')}else{e.classList.add('light');e.classList.remove('dark')}}catch(e){}})()` }} />
         {/* Pretendard: npm 패키지에서 로컬 로드 (CORS 이슈 해결) */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

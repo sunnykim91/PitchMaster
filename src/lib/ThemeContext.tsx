@@ -20,7 +20,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("system");
   const [resolvedTheme, setResolved] = useState<"light" | "dark">("dark");
 
-  // 초기 로드: localStorage에서 저장된 테마 복원
   useEffect(() => {
     const saved = localStorage.getItem("theme") as Theme | null;
     if (saved && ["light", "dark", "system"].includes(saved)) {
@@ -28,14 +27,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // 테마 변경 시 DOM 클래스 토글 + system 미디어쿼리 리스너
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
 
     function apply() {
-      const isDark =
-        theme === "dark" || (theme === "system" && mq.matches);
-      document.documentElement.classList.toggle("dark", isDark);
+      let isDark: boolean;
+      if (theme === "dark") isDark = true;
+      else if (theme === "light") isDark = false;
+      else isDark = mq.matches;
+
+      const el = document.documentElement;
+      if (isDark) {
+        el.classList.remove("light");
+        el.classList.add("dark");
+      } else {
+        el.classList.remove("dark");
+        el.classList.add("light");
+      }
       setResolved(isDark ? "dark" : "light");
     }
 
