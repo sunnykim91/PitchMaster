@@ -373,12 +373,15 @@ export default function BoardClient({
 
     // 백그라운드 API 호출
     try {
-      await apiMutate("/api/posts/vote", "POST", { pollId, optionId });
+      const { error: voteErr } = await apiMutate("/api/posts/vote", "POST", { pollId, optionId });
+      if (voteErr) {
+        showToast("투표에 실패했습니다.", "error");
+        setOptimisticPolls((prev) => { const n = { ...prev }; delete n[pollId]; return n; });
+      }
       await refetchPosts();
-      // 서버 데이터 반영 후 optimistic 제거
       setOptimisticPolls((prev) => { const n = { ...prev }; delete n[pollId]; return n; });
     } catch {
-      // 롤백
+      showToast("투표에 실패했습니다.", "error");
       setOptimisticPolls((prev) => { const n = { ...prev }; delete n[pollId]; return n; });
       await refetchPosts();
     }
