@@ -47,6 +47,7 @@ git push origin main
 - 기능 변경 후 관련 문서(백로그, 메모리)도 반드시 업데이트
 
 ## 주요 데이터
-- **등록 팀**: FCMZ (축구), FCMZ 풋살, FK Rebirth, FC서순, FC DEMO (데모)
+- **등록 팀**: FCMZ (축구), FCMZ 풋살, FK Rebirth, FC서순, FC DEMO (데모), 시즌FC
 - **데모 계정**: kakao_id=demo_kakao_id_pitchmaster, 팀=FC DEMO, 역할=회장
 - **FK Rebirth 시즌**: 2024(1-12월), 2025(1-11월), 2026(12월-12월) — 다른 팀과 다름
+- **시즌FC**: 34명, 14경기 데이터 이관 완료 (2026 시즌)
