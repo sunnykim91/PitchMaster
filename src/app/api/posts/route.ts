@@ -53,26 +53,16 @@ export async function GET(request: NextRequest) {
   if (pollIds.length > 0) {
     const { data: voteData } = await db
       .from("post_poll_votes")
-      .select("poll_id, option_id")
+      .select("poll_id, option_id, user_id")
       .in("poll_id", pollIds);
 
-    // Count votes per option
+    // Count votes per option + 내 투표 찾기
     for (const v of voteData ?? []) {
       const optId = (v as { option_id: string }).option_id;
       voteCounts[optId] = (voteCounts[optId] ?? 0) + 1;
-      if ((v as { user_id?: string }).user_id === ctx.userId) {
+      if ((v as { user_id: string }).user_id === ctx.userId) {
         userVotes[(v as { poll_id: string }).poll_id] = optId;
       }
-    }
-
-    // Also check current user's votes
-    const { data: myVotes } = await db
-      .from("post_poll_votes")
-      .select("poll_id, option_id")
-      .in("poll_id", pollIds)
-      .eq("user_id", ctx.userId);
-    for (const v of myVotes ?? []) {
-      userVotes[(v as { poll_id: string }).poll_id] = (v as { option_id: string }).option_id;
     }
   }
 

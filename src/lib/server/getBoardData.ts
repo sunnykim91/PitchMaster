@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
-export async function getBoardData(teamId: string) {
+export async function getBoardData(teamId: string, userId?: string) {
   const db = getSupabaseAdmin();
   if (!db) return { posts: [] };
 
@@ -35,14 +35,18 @@ export async function getBoardData(teamId: string) {
     const pollIds = (pollData ?? []).map((p) => (p as { id: string }).id);
 
     let voteCounts: Record<string, number> = {};
+    let userVotes: Record<string, string> = {}; // pollId → optionId
     if (pollIds.length > 0) {
       const { data: voteData } = await db
         .from("post_poll_votes")
-        .select("option_id")
+        .select("poll_id, option_id, user_id")
         .in("poll_id", pollIds);
       for (const v of voteData ?? []) {
         const optId = (v as { option_id: string }).option_id;
         voteCounts[optId] = (voteCounts[optId] ?? 0) + 1;
+        if (userId && (v as { user_id: string }).user_id === userId) {
+          userVotes[(v as { poll_id: string }).poll_id] = optId;
+        }
       }
     }
 
@@ -62,7 +66,7 @@ export async function getBoardData(teamId: string) {
         endsAt: poll.ends_at,
         options,
         totalVotes,
-        myVote: null, // SSR doesn't know user yet
+        myVote: userVotes[poll.id] ?? null,
       };
     }
   }
