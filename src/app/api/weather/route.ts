@@ -115,17 +115,21 @@ export async function GET(request: NextRequest) {
     (new Date(date).getTime() - new Date(todayStr).getTime()) / (1000 * 60 * 60 * 24)
   );
 
+  // 5일 초과면 날씨 없음 (OpenWeatherMap 무료 플랜 제한)
+  if (diffDays > 5) {
+    return apiSuccess(null);
+  }
+
   const apiKey = process.env.OPENWEATHERMAP_API_KEY;
   const coords = resolveCoords(location);
 
-  // API 키가 없거나 7일 초과면 fallback
-  if (!apiKey || diffDays > 7) {
+  // API 키가 없으면 fallback
+  if (!apiKey) {
     const fallback = getFallbackWeather(date, location);
     return apiSuccess(fallback, 200);
   }
 
-  // OpenWeatherMap은 5일까지만 forecast 제공 → 5일 초과 시 5일차 날씨로 대체
-  const queryDiffDays = diffDays > 5 ? 5 : diffDays;
+  const queryDiffDays = diffDays;
 
   try {
     // 오늘이면 current weather, 미래면 forecast
