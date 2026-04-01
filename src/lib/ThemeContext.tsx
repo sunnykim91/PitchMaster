@@ -88,7 +88,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       let isDark: boolean;
       if (theme === "dark") isDark = true;
       else if (theme === "light") isDark = false;
-      else isDark = mq.matches;
+      else isDark = true; // system = 기본 다크 (기존 UX 유지)
 
       applyTheme(isDark);
       setResolved(isDark ? "dark" : "light");
