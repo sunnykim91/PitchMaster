@@ -76,6 +76,8 @@ type DashboardData = {
   teamUniform?: TeamUniform | null;
   birthdayMembers?: BirthdayMember[];
   hasDuesSettings?: boolean;
+  /** 팀 전체 경기 수 (0이면 한 번도 경기를 등록한 적 없음) */
+  totalMatches?: number;
 };
 
 const emptyData: DashboardData = {
@@ -251,6 +253,9 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
   // Onboarding wizard: show only for brand-new teams with no data
   const showWizard = !upcomingMatch && activeVotes.length === 0 && !recentResult && recordTotal === 0;
 
+  // 경기 0건 넛지 카드: 위자드와 별개로, 한 번도 경기를 등록한 적 없는 팀에게 운영진에게만 표시
+  const showNoMatchNudge = !showWizard && isStaffOrAbove(role) && (data.totalMatches ?? 0) === 0;
+
   async function handleCopyInviteCode() {
     if (!inviteCode) return;
     try {
@@ -335,6 +340,24 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── 경기 0건 넛지 카드 (운영진 전용, 한 번도 경기 등록 안 한 팀) ── */}
+      {showNoMatchNudge && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-5 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 mb-3">
+              <Calendar className="h-6 w-6 text-primary" />
+            </div>
+            <p className="text-base font-bold">첫 경기를 등록해보세요!</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              경기를 등록하면 팀원에게 자동으로 참석 투표 알림이 갑니다.
+            </p>
+            <Button className="mt-4" asChild>
+              <Link href="/matches">경기 등록하러 가기</Link>
+            </Button>
           </CardContent>
         </Card>
       )}

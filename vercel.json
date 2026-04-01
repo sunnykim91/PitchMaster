@@ -15,6 +15,10 @@
     {
       "path": "/api/cron/match-nudge",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/push/match-nudge",
+      "schedule": "0 1 * * *"
     }
   ]
 }
