@@ -1,9 +1,10 @@
 "use client";
 
 import { memo, useState } from "react";
-import { BarChart3, ChevronRight, Users, X } from "lucide-react";
+import { BarChart3, ChevronRight, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { relativeTime } from "@/lib/utils";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { Poll } from "@/app/(app)/board/BoardClient";
 
 export interface PollBlockProps {
@@ -132,22 +133,21 @@ export const PollBlock = memo(function PollBlock({ poll, onVote, votingOptionId 
         </button>
       </div>
 
-      {/* 투표 현황 모달 */}
-      {detailOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setDetailOpen(false)}>
-          <div className="fixed inset-0 bg-black/50" />
-          <div
-            className="relative w-full max-w-md max-h-[80vh] rounded-t-2xl sm:rounded-2xl bg-card shadow-lg animate-in slide-in-from-bottom-4 flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between p-5 pb-3 shrink-0">
-              <h3 className="text-base font-bold">투표 현황</h3>
-              <button type="button" onClick={() => setDetailOpen(false)} className="p-1 rounded-md hover:bg-muted">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="overflow-y-auto overscroll-contain px-5 pb-5">
+      {/* 투표 현황 Sheet */}
+      <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
+        <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto rounded-t-2xl px-0">
+          <SheetHeader className="text-left px-5 pb-3 border-b border-border/30">
+            <SheetTitle className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              투표 현황
+              {detail && (
+                <span className="text-xs font-normal text-muted-foreground">
+                  {detail.totalVoted}/{detail.totalMembers}명 참여
+                </span>
+              )}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-2 px-5 pb-5">
             {detailLoading ? (
               <div className="flex justify-center py-8">
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -174,7 +174,6 @@ export const PollBlock = memo(function PollBlock({ poll, onVote, votingOptionId 
                   </div>
                 ))}
 
-                {/* 미투표자 */}
                 {detail.notVoted.length > 0 && (
                   <div className="border-t border-border/30 pt-3">
                     <div className="flex items-center justify-between mb-1.5">
@@ -190,18 +189,13 @@ export const PollBlock = memo(function PollBlock({ poll, onVote, votingOptionId 
                     </div>
                   </div>
                 )}
-
-                <p className="text-xs text-center text-muted-foreground/60 pt-1">
-                  {detail.totalVoted}/{detail.totalMembers}명 참여
-                </p>
               </div>
             ) : (
               <p className="py-8 text-center text-sm text-muted-foreground">데이터를 불러올 수 없습니다.</p>
             )}
-            </div>
           </div>
-        </div>
-      )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 });
