@@ -10,6 +10,60 @@ interface ThemeContextValue {
   resolvedTheme: "light" | "dark";
 }
 
+const LIGHT_VARS = `
+  --background: 0 0% 98%;
+  --foreground: 240 10% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 10%;
+  --primary: 16 85% 52%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 5% 92%;
+  --secondary-foreground: 240 5% 35%;
+  --muted: 240 5% 94%;
+  --muted-foreground: 240 4% 46%;
+  --accent: 40 60% 50%;
+  --accent-foreground: 240 10% 10%;
+  --destructive: 0 72% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 240 6% 85%;
+  --input: 240 6% 85%;
+  --ring: 16 85% 52%;
+  --success: 152 55% 42%;
+  --warning: 38 85% 50%;
+  --info: 210 70% 50%;
+  --win: 152 55% 42%;
+  --draw: 40 20% 50%;
+  --loss: 0 65% 50%;
+  --pitch: 152 40% 35%;
+  --sidebar-background: 0 0% 97%;
+  --sidebar-foreground: 240 10% 10%;
+  --sidebar-primary: 16 85% 52%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 240 5% 92%;
+  --sidebar-accent-foreground: 240 5% 35%;
+  --sidebar-border: 240 6% 85%;
+  --sidebar-ring: 16 85% 52%;
+`;
+
+const STYLE_ID = "pm-theme-light";
+
+function applyTheme(isDark: boolean) {
+  // light 모드일 때 style 태그로 CSS 변수 주입
+  let style = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
+  if (!isDark) {
+    if (!style) {
+      style = document.createElement("style");
+      style.id = STYLE_ID;
+      document.head.appendChild(style);
+    }
+    style.textContent = `:root { ${LIGHT_VARS} }`;
+  } else {
+    style?.remove();
+  }
+}
+
 const ThemeContext = createContext<ThemeContextValue>({
   theme: "system",
   setTheme: () => {},
@@ -36,14 +90,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       else if (theme === "light") isDark = false;
       else isDark = mq.matches;
 
-      const el = document.documentElement;
-      if (isDark) {
-        el.classList.remove("light");
-        el.classList.add("dark");
-      } else {
-        el.classList.remove("dark");
-        el.classList.add("light");
-      }
+      applyTheme(isDark);
       setResolved(isDark ? "dark" : "light");
     }
 
