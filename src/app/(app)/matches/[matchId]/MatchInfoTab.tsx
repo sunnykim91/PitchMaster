@@ -285,9 +285,22 @@ function MatchInfoTabInner({
                 <div className="space-y-1">
                   <Label className="text-sm">시간</Label>
                   <div className="flex items-center gap-2">
-                    <Input type="time" name="time" defaultValue={match.time} />
+                    <select name="time" defaultValue={formatTime(match.time)} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                      {Array.from({ length: 48 }, (_, i) => {
+                        const h = String(Math.floor(i / 2)).padStart(2, "0");
+                        const m = i % 2 === 0 ? "00" : "30";
+                        return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
+                      })}
+                    </select>
                     <span className="text-muted-foreground shrink-0">~</span>
-                    <Input type="time" name="endTime" defaultValue={match.endTime ?? ""} />
+                    <select name="endTime" defaultValue={match.endTime ? formatTime(match.endTime) : ""} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                      <option value="">미설정</option>
+                      {Array.from({ length: 48 }, (_, i) => {
+                        const h = String(Math.floor(i / 2)).padStart(2, "0");
+                        const m = i % 2 === 0 ? "00" : "30";
+                        return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
+                      })}
+                    </select>
                   </div>
                 </div>
                 <div className="space-y-1">
