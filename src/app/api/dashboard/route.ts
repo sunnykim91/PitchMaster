@@ -25,7 +25,7 @@ export async function GET() {
 
   const [upcomingRes, recentRes, activeVotesRes] = await Promise.all([
     db.from("matches")
-      .select("id, match_date, match_time, vote_deadline, opponent_name, status, location")
+      .select("id, match_date, match_time, match_end_time, vote_deadline, opponent_name, status, location, uniform_type")
       .eq("team_id", ctx.teamId)
       .eq("status", "SCHEDULED")
       .gte("match_date", today)

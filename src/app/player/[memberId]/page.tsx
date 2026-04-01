@@ -184,7 +184,7 @@ export default async function PlayerProfilePage({ params }: Props) {
   const posLabel = data.positions.length > 0 ? data.positions[0] : "";
 
   return (
-    <div className="min-h-screen bg-[#0b0f1a] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-md px-4 py-8">
         {/* 헤더 */}
         <div className="text-center mb-8">

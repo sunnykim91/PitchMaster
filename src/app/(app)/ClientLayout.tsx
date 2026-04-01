@@ -7,6 +7,7 @@ import SidebarNav from "@/components/SidebarNav";
 import { ViewAsRoleProvider, useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { ToastProvider } from "@/lib/ToastContext";
 import { ConfirmProvider } from "@/lib/ConfirmContext";
+import { ThemeProvider } from "@/lib/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,13 +30,15 @@ export default function ClientLayout({ session, children }: ClientLayoutProps) {
   const canSwitchRole = session.user.name === "김선휘";
 
   return (
-    <ViewAsRoleProvider isPresident={canSwitchRole}>
-      <ToastProvider>
-        <ConfirmProvider>
-          <ClientLayoutInner session={session}>{children}</ClientLayoutInner>
-        </ConfirmProvider>
-      </ToastProvider>
-    </ViewAsRoleProvider>
+    <ThemeProvider>
+      <ViewAsRoleProvider isPresident={canSwitchRole}>
+        <ToastProvider>
+          <ConfirmProvider>
+            <ClientLayoutInner session={session}>{children}</ClientLayoutInner>
+          </ConfirmProvider>
+        </ToastProvider>
+      </ViewAsRoleProvider>
+    </ThemeProvider>
   );
 }
 

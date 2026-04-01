@@ -2,7 +2,8 @@
 
 import { memo, useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { Bell } from "lucide-react";
+import { Bell, Sun, Moon, Monitor } from "lucide-react";
+import { useTheme } from "@/lib/ThemeContext";
 import { subscribeToPush } from "@/lib/pushSubscription";
 import { apiMutate } from "@/lib/useApi";
 import type { PreferredPosition, PreferredFoot } from "@/lib/types";
@@ -299,6 +300,9 @@ function PersonalSettingsComponent({
           </Button>
         </form>
 
+        {/* 테마 설정 */}
+        <ThemeSelector />
+
         {/* 알림 설정 */}
         <div className="rounded-xl border border-border p-4">
           <p className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">알림</p>
@@ -341,6 +345,44 @@ function PersonalSettingsComponent({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function ThemeSelector() {
+  const { theme, setTheme } = useTheme();
+
+  const options = [
+    { value: "system" as const, label: "시스템 자동", icon: Monitor },
+    { value: "light" as const, label: "라이트", icon: Sun },
+    { value: "dark" as const, label: "다크", icon: Moon },
+  ];
+
+  return (
+    <div className="rounded-xl border border-border p-4">
+      <p className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">테마</p>
+      <div className="flex gap-2">
+        {options.map((opt) => {
+          const Icon = opt.icon;
+          const isActive = theme === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setTheme(opt.value)}
+              className={cn(
+                "flex flex-1 flex-col items-center gap-1.5 rounded-lg border px-3 py-3 text-sm font-medium transition-all active:scale-95",
+                isActive
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:text-foreground"
+              )}
+            >
+              <Icon className="h-5 w-5" />
+              <span className="text-xs">{opt.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

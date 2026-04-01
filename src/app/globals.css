@@ -37,7 +37,65 @@
   --radius: 0.625rem;
   --font-display: "Bebas Neue", var(--font-sans);
 
-  /* Athletic Premium palette */
+  /* Light mode palette (default) */
+  --background: 0 0% 98%;
+  --foreground: 240 10% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 10%;
+  --primary: 16 85% 52%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 5% 92%;
+  --secondary-foreground: 240 5% 35%;
+  --muted: 240 5% 94%;
+  --muted-foreground: 240 4% 46%;
+  --accent: 40 60% 50%;
+  --accent-foreground: 240 10% 10%;
+  --destructive: 0 72% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 240 6% 85%;
+  --input: 240 6% 85%;
+  --ring: 16 85% 52%;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1rem;
+  --kakao: 51 100% 50%;
+  --kakao-foreground: 0 0% 12%;
+  --success: 152 55% 42%;
+  --warning: 38 85% 50%;
+  --info: 210 70% 50%;
+
+  /* Sport-specific */
+  --win: 152 55% 42%;
+  --draw: 40 20% 50%;
+  --loss: 0 65% 50%;
+  --pitch: 152 40% 35%;
+
+  /* Sidebar (warm palette) */
+  --sidebar-background: 0 0% 97%;
+  --sidebar-foreground: 240 10% 10%;
+  --sidebar-primary: 16 85% 52%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 240 5% 92%;
+  --sidebar-accent-foreground: 240 5% 35%;
+  --sidebar-border: 240 6% 85%;
+  --sidebar-ring: 16 85% 52%;
+
+  /* Spacing scale tokens */
+  --space-card: 1.25rem;
+  --space-card-lg: 1.5rem;
+  --space-section: 1.25rem;
+
+  /* Card radius tokens */
+  --radius-card: 1rem;
+  --radius-card-inner: 0.875rem;
+}
+
+.dark {
+  /* Dark mode palette */
   --background: 240 6% 6%;
   --foreground: 40 10% 92%;
   --card: 240 5% 10%;
@@ -57,24 +115,15 @@
   --border: 240 4% 25%;
   --input: 240 4% 25%;
   --ring: 16 85% 58%;
-
-  --radius-sm: 0.375rem;
-  --radius-md: 0.625rem;
-  --radius-lg: 0.875rem;
-  --radius-xl: 1rem;
   --kakao: 51 100% 50%;
   --kakao-foreground: 0 0% 12%;
   --success: 152 55% 55%;
   --warning: 38 85% 58%;
   --info: 210 70% 60%;
-
-  /* Sport-specific */
   --win: 152 55% 55%;
   --draw: 40 30% 62%;
   --loss: 0 65% 60%;
   --pitch: 152 40% 28%;
-
-  /* Sidebar (warm palette) */
   --sidebar-background: 240 5% 8%;
   --sidebar-foreground: 40 10% 92%;
   --sidebar-primary: 16 85% 58%;
@@ -83,15 +132,6 @@
   --sidebar-accent-foreground: 40 6% 80%;
   --sidebar-border: 240 4% 16%;
   --sidebar-ring: 16 85% 58%;
-
-  /* Spacing scale tokens */
-  --space-card: 1.25rem;
-  --space-card-lg: 1.5rem;
-  --space-section: 1.25rem;
-
-  /* Card radius tokens */
-  --radius-card: 1rem;
-  --radius-card-inner: 0.875rem;
 }
 
 
@@ -102,9 +142,6 @@ html, body {
 
 body {
   background-color: hsl(var(--background));
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -20%, hsl(16 85% 58% / 0.03), transparent),
-    radial-gradient(ellipse 60% 40% at 80% 100%, hsl(40 60% 50% / 0.02), transparent);
   color: hsl(var(--foreground));
   font-family: var(--font-sans);
   font-size: 15px;
@@ -139,6 +176,13 @@ button, [role="button"], [onclick], a, summary { cursor: pointer; }
 ::selection {
   background: hsl(16 85% 58%);
   color: white;
+}
+
+/* 다크 모드에서만 은은한 그라디언트 배경 */
+:is(.dark) body {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, hsl(16 85% 58% / 0.03), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%, hsl(40 60% 50% / 0.02), transparent);
 }
 
 /* ── Native Select ── */
