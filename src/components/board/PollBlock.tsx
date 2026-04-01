@@ -1,7 +1,7 @@
 "use client";
 
-import { memo } from "react";
-import { BarChart3 } from "lucide-react";
+import { memo, useState } from "react";
+import { BarChart3, ChevronRight, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { relativeTime } from "@/lib/utils";
 import type { Poll } from "@/app/(app)/board/BoardClient";
@@ -12,9 +12,35 @@ export interface PollBlockProps {
   votingOptionId: string | null;
 }
 
+type VoteDetail = {
+  options: { id: string; label: string; voters: { name: string }[] }[];
+  notVoted: { name: string }[];
+  totalMembers: number;
+  totalVoted: number;
+};
+
 export const PollBlock = memo(function PollBlock({ poll, onVote, votingOptionId }: PollBlockProps) {
   const isPollExpired = poll.endsAt ? new Date(poll.endsAt) < new Date() : false;
   const hasVoted = !!poll.myVote;
+
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detail, setDetail] = useState<VoteDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  async function handleOpenDetail() {
+    setDetailOpen(true);
+    if (detail) return;
+    setDetailLoading(true);
+    try {
+      const res = await fetch(`/api/posts/vote/detail?pollId=${poll.id}`);
+      const data = await res.json();
+      setDetail(data);
+    } catch {
+      // ignore
+    } finally {
+      setDetailLoading(false);
+    }
+  }
 
   return (
     <div className="mt-3 rounded-lg border border-border/50 bg-secondary/30 p-3 space-y-2.5">
@@ -85,15 +111,95 @@ export const PollBlock = memo(function PollBlock({ poll, onVote, votingOptionId 
         })}
       </div>
 
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <span>{poll.totalVotes}명 투표</span>
-        {poll.endsAt && (
-          <>
-            <span>&middot;</span>
-            <span>{isPollExpired ? "마감됨" : `${relativeTime(poll.endsAt)} 마감`}</span>
-          </>
-        )}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span>{poll.totalVotes}명 투표</span>
+          {poll.endsAt && (
+            <>
+              <span>&middot;</span>
+              <span>{isPollExpired ? "마감됨" : `${relativeTime(poll.endsAt)} 마감`}</span>
+            </>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={handleOpenDetail}
+          className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Users className="h-3 w-3" />
+          투표 현황
+          <ChevronRight className="h-3 w-3" />
+        </button>
       </div>
+
+      {/* 투표 현황 모달 */}
+      {detailOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setDetailOpen(false)}>
+          <div className="fixed inset-0 bg-black/50" />
+          <div
+            className="relative w-full max-w-md max-h-[70vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-card p-5 shadow-lg animate-in slide-in-from-bottom-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold">투표 현황</h3>
+              <button type="button" onClick={() => setDetailOpen(false)} className="p-1 rounded-md hover:bg-muted">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {detailLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+            ) : detail ? (
+              <div className="space-y-4">
+                {detail.options.map((opt) => (
+                  <div key={opt.id}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-sm font-semibold">{opt.label}</span>
+                      <span className="text-xs text-muted-foreground">{opt.voters.length}명</span>
+                    </div>
+                    {opt.voters.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {opt.voters.map((v, i) => (
+                          <span key={i} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                            {v.name}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground/50">없음</p>
+                    )}
+                  </div>
+                ))}
+
+                {/* 미투표자 */}
+                {detail.notVoted.length > 0 && (
+                  <div className="border-t border-border/30 pt-3">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-sm font-semibold text-muted-foreground">미투표</span>
+                      <span className="text-xs text-muted-foreground">{detail.notVoted.length}명</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {detail.notVoted.map((v, i) => (
+                        <span key={i} className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
+                          {v.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-xs text-center text-muted-foreground/60 pt-1">
+                  {detail.totalVoted}/{detail.totalMembers}명 참여
+                </p>
+              </div>
+            ) : (
+              <p className="py-8 text-center text-sm text-muted-foreground">데이터를 불러올 수 없습니다.</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 });
