@@ -330,7 +330,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                     경기를 등록하면 팀원에게 자동으로 참석 투표 알림이 갑니다.
                   </p>
                   <Button size="sm" className="mt-2" asChild>
-                    <Link href="/matches">지금 바로 등록하기 &rarr;</Link>
+                    <Link href="/matches?create=true">지금 바로 등록하기 &rarr;</Link>
                   </Button>
                 </div>
               </div>
@@ -351,7 +351,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
               경기를 등록하면 팀원에게 자동으로 참석 투표 알림이 갑니다.
             </p>
             <Button className="mt-4" asChild>
-              <Link href="/matches">경기 등록하러 가기</Link>
+              <Link href="/matches?create=true">경기 등록하러 가기</Link>
             </Button>
           </CardContent>
         </Card>

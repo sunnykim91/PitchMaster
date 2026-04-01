@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
@@ -109,6 +109,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   const role = effectiveRole(userRole);
   const { showToast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const {
     data: matchesData,
@@ -133,7 +134,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   const defaults = SPORT_DEFAULTS[sportType];
   const isFutsal = sportType === "FUTSAL";
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(searchParams.get("create") === "true");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [votingMatchId, setVotingMatchId] = useState<string | null>(null);
