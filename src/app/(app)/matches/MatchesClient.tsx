@@ -142,17 +142,23 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   useEffect(() => { setNow(Date.now()); }, []);
   const today = now ? new Date(now).toISOString().split("T")[0] : "";
   const [matchDate, setMatchDate] = useState(today);
+  // today가 설정되면 matchDate 동기화
+  useEffect(() => { if (today && !matchDate) setMatchDate(today); }, [today, matchDate]);
   const [matchTime, setMatchTime] = useState("09:00");
   const [matchEndTime, setMatchEndTime] = useState("11:00");
   const [location, setLocation] = useState("");
-  const [voteDeadline, setVoteDeadline] = useState(() => {
-    const prev = new Date(today + "T00:00:00");
+  const [voteDeadline, setVoteDeadline] = useState("");
+
+  // matchDate 변경 시 투표 마감일 자동 계산 (경기 전날 17시)
+  useEffect(() => {
+    if (!matchDate) return;
+    const prev = new Date(matchDate + "T00:00:00");
     prev.setDate(prev.getDate() - 1);
     const yyyy = prev.getFullYear();
     const mm = String(prev.getMonth() + 1).padStart(2, "0");
     const dd = String(prev.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}T17:00`;
-  });
+    setVoteDeadline(`${yyyy}-${mm}-${dd}T17:00`);
+  }, [matchDate]);
   const [playerCount, setPlayerCount] = useState(defaults.playerCount);
   const [matchType, setMatchType] = useState<"REGULAR" | "INTERNAL">("REGULAR");
   const [statsIncluded, setStatsIncluded] = useState(true);
