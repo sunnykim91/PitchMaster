@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
 import { shareVoteLink } from "@/lib/kakaoShare";
 import { EmptyState } from "@/components/EmptyState";
+import { MatchCalendar } from "@/components/MatchCalendar";
 import { Calendar } from "lucide-react";
 
 type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
@@ -134,6 +135,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   const defaults = SPORT_DEFAULTS[sportType];
   const isFutsal = sportType === "FUTSAL";
 
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [isOpen, setIsOpen] = useState(searchParams.get("create") === "true");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -329,9 +331,33 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
       <Card className="rounded-md">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
-              경기 일정 관리
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
+                경기 일정
+              </CardTitle>
+              <div className="flex rounded-lg bg-secondary/50 p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  className={cn(
+                    "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
+                    viewMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  목록
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("calendar")}
+                  className={cn(
+                    "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
+                    viewMode === "calendar" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  캘린더
+                </button>
+              </div>
+            </div>
             {isStaffOrAbove(role) && (
               <Button
                 type="button"
@@ -579,6 +605,31 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
         ) : null}
       </Card>
 
+      {viewMode === "calendar" ? (
+        <Card className="rounded-md">
+          <CardContent className="p-4">
+            <MatchCalendar
+              matches={sortedMatches.map((m) => {
+                const matchVotes = Object.values(attendance[m.id] ?? {});
+                return {
+                  id: m.id,
+                  date: m.date,
+                  time: m.time,
+                  endTime: m.endTime,
+                  location: m.location,
+                  opponent: m.opponent,
+                  status: m.status,
+                  score: m.score,
+                  matchType: m.matchType,
+                  attendCount: matchVotes.filter((v) => v === "ATTEND").length,
+                  absentCount: matchVotes.filter((v) => v === "ABSENT").length,
+                  maybeCount: matchVotes.filter((v) => v === "MAYBE").length,
+                };
+              })}
+            />
+          </CardContent>
+        </Card>
+      ) : (
       <section className="grid gap-4">
         {sortedMatches.length === 0 && (
           <Card className="rounded-md p-6">
@@ -740,6 +791,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
           );
         })}
       </section>
+      )}
     </div>
   );
 }
