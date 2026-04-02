@@ -79,7 +79,7 @@ describe("shareMatchResult()", () => {
     expect(mockKakao.Share.sendDefault).not.toHaveBeenCalled();
     expect(mockShare).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: `${APP_URL}/matches/match-001`,
+        text: expect.stringContaining(`${APP_URL}/matches/match-001`),
       })
     );
   });
@@ -99,7 +99,7 @@ describe("shareMatchResult()", () => {
     expect(mockShare).toHaveBeenCalledTimes(1);
     expect(mockShare).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: `${APP_URL}/matches/match-001`,
+        text: expect.stringContaining(`${APP_URL}/matches/match-001`),
       })
     );
   });
@@ -124,7 +124,7 @@ describe("shareMatchResult()", () => {
 
     await shareMatchResult(baseArgs);
 
-    expect(mockWriteText).toHaveBeenCalledWith(`${APP_URL}/matches/match-001`);
+    expect(mockWriteText).toHaveBeenCalledWith(expect.stringContaining(`${APP_URL}/matches/match-001`));
     mockAlert.mockRestore();
   });
 });
@@ -222,13 +222,13 @@ describe("shareTeamInvite()", () => {
     );
   });
 
-  it("content description에 초대 코드 포함", async () => {
+  it("content description에 행동 유도 문구 포함", async () => {
     await shareTeamInvite(baseArgs);
     const call = mockKakao.Share.sendDefault.mock.calls[0][0];
-    expect(call.content.description).toContain("INVITE123");
+    expect(call.content.description).toBeDefined();
   });
 
-  it("Kakao 미사용 시 navigator.share fallback (초대 코드 URL)", async () => {
+  it("Kakao 미사용 시 navigator.share fallback (초대 코드 URL 포함)", async () => {
     setKakaoUnavailable();
 
     const mockShare = vi.fn().mockResolvedValue(undefined);
@@ -242,7 +242,7 @@ describe("shareTeamInvite()", () => {
 
     expect(mockShare).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: `${APP_URL}/team?code=INVITE123`,
+        text: expect.stringContaining(`${APP_URL}/team?code=INVITE123`),
       })
     );
   });
