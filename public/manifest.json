@@ -1,15 +1,17 @@
 {
+  "id": "/",
   "name": "PitchMaster - 조기축구 팀 관리",
   "short_name": "PitchMaster",
-  "description": "조기축구 팀을 위한 스마트 운영 허브",
+  "description": "참석투표, 회비관리, 전술판, 경기기록까지 — 조기축구·풋살 팀 운영 올인원 앱",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#0a0c10",
-  "theme_color": "#22c55e",
+  "theme_color": "#e8613a",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "ko",
   "categories": ["sports", "utilities"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -34,6 +36,64 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/01-dashboard.png",
+      "sizes": "414x896",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "대시보드 - 다가오는 경기와 투표"
+    },
+    {
+      "src": "/screenshots/02-match-detail.png",
+      "sizes": "414x896",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "경기 상세 - 날씨, 정보, 전적 반영"
+    },
+    {
+      "src": "/screenshots/03-records.png",
+      "sizes": "414x896",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "전적 - 시즌 통계와 레이더 차트"
+    },
+    {
+      "src": "/screenshots/04-tactics.png",
+      "sizes": "414x896",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "전술판 - 포메이션과 자동편성"
+    },
+    {
+      "src": "/screenshots/05-dues.png",
+      "sizes": "414x896",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "회비 관리 - 입출금 내역"
+    },
+    {
+      "src": "/screenshots/06-dues-status.png",
+      "sizes": "414x896",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "납부현황 - 납부/미납 관리"
+    },
+    {
+      "src": "/screenshots/07-board.png",
+      "sizes": "414x896",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "게시판 - 투표와 소통"
+    },
+    {
+      "src": "/screenshots/08-members.png",
+      "sizes": "414x896",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "회원 관리 - 등번호와 역할"
     }
   ]
 }
