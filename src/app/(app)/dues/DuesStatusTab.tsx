@@ -221,7 +221,7 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus }:
     return (
       <div key={m.id} className={cn(
         "flex items-center justify-between gap-2 rounded-lg px-3 py-2.5",
-        m.status === "UNPAID" ? "bg-[hsl(var(--loss)/0.1)] border border-[hsl(var(--loss)/0.2)]" : "bg-secondary/50"
+        m.status === "UNPAID" ? "bg-[hsl(var(--loss)/0.06)] border border-[hsl(var(--loss)/0.15)]" : "bg-secondary/50"
       )}>
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="text-sm font-semibold whitespace-nowrap text-foreground">{m.name}</span>
@@ -258,9 +258,9 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus }:
                   "rounded-full px-3 py-2 min-h-[44px] text-xs font-bold transition-all active:scale-95",
                   m.status === s
                     ? s === "PAID"
-                      ? "bg-[hsl(var(--success))] text-[hsl(0_0%_10%)]"
+                      ? "bg-[hsl(var(--success))] text-white"
                       : s === "EXEMPT"
-                      ? "bg-[hsl(var(--warning))] text-[hsl(0_0%_10%)]"
+                      ? "bg-[hsl(var(--warning))] text-white"
                       : "bg-[hsl(var(--loss))] text-white"
                     : "bg-secondary/50 text-secondary-foreground hover:bg-secondary"
                 )}

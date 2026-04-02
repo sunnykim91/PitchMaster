@@ -374,10 +374,10 @@ function DuesRecordsTabInner({
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   <span
                     className={cn(
-                      "rounded-lg px-3 py-1 text-xs font-bold font-[family-name:var(--font-display)] whitespace-nowrap",
+                      "rounded-lg px-3 py-1 text-sm font-bold font-[family-name:var(--font-display)] whitespace-nowrap",
                       record.type === "INCOME"
-                        ? "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"
-                        : "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]"
+                        ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]"
+                        : "bg-[hsl(var(--loss))]/20 text-[hsl(var(--loss))]"
                     )}
                   >
                     {record.type === "INCOME" ? "+" : "-"}
@@ -393,7 +393,7 @@ function DuesRecordsTabInner({
                             document.querySelector(`[data-edit-id="${record.id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
                           }, 100);
                         }}
-                        className="min-h-[44px] rounded-lg px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors active:scale-95"
+                        className="rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors active:scale-95"
                       >
                         수정
                       </button>
@@ -403,7 +403,7 @@ function DuesRecordsTabInner({
                           const ok = await confirm({ title: "이 내역을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
                           if (ok) handleDeleteRecord(record.id);
                         }}
-                        className="min-h-[44px] rounded-lg px-3 py-2 text-xs font-medium bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] transition-colors active:scale-95"
+                        className="rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors active:scale-95"
                       >
                         삭제
                       </button>
