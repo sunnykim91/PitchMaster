@@ -716,17 +716,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                           {label && <span className={cn("rounded px-1.5 py-0.5 text-xs font-bold", bgColor)}>{label}</span>}
                         </>
                       );
-                    })() : !isCompleted ? (
-                      <>
-                        <span className="text-sm font-bold">
-                          <span className="text-[hsl(var(--success))]">{attendCount}</span>
-                          <span className="text-muted-foreground/40"> / </span>
-                          <span className="text-[hsl(var(--loss))]">{absentCount}</span>
-                          <span className="text-muted-foreground/40"> / </span>
-                          <span className="text-[hsl(var(--warning))]">{maybeCount}</span>
-                        </span>
-                      </>
-                    ) : null}
+                    })() : null}
                     <span className="text-muted-foreground/20 text-lg">›</span>
                   </div>
                 </div>
