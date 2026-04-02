@@ -400,61 +400,63 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
         </div>
         {upcomingMatch ? (
           <>
-          <Link href={`/matches/${upcomingMatch.id}`} className="block mt-3">
-            {/* 상단: 날짜 + 시간 + 장소를 한 블록에 컴팩트하게 */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">
-                  {formatDateKo(upcomingMatch.match_date)}
-                  <span className="ml-2 text-primary font-bold">
-                    {upcomingMatch.match_time ? formatTime(upcomingMatch.match_time) : "시간 미정"}
-                    {upcomingMatch.match_end_time && <span className="text-muted-foreground font-normal"> ~ {formatTime(upcomingMatch.match_end_time)}</span>}
-                  </span>
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground truncate">
-                  {upcomingMatch.location ?? "장소 미정"}
-                  {upcomingMatch.opponent_name ? ` · vs ${upcomingMatch.opponent_name}` : ""}
-                </p>
-                {/* 유니폼 + 날씨 인라인 */}
-                <div className="mt-1.5 flex items-center gap-2">
-                  {(() => {
-                    const uniformType = upcomingMatch.uniform_type ?? "HOME";
-                    const isHome = uniformType !== "AWAY";
-                    const bgColor = data.teamUniform
-                      ? (isHome ? data.teamUniform.uniformPrimary : data.teamUniform.uniformSecondary) ?? (isHome ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))")
-                      : (isHome ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))");
-                    return (
-                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                        <span className="h-2.5 w-2.5 rounded-full border border-border/60 shrink-0" style={{ backgroundColor: bgColor }} />
-                        {isHome ? "홈" : "원정"}
-                      </span>
-                    );
-                  })()}
-                  <DashboardWeather date={upcomingMatch.match_date} location={upcomingMatch.location} />
-                </div>
+          <Link href={`/matches/${upcomingMatch.id}`} className="block mt-4">
+            {/* 1줄: 날짜 + 날씨 | 상대팀 */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">{formatDateKo(upcomingMatch.match_date)}</span>
+                <DashboardWeather date={upcomingMatch.match_date} location={upcomingMatch.location} />
               </div>
-              {/* 우측: 투표 현황 숫자 */}
-              <div className="shrink-0 text-right">
-                <div className="flex items-center gap-1.5 text-xs">
-                  <span className="text-[hsl(var(--success))] font-bold">{voteCounts.attend}</span>
-                  <span className="text-muted-foreground/40">/</span>
-                  <span className="text-[hsl(var(--loss))] font-bold">{voteCounts.absent}</span>
-                  <span className="text-muted-foreground/40">/</span>
-                  <span className="text-muted-foreground font-bold">{voteCounts.undecided}</span>
-                </div>
-                <p className="text-[10px] text-muted-foreground mt-0.5">참/불/미</p>
-              </div>
+              <span className="text-sm font-semibold text-foreground">
+                {upcomingMatch.opponent_name ? `vs ${upcomingMatch.opponent_name}` : ""}
+              </span>
             </div>
 
-            {/* 프로그레스 바 */}
-            <div className="mt-2.5 flex h-1 overflow-hidden rounded-full bg-secondary/50">
+            {/* 2줄: 시간 (큰 폰트, primary) */}
+            <p className="mt-1 text-3xl font-bold text-primary tracking-tight">
+              {upcomingMatch.match_time ? formatTime(upcomingMatch.match_time) : "시간 미정"}
+              {upcomingMatch.match_end_time && (
+                <span className="text-primary/60"> ~ {formatTime(upcomingMatch.match_end_time)}</span>
+              )}
+            </p>
+
+            {/* 3줄: 장소 + 유니폼 */}
+            <div className="mt-2 flex items-center gap-3 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <span className="text-xs">📍</span>
+                <span className="truncate">{upcomingMatch.location ?? "장소 미정"}</span>
+              </span>
+              {(() => {
+                const uniformType = upcomingMatch.uniform_type ?? "HOME";
+                const isHome = uniformType !== "AWAY";
+                const bgColor = data.teamUniform
+                  ? (isHome ? data.teamUniform.uniformPrimary : data.teamUniform.uniformSecondary) ?? (isHome ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))")
+                  : (isHome ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))");
+                return (
+                  <span className="inline-flex items-center gap-1 shrink-0">
+                    <span className="h-3 w-3 rounded-full border border-border/60" style={{ backgroundColor: bgColor }} />
+                    <span>{isHome ? "홈" : "원정"}</span>
+                  </span>
+                );
+              })()}
+            </div>
+
+            {/* 4줄: 투표 현황 (dot + 숫자) + 프로그레스 바 */}
+            <div className="mt-3 flex items-center gap-4 text-xs">
+              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[hsl(var(--success))]" />참석 <strong className="text-[hsl(var(--success))]">{voteCounts.attend}</strong></span>
+              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[hsl(var(--loss))]" />불참 <strong className="text-[hsl(var(--loss))]">{voteCounts.absent}</strong></span>
+              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[hsl(var(--warning))]" />미정 <strong className="text-[hsl(var(--warning))]">{voteCounts.undecided}</strong></span>
+            </div>
+            <div className="mt-1.5 flex h-1.5 overflow-hidden rounded-full bg-secondary/50">
               <div className="rounded-full bg-[hsl(var(--success))] transition-all duration-500" style={attendBarStyle} />
               <div className="bg-[hsl(var(--loss))] transition-all duration-500" style={absentBarStyle} />
+              {voteCounts.undecided > 0 && <div className="bg-[hsl(var(--warning))] transition-all duration-500" style={{ width: `${voteTotal > 0 ? (voteCounts.undecided / voteTotal) * 100 : 0}%` }} />}
             </div>
           </Link>
-          {/* 투표 버튼 — 링크 바깥 (클릭 이벤트 충돌 방지) */}
+
+          {/* 투표 버튼 */}
           {upcomingMatch.myMemberId && (
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-4 flex items-center gap-2">
               {([
                 { value: "ATTEND" as const, label: "참석" },
                 { value: "MAYBE" as const, label: "미정" },
@@ -468,8 +470,8 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                     disabled={pendingVote}
                     aria-pressed={displayVote === opt.value}
                     className={cn(
-                      "flex-1 rounded-lg py-2.5 text-xs font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50 min-h-[44px]",
-                      isSelected ? voteStyles[opt.value].active : voteStyles[opt.value].inactive
+                      "flex-1 rounded-xl py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50 min-h-[44px]",
+                      isSelected ? voteStyles[opt.value].active : "border border-border text-muted-foreground hover:bg-secondary"
                     )}
                     onClick={() => handleQuickVote(upcomingMatch.id, upcomingMatch.myMemberId!, opt.value)}
                   >
