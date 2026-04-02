@@ -18,7 +18,7 @@ export type MatchRow = {
   break_duration: number;
   status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
   uniform_type?: "HOME" | "AWAY";
-  match_type?: "REGULAR" | "INTERNAL";
+  match_type?: "REGULAR" | "INTERNAL" | "EVENT";
   stats_included?: boolean;
   vote_deadline?: string | null;
 };

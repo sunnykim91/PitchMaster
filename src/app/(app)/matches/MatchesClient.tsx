@@ -101,7 +101,7 @@ function mapDbMatchToMatch(db: DbMatch): Match {
     voteDeadline: db.vote_deadline || undefined,
     score: db.score ?? null,
     uniformType: (db.uniform_type === "AWAY" ? "AWAY" : "HOME") as "HOME" | "AWAY",
-    matchType: (db.match_type === "INTERNAL" ? "INTERNAL" : "REGULAR") as "REGULAR" | "INTERNAL" | "EVENT",
+    matchType: (db.match_type === "INTERNAL" ? "INTERNAL" : db.match_type === "EVENT" ? "EVENT" : "REGULAR") as "REGULAR" | "INTERNAL" | "EVENT",
     statsIncluded: db.stats_included ?? true,
   };
 }

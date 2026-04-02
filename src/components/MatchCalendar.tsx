@@ -71,14 +71,16 @@ export const MatchCalendar = memo(function MatchCalendar({ matches }: MatchCalen
       if (m.endDate && m.endDate !== m.date) {
         const start = new Date(m.date);
         const end = new Date(m.endDate);
-        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-          const ds = d.toISOString().slice(0, 10);
-          if (ds === m.date) continue; // 시작일은 이미 추가
-          if (ds.startsWith(prefix)) {
+        const cur = new Date(start);
+        // 최대 30일 제한 (안전장치)
+        for (let i = 0; i < 30 && cur <= end; i++) {
+          const ds = cur.toISOString().slice(0, 10);
+          if (ds !== m.date && ds.startsWith(prefix)) {
             const arr = map.get(ds) ?? [];
             if (!arr.find((x) => x.id === m.id)) arr.push(m);
             map.set(ds, arr);
           }
+          cur.setTime(cur.getTime() + 86400000);
         }
       }
     }
