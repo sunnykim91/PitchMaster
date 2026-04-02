@@ -401,15 +401,10 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
         {upcomingMatch ? (
           <>
           <Link href={`/matches/${upcomingMatch.id}`} className="block mt-4">
-            {/* 1줄: 날짜 + 날씨 | 상대팀 */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">{formatDateKo(upcomingMatch.match_date)}</span>
-                <DashboardWeather date={upcomingMatch.match_date} location={upcomingMatch.location} />
-              </div>
-              <span className="text-sm font-semibold text-foreground">
-                {upcomingMatch.opponent_name ? `vs ${upcomingMatch.opponent_name}` : ""}
-              </span>
+            {/* 1줄: 날짜 + 날씨 */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">{formatDateKo(upcomingMatch.match_date)}</span>
+              <DashboardWeather date={upcomingMatch.match_date} location={upcomingMatch.location} />
             </div>
 
             {/* 2줄: 시간 (큰 폰트, primary) */}
@@ -420,11 +415,14 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
               )}
             </p>
 
-            {/* 3줄: 장소 + 유니폼 */}
+            {/* 3줄: 장소 + 상대 + 유니폼 */}
             <div className="mt-2 flex items-center gap-3 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1">
-                <span className="text-xs">📍</span>
-                <span className="truncate">{upcomingMatch.location ?? "장소 미정"}</span>
+              <span className="inline-flex items-center gap-1 min-w-0 truncate">
+                <span className="text-xs shrink-0">📍</span>
+                <span className="truncate">
+                  {upcomingMatch.location ?? "장소 미정"}
+                  {upcomingMatch.opponent_name ? ` · vs ${upcomingMatch.opponent_name}` : ""}
+                </span>
               </span>
               {(() => {
                 const uniformType = upcomingMatch.uniform_type ?? "HOME";
