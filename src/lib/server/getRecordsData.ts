@@ -5,6 +5,8 @@ type MemberRow = {
   id: string;
   user_id: string | null;
   pre_name: string | null;
+  jersey_number?: number | null;
+  team_role?: string | null;
   users: { id: string; name: string; preferred_positions: string[] } | { id: string; name: string; preferred_positions: string[] }[] | null;
 };
 
@@ -36,7 +38,7 @@ export async function getRecordsData(teamId: string) {
 
   const { data: members } = await db
     .from("team_members")
-    .select("id, user_id, pre_name, users(id, name, preferred_positions)")
+    .select("id, user_id, pre_name, jersey_number, team_role, users(id, name, preferred_positions)")
     .eq("team_id", teamId)
     .eq("status", "ACTIVE");
 
@@ -87,6 +89,7 @@ export async function getRecordsData(teamId: string) {
         return {
           memberId: m.user_id ?? m.id, name: user?.name ?? m.pre_name ?? "",
           goals: 0, assists: 0, mvp: 0, attendanceRate: 0, preferredPositions: user?.preferred_positions ?? [],
+          jerseyNumber: m.jersey_number ?? null, teamRole: m.team_role ?? null,
         };
       }),
     };
@@ -129,6 +132,8 @@ export async function getRecordsData(teamId: string) {
       mvp: ids.reduce((s, id) => s + (mvpMap.get(id) ?? 0), 0),
       attendanceRate: matchIds.length > 0 ? attended / matchIds.length : 0,
       preferredPositions: user?.preferred_positions ?? [],
+      jerseyNumber: m.jersey_number ?? null,
+      teamRole: m.team_role ?? null,
     };
   });
 

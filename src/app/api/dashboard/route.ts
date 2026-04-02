@@ -216,12 +216,26 @@ export async function GET() {
     .select("id", { count: "exact", head: true })
     .eq("team_id", ctx.teamId);
 
+  // ── 팀 유니폼 정보 ──
+  const { data: teamRow } = await db
+    .from("teams")
+    .select("uniform_primary, uniform_secondary, uniform_pattern")
+    .eq("id", ctx.teamId)
+    .single();
+
+  const teamUniform = teamRow ? {
+    uniformPrimary: (teamRow as any).uniform_primary ?? null,
+    uniformSecondary: (teamRow as any).uniform_secondary ?? null,
+    uniformPattern: (teamRow as any).uniform_pattern ?? null,
+  } : null;
+
   return apiSuccess({
     upcomingMatch,
     recentResult,
     activeVotes,
     tasks,
     teamRecord,
+    teamUniform,
     birthdayMembers,
     hasDuesSettings: (duesSettingsCount ?? 0) > 0,
     totalMatches: totalMatchesCount ?? 0,
