@@ -694,16 +694,41 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
             <Card key={match.id} className={cn("rounded-xl overflow-hidden transition-all hover:border-border/80", isCompleted && "opacity-50")}>
               {/* 메인: 클릭 → 상세 */}
               <Link href={`/matches/${match.id}`} className="block p-4">
-                {/* 1줄: 시간 + 날짜 | 꺽쇠 */}
-                <div className="flex items-center justify-between">
-                  <p className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold text-primary">
+                {/* 1줄: 시간+날짜 (좌) | 스코어 or 투표현황 + 꺽쇠 (우) */}
+                <div className="flex items-center justify-between gap-2">
+                  <p className="flex items-baseline gap-2 min-w-0">
+                    <span className={cn("text-lg font-bold", isCompleted ? "text-muted-foreground" : "text-primary")}>
                       {formatTime(match.time)}
-                      {match.endTime && <span className="text-primary/50"> ~ {formatTime(match.endTime)}</span>}
+                      {match.endTime && <span className={isCompleted ? "text-muted-foreground/50" : "text-primary/50"}> ~ {formatTime(match.endTime)}</span>}
                     </span>
                     <span className="text-sm text-muted-foreground">{formatMatchDate(match.date)}</span>
                   </p>
-                  <span className="text-muted-foreground/30 text-lg ml-2 shrink-0">›</span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {isCompleted && match.score ? (() => {
+                      const [left, right] = match.score.split(":").map((s) => parseInt(s.trim(), 10));
+                      const color = match.matchType === "INTERNAL" ? "text-foreground"
+                        : left > right ? "text-[hsl(var(--win))]" : left === right ? "text-muted-foreground" : "text-[hsl(var(--loss))]";
+                      const bgColor = left > right ? "bg-[hsl(var(--win))]/15 text-[hsl(var(--win))]" : left === right ? "bg-muted text-muted-foreground" : "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]";
+                      const label = match.matchType === "INTERNAL" ? "" : left > right ? "승" : left === right ? "무" : "패";
+                      return (
+                        <>
+                          <span className={cn("text-xl font-heading font-bold", color)}>{match.score}</span>
+                          {label && <span className={cn("rounded px-1.5 py-0.5 text-xs font-bold", bgColor)}>{label}</span>}
+                        </>
+                      );
+                    })() : !isCompleted ? (
+                      <>
+                        <span className="text-sm font-bold">
+                          <span className="text-[hsl(var(--success))]">{attendCount}</span>
+                          <span className="text-muted-foreground/40"> / </span>
+                          <span className="text-[hsl(var(--loss))]">{absentCount}</span>
+                          <span className="text-muted-foreground/40"> / </span>
+                          <span className="text-[hsl(var(--warning))]">{maybeCount}</span>
+                        </span>
+                      </>
+                    ) : null}
+                    <span className="text-muted-foreground/20 text-lg">›</span>
+                  </div>
                 </div>
 
                 {/* 2줄: 장소 · 상대 | 유니폼 dot (우측) */}
@@ -723,32 +748,14 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   )}
                 </div>
 
-                {/* 3줄: 투표 현황 or 스코어 (장소와 버튼 사이) */}
-                {isCompleted && match.score ? (() => {
-                  const [left, right] = match.score.split(":").map((s) => parseInt(s.trim(), 10));
-                  if (match.matchType === "INTERNAL") {
-                    return (
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="text-2xl font-heading font-bold text-foreground">{match.score}</span>
-                      </div>
-                    );
-                  }
-                  const color = left > right ? "text-[hsl(var(--win))]" : left === right ? "text-muted-foreground" : "text-[hsl(var(--loss))]";
-                  const bgColor = left > right ? "bg-[hsl(var(--win))]/15 text-[hsl(var(--win))]" : left === right ? "bg-muted text-muted-foreground" : "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]";
-                  const label = left > right ? "승" : left === right ? "무" : "패";
-                  return (
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className={cn("text-2xl font-heading font-bold", color)}>{match.score}</span>
-                      <span className={cn("rounded px-1.5 py-0.5 text-xs font-bold", bgColor)}>{label}</span>
-                    </div>
-                  );
-                })() : !isCompleted ? (
+                {/* 3줄: 예정 경기만 투표 현황 텍스트 */}
+                {!isCompleted && (
                   <div className="mt-2 flex items-center gap-3 text-sm">
                     <span className="text-[hsl(var(--success))]">참석 <strong>{attendCount}</strong></span>
                     <span className="text-[hsl(var(--loss))]">불참 <strong>{absentCount}</strong></span>
                     <span className="text-[hsl(var(--warning))]">미정 <strong>{maybeCount}</strong></span>
                   </div>
-                ) : null}
+                )}
 
                 {match.matchType === "EVENT" && (
                   <p className="mt-1 text-xs font-semibold text-accent">팀 일정</p>
