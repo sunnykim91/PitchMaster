@@ -375,6 +375,49 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
               className="grid gap-4 rounded-md border border-border bg-card p-5"
               action={(formData) => handleCreate(formData)}
             >
+              {/* 경기 유형 — 최상단 */}
+              <div className="space-y-2">
+                <Label>경기 유형</Label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMatchType("REGULAR")}
+                    className={cn(
+                      "flex-1 min-h-[40px] rounded-lg border px-3 text-sm font-medium transition-colors",
+                      matchType === "REGULAR"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border text-muted-foreground hover:border-primary/30"
+                    )}
+                  >
+                    일반 경기
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMatchType("INTERNAL")}
+                    className={cn(
+                      "flex-1 min-h-[40px] rounded-lg border px-3 text-sm font-medium transition-colors",
+                      matchType === "INTERNAL"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border text-muted-foreground hover:border-primary/30"
+                    )}
+                  >
+                    자체전
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setMatchType("EVENT"); setStatsIncluded(false); }}
+                    className={cn(
+                      "flex-1 min-h-[40px] rounded-lg border px-3 text-sm font-medium transition-colors",
+                      matchType === "EVENT"
+                        ? "border-accent bg-accent/10 text-accent"
+                        : "border-border text-muted-foreground hover:border-accent/30"
+                    )}
+                  >
+                    팀 일정
+                  </button>
+                </div>
+              </div>
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="date">날짜 <span className="text-destructive">*</span></Label>
@@ -480,48 +523,6 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       ))}
                     </div>
                   )}
-                </div>
-                {/* 경기 유형 */}
-                <div className="space-y-2">
-                  <Label>경기 유형</Label>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setMatchType("REGULAR")}
-                      className={cn(
-                        "flex-1 min-h-[44px] rounded-lg border px-3 text-sm font-medium transition-colors",
-                        matchType === "REGULAR"
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border text-muted-foreground hover:border-primary/30"
-                      )}
-                    >
-                      일반 경기
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMatchType("INTERNAL")}
-                      className={cn(
-                        "flex-1 min-h-[44px] rounded-lg border px-3 text-sm font-medium transition-colors",
-                        matchType === "INTERNAL"
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border text-muted-foreground hover:border-primary/30"
-                      )}
-                    >
-                      자체전
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setMatchType("EVENT"); setStatsIncluded(false); }}
-                      className={cn(
-                        "flex-1 min-h-[44px] rounded-lg border px-3 text-sm font-medium transition-colors",
-                        matchType === "EVENT"
-                          ? "border-accent bg-accent/10 text-accent"
-                          : "border-border text-muted-foreground hover:border-accent/30"
-                      )}
-                    >
-                      팀 일정
-                    </button>
-                  </div>
                 </div>
                 {matchType === "EVENT" ? (
                   <>
