@@ -660,6 +660,12 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   maybeCount: matchVotes.filter((v) => v === "MAYBE").length,
                 };
               })}
+              myVotes={Object.fromEntries(
+                sortedMatches.map((m) => [m.id, attendance[m.id]?.[userId] ?? ""])
+                  .filter(([, v]) => v)
+              )}
+              onVote={handleVote}
+              votingMatchId={votingMatchId}
             />
           </CardContent>
         </Card>
