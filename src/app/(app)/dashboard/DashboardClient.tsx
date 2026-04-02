@@ -218,21 +218,6 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
     }
   }
 
-  if (error) {
-    return (
-      <Card className="p-6">
-        <div className="flex items-center justify-between">
-          <span className="text-destructive">오류: {toKoreanError(error)}</span>
-          <Button variant="outline" size="sm" onClick={refetch}>다시 시도</Button>
-        </div>
-      </Card>
-    );
-  }
-
-  if (loading) {
-    return <CardSkeleton />;
-  }
-
   const { upcomingMatch, activeVotes, tasks, recentResult, teamRecord, birthdayMembers } = data;
 
   // 낙관적 상태가 있으면 우선 사용
@@ -255,6 +240,21 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
 
   // 경기 0건 넛지 카드: 위자드와 별개로, 한 번도 경기를 등록한 적 없는 팀에게 운영진에게만 표시
   const showNoMatchNudge = !showWizard && isStaffOrAbove(role) && (data.totalMatches ?? 0) === 0;
+
+  if (error) {
+    return (
+      <Card className="p-6">
+        <div className="flex items-center justify-between">
+          <span className="text-destructive">오류: {toKoreanError(error)}</span>
+          <Button variant="outline" size="sm" onClick={refetch}>다시 시도</Button>
+        </div>
+      </Card>
+    );
+  }
+
+  if (loading) {
+    return <CardSkeleton />;
+  }
 
   async function handleCopyInviteCode() {
     if (!inviteCode) return;
