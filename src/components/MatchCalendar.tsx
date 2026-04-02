@@ -220,16 +220,14 @@ export const MatchCalendar = memo(function MatchCalendar({ matches }: MatchCalen
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {isCompleted && m.score ? (
-                        <>
-                          {resultBadge}
-                        </>
+                        <>{resultBadge}</>
                       ) : !isCompleted && (m.attendCount !== undefined) ? (
-                        <span className="text-sm font-bold">
-                          <span className="text-[hsl(var(--success))]">{m.attendCount}</span>
+                        <span className="text-xs">
+                          <span className="text-[hsl(var(--success))] font-bold">참석 {m.attendCount}</span>
                           <span className="text-muted-foreground/40"> / </span>
-                          <span className="text-[hsl(var(--loss))]">{m.absentCount}</span>
+                          <span className="text-[hsl(var(--loss))] font-bold">불참 {m.absentCount}</span>
                           <span className="text-muted-foreground/40"> / </span>
-                          <span className="text-[hsl(var(--warning))]">{m.maybeCount}</span>
+                          <span className="text-[hsl(var(--warning))] font-bold">미정 {m.maybeCount}</span>
                         </span>
                       ) : null}
                       <span className="text-muted-foreground/20 text-lg">›</span>
