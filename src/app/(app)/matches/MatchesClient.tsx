@@ -328,34 +328,10 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     <div className="grid gap-5">
       <Card className="rounded-md">
         <CardHeader>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
-                경기 일정
-              </CardTitle>
-              <div className="flex rounded-lg bg-secondary/50 p-0.5">
-                <button
-                  type="button"
-                  onClick={() => setViewMode("list")}
-                  className={cn(
-                    "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
-                    viewMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  목록
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("calendar")}
-                  className={cn(
-                    "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
-                    viewMode === "calendar" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  캘린더
-                </button>
-              </div>
-            </div>
+          <div className="flex items-center justify-between">
+            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">
+              경기 일정
+            </CardTitle>
             {isStaffOrAbove(role) && (
               <Button
                 type="button"
@@ -366,6 +342,28 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 일정 등록하기
               </Button>
             )}
+          </div>
+          <div className="mt-2 flex rounded-lg bg-secondary/50 p-0.5 w-fit">
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              className={cn(
+                "rounded-md px-4 py-1.5 text-xs font-semibold transition-colors",
+                viewMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              목록
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("calendar")}
+              className={cn(
+                "rounded-md px-4 py-1.5 text-xs font-semibold transition-colors",
+                viewMode === "calendar" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              캘린더
+            </button>
           </div>
         </CardHeader>
 
