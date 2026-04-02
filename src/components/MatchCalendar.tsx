@@ -122,7 +122,7 @@ export const MatchCalendar = memo(function MatchCalendar({ matches }: MatchCalen
         {WEEKDAYS.map((day, i) => (
           <span key={day} className={cn(
             "text-xs font-semibold py-2",
-            i === 5 ? "text-[hsl(var(--info))]" : i === 6 ? "text-[hsl(var(--loss))]" : "text-muted-foreground"
+            i === 5 ? "text-muted-foreground/80" : i === 6 ? "text-muted-foreground/60" : "text-muted-foreground"
           )}>
             {day}
           </span>
@@ -161,20 +161,20 @@ export const MatchCalendar = memo(function MatchCalendar({ matches }: MatchCalen
               type="button"
               onClick={() => setSelectedDate(isSelected ? null : dateStr)}
               className={cn(
-                "aspect-square flex flex-col items-center justify-center rounded-lg transition-all text-sm relative",
+                "flex flex-col items-center justify-center rounded-lg transition-all text-sm relative py-3",
                 isSelected && isToday ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background" :
                 isSelected ? "bg-primary text-primary-foreground" :
                 isToday ? "ring-2 ring-primary text-primary font-bold" :
                 hasMatch && "bg-primary/8",
                 !isSelected && !isToday && "hover:bg-secondary",
-                dow === 5 && !isSelected && !isToday && "text-[hsl(var(--info))]",
-                dow === 6 && !isSelected && !isToday && "text-[hsl(var(--loss))]",
+                dow === 5 && !isSelected && !isToday && "text-muted-foreground/80",
+                dow === 6 && !isSelected && !isToday && "text-muted-foreground/60",
               )}
             >
               {day}
               {hasMatch && (
                 <span className={cn(
-                  "absolute bottom-0.5 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full",
+                  "absolute bottom-1 left-1/2 -translate-x-1/2 h-1 w-4 rounded-full",
                   isSelected ? "bg-primary-foreground" : dotColor
                 )} />
               )}
@@ -203,39 +203,40 @@ export const MatchCalendar = memo(function MatchCalendar({ matches }: MatchCalen
             }
 
             return (
-              <Link key={m.id} href={`/matches/${m.id}`}>
-                <Card className="hover:bg-secondary/70 transition-colors cursor-pointer">
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold">
-                            {formatTime(m.time)}
-                            {m.endTime && <span className="text-muted-foreground"> ~ {formatTime(m.endTime)}</span>}
-                          </span>
-                          {resultBadge}
-                          {m.matchType === "INTERNAL" && (
-                            <Badge variant="outline" className="text-xs border-[hsl(var(--warning))] text-[hsl(var(--warning))]">자체전</Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground truncate mt-0.5">
-                          {m.location}
-                          {m.opponent && ` · vs ${m.opponent}`}
-                        </p>
-                      </div>
-                      {!isCompleted && (m.attendCount !== undefined) && (
-                        <div className="flex gap-1.5 text-xs text-muted-foreground shrink-0">
-                          <span className="text-[hsl(var(--success))]">참 {m.attendCount}</span>
-                          <span>·</span>
-                          <span className="text-[hsl(var(--loss))]">불 {m.absentCount}</span>
-                          <span>·</span>
-                          <span>미 {m.maybeCount}</span>
-                        </div>
-                      )}
+              <Card key={m.id} className={cn("rounded-xl overflow-hidden transition-all hover:border-border/80", isCompleted && "opacity-70")}>
+                <Link href={`/matches/${m.id}`} className="block p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="flex items-baseline gap-1.5">
+                        <span className={cn("text-lg font-bold", isCompleted ? "text-muted-foreground" : "text-primary")}>
+                          {formatTime(m.time)}
+                          {m.endTime && <span className={isCompleted ? "text-muted-foreground/50" : "text-primary/50"}> ~ {formatTime(m.endTime)}</span>}
+                        </span>
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">
+                        📍 {m.location}
+                        {m.opponent && ` · vs ${m.opponent}`}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {isCompleted && m.score ? (
+                        <>
+                          {resultBadge}
+                        </>
+                      ) : !isCompleted && (m.attendCount !== undefined) ? (
+                        <span className="text-sm font-bold">
+                          <span className="text-[hsl(var(--success))]">{m.attendCount}</span>
+                          <span className="text-muted-foreground/40"> / </span>
+                          <span className="text-[hsl(var(--loss))]">{m.absentCount}</span>
+                          <span className="text-muted-foreground/40"> / </span>
+                          <span className="text-[hsl(var(--warning))]">{m.maybeCount}</span>
+                        </span>
+                      ) : null}
+                      <span className="text-muted-foreground/20 text-lg">›</span>
+                    </div>
+                  </div>
+                </Link>
+              </Card>
             );
           })}
         </div>
