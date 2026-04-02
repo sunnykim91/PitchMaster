@@ -7,6 +7,7 @@ export type DbMatchRow = {
   match_date: string;
   match_time: string;
   match_end_time: string | null;
+  match_end_date: string | null;
   location: string;
   quarter_count: number;
   quarter_duration: number;

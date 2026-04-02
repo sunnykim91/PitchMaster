@@ -250,9 +250,9 @@ function MatchInfoTabInner({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <p className="type-overline text-[hsl(var(--info))]">Match Info</p>
+            <p className="type-overline text-[hsl(var(--info))]">{match.matchType === "EVENT" ? "Team Event" : "Match Info"}</p>
             <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
-              경기 정보
+              {match.matchType === "EVENT" ? "팀 일정" : "경기 정보"}
             </CardTitle>
           </div>
           {canManage && !editing && (
@@ -361,8 +361,14 @@ function MatchInfoTabInner({
               )}
               {match.opponent && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground w-14 shrink-0">상대팀</span>
+                  <span className="text-muted-foreground w-14 shrink-0">{match.matchType === "EVENT" ? "제목" : "상대팀"}</span>
                   <span className="font-medium">{match.opponent}</span>
+                </div>
+              )}
+              {match.endDate && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-14 shrink-0">종료일</span>
+                  <span className="font-medium">{formatDateKo(match.endDate)}</span>
                 </div>
               )}
               {goalsProp && goalsProp.length > 0 && (() => {
@@ -394,7 +400,8 @@ function MatchInfoTabInner({
             </div>
           )}
 
-          {/* 유니폼 선택 */}
+          {/* 유니폼 선택 (EVENT에서 숨김) */}
+          {match.matchType !== "EVENT" && (
           <div className="flex items-center gap-3 pt-1">
             <span className="text-sm text-muted-foreground">유니폼</span>
             <div className="flex gap-2">
@@ -428,9 +435,10 @@ function MatchInfoTabInner({
               </button>
             </div>
           </div>
+          )}
 
-          {/* 전적 반영 토글 (운영진 이상) */}
-          {canManage && (
+          {/* 전적 반영 토글 (운영진 이상, EVENT 제외) */}
+          {canManage && match.matchType !== "EVENT" && (
             <div className="flex items-center justify-between gap-4 rounded-lg border border-border p-3">
               <div className="min-w-0">
                 <p className="text-sm font-medium">전적 반영</p>

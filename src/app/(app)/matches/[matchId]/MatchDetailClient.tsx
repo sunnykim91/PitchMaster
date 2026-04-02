@@ -388,9 +388,11 @@ export default function MatchDetailClient({
           {([
             { key: "info", label: "정보" },
             { key: "vote", label: "투표" },
-            { key: "tactics", label: "전술" },
-            { key: "record", label: "기록" },
-            { key: "diary", label: "일지" },
+            ...(match.matchType !== "EVENT" ? [
+              { key: "tactics" as const, label: "전술" },
+              { key: "record" as const, label: "기록" },
+              { key: "diary" as const, label: "일지" },
+            ] : []),
           ] as const).map((tab) => (
             <button
               key={tab.key}

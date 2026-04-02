@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
       match_date: body.date,
       match_time: body.time || null,
       match_end_time: body.endTime || null,
+      match_end_date: body.endDate || null,
       location: body.location || null,
       quarter_count: body.quarterCount ?? 4,
       quarter_duration: body.quarterDuration ?? 25,
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
       player_count: body.playerCount ?? 11,
       uniform_type: body.uniformType ?? "HOME",
       match_type: body.matchType ?? "REGULAR",
-      stats_included: body.statsIncluded ?? true,
+      stats_included: body.matchType === "EVENT" ? false : (body.statsIncluded ?? true),
       status: "SCHEDULED",
       vote_deadline: body.voteDeadline || null,
       created_by: ctx.userId,
@@ -105,10 +106,14 @@ export async function POST(request: NextRequest) {
 
   // 경기 등록 알림 발송 (비동기, 응답 차단 안 함)
   const matchDate = body.date;
+  const isEvent = body.matchType === "EVENT";
   const isInternal = body.matchType === "INTERNAL";
-  const pushBody = isInternal ? `${matchDate} 자체전` : `${matchDate} vs ${body.opponent || "상대 미정"}`;
+  const pushTitle = isEvent ? "📅 새 팀 일정이 등록되었습니다" : "새 경기 일정이 등록되었습니다";
+  const pushBody = isEvent ? `${matchDate} ${body.opponent || "팀 일정"}`
+    : isInternal ? `${matchDate} 자체전`
+    : `${matchDate} vs ${body.opponent || "상대 미정"}`;
   sendTeamPush(ctx.teamId!, {
-    title: "새 경기 일정이 등록되었습니다",
+    title: pushTitle,
     body: pushBody,
     url: `/matches/${data.id}`,
   }).catch(() => {});
@@ -133,6 +138,7 @@ export async function PUT(request: NextRequest) {
   if (body.date !== undefined) updates.match_date = body.date;
   if (body.time !== undefined) updates.match_time = body.time || null;
   if (body.endTime !== undefined) updates.match_end_time = body.endTime || null;
+  if (body.endDate !== undefined) updates.match_end_date = body.endDate || null;
   if (body.location !== undefined) updates.location = body.location || null;
   if (body.opponent !== undefined) updates.opponent_name = body.opponent || null;
   if (body.quarterCount !== undefined) updates.quarter_count = body.quarterCount;

@@ -16,7 +16,8 @@ type CalendarMatch = {
   opponent?: string;
   status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
   score?: string | null;
-  matchType: "REGULAR" | "INTERNAL";
+  matchType: "REGULAR" | "INTERNAL" | "EVENT";
+  endDate?: string | null;
   // 투표 집계
   attendCount?: number;
   absentCount?: number;
@@ -60,10 +61,25 @@ export const MatchCalendar = memo(function MatchCalendar({ matches }: MatchCalen
     const map = new Map<string, CalendarMatch[]>();
     const prefix = `${year}-${String(month + 1).padStart(2, "0")}`;
     for (const m of matches) {
+      // 시작일
       if (m.date.startsWith(prefix)) {
         const arr = map.get(m.date) ?? [];
         arr.push(m);
         map.set(m.date, arr);
+      }
+      // 종료일까지 (1박2일 등)
+      if (m.endDate && m.endDate !== m.date) {
+        const start = new Date(m.date);
+        const end = new Date(m.endDate);
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          const ds = d.toISOString().slice(0, 10);
+          if (ds === m.date) continue; // 시작일은 이미 추가
+          if (ds.startsWith(prefix)) {
+            const arr = map.get(ds) ?? [];
+            if (!arr.find((x) => x.id === m.id)) arr.push(m);
+            map.set(ds, arr);
+          }
+        }
       }
     }
     return map;
@@ -127,7 +143,9 @@ export const MatchCalendar = memo(function MatchCalendar({ matches }: MatchCalen
           let dotColor = "bg-primary"; // 예정
           if (hasMatch) {
             const m = dayMatches[0];
-            if (m.status === "COMPLETED" && m.score) {
+            if (m.matchType === "EVENT") {
+              dotColor = "bg-[hsl(var(--accent))]";
+            } else if (m.status === "COMPLETED" && m.score) {
               const [l, r] = m.score.split(":").map((s) => parseInt(s.trim(), 10));
               if (l > r) dotColor = "bg-[hsl(var(--win))]";
               else if (l < r) dotColor = "bg-[hsl(var(--loss))]";

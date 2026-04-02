@@ -33,6 +33,7 @@ type Match = {
   date: string;
   time: string;
   endTime?: string | null;
+  endDate?: string | null;
   location: string;
   opponent?: string;
   quarterCount: number;
@@ -42,7 +43,7 @@ type Match = {
   voteDeadline?: string;
   score?: string | null;
   uniformType: "HOME" | "AWAY";
-  matchType: "REGULAR" | "INTERNAL";
+  matchType: "REGULAR" | "INTERNAL" | "EVENT";
   statsIncluded: boolean;
 };
 
@@ -53,6 +54,7 @@ type DbMatch = {
   match_date: string;
   match_time: string;
   match_end_time: string | null;
+  match_end_date: string | null;
   location: string;
   quarter_count: number;
   quarter_duration: number;
@@ -89,6 +91,7 @@ function mapDbMatchToMatch(db: DbMatch): Match {
     date: db.match_date,
     time: db.match_time,
     endTime: db.match_end_time,
+    endDate: db.match_end_date,
     location: db.location,
     opponent: db.opponent_name || undefined,
     quarterCount: db.quarter_count,
@@ -98,7 +101,7 @@ function mapDbMatchToMatch(db: DbMatch): Match {
     voteDeadline: db.vote_deadline || undefined,
     score: db.score ?? null,
     uniformType: (db.uniform_type === "AWAY" ? "AWAY" : "HOME") as "HOME" | "AWAY",
-    matchType: (db.match_type === "INTERNAL" ? "INTERNAL" : "REGULAR") as "REGULAR" | "INTERNAL",
+    matchType: (db.match_type === "INTERNAL" ? "INTERNAL" : "REGULAR") as "REGULAR" | "INTERNAL" | "EVENT",
     statsIncluded: db.stats_included ?? true,
   };
 }
@@ -163,7 +166,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     setVoteDeadline(`${yyyy}-${mm}-${dd}T17:00`);
   }, [matchDate]);
   const [playerCount, setPlayerCount] = useState(defaults.playerCount);
-  const [matchType, setMatchType] = useState<"REGULAR" | "INTERNAL">("REGULAR");
+  const [matchType, setMatchType] = useState<"REGULAR" | "INTERNAL" | "EVENT">("REGULAR");
   const [statsIncluded, setStatsIncluded] = useState(true);
 
   const formRef = useRef<HTMLDivElement>(null);
@@ -243,13 +246,14 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
       endTime: String(formData.get("endTime") || "") || undefined,
       location: String(formData.get("location") || ""),
       opponent: matchType === "INTERNAL" ? null : String(formData.get("opponent") || ""),
-      quarterCount: Number(formData.get("quarterCount") || defaults.quarters),
-      quarterDuration: Number(formData.get("quarterDuration") || defaults.duration),
-      breakDuration: Number(formData.get("breakDuration") || defaults.breakTime),
+      quarterCount: matchType === "EVENT" ? 1 : Number(formData.get("quarterCount") || defaults.quarters),
+      quarterDuration: matchType === "EVENT" ? 0 : Number(formData.get("quarterDuration") || defaults.duration),
+      breakDuration: matchType === "EVENT" ? 0 : Number(formData.get("breakDuration") || defaults.breakTime),
       playerCount,
       voteDeadline: String(formData.get("voteDeadline") || "") || undefined,
       matchType,
-      statsIncluded,
+      statsIncluded: matchType === "EVENT" ? false : statsIncluded,
+      endDate: matchType === "EVENT" ? (String(formData.get("endDate") || "") || undefined) : undefined,
     };
     const { error, data } = await apiMutate<{ id: string }>("/api/matches", "POST", body);
     setSubmitting(false);
@@ -511,18 +515,51 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     >
                       자체전
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => { setMatchType("EVENT"); setStatsIncluded(false); }}
+                      className={cn(
+                        "flex-1 min-h-[44px] rounded-lg border px-3 text-sm font-medium transition-colors",
+                        matchType === "EVENT"
+                          ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent)/0.1)] text-[hsl(var(--accent))]"
+                          : "border-border text-muted-foreground hover:border-[hsl(var(--accent)/0.3)]"
+                      )}
+                    >
+                      팀 일정
+                    </button>
                   </div>
                 </div>
-                {matchType === "REGULAR" && (
+                {matchType === "EVENT" ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="opponent">일정 제목</Label>
+                      <Input id="opponent" name="opponent" placeholder="예: 연말 회식, MT, 유니폼 주문" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="multiDay"
+                        className="h-4 w-4 rounded border-border accent-primary"
+                        onChange={(e) => {
+                          const endDateInput = document.getElementById("endDate") as HTMLInputElement;
+                          if (endDateInput) endDateInput.disabled = !e.target.checked;
+                        }}
+                      />
+                      <Label htmlFor="multiDay" className="text-sm text-muted-foreground cursor-pointer">
+                        1박 이상 일정
+                      </Label>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="endDate">종료일</Label>
+                      <Input id="endDate" name="endDate" type="date" disabled />
+                    </div>
+                  </>
+                ) : matchType === "REGULAR" ? (
                   <div className="space-y-2">
                     <Label htmlFor="opponent">상대팀</Label>
-                    <Input
-                      id="opponent"
-                      name="opponent"
-                    />
+                    <Input id="opponent" name="opponent" />
                   </div>
-                )}
-                {matchType === "INTERNAL" && (
+                ) : (
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -537,6 +574,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   </div>
                 )}
               </div>
+              {matchType !== "EVENT" && (
               <button
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
@@ -544,7 +582,8 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
               >
                 {showAdvanced ? "상세 설정 접기 ▲" : "상세 설정 ▼"}
               </button>
-              {showAdvanced && (
+              )}
+              {showAdvanced && matchType !== "EVENT" && (
                 <div className="grid gap-3 animate-slide-down">
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="space-y-2">
@@ -616,6 +655,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   date: m.date,
                   time: m.time,
                   endTime: m.endTime,
+                  endDate: m.endDate,
                   location: m.location,
                   opponent: m.opponent,
                   status: m.status,
@@ -667,6 +707,9 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       {match.matchType === "INTERNAL" && (
                         <Badge variant="outline" className="text-xs border-[hsl(var(--warning))] text-[hsl(var(--warning))]">자체전</Badge>
                       )}
+                      {match.matchType === "EVENT" && (
+                        <Badge variant="outline" className="text-xs border-[hsl(var(--accent))] text-[hsl(var(--accent))]">📅 팀 일정</Badge>
+                      )}
                       {match.status === "COMPLETED" && match.score && (() => {
                         const [left, right] = match.score.split(":").map((s) => parseInt(s.trim(), 10));
                         if (match.matchType === "INTERNAL") {
@@ -694,8 +737,12 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       {formatMatchDate(match.date)} · {formatTime(match.time)}{match.endTime ? ` ~ ${formatTime(match.endTime)}` : ""}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground truncate max-w-[280px] sm:max-w-none">
-                      {match.location} {match.matchType === "INTERNAL" ? "· 자체전" : match.opponent ? `· ${match.opponent}` : ""}
+                      {match.location}
+                      {match.matchType === "EVENT" ? (match.opponent ? ` · ${match.opponent}` : "")
+                        : match.matchType === "INTERNAL" ? " · 자체전"
+                        : match.opponent ? ` · vs ${match.opponent}` : ""}
                     </p>
+                    {match.matchType !== "EVENT" && (
                     <div className="mt-1 flex items-center gap-1.5">
                       <div
                         className="h-3 w-3 rounded-full border border-border/60 shrink-0"
@@ -705,6 +752,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         {match.uniformType === "HOME" ? "홈" : "원정"} 유니폼
                       </span>
                     </div>
+                    )}
                     {match.voteDeadline && (
                       <p className="mt-1 text-xs text-muted-foreground">
                         투표 마감: {formatDateTime(match.voteDeadline ?? "")}
