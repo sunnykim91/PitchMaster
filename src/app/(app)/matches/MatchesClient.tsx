@@ -699,7 +699,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   <p className="flex items-baseline gap-2">
                     <span className="text-2xl font-bold text-primary">
                       {formatTime(match.time)}
-                      {match.endTime && <span className="text-lg text-primary/50"> ~ {formatTime(match.endTime)}</span>}
+                      {match.endTime && <span className="text-primary/50"> ~ {formatTime(match.endTime)}</span>}
                     </span>
                     <span className="text-sm text-muted-foreground">{formatMatchDate(match.date)}</span>
                   </p>
