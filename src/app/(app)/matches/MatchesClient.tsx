@@ -758,19 +758,6 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     ) : null}
                   </div>
                 </div>
-                {/* 프로그레스 바 — 예정 경기만 */}
-                {!isCompleted && (() => {
-                  const total = attendCount + absentCount + maybeCount;
-                  return total > 0 ? (
-                    <div className="px-4 pb-2">
-                      <div className="flex h-1.5 overflow-hidden rounded-full bg-secondary/50">
-                        <div className="rounded-full bg-[hsl(var(--success))] transition-all duration-500" style={{ width: `${(attendCount / total) * 100}%` }} />
-                        <div className="bg-[hsl(var(--loss))] transition-all duration-500" style={{ width: `${(absentCount / total) * 100}%` }} />
-                        <div className="bg-[hsl(var(--warning))] transition-all duration-500" style={{ width: `${(maybeCount / total) * 100}%` }} />
-                      </div>
-                    </div>
-                  ) : null;
-                })()}
               </Link>
 
               {/* 투표 버튼 — 예정 경기만 */}
