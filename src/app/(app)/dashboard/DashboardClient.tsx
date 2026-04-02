@@ -468,7 +468,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                     disabled={pendingVote}
                     aria-pressed={displayVote === opt.value}
                     className={cn(
-                      "flex-1 rounded-xl py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50 min-h-[44px]",
+                      "flex-1 rounded-lg py-1.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50",
                       isSelected ? voteStyles[opt.value].active : "border border-border text-muted-foreground hover:bg-secondary"
                     )}
                     onClick={() => handleQuickVote(upcomingMatch.id, upcomingMatch.myMemberId!, opt.value)}
