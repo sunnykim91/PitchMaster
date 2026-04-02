@@ -22,6 +22,7 @@ export interface PostCardProps {
   onPin: (postId: string) => void;
   onImageClick: (src: string) => void;
   onVote: (pollId: string, optionId: string) => void;
+  onClosePoll?: (pollId: string) => void;
   onShare: (post: Post) => void;
   onToggleExpand: (postId: string) => void;
   likingPostIds: Set<string>;
@@ -49,6 +50,7 @@ export const PostCard = memo(function PostCard({
   onPin,
   onImageClick,
   onVote,
+  onClosePoll,
   onShare,
   onToggleExpand,
   likingPostIds,
@@ -173,6 +175,8 @@ export const PostCard = memo(function PostCard({
           <PollBlock
             poll={post.poll}
             onVote={onVote}
+            onClosePoll={onClosePoll}
+            isStaff={isStaff}
             votingOptionId={votingOptionId}
           />
         )}

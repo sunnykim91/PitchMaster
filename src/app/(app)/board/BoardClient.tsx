@@ -410,6 +410,16 @@ export default function BoardClient({
     showToast("게시글 링크가 복사되었습니다.");
   }, [showToast]);
 
+  const handleClosePoll = useCallback(async (pollId: string) => {
+    const { error: err } = await apiMutate("/api/posts/vote/close", "POST", { pollId });
+    if (err) {
+      showToast("투표 마감에 실패했습니다.", "error");
+    } else {
+      showToast("투표가 마감되었습니다.");
+      await refetchPosts();
+    }
+  }, [refetchPosts, showToast]);
+
   const handleAddComment = useCallback(async (postId: string) => {
     const content = commentInputs[postId]?.trim();
     if (!content) return;
@@ -524,6 +534,7 @@ export default function BoardClient({
               onPin={handlePin}
               onImageClick={setLightboxSrc}
               onVote={handleVote}
+              onClosePoll={handleClosePoll}
               onShare={handleShare}
               onToggleExpand={toggleExpand}
               likingPostIds={likingPostIds}

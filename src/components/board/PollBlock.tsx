@@ -10,6 +10,8 @@ import type { Poll } from "@/app/(app)/board/BoardClient";
 export interface PollBlockProps {
   poll: Poll;
   onVote: (pollId: string, optionId: string) => void;
+  onClosePoll?: (pollId: string) => void;
+  isStaff?: boolean;
   votingOptionId: string | null;
 }
 
@@ -20,7 +22,7 @@ type VoteDetail = {
   totalVoted: number;
 };
 
-export const PollBlock = memo(function PollBlock({ poll, onVote, votingOptionId }: PollBlockProps) {
+export const PollBlock = memo(function PollBlock({ poll, onVote, onClosePoll, isStaff, votingOptionId }: PollBlockProps) {
   const isPollExpired = poll.endsAt ? new Date(poll.endsAt) < new Date() : false;
   const hasVoted = !!poll.myVote;
 
@@ -115,10 +117,27 @@ export const PollBlock = memo(function PollBlock({ poll, onVote, votingOptionId 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span>{poll.totalVotes}명 투표</span>
-          {poll.endsAt && (
+          {isPollExpired ? (
             <>
               <span>&middot;</span>
-              <span>{isPollExpired ? "마감됨" : `${relativeTime(poll.endsAt)} 마감`}</span>
+              <span>마감됨</span>
+            </>
+          ) : poll.endsAt ? (
+            <>
+              <span>&middot;</span>
+              <span>{relativeTime(poll.endsAt)} 마감</span>
+            </>
+          ) : null}
+          {isStaff && !isPollExpired && onClosePoll && (
+            <>
+              <span>&middot;</span>
+              <button
+                type="button"
+                onClick={() => onClosePoll(poll.id)}
+                className="text-[hsl(var(--loss))] hover:underline font-medium"
+              >
+                투표 마감
+              </button>
             </>
           )}
         </div>
