@@ -709,19 +709,10 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         : match.matchType === "INTERNAL" ? "  ·  자체전"
                         : match.opponent ? `  ·  vs ${match.opponent}` : ""}
                     </p>
-                    {/* 유니폼 */}
-                    {match.matchType !== "EVENT" && (
-                      <div className="mt-1 flex items-center gap-1.5">
-                        <span
-                          className="h-4 w-4 rounded-full border border-border/60 shrink-0"
-                          style={{ backgroundColor: teamUniform ? (match.uniformType === "HOME" ? teamUniform.primary ?? "hsl(var(--primary))" : teamUniform.secondary ?? "hsl(var(--muted-foreground))") : (match.uniformType === "HOME" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))") }}
-                        />
-                        <span className="text-sm text-muted-foreground">{match.uniformType === "HOME" ? "홈" : "원정"}</span>
-                      </div>
-                    )}
                     {match.matchType === "EVENT" && (
                       <p className="mt-1 text-xs font-semibold text-accent">팀 일정</p>
                     )}
+                    <p className="mt-1.5 text-xs text-primary">상세 →</p>
                   </div>
 
                   {/* 우측: 스코어 or 투표 현황 */}
@@ -748,12 +739,20 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         </div>
                       );
                     })() : !isCompleted ? (
-                      <div className="text-sm font-bold text-right">
-                        <span className="text-[hsl(var(--success))]">{attendCount}</span>
-                        <span className="text-muted-foreground/40"> / </span>
-                        <span className="text-[hsl(var(--loss))]">{absentCount}</span>
-                        <span className="text-muted-foreground/40"> / </span>
-                        <span className="text-[hsl(var(--warning))]">{maybeCount}</span>
+                      <div className="flex items-center gap-1.5">
+                        {match.matchType !== "EVENT" && (
+                          <span
+                            className="h-4 w-4 rounded-full border border-border/60 shrink-0"
+                            style={{ backgroundColor: teamUniform ? (match.uniformType === "HOME" ? teamUniform.primary ?? "hsl(var(--primary))" : teamUniform.secondary ?? "hsl(var(--muted-foreground))") : (match.uniformType === "HOME" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))") }}
+                          />
+                        )}
+                        <span className="text-sm font-bold">
+                          <span className="text-[hsl(var(--success))]">{attendCount}</span>
+                          <span className="text-muted-foreground/40"> / </span>
+                          <span className="text-[hsl(var(--loss))]">{absentCount}</span>
+                          <span className="text-muted-foreground/40"> / </span>
+                          <span className="text-[hsl(var(--warning))]">{maybeCount}</span>
+                        </span>
                       </div>
                     ) : null}
                   </div>
