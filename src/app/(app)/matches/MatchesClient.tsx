@@ -691,7 +691,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
           const maybeCount = matchVotes.filter((v) => v === "MAYBE").length;
           const isCompleted = match.status === "COMPLETED";
           return (
-            <Card key={match.id} className={cn("rounded-xl overflow-hidden transition-all hover:border-border/80", isCompleted && "opacity-50")}>
+            <Card key={match.id} className={cn("rounded-xl overflow-hidden transition-all hover:border-border/80", isCompleted && "opacity-70")}>
               {/* 메인: 클릭 → 상세 */}
               <Link href={`/matches/${match.id}`} className="block p-4">
                 {/* 1줄: 시간+날짜 (좌) | 스코어 or 투표현황 + 꺽쇠 (우) */}
