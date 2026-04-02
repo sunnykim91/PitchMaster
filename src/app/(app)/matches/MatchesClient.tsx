@@ -691,14 +691,14 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
           const maybeCount = matchVotes.filter((v) => v === "MAYBE").length;
           const isCompleted = match.status === "COMPLETED";
           return (
-            <Card key={match.id} className="rounded-xl overflow-hidden transition-all hover:border-border/80">
+            <Card key={match.id} className={cn("rounded-xl overflow-hidden transition-all hover:border-border/80", isCompleted && "opacity-50")}>
               {/* 메인: 클릭 → 상세 */}
               <Link href={`/matches/${match.id}`} className="block p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     {/* 시간(크게, primary) + 날짜 */}
                     <p className="flex items-baseline gap-2">
-                      <span className="text-xl font-bold text-primary">{formatTime(match.time)}</span>
+                      <span className="text-2xl font-bold text-primary">{formatTime(match.time)}</span>
                       <span className="text-sm text-muted-foreground">{formatMatchDate(match.date)}</span>
                     </p>
                     {/* 장소 · 상대 */}
@@ -713,10 +713,10 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     {match.matchType !== "EVENT" && (
                       <div className="mt-1 flex items-center gap-1.5">
                         <span
-                          className="h-3 w-3 rounded-full border border-border/60 shrink-0"
+                          className="h-4 w-4 rounded-full border border-border/60 shrink-0"
                           style={{ backgroundColor: teamUniform ? (match.uniformType === "HOME" ? teamUniform.primary ?? "hsl(var(--primary))" : teamUniform.secondary ?? "hsl(var(--muted-foreground))") : (match.uniformType === "HOME" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))") }}
                         />
-                        <span className="text-xs text-muted-foreground">{match.uniformType === "HOME" ? "홈" : "원정"}</span>
+                        <span className="text-sm text-muted-foreground">{match.uniformType === "HOME" ? "홈" : "원정"}</span>
                       </div>
                     )}
                     {match.matchType === "EVENT" && (
@@ -739,29 +739,21 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       const color = left > right ? "text-[hsl(var(--win))]" : left === right ? "text-muted-foreground" : "text-[hsl(var(--loss))]";
                       const bgColor = left > right ? "bg-[hsl(var(--win))]/15 text-[hsl(var(--win))]" : left === right ? "bg-muted text-muted-foreground" : "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]";
                       const label = left > right ? "승" : left === right ? "무" : "패";
-                      const uniformColor = teamUniform ? (match.uniformType === "HOME" ? teamUniform.primary : teamUniform.secondary) : null;
                       return (
                         <div className="flex flex-col items-end gap-1">
                           <div className="flex items-center gap-1.5">
-                            {uniformColor && <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: uniformColor }} />}
                             <span className={cn("text-2xl font-heading font-bold", color)}>{match.score}</span>
                             <span className={cn("rounded px-1.5 py-0.5 text-xs font-bold", bgColor)}>{label}</span>
                           </div>
                         </div>
                       );
                     })() : !isCompleted ? (
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className="h-3 w-3 rounded-full border border-border/60 shrink-0"
-                          style={{ backgroundColor: teamUniform ? (match.uniformType === "HOME" ? teamUniform.primary ?? "hsl(var(--primary))" : teamUniform.secondary ?? "hsl(var(--muted-foreground))") : "hsl(var(--primary))" }}
-                        />
-                        <span className="text-xs">
-                          <span className="text-[hsl(var(--success))] font-bold">{attendCount}</span>
-                          <span className="text-muted-foreground/40"> / </span>
-                          <span className="text-[hsl(var(--loss))] font-bold">{absentCount}</span>
-                          <span className="text-muted-foreground/40"> / </span>
-                          <span className="text-[hsl(var(--warning))] font-bold">{maybeCount}</span>
-                        </span>
+                      <div className="text-sm font-bold">
+                        <span className="text-[hsl(var(--success))]">{attendCount}</span>
+                        <span className="text-muted-foreground/40"> / </span>
+                        <span className="text-[hsl(var(--loss))]">{absentCount}</span>
+                        <span className="text-muted-foreground/40"> / </span>
+                        <span className="text-[hsl(var(--warning))]">{maybeCount}</span>
                       </div>
                     ) : null}
                   </div>
@@ -784,7 +776,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                           type="button"
                           disabled={votingMatchId === match.id}
                           className={cn(
-                            "flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50 min-h-[44px]",
+                            "flex-1 rounded-xl py-2 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50 min-h-[40px]",
                             isSelected ? voteStyles[item.value].active : "border border-border text-muted-foreground hover:bg-secondary"
                           )}
                           onClick={() => handleVote(match.id, item.value)}
