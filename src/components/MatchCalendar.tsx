@@ -131,7 +131,7 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
         {WEEKDAYS.map((day, i) => (
           <span key={day} className={cn(
             "text-xs font-semibold py-2",
-            i >= 5 ? "text-primary/50" : "text-muted-foreground"
+            i >= 5 ? "text-primary/70" : "text-muted-foreground"
           )}>
             {day}
           </span>
@@ -176,7 +176,7 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
                 isToday ? "ring-2 ring-primary text-primary font-bold" :
                 hasMatch && "bg-primary/8",
                 !isSelected && !isToday && "hover:bg-secondary",
-                dow >= 5 && !isSelected && !isToday && "text-primary/40",
+                dow >= 5 && !isSelected && !isToday && "text-primary/70",
               )}
             >
               {day}
@@ -212,7 +212,8 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
 
             const myVote = myVotes?.[m.id];
             return (
-              <Card key={m.id} className={cn("rounded-xl overflow-hidden transition-all hover:border-border/80", isCompleted && "opacity-70")}>
+              <Card key={m.id} className={cn("rounded-xl overflow-hidden transition-all hover:border-border/80 relative", isCompleted && "opacity-70")}>
+                <span className="absolute top-3 right-3 text-muted-foreground/20 text-lg">›</span>
                 {/* 투표 현황 (예정 경기만) */}
                 {!isCompleted && (m.attendCount !== undefined) && (
                   <div className="px-3 pt-3 flex items-center gap-3 text-xs">
@@ -222,8 +223,7 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
                   </div>
                 )}
                 {/* 경기 정보 */}
-                <Link href={`/matches/${m.id}`} className="block px-3 py-2 relative">
-                  <span className="absolute top-2 right-3 text-muted-foreground/20 text-lg">›</span>
+                <Link href={`/matches/${m.id}`} className="block px-3 py-2">
                   <p className="flex items-baseline gap-1.5">
                     <span className={cn("text-lg font-bold", isCompleted ? "text-muted-foreground" : "text-primary")}>
                       {formatTime(m.time)}
