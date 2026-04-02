@@ -689,158 +689,125 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
           const attendCount = matchVotes.filter((v) => v === "ATTEND").length;
           const absentCount = matchVotes.filter((v) => v === "ABSENT").length;
           const maybeCount = matchVotes.filter((v) => v === "MAYBE").length;
+          const voteTotal = attendCount + absentCount + maybeCount;
           const isVoteActive = match.status !== "COMPLETED" && match.voteDeadline && now > 0 && new Date(match.voteDeadline).getTime() > now;
           return (
-            <Card key={match.id} className="rounded-md hover:bg-secondary/60 hover:border-border cursor-pointer transition-all">
-              <CardHeader>
-                <div className="flex flex-wrap items-start justify-between gap-3">
+            <Card key={match.id} className="rounded-md overflow-hidden transition-all hover:border-border">
+              {/* 메인 콘텐츠: 클릭 시 상세 이동 */}
+              <Link href={`/matches/${match.id}`} className="block p-4">
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    {/* 뱃지 영역 */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge
-                        variant={match.status === "COMPLETED" ? "secondary" : "default"}
-                        className={cn(
-                          "text-xs font-bold px-2.5 py-0.5",
-                          match.status !== "COMPLETED" && "bg-[hsl(var(--warning))] text-white hover:bg-[hsl(var(--warning))]/90"
-                        )}
-                      >
-                        {match.status === "COMPLETED" ? "완료" : "예정"}
-                      </Badge>
-                      {match.matchType === "INTERNAL" && (
-                        <Badge variant="outline" className="text-xs border-[hsl(var(--warning))] text-[hsl(var(--warning))]">자체전</Badge>
-                      )}
-                      {match.matchType === "EVENT" && (
-                        <Badge variant="outline" className="text-xs border-accent text-accent">📅 팀 일정</Badge>
-                      )}
-                      {match.status === "COMPLETED" && match.score && (() => {
-                        const [left, right] = match.score.split(":").map((s) => parseInt(s.trim(), 10));
-                        if (match.matchType === "INTERNAL") {
-                          return (
-                            <span className="flex items-center gap-1">
-                              <span className="text-xs text-muted-foreground">A</span>
-                              <span className="type-stat font-heading font-bold text-foreground">{match.score}</span>
-                              <span className="text-xs text-muted-foreground">B</span>
-                            </span>
-                          );
-                        }
-                        const color = left > right ? "text-[hsl(var(--win))]" : left === right ? "text-muted-foreground" : "text-[hsl(var(--loss))]";
-                        const label = left > right ? "승" : left === right ? "무" : "패";
-                        return (
-                          <span className="flex items-center gap-1.5">
-                            <span className={cn("type-stat font-heading font-bold", color)}>{match.score}</span>
-                            <span className={cn("rounded-full px-1.5 py-0.5 text-xs font-bold",
-                              left > right ? "bg-[hsl(var(--win)/0.15)] text-[hsl(var(--win))]" : left === right ? "bg-muted text-muted-foreground" : "bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))]"
-                            )}>{label}</span>
-                          </span>
-                        );
-                      })()}
-                    </div>
-
-                    {/* 날짜/시간 */}
-                    <CardTitle className="mt-2 font-heading text-lg sm:text-2xl font-bold uppercase">
-                      {formatMatchDate(match.date)} · {formatTime(match.time)}{match.endTime ? ` ~ ${formatTime(match.endTime)}` : ""}
-                    </CardTitle>
-
-                    {/* 장소 / 상대 */}
-                    <p className="text-sm text-muted-foreground truncate max-w-[280px] sm:max-w-none">
+                    {/* 1줄: 날짜 + 시간 */}
+                    <p className="text-sm font-bold text-foreground">
+                      {formatMatchDate(match.date)}
+                      <span className="ml-1.5 text-primary">
+                        {formatTime(match.time)}{match.endTime ? ` ~ ${formatTime(match.endTime)}` : ""}
+                      </span>
+                    </p>
+                    {/* 2줄: 장소 + 상대 */}
+                    <p className="mt-0.5 text-xs text-muted-foreground truncate">
                       {match.location}
                       {match.matchType === "EVENT" ? (match.opponent ? ` · ${match.opponent}` : "")
                         : match.matchType === "INTERNAL" ? " · 자체전"
                         : match.opponent ? ` · vs ${match.opponent}` : ""}
                     </p>
-
-                    {/* 유니폼 (경기 타입만) */}
-                    {match.matchType !== "EVENT" && (
-                      <div className="mt-1 flex items-center gap-1.5">
-                        <div
-                          className="h-3 w-3 rounded-full border border-border/60 shrink-0"
-                          style={{ backgroundColor: teamUniform ? (match.uniformType === "HOME" ? teamUniform.primary ?? "hsl(var(--primary))" : teamUniform.secondary ?? "hsl(var(--muted-foreground))") : (match.uniformType === "HOME" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))") }}
-                        />
-                        <span className="text-xs text-muted-foreground">
-                          {match.uniformType === "HOME" ? "홈" : "원정"} 유니폼
+                    {/* 3줄: 뱃지들 (유니폼 + 타입) */}
+                    <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                      {match.matchType !== "EVENT" && (
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                          <span
+                            className="h-2.5 w-2.5 rounded-full border border-border/60 shrink-0"
+                            style={{ backgroundColor: teamUniform ? (match.uniformType === "HOME" ? teamUniform.primary ?? "hsl(var(--primary))" : teamUniform.secondary ?? "hsl(var(--muted-foreground))") : (match.uniformType === "HOME" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))") }}
+                          />
+                          {match.uniformType === "HOME" ? "홈" : "원정"}
                         </span>
-                      </div>
-                    )}
-
-                    {/* 투표 마감일 */}
-                    {match.voteDeadline && (
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        투표 마감: {formatDateTime(match.voteDeadline ?? "")}
-                      </p>
-                    )}
-
-                    {/* 버튼 영역: 상세 보기(primary) + 공유(아이콘) */}
-                    <div className="mt-3 flex items-center gap-2">
-                      <Button variant="default" size="sm" asChild>
-                        <Link href={`/matches/${match.id}`}>상세 보기</Link>
-                      </Button>
-                      {isVoteActive && (
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          className="h-9 w-9 shrink-0"
-                          onClick={() => shareVoteLink({
-                            matchId: match.id,
-                            date: match.date,
-                            time: match.time,
-                            location: match.location,
-                            opponent: match.opponent,
-                          })}
-                        >
-                          <Share2 className="h-4 w-4" />
-                          <span className="sr-only">투표 공유</span>
-                        </Button>
+                      )}
+                      {match.matchType === "INTERNAL" && (
+                        <span className="text-xs font-semibold text-[hsl(var(--warning))]">자체전</span>
+                      )}
+                      {match.matchType === "EVENT" && (
+                        <span className="text-xs font-semibold text-accent">팀 일정</span>
                       )}
                     </div>
+                  </div>
+
+                  {/* 우측: 스코어 또는 투표 현황 */}
+                  <div className="shrink-0 text-right">
+                    {match.status === "COMPLETED" && match.score ? (() => {
+                      const [left, right] = match.score.split(":").map((s) => parseInt(s.trim(), 10));
+                      if (match.matchType === "INTERNAL") {
+                        return <p className="text-lg font-heading font-bold text-foreground">{match.score}</p>;
+                      }
+                      const color = left > right ? "text-[hsl(var(--win))]" : left === right ? "text-muted-foreground" : "text-[hsl(var(--loss))]";
+                      const label = left > right ? "승" : left === right ? "무" : "패";
+                      return (
+                        <div>
+                          <p className={cn("text-lg font-heading font-bold", color)}>{match.score}</p>
+                          <p className={cn("text-xs font-bold", color)}>{label}</p>
+                        </div>
+                      );
+                    })() : match.status !== "COMPLETED" && voteTotal > 0 ? (
+                      <div>
+                        <div className="flex items-center gap-1 text-xs justify-end">
+                          <span className="text-[hsl(var(--success))] font-bold">{attendCount}</span>
+                          <span className="text-muted-foreground/40">/</span>
+                          <span className="text-[hsl(var(--loss))] font-bold">{absentCount}</span>
+                          <span className="text-muted-foreground/40">/</span>
+                          <span className="text-muted-foreground font-bold">{maybeCount}</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">참/불/미</p>
+                      </div>
+                    ) : (
+                      <Badge variant={match.status === "COMPLETED" ? "secondary" : "warning"} className="text-xs">
+                        {match.status === "COMPLETED" ? "완료" : "예정"}
+                      </Badge>
+                    )}
                   </div>
                 </div>
-              </CardHeader>
+              </Link>
 
-              {/* 투표 영역: 카드 in 카드 제거, 구분선으로만 분리 */}
+              {/* 투표 버튼 — 예정 경기만 */}
               {match.status !== "COMPLETED" && (
-                <CardContent className="pt-0">
-                  <div className="mt-1 pt-3 border-t border-border/30">
-                    {/* 투표 버튼 */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs text-muted-foreground shrink-0">내 투표:</span>
-                      {([
-                        { value: "ATTEND" as const, label: "참석" },
-                        { value: "ABSENT" as const, label: "불참" },
-                        { value: "MAYBE" as const, label: "미정" },
-                      ]).map((item) => {
-                        const isSelected = vote === item.value;
-                        return (
-                          <button
-                            key={item.value}
-                            type="button"
-                            disabled={votingMatchId === match.id}
-                            className={cn(
-                              "rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-105 disabled:opacity-50",
-                              isSelected ? voteStyles[item.value].active : voteStyles[item.value].inactive
-                            )}
-                            onClick={() => handleVote(match.id, item.value)}
-                          >
-                            {item.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* 집계 */}
-                    <div className="mt-2 flex gap-3 text-xs">
-                      <span className="text-[hsl(var(--success))] font-semibold">참석 {attendCount}</span>
-                      <span className="text-muted-foreground">·</span>
-                      <span className="text-[hsl(var(--loss))] font-semibold">불참 {absentCount}</span>
-                      {maybeCount > 0 && (
-                        <>
-                          <span className="text-muted-foreground">·</span>
-                          <span className="text-[hsl(var(--warning))] font-semibold">미정 {maybeCount}</span>
-                        </>
-                      )}
-                    </div>
+                <div className="px-4 pb-4">
+                  <div className="flex items-center gap-2">
+                    {([
+                      { value: "ATTEND" as const, label: "참석" },
+                      { value: "MAYBE" as const, label: "미정" },
+                      { value: "ABSENT" as const, label: "불참" },
+                    ]).map((item) => {
+                      const isSelected = vote === item.value;
+                      return (
+                        <button
+                          key={item.value}
+                          type="button"
+                          disabled={votingMatchId === match.id}
+                          className={cn(
+                            "flex-1 rounded-lg py-2 text-xs font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50 min-h-[40px]",
+                            isSelected ? voteStyles[item.value].active : voteStyles[item.value].inactive
+                          )}
+                          onClick={() => handleVote(match.id, item.value)}
+                        >
+                          {item.label}
+                        </button>
+                      );
+                    })}
+                    {isVoteActive && (
+                      <button
+                        type="button"
+                        className="shrink-0 rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors min-h-[40px]"
+                        onClick={() => shareVoteLink({
+                          matchId: match.id,
+                          date: match.date,
+                          time: match.time,
+                          location: match.location,
+                          opponent: match.opponent,
+                        })}
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
-                </CardContent>
+                </div>
               )}
             </Card>
           );

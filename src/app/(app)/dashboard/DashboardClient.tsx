@@ -399,93 +399,87 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
           </Button>
         </div>
         {upcomingMatch ? (
-          <div className="mt-4">
-            <p className="type-overline">{formatDateKo(upcomingMatch.match_date)}</p>
-            <p className="mt-2 type-score text-foreground">
-              {upcomingMatch.match_time ? formatTime(upcomingMatch.match_time) : "시간 미정"}
-              {upcomingMatch.match_end_time && (
-                <span className="text-muted-foreground"> ~ {formatTime(upcomingMatch.match_end_time)}</span>
-              )}
-            </p>
-            <p className="mt-1 truncate text-sm text-muted-foreground">
-              {upcomingMatch.location ?? "장소 미정"}
-            </p>
-
-            {/* 날씨 + 유니폼 + 상대팀 정보 묶음 */}
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {(() => {
-                const uniformType = upcomingMatch.uniform_type ?? "HOME";
-                const isHome = uniformType !== "AWAY";
-                const bgColor = data.teamUniform
-                  ? (isHome ? data.teamUniform.uniformPrimary : data.teamUniform.uniformSecondary) ?? (isHome ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))")
-                  : (isHome ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))");
-                return (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/50 px-2.5 py-1 text-xs text-muted-foreground">
-                    <span
-                      className="h-3 w-3 rounded-full border border-border/60 shrink-0"
-                      style={{ backgroundColor: bgColor }}
-                    />
-                    {isHome ? "홈" : "원정"}
+          <>
+          <Link href={`/matches/${upcomingMatch.id}`} className="block mt-3">
+            {/* 상단: 날짜 + 시간 + 장소를 한 블록에 컴팩트하게 */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">
+                  {formatDateKo(upcomingMatch.match_date)}
+                  <span className="ml-2 text-primary font-bold">
+                    {upcomingMatch.match_time ? formatTime(upcomingMatch.match_time) : "시간 미정"}
+                    {upcomingMatch.match_end_time && <span className="text-muted-foreground font-normal"> ~ {formatTime(upcomingMatch.match_end_time)}</span>}
                   </span>
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground truncate">
+                  {upcomingMatch.location ?? "장소 미정"}
+                  {upcomingMatch.opponent_name ? ` · vs ${upcomingMatch.opponent_name}` : ""}
+                </p>
+                {/* 유니폼 + 날씨 인라인 */}
+                <div className="mt-1.5 flex items-center gap-2">
+                  {(() => {
+                    const uniformType = upcomingMatch.uniform_type ?? "HOME";
+                    const isHome = uniformType !== "AWAY";
+                    const bgColor = data.teamUniform
+                      ? (isHome ? data.teamUniform.uniformPrimary : data.teamUniform.uniformSecondary) ?? (isHome ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))")
+                      : (isHome ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))");
+                    return (
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                        <span className="h-2.5 w-2.5 rounded-full border border-border/60 shrink-0" style={{ backgroundColor: bgColor }} />
+                        {isHome ? "홈" : "원정"}
+                      </span>
+                    );
+                  })()}
+                  <DashboardWeather date={upcomingMatch.match_date} location={upcomingMatch.location} />
+                </div>
+              </div>
+              {/* 우측: 투표 현황 숫자 */}
+              <div className="shrink-0 text-right">
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span className="text-[hsl(var(--success))] font-bold">{voteCounts.attend}</span>
+                  <span className="text-muted-foreground/40">/</span>
+                  <span className="text-[hsl(var(--loss))] font-bold">{voteCounts.absent}</span>
+                  <span className="text-muted-foreground/40">/</span>
+                  <span className="text-muted-foreground font-bold">{voteCounts.undecided}</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-0.5">참/불/미</p>
+              </div>
+            </div>
+
+            {/* 프로그레스 바 */}
+            <div className="mt-2.5 flex h-1 overflow-hidden rounded-full bg-secondary/50">
+              <div className="rounded-full bg-[hsl(var(--success))] transition-all duration-500" style={attendBarStyle} />
+              <div className="bg-[hsl(var(--loss))] transition-all duration-500" style={absentBarStyle} />
+            </div>
+          </Link>
+          {/* 투표 버튼 — 링크 바깥 (클릭 이벤트 충돌 방지) */}
+          {upcomingMatch.myMemberId && (
+            <div className="mt-3 flex items-center gap-2">
+              {([
+                { value: "ATTEND" as const, label: "참석" },
+                { value: "MAYBE" as const, label: "미정" },
+                { value: "ABSENT" as const, label: "불참" },
+              ]).map((opt) => {
+                const isSelected = displayVote === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    disabled={pendingVote}
+                    aria-pressed={displayVote === opt.value}
+                    className={cn(
+                      "flex-1 rounded-lg py-2.5 text-xs font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50 min-h-[44px]",
+                      isSelected ? voteStyles[opt.value].active : voteStyles[opt.value].inactive
+                    )}
+                    onClick={() => handleQuickVote(upcomingMatch.id, upcomingMatch.myMemberId!, opt.value)}
+                  >
+                    {opt.label}
+                  </button>
                 );
-              })()}
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted/50 px-2.5 py-1 text-xs text-muted-foreground">
-                vs <span className="font-semibold text-foreground">{upcomingMatch.opponent_name ?? "미정"}</span>
-              </span>
-              <DashboardWeather date={upcomingMatch.match_date} location={upcomingMatch.location} />
+              })}
             </div>
-
-            {/* Vote buttons */}
-            {upcomingMatch.myMemberId && (
-              <div className="mt-4 pt-3 border-t border-border/30 flex flex-wrap items-center gap-2">
-                <span className="text-sm text-muted-foreground mr-1">내 투표:</span>
-                {([
-                  { value: "ATTEND" as const, label: "참석" },
-                  { value: "MAYBE" as const, label: "미정" },
-                  { value: "ABSENT" as const, label: "불참" },
-                ]).map((opt) => {
-                  const isSelected = displayVote === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      disabled={pendingVote}
-                      aria-pressed={displayVote === opt.value}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 min-h-[44px] text-xs font-semibold transition-all duration-200 active:scale-105 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                        isSelected ? voteStyles[opt.value].active : voteStyles[opt.value].inactive
-                      )}
-                      onClick={() => handleQuickVote(upcomingMatch.id, upcomingMatch.myMemberId!, opt.value)}
-                    >
-                      {opt.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Attendance visual bar */}
-            <div className="mt-4">
-              <div className="flex h-1.5 overflow-hidden rounded-full bg-secondary/50">
-                <div className="rounded-full bg-[hsl(var(--success))] transition-all duration-500 will-change-[width]" style={attendBarStyle} />
-                <div className="bg-[hsl(var(--loss))] transition-all duration-500 will-change-[width]" style={absentBarStyle} />
-              </div>
-              <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-                <span>참석 <strong className="text-[hsl(var(--success))]">{voteCounts.attend}</strong></span>
-                <span>불참 <strong className="text-[hsl(var(--loss))]">{voteCounts.absent}</strong></span>
-                <span>미정 <strong>{voteCounts.undecided}</strong></span>
-                {(upcomingMatch as any)?.guestCount > 0 && (
-                  <span>용병 <strong className="text-[hsl(var(--info))]">{(upcomingMatch as any).guestCount}</strong></span>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <Button size="sm" asChild>
-                <Link href={`/matches/${upcomingMatch.id}`}>상세 보기</Link>
-              </Button>
-            </div>
-          </div>
+          )}
+          </>
         ) : !showWizard ? (
           <div className="mt-4">
             <EmptyState
