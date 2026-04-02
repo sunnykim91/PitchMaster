@@ -129,16 +129,13 @@ export const PollBlock = memo(function PollBlock({ poll, onVote, onClosePoll, is
             </>
           ) : null}
           {isStaff && !isPollExpired && onClosePoll && (
-            <>
-              <span>&middot;</span>
-              <button
-                type="button"
-                onClick={() => onClosePoll(poll.id)}
-                className="text-[hsl(var(--loss))] hover:underline font-medium"
-              >
-                투표 마감
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={() => onClosePoll(poll.id)}
+              className="rounded-full border border-[hsl(var(--loss)/0.3)] bg-[hsl(var(--loss)/0.1)] px-2.5 py-1 text-xs font-semibold text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.2)] transition-colors"
+            >
+              마감하기
+            </button>
           )}
         </div>
         <button
