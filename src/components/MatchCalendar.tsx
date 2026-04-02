@@ -27,7 +27,7 @@ type CalendarMatch = {
 interface MatchCalendarProps {
   matches: CalendarMatch[];
   myVotes?: Record<string, string>;  // matchId → vote value
-  onVote?: (matchId: string, vote: string) => void;
+  onVote?: (matchId: string, vote: "ATTEND" | "MAYBE" | "ABSENT") => void;
   votingMatchId?: string | null;
 }
 
