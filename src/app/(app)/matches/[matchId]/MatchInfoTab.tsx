@@ -308,8 +308,8 @@ function MatchInfoTabInner({
                   <Input name="location" defaultValue={match.location} required />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-sm">상대팀</Label>
-                  <Input name="opponent" defaultValue={match.opponent ?? ""} />
+                  <Label className="text-sm">{match.matchType === "EVENT" ? "일정 제목" : "상대팀"}</Label>
+                  <Input name="opponent" defaultValue={match.opponent ?? ""} placeholder={match.matchType === "EVENT" ? "예: 연말 회식, MT" : ""} />
                 </div>
               </div>
               <div className="flex gap-2 justify-end">

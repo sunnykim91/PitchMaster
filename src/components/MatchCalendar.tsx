@@ -162,17 +162,19 @@ export const MatchCalendar = memo(function MatchCalendar({ matches }: MatchCalen
               onClick={() => setSelectedDate(isSelected ? null : dateStr)}
               className={cn(
                 "aspect-square flex flex-col items-center justify-center rounded-lg transition-all text-sm relative",
+                isSelected && isToday ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background" :
                 isSelected ? "bg-primary text-primary-foreground" :
-                isToday ? "bg-primary/10 text-primary font-bold" :
-                "hover:bg-secondary",
-                dow === 5 && !isSelected && "text-[hsl(var(--info))]",
-                dow === 6 && !isSelected && "text-[hsl(var(--loss))]",
+                isToday ? "ring-2 ring-primary text-primary font-bold" :
+                hasMatch && "bg-primary/8",
+                !isSelected && !isToday && "hover:bg-secondary",
+                dow === 5 && !isSelected && !isToday && "text-[hsl(var(--info))]",
+                dow === 6 && !isSelected && !isToday && "text-[hsl(var(--loss))]",
               )}
             >
               {day}
               {hasMatch && (
                 <span className={cn(
-                  "absolute bottom-1 h-1.5 w-1.5 rounded-full",
+                  "absolute bottom-0.5 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full",
                   isSelected ? "bg-primary-foreground" : dotColor
                 )} />
               )}
@@ -186,8 +188,10 @@ export const MatchCalendar = memo(function MatchCalendar({ matches }: MatchCalen
         <div className="space-y-2 pt-2 border-t border-border/30">
           <p className="text-xs font-semibold text-muted-foreground">
             {parseInt(selectedDate.split("-")[1])}월 {parseInt(selectedDate.split("-")[2])}일
-            {selectedMatches.length === 0 && " — 경기 없음"}
           </p>
+          {selectedMatches.length === 0 && (
+            <p className="py-4 text-center text-sm text-muted-foreground">이 날짜에 경기가 없습니다</p>
+          )}
           {selectedMatches.map((m) => {
             const isCompleted = m.status === "COMPLETED";
             let resultBadge = null;
@@ -220,10 +224,12 @@ export const MatchCalendar = memo(function MatchCalendar({ matches }: MatchCalen
                         </p>
                       </div>
                       {!isCompleted && (m.attendCount !== undefined) && (
-                        <div className="flex gap-2 text-xs text-muted-foreground shrink-0">
-                          <span className="text-[hsl(var(--success))]">{m.attendCount}</span>
-                          <span className="text-[hsl(var(--loss))]">{m.absentCount}</span>
-                          <span>{m.maybeCount}</span>
+                        <div className="flex gap-1.5 text-xs text-muted-foreground shrink-0">
+                          <span className="text-[hsl(var(--success))]">참 {m.attendCount}</span>
+                          <span>·</span>
+                          <span className="text-[hsl(var(--loss))]">불 {m.absentCount}</span>
+                          <span>·</span>
+                          <span>미 {m.maybeCount}</span>
                         </div>
                       )}
                     </div>

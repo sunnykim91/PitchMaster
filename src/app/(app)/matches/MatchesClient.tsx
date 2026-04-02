@@ -23,7 +23,7 @@ import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
 import { shareVoteLink } from "@/lib/kakaoShare";
 import { EmptyState } from "@/components/EmptyState";
 import { MatchCalendar } from "@/components/MatchCalendar";
-import { Calendar } from "lucide-react";
+import { Calendar, Share2 } from "lucide-react";
 
 type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
 type AttendanceVote = "ATTEND" | "ABSENT" | "MAYBE";
@@ -78,12 +78,6 @@ type DbAttendance = {
 };
 
 type AttendanceState = Record<string, Record<string, AttendanceVote>>;
-
-const attendanceLabels: Record<AttendanceVote, string> = {
-  ATTEND: "참석",
-  ABSENT: "불참",
-  MAYBE: "미정",
-};
 
 function mapDbMatchToMatch(db: DbMatch): Match {
   return {
@@ -521,8 +515,8 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       className={cn(
                         "flex-1 min-h-[44px] rounded-lg border px-3 text-sm font-medium transition-colors",
                         matchType === "EVENT"
-                          ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent)/0.1)] text-[hsl(var(--accent))]"
-                          : "border-border text-muted-foreground hover:border-[hsl(var(--accent)/0.3)]"
+                          ? "border-accent bg-accent/10 text-accent"
+                          : "border-border text-muted-foreground hover:border-accent/30"
                       )}
                     >
                       팀 일정
@@ -695,20 +689,28 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
           const attendCount = matchVotes.filter((v) => v === "ATTEND").length;
           const absentCount = matchVotes.filter((v) => v === "ABSENT").length;
           const maybeCount = matchVotes.filter((v) => v === "MAYBE").length;
+          const isVoteActive = match.status !== "COMPLETED" && match.voteDeadline && now > 0 && new Date(match.voteDeadline).getTime() > now;
           return (
             <Card key={match.id} className="rounded-md hover:bg-secondary/60 hover:border-border cursor-pointer transition-all">
               <CardHeader>
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={match.status === "COMPLETED" ? "secondary" : "default"}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    {/* 뱃지 영역 */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge
+                        variant={match.status === "COMPLETED" ? "secondary" : "default"}
+                        className={cn(
+                          "text-xs font-bold px-2.5 py-0.5",
+                          match.status !== "COMPLETED" && "bg-[hsl(var(--warning))] text-white hover:bg-[hsl(var(--warning))]/90"
+                        )}
+                      >
                         {match.status === "COMPLETED" ? "완료" : "예정"}
                       </Badge>
                       {match.matchType === "INTERNAL" && (
                         <Badge variant="outline" className="text-xs border-[hsl(var(--warning))] text-[hsl(var(--warning))]">자체전</Badge>
                       )}
                       {match.matchType === "EVENT" && (
-                        <Badge variant="outline" className="text-xs border-[hsl(var(--accent))] text-[hsl(var(--accent))]">📅 팀 일정</Badge>
+                        <Badge variant="outline" className="text-xs border-accent text-accent">📅 팀 일정</Badge>
                       )}
                       {match.status === "COMPLETED" && match.score && (() => {
                         const [left, right] = match.score.split(":").map((s) => parseInt(s.trim(), 10));
@@ -733,66 +735,75 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         );
                       })()}
                     </div>
+
+                    {/* 날짜/시간 */}
                     <CardTitle className="mt-2 font-heading text-lg sm:text-2xl font-bold uppercase">
                       {formatMatchDate(match.date)} · {formatTime(match.time)}{match.endTime ? ` ~ ${formatTime(match.endTime)}` : ""}
                     </CardTitle>
+
+                    {/* 장소 / 상대 */}
                     <p className="text-sm text-muted-foreground truncate max-w-[280px] sm:max-w-none">
                       {match.location}
                       {match.matchType === "EVENT" ? (match.opponent ? ` · ${match.opponent}` : "")
                         : match.matchType === "INTERNAL" ? " · 자체전"
                         : match.opponent ? ` · vs ${match.opponent}` : ""}
                     </p>
+
+                    {/* 유니폼 (경기 타입만) */}
                     {match.matchType !== "EVENT" && (
-                    <div className="mt-1 flex items-center gap-1.5">
-                      <div
-                        className="h-3 w-3 rounded-full border border-border/60 shrink-0"
-                        style={{ backgroundColor: teamUniform ? (match.uniformType === "HOME" ? teamUniform.primary ?? "hsl(var(--primary))" : teamUniform.secondary ?? "hsl(var(--muted-foreground))") : (match.uniformType === "HOME" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))") }}
-                      />
-                      <span className="text-xs text-muted-foreground">
-                        {match.uniformType === "HOME" ? "홈" : "원정"} 유니폼
-                      </span>
-                    </div>
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <div
+                          className="h-3 w-3 rounded-full border border-border/60 shrink-0"
+                          style={{ backgroundColor: teamUniform ? (match.uniformType === "HOME" ? teamUniform.primary ?? "hsl(var(--primary))" : teamUniform.secondary ?? "hsl(var(--muted-foreground))") : (match.uniformType === "HOME" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))") }}
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          {match.uniformType === "HOME" ? "홈" : "원정"} 유니폼
+                        </span>
+                      </div>
                     )}
+
+                    {/* 투표 마감일 */}
                     {match.voteDeadline && (
                       <p className="mt-1 text-xs text-muted-foreground">
                         투표 마감: {formatDateTime(match.voteDeadline ?? "")}
                       </p>
                     )}
-                  </div>
-                  <div className="flex gap-2">
-                    {match.status !== "COMPLETED" && match.voteDeadline && now > 0 && new Date(match.voteDeadline).getTime() > now && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        className="bg-[hsl(var(--kakao))] text-[hsl(var(--kakao-foreground))] hover:bg-[hsl(var(--kakao))]/90 text-xs"
-                        onClick={() => shareVoteLink({
-                          matchId: match.id,
-                          date: match.date,
-                          time: match.time,
-                          location: match.location,
-                          opponent: match.opponent,
-                        })}
-                      >
-                        투표 공유
+
+                    {/* 버튼 영역: 상세 보기(primary) + 공유(아이콘) */}
+                    <div className="mt-3 flex items-center gap-2">
+                      <Button variant="default" size="sm" asChild>
+                        <Link href={`/matches/${match.id}`}>상세 보기</Link>
                       </Button>
-                    )}
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/matches/${match.id}`}>
-                        상세 보기
-                      </Link>
-                    </Button>
+                      {isVoteActive && (
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="h-9 w-9 shrink-0"
+                          onClick={() => shareVoteLink({
+                            matchId: match.id,
+                            date: match.date,
+                            time: match.time,
+                            location: match.location,
+                            opponent: match.opponent,
+                          })}
+                        >
+                          <Share2 className="h-4 w-4" />
+                          <span className="sr-only">투표 공유</span>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="mb-3 text-xs text-muted-foreground">
-                  쿼터 {match.quarterCount} · {match.quarterDuration}분 · 휴식 {match.breakDuration}분
-                </p>
-                <div className="grid gap-3">
-                  {match.status !== "COMPLETED" && (
-                  <div className="rounded-md border border-border bg-card p-4">
-                    <p className="text-sm font-bold text-card-foreground">참석 투표</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
+
+              {/* 투표 영역: 카드 in 카드 제거, 구분선으로만 분리 */}
+              {match.status !== "COMPLETED" && (
+                <CardContent className="pt-0">
+                  <div className="mt-1 pt-3 border-t border-border/30">
+                    {/* 투표 버튼 */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-muted-foreground shrink-0">내 투표:</span>
                       {([
                         { value: "ATTEND" as const, label: "참석" },
                         { value: "ABSENT" as const, label: "불참" },
@@ -815,26 +826,22 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         );
                       })}
                     </div>
-                    <div className="mt-2 flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground">
-                        내 투표: {vote ? attendanceLabels[vote] : "미선택"}
-                      </p>
-                      <div className="flex gap-2 text-xs">
-                        <span className="text-[hsl(var(--success))] font-semibold">참석 {attendCount}</span>
-                        <span className="text-muted-foreground">·</span>
-                        <span className="text-[hsl(var(--loss))] font-semibold">불참 {absentCount}</span>
-                        {maybeCount > 0 && (
-                          <>
-                            <span className="text-muted-foreground">·</span>
-                            <span className="text-[hsl(var(--warning))] font-semibold">미정 {maybeCount}</span>
-                          </>
-                        )}
-                      </div>
+
+                    {/* 집계 */}
+                    <div className="mt-2 flex gap-3 text-xs">
+                      <span className="text-[hsl(var(--success))] font-semibold">참석 {attendCount}</span>
+                      <span className="text-muted-foreground">·</span>
+                      <span className="text-[hsl(var(--loss))] font-semibold">불참 {absentCount}</span>
+                      {maybeCount > 0 && (
+                        <>
+                          <span className="text-muted-foreground">·</span>
+                          <span className="text-[hsl(var(--warning))] font-semibold">미정 {maybeCount}</span>
+                        </>
+                      )}
                     </div>
                   </div>
-                  )}
-                </div>
-              </CardContent>
+                </CardContent>
+              )}
             </Card>
           );
         })}
