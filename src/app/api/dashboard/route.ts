@@ -210,6 +210,12 @@ export async function GET() {
     .eq("team_id", ctx.teamId)
     .neq("member_type", "__PERIOD__");
 
+  // ── 팀 전체 경기 수 ──
+  const { count: totalMatchesCount } = await db
+    .from("matches")
+    .select("id", { count: "exact", head: true })
+    .eq("team_id", ctx.teamId);
+
   return apiSuccess({
     upcomingMatch,
     recentResult,
@@ -218,5 +224,6 @@ export async function GET() {
     teamRecord,
     birthdayMembers,
     hasDuesSettings: (duesSettingsCount ?? 0) > 0,
+    totalMatches: totalMatchesCount ?? 0,
   });
 }
