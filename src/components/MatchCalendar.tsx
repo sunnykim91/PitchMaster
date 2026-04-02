@@ -131,7 +131,7 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
         {WEEKDAYS.map((day, i) => (
           <span key={day} className={cn(
             "text-xs font-semibold py-2",
-            i === 5 ? "text-muted-foreground/80" : i === 6 ? "text-muted-foreground/60" : "text-muted-foreground"
+            i >= 5 ? "text-primary/50" : "text-muted-foreground"
           )}>
             {day}
           </span>
@@ -176,8 +176,7 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
                 isToday ? "ring-2 ring-primary text-primary font-bold" :
                 hasMatch && "bg-primary/8",
                 !isSelected && !isToday && "hover:bg-secondary",
-                dow === 5 && !isSelected && !isToday && "text-muted-foreground/80",
-                dow === 6 && !isSelected && !isToday && "text-muted-foreground/60",
+                dow >= 5 && !isSelected && !isToday && "text-primary/40",
               )}
             >
               {day}
