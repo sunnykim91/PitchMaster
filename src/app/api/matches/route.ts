@@ -4,6 +4,14 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
 import { sendTeamPush } from "@/lib/server/sendPush";
 
+/** datetime-local 값("2026-04-02T17:00")에 KST 오프셋이 없으면 붙여줌 */
+function toKSTTimestamp(v: string): string {
+  if (!v) return v;
+  // 이미 타임존 정보가 있으면 그대로
+  if (/[+-]\d{2}:\d{2}$/.test(v) || v.endsWith("Z")) return v;
+  return v + "+09:00";
+}
+
 export async function GET() {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
@@ -96,7 +104,7 @@ export async function POST(request: NextRequest) {
       match_type: body.matchType ?? "REGULAR",
       stats_included: body.matchType === "EVENT" ? false : (body.statsIncluded ?? true),
       status: "SCHEDULED",
-      vote_deadline: body.voteDeadline || null,
+      vote_deadline: body.voteDeadline ? toKSTTimestamp(body.voteDeadline) : null,
       created_by: ctx.userId,
     })
     .select()
@@ -146,7 +154,7 @@ export async function PUT(request: NextRequest) {
   if (body.breakDuration !== undefined) updates.break_duration = body.breakDuration;
   if (body.playerCount !== undefined) updates.player_count = body.playerCount;
   if (body.status !== undefined) updates.status = body.status;
-  if (body.voteDeadline !== undefined) updates.vote_deadline = body.voteDeadline || null;
+  if (body.voteDeadline !== undefined) updates.vote_deadline = body.voteDeadline ? toKSTTimestamp(body.voteDeadline) : null;
   if (body.uniformType !== undefined) updates.uniform_type = body.uniformType;
   if (body.matchType !== undefined) updates.match_type = body.matchType;
   if (body.statsIncluded !== undefined) updates.stats_included = body.statsIncluded;
