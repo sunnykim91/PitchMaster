@@ -644,7 +644,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   }
 
   async function clearBoard() {
-    const ok = await confirm({ title: "전술판 초기화", description: "이 쿼터의 배치를 초기화할까요? 되돌릴 수 없습니다.", variant: "destructive", confirmLabel: "초기화" });
+    const ok = await confirm({ title: "이 쿼터 초기화", description: "이 쿼터의 배치를 초기화할까요? 되돌릴 수 없습니다.", variant: "destructive", confirmLabel: "초기화" });
     if (!ok) return;
     const reset: Record<string, Placement | null> = {};
     formation.slots.forEach((slot) => {
@@ -652,8 +652,22 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     });
     const newState: BoardState = { formationId: formation.id, placements: reset };
     setBoardState(newState);
-    // debounce 건너뛰고 즉시 저장
     saveToApi(newState, activeQuarterRef.current);
+    setActiveSlotId(null);
+  }
+
+  async function clearAllQuarters() {
+    const ok = await confirm({ title: "전체 쿼터 초기화", description: "모든 쿼터의 배치를 초기화할까요? 되돌릴 수 없습니다.", variant: "destructive", confirmLabel: "전체 초기화" });
+    if (!ok) return;
+    const reset: Record<string, Placement | null> = {};
+    formation.slots.forEach((slot) => {
+      reset[slot.id] = null;
+    });
+    const emptyState: BoardState = { formationId: formation.id, placements: reset };
+    for (let q = 1; q <= quarterCount; q++) {
+      await saveToApi(emptyState, q);
+    }
+    setBoardState(emptyState);
     setActiveSlotId(null);
   }
 
@@ -749,15 +763,26 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               </Button>
             </Badge>
             {!readOnly && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={clearBoard}
-                className="rounded-xl"
-              >
-                초기화
-              </Button>
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={clearBoard}
+                  className="rounded-xl"
+                >
+                  Q{activeQuarter} 초기화
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearAllQuarters}
+                  className="rounded-xl text-muted-foreground hover:text-destructive"
+                >
+                  전체 초기화
+                </Button>
+              </>
             )}
             <Button
               type="button"
