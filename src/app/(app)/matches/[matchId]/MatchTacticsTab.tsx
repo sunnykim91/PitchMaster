@@ -120,7 +120,7 @@ function MatchTacticsTabInner({
         return (
           <>
             {/* 팀 편성 */}
-            <Card className={hasTeams ? "border-[hsl(var(--success))]/20" : "border-[hsl(var(--warning))]/20"}>
+            <Card className={cn("rounded-xl", hasTeams ? "border-[hsl(var(--success))]/20" : "border-[hsl(var(--warning))]/20")}>
               <CardContent className="p-3">
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <div className="text-xs">

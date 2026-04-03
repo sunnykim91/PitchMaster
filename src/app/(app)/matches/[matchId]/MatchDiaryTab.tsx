@@ -110,35 +110,25 @@ function MatchDiaryTabInner({
   }
 
   return (
-    <>
-      {/* ── 경기 결과 공유 ── */}
-      <Card>
-        <CardHeader>
-          <p className="type-overline">
-            Share
-          </p>
-          <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
-            경기 결과 공유
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent>
-          <Card className="border-primary/20 bg-primary/5 shadow-none">
-            <CardContent className="p-4">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
-                PitchMaster
-              </p>
-              <p className="mt-2 type-score text-foreground">
-                {score}
-              </p>
-              <p className="text-sm text-muted-foreground truncate">
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      {/* ══ 경기 결과 공유 ══ */}
+      <Card className="rounded-2xl border-0 overflow-hidden shadow-lg">
+        <CardContent className="p-0">
+          <div className="relative overflow-hidden bg-gradient-to-br from-card via-secondary to-background p-8 text-center">
+            <div className="relative z-10">
+              <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary">PITCHMASTER</span>
+              <div className="mt-3 text-5xl font-black tabular-nums tracking-tighter">{score}</div>
+              <div className="mt-2 font-medium text-muted-foreground">
                 {match.opponent ? `vs ${match.opponent}` : "친선 경기"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {match.date} {formatTime(match.time)}
-              </p>
-            </CardContent>
-          </Card>
+              </div>
+              <div className="mt-1 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <span>{match.date}</span>
+                <span className="h-1 w-1 rounded-full bg-muted-foreground" />
+                <span>{formatTime(match.time)}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2 bg-card p-4">
 
           <div className="mt-4 flex flex-wrap gap-2">
             <Button
@@ -159,35 +149,22 @@ function MatchDiaryTabInner({
             </Button>
           </div>
 
-          {shareMessage ? (
-            <p className="mt-2 text-xs text-primary">{shareMessage}</p>
-          ) : null}
+          {shareMessage && <p className="mt-2 px-4 pb-2 text-xs text-primary">{shareMessage}</p>}
+          </div>
         </CardContent>
       </Card>
 
-      {/* ── 경기 일지 ── */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <p className="type-overline text-[hsl(var(--info))]">
-              Match Diary
-            </p>
-            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
-              경기 일지
-            </CardTitle>
-          </div>
+      {/* ══ 경기 일지 ══ */}
+      <Card className="rounded-xl border-border/30">
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="text-base font-bold">경기 일지</CardTitle>
           {canManage && !isDiaryEditing && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsDiaryEditing(true)}
-            >
+            <Button type="button" size="sm" variant="ghost" className="h-8 px-3 text-sm font-medium text-primary"
+              onClick={() => setIsDiaryEditing(true)}>
               {diary.memo || diary.weather || diary.condition ? "수정" : "작성하기"}
             </Button>
           )}
         </CardHeader>
-
         <CardContent>
           {isDiaryEditing ? (
             <form
@@ -286,7 +263,7 @@ function MatchDiaryTabInner({
           )}
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 }
 

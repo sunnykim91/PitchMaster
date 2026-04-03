@@ -91,106 +91,92 @@ function MatchVoteTabInner({
   const noVote = baseRoster.filter((m) => !memberVoteMap[m.memberId]);
 
   return (
-    <div className="grid gap-4">
-      {/* ── 내 참석 투표 ── */}
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      {/* ══ 내 참석 투표 ══ */}
       {match.status !== "COMPLETED" && myMember && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-muted-foreground">내 참석 투표</p>
-                <p className={cn("mt-0.5 text-sm font-semibold", !myVote && "text-[hsl(var(--warning))]")}>
-                  {myVote === "ATTEND" ? "참석" : myVote === "ABSENT" ? "불참" : myVote === "MAYBE" ? "미정" : "미투표"}
-                </p>
+        <Card className="rounded-xl border-border/30 overflow-hidden">
+          <CardHeader className="pb-2"><CardTitle className="text-base font-bold">내 투표</CardTitle></CardHeader>
+          <CardContent>
+            {match.voteDeadline && (
+              <div className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground">
+                <span>마감: {new Date(match.voteDeadline).toLocaleDateString("ko-KR", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
               </div>
-              {isExpired ? (
-                <p className="text-xs text-muted-foreground shrink-0">투표 마감됨</p>
-              ) : (
-                <div className="flex gap-1.5 shrink-0">
-                  {([ { value: "ATTEND" as const, label: "참석" }, { value: "MAYBE" as const, label: "미정" }, { value: "ABSENT" as const, label: "불참" } ]).map((opt) => (
-                    <button key={opt.value} type="button"
-                      disabled={pendingVote}
-                      className={cn("rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
-                        myVote === opt.value ? styles[opt.value].active : styles[opt.value].inactive
-                      )}
-                      onClick={() => handleMyVote(opt.value)}>
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            )}
+            {isExpired ? (
+              <div className="py-4 text-center"><Badge variant="secondary" className="text-sm">마감됨</Badge></div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="참석 투표">
+                {([
+                  { value: "ATTEND" as const, label: "참석", icon: "👤", activeClass: "bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]" },
+                  { value: "MAYBE" as const, label: "미정", icon: "❓", activeClass: "bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))]" },
+                  { value: "ABSENT" as const, label: "불참", icon: "🚫", activeClass: "bg-destructive text-destructive-foreground" },
+                ]).map((opt) => (
+                  <button
+                    key={opt.value}
+                    role="radio"
+                    aria-checked={myVote === opt.value}
+                    disabled={pendingVote}
+                    onClick={() => handleMyVote(opt.value)}
+                    className={cn(
+                      "relative flex flex-col items-center justify-center gap-1.5 rounded-xl p-4 transition-all min-h-[80px]",
+                      myVote === opt.value ? opt.activeClass : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+                      pendingVote && "opacity-50"
+                    )}
+                  >
+                    {myVote === opt.value && <span className="absolute right-2 top-2 text-xs">✓</span>}
+                    <span className="text-xl">{opt.icon}</span>
+                    <span className="text-sm font-semibold">{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
 
-      {/* ── 투표 현황 요약 ── */}
-      <Card>
-        <CardContent className="p-4">
-          {/* 프로그레스 바 */}
+      {/* ══ 투표 현황 요약 ══ */}
+      <Card className="rounded-xl border-border/30">
+        <CardContent className="p-5">
           {(() => {
             const voted = attend.length + absent.length + maybe.length;
             const total = voted || 1;
             return (
-              <div className="mb-3 flex h-2 overflow-hidden rounded-full bg-secondary/50">
+              <div className="mb-4 flex h-2.5 overflow-hidden rounded-full bg-muted">
                 <div className="bg-[hsl(var(--success))] transition-all duration-500" style={{ width: `${(attend.length / total) * 100}%` }} />
                 <div className="bg-[hsl(var(--loss))] transition-all duration-500" style={{ width: `${(absent.length / total) * 100}%` }} />
                 <div className="bg-[hsl(var(--warning))] transition-all duration-500" style={{ width: `${(maybe.length / total) * 100}%` }} />
               </div>
             );
           })()}
-          <div className="flex flex-wrap items-center gap-3 text-sm font-semibold">
-            <span className="text-[hsl(var(--success))]">참석 {attend.length}</span>
-            <span className="text-[hsl(var(--loss))]">불참 {absent.length}</span>
-            <span className="text-[hsl(var(--warning))]">미정 {maybe.length}</span>
-            <span className="text-muted-foreground">미투표 {noVote.length}</span>
-            {guestCount > 0 && <span className="text-[hsl(var(--info))]">용병 {guestCount}</span>}
-            <span className="text-muted-foreground/50">· 총 {baseRoster.length + guestCount}명</span>
+          <div className="grid grid-cols-5 gap-2 text-center">
+            <div><div className="text-xl font-bold text-[hsl(var(--success))]">{attend.length}</div><div className="text-[10px] text-muted-foreground">참석</div></div>
+            <div><div className="text-xl font-bold text-[hsl(var(--loss))]">{absent.length}</div><div className="text-[10px] text-muted-foreground">불참</div></div>
+            <div><div className="text-xl font-bold text-[hsl(var(--warning))]">{maybe.length}</div><div className="text-[10px] text-muted-foreground">미정</div></div>
+            <div><div className="text-xl font-bold text-muted-foreground">{noVote.length}</div><div className="text-[10px] text-muted-foreground">미투표</div></div>
+            <div><div className="text-xl font-bold text-[hsl(var(--info))]">{guestCount}</div><div className="text-[10px] text-muted-foreground">용병</div></div>
           </div>
+          <div className="mt-3 border-t border-border/30 pt-3 text-center text-xs text-muted-foreground">총 {baseRoster.length + guestCount}명</div>
 
-          {/* 투표 마감/재개 (운영진, 예정 경기만) */}
           {canManage && match.status !== "COMPLETED" && (
-            <div className="mt-3 pt-3 border-t border-border/30 flex items-center justify-between">
+            <div className="mt-3 flex items-center justify-between border-t border-border/30 pt-3">
               {isExpired ? (
                 <>
                   <span className="text-xs text-muted-foreground">투표 마감됨</span>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      // 마감 시간을 한 달 뒤로 → 재개
-                      const future = new Date();
-                      future.setMonth(future.getMonth() + 1);
-                      const { error: err } = await apiMutate("/api/matches", "PUT", {
-                        id: matchId,
-                        voteDeadline: future.toISOString(),
-                      });
-                      if (!err) {
-                        setIsExpired(false);
-                        showToast("투표가 재개되었습니다.");
-                      }
-                    }}
-                    className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                  >
+                  <button type="button" onClick={async () => {
+                    const future = new Date(); future.setMonth(future.getMonth() + 1);
+                    const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, voteDeadline: future.toISOString() });
+                    if (!err) { setIsExpired(false); showToast("투표가 재개되었습니다."); }
+                  }} className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
                     투표 재개
                   </button>
                 </>
               ) : (
                 <>
                   <span className="text-xs text-muted-foreground">투표 진행 중</span>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const { error: err } = await apiMutate("/api/matches", "PUT", {
-                        id: matchId,
-                        voteDeadline: new Date().toISOString(),
-                      });
-                      if (!err) {
-                        setIsExpired(true);
-                        showToast("투표가 마감되었습니다.");
-                      }
-                    }}
-                    className="rounded-lg border border-[hsl(var(--loss)/0.3)] bg-[hsl(var(--loss)/0.08)] px-3 py-1.5 text-xs font-semibold text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.15)] transition-colors"
-                  >
+                  <button type="button" onClick={async () => {
+                    const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, voteDeadline: new Date().toISOString() });
+                    if (!err) { setIsExpired(true); showToast("투표가 마감되었습니다."); }
+                  }} className="rounded-lg border border-[hsl(var(--loss)/0.3)] bg-[hsl(var(--loss)/0.08)] px-3 py-1.5 text-xs font-semibold text-[hsl(var(--loss))] transition-colors hover:bg-[hsl(var(--loss)/0.15)]">
                     투표 마감
                   </button>
                 </>
@@ -200,30 +186,33 @@ function MatchVoteTabInner({
         </CardContent>
       </Card>
 
-      {/* ── 투표 관리 (운영진) 또는 현황 (평회원) ── */}
+      {/* ══ 투표 관리 (운영진) / 현황 (평회원) ══ */}
       {canManage ? (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">투표 관리</CardTitle>
-            <input type="text" placeholder="이름 검색..." value={voteSearch}
-              onChange={(e) => setVoteSearch(e.target.value)} list="vote-member-names" autoComplete="off"
-              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
-            <datalist id="vote-member-names">
-              {baseRoster.map((m) => <option key={m.memberId} value={m.name} />)}
-            </datalist>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <div className="flex gap-1">
+        <Card className="rounded-xl border-border/30">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-bold">{canManage ? "투표 관리" : "투표 현황"}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="relative">
+              <input type="text" placeholder="이름 검색" value={voteSearch}
+                onChange={(e) => setVoteSearch(e.target.value)} list="vote-member-names" autoComplete="off"
+                className="w-full min-h-[44px] rounded-lg border-0 bg-secondary pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
+              <datalist id="vote-member-names">
+                {baseRoster.map((m) => <option key={m.memberId} value={m.name} />)}
+              </datalist>
+            </div>
+
+            <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 {([{ v: "all" as const, l: "전체" }, { v: "unvoted" as const, l: "미투표" }]).map(({ v, l }) => (
-                  <button key={v} type="button" onClick={() => setVoteFilter(v)}
-                    className={cn("rounded-full px-3.5 py-2 text-xs font-medium transition-colors",
-                      voteFilter === v ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                    )}>
-                    {l}{v === "unvoted" && noVote.length > 0 && (
-                      <span className={cn("ml-1 rounded-full px-1.5 py-0.5 text-xs font-bold leading-tight",
-                        voteFilter === "unvoted" ? "bg-primary-foreground/20 text-primary-foreground" : "bg-destructive/15 text-destructive"
-                      )}>{noVote.length}</span>
+                  <Button key={v} variant={voteFilter === v ? "default" : "secondary"} size="sm" onClick={() => setVoteFilter(v)}
+                    className={cn("relative min-h-[36px]", voteFilter === v && "bg-primary text-primary-foreground")}>
+                    {l}
+                    {v === "unvoted" && noVote.length > 0 && (
+                      <Badge className="absolute -right-1.5 -top-1.5 bg-destructive text-destructive-foreground text-[10px] px-1.5 min-w-[18px] h-[18px]">{noVote.length}</Badge>
                     )}
-                  </button>
+                  </Button>
                 ))}
               </div>
               <div className="flex gap-1 border-l border-border pl-2">
@@ -236,7 +225,7 @@ function MatchVoteTabInner({
                   return (
                     <button key={key} type="button"
                       onClick={() => { const next = idx < 0 ? 1 : (idx + 1) % 3; setVoteSortBy(cycle[next] as typeof voteSortBy); }}
-                      className={cn("rounded-full px-3.5 py-2 text-xs font-medium transition-colors",
+                      className={cn("rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
                         isActive ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
                       )}>
                       {isActive ? labels[idx] : labels[0]}
@@ -245,22 +234,8 @@ function MatchVoteTabInner({
                 })}
               </div>
             </div>
-            {noVote.length > 0 && (
-              <button type="button"
-                className="mt-3 flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 active:scale-95"
-                onClick={async () => {
-                  try {
-                    const res = await fetch("/api/push/vote-nudge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ matchId: match.id }) });
-                    const data = await res.json();
-                    showToast(`미투표자 ${data.unvoted ?? 0}명에게 알림을 보냈습니다`);
-                  } catch { showToast("알림 발송에 실패했습니다", "error"); }
-                }}>
-                <Bell className="h-3.5 w-3.5" />투표독려 알림 보내기
-              </button>
-            )}
-          </CardHeader>
-          <CardContent>
-            <div className="max-h-[60vh] overflow-y-auto space-y-1.5">
+
+            <ul className="max-h-[50vh] space-y-2 overflow-y-auto" role="list">
               {[...baseRoster].filter((m) => {
                 if (voteSearch && !m.name.includes(voteSearch)) return false;
                 if (voteFilter === "unvoted" && memberVoteMap[m.memberId]) return false;
@@ -277,17 +252,14 @@ function MatchVoteTabInner({
               }).map((member) => {
                 const currentVote = memberVoteMap[member.memberId];
                 return (
-                  <div key={member.id} className={cn("flex items-center justify-between rounded-lg px-3 py-2.5",
-                    !currentVote ? "bg-destructive/5 ring-1 ring-destructive/20" : "bg-secondary"
+                  <li key={member.id} className={cn("flex items-center justify-between rounded-xl p-3 transition-colors",
+                    !currentVote ? "bg-destructive/15 ring-1 ring-inset ring-destructive/30" : "bg-secondary/50"
                   )}>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-sm font-semibold truncate">{member.name}</span>
-                      {!member.isLinked && <Badge variant="outline" className="text-xs text-muted-foreground">미가입</Badge>}
-                    </div>
-                    <div className="flex gap-1.5 shrink-0">
+                    <span className={cn("text-sm font-medium", !currentVote && "text-destructive")}>{member.name}</span>
+                    <div className="flex gap-1" role="radiogroup">
                       {([{ value: "ATTEND" as const, label: "참석" }, { value: "MAYBE" as const, label: "미정" }, { value: "ABSENT" as const, label: "불참" }]).map((opt) => (
-                        <button key={opt.value} type="button"
-                          className={cn("rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200 active:scale-95",
+                        <button key={opt.value} role="radio" aria-checked={currentVote === opt.value}
+                          className={cn("min-h-[32px] rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
                             currentVote === opt.value ? styles[opt.value].active : styles[opt.value].inactive
                           )}
                           onClick={() => handleProxyVote(member.memberId, opt.value)}>
@@ -295,49 +267,50 @@ function MatchVoteTabInner({
                         </button>
                       ))}
                     </div>
-                  </div>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
+
+            {noVote.length > 0 && (
+              <Button className="w-full min-h-[48px] font-semibold" onClick={async () => {
+                try {
+                  const res = await fetch("/api/push/vote-nudge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ matchId: match.id }) });
+                  const data = await res.json();
+                  showToast(`미투표자 ${data.unvoted ?? 0}명에게 알림을 보냈습니다`);
+                } catch { showToast("알림 발송에 실패했습니다", "error"); }
+              }}>
+                <Bell className="mr-2 h-4 w-4" />미투표 {noVote.length}명에게 알림 보내기
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
-        /* 평회원 참석 현황 */
         baseRoster.length > 0 && (
-          <Card>
-            <CardContent className="p-4 space-y-3">
-              {attend.length > 0 && (
-                <div>
-                  <p className="mb-1.5 text-xs font-semibold text-[hsl(var(--success))]">참석</p>
+          <Card className="rounded-xl border-border/30">
+            <CardContent className="space-y-5 p-5">
+              {([
+                { items: attend, label: "참석", color: "success" },
+                { items: maybe, label: "미정", color: "warning" },
+                { items: absent, label: "불참", color: "loss" },
+                { items: noVote, label: "미투표", color: null },
+              ]).filter(({ items }) => items.length > 0).map(({ items, label, color }) => (
+                <div key={label}>
+                  <div className="mb-2 flex items-center gap-2">
+                    {color && <div className={`h-2 w-2 rounded-full bg-[hsl(var(--${color}))]`} />}
+                    {!color && <div className="h-2 w-2 rounded-full bg-muted-foreground" />}
+                    <span className="text-sm font-semibold">{label}</span>
+                    <Badge variant="secondary" className="text-xs">{items.length}</Badge>
+                  </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {attend.map((m) => <span key={m.id} className="rounded-full bg-[hsl(var(--success)/0.1)] px-2.5 py-1 text-xs font-medium text-[hsl(var(--success))]">{m.name}</span>)}
+                    {items.map((m) => (
+                      <Badge key={m.id} className={cn("border-0 font-medium",
+                        color ? `bg-[hsl(var(--${color}))]/15 text-[hsl(var(--${color}))]` : "bg-secondary text-muted-foreground"
+                      )}>{m.name}</Badge>
+                    ))}
                   </div>
                 </div>
-              )}
-              {maybe.length > 0 && (
-                <div>
-                  <p className="mb-1.5 text-xs font-semibold text-[hsl(var(--warning))]">미정</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {maybe.map((m) => <span key={m.id} className="rounded-full bg-[hsl(var(--warning)/0.1)] px-2.5 py-1 text-xs font-medium text-[hsl(var(--warning))]">{m.name}</span>)}
-                  </div>
-                </div>
-              )}
-              {absent.length > 0 && (
-                <div>
-                  <p className="mb-1.5 text-xs font-semibold text-[hsl(var(--loss))]">불참</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {absent.map((m) => <span key={m.id} className="rounded-full bg-[hsl(var(--loss)/0.1)] px-2.5 py-1 text-xs font-medium text-[hsl(var(--loss))]">{m.name}</span>)}
-                  </div>
-                </div>
-              )}
-              {noVote.length > 0 && (
-                <div>
-                  <p className="mb-1.5 text-xs font-semibold text-muted-foreground">미투표</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {noVote.map((m) => <span key={m.id} className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">{m.name}</span>)}
-                  </div>
-                </div>
-              )}
+              ))}
             </CardContent>
           </Card>
         )

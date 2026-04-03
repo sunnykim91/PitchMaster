@@ -230,13 +230,13 @@ function MatchRecordTabInner({
 
   return (
     <>
-      <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+      <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr] animate-in fade-in slide-in-from-bottom-2 duration-300">
         <div className="space-y-5">
         {/* ── 스코어보드 ── */}
-        <Card className="card-featured">
+        <Card className="rounded-xl border-0 bg-gradient-to-br from-secondary to-background overflow-hidden">
+          <CardContent className="p-6">
           <div className="text-center">
-            <p className="type-overline">경기 스코어</p>
-            <div className="mt-3 flex items-center justify-center gap-6">
+            <div className="mb-4 flex items-center justify-center gap-6">
               {isInternal ? (
                 <>
                   <div>
@@ -319,10 +319,11 @@ function MatchRecordTabInner({
               </div>
             )}
           </div>
+          </CardContent>
         </Card>
 
         {/* ── 상세 골 기록 (접기/펼치기) ── */}
-        <Card>
+        <Card className="rounded-xl border-border/30">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">
               상세 기록
@@ -578,13 +579,10 @@ function MatchRecordTabInner({
         {/* ── 우측 컬럼 ── */}
         <div className="space-y-5">
           {/* ── MVP 투표 ── */}
-          <Card>
-            <CardHeader>
-              <p className="type-overline text-[hsl(var(--info))]">
-                MVP
-              </p>
-              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
-                MVP 투표
+          <Card className="rounded-xl border-border/30">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base font-bold">
+                🏆 MVP 투표
               </CardTitle>
             </CardHeader>
 
@@ -618,15 +616,10 @@ function MatchRecordTabInner({
 
           {/* ── 출석 체크 (staff only) ── */}
           {canManageAttendance && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="rounded-xl border-border/30">
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <div>
-                  <p className="type-overline">
-                    Attendance
-                  </p>
-                  <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
-                    출석 체크
-                  </CardTitle>
+                  <CardTitle className="text-base font-bold">출석 체크</CardTitle>
                 </div>
                 {attendingMembers.length > 0 && (
                   <Button

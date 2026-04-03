@@ -382,9 +382,9 @@ export default function MatchDetailClient({
         </Button>
       </div>
 
-      {/* ── Sticky Tab Bar ── */}
-      <div className="sticky top-0 z-10 -mx-1 px-1 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="flex" role="tablist">
+      {/* ── Sticky Tab Bar (v0 style) ── */}
+      <div className="sticky top-0 z-10 -mx-1 px-1 bg-background/90 backdrop-blur-md border-b border-border/50">
+        <div className="flex" role="tablist" aria-label="경기 상세 탭">
           {([
             { key: "info", label: "정보" },
             { key: "vote", label: "투표" },
@@ -400,13 +400,16 @@ export default function MatchDetailClient({
               aria-selected={activeTab === tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={cn(
-                "flex-1 py-3 text-sm font-medium transition-colors border-b-2",
+                "relative flex-1 py-3.5 text-center text-sm font-medium transition-all min-h-[48px]",
                 activeTab === tab.key
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
+                  ? "text-foreground font-semibold"
+                  : "text-muted-foreground hover:text-foreground/80"
               )}
             >
               {tab.label}
+              {activeTab === tab.key && (
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-[3px] rounded-full bg-primary" aria-hidden="true" />
+              )}
             </button>
           ))}
         </div>
