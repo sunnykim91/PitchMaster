@@ -165,7 +165,7 @@ export default function FeaturesSection() {
           ))}
         </div>
 
-        {/* Tactics Board — 세로 형태 (우리 서비스) */}
+        {/* Tactics Board + Auto Formation */}
         <div className="mb-14 text-center">
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.3em] text-[hsl(var(--accent))]">Smart Lineup</p>
           <h3 className="mb-2 font-heading text-2xl font-bold sm:text-3xl">
@@ -175,7 +175,33 @@ export default function FeaturesSection() {
             참석자 명단을 바탕으로 최적의 포지션을 자동 배치하고, 드래그로 손쉽게 수정하세요.
           </p>
         </div>
-        <TacticsBoard />
+        <div className="grid gap-6 md:grid-cols-3">
+          <TacticsBoard />
+          <div className="mx-auto w-full max-w-sm">
+            <div className="overflow-hidden rounded-2xl border-2 border-foreground/10 shadow-2xl shadow-black/40">
+              <Image
+                src="/screenshots/autoposition.png"
+                alt="자동 포메이션 편성 — 포지션 배정 결과"
+                width={400}
+                height={700}
+                className="w-full object-cover"
+                quality={85}
+              />
+            </div>
+          </div>
+          <div className="mx-auto w-full max-w-sm">
+            <div className="overflow-hidden rounded-2xl border-2 border-foreground/10 shadow-2xl shadow-black/40">
+              <Image
+                src="/screenshots/autoposition2.png"
+                alt="편성 결과 — 쿼터별 라인업 배치표"
+                width={400}
+                height={700}
+                className="w-full object-cover"
+                quality={85}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
