@@ -772,140 +772,124 @@ export default function AutoFormationBuilder({
 
   /* ── Open state ── */
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">
-            Auto Formation
-          </p>
-          <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
-            자동 포메이션 편성
-          </CardTitle>
+    <Card className="rounded-xl border-border/30 overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <CardTitle className="flex items-center gap-2 text-base font-bold">
+          <span className="text-primary">⚡</span> 자동 편성
+        </CardTitle>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-xs">{attendingPlayers.length}명</Badge>
+          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground" onClick={() => setIsOpen(false)}>✕</Button>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setIsOpen(false)}
-        >
-          닫기
-        </Button>
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {/* ── 통계 3열 ── */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-xl bg-secondary/30 p-3 text-center">
+            <div className="text-2xl font-bold">{attendingPlayers.length}</div>
+            <div className="text-[11px] text-muted-foreground">총 선수</div>
+          </div>
+          <div className="rounded-xl bg-secondary/30 p-3 text-center">
+            <div className="text-2xl font-bold">{formation?.slots.length ?? 0}</div>
+            <div className="text-[11px] text-muted-foreground">포지션</div>
+          </div>
+          <div className="rounded-xl bg-secondary/30 p-3 text-center">
+            <div className={cn("text-2xl font-bold", isBalanced ? "text-[hsl(var(--success))]" : "text-destructive")}>
+              {totalAssigned}/{totalNeeded}
+            </div>
+            <div className="text-[11px] text-muted-foreground">슬롯</div>
+          </div>
+        </div>
+
+        {/* ── 슬롯 프로그레스바 ── */}
+        <div className="space-y-1.5">
+          <div className="flex justify-between text-xs">
+            <span className="text-muted-foreground">슬롯 배분</span>
+            <span className={cn("font-semibold", isBalanced ? "text-[hsl(var(--success))]" : totalAssigned > totalNeeded ? "text-destructive" : "text-[hsl(var(--accent))]")}>
+              {isBalanced ? "완료" : totalAssigned > totalNeeded ? `${totalAssigned - totalNeeded} 초과` : `${totalNeeded - totalAssigned} 부족`}
+            </span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-secondary">
+            <div className={cn("h-full rounded-full transition-all duration-300", isBalanced ? "bg-[hsl(var(--success))]" : totalAssigned > totalNeeded ? "bg-destructive" : "bg-[hsl(var(--accent))]")}
+              style={{ width: `${Math.min(100, (totalAssigned / (totalNeeded || 1)) * 100)}%` }} />
+          </div>
+        </div>
+
         {/* ── Controls ── */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <NativeSelect
             value={formationId}
-            onChange={(e) => {
-              setFormationId(e.target.value);
-              setResults(null);
-            }}
+            onChange={(e) => { setFormationId(e.target.value); setResults(null); }}
             className="w-auto"
           >
             {filteredFormations.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.name}
-              </option>
+              <option key={f.id} value={f.id}>{f.name}</option>
             ))}
           </NativeSelect>
-
-          <Button size="sm" variant="outline" onClick={autoDistribute}>
-            자동 분배
-          </Button>
-
-          <p className="text-xs text-muted-foreground whitespace-nowrap">
-            참석 {attendingPlayers.length}명 · GK {gks.length} · 필드 {fieldPlayers.length}
-          </p>
-        </div>
-
-        {/* ── Balance indicator ── */}
-        <div
-          className={cn(
-            "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold",
-            isBalanced
-              ? "bg-primary/10 text-primary"
-              : "bg-amber-500/10 text-amber-400",
-          )}
-        >
-          <span>필요 슬롯: {totalNeeded}</span>
-          <span>·</span>
-          <span>배정됨: {totalAssigned}</span>
-          {isBalanced ? (
-            <span className="ml-auto">균형 맞음</span>
-          ) : (
-            <span className="ml-auto">
-              {totalAssigned > totalNeeded
-                ? `${totalAssigned - totalNeeded} 초과`
-                : `${totalNeeded - totalAssigned} 부족`}
-            </span>
-          )}
+          <Button size="sm" variant="outline" className="rounded-lg" onClick={autoDistribute}>자동 분배</Button>
         </div>
 
         {/* ── Player list ── */}
         <div className="space-y-1">
-          {sortedAssignments.map((player) => (
+          {sortedAssignments.map((player, idx) => (
             <div
               key={player.id}
-              className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2"
+              className={cn("rounded-xl p-3 transition-colors", idx % 2 === 0 ? "bg-secondary/30" : "bg-secondary/15")}
             >
-              {/* GK toggle */}
-              <button
-                type="button"
-                onClick={() => toggleGK(player.id)}
-                className={cn(
-                  "flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold transition",
-                  player.isGK
-                    ? "bg-amber-500/30 text-amber-400"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80",
-                )}
-                title="골키퍼 지정/해제"
-              >
-                G
-              </button>
-
-              {/* Name */}
-              <span className="min-w-0 flex-1 truncate text-sm font-semibold">
-                {player.name}
-              </span>
-
-              {/* Position badge */}
-              <div className="flex flex-wrap gap-0.5 justify-end max-w-[140px]">
-                {(player.preferredPositions ?? [player.preferredPosition]).map((pos) => (
-                  <Badge
-                    key={pos}
-                    variant="outline"
-                    className={cn("text-xs px-1", POS_COLOR[pos])}
-                  >
-                    {POS_LABEL[pos] ?? pos}
-                  </Badge>
-                ))}
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    {/* GK toggle */}
+                    <button
+                      type="button"
+                      onClick={() => toggleGK(player.id)}
+                      className={cn(
+                        "flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-bold transition",
+                        player.isGK ? "bg-amber-500/30 text-amber-400" : "bg-muted text-muted-foreground hover:bg-muted/80",
+                      )}
+                      title="골키퍼 지정/해제"
+                    >G</button>
+                    <span className="truncate text-sm font-semibold">{player.name}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {(player.preferredPositions ?? [player.preferredPosition]).map((pos) => (
+                      <Badge key={pos} className={cn("text-[10px] px-1.5 py-0 border-0", POS_COLOR[pos])}>
+                        {POS_LABEL[pos] ?? pos}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                {/* Quarter +/- buttons */}
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {player.isGK ? (
+                    <span className="min-w-[52px] text-center text-xs font-semibold text-amber-400">
+                      {gks.length <= 1 ? `${quarterCount}Q` : `${Math.ceil(quarterCount / gks.length)}Q`}
+                    </span>
+                  ) : (
+                    <>
+                      <button type="button"
+                        onClick={() => setPlayerQuarters(player.id, Math.max(0, player.quarters - 0.5))}
+                        disabled={player.quarters <= 0}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 text-sm transition-colors hover:bg-secondary disabled:opacity-30"
+                      >−</button>
+                      <div className={cn("flex h-8 min-w-[52px] items-center justify-center rounded-lg text-sm font-bold",
+                        player.quarters === quarterCount ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]" :
+                        player.quarters === 0 ? "bg-muted text-muted-foreground" :
+                        player.quarters >= quarterCount * 0.75 ? "bg-primary/20 text-primary" :
+                        "bg-[hsl(var(--accent))]/20 text-[hsl(var(--accent))]"
+                      )}>
+                        {player.quarters}Q
+                      </div>
+                      <button type="button"
+                        onClick={() => setPlayerQuarters(player.id, Math.min(quarterCount, player.quarters + 0.5))}
+                        disabled={player.quarters >= quarterCount}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 text-sm transition-colors hover:bg-secondary disabled:opacity-30"
+                      >+</button>
+                    </>
+                  )}
+                </div>
               </div>
-
-              {/* Quarter selector */}
-              {player.isGK ? (
-                <span className="w-[72px] shrink-0 text-center text-xs font-semibold text-amber-400">
-                  {gks.length <= 1
-                    ? `${quarterCount}Q 고정`
-                    : `${Math.ceil(quarterCount / gks.length)}Q`}
-                </span>
-              ) : (
-                <NativeSelect
-                  value={player.quarters.toString()}
-                  onChange={(e) =>
-                    setPlayerQuarters(
-                      player.id,
-                      parseFloat(e.target.value),
-                    )
-                  }
-                  className="w-[72px] shrink-0 text-xs"
-                >
-                  {quarterOptions.map((v) => (
-                    <option key={v} value={v.toString()}>
-                      {v}Q
-                    </option>
-                  ))}
-                </NativeSelect>
-              )}
             </div>
           ))}
 
@@ -919,12 +903,11 @@ export default function AutoFormationBuilder({
 
         {/* ── Generate button ── */}
         <Button
-          className="w-full"
-          size="sm"
+          className="w-full min-h-[48px] rounded-xl font-semibold"
           onClick={generate}
           disabled={!isBalanced || fieldPlayers.length === 0}
         >
-          {results ? "다시 생성" : "편성 생성"}
+          {results ? "다시 생성" : "자동 편성 실행"}
         </Button>
 
         {/* ── Results ── */}
