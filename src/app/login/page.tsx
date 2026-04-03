@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { isKakaoConfigured } from "@/lib/auth";
-import { getSupabaseServer } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { Button } from "@/components/ui/button";
 import DemoButton from "./DemoButton";
 import HeroSection from "./sections/HeroSection";
@@ -31,11 +31,11 @@ export default async function LoginPage({
   let teamCount = 50;
   let memberCount = 375;
   try {
-    const db = getSupabaseServer();
+    const db = getSupabaseAdmin();
     if (db) {
       const [teamsRes, membersRes] = await Promise.all([
         db.from("teams").select("id", { count: "exact", head: true }).neq("id", DEMO_TEAM_ID),
-        db.from("team_members").select("user_id", { count: "exact", head: true }).neq("team_id", DEMO_TEAM_ID).eq("status", "ACTIVE"),
+        db.from("team_members").select("id", { count: "exact", head: true }).neq("team_id", DEMO_TEAM_ID).in("status", ["ACTIVE", "DORMANT"]),
       ]);
       if (teamsRes.count != null && teamsRes.count > 0) teamCount = teamsRes.count;
       if (membersRes.count != null && membersRes.count > 0) memberCount = membersRes.count;
