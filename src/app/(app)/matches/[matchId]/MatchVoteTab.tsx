@@ -124,26 +124,6 @@ function MatchVoteTabInner({
         </Card>
       )}
 
-      {/* ── 투표 마감하기 (운영진, 마감 전에만) ── */}
-      {canManage && match.status !== "COMPLETED" && !isExpired && (
-        <button
-          type="button"
-          onClick={async () => {
-            const { error: err } = await apiMutate("/api/matches", "PUT", {
-              id: matchId,
-              voteDeadline: new Date().toISOString(),
-            });
-            if (!err) {
-              setIsExpired(true);
-              showToast("투표가 마감되었습니다.");
-            }
-          }}
-          className="rounded-xl border border-[hsl(var(--loss)/0.3)] bg-[hsl(var(--loss)/0.1)] px-4 py-2.5 text-sm font-semibold text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.2)] transition-colors w-full"
-        >
-          투표 마감하기
-        </button>
-      )}
-
       {/* ── 투표 현황 요약 ── */}
       <Card>
         <CardContent className="p-4">
@@ -159,7 +139,7 @@ function MatchVoteTabInner({
               </div>
             );
           })()}
-          <div className="flex flex-wrap gap-3 text-sm font-semibold">
+          <div className="flex flex-wrap items-center gap-3 text-sm font-semibold">
             <span className="text-[hsl(var(--success))]">참석 {attend.length}</span>
             <span className="text-[hsl(var(--loss))]">불참 {absent.length}</span>
             <span className="text-[hsl(var(--warning))]">미정 {maybe.length}</span>
@@ -167,6 +147,56 @@ function MatchVoteTabInner({
             {guestCount > 0 && <span className="text-[hsl(var(--info))]">용병 {guestCount}</span>}
             <span className="text-muted-foreground/50">· 총 {baseRoster.length + guestCount}명</span>
           </div>
+
+          {/* 투표 마감/재개 (운영진, 예정 경기만) */}
+          {canManage && match.status !== "COMPLETED" && (
+            <div className="mt-3 pt-3 border-t border-border/30 flex items-center justify-between">
+              {isExpired ? (
+                <>
+                  <span className="text-xs text-muted-foreground">투표 마감됨</span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      // 마감 시간을 한 달 뒤로 → 재개
+                      const future = new Date();
+                      future.setMonth(future.getMonth() + 1);
+                      const { error: err } = await apiMutate("/api/matches", "PUT", {
+                        id: matchId,
+                        voteDeadline: future.toISOString(),
+                      });
+                      if (!err) {
+                        setIsExpired(false);
+                        showToast("투표가 재개되었습니다.");
+                      }
+                    }}
+                    className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                  >
+                    투표 재개
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="text-xs text-muted-foreground">투표 진행 중</span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const { error: err } = await apiMutate("/api/matches", "PUT", {
+                        id: matchId,
+                        voteDeadline: new Date().toISOString(),
+                      });
+                      if (!err) {
+                        setIsExpired(true);
+                        showToast("투표가 마감되었습니다.");
+                      }
+                    }}
+                    className="rounded-lg border border-[hsl(var(--loss)/0.3)] bg-[hsl(var(--loss)/0.08)] px-3 py-1.5 text-xs font-semibold text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.15)] transition-colors"
+                  >
+                    투표 마감
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
