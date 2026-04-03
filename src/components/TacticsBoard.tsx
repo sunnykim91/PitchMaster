@@ -12,6 +12,8 @@ import { useConfirm } from "@/lib/ConfirmContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
+import { useIsMobile } from "@/lib/useIsMobile";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 type Player = {
   id: string;
@@ -78,6 +80,8 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
 
 export default function TacticsBoard({ matchId, roster, quarterCount, sportType = "SOCCER", teamSettings: teamSettingsProp, initialSquads, defaultFormationId: teamDefaultFormationId, readOnly = false, side }: TacticsBoardProps) {
   const confirm = useConfirm();
+  const isMobile = useIsMobile();
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const isFutsal = sportType === "FUTSAL";
   const futsalFieldCounts = useMemo(() => (isFutsal ? getFutsalFieldCounts() : []), [isFutsal]);
   const [futsalFieldCount, setFutsalFieldCount] = useState(isFutsal ? 5 : 0);
@@ -294,6 +298,9 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     Object.entries(placements).forEach(([slotId, placement]) => {
       if (placement) {
         map.set(placement.playerId, slotId);
+        if (placement.secondPlayerId) {
+          map.set(placement.secondPlayerId, slotId);
+        }
       }
     });
     return map;
@@ -561,15 +568,42 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     }
   }
 
+  // 하프쿼터: "assign" = 풀타임 배치, "assign_second" = 후반 선수 추가
+  type SlotMode = "assign" | "assign_second";
+  const [slotMode, setSlotMode] = useState<SlotMode>("assign");
+
   function handleSelectSlot(slotId: string) {
     if (readOnly) return;
     setActiveSlotId(slotId);
+    setSlotMode("assign");
+    if (isMobile) setMobileSheetOpen(true);
   }
 
   function handleAssignPlayer(slotId: string, playerId: string) {
     if (assignedPlayers.has(playerId)) return;
     const slot = formation.slots.find((item) => item.id === slotId);
     if (!slot) return;
+
+    if (slotMode === "assign_second") {
+      // 후반 선수 배정
+      updateBoardState((prev) => {
+        const current = prev.placements[slotId];
+        if (!current) return prev;
+        return {
+          ...prev,
+          placements: {
+            ...prev.placements,
+            [slotId]: { ...current, secondPlayerId: playerId },
+          },
+        };
+      });
+      setSlotMode("assign");
+      setActiveSlotId(null);
+      if (isMobile) setMobileSheetOpen(false);
+      return;
+    }
+
+    // 기존 풀타임 배치
     updateBoardState((prev) => {
       const nextPlacements = { ...prev.placements };
       Object.entries(nextPlacements).forEach(([key, placement]) => {
@@ -580,6 +614,17 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       nextPlacements[slotId] = { playerId, x: slot.x, y: slot.y };
       return { ...prev, placements: nextPlacements };
     });
+    if (isMobile) setMobileSheetOpen(false);
+  }
+
+  function handleClearSecondPlayer(slotId: string) {
+    updateBoardState((prev) => {
+      const current = prev.placements[slotId];
+      if (!current?.secondPlayerId) return prev;
+      const { secondPlayerId: _, ...rest } = current;
+      return { ...prev, placements: { ...prev.placements, [slotId]: rest } };
+    });
+    setActiveSlotId(null);
   }
 
   function handleClearSlot(slotId: string) {
@@ -910,8 +955,8 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
           )}
           </div>{/* end captureRef */}
 
-          {/* Roster panel (편집 모드에서만 표시) */}
-          {!readOnly && (
+          {/* Roster panel — PC: 인라인, 모바일: 바텀시트 */}
+          {!readOnly && !isMobile && (
           <div className="space-y-4">
             <Card className="border-0 bg-secondary">
               <CardContent className="p-4">
@@ -922,15 +967,49 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                       포지션: {formation.slots.find((slot) => slot.id === activeSlotId)?.label}
                     </p>
                     {placements[activeSlotId] ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleClearSlot(activeSlotId)}
-                        className="rounded-xl"
-                      >
-                        배치 해제
-                      </Button>
+                      <div className="space-y-2">
+                        <p className="text-xs">
+                          전반: {roster.find((r) => r.id === placements[activeSlotId]?.playerId)?.name ?? "알 수 없음"}
+                          {placements[activeSlotId]?.secondPlayerId && (
+                            <> / 후반: {roster.find((r) => r.id === placements[activeSlotId]?.secondPlayerId)?.name ?? "알 수 없음"}</>
+                          )}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {!placements[activeSlotId]?.secondPlayerId ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSlotMode("assign_second")}
+                              className="rounded-xl text-[hsl(var(--info))]"
+                            >
+                              후반 선수 추가
+                            </Button>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleClearSecondPlayer(activeSlotId)}
+                              className="rounded-xl text-[hsl(var(--accent))]"
+                            >
+                              후반 선수 해제
+                            </Button>
+                          )}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleClearSlot(activeSlotId)}
+                            className="rounded-xl"
+                          >
+                            전체 해제
+                          </Button>
+                        </div>
+                        {slotMode === "assign_second" && (
+                          <p className="text-xs font-bold text-[hsl(var(--info))]">아래에서 후반 선수를 선택하세요</p>
+                        )}
+                      </div>
                     ) : (
                       <p className="text-xs text-muted-foreground">선수를 선택해주세요.</p>
                     )}
@@ -948,15 +1027,18 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                   {sortedRoster.map((player) => {
                     const assignedSlot = assignedPlayers.get(player.id);
                     const isAssigned = Boolean(assignedSlot);
+                    // 후반 모드에서는 현재 슬롯의 전반 선수도 비활성
+                    const isCurrentSlotPlayer = activeSlotId ? placements[activeSlotId]?.playerId === player.id : false;
+                    const isDisabled = !activeSlotId || isAssigned || (slotMode === "assign_second" && isCurrentSlotPlayer);
                     const playedQuarters = playerQuarterMap.get(player.id) ?? [];
                     const qCount = playedQuarters.length;
                     return (
                       <Button
                         key={player.id}
                         type="button"
-                        variant={!activeSlotId || isAssigned ? "outline" : "success"}
-                        disabled={!activeSlotId || isAssigned}
-                        onClick={() => activeSlotId && !isAssigned && handleAssignPlayer(activeSlotId, player.id)}
+                        variant={isDisabled ? "outline" : slotMode === "assign_second" ? "default" : "success"}
+                        disabled={isDisabled}
+                        onClick={() => activeSlotId && !isDisabled && handleAssignPlayer(activeSlotId, player.id)}
                         className={cn(
                           "flex w-full min-w-0 items-center justify-between gap-2 overflow-hidden rounded-xl px-4 py-3 text-left text-sm h-auto",
                           (!activeSlotId || isAssigned) && "text-muted-foreground"
@@ -1021,6 +1103,71 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               포지션을 클릭해 선수를 배치하고, 배치된 선수는 드래그해서 위치를 조정하세요.
             </p>
           </div>
+          )}
+
+          {/* 모바일 바텀시트 */}
+          {!readOnly && isMobile && (
+            <Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
+              <SheetContent side="bottom" className="max-h-[70vh] overflow-y-auto rounded-t-2xl">
+                <SheetTitle className="text-base font-bold">
+                  {activeSlotId ? `${formation.slots.find((s) => s.id === activeSlotId)?.label ?? "포지션"} — 선수 배치` : "선수 배치"}
+                </SheetTitle>
+
+                {activeSlotId && placements[activeSlotId] && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      전반: {roster.find((r) => r.id === placements[activeSlotId]?.playerId)?.name ?? "알 수 없음"}
+                      {placements[activeSlotId]?.secondPlayerId && (
+                        <> / 후반: {roster.find((r) => r.id === placements[activeSlotId]?.secondPlayerId)?.name ?? "알 수 없음"}</>
+                      )}
+                    </p>
+                    <div className="flex gap-2">
+                      {!placements[activeSlotId]?.secondPlayerId ? (
+                        <Button type="button" variant="outline" size="sm" onClick={() => setSlotMode("assign_second")} className="rounded-xl text-[hsl(var(--info))]">
+                          후반 선수 추가
+                        </Button>
+                      ) : (
+                        <Button type="button" variant="outline" size="sm" onClick={() => { handleClearSecondPlayer(activeSlotId); }} className="rounded-xl text-[hsl(var(--accent))]">
+                          후반 선수 해제
+                        </Button>
+                      )}
+                      <Button type="button" variant="outline" size="sm" onClick={() => { handleClearSlot(activeSlotId); setMobileSheetOpen(false); }} className="rounded-xl">
+                        전체 해제
+                      </Button>
+                    </div>
+                    {slotMode === "assign_second" && (
+                      <p className="text-xs font-bold text-[hsl(var(--info))]">후반 선수를 선택하세요</p>
+                    )}
+                  </div>
+                )}
+
+                <div className="mt-4 grid gap-2">
+                  {sortedRoster.map((player) => {
+                    const isAssigned = assignedPlayers.has(player.id);
+                    const isCurrentSlotPlayer = activeSlotId ? placements[activeSlotId]?.playerId === player.id : false;
+                    const isDisabled = !activeSlotId || isAssigned || (slotMode === "assign_second" && isCurrentSlotPlayer);
+                    return (
+                      <Button
+                        key={player.id}
+                        type="button"
+                        variant={isDisabled ? "outline" : slotMode === "assign_second" ? "default" : "success"}
+                        disabled={isDisabled}
+                        onClick={() => activeSlotId && !isDisabled && handleAssignPlayer(activeSlotId, player.id)}
+                        className={cn(
+                          "flex w-full items-center justify-between gap-2 rounded-xl px-4 py-3 text-left text-sm h-auto",
+                          isDisabled && "text-muted-foreground"
+                        )}
+                      >
+                        <span className="truncate font-semibold">{player.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {isAssigned ? formation.slots.find((s) => s.id === assignedPlayers.get(player.id))?.label ?? "배치됨" : ""}
+                        </span>
+                      </Button>
+                    );
+                  })}
+                </div>
+              </SheetContent>
+            </Sheet>
           )}
         </div>
       </CardContent>
