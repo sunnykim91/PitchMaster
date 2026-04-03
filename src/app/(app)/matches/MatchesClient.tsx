@@ -724,7 +724,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         </>
                       );
                     })() : null}
-                    <span className="text-muted-foreground/20 text-lg">›</span>
+                    <span className="text-muted-foreground/50 text-lg">›</span>
                   </div>
                 </div>
 
