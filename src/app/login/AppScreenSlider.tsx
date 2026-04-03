@@ -7,7 +7,7 @@ const screens = [
   { title: "대시보드", src: "/screenshot/dashboard.png" },
   { title: "참석 투표", src: "/screenshot/vote.png" },
   { title: "내 기록 · 레이더 차트", src: "/screenshot/records1.png" },
-  { title: "스마트 라인업", src: "/screenshot/tactics.png" },
+  { title: "스마트 라인업", src: "/screenshots/tactisboard.png" },
   { title: "전체 기록", src: "/screenshot/records2.png" },
   { title: "회비 관리", src: "/screenshot/dues.png" },
 ];

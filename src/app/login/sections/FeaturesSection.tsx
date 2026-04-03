@@ -93,7 +93,7 @@ function TacticsBoard() {
     <div ref={ref} className={`mx-auto w-full max-w-sm transition-all duration-700 ${isVisible ? "scale-100 opacity-100" : "scale-95 opacity-0"}`}>
       <div className="overflow-hidden rounded-2xl border-2 border-foreground/10 shadow-2xl shadow-black/40">
         <Image
-          src="/screenshot/tactics.png"
+          src="/screenshots/tactisboard.png"
           alt="PitchMaster 전술판 — 4-3-3 포메이션 자동 배치"
           width={400}
           height={500}
