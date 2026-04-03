@@ -59,22 +59,14 @@ function PaymentVisual() {
 }
 
 function LineupVisual() {
-  const players = [
-    { x: 50, y: 92 }, { x: 18, y: 74 }, { x: 38, y: 78 }, { x: 62, y: 78 }, { x: 82, y: 74 },
-    { x: 30, y: 52 }, { x: 50, y: 48 }, { x: 70, y: 52 },
-    { x: 22, y: 26 }, { x: 50, y: 20 }, { x: 78, y: 26 },
-  ];
   return (
-    <div className="relative aspect-[4/3] overflow-hidden rounded-xl" style={{ background: "linear-gradient(to bottom, #1a6b32, #145528)" }}>
-      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 75">
-        <line x1="0" y1="37.5" x2="100" y2="37.5" stroke="white" strokeOpacity="0.2" strokeWidth="0.5" />
-        <circle cx="50" cy="37.5" r="10" fill="none" stroke="white" strokeOpacity="0.2" strokeWidth="0.5" />
-        <rect x="25" y="0" width="50" height="12" fill="none" stroke="white" strokeOpacity="0.2" strokeWidth="0.5" />
-        <rect x="25" y="63" width="50" height="12" fill="none" stroke="white" strokeOpacity="0.2" strokeWidth="0.5" />
-      </svg>
-      {players.map((p, i) => (
-        <div key={i} className="absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow-lg shadow-primary/40" style={{ left: `${p.x}%`, top: `${p.y}%` }} />
-      ))}
+    <div className="grid grid-cols-2 gap-2">
+      <div className="overflow-hidden rounded-lg border border-foreground/10">
+        <Image src="/screenshots/autoposition.png" alt="자동 포메이션 편성" width={300} height={500} className="w-full object-cover" quality={80} />
+      </div>
+      <div className="overflow-hidden rounded-lg border border-foreground/10">
+        <Image src="/screenshots/autoposition2.png" alt="쿼터별 라인업 결과" width={300} height={500} className="w-full object-cover" quality={80} />
+      </div>
     </div>
   );
 }
@@ -175,33 +167,7 @@ export default function FeaturesSection() {
             참석자 명단을 바탕으로 최적의 포지션을 자동 배치하고, 드래그로 손쉽게 수정하세요.
           </p>
         </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          <TacticsBoard />
-          <div className="mx-auto w-full max-w-sm">
-            <div className="overflow-hidden rounded-2xl border-2 border-foreground/10 shadow-2xl shadow-black/40">
-              <Image
-                src="/screenshots/autoposition.png"
-                alt="자동 포메이션 편성 — 포지션 배정 결과"
-                width={400}
-                height={700}
-                className="w-full object-cover"
-                quality={85}
-              />
-            </div>
-          </div>
-          <div className="mx-auto w-full max-w-sm">
-            <div className="overflow-hidden rounded-2xl border-2 border-foreground/10 shadow-2xl shadow-black/40">
-              <Image
-                src="/screenshots/autoposition2.png"
-                alt="편성 결과 — 쿼터별 라인업 배치표"
-                width={400}
-                height={700}
-                className="w-full object-cover"
-                quality={85}
-              />
-            </div>
-          </div>
-        </div>
+        <TacticsBoard />
       </div>
     </section>
   );
