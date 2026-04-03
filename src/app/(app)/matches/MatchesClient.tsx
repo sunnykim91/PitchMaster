@@ -759,7 +759,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 )}
               </Link>
 
-              {/* 투표 버튼 — 예정 경기만, 납작하게 */}
+              {/* 투표 버튼 + 공유 — 예정 경기만 */}
               {!isCompleted && (
                 <div className="px-4 pb-3">
                   <div className="flex items-center gap-2">
@@ -784,6 +784,19 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         </button>
                       );
                     })}
+                    <button
+                      type="button"
+                      className="shrink-0 rounded-lg border border-border p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                      onClick={() => shareVoteLink({
+                        matchId: match.id,
+                        date: match.date,
+                        time: match.time,
+                        location: match.location,
+                        opponent: match.opponent,
+                      })}
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               )}
