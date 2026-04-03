@@ -406,6 +406,37 @@ select optgroup {
   color: hsl(var(--muted-foreground));
 }
 
+/* ── Landing page utilities (from v0) ── */
+.grid-pattern {
+  background-image:
+    linear-gradient(to right, hsl(var(--border) / 0.3) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border) / 0.3) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.text-gradient {
+  background: linear-gradient(to right, hsl(var(--foreground)), hsl(var(--foreground) / 0.5));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes scan {
+  0% { top: 0%; }
+  100% { top: 100%; }
+}
+.animate-scan {
+  animation: scan 2.5s ease-in-out infinite;
+}
+
 /* ── Scroll Reveal Animation ── */
 .js-ready .scroll-reveal {
   opacity: 0;
