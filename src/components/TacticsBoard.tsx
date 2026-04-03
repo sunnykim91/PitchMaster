@@ -679,116 +679,95 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     <>
     <Card className="p-6">
       <CardContent className="p-0">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* 헤더 */}
+        <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Tactics</p>
             <h3 className="mt-1 font-heading text-xl font-bold uppercase text-foreground">전술판 편성</h3>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex flex-wrap gap-1">
-              {quarters.map((quarter) => (
-                <Button
-                  key={quarter}
-                  type="button"
-                  variant={activeQuarter === quarter ? "info" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    flushPendingSave(); // 이전 쿼터 저장 즉시 flush
-                    setActiveQuarter(quarter);
-                    setActiveSlotId(null);
-                  }}
-                  className="rounded-xl"
-                >
-                  {quarter}쿼터
-                </Button>
-              ))}
-            </div>
-            {/* 풋살 인원 수 선택 */}
-            {isFutsal && !readOnly && (
-              <Select value={String(futsalFieldCount)} onValueChange={(v) => handleFutsalFieldCountChange(Number(v))}>
-                <SelectTrigger className="w-auto min-w-[70px] rounded-xl text-xs font-semibold">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {futsalFieldCounts.map((count) => (
-                    <SelectItem key={count} value={String(count)}>
-                      {count}vs{count}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            {isFutsal && readOnly && (
-              <Badge variant="secondary" className="rounded-xl px-3 py-1 text-xs font-semibold">
-                {futsalFieldCount}인제
-              </Badge>
-            )}
-            {!readOnly && (
-              <Select value={formation.id} onValueChange={handleFormationChange}>
-                <SelectTrigger className="w-auto min-w-[100px] rounded-xl text-xs font-semibold">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredFormations.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            {readOnly && (
-              <Badge variant="secondary" className="rounded-xl px-3 py-1 text-xs font-semibold">
-                {formation.name}
-              </Badge>
-            )}
-            <Badge variant="secondary" className="flex items-center gap-1 rounded-xl px-1 py-1">
-              <Button
-                type="button"
-                variant={uniformMode === "HOME" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setUniformMode("HOME")}
-                className="rounded-lg px-3 py-1 text-xs font-semibold"
-              >
-                홈
-              </Button>
-              <Button
-                type="button"
-                variant={uniformMode === "AWAY" ? "warning" : "outline"}
-                size="sm"
-                onClick={() => setUniformMode("AWAY")}
-                className="rounded-lg px-3 py-1 text-xs font-semibold"
-              >
-                원정
-              </Button>
-            </Badge>
-          </div>
-          {/* 액션 버튼 (초기화 + 공유) */}
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            {!readOnly && (
-              <>
-                <button type="button" onClick={clearBoard} className="rounded-lg border border-border px-2.5 py-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
-                  Q{activeQuarter} 초기화
-                </button>
-                <button type="button" onClick={clearAllQuarters} className="rounded-lg px-2.5 py-1.5 text-muted-foreground/60 hover:text-destructive transition-colors">
-                  전체 초기화
-                </button>
-                <span className="text-border">|</span>
-              </>
-            )}
-            <button type="button" onClick={handleShareFormation} className="rounded-lg border border-border px-2.5 py-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
-              Q{activeQuarter} 공유
+          {saving && <span className="text-xs text-muted-foreground animate-pulse">저장 중...</span>}
+          {shareMsg && <span className="text-xs text-primary animate-pulse">{shareMsg}</span>}
+        </div>
+
+        {/* 쿼터 선택 */}
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {quarters.map((quarter) => (
+            <Button
+              key={quarter}
+              type="button"
+              variant={activeQuarter === quarter ? "info" : "outline"}
+              size="sm"
+              onClick={() => {
+                flushPendingSave();
+                setActiveQuarter(quarter);
+                setActiveSlotId(null);
+              }}
+              className="rounded-xl"
+            >
+              {quarter}쿼터
+            </Button>
+          ))}
+        </div>
+
+        {/* 설정 (포메이션 + 유니폼) + 액션 버튼 */}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {/* 포메이션 */}
+          {!readOnly ? (
+            <Select value={formation.id} onValueChange={handleFormationChange}>
+              <SelectTrigger className="w-auto min-w-[100px] rounded-xl text-xs font-semibold">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredFormations.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Badge variant="secondary" className="rounded-xl px-3 py-1 text-xs font-semibold">{formation.name}</Badge>
+          )}
+
+          {/* 풋살 인원 */}
+          {isFutsal && !readOnly && (
+            <Select value={String(futsalFieldCount)} onValueChange={(v) => handleFutsalFieldCountChange(Number(v))}>
+              <SelectTrigger className="w-auto min-w-[70px] rounded-xl text-xs font-semibold"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {futsalFieldCounts.map((count) => (
+                  <SelectItem key={count} value={String(count)}>{count}vs{count}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {isFutsal && readOnly && (
+            <Badge variant="secondary" className="rounded-xl px-3 py-1 text-xs font-semibold">{futsalFieldCount}인제</Badge>
+          )}
+
+          {/* 유니폼 */}
+          <Badge variant="secondary" className="flex items-center gap-1 rounded-xl px-1 py-1">
+            <Button type="button" variant={uniformMode === "HOME" ? "default" : "outline"} size="sm" onClick={() => setUniformMode("HOME")} className="rounded-lg px-3 py-1 text-xs font-semibold">홈</Button>
+            <Button type="button" variant={uniformMode === "AWAY" ? "warning" : "outline"} size="sm" onClick={() => setUniformMode("AWAY")} className="rounded-lg px-3 py-1 text-xs font-semibold">원정</Button>
+          </Badge>
+
+          {/* 구분 */}
+          <div className="flex-1" />
+
+          {/* 액션: 초기화 + 공유 — 동일한 pill 스타일 */}
+          {!readOnly && (
+            <button type="button" onClick={clearBoard} className="rounded-full border border-border/50 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
+              초기화
             </button>
-            <button type="button" onClick={handleShareAll} className="rounded-lg border border-border px-2.5 py-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
-              전체 공유
+          )}
+          {!readOnly && (
+            <button type="button" onClick={clearAllQuarters} className="rounded-full border border-border/50 px-3 py-1.5 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
+              전체 초기화
             </button>
-            {saving && (
-              <span className="text-xs text-muted-foreground animate-pulse">저장 중...</span>
-            )}
-            {shareMsg && (
-              <span className="text-xs text-primary animate-pulse">{shareMsg}</span>
-            )}
-          </div>
+          )}
+          <button type="button" onClick={handleShareFormation} className="rounded-full border border-border/50 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
+            공유
+          </button>
+          <button type="button" onClick={handleShareAll} className="rounded-full border border-border/50 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
+            전체 공유
+          </button>
         </div>
 
         <div className={cn("mt-5 grid gap-5", !readOnly && "lg:grid-cols-[1.2fr_0.8fr]")}>
