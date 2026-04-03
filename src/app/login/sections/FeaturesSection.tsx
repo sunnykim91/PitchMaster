@@ -60,13 +60,8 @@ function PaymentVisual() {
 
 function LineupVisual() {
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <div className="overflow-hidden rounded-lg border border-foreground/10">
-        <Image src="/screenshots/autoposition.png" alt="자동 포메이션 편성" width={300} height={500} className="w-full object-cover" quality={80} />
-      </div>
-      <div className="overflow-hidden rounded-lg border border-foreground/10">
-        <Image src="/screenshots/autoposition2.png" alt="쿼터별 라인업 결과" width={300} height={500} className="w-full object-cover" quality={80} />
-      </div>
+    <div className="overflow-hidden rounded-lg border border-foreground/10">
+      <Image src="/screenshots/autoposition.png" alt="자동 포메이션 편성" width={400} height={700} className="w-full object-cover" quality={85} />
     </div>
   );
 }
