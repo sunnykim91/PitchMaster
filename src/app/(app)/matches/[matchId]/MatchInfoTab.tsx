@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn, formatPhone, formatDateKo, formatTime } from "@/lib/utils";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { useConfirm } from "@/lib/ConfirmContext";
-import { Bell } from "lucide-react";
+import { Bell, X, Trash2, Pencil } from "lucide-react";
 import { useToast } from "@/lib/ToastContext";
 import type {
   Match,
@@ -114,7 +114,6 @@ function MatchInfoTabInner({
   } | null>(null);
 
   useEffect(() => {
-    // 완료된 경기이면 날씨 표시 안 함
     if (match.status === "COMPLETED") return;
     if (!match.date) return;
 
@@ -126,9 +125,7 @@ function MatchInfoTabInner({
       .then((data) => {
         if (data && data.icon) setWeather(data);
       })
-      .catch(() => {
-        // 날씨 조회 실패 시 무시
-      });
+      .catch(() => {});
   }, [match.date, match.location, match.status]);
 
   /* ── 유니폼 스타일 ── */
@@ -260,48 +257,57 @@ function MatchInfoTabInner({
     return { left, right, result: left > right ? "승" : left === right ? "무" : "패" };
   }, [goalsProp, isInternal]);
 
+  // 댓글 시간 표시 헬퍼 (n분 전, n시간 전, 날짜)
+  function formatCommentTime(dateStr: string) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "방금 전";
+    if (mins < 60) return `${mins}분 전`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}시간 전`;
+    return new Date(dateStr).toLocaleDateString("ko-KR", { month: "short", day: "numeric" });
+  }
+
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
 
-      {/* ══ 스코어 히어로 카드 ══ */}
+      {/* ═══ 1. 스코어 히어로 카드 (완료된 경기 + 골 있을 때) ═══ */}
       {scoreData && match.matchType !== "EVENT" && (
         <Card className="rounded-2xl border-0 bg-gradient-to-br from-secondary to-background overflow-hidden">
           <CardContent className="p-0">
-            <div className="relative px-6 pt-7 pb-5 text-center">
-              {match.status === "COMPLETED" && (
-                <div className="absolute right-4 top-4">
-                  <Badge className={cn(
-                    "px-2.5 py-1 text-xs font-bold tracking-wider",
-                    scoreData.result === "승" && "bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]",
-                    scoreData.result === "무" && "bg-muted text-muted-foreground",
-                    scoreData.result === "패" && "bg-destructive text-destructive-foreground",
-                  )}>
-                    {scoreData.result === "승" ? "WIN" : scoreData.result === "무" ? "DRAW" : "LOSE"}
-                  </Badge>
+            <div className="px-6 pt-8 pb-6 text-center">
+              <div className="flex items-center justify-center gap-6">
+                {/* 홈 */}
+                <div className="relative flex flex-1 flex-col items-center gap-3">
+                  <div className="h-14 w-14 rounded-sm shadow-lg" style={{ ...getUniformBg(uniformPrimary, uniformSecondary, uniformPattern), clipPath: JERSEY_CLIP }} />
+                  {match.status === "COMPLETED" && scoreData.result === "승" && (
+                    <Badge className="absolute -right-1 -top-1 bg-[hsl(var(--success))] px-1.5 py-0.5 text-[10px] font-bold text-white">WIN</Badge>
+                  )}
+                  <span className="max-w-[100px] truncate text-sm font-semibold">{isInternal ? "A팀" : "우리팀"}</span>
                 </div>
-              )}
-              <div className="flex items-center justify-center gap-5">
-                <div className="flex flex-1 flex-col items-center gap-2">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl text-xl font-bold shadow-lg" style={homeJerseyStyle}>
-                    {isInternal ? "A" : "H"}
-                  </div>
-                  <span className="max-w-[90px] truncate text-xs font-semibold">{isInternal ? "A팀" : "우리팀"}</span>
-                </div>
-                <div className="flex flex-col items-center gap-0.5 px-3">
+                {/* 스코어 */}
+                <div className="flex flex-col items-center gap-1 px-4">
                   <div className="text-5xl font-black tabular-nums tracking-tighter">
                     <span>{scoreData.left}</span>
                     <span className="mx-2 text-muted-foreground">:</span>
                     <span className="text-muted-foreground">{scoreData.right}</span>
                   </div>
                   {match.status === "COMPLETED" && (
-                    <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Final</span>
+                    <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Final</span>
                   )}
                 </div>
-                <div className="flex flex-1 flex-col items-center gap-2">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-xl font-bold shadow-lg" style={awayJerseyStyle}>
+                {/* 어웨이 */}
+                <div className="relative flex flex-1 flex-col items-center gap-3">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-xl font-bold shadow-lg text-muted-foreground">
                     {isInternal ? "B" : (match.opponent?.[0] ?? "?")}
                   </div>
-                  <span className="max-w-[90px] truncate text-xs font-semibold text-muted-foreground">{isInternal ? "B팀" : (match.opponent ?? "상대팀")}</span>
+                  {match.status === "COMPLETED" && scoreData.result === "패" && (
+                    <Badge className="absolute -left-1 -top-1 bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-white">WIN</Badge>
+                  )}
+                  {match.status === "COMPLETED" && scoreData.result === "무" && (
+                    <Badge className="absolute -right-1 -top-1 bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">DRAW</Badge>
+                  )}
+                  <span className="max-w-[100px] truncate text-sm font-semibold text-muted-foreground">{isInternal ? "B팀" : (match.opponent ?? "상대팀")}</span>
                 </div>
               </div>
             </div>
@@ -316,37 +322,124 @@ function MatchInfoTabInner({
         </Card>
       )}
 
-      {/* ══ 유니폼 선택 (EVENT 제외) ══ */}
-      {match.matchType !== "EVENT" && (
-        <Card className="rounded-xl border-border/30">
-          <CardHeader className="pb-3"><CardTitle className="text-base font-bold">우리팀 유니폼</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="유니폼 선택">
-              {([{ type: "HOME" as const, label: "홈", style: homeJerseyStyle }, { type: "AWAY" as const, label: "원정", style: awayJerseyStyle }]).map((u) => (
-                <button
-                  key={u.type}
-                  type="button"
-                  role="radio"
-                  aria-checked={match.uniformType === u.type}
-                  onClick={() => handleUniformChange(u.type)}
-                  disabled={!canManage}
-                  className={cn(
-                    "flex items-center gap-3 rounded-xl p-4 transition-all",
-                    match.uniformType === u.type ? "bg-primary/10 ring-2 ring-primary" : "bg-secondary hover:bg-secondary/80"
-                  )}
-                >
-                  <div className="flex gap-1">
-                    <div className="h-8 w-6 rounded-sm shadow-sm" style={u.style} />
+      {/* ═══ 2. 경기 정보 ═══ */}
+      <Card className="rounded-xl border-border/30">
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="text-base font-bold">{match.matchType === "EVENT" ? "팀 일정" : "경기 정보"}</CardTitle>
+          {canManage && match.status === "SCHEDULED" && !editing && (
+            <Button variant="ghost" size="icon" onClick={() => setEditing(true)} className="h-8 w-8 text-primary" aria-label="경기 정보 수정">
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {editing ? (
+            <form onSubmit={handleSaveEdit}>
+              <style>{`
+                .edit-form input[type="date"]::-webkit-calendar-picker-indicator,
+                .edit-form input[type="datetime-local"]::-webkit-calendar-picker-indicator { opacity: 0; width: 100%; height: 100%; position: absolute; top: 0; left: 0; cursor: pointer; }
+              `}</style>
+              <div className="edit-form space-y-5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">날짜</p>
+                    <input type="date" name="date" defaultValue={match.date} required className="relative h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
                   </div>
-                  <span className={cn("text-sm font-semibold", match.uniformType === u.type ? "text-primary" : "text-foreground")}>{u.label}</span>
-                </button>
-              ))}
+                  <div>
+                    <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">{match.matchType === "EVENT" ? "일정 제목" : "상대팀"}</p>
+                    <input name="opponent" defaultValue={match.opponent ?? ""} placeholder={match.matchType === "EVENT" ? "예: 연말 회식" : "미정"} className="h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">시작</p>
+                    <select name="time" defaultValue={formatTime(match.time)} className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+                      {Array.from({ length: 48 }, (_, i) => { const h = String(Math.floor(i / 2)).padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>; })}
+                    </select>
+                  </div>
+                  <div>
+                    <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">종료</p>
+                    <select name="endTime" defaultValue={match.endTime ? formatTime(match.endTime) : ""} className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+                      <option value="">미설정</option>
+                      {Array.from({ length: 48 }, (_, i) => { const h = String(Math.floor(i / 2)).padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>; })}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">장소</p>
+                  <input name="location" defaultValue={match.location} required className="h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+                </div>
+                <div>
+                  <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">투표 마감</p>
+                  <input type="datetime-local" name="voteDeadline" defaultValue={match.voteDeadline?.slice(0, 16) ?? ""} className="relative h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+                </div>
+                <div className="flex gap-3 pt-1">
+                  <Button type="button" variant="outline" className="flex-1 h-12 rounded-xl" onClick={() => setEditing(false)}>취소</Button>
+                  <Button type="submit" className="flex-1 h-12 rounded-xl" disabled={saving}>{saving ? "저장 중..." : "저장"}</Button>
+                </div>
+              </div>
+            </form>
+          ) : (
+            <div className="grid gap-2 text-sm">
+              {/* 스코어 카드가 없을 때만 기본 정보 표시 */}
+              {!scoreData && (
+                <>
+                  <div className="flex items-center gap-2"><span className="w-14 shrink-0 text-muted-foreground">날짜</span><span className="font-medium">{formatDateKo(match.date)}</span></div>
+                  {match.time && <div className="flex items-center gap-2"><span className="w-14 shrink-0 text-muted-foreground">시간</span><span className="font-medium">{formatTime(match.time)}{match.endTime && <span className="text-muted-foreground"> ~ {formatTime(match.endTime)}</span>}</span></div>}
+                  {match.location && <div className="flex items-center gap-2"><span className="w-14 shrink-0 text-muted-foreground">장소</span><span className="font-medium">{match.location}</span></div>}
+                  {match.opponent && <div className="flex items-center gap-2"><span className="w-14 shrink-0 text-muted-foreground">{match.matchType === "EVENT" ? "제목" : "상대팀"}</span><span className="font-medium">{match.opponent}</span></div>}
+                </>
+              )}
+              {match.endDate && <div className="flex items-center gap-2"><span className="w-14 shrink-0 text-muted-foreground">종료일</span><span className="font-medium">{formatDateKo(match.endDate)}</span></div>}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
 
-      {/* ══ 날씨 카드 ══ */}
+          {/* 유니폼 선택 (EVENT 제외) */}
+          {match.matchType !== "EVENT" && (
+            <div className="flex items-center gap-3 pt-1">
+              <span className="text-sm text-muted-foreground">유니폼</span>
+              <div className="flex gap-2">
+                {([
+                  { type: "HOME" as const, label: "홈", style: homeJerseyStyle },
+                  { type: "AWAY" as const, label: "원정", style: awayJerseyStyle },
+                ]).map((u) => (
+                  <button key={u.type} type="button" onClick={() => handleUniformChange(u.type)} disabled={!canManage}
+                    className={cn("flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
+                      match.uniformType === u.type ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-secondary"
+                    )}>
+                    <div className="h-5 w-5 shrink-0 rounded-sm" style={u.style} />
+                    {u.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 전적 반영 토글 */}
+          {canManage && match.matchType !== "EVENT" && (
+            <div className="flex items-center justify-between rounded-xl border border-border/30 p-3.5">
+              <div className="min-w-0">
+                <p className="text-sm font-medium">전적 반영</p>
+                <p className="text-xs text-muted-foreground">
+                  {match.statsIncluded ? "시즌 전적·개인 통계에 반영됩니다" : "시즌 전적·개인 통계에서 제외됩니다"}
+                </p>
+              </div>
+              <button type="button" role="switch" aria-checked={match.statsIncluded}
+                onClick={async () => {
+                  const next = !match.statsIncluded;
+                  const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, statsIncluded: next });
+                  if (!err) { showToast(next ? "전적에 반영됩니다." : "전적에서 제외됩니다."); await refetchMatches(); }
+                }}
+                className={cn("relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200", match.statsIncluded ? "bg-primary" : "bg-muted-foreground/25")}
+              >
+                <span className={cn("pointer-events-none block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200", match.statsIncluded ? "translate-x-[22px]" : "translate-x-[2px]")} />
+              </button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ═══ 4. 날씨 카드 ═══ */}
       {weather && (
         <Card className="rounded-xl border-border/30">
           <CardContent className="flex items-center justify-between p-4">
@@ -354,12 +447,10 @@ function MatchInfoTabInner({
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-lg">{weather.icon}</div>
               <div>
                 <div className="text-sm font-medium">{weather.description}</div>
-                <div className="text-xs text-muted-foreground">경기 당일 날씨</div>
+                <div className="text-xs text-muted-foreground">경기 당일 날씨{weather.humidity != null && ` · 습도 ${weather.humidity}%`}{weather.windSpeed != null && ` · 풍속 ${weather.windSpeed}m/s`}</div>
               </div>
             </div>
-            <div className="flex items-center gap-1 text-2xl font-bold">
-              {weather.temp != null && <>{weather.temp}°</>}
-            </div>
+            {weather.temp != null && <div className="text-2xl font-bold">{weather.temp}°</div>}
           </CardContent>
         </Card>
       )}
@@ -371,123 +462,7 @@ function MatchInfoTabInner({
         </Card>
       )}
 
-      {/* ══ 경기 정보 ══ */}
-      <Card className="rounded-xl border-border/30">
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-base font-bold">{match.matchType === "EVENT" ? "팀 일정" : "경기 정보"}</CardTitle>
-          {canManage && !editing && match.status === "SCHEDULED" && (
-            <Button variant="ghost" size="sm" onClick={() => setEditing(true)} className="h-8 px-3 text-sm font-medium text-primary">수정</Button>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {editing ? (
-            <form onSubmit={handleSaveEdit} className="space-y-3">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">날짜</Label>
-                  <Input type="date" name="date" defaultValue={match.date} required className="min-h-[44px] border-0 bg-secondary" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">{match.matchType === "EVENT" ? "일정 제목" : "상대팀"}</Label>
-                  <Input name="opponent" defaultValue={match.opponent ?? ""} placeholder={match.matchType === "EVENT" ? "예: 연말 회식, MT" : ""} className="min-h-[44px] border-0 bg-secondary" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">시작</Label>
-                  <select name="time" defaultValue={formatTime(match.time)} className="flex h-11 w-full rounded-md border-0 bg-secondary px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary">
-                    {Array.from({ length: 48 }, (_, i) => {
-                      const h = String(Math.floor(i / 2)).padStart(2, "0");
-                      const m = i % 2 === 0 ? "00" : "30";
-                      return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
-                    })}
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">종료</Label>
-                  <select name="endTime" defaultValue={match.endTime ? formatTime(match.endTime) : ""} className="flex h-11 w-full rounded-md border-0 bg-secondary px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary">
-                    <option value="">미설정</option>
-                    {Array.from({ length: 48 }, (_, i) => {
-                      const h = String(Math.floor(i / 2)).padStart(2, "0");
-                      const m = i % 2 === 0 ? "00" : "30";
-                      return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
-                    })}
-                  </select>
-                </div>
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label className="text-xs font-medium text-muted-foreground">장소</Label>
-                  <Input name="location" defaultValue={match.location} required className="min-h-[44px] border-0 bg-secondary" />
-                </div>
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label className="text-xs font-medium text-muted-foreground">투표 마감</Label>
-                  <Input type="datetime-local" name="voteDeadline" defaultValue={match.voteDeadline?.slice(0, 16) ?? ""} className="min-h-[44px] border-0 bg-secondary" />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" size="sm" className="min-h-[44px]" onClick={() => setEditing(false)}>취소</Button>
-                <Button type="submit" size="sm" className="min-h-[44px]" disabled={saving}>{saving ? "저장 중..." : "저장"}</Button>
-              </div>
-            </form>
-          ) : (
-            <div className="grid gap-2 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="w-14 shrink-0 text-muted-foreground">날짜</span>
-                <span className="font-medium">{formatDateKo(match.date)}</span>
-              </div>
-              {match.time && (
-                <div className="flex items-center gap-2">
-                  <span className="w-14 shrink-0 text-muted-foreground">시간</span>
-                  <span className="font-medium">{formatTime(match.time)}{match.endTime && <span className="text-muted-foreground"> ~ {formatTime(match.endTime)}</span>}</span>
-                </div>
-              )}
-              {match.location && (
-                <div className="flex items-center gap-2">
-                  <span className="w-14 shrink-0 text-muted-foreground">장소</span>
-                  <span className="font-medium">{match.location}</span>
-                </div>
-              )}
-              {match.opponent && (
-                <div className="flex items-center gap-2">
-                  <span className="w-14 shrink-0 text-muted-foreground">{match.matchType === "EVENT" ? "제목" : "상대팀"}</span>
-                  <span className="font-medium">{match.opponent}</span>
-                </div>
-              )}
-              {match.endDate && (
-                <div className="flex items-center gap-2">
-                  <span className="w-14 shrink-0 text-muted-foreground">종료일</span>
-                  <span className="font-medium">{formatDateKo(match.endDate)}</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 전적 반영 토글 */}
-          {canManage && match.matchType !== "EVENT" && (
-            <div className="flex items-center justify-between rounded-xl border border-border/30 p-3.5">
-              <div className="min-w-0">
-                <Label htmlFor="stats-toggle" className="text-sm font-medium cursor-pointer">시즌 전적에 포함</Label>
-              </div>
-              <button
-                id="stats-toggle"
-                type="button"
-                role="switch"
-                aria-checked={match.statsIncluded}
-                onClick={async () => {
-                  const next = !match.statsIncluded;
-                  const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, statsIncluded: next });
-                  if (!err) { showToast(next ? "전적에 반영됩니다." : "전적에서 제외됩니다."); await refetchMatches(); }
-                }}
-                className={cn(
-                  "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200",
-                  match.statsIncluded ? "bg-[hsl(var(--success))]" : "bg-muted-foreground/25"
-                )}
-              >
-                <span className={cn("pointer-events-none block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200", match.statsIncluded ? "translate-x-[22px]" : "translate-x-[2px]")} />
-              </button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ══ 댓글 ══ */}
+      {/* ═══ 5. 댓글 ═══ */}
       <Card className="rounded-xl border-border/30">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base font-bold">
@@ -496,7 +471,6 @@ function MatchInfoTabInner({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* 입력 */}
           <form onSubmit={async (e) => {
             e.preventDefault();
             if (!commentText.trim() || sendingComment) return;
@@ -508,13 +482,7 @@ function MatchInfoTabInner({
             refetchComments?.();
           }} className="flex gap-2">
             <div className="relative flex-1">
-              <Input
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                placeholder="댓글을 입력하세요"
-                maxLength={200}
-                className="min-h-[44px] border-0 bg-secondary pr-12"
-              />
+              <Input value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="댓글을 입력하세요" maxLength={200} className="min-h-[44px] border-0 bg-secondary pr-12" />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">{commentText.length}/200</span>
             </div>
             <Button type="submit" className="min-h-[44px] min-w-[44px]" disabled={sendingComment || !commentText.trim()}>
@@ -522,7 +490,6 @@ function MatchInfoTabInner({
             </Button>
           </form>
 
-          {/* 목록 */}
           {(comments ?? []).length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
               <p>아직 댓글이 없습니다</p>
@@ -538,19 +505,17 @@ function MatchInfoTabInner({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold">{c.users?.name ?? "알 수 없음"}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(c.created_at).toLocaleDateString("ko-KR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                      </span>
+                      <span className="text-xs text-muted-foreground">{formatCommentTime(c.created_at)}</span>
                     </div>
                     <p className="mt-1 break-words text-sm leading-relaxed text-foreground/90">{c.content}</p>
                   </div>
                   {c.user_id === userId && (
-                    <button
-                      type="button"
+                    <button type="button"
                       onClick={async () => { await apiMutate(`/api/match-comments?id=${c.id}`, "DELETE"); refetchComments?.(); }}
-                      className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-destructive"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      aria-label="댓글 삭제"
                     >
-                      삭제
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   )}
                 </li>
@@ -560,14 +525,10 @@ function MatchInfoTabInner({
         </CardContent>
       </Card>
 
-      {/* ══ 경기 삭제 ══ */}
+      {/* ═══ 6. 경기 삭제 ═══ */}
       {canManage && (
-        <Button
-          variant="ghost"
-          className="w-full min-h-[44px] text-sm text-destructive hover:bg-destructive/10 hover:text-destructive"
-          disabled={deleting}
-          onClick={handleDeleteMatch}
-        >
+        <Button variant="ghost" className="w-full min-h-[44px] gap-2 text-sm text-destructive hover:bg-destructive/10 hover:text-destructive" disabled={deleting} onClick={handleDeleteMatch}>
+          <Trash2 className="h-4 w-4" />
           {deleting ? "삭제 중..." : "경기 삭제"}
         </Button>
       )}

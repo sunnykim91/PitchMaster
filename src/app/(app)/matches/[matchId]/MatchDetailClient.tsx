@@ -382,9 +382,9 @@ export default function MatchDetailClient({
         </Button>
       </div>
 
-      {/* ── Sticky Tab Bar (v0 style) ── */}
-      <div className="sticky top-0 z-10 -mx-1 px-1 bg-background/90 backdrop-blur-md border-b border-border/50">
-        <div className="flex" role="tablist" aria-label="경기 상세 탭">
+      {/* ── Sticky Tab Bar ── */}
+      <div className="sticky top-0 z-10 -mx-1 px-1 bg-background/90 backdrop-blur-md">
+        <div className="flex border-b border-border/50" role="tablist" aria-label="경기 상세 탭">
           {([
             { key: "info", label: "정보" },
             { key: "vote", label: "투표" },
@@ -399,16 +399,12 @@ export default function MatchDetailClient({
               role="tab"
               aria-selected={activeTab === tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={cn(
-                "relative flex-1 py-3.5 text-center text-sm font-medium transition-all min-h-[48px]",
-                activeTab === tab.key
-                  ? "text-foreground font-semibold"
-                  : "text-muted-foreground hover:text-foreground/80"
-              )}
+              className="relative flex-1 py-3.5 text-center text-sm font-medium transition-all min-h-[48px]"
+              style={{ color: activeTab === tab.key ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
             >
               {tab.label}
               {activeTab === tab.key && (
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-[3px] rounded-full bg-primary" aria-hidden="true" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-1 rounded-full" style={{ backgroundColor: "hsl(16, 85%, 58%)" }} />
               )}
             </button>
           ))}
