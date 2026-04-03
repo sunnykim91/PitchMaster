@@ -37,8 +37,8 @@ export default async function LoginPage({
         db.from("teams").select("id", { count: "exact", head: true }).neq("id", DEMO_TEAM_ID),
         db.from("team_members").select("user_id", { count: "exact", head: true }).neq("team_id", DEMO_TEAM_ID).eq("status", "ACTIVE"),
       ]);
-      if (teamsRes.count != null) teamCount = teamsRes.count;
-      if (membersRes.count != null) memberCount = membersRes.count;
+      if (teamsRes.count != null && teamsRes.count > 0) teamCount = teamsRes.count;
+      if (membersRes.count != null && membersRes.count > 0) memberCount = membersRes.count;
     }
   } catch {
     // fallback

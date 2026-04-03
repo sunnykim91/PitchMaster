@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { Vote, CreditCard, LayoutGrid, Check } from "lucide-react";
 
 function VoteVisual() {
@@ -78,7 +79,7 @@ function LineupVisual() {
   );
 }
 
-// 세로 전술판 (우리 서비스 실제 형태)
+// 전술판 — 실제 서비스 스크린샷 사용
 function TacticsBoard() {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -88,48 +89,17 @@ function TacticsBoard() {
     return () => observer.disconnect();
   }, []);
 
-  const players = [
-    { x: 50, y: 92, name: "GK" },
-    { x: 16, y: 74, name: "김OO" }, { x: 38, y: 76, name: "박OO" }, { x: 62, y: 76, name: "이OO" }, { x: 84, y: 74, name: "최OO" },
-    { x: 35, y: 54, name: "정OO" }, { x: 50, y: 50, name: "한OO" }, { x: 65, y: 54, name: "윤OO" },
-    { x: 22, y: 26, name: "서OO" }, { x: 50, y: 22, name: "장OO" }, { x: 78, y: 26, name: "조OO" },
-  ];
-
   return (
-    <div ref={ref} className="mx-auto w-full max-w-sm">
-      <div className="flex items-center justify-between rounded-t-2xl border-b border-foreground/10 bg-[#0d3d1a] px-4 py-2.5">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-foreground/60">1쿼터</span>
-          <span className="font-semibold text-foreground">4-3-3</span>
-        </div>
-        <span className="text-sm font-medium text-foreground/60">PitchMaster</span>
-      </div>
-      <div
-        className="relative aspect-[4/5] w-full overflow-hidden rounded-b-2xl shadow-2xl"
-        style={{ background: "linear-gradient(to bottom, #1a6b32, #145528)" }}
-      >
-        {/* Field lines */}
-        <div className="absolute inset-3 rounded-sm border-2 border-foreground/25" />
-        <div className="absolute inset-x-3 top-1/2 h-0.5 -translate-y-px bg-foreground/25" />
-        <div className="absolute left-1/2 top-1/2 h-[18%] w-[28%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-foreground/25" />
-        <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/30" />
-        <div className="absolute inset-x-[20%] top-3 h-[16%] border-2 border-t-0 border-foreground/25" />
-        <div className="absolute inset-x-[20%] bottom-3 h-[16%] border-2 border-b-0 border-foreground/25" />
-
-        {players.map((p, i) => (
-          <div
-            key={i}
-            className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5 transition-all duration-700 ${isVisible ? "scale-100 opacity-100" : "scale-50 opacity-0"}`}
-            style={{ left: `${p.x}%`, top: `${p.y}%`, transitionDelay: `${i * 80}ms` }}
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-foreground/30 bg-primary text-xs font-bold text-primary-foreground shadow-lg shadow-primary/40 sm:h-10 sm:w-10">
-              {p.name.length <= 2 ? p.name : p.name.slice(0, 1)}
-            </div>
-            <span className="whitespace-nowrap rounded bg-black/50 px-1.5 py-0.5 text-[9px] font-medium text-foreground sm:text-[10px]">
-              {p.name}
-            </span>
-          </div>
-        ))}
+    <div ref={ref} className={`mx-auto w-full max-w-sm transition-all duration-700 ${isVisible ? "scale-100 opacity-100" : "scale-95 opacity-0"}`}>
+      <div className="overflow-hidden rounded-2xl border-2 border-foreground/10 shadow-2xl shadow-black/40">
+        <Image
+          src="/screenshot/tactics.png"
+          alt="PitchMaster 전술판 — 4-3-3 포메이션 자동 배치"
+          width={400}
+          height={500}
+          className="w-full object-cover"
+          quality={85}
+        />
       </div>
     </div>
   );
