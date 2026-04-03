@@ -5,7 +5,7 @@ import { GA } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bell } from "lucide-react";
+import { Bell, Users, HelpCircle, UserX, Check, Clock, Search, Lock, LockOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
@@ -96,20 +96,54 @@ function MatchVoteTabInner({
       {match.status !== "COMPLETED" && myMember && (
         <Card className="rounded-xl border-border/30 overflow-hidden">
           <CardHeader className="pb-2"><CardTitle className="text-base font-bold">내 투표</CardTitle></CardHeader>
-          <CardContent>
-            {match.voteDeadline && (
-              <div className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground">
-                <span>마감: {new Date(match.voteDeadline).toLocaleDateString("ko-KR", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+          <CardContent className="space-y-4">
+            {/* 마감 시간 + 마감/재개 버튼 */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Clock className="h-3.5 w-3.5 shrink-0" />
+                <span>마감: {match.voteDeadline ? new Date(match.voteDeadline).toLocaleDateString("ko-KR", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "미설정"}</span>
               </div>
-            )}
+              {canManage && (
+                isExpired ? (
+                  <button type="button" onClick={async () => {
+                    const future = new Date(); future.setMonth(future.getMonth() + 1);
+                    const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, voteDeadline: future.toISOString() });
+                    if (!err) { setIsExpired(false); showToast("투표가 재개되었습니다."); }
+                  }} className="flex shrink-0 items-center gap-1 rounded-lg border border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/10 px-2.5 py-1 text-[11px] font-semibold text-[hsl(var(--success))] transition-colors hover:bg-[hsl(var(--success))]/20">
+                    <LockOpen className="h-3 w-3" />재개
+                  </button>
+                ) : (
+                  <button type="button" onClick={async () => {
+                    const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, voteDeadline: new Date().toISOString() });
+                    if (!err) { setIsExpired(true); showToast("투표가 마감되었습니다."); }
+                  }} className="flex shrink-0 items-center gap-1 rounded-lg border border-destructive/30 bg-destructive/10 px-2.5 py-1 text-[11px] font-semibold text-destructive transition-colors hover:bg-destructive/20">
+                    <Lock className="h-3 w-3" />마감
+                  </button>
+                )
+              )}
+            </div>
+
+            {/* 투표 버튼 또는 마감 상태 */}
             {isExpired ? (
-              <div className="py-4 text-center"><Badge variant="secondary" className="text-sm">마감됨</Badge></div>
+              <div className="flex flex-col items-center gap-3 py-6">
+                <Lock className="h-8 w-8 text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">투표가 마감되었습니다</p>
+                {myVote && (
+                  <Badge className={cn("text-sm px-3 py-1",
+                    myVote === "ATTEND" && "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]",
+                    myVote === "MAYBE" && "bg-[hsl(var(--warning))]/20 text-[hsl(var(--warning))]",
+                    myVote === "ABSENT" && "bg-destructive/20 text-destructive",
+                  )}>
+                    내 투표: {myVote === "ATTEND" ? "참석" : myVote === "MAYBE" ? "미정" : "불참"}
+                  </Badge>
+                )}
+              </div>
             ) : (
               <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="참석 투표">
                 {([
-                  { value: "ATTEND" as const, label: "참석", icon: "👤", activeClass: "bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]" },
-                  { value: "MAYBE" as const, label: "미정", icon: "❓", activeClass: "bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))]" },
-                  { value: "ABSENT" as const, label: "불참", icon: "🚫", activeClass: "bg-destructive text-destructive-foreground" },
+                  { value: "ATTEND" as const, label: "참석", Icon: Users, activeClass: "bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]" },
+                  { value: "MAYBE" as const, label: "미정", Icon: HelpCircle, activeClass: "bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))]" },
+                  { value: "ABSENT" as const, label: "불참", Icon: UserX, activeClass: "bg-destructive text-destructive-foreground" },
                 ]).map((opt) => (
                   <button
                     key={opt.value}
@@ -118,13 +152,15 @@ function MatchVoteTabInner({
                     disabled={pendingVote}
                     onClick={() => handleMyVote(opt.value)}
                     className={cn(
-                      "relative flex flex-col items-center justify-center gap-1.5 rounded-xl p-4 transition-all min-h-[80px]",
+                      "relative flex flex-col items-center justify-center gap-2 rounded-xl p-4 transition-all min-h-[80px]",
                       myVote === opt.value ? opt.activeClass : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
                       pendingVote && "opacity-50"
                     )}
                   >
-                    {myVote === opt.value && <span className="absolute right-2 top-2 text-xs">✓</span>}
-                    <span className="text-xl">{opt.icon}</span>
+                    {myVote === opt.value && (
+                      <span className="absolute right-2 top-2"><Check className="h-4 w-4" /></span>
+                    )}
+                    <opt.Icon className="h-6 w-6" />
                     <span className="text-sm font-semibold">{opt.label}</span>
                   </button>
                 ))}
@@ -138,8 +174,7 @@ function MatchVoteTabInner({
       <Card className="rounded-xl border-border/30">
         <CardContent className="p-5">
           {(() => {
-            const voted = attend.length + absent.length + maybe.length;
-            const total = voted || 1;
+            const total = baseRoster.length || 1;
             return (
               <div className="mb-4 flex h-2.5 overflow-hidden rounded-full bg-muted">
                 <div className="bg-[hsl(var(--success))] transition-all duration-500" style={{ width: `${(attend.length / total) * 100}%` }} />
@@ -148,41 +183,22 @@ function MatchVoteTabInner({
               </div>
             );
           })()}
-          <div className="grid grid-cols-5 gap-2 text-center">
-            <div><div className="text-xl font-bold text-[hsl(var(--success))]">{attend.length}</div><div className="text-[10px] text-muted-foreground">참석</div></div>
-            <div><div className="text-xl font-bold text-[hsl(var(--loss))]">{absent.length}</div><div className="text-[10px] text-muted-foreground">불참</div></div>
-            <div><div className="text-xl font-bold text-[hsl(var(--warning))]">{maybe.length}</div><div className="text-[10px] text-muted-foreground">미정</div></div>
-            <div><div className="text-xl font-bold text-muted-foreground">{noVote.length}</div><div className="text-[10px] text-muted-foreground">미투표</div></div>
-            <div><div className="text-xl font-bold text-[hsl(var(--info))]">{guestCount}</div><div className="text-[10px] text-muted-foreground">용병</div></div>
+          <div className="flex items-center justify-between text-center">
+            {([
+              { n: attend.length, label: "참석", color: "text-[hsl(var(--success))]" },
+              { n: absent.length, label: "불참", color: "text-[hsl(var(--loss))]" },
+              { n: maybe.length, label: "미정", color: "text-[hsl(var(--warning))]" },
+              { n: noVote.length, label: "미투표", color: "text-muted-foreground" },
+              { n: guestCount, label: "용병", color: "text-[hsl(var(--info))]" },
+            ]).map((s) => (
+              <div key={s.label} className="flex-1">
+                <div className={cn("text-xl font-bold", s.color)}>{s.n}</div>
+                <div className="text-[10px] font-medium tracking-wide text-muted-foreground">{s.label}</div>
+              </div>
+            ))}
           </div>
           <div className="mt-3 border-t border-border/30 pt-3 text-center text-xs text-muted-foreground">총 {baseRoster.length + guestCount}명</div>
 
-          {canManage && match.status !== "COMPLETED" && (
-            <div className="mt-3 flex items-center justify-between border-t border-border/30 pt-3">
-              {isExpired ? (
-                <>
-                  <span className="text-xs text-muted-foreground">투표 마감됨</span>
-                  <button type="button" onClick={async () => {
-                    const future = new Date(); future.setMonth(future.getMonth() + 1);
-                    const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, voteDeadline: future.toISOString() });
-                    if (!err) { setIsExpired(false); showToast("투표가 재개되었습니다."); }
-                  }} className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-                    투표 재개
-                  </button>
-                </>
-              ) : (
-                <>
-                  <span className="text-xs text-muted-foreground">투표 진행 중</span>
-                  <button type="button" onClick={async () => {
-                    const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, voteDeadline: new Date().toISOString() });
-                    if (!err) { setIsExpired(true); showToast("투표가 마감되었습니다."); }
-                  }} className="rounded-lg border border-[hsl(var(--loss)/0.3)] bg-[hsl(var(--loss)/0.08)] px-3 py-1.5 text-xs font-semibold text-[hsl(var(--loss))] transition-colors hover:bg-[hsl(var(--loss)/0.15)]">
-                    투표 마감
-                  </button>
-                </>
-              )}
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -193,49 +209,42 @@ function MatchVoteTabInner({
             <CardTitle className="text-base font-bold">{canManage ? "투표 관리" : "투표 현황"}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="relative">
+            <div className="flex h-11 items-center gap-2.5 rounded-lg border border-border bg-secondary/50 px-3">
+              <Search className="h-4 w-4 shrink-0 text-muted-foreground translate-y-[0.5px]" />
               <input type="text" placeholder="이름 검색" value={voteSearch}
-                onChange={(e) => setVoteSearch(e.target.value)} list="vote-member-names" autoComplete="off"
-                className="w-full min-h-[44px] rounded-lg border-0 bg-secondary pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
-              <datalist id="vote-member-names">
-                {baseRoster.map((m) => <option key={m.memberId} value={m.name} />)}
-              </datalist>
+                onChange={(e) => setVoteSearch(e.target.value)} autoComplete="off"
+                className="h-full w-full border-0 bg-transparent text-sm leading-none placeholder:text-muted-foreground focus:outline-none" />
             </div>
 
-            <div className="flex gap-2">
-              <div className="flex gap-1.5">
-                {([{ v: "all" as const, l: "전체" }, { v: "unvoted" as const, l: "미투표" }]).map(({ v, l }) => (
-                  <Button key={v} variant={voteFilter === v ? "default" : "secondary"} size="sm" onClick={() => setVoteFilter(v)}
-                    className={cn("relative min-h-[36px]", voteFilter === v && "bg-primary text-primary-foreground")}>
-                    {l}
-                    {v === "unvoted" && noVote.length > 0 && (
-                      <Badge className="absolute -right-1.5 -top-1.5 bg-destructive text-destructive-foreground text-[10px] px-1.5 min-w-[18px] h-[18px]">{noVote.length}</Badge>
-                    )}
-                  </Button>
-                ))}
-              </div>
-              <div className="flex gap-1 border-l border-border pl-2">
-                {([
-                  { key: "name", cycle: ["none", "name-asc", "name-desc"] as string[], labels: ["이름", "이름 ↑", "이름 ↓"] },
-                  { key: "time", cycle: ["none", "time-asc", "time-desc"] as string[], labels: ["투표시간", "투표 ↑", "투표 ↓"] },
-                ]).map(({ key, cycle, labels }) => {
-                  const idx = cycle.indexOf(voteSortBy);
-                  const isActive = idx > 0;
-                  return (
-                    <button key={key} type="button"
-                      onClick={() => { const next = idx < 0 ? 1 : (idx + 1) % 3; setVoteSortBy(cycle[next] as typeof voteSortBy); }}
-                      className={cn("rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                        isActive ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
-                      )}>
-                      {isActive ? labels[idx] : labels[0]}
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="flex items-center gap-2">
+              {([{ v: "all" as const, l: "전체" }, { v: "unvoted" as const, l: "미투표" }]).map(({ v, l }) => (
+                <Button key={v} variant={voteFilter === v ? "default" : "secondary"} size="sm" onClick={() => setVoteFilter(v)}
+                  className={cn("relative h-9 rounded-lg px-3 text-xs", voteFilter === v && "bg-primary text-primary-foreground")}>
+                  {l}
+                  {v === "unvoted" && noVote.length > 0 && (
+                    <Badge className="absolute -right-1.5 -top-1.5 bg-destructive text-destructive-foreground text-[10px] px-1.5 min-w-[18px] h-[18px]">{noVote.length}</Badge>
+                  )}
+                </Button>
+              ))}
+              {([
+                { key: "name", cycle: ["none", "name-asc", "name-desc"] as string[], labels: ["이름순", "이름 ↑", "이름 ↓"] },
+                { key: "time", cycle: ["none", "time-asc", "time-desc"] as string[], labels: ["투표순", "투표 ↑", "투표 ↓"] },
+              ]).map(({ key, cycle, labels }) => {
+                const idx = cycle.indexOf(voteSortBy);
+                const isActive = idx > 0;
+                return (
+                  <button key={key} type="button"
+                    onClick={() => { const next = idx < 0 ? 1 : (idx + 1) % 3; setVoteSortBy(cycle[next] as typeof voteSortBy); }}
+                    className={cn("h-9 rounded-lg px-3 text-xs font-medium transition-colors",
+                      isActive ? "bg-secondary text-foreground" : "bg-secondary/50 text-muted-foreground hover:text-foreground"
+                    )}>
+                    {isActive ? labels[idx] : labels[0]}
+                  </button>
+                );
+              })}
             </div>
 
-            <ul className="max-h-[50vh] space-y-2 overflow-y-auto" role="list">
+            <ul className="max-h-[60vh] space-y-2 overflow-y-auto overscroll-contain" role="list">
               {[...baseRoster].filter((m) => {
                 if (voteSearch && !m.name.includes(voteSearch)) return false;
                 if (voteFilter === "unvoted" && memberVoteMap[m.memberId]) return false;
@@ -253,7 +262,7 @@ function MatchVoteTabInner({
                 const currentVote = memberVoteMap[member.memberId];
                 return (
                   <li key={member.id} className={cn("flex items-center justify-between rounded-xl p-3 transition-colors",
-                    !currentVote ? "bg-destructive/15 ring-1 ring-inset ring-destructive/30" : "bg-secondary/50"
+                    !currentVote ? "bg-destructive/10 border border-destructive/30" : "bg-secondary/50"
                   )}>
                     <span className={cn("text-sm font-medium", !currentVote && "text-destructive")}>{member.name}</span>
                     <div className="flex gap-1" role="radiogroup">
@@ -273,13 +282,16 @@ function MatchVoteTabInner({
             </ul>
 
             {noVote.length > 0 && (
-              <Button className="w-full min-h-[48px] font-semibold" onClick={async () => {
-                try {
-                  const res = await fetch("/api/push/vote-nudge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ matchId: match.id }) });
-                  const data = await res.json();
-                  showToast(`미투표자 ${data.unvoted ?? 0}명에게 알림을 보냈습니다`);
-                } catch { showToast("알림 발송에 실패했습니다", "error"); }
-              }}>
+              <Button
+                className="w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25 hover:bg-primary/90"
+                onClick={async () => {
+                  try {
+                    const res = await fetch("/api/push/vote-nudge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ matchId: match.id }) });
+                    const data = await res.json();
+                    showToast(`미투표자 ${data.unvoted ?? 0}명에게 알림을 보냈습니다`);
+                  } catch { showToast("알림 발송에 실패했습니다", "error"); }
+                }}
+              >
                 <Bell className="mr-2 h-4 w-4" />미투표 {noVote.length}명에게 알림 보내기
               </Button>
             )}
