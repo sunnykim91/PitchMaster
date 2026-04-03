@@ -100,8 +100,9 @@ export async function shareVoteLink({
   location?: string;
   opponent?: string;
 }) {
+  const voteUrl = `${APP_URL}/matches/${matchId}?tab=vote`;
   if (!(await ensureKakao())) {
-    fallbackShare(`${APP_URL}/matches/${matchId}`, `${date} 경기 참석 투표에 참여하세요!`);
+    fallbackShare(voteUrl, `${date} 경기 참석 투표에 참여하세요!`);
     return;
   }
 
@@ -116,16 +117,16 @@ export async function shareVoteLink({
       ].filter(Boolean).join(" · "),
       imageUrl: `${APP_URL}/icons/icon-512.png`,
       link: {
-        mobileWebUrl: `${APP_URL}/matches/${matchId}`,
-        webUrl: `${APP_URL}/matches/${matchId}`,
+        mobileWebUrl: voteUrl,
+        webUrl: voteUrl,
       },
     },
     buttons: [
       {
         title: "투표 참여하기",
         link: {
-          mobileWebUrl: `${APP_URL}/matches/${matchId}`,
-          webUrl: `${APP_URL}/matches/${matchId}`,
+          mobileWebUrl: voteUrl,
+          webUrl: voteUrl,
         },
       },
     ],
