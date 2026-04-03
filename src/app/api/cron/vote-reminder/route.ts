@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   // 1) 내일 마감인 경기 (vote_deadline 기준)
   const { data: deadlineMatches } = await db
     .from("matches")
-    .select("id, team_id, match_date, opponent_name, vote_deadline")
+    .select("id, team_id, match_date, opponent_name, vote_deadline, match_type")
     .eq("status", "SCHEDULED")
     .gte("vote_deadline", tomorrowStart)
     .lte("vote_deadline", tomorrowEnd);
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   const tomorrowDate = tomorrow.toISOString().split("T")[0];
   const { data: noDeadlineMatches } = await db
     .from("matches")
-    .select("id, team_id, match_date, opponent_name, vote_deadline")
+    .select("id, team_id, match_date, opponent_name, vote_deadline, match_type")
     .eq("status", "SCHEDULED")
     .eq("match_date", tomorrowDate)
     .is("vote_deadline", null);
@@ -73,10 +73,11 @@ export async function GET(request: NextRequest) {
 
     if (unvotedIds.length === 0) continue;
 
-    const opponent = match.opponent_name || "상대 미정";
+    const isEvent = (match as { match_type?: string }).match_type === "EVENT";
+    const opponent = match.opponent_name || (isEvent ? "팀 일정" : "상대 미정");
     const result = await sendTeamPush(match.team_id, {
-      title: "투표 마감이 내일입니다!",
-      body: `${match.match_date} vs ${opponent} — 참석 여부를 투표해주세요`,
+      title: isEvent ? "일정 참석 투표 마감이 내일입니다!" : "투표 마감이 내일입니다!",
+      body: isEvent ? `${match.match_date} ${opponent} — 참석 여부를 투표해주세요` : `${match.match_date} vs ${opponent} — 참석 여부를 투표해주세요`,
       url: `/matches/${match.id}`,
       userIds: unvotedIds,
     });

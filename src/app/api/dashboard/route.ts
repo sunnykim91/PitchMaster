@@ -25,7 +25,7 @@ export async function GET() {
 
   const [upcomingRes, recentRes, activeVotesRes] = await Promise.all([
     db.from("matches")
-      .select("id, match_date, match_time, match_end_time, vote_deadline, opponent_name, status, location, uniform_type")
+      .select("id, match_date, match_time, match_end_time, vote_deadline, opponent_name, status, location, uniform_type, match_type")
       .eq("team_id", ctx.teamId)
       .eq("status", "SCHEDULED")
       .gte("match_date", today)
@@ -40,7 +40,7 @@ export async function GET() {
       .limit(1)
       .maybeSingle(),
     db.from("matches")
-      .select("id, match_date, vote_deadline, opponent_name")
+      .select("id, match_date, vote_deadline, opponent_name, match_type")
       .eq("team_id", ctx.teamId)
       .eq("status", "SCHEDULED")
       .gt("vote_deadline", now)
@@ -103,10 +103,10 @@ export async function GET() {
     };
   }
 
-  type VoteMatchRow = { id: string; match_date: string; vote_deadline: string };
+  type VoteMatchRow = { id: string; match_date: string; vote_deadline: string; match_type?: string };
   const activeVotes = ((activeVotesRes.data || []) as VoteMatchRow[]).map((m) => ({
     id: m.id,
-    title: `${m.match_date} 경기 참석 투표`,
+    title: `${m.match_date} ${m.match_type === "EVENT" ? "일정" : "경기"} 참석 투표`,
     due: m.vote_deadline,
   }));
 
@@ -120,7 +120,8 @@ export async function GET() {
       ? db.from("match_mvp_votes").select("id").eq("match_id", recentMatch.id).eq("voter_id", ctx.userId).maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
-  if (upcomingMatch && !userVoteResult.data) tasks.push("다음 경기 참석 투표 완료하기");
+  const upcomingLabel = (upcomingMatch as { match_type?: string } | null)?.match_type === "EVENT" ? "다음 일정" : "다음 경기";
+  if (upcomingMatch && !userVoteResult.data) tasks.push(`${upcomingLabel} 참석 투표 완료하기`);
   if (recentMatch && !userMvpVoteResult.data) tasks.push("최근 경기 MVP 투표 완료하기");
 
   // 팀 전적 (활성 시즌 기준)

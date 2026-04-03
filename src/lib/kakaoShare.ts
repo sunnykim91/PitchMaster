@@ -93,25 +93,29 @@ export async function shareVoteLink({
   time,
   location,
   opponent,
+  matchType,
 }: {
   matchId: string;
   date: string;
   time?: string;
   location?: string;
   opponent?: string;
+  matchType?: string;
 }) {
+  const isEvent = matchType === "EVENT";
+  const label = isEvent ? "일정" : "경기";
   const voteUrl = `${APP_URL}/matches/${matchId}?tab=vote`;
   if (!(await ensureKakao())) {
-    fallbackShare(voteUrl, `${date} 경기 참석 투표에 참여하세요!`);
+    fallbackShare(voteUrl, `${date} ${label} 참석 투표에 참여하세요!`);
     return;
   }
 
   window.Kakao.Share.sendDefault({
     objectType: "feed",
     content: {
-      title: `📋 ${date} 경기 참석 투표`,
+      title: `📋 ${date} ${label} 참석 투표`,
       description: [
-        opponent && `vs ${opponent}`,
+        opponent && (isEvent ? opponent : `vs ${opponent}`),
         time,
         location,
       ].filter(Boolean).join(" · "),

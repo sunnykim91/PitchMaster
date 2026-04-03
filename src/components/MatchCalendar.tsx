@@ -233,7 +233,7 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
                   </p>
                   <p className="text-xs text-muted-foreground truncate mt-0.5 pr-6">
                     📍 {m.location}
-                    {m.opponent && ` · vs ${m.opponent}`}
+                    {m.opponent && (m.matchType === "EVENT" ? ` · ${m.opponent}` : ` · vs ${m.opponent}`)}
                   </p>
                 </Link>
                 {/* 투표 버튼 (예정 경기 + onVote 있을 때) */}

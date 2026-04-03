@@ -373,7 +373,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
         {isOpen ? (
           <CardContent ref={formRef}>
             <form
-              className="grid gap-4 rounded-md border border-border bg-card p-5"
+              className="grid gap-5 rounded-xl border border-border bg-card p-5"
               action={(formData) => handleCreate(formData)}
             >
               {/* 경기 유형 — 최상단 */}
@@ -384,37 +384,37 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     type="button"
                     onClick={() => setMatchType("REGULAR")}
                     className={cn(
-                      "flex-1 min-h-[40px] rounded-lg border px-3 text-sm font-medium transition-colors",
+                      "flex-1 min-h-[44px] rounded-xl border-2 px-3 text-sm font-bold transition-all",
                       matchType === "REGULAR"
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border text-muted-foreground hover:border-primary/30"
+                        ? "border-[hsl(var(--success))] bg-[hsl(var(--success))]/15 text-[hsl(var(--success))] shadow-sm shadow-[hsl(var(--success))]/10"
+                        : "border-[hsl(var(--success))]/20 bg-[hsl(var(--success))]/5 text-[hsl(var(--success))]/50 hover:border-[hsl(var(--success))]/40 hover:text-[hsl(var(--success))]/70"
                     )}
                   >
-                    일반 경기
+                    ⚽ 일반 경기
                   </button>
                   <button
                     type="button"
                     onClick={() => setMatchType("INTERNAL")}
                     className={cn(
-                      "flex-1 min-h-[40px] rounded-lg border px-3 text-sm font-medium transition-colors",
+                      "flex-1 min-h-[44px] rounded-xl border-2 px-3 text-sm font-bold transition-all",
                       matchType === "INTERNAL"
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border text-muted-foreground hover:border-primary/30"
+                        ? "border-[hsl(var(--info))] bg-[hsl(var(--info))]/15 text-[hsl(var(--info))] shadow-sm shadow-[hsl(var(--info))]/10"
+                        : "border-[hsl(var(--info))]/20 bg-[hsl(var(--info))]/5 text-[hsl(var(--info))]/50 hover:border-[hsl(var(--info))]/40 hover:text-[hsl(var(--info))]/70"
                     )}
                   >
-                    자체전
+                    🆚 자체전
                   </button>
                   <button
                     type="button"
                     onClick={() => { setMatchType("EVENT"); setStatsIncluded(false); }}
                     className={cn(
-                      "flex-1 min-h-[40px] rounded-lg border px-3 text-sm font-medium transition-colors",
+                      "flex-1 min-h-[44px] rounded-xl border-2 px-3 text-sm font-bold transition-all",
                       matchType === "EVENT"
-                        ? "border-accent bg-accent/10 text-accent"
-                        : "border-border text-muted-foreground hover:border-accent/30"
+                        ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))] shadow-sm shadow-[hsl(var(--accent))]/10"
+                        : "border-[hsl(var(--accent))]/20 bg-[hsl(var(--accent))]/5 text-[hsl(var(--accent))]/50 hover:border-[hsl(var(--accent))]/40 hover:text-[hsl(var(--accent))]/70"
                     )}
                   >
-                    팀 일정
+                    📅 팀 일정
                   </button>
                 </div>
               </div>
@@ -799,6 +799,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         time: match.time,
                         location: match.location,
                         opponent: match.opponent,
+                        matchType: match.matchType,
                       })}
                     >
                       <Share2 className="h-4 w-4" />
