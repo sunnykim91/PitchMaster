@@ -13,6 +13,7 @@ import type { Match, SimpleRosterPlayer, InternalTeamAssignment, Guest } from ".
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { X, ChevronDown, Sparkles } from "lucide-react";
 import { formatPhone } from "@/lib/utils";
 import type { SportType } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -235,21 +236,17 @@ function MatchTacticsTabInner({
 
       {/* ── 용병 관리 ── */}
       {canManage && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div>
-              <p className="type-overline text-[hsl(var(--accent))]">Guests</p>
-              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
-                용병 관리
-              </CardTitle>
+        <details className="group rounded-xl border border-border/30 overflow-hidden" open={showGuestForm || (guests ?? []).length > 0}>
+          <summary className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-secondary/30 transition-colors list-none [&::-webkit-details-marker]:hidden" onClick={(e) => { e.preventDefault(); setShowGuestForm(!showGuestForm); }}>
+            <div className="flex items-center gap-2">
+              <span className="text-base font-bold">용병 관리</span>
+              <Badge variant="secondary" className="text-xs">{(guests ?? []).length}명</Badge>
             </div>
-            <Button type="button" size="sm" onClick={() => setShowGuestForm(!showGuestForm)}>
-              {showGuestForm ? "닫기" : "용병 등록"}
-            </Button>
-          </CardHeader>
-          <CardContent>
+            <ChevronDown className={cn("h-5 w-5 text-muted-foreground transition-transform duration-200", showGuestForm && "rotate-180")} />
+          </summary>
+          <div className="space-y-4 px-5 pb-5">
             {showGuestForm && (
-              <form className="mb-4" action={async (formData) => {
+              <form action={async (formData) => {
                 const name = String(formData.get("guestName") || "").trim();
                 if (!name) return;
                 const positions = formData.getAll("guestPositions").map(String).filter(Boolean);
@@ -258,69 +255,62 @@ function MatchTacticsTabInner({
                 await apiMutate("/api/guests", "POST", { matchId, name, position: positions.join(",") || null, phone, note });
                 setShowGuestForm(false);
                 refetchGuests?.();
-              }}>
-                <Card className="border-0 bg-secondary shadow-none">
-                  <CardContent className="p-4">
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-muted-foreground">이름 <span className="text-destructive">*</span></Label>
-                        <Input name="guestName" required placeholder="홍길동" />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <fieldset>
-                          <legend className="text-xs font-semibold text-muted-foreground mb-1">선호 포지션 (복수 선택)</legend>
-                          <div className="flex flex-wrap gap-2">
-                            {(["GK","CB","LB","RB","CDM","CM","CAM","LW","RW","ST"] as const).map((pos) => (
-                              <label key={pos} className="flex items-center gap-1 text-xs cursor-pointer">
-                                <input type="checkbox" name="guestPositions" value={pos} className="rounded" />
-                                {pos}
-                              </label>
-                            ))}
-                          </div>
-                        </fieldset>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-muted-foreground">연락처</Label>
-                        <PhoneInput name="guestPhone" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-muted-foreground">메모</Label>
-                        <Input name="guestNote" placeholder="소속팀, 실력 등" />
-                      </div>
-                    </div>
-                    <Button type="submit" className="mt-3 w-full" size="sm">등록</Button>
-                  </CardContent>
-                </Card>
+              }} className="space-y-4 rounded-xl bg-secondary/30 p-4">
+                <div>
+                  <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">이름 <span className="text-destructive">*</span></p>
+                  <input name="guestName" required placeholder="용병 이름" className="h-12 w-full rounded-xl border-0 bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+                </div>
+                <div>
+                  <p className="mb-2 text-[11px] font-medium text-muted-foreground">선호 포지션 (복수 선택)</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {(["GK","CB","LB","RB","CDM","CM","CAM","LW","RW","ST"] as const).map((pos) => (
+                      <label key={pos} className="flex cursor-pointer items-center gap-2 rounded-lg bg-background px-3 py-2.5">
+                        <input type="checkbox" name="guestPositions" value={pos} className="h-4 w-4 rounded border-border accent-primary" />
+                        <span className="text-sm font-medium">{pos}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">연락처</p>
+                  <PhoneInput name="guestPhone" />
+                </div>
+                <div>
+                  <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">메모</p>
+                  <input name="guestNote" placeholder="소속팀, 실력 등" className="h-12 w-full rounded-xl border-0 bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+                </div>
+                <Button type="submit" className="w-full h-12 rounded-xl">용병 등록</Button>
               </form>
             )}
             {(guests ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">등록된 용병이 없습니다.</p>
             ) : (
-              <div className="space-y-2">
+              <ul className="space-y-2">
                 {(guests ?? []).map((g) => (
-                  <Card key={g.id} className="border-0 bg-secondary shadow-none">
-                    <CardContent className="flex items-center justify-between px-4 py-3">
-                      <div>
-                        <p className="text-sm font-semibold truncate">
-                          {g.name}
-                          {g.position && <Badge variant="outline" className="ml-2 text-xs">{g.position}</Badge>}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {[g.phone ? formatPhone(g.phone) : "", g.note].filter(Boolean).join(" · ") || "용병"}
-                        </p>
-                      </div>
-                      <button type="button" onClick={() => handleRemoveGuest?.(g.id)}
-                        className="min-h-[36px] min-w-[36px] rounded px-2 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors">
-                        삭제
-                      </button>
-                    </CardContent>
-                  </Card>
+                  <li key={g.id} className="flex items-start justify-between rounded-xl bg-secondary/30 p-3">
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold">{g.name}</p>
+                      {g.position && (
+                        <div className="flex flex-wrap gap-1">
+                          {g.position.split(",").map((pos) => (
+                            <Badge key={pos} variant="secondary" className="text-[10px] px-1.5 py-0">{pos.trim()}</Badge>
+                          ))}
+                        </div>
+                      )}
+                      {(g.phone || g.note) && (
+                        <p className="text-xs text-muted-foreground">{[g.phone ? formatPhone(g.phone) : "", g.note].filter(Boolean).join(" · ")}</p>
+                      )}
+                    </div>
+                    <button type="button" onClick={() => handleRemoveGuest?.(g.id)}
+                      className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </li>
                 ))}
-                <p className="text-xs text-muted-foreground">총 {(guests ?? []).length}명의 용병이 등록되었습니다.</p>
-              </div>
+              </ul>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </details>
       )}
 
       {canManage && filteredAttending.length >= 5 && (() => {
@@ -333,13 +323,13 @@ function MatchTacticsTabInner({
         const rec = recommendFormation(aiPlayers, Math.min(filteredAttending.length, maxPlayers), sportType);
         if (!rec) return null;
         return (
-          <details className="rounded-xl border border-primary/20 bg-primary/5 overflow-hidden">
-            <summary className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-primary/8 transition-colors">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">AI Recommendation</p>
-                <p className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">AI 포메이션 추천</p>
+          <details className="group rounded-xl border border-border/30 bg-gradient-to-br from-primary/5 to-background overflow-hidden">
+            <summary className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-secondary/30 transition-colors list-none [&::-webkit-details-marker]:hidden">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-base font-bold">AI 포메이션 추천</span>
               </div>
-              <span className="text-muted-foreground text-xs">▼</span>
+              <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
             </summary>
             <div className="px-6 pb-5">
               <p className="text-sm text-foreground/80">{rec.reason}</p>
