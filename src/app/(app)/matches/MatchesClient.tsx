@@ -146,6 +146,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   useEffect(() => { if (today && !matchDate) setMatchDate(today); }, [today, matchDate]);
   const [matchTime, setMatchTime] = useState("09:00");
   const [matchEndTime, setMatchEndTime] = useState("11:00");
+  const [showEndDate, setShowEndDate] = useState(false);
   const [location, setLocation] = useState("");
   const [voteDeadline, setVoteDeadline] = useState("");
 
@@ -446,7 +447,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   {formErrors.matchDate && <p className="text-xs text-destructive mt-1">{formErrors.matchDate}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label>시간</Label>
+                  <Label>{matchType === "EVENT" ? "시작 시간" : "시간"}</Label>
                   <div className="flex items-center gap-2">
                     <select
                       id="time"
@@ -456,10 +457,11 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       onChange={(e) => {
                         const val = e.target.value;
                         setMatchTime(val);
-                        // 종료시간 자동 계산: +2시간
-                        const [hh, mm] = val.split(":").map(Number);
-                        const endH = String((hh + 2) % 24).padStart(2, "0");
-                        setMatchEndTime(`${endH}:${String(mm).padStart(2, "0")}`);
+                        if (matchType !== "EVENT") {
+                          const [hh, mm] = val.split(":").map(Number);
+                          const endH = String((hh + 2) % 24).padStart(2, "0");
+                          setMatchEndTime(`${endH}:${String(mm).padStart(2, "0")}`);
+                        }
                       }}
                       className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     >
@@ -469,24 +471,28 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
                       })}
                     </select>
-                    <span className="text-muted-foreground shrink-0">~</span>
-                    <select
-                      id="endTime"
-                      name="endTime"
-                      value={matchEndTime}
-                      onChange={(e) => setMatchEndTime(e.target.value)}
-                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    >
-                      {Array.from({ length: 48 }, (_, i) => {
-                        const h = String(Math.floor(i / 2)).padStart(2, "0");
-                        const m = i % 2 === 0 ? "00" : "30";
-                        return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
-                      })}
-                    </select>
+                    {matchType !== "EVENT" && (
+                      <>
+                        <span className="text-muted-foreground shrink-0">~</span>
+                        <select
+                          id="endTime"
+                          name="endTime"
+                          value={matchEndTime}
+                          onChange={(e) => setMatchEndTime(e.target.value)}
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                          {Array.from({ length: 48 }, (_, i) => {
+                            const h = String(Math.floor(i / 2)).padStart(2, "0");
+                            const m = i % 2 === 0 ? "00" : "30";
+                            return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
+                          })}
+                        </select>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="voteDeadline">투표 마감 <span className="text-xs font-normal text-muted-foreground">(기본: 경기 전날 17시)</span></Label>
+                  <Label htmlFor="voteDeadline">투표 마감 <span className="text-xs font-normal text-muted-foreground">(기본: {matchType === "EVENT" ? "일정" : "경기"} 전날 17시)</span></Label>
                   <Input
                     id="voteDeadline"
                     name="voteDeadline"
@@ -527,27 +533,27 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 {matchType === "EVENT" ? (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="opponent">일정 제목</Label>
-                      <Input id="opponent" name="opponent" placeholder="예: 연말 회식, MT, 유니폼 주문" />
+                      <Label htmlFor="opponent">일정 제목 <span className="text-destructive">*</span></Label>
+                      <Input id="opponent" name="opponent" required placeholder="예: 연말 회식, MT, 유니폼 주문" />
                     </div>
                     <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         id="multiDay"
+                        checked={showEndDate}
+                        onChange={(e) => setShowEndDate(e.target.checked)}
                         className="h-4 w-4 rounded border-border accent-primary"
-                        onChange={(e) => {
-                          const endDateInput = document.getElementById("endDate") as HTMLInputElement;
-                          if (endDateInput) endDateInput.disabled = !e.target.checked;
-                        }}
                       />
                       <Label htmlFor="multiDay" className="text-sm text-muted-foreground cursor-pointer">
                         1박 이상 일정
                       </Label>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="endDate">종료일</Label>
-                      <Input id="endDate" name="endDate" type="date" disabled />
-                    </div>
+                    {showEndDate && (
+                      <div className="space-y-2">
+                        <Label htmlFor="endDate">종료일</Label>
+                        <Input id="endDate" name="endDate" type="date" />
+                      </div>
+                    )}
                   </>
                 ) : matchType === "REGULAR" ? (
                   <div className="space-y-2">
