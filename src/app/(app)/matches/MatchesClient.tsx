@@ -380,42 +380,25 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
               <div className="space-y-2">
                 <Label>경기 유형</Label>
                 <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setMatchType("REGULAR")}
-                    className={cn(
-                      "flex-1 min-h-[44px] rounded-xl border-2 px-3 text-sm font-bold transition-all",
-                      matchType === "REGULAR"
-                        ? "border-[hsl(var(--success))] bg-[hsl(var(--success))]/15 text-[hsl(var(--success))] shadow-sm shadow-[hsl(var(--success))]/10"
-                        : "border-[hsl(var(--success))]/20 bg-[hsl(var(--success))]/5 text-[hsl(var(--success))]/50 hover:border-[hsl(var(--success))]/40 hover:text-[hsl(var(--success))]/70"
-                    )}
-                  >
-                    ⚽ 일반 경기
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMatchType("INTERNAL")}
-                    className={cn(
-                      "flex-1 min-h-[44px] rounded-xl border-2 px-3 text-sm font-bold transition-all",
-                      matchType === "INTERNAL"
-                        ? "border-[hsl(var(--info))] bg-[hsl(var(--info))]/15 text-[hsl(var(--info))] shadow-sm shadow-[hsl(var(--info))]/10"
-                        : "border-[hsl(var(--info))]/20 bg-[hsl(var(--info))]/5 text-[hsl(var(--info))]/50 hover:border-[hsl(var(--info))]/40 hover:text-[hsl(var(--info))]/70"
-                    )}
-                  >
-                    🆚 자체전
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setMatchType("EVENT"); setStatsIncluded(false); }}
-                    className={cn(
-                      "flex-1 min-h-[44px] rounded-xl border-2 px-3 text-sm font-bold transition-all",
-                      matchType === "EVENT"
-                        ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))] shadow-sm shadow-[hsl(var(--accent))]/10"
-                        : "border-[hsl(var(--accent))]/20 bg-[hsl(var(--accent))]/5 text-[hsl(var(--accent))]/50 hover:border-[hsl(var(--accent))]/40 hover:text-[hsl(var(--accent))]/70"
-                    )}
-                  >
-                    📅 팀 일정
-                  </button>
+                  {([
+                    { type: "REGULAR" as const, label: "일반 경기", color: "success" },
+                    { type: "INTERNAL" as const, label: "자체전", color: "info" },
+                    { type: "EVENT" as const, label: "팀 일정", color: "accent" },
+                  ]).map((item) => (
+                    <button
+                      key={item.type}
+                      type="button"
+                      onClick={() => { setMatchType(item.type); if (item.type === "EVENT") setStatsIncluded(false); }}
+                      className={cn(
+                        "flex-1 min-h-[44px] rounded-xl border-2 px-2 text-xs font-bold transition-all sm:text-sm sm:px-3",
+                        matchType === item.type
+                          ? `border-[hsl(var(--${item.color}))] bg-[hsl(var(--${item.color}))]/15 text-[hsl(var(--${item.color}))] shadow-sm`
+                          : `border-[hsl(var(--${item.color}))]/20 bg-[hsl(var(--${item.color}))]/5 text-[hsl(var(--${item.color}))]/50 hover:border-[hsl(var(--${item.color}))]/40`
+                      )}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -637,8 +620,8 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   )}
                 </div>
               )}
-              <Button type="submit" variant="default" disabled={submitting}>
-                {submitting ? "저장 중..." : "일정 저장"}
+              <Button type="submit" variant="default" disabled={submitting} className="mt-2 w-full h-12 text-base font-bold rounded-xl">
+                {submitting ? "저장 중..." : matchType === "EVENT" ? "일정 저장" : "경기 등록"}
               </Button>
             </form>
           </CardContent>
