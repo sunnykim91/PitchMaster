@@ -124,6 +124,26 @@ function MatchVoteTabInner({
         </Card>
       )}
 
+      {/* ── 투표 마감하기 (운영진, 마감 전에만) ── */}
+      {canManage && match.status !== "COMPLETED" && !isExpired && (
+        <button
+          type="button"
+          onClick={async () => {
+            const { error: err } = await apiMutate("/api/matches", "PUT", {
+              id: matchId,
+              voteDeadline: new Date().toISOString(),
+            });
+            if (!err) {
+              setIsExpired(true);
+              showToast("투표가 마감되었습니다.");
+            }
+          }}
+          className="rounded-xl border border-[hsl(var(--loss)/0.3)] bg-[hsl(var(--loss)/0.1)] px-4 py-2.5 text-sm font-semibold text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.2)] transition-colors w-full"
+        >
+          투표 마감하기
+        </button>
+      )}
+
       {/* ── 투표 현황 요약 ── */}
       <Card>
         <CardContent className="p-4">

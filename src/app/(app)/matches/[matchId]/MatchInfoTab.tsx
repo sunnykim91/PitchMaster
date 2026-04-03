@@ -170,6 +170,7 @@ function MatchInfoTabInner({
       endTime: fd.get("endTime") || null,
       location: fd.get("location"),
       opponent: fd.get("opponent"),
+      voteDeadline: fd.get("voteDeadline") || null,
     });
     setSaving(false);
     if (!error) {
@@ -310,6 +311,10 @@ function MatchInfoTabInner({
                 <div className="space-y-1">
                   <Label className="text-sm">{match.matchType === "EVENT" ? "일정 제목" : "상대팀"}</Label>
                   <Input name="opponent" defaultValue={match.opponent ?? ""} placeholder={match.matchType === "EVENT" ? "예: 연말 회식, MT" : ""} />
+                </div>
+                <div className="space-y-1 sm:col-span-2">
+                  <Label className="text-sm">투표 마감</Label>
+                  <Input type="datetime-local" name="voteDeadline" defaultValue={match.voteDeadline?.slice(0, 16) ?? ""} />
                 </div>
               </div>
               <div className="flex gap-2 justify-end">
