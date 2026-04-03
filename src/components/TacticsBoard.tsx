@@ -762,46 +762,26 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                 원정
               </Button>
             </Badge>
+          </div>
+          {/* 액션 버튼 (초기화 + 공유) */}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
             {!readOnly && (
               <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={clearBoard}
-                  className="rounded-xl"
-                >
+                <button type="button" onClick={clearBoard} className="rounded-lg border border-border px-2.5 py-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
                   Q{activeQuarter} 초기화
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearAllQuarters}
-                  className="rounded-xl text-muted-foreground hover:text-destructive"
-                >
+                </button>
+                <button type="button" onClick={clearAllQuarters} className="rounded-lg px-2.5 py-1.5 text-muted-foreground/60 hover:text-destructive transition-colors">
                   전체 초기화
-                </Button>
+                </button>
+                <span className="text-border">|</span>
               </>
             )}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleShareFormation}
-              className="rounded-xl"
-            >
-              공유
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleShareAll}
-              className="rounded-xl"
-            >
+            <button type="button" onClick={handleShareFormation} className="rounded-lg border border-border px-2.5 py-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+              Q{activeQuarter} 공유
+            </button>
+            <button type="button" onClick={handleShareAll} className="rounded-lg border border-border px-2.5 py-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
               전체 공유
-            </Button>
+            </button>
             {saving && (
               <span className="text-xs text-muted-foreground animate-pulse">저장 중...</span>
             )}
