@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { NativeSelect } from "@/components/ui/native-select";
 import { cn, formatPhone, formatDateKo, formatTime } from "@/lib/utils";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { useConfirm } from "@/lib/ConfirmContext";
@@ -286,22 +287,22 @@ function MatchInfoTabInner({
                 <div className="space-y-1">
                   <Label className="text-sm">시간</Label>
                   <div className="flex items-center gap-2">
-                    <select name="time" defaultValue={formatTime(match.time)} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                    <NativeSelect name="time" defaultValue={formatTime(match.time)} className="h-9">
                       {Array.from({ length: 48 }, (_, i) => {
                         const h = String(Math.floor(i / 2)).padStart(2, "0");
                         const m = i % 2 === 0 ? "00" : "30";
                         return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
                       })}
-                    </select>
+                    </NativeSelect>
                     <span className="text-muted-foreground shrink-0">~</span>
-                    <select name="endTime" defaultValue={match.endTime ? formatTime(match.endTime) : ""} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                    <NativeSelect name="endTime" defaultValue={match.endTime ? formatTime(match.endTime) : ""} className="h-9">
                       <option value="">미설정</option>
                       {Array.from({ length: 48 }, (_, i) => {
                         const h = String(Math.floor(i / 2)).padStart(2, "0");
                         const m = i % 2 === 0 ? "00" : "30";
                         return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
                       })}
-                    </select>
+                    </NativeSelect>
                   </div>
                 </div>
                 <div className="space-y-1">

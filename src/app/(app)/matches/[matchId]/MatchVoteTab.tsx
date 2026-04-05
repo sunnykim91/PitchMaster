@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bell } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatDue } from "@/lib/utils";
 import { apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
 import type { Match, RosterPlayer } from "./matchDetailTypes";
@@ -148,6 +148,14 @@ function MatchVoteTabInner({
             <span className="text-muted-foreground/50">· 총 {baseRoster.length + guestCount}명</span>
           </div>
 
+          {/* 투표 마감 일시 */}
+          {match.voteDeadline && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              마감: {formatDue(match.voteDeadline)}
+              {isExpired && <span className="ml-1 text-[hsl(var(--loss))] font-semibold">(마감됨)</span>}
+            </p>
+          )}
+
           {/* 투표 마감/재개 (운영진, 예정 경기만) */}
           {canManage && match.status !== "COMPLETED" && (
             <div className="mt-3 pt-3 border-t border-border/30 flex items-center justify-between">
@@ -157,12 +165,15 @@ function MatchVoteTabInner({
                   <button
                     type="button"
                     onClick={async () => {
-                      // 마감 시간을 한 달 뒤로 → 재개
-                      const future = new Date();
-                      future.setMonth(future.getMonth() + 1);
+                      // 경기 전날 17시로 재설정
+                      const matchDate = new Date(match.date + "T00:00:00");
+                      matchDate.setDate(matchDate.getDate() - 1);
+                      matchDate.setHours(17, 0, 0, 0);
+                      // 이미 지난 경우 내일 17시
+                      const deadline = matchDate > new Date() ? matchDate : (() => { const t = new Date(); t.setDate(t.getDate() + 1); t.setHours(17, 0, 0, 0); return t; })();
                       const { error: err } = await apiMutate("/api/matches", "PUT", {
                         id: matchId,
-                        voteDeadline: future.toISOString(),
+                        voteDeadline: deadline.toISOString(),
                       });
                       if (!err) {
                         setIsExpired(false);
