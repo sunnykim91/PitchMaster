@@ -50,12 +50,14 @@ export type DashboardData = {
   hasDuesSettings: boolean;
   /** 팀 전체 경기 등록 수 (0이면 한 번도 경기를 등록한 적 없음) */
   totalMatches: number;
+  /** 실제 가입(카카오 로그인) 완료한 팀원 수 */
+  registeredMemberCount: number;
 };
 
 export async function getDashboardData(teamId: string, userId: string): Promise<DashboardData> {
   const db = getSupabaseAdmin();
   const emptyRecord: TeamRecord = { wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, recent5: [] };
-  if (!db) return { upcomingMatch: null, recentResult: null, activeVotes: [], tasks: [], teamRecord: emptyRecord, teamUniform: null, birthdayMembers: [], hasDuesSettings: false, totalMatches: 0 };
+  if (!db) return { upcomingMatch: null, recentResult: null, activeVotes: [], tasks: [], teamRecord: emptyRecord, teamUniform: null, birthdayMembers: [], hasDuesSettings: false, totalMatches: 0, registeredMemberCount: 0 };
 
   const now = new Date().toISOString();
   const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
@@ -288,5 +290,15 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
 
   const totalMatches = totalMatchesCount ?? 0;
 
-  return { upcomingMatch, recentResult, activeVotes, tasks, teamRecord, teamUniform, birthdayMembers, hasDuesSettings, totalMatches };
+  // ── 실제 가입 완료(user_id가 있는) 팀원 수 ──
+  const { count: registeredCount } = await db
+    .from("team_members")
+    .select("id", { count: "exact", head: true })
+    .eq("team_id", teamId)
+    .eq("status", "ACTIVE")
+    .not("user_id", "is", null);
+
+  const registeredMemberCount = registeredCount ?? 0;
+
+  return { upcomingMatch, recentResult, activeVotes, tasks, teamRecord, teamUniform, birthdayMembers, hasDuesSettings, totalMatches, registeredMemberCount };
 }
