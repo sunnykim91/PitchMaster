@@ -129,28 +129,14 @@ function MatchDiaryTabInner({
             </div>
           </div>
           <div className="flex gap-2 bg-card p-4">
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button
-              type="button"
-              size="sm"
-              className="bg-[hsl(var(--kakao))] text-[hsl(var(--kakao-foreground))] hover:bg-[hsl(var(--kakao))]/90"
-              onClick={handleKakaoShare}
-            >
+            <Button type="button" className="flex-1 min-h-[48px] font-semibold bg-[hsl(var(--kakao))] text-[hsl(var(--kakao-foreground))] hover:bg-[hsl(var(--kakao))]/90" onClick={handleKakaoShare}>
               카카오톡 공유
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleShare}
-            >
-              결과 요약 복사
+            <Button type="button" variant="outline" className="flex-1 min-h-[48px] font-semibold" onClick={handleShare}>
+              결과 복사
             </Button>
           </div>
-
-          {shareMessage && <p className="mt-2 px-4 pb-2 text-xs text-primary">{shareMessage}</p>}
-          </div>
+          {shareMessage && <p className="px-4 pb-3 text-xs text-primary">{shareMessage}</p>}
         </CardContent>
       </Card>
 
@@ -170,92 +156,91 @@ function MatchDiaryTabInner({
             <form
               ref={diaryFormRef}
               action={(formData) => handleSaveDiary(formData)}
+              className="space-y-5"
             >
-              <Card className="border-0 bg-secondary shadow-none">
-                <CardContent className="p-4">
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-muted-foreground">
-                        날씨
-                      </Label>
-                      <NativeSelect name="weather" defaultValue={diary.weather ?? ""}>
-                        <option value="">선택 안 함</option>
-                        {WEATHER_OPTIONS.map((w) => (
-                          <option key={w} value={w}>{w}</option>
-                        ))}
-                      </NativeSelect>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-muted-foreground">
-                        팀 컨디션
-                      </Label>
-                      <NativeSelect name="condition" defaultValue={diary.condition ?? ""}>
-                        <option value="">선택 안 함</option>
-                        {CONDITION_OPTIONS.map((c) => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </NativeSelect>
-                    </div>
-                  </div>
-                  <div className="mt-3 space-y-2">
-                    <Label className="text-xs font-semibold text-muted-foreground">
-                      메모
-                    </Label>
-                    <Textarea
-                      name="memo"
-                      defaultValue={diary.memo ?? ""}
-                      placeholder="오늘 경기에 대한 기록, 느낀 점, 특이사항 등을 자유롭게 적어주세요."
-                      rows={4}
-                    />
-                  </div>
-                  <div className="mt-3 flex gap-2">
-                    <Button type="submit" className="flex-1" size="sm">
-                      저장
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsDiaryEditing(false)}
-                    >
-                      취소
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* 날씨 — 5개 버튼 */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">날씨</p>
+                <div className="grid grid-cols-5 gap-2">
+                  {WEATHER_OPTIONS.map((w) => {
+                    const icons: Record<string, string> = { "맑음": "☀️", "흐림": "☁️", "비": "🌧️", "눈": "❄️", "바람": "💨" };
+                    return (
+                      <label key={w} className="cursor-pointer">
+                        <input type="radio" name="weather" value={w} defaultChecked={diary.weather === w} className="peer sr-only" />
+                        <div className="flex flex-col items-center gap-1.5 rounded-xl p-3 text-muted-foreground transition-all peer-checked:bg-primary peer-checked:text-primary-foreground hover:bg-secondary">
+                          <span className="text-lg">{icons[w] ?? "🌤️"}</span>
+                          <span className="text-[10px] font-medium">{w}</span>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 팀 컨디션 — 5개 버튼 */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">팀 컨디션</p>
+                <div className="grid grid-cols-5 gap-2">
+                  {CONDITION_OPTIONS.map((c) => (
+                    <label key={c} className="cursor-pointer">
+                      <input type="radio" name="condition" value={c} defaultChecked={diary.condition === c} className="peer sr-only" />
+                      <div className={cn(
+                        "rounded-xl p-2.5 text-center text-xs font-semibold transition-all",
+                        "peer-checked:text-primary-foreground hover:bg-secondary text-muted-foreground",
+                        c === "최상" || c === "좋음" ? "peer-checked:bg-[hsl(var(--success))]" :
+                        c === "보통" ? "peer-checked:bg-muted peer-checked:text-foreground" :
+                        "peer-checked:bg-destructive"
+                      )}>
+                        {c}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* 메모 */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">메모</p>
+                <Textarea
+                  name="memo"
+                  defaultValue={diary.memo ?? ""}
+                  placeholder="경기에 대한 메모를 작성하세요..."
+                  rows={5}
+                  className="min-h-[140px] resize-none rounded-xl border-0 bg-secondary focus-visible:ring-primary leading-relaxed"
+                />
+              </div>
+
+              <Button type="submit" className="w-full min-h-[48px] rounded-xl font-semibold">
+                저장
+              </Button>
             </form>
           ) : diary.memo || diary.weather || diary.condition ? (
-            <Card className="border-0 bg-secondary shadow-none">
-              <CardContent className="p-4">
-                <div className="flex flex-wrap gap-2">
-                  {diary.weather && (
-                    <Badge variant="outline" className="text-xs">
-                      {diary.weather === "맑음" ? "☀️" : diary.weather === "흐림" ? "☁️" : diary.weather === "비" ? "🌧️" : diary.weather === "눈" ? "🌨️" : "💨"} {diary.weather}
-                    </Badge>
-                  )}
-                  {diary.condition && (
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-xs",
-                        diary.condition === "최상" || diary.condition === "좋음"
-                          ? "border-[hsl(var(--success)/0.3)] text-[hsl(var(--success))]"
-                          : diary.condition === "보통"
-                          ? "border-[hsl(var(--warning)/0.3)] text-[hsl(var(--warning))]"
-                          : "border-[hsl(var(--loss)/0.3)] text-[hsl(var(--loss))]"
-                      )}
-                    >
-                      컨디션: {diary.condition}
-                    </Badge>
-                  )}
-                </div>
-                {diary.memo && (
-                  <p className="mt-3 whitespace-pre-wrap text-sm text-foreground/90 leading-relaxed">
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                {diary.weather && (
+                  <Badge variant="secondary" className="gap-1.5 py-1.5 px-3 text-sm">
+                    {diary.weather === "맑음" ? "☀️" : diary.weather === "흐림" ? "☁️" : diary.weather === "비" ? "🌧️" : diary.weather === "눈" ? "❄️" : "💨"} {diary.weather}
+                  </Badge>
+                )}
+                {diary.condition && (
+                  <Badge className={cn(
+                    "py-1.5 px-3 text-sm border-0",
+                    diary.condition === "최상" || diary.condition === "좋음" ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]" :
+                    diary.condition === "보통" ? "bg-muted text-muted-foreground" :
+                    "bg-destructive/20 text-destructive"
+                  )}>
+                    컨디션: {diary.condition}
+                  </Badge>
+                )}
+              </div>
+              {diary.memo && (
+                <div className="rounded-xl bg-secondary/30 p-4">
+                  <p className="whitespace-pre-wrap text-sm text-foreground/90 leading-relaxed">
                     {diary.memo}
                   </p>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+              )}
+            </div>
           ) : (
             <p className="text-sm text-muted-foreground">
               아직 작성된 경기 일지가 없습니다. 날씨, 컨디션, 느낀 점 등을 기록해보세요.
