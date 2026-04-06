@@ -176,6 +176,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+// 공개 페이지 — 30분 ISR
+export const revalidate = 1800;
+
 export default async function PlayerProfilePage({ params }: Props) {
   const { memberId } = await params;
   const data = await getPlayerData(memberId);

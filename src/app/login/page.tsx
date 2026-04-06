@@ -16,6 +16,9 @@ import FooterSection from "./sections/FooterSection";
 
 const DEMO_TEAM_ID = "192127c0-e2be-46b4-b340-7583730467da";
 
+// 소셜프루프 수치만 변동 — 1시간 ISR
+export const revalidate = 3600;
+
 export default async function LoginPage({
   searchParams,
 }: {
