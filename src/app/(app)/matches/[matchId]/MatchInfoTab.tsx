@@ -297,11 +297,15 @@ function MatchInfoTabInner({
                     <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Final</span>
                   )}
                 </div>
-                {/* 어웨이 */}
+                {/* 어웨이 / B팀 */}
                 <div className="relative flex flex-1 flex-col items-center gap-3">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-xl font-bold shadow-lg text-muted-foreground">
-                    {isInternal ? "B" : (match.opponent?.[0] ?? "?")}
-                  </div>
+                  {isInternal ? (
+                    <div className="h-14 w-14 rounded-sm shadow-lg" style={{ ...getUniformBg(uniformSecondary, uniformPrimary, uniformPattern), clipPath: JERSEY_CLIP }} />
+                  ) : (
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-xl font-bold shadow-lg text-muted-foreground">
+                      {match.opponent?.[0] ?? "?"}
+                    </div>
+                  )}
                   {match.status === "COMPLETED" && scoreData.result === "패" && (
                     <Badge className="absolute -left-1 -top-1 bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-white">WIN</Badge>
                   )}

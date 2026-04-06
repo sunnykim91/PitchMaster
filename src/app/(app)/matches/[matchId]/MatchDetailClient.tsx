@@ -290,14 +290,17 @@ export default function MatchDetailClient({
   }, [baseRoster, guests]);
 
   const score = useMemo(() => {
-    const ourGoals = goals.filter(
-      (goal) => goal.scorerId !== "OPPONENT",
-    ).length;
-    const oppGoals = goals.filter(
-      (goal) => goal.scorerId === "OPPONENT",
-    ).length;
+    if (match.matchType === "INTERNAL") {
+      const aGoals = goals.filter((g) => g.side === "A").length;
+      const bGoals = goals.filter((g) => g.side === "B").length;
+      return `${aGoals} : ${bGoals}`;
+    }
+    const ourGoals = goals.filter((g) => g.scorerId !== "OPPONENT" && !g.isOwnGoal).length
+      + goals.filter((g) => g.scorerId === "OPPONENT" && g.isOwnGoal).length;
+    const oppGoals = goals.filter((g) => g.scorerId === "OPPONENT" && !g.isOwnGoal).length
+      + goals.filter((g) => g.scorerId !== "OPPONENT" && g.isOwnGoal).length;
     return `${ourGoals} : ${oppGoals}`;
-  }, [goals]);
+  }, [goals, match.matchType]);
 
   /** 멤버별 현재 참석투표 상태 (member_id 기반) */
   const memberVoteMap = useMemo(() => {
