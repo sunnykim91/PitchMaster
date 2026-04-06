@@ -65,7 +65,7 @@ export default function HeroSection({
             </p>
 
             {/* CTA */}
-            <div className={`mb-6 flex flex-col items-center gap-3 sm:flex-row sm:gap-4 lg:items-start ${mounted ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "300ms" }}>
+            <div className={`mb-6 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4 lg:justify-start ${mounted ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "300ms" }}>
               {kakaoButton}
               {demoButton}
             </div>
@@ -89,7 +89,7 @@ export default function HeroSection({
           </div>
 
           {/* Right: Real screenshots slider */}
-          <div className={`w-full max-w-sm flex-shrink-0 ${mounted ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "300ms" }}>
+          <div className={`mx-auto w-full max-w-sm flex-shrink-0 lg:mx-0 ${mounted ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "300ms" }}>
             <AppScreenSlider />
           </div>
         </div>

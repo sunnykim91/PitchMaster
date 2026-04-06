@@ -108,6 +108,13 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* 날짜/시간 input 아이콘 색상 (다크 모드) */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+}
+
 /* 클릭 가능 요소 기본 커서 */
 button, [role="button"], [onclick], a, summary { cursor: pointer; }
 

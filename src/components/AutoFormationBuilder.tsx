@@ -743,45 +743,33 @@ export default function AutoFormationBuilder({
     });
   }, [assignments]);
 
-  /* ── Closed state ── */
-  if (!isOpen) {
-    return (
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">
-              Auto Formation
-            </p>
-            <CardTitle className="mt-1 font-heading text-xl font-bold uppercase">
-              자동 포메이션 편성
-            </CardTitle>
-          </div>
-          <Button size="sm" onClick={() => setIsOpen(true)}>
-            편성 시작
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            참석 인원을 기반으로 공정하게 쿼터를 분배하고 포메이션을
-            자동으로 편성합니다.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  /* ── Open state ── */
+  /* ── Collapsible card ── */
   return (
     <Card className="rounded-xl border-border/30 overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <CardTitle className="flex items-center gap-2 text-base font-bold">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center justify-between px-5 py-4 hover:bg-secondary/30 transition-colors"
+      >
+        <span className="flex items-center gap-2 text-base font-bold">
           <span className="text-primary">⚡</span> 자동 편성
-        </CardTitle>
+        </span>
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="text-xs">{attendingPlayers.length}명</Badge>
-          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground" onClick={() => setIsOpen(false)}>✕</Button>
+          <svg className={cn("h-5 w-5 text-muted-foreground transition-transform duration-200", isOpen && "rotate-180")} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg>
         </div>
-      </CardHeader>
+      </button>
+
+      {!isOpen && (
+        <div className="px-5 pb-4">
+          <p className="text-sm text-muted-foreground">
+            참석 인원을 기반으로 공정하게 쿼터를 분배하고 포메이션을 자동으로 편성합니다.
+          </p>
+        </div>
+      )}
+
+      {isOpen && (
+      <>
 
       <CardContent className="space-y-4">
         {/* ── 통계 3열 ── */}
@@ -1109,6 +1097,8 @@ export default function AutoFormationBuilder({
           </div>
         )}
       </CardContent>
+      </>
+      )}
     </Card>
   );
 }

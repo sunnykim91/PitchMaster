@@ -78,6 +78,8 @@ type DashboardData = {
   hasDuesSettings?: boolean;
   /** 팀 전체 경기 수 (0이면 한 번도 경기를 등록한 적 없음) */
   totalMatches?: number;
+  /** 실제 가입 완료한 팀원 수 */
+  registeredMemberCount?: number;
 };
 
 const emptyData: DashboardData = {
@@ -499,7 +501,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
       </div>
 
       {/* ── Invite card (staff/president only) ── */}
-      {isStaffOrAbove(role) && inviteCode && (
+      {isStaffOrAbove(role) && inviteCode && (data.registeredMemberCount ?? 0) < 10 && (
         <Card className="border-[hsl(var(--accent))]/20 bg-[hsl(var(--accent))]/5">
           <CardContent className="p-3">
             <div className="flex items-center gap-2">
