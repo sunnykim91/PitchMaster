@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
+import { cn } from "@/lib/utils";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { EmptyState } from "@/components/EmptyState";
-import { Target } from "lucide-react";
+import { Target, ChevronDown, Trophy, Check, Pencil, Trash2, Clock } from "lucide-react";
 import { useToast } from "@/lib/ToastContext";
 import type {
   Match,
@@ -235,72 +236,40 @@ function MatchRecordTabInner({
         {/* ── 스코어보드 ── */}
         <Card className="rounded-xl border-0 bg-gradient-to-br from-secondary to-background overflow-hidden">
           <CardContent className="p-6">
-          <div className="text-center">
-            <div className="mb-4 flex items-center justify-center gap-6">
-              {isInternal ? (
-                <>
-                  <div>
-                    <p className="type-overline text-primary">A팀</p>
-                    <p className="type-score text-primary">
-                      {goals.filter((g) => g.side === "A").length}
-                    </p>
-                  </div>
-                  <span className="text-2xl text-muted-foreground/40">:</span>
-                  <div>
-                    <p className="type-overline text-[hsl(var(--info))]">B팀</p>
-                    <p className="type-score text-[hsl(var(--info))]">
-                      {goals.filter((g) => g.side === "B").length}
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <p className="type-overline">우리팀</p>
-                    <p className="type-score text-foreground">
-                      {goals.filter((g) => g.scorerId !== "OPPONENT" && !g.isOwnGoal).length}
-                    </p>
-                  </div>
-                  <span className="text-2xl text-muted-foreground/40">:</span>
-                  <div>
-                    <p className="type-overline">상대팀</p>
-                    <p className="type-score text-muted-foreground/60">
-                      {goals.filter((g) => g.scorerId === "OPPONENT" || g.isOwnGoal).length}
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-            {canRecord && (
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <div className="mb-6 text-center">
+              <div className="text-6xl font-black tabular-nums tracking-tighter">
                 {isInternal ? (
                   <>
-                    <button
-                      type="button"
-                      onClick={() => { setShowDetailForm(true); /* A팀 골 기록 시 side는 선수 선택에서 자동 결정 */ }}
-                      className="rounded-full bg-primary px-5 py-2 text-xs font-bold text-primary-foreground shadow-[0_2px_8px_-2px_hsl(16_85%_58%/0.4)] transition-all hover:bg-primary/90 active:scale-95"
-                    >
-                      + A팀 골
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowDetailForm(true)}
-                      className="rounded-full bg-[hsl(var(--info))] px-5 py-2 text-xs font-bold text-primary-foreground shadow-[0_2px_8px_-2px_hsl(var(--info)/0.4)] transition-all hover:bg-[hsl(var(--info))]/90 active:scale-95"
-                    >
-                      + B팀 골
-                    </button>
+                    <span className="text-foreground">{goals.filter((g) => g.side === "A").length}</span>
+                    <span className="mx-3 text-muted-foreground">:</span>
+                    <span className="text-muted-foreground">{goals.filter((g) => g.side === "B").length}</span>
                   </>
                 ) : (
                   <>
-                    <button
-                      type="button"
-                      onClick={() => setShowDetailForm(true)}
-                      className="rounded-full bg-[hsl(var(--success))] px-5 py-2 text-xs font-bold text-white shadow-[0_2px_8px_-2px_hsl(var(--success)/0.4)] transition-all hover:bg-[hsl(var(--success))]/90 active:scale-95"
-                    >
+                    <span className="text-foreground">{goals.filter((g) => g.scorerId !== "OPPONENT" && !g.isOwnGoal).length}</span>
+                    <span className="mx-3 text-muted-foreground">:</span>
+                    <span className="text-muted-foreground">{goals.filter((g) => g.scorerId === "OPPONENT" || g.isOwnGoal).length}</span>
+                  </>
+                )}
+              </div>
+            </div>
+            {canRecord && (
+              <div className="flex gap-3">
+                {isInternal ? (
+                  <>
+                    <Button type="button" className="flex-1 min-h-[48px] bg-primary/20 text-primary hover:bg-primary/30 font-semibold" onClick={() => setShowDetailForm(true)}>
+                      + A팀 골
+                    </Button>
+                    <Button type="button" className="flex-1 min-h-[48px] bg-[hsl(var(--info))]/20 text-[hsl(var(--info))] hover:bg-[hsl(var(--info))]/30 font-semibold" onClick={() => setShowDetailForm(true)}>
+                      + B팀 골
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button type="button" className="flex-1 min-h-[48px] bg-[hsl(var(--success))]/20 text-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/30 font-semibold" onClick={() => setShowDetailForm(true)}>
                       + 득점
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button type="button" className="flex-1 min-h-[48px] bg-destructive/20 text-destructive hover:bg-destructive/30 font-semibold"
                       onClick={async () => {
                         const formData = new FormData();
                         formData.set("scorerId", "OPPONENT");
@@ -309,33 +278,26 @@ function MatchRecordTabInner({
                         formData.set("minute", "0");
                         formData.set("isOwnGoal", "");
                         await handleAddGoal(formData);
-                      }}
-                      className="rounded-full bg-[hsl(var(--loss))] px-5 py-2 text-xs font-bold text-white shadow-[0_2px_8px_-2px_hsl(var(--loss)/0.4)] transition-all hover:bg-[hsl(var(--loss))]/90 active:scale-95"
-                    >
+                      }}>
                       + 실점
-                    </button>
+                    </Button>
                   </>
                 )}
               </div>
             )}
-          </div>
           </CardContent>
         </Card>
 
-        {/* ── 상세 골 기록 (접기/펼치기) ── */}
-        <Card className="rounded-xl border-border/30">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">
-              상세 기록
-            </CardTitle>
-            <button
-              type="button"
-              onClick={() => setShowDetailForm((prev) => !prev)}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {showDetailForm ? "접기 ▲" : "펼치기 ▼"}
-            </button>
-          </CardHeader>
+        {/* ── 골 기록 추가 (아코디언) ── */}
+        <Card className="rounded-xl border-border/30 overflow-hidden">
+          <button type="button" onClick={() => setShowDetailForm((prev) => !prev)}
+            className="flex w-full items-center justify-between px-5 py-4 hover:bg-secondary/30 transition-colors">
+            <span className="flex items-center gap-2 text-base font-bold">
+              <Target className="h-4 w-4 text-primary" />
+              골 기록 추가
+            </span>
+            <ChevronDown className={cn("h-5 w-5 text-muted-foreground transition-transform duration-200", showDetailForm && "rotate-180")} />
+          </button>
 
           <CardContent>
             {showDetailForm && (
@@ -582,35 +544,57 @@ function MatchRecordTabInner({
           <Card className="rounded-xl border-border/30">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base font-bold">
-                🏆 MVP 투표
+                <Trophy className="h-4 w-4 text-[hsl(var(--warning))]" />
+                MVP 투표
               </CardTitle>
             </CardHeader>
-
             <CardContent>
-              <div className="space-y-2">
-                {attendingMembers.map((player) => (
-                  <Button
-                    key={player.id}
-                    type="button"
-                    variant={votes[userId] === player.id ? "default" : "outline"}
-                    className="flex w-full items-center justify-between"
-                    onClick={() => handleVote(player.id)}
-                  >
-                    <span className="font-semibold truncate">{player.name}</span>
-                    <Badge
-                      variant={
-                        votes[userId] === player.id ? "secondary" : "outline"
-                      }
-                      className="ml-2"
+              <p className="mb-3 text-xs text-muted-foreground">참석자만 1인 1표</p>
+
+              {/* 현재 1위 */}
+              {(() => {
+                const topPlayer = attendingMembers.reduce<{ id: string; name: string; count: number } | null>((top, p) => {
+                  const count = voteCounts[p.id] ?? 0;
+                  if (count > 0 && (!top || count > top.count)) return { id: p.id, name: p.name, count };
+                  return top;
+                }, null);
+                return topPlayer ? (
+                  <div className="mb-4 flex items-center gap-3 rounded-xl bg-[hsl(var(--warning))]/10 p-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--warning))]/20">
+                      <Trophy className="h-5 w-5 text-[hsl(var(--warning))]" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-[hsl(var(--warning))]">현재 1위</div>
+                      <div className="font-bold">{topPlayer.name} ({topPlayer.count}표)</div>
+                    </div>
+                  </div>
+                ) : null;
+              })()}
+
+              <div className="grid grid-cols-3 gap-2">
+                {attendingMembers.map((player) => {
+                  const isVoted = votes[userId] === player.id;
+                  const count = voteCounts[player.id] ?? 0;
+                  return (
+                    <button
+                      key={player.id}
+                      type="button"
+                      onClick={() => handleVote(player.id)}
+                      className={cn(
+                        "relative rounded-xl p-3 text-sm font-medium transition-all",
+                        isVoted ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                      )}
                     >
-                      {voteCounts[player.id] ?? 0}표
-                    </Badge>
-                  </Button>
-                ))}
+                      {player.name}
+                      {count > 0 && (
+                        <Badge className="absolute -right-1.5 -top-1.5 bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] text-[10px] px-1.5 min-w-[20px] h-[20px]">
+                          {count}
+                        </Badge>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">
-                참석자만 1인 1표로 투표할 수 있습니다.
-              </p>
             </CardContent>
           </Card>
 
@@ -618,14 +602,13 @@ function MatchRecordTabInner({
           {canManageAttendance && (
             <Card className="rounded-xl border-border/30">
               <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <div>
-                  <CardTitle className="text-base font-bold">출석 체크</CardTitle>
-                </div>
+                <CardTitle className="text-base font-bold">출석 체크</CardTitle>
                 {attendingMembers.length > 0 && (
                   <Button
                     type="button"
                     size="sm"
-                    variant="outline"
+                    variant="ghost"
+                    className="h-8 px-3 text-sm font-medium text-primary"
                     onClick={async () => {
                       const ok = await confirm({
                         title: "전원 참석 처리",
