@@ -259,13 +259,14 @@ function MatchInfoTabInner({
 
   // 댓글 시간 표시 헬퍼 (n분 전, n시간 전, 날짜)
   function formatCommentTime(dateStr: string) {
-    const diff = Date.now() - new Date(dateStr).getTime();
+    const d = new Date(dateStr);
+    const diff = Date.now() - d.getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return "방금 전";
     if (mins < 60) return `${mins}분 전`;
     const hours = Math.floor(mins / 60);
     if (hours < 24) return `${hours}시간 전`;
-    return new Date(dateStr).toLocaleDateString("ko-KR", { month: "short", day: "numeric" });
+    return `${d.getMonth() + 1}월 ${d.getDate()}일`;
   }
 
   return (

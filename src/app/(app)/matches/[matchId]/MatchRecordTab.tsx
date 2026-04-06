@@ -333,13 +333,11 @@ function MatchRecordTabInner({
 
                   {!editingIsOpponent && (
                   <>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-muted-foreground">
-                        득점자
-                      </Label>
-                      <NativeSelect name="scorerId">
-                        <option value="">득점자 선택</option>
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <p className="text-[11px] font-medium text-muted-foreground">득점자</p>
+                      <select name="scorerId" className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+                        <option value="">선택</option>
                         <optgroup label="참석 멤버">
                           {attendingMembers.map((player) => (
                             <option key={player.id} value={player.id}>
@@ -364,15 +362,13 @@ function MatchRecordTabInner({
                             </option>
                           ))}
                         </optgroup>
-                      </NativeSelect>
+                      </select>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-muted-foreground">
-                        어시스트
-                      </Label>
-                      <NativeSelect name="assistId">
-                        <option value="">어시스트 선택</option>
+                    <div className="space-y-1.5">
+                      <p className="text-[11px] font-medium text-muted-foreground">어시스트</p>
+                      <select name="assistId" className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+                        <option value="">선택</option>
                         <optgroup label="참석 멤버">
                           {attendingMembers.map((player) => (
                             <option key={player.id} value={player.id}>
@@ -396,39 +392,34 @@ function MatchRecordTabInner({
                             </option>
                           ))}
                         </optgroup>
-                      </NativeSelect>
+                      </select>
                     </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-muted-foreground">
-                      골 유형
-                    </Label>
-                    <NativeSelect name="goalType" defaultValue="NORMAL">
-                      <option value="NORMAL">일반</option>
-                      <option value="PK">PK (페널티킥)</option>
-                      <option value="FK">FK (프리킥)</option>
-                      <option value="HEADER">헤딩</option>
-                      <option value="OWN_GOAL">자책골</option>
-                    </NativeSelect>
-                  </div>
-                  </>
-                  )}
+                    <div className="space-y-1.5">
+                      <p className="text-[11px] font-medium text-muted-foreground">골 유형</p>
+                      <select name="goalType" defaultValue="NORMAL" className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+                        <option value="NORMAL">일반</option>
+                        <option value="PK">PK (페널티킥)</option>
+                        <option value="FK">FK (프리킥)</option>
+                        <option value="HEADER">헤딩</option>
+                        <option value="OWN_GOAL">자책골</option>
+                      </select>
+                    </div>
 
-                  <div className="mt-3 space-y-1">
-                    <Label className="text-xs font-semibold text-muted-foreground">쿼터 (선택사항)</Label>
-                    <div className="flex flex-wrap gap-1">
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] font-medium text-muted-foreground">쿼터</p>
+                    <div className="flex gap-1 rounded-lg bg-secondary p-1">
                       <button
                         type="button"
                         onClick={(e) => {
                           const input = e.currentTarget.parentElement?.querySelector("input[name=quarter]") as HTMLInputElement;
                           if (input) input.value = "0";
-                          e.currentTarget.parentElement?.querySelectorAll("button").forEach((btn) => btn.classList.remove("bg-primary", "text-white"));
-                          e.currentTarget.classList.add("bg-primary", "text-white");
+                          e.currentTarget.parentElement?.querySelectorAll("button").forEach((btn) => { btn.classList.remove("bg-background", "text-foreground", "shadow-sm"); btn.classList.add("text-muted-foreground"); });
+                          e.currentTarget.classList.remove("text-muted-foreground"); e.currentTarget.classList.add("bg-background", "text-foreground", "shadow-sm");
                         }}
-                        className="h-8 rounded-lg bg-primary px-3 text-xs font-bold text-white transition-colors hover:bg-primary/90"
+                        className="flex-1 rounded-md py-2 text-sm font-medium bg-background text-foreground shadow-sm"
                       >
-                        선택 안함
+                        -
                       </button>
                       {Array.from({ length: match.quarterCount }, (_, i) => i + 1).map((q) => (
                         <button
@@ -437,10 +428,10 @@ function MatchRecordTabInner({
                           onClick={(e) => {
                             const input = e.currentTarget.parentElement?.querySelector("input[name=quarter]") as HTMLInputElement;
                             if (input) input.value = String(q);
-                            e.currentTarget.parentElement?.querySelectorAll("button").forEach((btn) => btn.classList.remove("bg-primary", "text-white"));
-                            e.currentTarget.classList.add("bg-primary", "text-white");
+                            e.currentTarget.parentElement?.querySelectorAll("button").forEach((btn) => { btn.classList.remove("bg-background", "text-foreground", "shadow-sm"); btn.classList.add("text-muted-foreground"); });
+                            e.currentTarget.classList.remove("text-muted-foreground"); e.currentTarget.classList.add("bg-background", "text-foreground", "shadow-sm");
                           }}
-                          className="h-8 w-8 rounded-lg bg-secondary text-xs font-bold text-muted-foreground transition-colors hover:bg-secondary/80"
+                          className="flex-1 rounded-md py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
                         >
                           Q{q}
                         </button>
@@ -448,10 +439,13 @@ function MatchRecordTabInner({
                       <input name="quarter" type="hidden" defaultValue="0" />
                     </div>
                   </div>
+                  </div>
+                  </>
+                  )}
                   <input name="minute" type="hidden" value="0" />
 
-                  <div className="mt-3 flex gap-2">
-                    <Button type="submit" className="flex-1" size="sm">
+                  <div className="mt-4 flex gap-2">
+                    <Button type="submit" className="flex-1 min-h-[48px] rounded-xl font-semibold">
                       {editingGoalId ? "수정 완료" : "기록 추가"}
                     </Button>
                     {editingGoalId && (

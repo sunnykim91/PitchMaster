@@ -1,7 +1,6 @@
 "use client";
 
 import { memo, useState } from "react";
-import dynamic from "next/dynamic";
 import type { AttendingPlayer, GeneratedSquad } from "@/components/AutoFormationBuilder";
 import { apiMutate } from "@/lib/useApi";
 import { Button } from "@/components/ui/button";
@@ -27,15 +26,8 @@ const TacticsBoardSkeleton = () => (
   </div>
 );
 
-const TacticsBoard = dynamic(() => import("@/components/TacticsBoard"), {
-  ssr: false,
-  loading: () => <TacticsBoardSkeleton />,
-});
-
-const AutoFormationBuilder = dynamic(() => import("@/components/AutoFormationBuilder"), {
-  ssr: false,
-  loading: () => <TacticsBoardSkeleton />,
-});
+import TacticsBoard from "@/components/TacticsBoard";
+import AutoFormationBuilder from "@/components/AutoFormationBuilder";
 
 export interface MatchTacticsTabProps {
   matchId: string;

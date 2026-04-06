@@ -101,7 +101,7 @@ function MatchVoteTabInner({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Clock className="h-3.5 w-3.5 shrink-0" />
-                <span>마감: {match.voteDeadline ? new Date(match.voteDeadline).toLocaleDateString("ko-KR", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "미설정"}</span>
+                <span>마감: {match.voteDeadline ? (() => { const d = new Date(match.voteDeadline); return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; })() : "미설정"}</span>
               </div>
               {canManage && (
                 isExpired ? (

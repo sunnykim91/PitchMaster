@@ -1,4 +1,5 @@
 "use client";
+/* v0-design-v2 */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toPng } from "html-to-image";
@@ -692,7 +693,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
 
         {/* 쿼터 선택 — 세그먼트 컨트롤 */}
         <div className="mt-4 rounded-lg bg-secondary p-1">
-          <div className="flex gap-1">
+          <div className="grid grid-cols-4 gap-1">
             {quarters.map((quarter) => (
               <button
                 key={quarter}
@@ -742,23 +743,6 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               </SelectContent>
             </Select>
           )}
-
-          <div className="flex gap-1">
-            <button type="button" onClick={() => setUniformMode("HOME")}
-              className={cn("flex h-11 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-all",
-                uniformMode === "HOME" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"
-              )}>
-              <span className="h-3 w-3 rounded" style={{ backgroundColor: resolvedTeamSettings.uniformPrimary }} />
-              홈
-            </button>
-            <button type="button" onClick={() => setUniformMode("AWAY")}
-              className={cn("flex h-11 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-all",
-                uniformMode === "AWAY" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"
-              )}>
-              <span className="h-3 w-3 rounded" style={{ backgroundColor: resolvedTeamSettings.uniformSecondary }} />
-              원정
-            </button>
-          </div>
 
           {!readOnly && (
             <Button type="button" variant="secondary" size="icon" className="h-11 w-11 shrink-0" onClick={clearBoard} title="이 쿼터 초기화">
@@ -866,6 +850,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               const displayName = secondPlayer
                 ? `${player?.name ?? "선수"}/${secondPlayer.name}`
                 : (player?.name ?? "선수");
+              const isActive = activeSlotId === slot.id;
               return (
                 <button
                   key={slot.id}
@@ -877,10 +862,17 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                     dragRef.current = { slotId: slot.id };
                   }}
                   onClick={() => handleSelectSlot(slot.id)}
-                  className="absolute -translate-x-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs font-bold transition"
+                  className={cn(
+                    "absolute -translate-x-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs font-bold transition-all",
+                    isActive && "z-20"
+                  )}
                   style={{ left: `${placement.x}%`, top: `${placement.y}%`, touchAction: "none" }}
                 >
                   <span className="flex flex-col items-center gap-0.5">
+                    {/* 선택 표시 화살표 */}
+                    {isActive && (
+                      <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-primary text-lg animate-bounce">▼</span>
+                    )}
                     <span className="block h-8 w-8 rounded-sm border border-white/40 shadow-md shadow-black/30 sm:h-10 sm:w-10" style={uniformStyle} />
                     {secondPlayer ? (
                       <span className="flex flex-col items-center rounded-md bg-black/70 px-1 py-0.5 shadow-sm sm:px-1.5">
@@ -951,6 +943,39 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               </div>
             </div>
           )}
+          {/* 역할 배정 — 모바일용 (captureRef 밖) */}
+          {!readOnly && isMobile && (
+            <div className="rounded-xl bg-secondary/50 px-4 py-3">
+              <p className="mb-2 text-sm font-bold">역할 배정</p>
+              <div className="space-y-3">
+                {[
+                  { key: "__referee" as const, label: "심판", current: referee },
+                  { key: "__camera" as const, label: "촬영", current: camera },
+                ].map(({ key, label, current }) => (
+                  <div key={key} className="flex items-center gap-3">
+                    <span className="w-10 text-sm text-muted-foreground">{label}</span>
+                    <select
+                      value={current}
+                      onChange={(e) => handleRoleAssign(key, e.target.value)}
+                      className="flex h-9 flex-1 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="">미배정</option>
+                      {(() => {
+                        const currentPlayer = current ? roster.find((r) => r.id === current) : null;
+                        const options = currentPlayer && !restingPlayers.some((p) => p.id === current)
+                          ? [currentPlayer, ...restingPlayers]
+                          : restingPlayers;
+                        return options.map((p) => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ));
+                      })()}
+                    </select>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           </div>{/* end captureRef */}
 
           {/* Roster panel — PC: 인라인, 모바일: 바텀시트 */}
