@@ -13,7 +13,7 @@ import type { Match, SimpleRosterPlayer, InternalTeamAssignment, Guest } from ".
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { X, ChevronDown, Sparkles } from "lucide-react";
+import { X, ChevronDown, Sparkles, Users, Plus } from "lucide-react";
 import { formatPhone } from "@/lib/utils";
 import type { SportType } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -125,7 +125,7 @@ function MatchTacticsTabInner({
               <CardContent className="p-3">
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <div className="text-xs">
-                    <span className="font-bold text-sm">팀 편성</span>
+                    <span className="flex items-center gap-1.5 font-bold text-sm"><Users className="h-4 w-4 text-primary" />팀 편성</span>
                     {unassignedCount > 0 && <span className="text-[hsl(var(--warning))] ml-2 font-medium">미배정 {unassignedCount}명</span>}
                   </div>
                   <div className="flex gap-1.5">
@@ -238,11 +238,11 @@ function MatchTacticsTabInner({
       {canManage && (
         <details className="group rounded-xl border border-border/30 overflow-hidden" open={showGuestForm || (guests ?? []).length > 0}>
           <summary className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-secondary/30 transition-colors list-none [&::-webkit-details-marker]:hidden" onClick={(e) => { e.preventDefault(); setShowGuestForm(!showGuestForm); }}>
+            <span className="flex items-center gap-1.5 text-base font-bold"><Plus className="h-4 w-4 text-primary" />용병 관리</span>
             <div className="flex items-center gap-2">
-              <span className="text-base font-bold">용병 관리</span>
               <Badge variant="secondary" className="text-xs">{(guests ?? []).length}명</Badge>
+              <ChevronDown className={cn("h-5 w-5 text-muted-foreground transition-transform duration-200", showGuestForm && "rotate-180")} />
             </div>
-            <ChevronDown className={cn("h-5 w-5 text-muted-foreground transition-transform duration-200", showGuestForm && "rotate-180")} />
           </summary>
           <div className="space-y-4 px-5 pb-5">
             {showGuestForm && (

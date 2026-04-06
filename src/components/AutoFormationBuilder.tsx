@@ -19,6 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
+import { Zap } from "lucide-react";
 
 /* ── Types ── */
 
@@ -527,6 +528,7 @@ export default function AutoFormationBuilder({
     [],
   );
   const [results, setResults] = useState<QuarterResult[] | null>(null);
+  const [previewQuarter, setPreviewQuarter] = useState(1);
   const [saving, setSaving] = useState(false);
 
   const formation = useMemo(
@@ -752,7 +754,7 @@ export default function AutoFormationBuilder({
         className="flex w-full items-center justify-between px-5 py-4 hover:bg-secondary/30 transition-colors"
       >
         <span className="flex items-center gap-2 text-base font-bold">
-          <span className="text-primary">⚡</span> 자동 편성
+          <Zap className="h-4 w-4 text-primary" /> 자동 편성
         </span>
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="text-xs">{attendingPlayers.length}명</Badge>
@@ -827,21 +829,25 @@ export default function AutoFormationBuilder({
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    {/* GK toggle */}
-                    <button
-                      type="button"
-                      onClick={() => toggleGK(player.id)}
-                      className={cn(
-                        "flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-bold transition",
-                        player.isGK ? "bg-amber-500/30 text-amber-400" : "bg-muted text-muted-foreground hover:bg-muted/80",
-                      )}
-                      title="골키퍼 지정/해제"
-                    >G</button>
+                  <div className="mb-1 flex items-center gap-2">
                     <span className="truncate text-sm font-semibold">{player.name}</span>
+                    {(player.preferredPositions ?? [player.preferredPosition]).includes("GK" as PreferredPosition) && (
+                      <button
+                        type="button"
+                        onClick={() => toggleGK(player.id)}
+                        className={cn(
+                          "flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold transition-all",
+                          player.isGK
+                            ? "bg-amber-500/30 text-amber-400"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        )}
+                      >
+                        🥅 GK
+                      </button>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-1">
-                    {(player.preferredPositions ?? [player.preferredPosition]).map((pos) => (
+                    {(player.preferredPositions ?? [player.preferredPosition]).filter((pos) => pos !== "GK").map((pos) => (
                       <Badge key={pos} className={cn("text-[10px] px-1.5 py-0 border-0", POS_COLOR[pos])}>
                         {POS_LABEL[pos] ?? pos}
                       </Badge>
@@ -859,9 +865,9 @@ export default function AutoFormationBuilder({
                       <button type="button"
                         onClick={() => setPlayerQuarters(player.id, Math.max(0, player.quarters - 0.5))}
                         disabled={player.quarters <= 0}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 text-sm transition-colors hover:bg-secondary disabled:opacity-30"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/50 text-sm text-muted-foreground transition-colors hover:bg-secondary disabled:opacity-30"
                       >−</button>
-                      <div className={cn("flex h-8 min-w-[52px] items-center justify-center rounded-lg text-sm font-bold",
+                      <div className={cn("flex h-8 w-14 shrink-0 items-center justify-center rounded-lg text-sm font-bold",
                         player.quarters === quarterCount ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]" :
                         player.quarters === 0 ? "bg-muted text-muted-foreground" :
                         player.quarters >= quarterCount * 0.75 ? "bg-primary/20 text-primary" :
@@ -872,7 +878,7 @@ export default function AutoFormationBuilder({
                       <button type="button"
                         onClick={() => setPlayerQuarters(player.id, Math.min(quarterCount, player.quarters + 0.5))}
                         disabled={player.quarters >= quarterCount}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 text-sm transition-colors hover:bg-secondary disabled:opacity-30"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/50 text-sm text-muted-foreground transition-colors hover:bg-secondary disabled:opacity-30"
                       >+</button>
                     </>
                   )}
@@ -898,204 +904,107 @@ export default function AutoFormationBuilder({
           {results ? "다시 생성" : "자동 편성 실행"}
         </Button>
 
-        {/* ── Results ── */}
-        {results && playerQuarterMap && (
-          <div className="space-y-4 border-t border-border pt-4">
-            {/* Legend */}
-            <div className="flex items-center gap-3">
-              <h4 className="text-sm font-bold">편성 결과</h4>
-              <div className="ml-auto flex gap-3 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <span className="inline-block h-3 w-5 rounded-sm bg-primary/60" />
-                  풀타임
-                </span>
-                <span className="flex items-center gap-1">
-                  <span
-                    className="inline-block h-3 w-5 overflow-hidden rounded-sm"
-                    style={{
-                      background:
-                        "linear-gradient(90deg, rgba(16,185,129,0.6) 50%, var(--secondary) 50%)",
-                    }}
-                  />
-                  전반
-                </span>
-                <span className="flex items-center gap-1">
-                  <span
-                    className="inline-block h-3 w-5 overflow-hidden rounded-sm"
-                    style={{
-                      background:
-                        "linear-gradient(90deg, var(--secondary) 50%, rgba(16,185,129,0.6) 50%)",
-                    }}
-                  />
-                  후반
-                </span>
+        {/* ── 쿼터별 미리보기 + 액션 버튼 ── */}
+        {results && playerQuarterMap && (() => {
+          const [previewQ, setPreviewQ] = [previewQuarter, setPreviewQuarter];
+          const qr = results.find((r) => r.quarter === previewQ) ?? results[0];
+          // 포지션별 그룹핑
+          const slotMap = new Map<string, SlotAssignment[]>();
+          if (qr) {
+            for (const a of qr.assignments) {
+              if (!slotMap.has(a.slotLabel)) slotMap.set(a.slotLabel, []);
+              slotMap.get(a.slotLabel)!.push(a);
+            }
+          }
+          const getSlotColor = (label: string) => {
+            if (label === "GK") return "bg-amber-500/20 text-amber-400 border-amber-500/30";
+            if (["CB","LCB","RCB","LB","RB"].includes(label)) return "bg-[hsl(var(--info))]/20 text-[hsl(var(--info))] border-[hsl(var(--info))]/30";
+            if (["CDM","LDM","RDM","CM","LCM","RCM","CAM","LAM","RAM"].includes(label)) return "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))] border-[hsl(var(--success))]/30";
+            return "bg-primary/20 text-primary border-primary/30";
+          };
+
+          return (
+            <div className="space-y-4 border-t border-border/30 pt-4">
+              {/* 쿼터별 미리보기 제목 */}
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">쿼터별 미리보기</div>
+
+              {/* 쿼터 탭 */}
+              <div className="flex gap-1 rounded-lg bg-secondary p-1">
+                {Array.from({ length: quarterCount }, (_, i) => i + 1).map((q) => (
+                  <button key={q} type="button" onClick={() => setPreviewQ(q)}
+                    className={cn("flex-1 rounded-md py-2 text-sm font-medium transition-all",
+                      previewQ === q ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    )}>
+                    Q{q}
+                  </button>
+                ))}
               </div>
-            </div>
 
-            {/* Player × quarter grid */}
-            <div className="overflow-x-auto">
-              <div className="min-w-[280px]">
-                {/* Header row */}
-                <div className="flex items-center gap-1 px-1 pb-1">
-                  <span className="w-16 text-xs font-bold text-muted-foreground">
-                    선수
-                  </span>
-                  <span className="w-8 shrink-0 text-center text-xs font-bold text-muted-foreground">
-                    합계
-                  </span>
-                  {Array.from({ length: quarterCount }, (_, i) => (
-                    <span
-                      key={i}
-                      className="flex-1 text-center text-xs font-bold text-muted-foreground"
-                    >
-                      Q{i + 1}
-                    </span>
-                  ))}
-                  <span className="w-10 text-center text-xs font-bold text-muted-foreground">
-                    배치
-                  </span>
-                </div>
-
-                {/* Player rows */}
-                {sortedAssignments
-                  .filter((a) => a.quarters > 0 || a.isGK)
-                  .map((player) => {
-                    const qmap = playerQuarterMap.get(player.id);
-                    // 실제 배정된 쿼터 합산 (full=1, half=0.5)
-                    let totalQ = 0;
-                    if (qmap) {
-                      for (const type of qmap.values()) {
-                        totalQ += type === "full" ? 1 : 0.5;
-                      }
-                    }
-                    return (
-                      <div
-                        key={player.id}
-                        className="flex items-center gap-1 px-1 py-0.5"
-                      >
-                        <span className="w-16 truncate text-xs font-medium">
-                          {player.name}
-                        </span>
-                        {/* 총 쿼터 수 */}
-                        <span className={cn(
-                          "w-8 shrink-0 text-center text-xs font-bold",
-                          totalQ % 1 !== 0 ? "text-sky-400" : "text-muted-foreground",
-                        )}>
-                          {totalQ % 1 !== 0 ? `${totalQ}` : `${totalQ}`}Q
-                        </span>
-                        {Array.from(
-                          { length: quarterCount },
-                          (_, i) => {
-                            const q = i + 1;
-                            const type = qmap?.get(q);
-                            return (
-                              <div
-                                key={q}
-                                className="flex flex-1 justify-center"
-                              >
-                                <div className="relative flex h-5 w-8 overflow-hidden rounded-sm border border-border/50">
-                                  <div
-                                    className={cn(
-                                      "flex-1 transition-colors",
-                                      type === "full" ||
-                                        type === "first_half"
-                                        ? "bg-primary/60"
-                                        : "bg-muted",
-                                    )}
-                                  />
-                                  {/* 중앙 구분선 (half일 때 강조) */}
-                                  {(type === "first_half" || type === "second_half") && (
-                                    <div className="absolute inset-y-0 left-1/2 w-px bg-border" />
-                                  )}
-                                  <div
-                                    className={cn(
-                                      "flex-1 transition-colors",
-                                      type === "full" ||
-                                        type === "second_half"
-                                        ? "bg-primary/60"
-                                        : "bg-muted",
-                                    )}
-                                  />
-                                  {/* 0.5Q 텍스트 라벨 */}
-                                  {type === "first_half" && (
-                                    <span className="absolute inset-0 flex items-center justify-center text-[7px] font-bold text-white/80">전</span>
-                                  )}
-                                  {type === "second_half" && (
-                                    <span className="absolute inset-0 flex items-center justify-center text-[7px] font-bold text-white/80">후</span>
+              {/* 포지션 그리드 — GK → 수비 → 미드 → 공격 순 */}
+              {qr && qr.assignments.length > 0 ? (() => {
+                const posOrder: Record<string, number> = { GK: 0, CB: 1, LCB: 1, RCB: 1, LB: 2, RB: 2, CDM: 3, LDM: 3, RDM: 3, CM: 4, LCM: 4, RCM: 4, CAM: 5, LAM: 5, RAM: 5, LW: 6, RW: 6, LWF: 6, RWF: 6, ST: 7, CF: 7 };
+                const sorted = [...qr.assignments].sort((a, b) => (posOrder[a.slotLabel] ?? 9) - (posOrder[b.slotLabel] ?? 9));
+                const getCategory = (label: string) => {
+                  if (label === "GK") return "gk";
+                  if ((posOrder[label] ?? 9) <= 2) return "def";
+                  if ((posOrder[label] ?? 9) <= 5) return "mid";
+                  return "atk";
+                };
+                // 카테고리별 그룹
+                const groups = [
+                  { key: "gk", label: "GK", color: "border-amber-500/20" },
+                  { key: "def", label: "수비", color: "border-[hsl(var(--info))]/20" },
+                  { key: "mid", label: "미드필드", color: "border-[hsl(var(--success))]/20" },
+                  { key: "atk", label: "공격", color: "border-primary/20" },
+                ];
+                return (
+                  <div className="space-y-3">
+                    {groups.map(({ key, label, color }) => {
+                      const items = sorted.filter((a) => getCategory(a.slotLabel) === key);
+                      if (items.length === 0) return null;
+                      return (
+                        <div key={key}>
+                          <p className="mb-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</p>
+                          <div className="grid grid-cols-4 gap-2">
+                            {items.map((a) => (
+                              <div key={`${a.slotId}-${a.playerId}`}
+                                className={cn("rounded-lg border p-2 text-center", getSlotColor(a.slotLabel))}>
+                                <Badge className={cn("mb-1 border-0 text-[10px]", getSlotColor(a.slotLabel))}>{a.slotLabel}</Badge>
+                                <div className="truncate text-xs font-medium text-foreground">
+                                  {a.playerName}
+                                  {a.type !== "full" && (
+                                    <span className="ml-0.5 text-[10px] text-muted-foreground">({a.type === "first_half" ? "전" : "후"})</span>
                                   )}
                                 </div>
                               </div>
-                            );
-                          },
-                        )}
-                        <span className="w-10 text-center text-xs text-muted-foreground">
-                          {playerPositionLabel.get(player.id) ?? "-"}
-                        </span>
-                      </div>
-                    );
-                  })}
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })() : (
+                <div className="py-4 text-center text-xs text-muted-foreground">배정된 선수가 없습니다</div>
+              )}
+
+              {/* 액션 버튼 */}
+              <div className="space-y-2">
+                <Button className="w-full min-h-[48px] rounded-xl font-semibold" onClick={generate}>
+                  다시 생성
+                </Button>
+                <Button className="w-full min-h-[44px] rounded-xl border-[hsl(var(--success))]/50 text-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/10" variant="outline"
+                  onClick={saveToTacticsBoard} disabled={saving}>
+                  {saving ? "저장 중..." : "→ 전술판에 적용"}
+                </Button>
+                <Button variant="ghost" className="w-full text-muted-foreground hover:text-foreground"
+                  onClick={() => { setResults(null); }}>
+                  ↻ 초기화
+                </Button>
               </div>
             </div>
-
-            {/* Per-quarter lineups */}
-            <div className="grid gap-2 sm:grid-cols-2">
-              {results.map((qr) => (
-                <Card
-                  key={qr.quarter}
-                  className="border-0 bg-secondary shadow-none"
-                >
-                  <CardContent className="p-3">
-                    <p className="mb-2 text-xs font-bold">
-                      Q{qr.quarter} 라인업
-                    </p>
-                    <div className="space-y-0.5">
-                      {qr.assignments.map((a) => (
-                        <div
-                          key={`${a.slotId}-${a.playerId}`}
-                          className="flex items-center gap-2 text-xs"
-                        >
-                          <Badge
-                            variant="outline"
-                            className="w-9 justify-center px-0 text-xs"
-                          >
-                            {a.slotLabel}
-                          </Badge>
-                          <span className="min-w-0 flex-1 truncate font-medium">
-                            {a.playerName}
-                          </span>
-                          {a.type !== "full" && (
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "ml-auto shrink-0 text-xs font-bold",
-                                a.type === "first_half"
-                                  ? "border-sky-500/40 bg-sky-500/10 text-sky-400"
-                                  : "border-violet-500/40 bg-violet-500/10 text-violet-400",
-                              )}
-                            >
-                              {a.type === "first_half"
-                                ? "0.5Q 전반"
-                                : "0.5Q 후반"}
-                            </Badge>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Save button */}
-            <Button
-              className="w-full"
-              onClick={saveToTacticsBoard}
-              disabled={saving}
-            >
-              {saving ? "저장 중..." : "전술판에 적용"}
-            </Button>
-          </div>
-        )}
+          );
+        })()}
       </CardContent>
       </>
       )}
