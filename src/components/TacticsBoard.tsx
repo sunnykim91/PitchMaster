@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { RotateCcw, Coffee, Share2, Copy } from "lucide-react";
 
 type Player = {
   id: string;
@@ -689,32 +690,36 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
           {shareMsg && <span className="text-xs text-primary animate-pulse">{shareMsg}</span>}
         </div>
 
-        {/* 쿼터 선택 */}
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          {quarters.map((quarter) => (
-            <Button
-              key={quarter}
-              type="button"
-              variant={activeQuarter === quarter ? "info" : "outline"}
-              size="sm"
-              onClick={() => {
-                flushPendingSave();
-                setActiveQuarter(quarter);
-                setActiveSlotId(null);
-              }}
-              className="rounded-xl"
-            >
-              {quarter}쿼터
-            </Button>
-          ))}
+        {/* 쿼터 선택 — 세그먼트 컨트롤 */}
+        <div className="mt-4 rounded-lg bg-secondary p-1">
+          <div className="flex gap-1">
+            {quarters.map((quarter) => (
+              <button
+                key={quarter}
+                type="button"
+                onClick={() => {
+                  flushPendingSave();
+                  setActiveQuarter(quarter);
+                  setActiveSlotId(null);
+                }}
+                className={cn(
+                  "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all",
+                  activeQuarter === quarter
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Q{quarter}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* 설정 (포메이션 + 유니폼) + 액션 버튼 */}
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          {/* 포메이션 */}
+        {/* 포메이션 + 유니폼 + 리셋 */}
+        <div className="mt-3 flex items-center gap-2">
           {!readOnly ? (
             <Select value={formation.id} onValueChange={handleFormationChange}>
-              <SelectTrigger className="w-auto min-w-[100px] rounded-xl text-xs font-semibold">
+              <SelectTrigger className="h-11 flex-1 rounded-lg border-0 bg-secondary text-sm font-semibold">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -724,13 +729,12 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               </SelectContent>
             </Select>
           ) : (
-            <Badge variant="secondary" className="rounded-xl px-3 py-1 text-xs font-semibold">{formation.name}</Badge>
+            <div className="flex h-11 flex-1 items-center rounded-lg bg-secondary px-3 text-sm font-semibold">{formation.name}</div>
           )}
 
-          {/* 풋살 인원 */}
           {isFutsal && !readOnly && (
             <Select value={String(futsalFieldCount)} onValueChange={(v) => handleFutsalFieldCountChange(Number(v))}>
-              <SelectTrigger className="w-auto min-w-[70px] rounded-xl text-xs font-semibold"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-11 w-auto min-w-[80px] rounded-lg border-0 bg-secondary text-sm font-semibold"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {futsalFieldCounts.map((count) => (
                   <SelectItem key={count} value={String(count)}>{count}vs{count}</SelectItem>
@@ -738,36 +742,42 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               </SelectContent>
             </Select>
           )}
-          {isFutsal && readOnly && (
-            <Badge variant="secondary" className="rounded-xl px-3 py-1 text-xs font-semibold">{futsalFieldCount}인제</Badge>
-          )}
 
-          {/* 유니폼 */}
-          <Badge variant="secondary" className="flex items-center gap-1 rounded-xl px-1 py-1">
-            <Button type="button" variant={uniformMode === "HOME" ? "default" : "outline"} size="sm" onClick={() => setUniformMode("HOME")} className="rounded-lg px-3 py-1 text-xs font-semibold">홈</Button>
-            <Button type="button" variant={uniformMode === "AWAY" ? "warning" : "outline"} size="sm" onClick={() => setUniformMode("AWAY")} className="rounded-lg px-3 py-1 text-xs font-semibold">원정</Button>
-          </Badge>
-
-          {/* 구분 */}
-          <div className="flex-1" />
-
-          {/* 액션: 초기화 + 공유 — 동일한 pill 스타일 */}
-          {!readOnly && (
-            <button type="button" onClick={clearBoard} className="rounded-full border border-border/50 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
-              초기화
+          <div className="flex gap-1">
+            <button type="button" onClick={() => setUniformMode("HOME")}
+              className={cn("flex h-11 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-all",
+                uniformMode === "HOME" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"
+              )}>
+              <span className="h-3 w-3 rounded" style={{ backgroundColor: resolvedTeamSettings.uniformPrimary }} />
+              홈
             </button>
-          )}
-          {!readOnly && (
-            <button type="button" onClick={clearAllQuarters} className="rounded-full border border-border/50 px-3 py-1.5 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
-              전체 초기화
+            <button type="button" onClick={() => setUniformMode("AWAY")}
+              className={cn("flex h-11 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-all",
+                uniformMode === "AWAY" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"
+              )}>
+              <span className="h-3 w-3 rounded" style={{ backgroundColor: resolvedTeamSettings.uniformSecondary }} />
+              원정
             </button>
+          </div>
+
+          {!readOnly && (
+            <Button type="button" variant="secondary" size="icon" className="h-11 w-11 shrink-0" onClick={clearBoard} title="이 쿼터 초기화">
+              <RotateCcw className="h-4 w-4" />
+            </Button>
           )}
-          <button type="button" onClick={handleShareFormation} className="rounded-full border border-border/50 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
-            공유
-          </button>
-          <button type="button" onClick={handleShareAll} className="rounded-full border border-border/50 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
-            전체 공유
-          </button>
+        </div>
+
+        {/* 액션 버튼 */}
+        <div className="mt-2 flex gap-2">
+          {!readOnly && (
+            <Button type="button" variant="outline" className="flex-1 text-xs" onClick={clearAllQuarters}>전체 초기화</Button>
+          )}
+          <Button type="button" variant="outline" className="flex-1 text-xs gap-1.5" onClick={handleShareFormation}>
+            <Share2 className="h-3.5 w-3.5" />공유
+          </Button>
+          <Button type="button" variant="outline" className="flex-1 text-xs gap-1.5" onClick={handleShareAll}>
+            <Copy className="h-3.5 w-3.5" />전체 공유
+          </Button>
         </div>
 
         <div className={cn("mt-5 grid gap-5", !readOnly && "lg:grid-cols-[1.2fr_0.8fr]")}>
@@ -896,18 +906,17 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
 
           {/* 쉬는 인원 (캡처 영역 내) */}
           {restingPlayers.length > 0 && (
-            <div className="rounded-xl bg-amber-500/10 px-4 py-3">
-              <p className="text-sm font-bold text-amber-400">
-                쉬는 선수 ({restingPlayers.length}명)
-              </p>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
+            <div className="rounded-xl bg-secondary/50 px-4 py-3">
+              <div className="mb-2 flex items-center gap-2">
+                <Coffee className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground">쉬는 선수</span>
+                <Badge variant="secondary" className="text-xs">{restingPlayers.length}</Badge>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
                 {restingPlayers.map((player) => (
-                  <span
-                    key={player.id}
-                    className="inline-block rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-400"
-                  >
+                  <Badge key={player.id} variant="secondary" className="text-xs">
                     {player.name}
-                  </span>
+                  </Badge>
                 ))}
               </div>
             </div>
