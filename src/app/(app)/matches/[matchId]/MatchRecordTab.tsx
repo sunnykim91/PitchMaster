@@ -117,9 +117,16 @@ function MatchRecordTabInner({
       scorerId = "UNKNOWN";
     }
 
-    // 자체전: 득점자의 소속팀(side) 자동 결정
+    // 자체전: 득점자의 소속팀(side) 결정
     let side: "A" | "B" | null = null;
-    if (isInternal && internalTeams) {
+    const formSide = String(formData.get("side") || "");
+    if (formSide === "A" || formSide === "B") {
+      side = formSide;
+    } else if (editingGoalId) {
+      // 수정 시: 기존 골의 side 보존
+      const existingGoal = goals.find((g) => g.id === editingGoalId);
+      side = existingGoal?.side ?? null;
+    } else if (isInternal && internalTeams) {
       const assignment = internalTeams.find((t) => t.playerId === scorerId);
       side = assignment?.side ?? null;
     }
@@ -176,13 +183,13 @@ function MatchRecordTabInner({
       if (goalTypeSelect) goalTypeSelect.value = goal.goalType ?? "NORMAL";
       const quarterBtns = quarterInput?.parentElement?.querySelectorAll("button");
       quarterBtns?.forEach((btn) => {
-        btn.classList.remove("bg-primary", "text-white");
-        btn.classList.add("bg-secondary", "text-muted-foreground");
+        btn.classList.remove("bg-background", "text-foreground", "shadow-sm");
+        btn.classList.add("text-muted-foreground");
       });
       const targetIdx = goal.quarter;
       if (quarterBtns && quarterBtns[targetIdx]) {
-        quarterBtns[targetIdx].classList.remove("bg-secondary", "text-muted-foreground");
-        quarterBtns[targetIdx].classList.add("bg-primary", "text-white");
+        quarterBtns[targetIdx].classList.remove("text-muted-foreground");
+        quarterBtns[targetIdx].classList.add("bg-background", "text-foreground", "shadow-sm");
       }
       form.scrollIntoView({ behavior: "smooth", block: "center" });
       return true;
@@ -220,11 +227,10 @@ function MatchRecordTabInner({
 
   /* ── Attendance handler ── */
   async function handleAttendance(player: RosterPlayer, status: "PRESENT" | "ABSENT" | "LATE") {
-    const attended = status === "PRESENT" || status === "LATE";
     await apiMutate("/api/attendance-check", "POST", {
       matchId,
       ...(player.isLinked ? { userId: player.id } : { memberId: player.memberId }),
-      attended,
+      status,
     });
     await refetchAttendance();
   }
@@ -257,10 +263,32 @@ function MatchRecordTabInner({
               <div className="flex gap-3">
                 {isInternal ? (
                   <>
-                    <Button type="button" className="flex-1 min-h-[48px] bg-primary/20 text-primary hover:bg-primary/30 font-semibold" onClick={() => setShowDetailForm(true)}>
+                    <Button type="button" className="flex-1 min-h-[48px] bg-primary/20 text-primary hover:bg-primary/30 font-semibold"
+                      onClick={async () => {
+                        const formData = new FormData();
+                        formData.set("scorerId", "UNKNOWN");
+                        formData.set("assistId", "");
+                        formData.set("quarter", "0");
+                        formData.set("minute", "0");
+                        formData.set("isOwnGoal", "");
+                        formData.set("goalType", "NORMAL");
+                        formData.set("side", "A");
+                        await handleAddGoal(formData);
+                      }}>
                       + A팀 골
                     </Button>
-                    <Button type="button" className="flex-1 min-h-[48px] bg-[hsl(var(--info))]/20 text-[hsl(var(--info))] hover:bg-[hsl(var(--info))]/30 font-semibold" onClick={() => setShowDetailForm(true)}>
+                    <Button type="button" className="flex-1 min-h-[48px] bg-[hsl(var(--info))]/20 text-[hsl(var(--info))] hover:bg-[hsl(var(--info))]/30 font-semibold"
+                      onClick={async () => {
+                        const formData = new FormData();
+                        formData.set("scorerId", "UNKNOWN");
+                        formData.set("assistId", "");
+                        formData.set("quarter", "0");
+                        formData.set("minute", "0");
+                        formData.set("isOwnGoal", "");
+                        formData.set("goalType", "NORMAL");
+                        formData.set("side", "B");
+                        await handleAddGoal(formData);
+                      }}>
                       + B팀 골
                     </Button>
                   </>
@@ -336,7 +364,7 @@ function MatchRecordTabInner({
                   <div className="space-y-4">
                     <div className="space-y-1.5">
                       <p className="text-[11px] font-medium text-muted-foreground">득점자</p>
-                      <select name="scorerId" className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+                      <select name="scorerId" className="h-12 w-full appearance-none rounded-xl border border-border bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
                         <option value="">선택</option>
                         <optgroup label="참석 멤버">
                           {attendingMembers.map((player) => (
@@ -367,7 +395,7 @@ function MatchRecordTabInner({
 
                     <div className="space-y-1.5">
                       <p className="text-[11px] font-medium text-muted-foreground">어시스트</p>
-                      <select name="assistId" className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+                      <select name="assistId" className="h-12 w-full appearance-none rounded-xl border border-border bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
                         <option value="">선택</option>
                         <optgroup label="참석 멤버">
                           {attendingMembers.map((player) => (
@@ -397,7 +425,7 @@ function MatchRecordTabInner({
 
                     <div className="space-y-1.5">
                       <p className="text-[11px] font-medium text-muted-foreground">골 유형</p>
-                      <select name="goalType" defaultValue="NORMAL" className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+                      <select name="goalType" defaultValue="NORMAL" className="h-12 w-full appearance-none rounded-xl border border-border bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
                         <option value="NORMAL">일반</option>
                         <option value="PK">PK (페널티킥)</option>
                         <option value="FK">FK (프리킥)</option>
@@ -449,12 +477,7 @@ function MatchRecordTabInner({
                       {editingGoalId ? "수정 완료" : "기록 추가"}
                     </Button>
                     {editingGoalId && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleCancelEdit}
-                      >
+                      <Button type="button" variant="outline" className="min-h-[48px] rounded-xl px-6" onClick={handleCancelEdit}>
                         취소
                       </Button>
                     )}
@@ -482,13 +505,22 @@ function MatchRecordTabInner({
                     className="card-list-item flex items-center justify-between"
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold truncate">
+                      <p className="text-sm font-semibold truncate flex items-center gap-1.5">
+                        {isInternal && goal.side && (
+                          <Badge className={cn("text-[10px] px-1.5 py-0 border-0",
+                            goal.side === "A" ? "bg-primary/20 text-primary" : "bg-[hsl(var(--info))]/20 text-[hsl(var(--info))]"
+                          )}>{goal.side}팀</Badge>
+                        )}
                         {label}
                       </p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
-                        {goal.quarter > 0 && <span>{goal.quarter}Q</span>}
+                        {goal.quarter > 0 && (
+                          <span className="flex items-center gap-0.5">
+                            <Clock className="h-3 w-3" />Q{goal.quarter}
+                          </span>
+                        )}
                         {goal.goalType && goal.goalType !== "NORMAL" && goal.goalType !== "OWN_GOAL" && (
-                          <span className="rounded bg-primary/15 px-1.5 py-0.5 text-xs font-bold text-primary">{goal.goalType}</span>
+                          <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">{goal.goalType}</span>
                         )}
                         {goal.assistId
                           ? <span>{(goal.quarter > 0 || (goal.goalType && goal.goalType !== "NORMAL" && goal.goalType !== "OWN_GOAL")) ? " · " : ""}A: {resolvePlayerName(goal.assistId)}</span>

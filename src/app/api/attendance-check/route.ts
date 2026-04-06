@@ -15,8 +15,11 @@ export async function POST(request: NextRequest) {
   if (roleCheck) return roleCheck;
 
   const body = await request.json();
-  const { matchId, userId, memberId, attended } = body;
+  const { matchId, userId, memberId, attended, status } = body;
+  // status: "PRESENT" | "LATE" | "ABSENT" (새 방식), attended: boolean (하위 호환)
   if (!matchId || (!userId && !memberId)) return apiError("matchId and (userId or memberId) required");
+  const attendanceStatus = status ?? (attended ? "PRESENT" : "ABSENT");
+  const actuallyAttended = attendanceStatus === "PRESENT" || attendanceStatus === "LATE";
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
@@ -39,7 +42,7 @@ export async function POST(request: NextRequest) {
     // 기존 레코드 업데이트 (vote는 건드리지 않음)
     const { error } = await db
       .from("match_attendance")
-      .update({ actually_attended: attended ?? true })
+      .update({ actually_attended: actuallyAttended, attendance_status: attendanceStatus })
       .eq("id", existing.id);
 
     if (error) return apiError(error.message);
@@ -52,7 +55,8 @@ export async function POST(request: NextRequest) {
         user_id: userId || null,
         member_id: memberId || null,
         vote: "ATTEND",
-        actually_attended: attended ?? true,
+        actually_attended: actuallyAttended,
+        attendance_status: attendanceStatus,
         voted_at: new Date().toISOString(),
       });
 
