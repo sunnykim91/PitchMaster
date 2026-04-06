@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import type { FormEvent } from "react";
 import { MessageSquare, Plus, X } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
@@ -116,7 +117,19 @@ export default function BoardClient({
   initialData?: InitialData;
 }) {
   const { showToast } = useToast();
+  const searchParams = useSearchParams();
   const isStaff = isStaffOrAbove(userRole);
+
+  // ?post=xxx 쿼리로 해당 글로 스크롤
+  useEffect(() => {
+    const postId = searchParams.get("post");
+    if (!postId) return;
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`post-${postId}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchParams]);
 
   /* ── Data fetching ── */
   const {
@@ -388,7 +401,7 @@ export default function BoardClient({
   }, [posts, optimisticPolls, refetchPosts]);
 
   const handleShare = useCallback(async (post: Post) => {
-    const url = `${window.location.origin}/board`;
+    const url = `${window.location.origin}/board?post=${post.id}`;
     const title = post.title;
     const text = post.poll
       ? `📊 ${post.poll.question}\n${post.poll.options.map((o) => `• ${o.label}`).join("\n")}`
@@ -523,8 +536,8 @@ export default function BoardClient({
       ) : (
         <div className="space-y-3">
           {posts.map((post) => (
+            <div id={`post-${post.id}`} key={post.id}>
             <PostCard
-              key={post.id}
               post={post}
               userId={userId}
               isStaff={isStaff}
@@ -552,6 +565,7 @@ export default function BoardClient({
               commentingPostId={commentingPostId}
               deletingCommentIds={deletingCommentIds}
             />
+            </div>
           ))}
         </div>
       )}
