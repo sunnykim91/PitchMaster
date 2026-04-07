@@ -3,10 +3,17 @@
 import React, { useRef, useState, useCallback } from "react";
 import { GA } from "@/lib/analytics";
 import Image from "next/image";
+import { Camera, FileSpreadsheet, Check, AlertCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { apiMutate } from "@/lib/useApi";
 
@@ -63,6 +70,12 @@ export type DuesBulkTabProps = {
   autoMatchMember: (description: string) => string | undefined;
 };
 
+function formatCurrencyInput(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  return new Intl.NumberFormat("ko-KR").format(Number(digits));
+}
+
 function DuesBulkTabInner({
   records,
   members,
@@ -87,6 +100,8 @@ function DuesBulkTabInner({
   const [excelBalance, setExcelBalance] = useState<number | null>(null);
   const [bulkProgress, setBulkProgress] = useState("");
   const bulkSectionRef = useRef<HTMLDivElement>(null);
+  const ocrFileInputRef = useRef<HTMLInputElement>(null);
+  const excelFileInputRef = useRef<HTMLInputElement>(null);
 
   /**
    * 은행 앱 스크린샷 OCR 텍스트에서 거래 내역 파싱
@@ -293,81 +308,336 @@ function DuesBulkTabInner({
     }
   }, [bulkRows, refetchSummary, showToast]);
 
+  /* ── 유효한 OCR 행 수 ── */
+  const validBulkCount = bulkRows.filter((r) => r.amount && r.description).length;
+
   return (
-    <div role="tabpanel" id="tabpanel-bulk" aria-labelledby="tab-bulk">
-      {/* ── 엑셀 업로드 ── */}
-      <Card className="p-4 sm:p-6 mb-5">
-        <h3 className="font-heading text-base sm:text-lg font-bold uppercase text-foreground">
-          엑셀 파일 업로드
-        </h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          은행 앱에서 다운로드한 거래 내역 엑셀을 그대로 올려주세요.
-        </p>
-        <details className="mt-2 text-sm text-muted-foreground">
-          <summary className="cursor-pointer text-sm font-medium text-primary hover:underline">지원 형식 안내</summary>
-          <div className="mt-2 space-y-1.5 rounded-lg bg-secondary/50 p-3 text-sm">
-            <p><strong>지원 은행:</strong> 카카오뱅크, 토스뱅크, 국민, 신한, 우리, 하나 등</p>
-            <p><strong>필수 컬럼:</strong> 거래일시, 거래금액(또는 금액)</p>
-            <p><strong>선택 컬럼:</strong> 구분(입금/출금), 잔액, 내용, 메모</p>
-            <p className="text-muted-foreground">은행 앱 → 거래내역 → 엑셀 다운로드 → 그대로 업로드하면 됩니다. 파일 편집은 필요 없습니다.</p>
+    <div role="tabpanel" id="tabpanel-bulk" aria-labelledby="tab-bulk" className="space-y-5">
+      <h2 className="text-sm font-medium text-foreground">내역 올리기</h2>
+
+      {/* ── OCR 섹션 ── */}
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-muted-foreground">OCR (스크린샷)</p>
+        <Card
+          className="border-dashed border-white/10 bg-card py-8 cursor-pointer hover:border-white/20 transition-colors active:scale-[0.99]"
+          onClick={() => ocrFileInputRef.current?.click()}
+        >
+          <CardContent className="flex flex-col items-center gap-3 px-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <Camera className="h-6 w-6 text-primary" />
+            </div>
+            <div className="text-center space-y-1">
+              <p className="text-sm font-medium text-foreground">
+                통장 거래내역 캡쳐를 올려주세요
+              </p>
+              <p className="text-xs text-muted-foreground">
+                은행 앱 스크린샷을 올리면 자동으로 인식합니다
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2 active:scale-[0.97] transition-transform"
+              disabled={ocrLoading}
+              onClick={(e) => {
+                e.stopPropagation();
+                ocrFileInputRef.current?.click();
+              }}
+            >
+              {ocrLoading ? "처리 중..." : "사진 선택"}
+            </Button>
+          </CardContent>
+        </Card>
+        <input
+          ref={ocrFileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleBulkImageChange}
+        />
+      </div>
+
+      {/* OCR 로딩 오버레이 */}
+      {ocrLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3 rounded-2xl bg-background p-8 shadow-2xl">
+            <span className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-[hsl(var(--info))]" />
+            <p className="text-base font-semibold text-foreground">거래 내역 인식 중...</p>
+            <p className="text-sm text-muted-foreground">은행 앱 스크린샷을 인식하고 있습니다.</p>
+            <button
+              type="button"
+              onClick={() => { setOcrLoading(false); setOcrStatus("취소됨"); }}
+              className="mt-2 rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary transition-colors"
+            >
+              취소
+            </button>
           </div>
-        </details>
-        <div className="mt-4">
-          <input
-            type="file"
-            accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              setExcelLoading(true);
-              setExcelRecords([]);
-              setExcelBalance(null);
-              try {
-                const formData = new FormData();
-                formData.append("file", file);
-                const res = await fetch("/api/dues/excel", { method: "POST", body: formData });
-                const json = await res.json();
-                if (!res.ok) {
-                  showToast(json.error || "엑셀 파싱 실패", "error");
-                  return;
-                }
-                // 기존 회비 내역과 중복 체크
-                const existingKeys = new Set(
-                  summaryRecords.map((r) => `${r.recorded_at?.slice(0, 10)}_${r.amount}_${r.type}`)
-                );
-                const filtered = json.records.filter((r: { date: string; amount: number; type: string }) => {
-                  const key = `${r.date}_${r.amount}_${r.type}`;
-                  return !existingKeys.has(key);
-                });
-                const dupCount = json.totalCount - filtered.length;
-                setExcelRecords(filtered);
-                setExcelBalance(json.lastBalance);
-                if (dupCount > 0) {
-                  showToast(`${json.totalCount}건 중 ${dupCount}건 중복 제외, ${filtered.length}건 새 내역`, "info");
-                } else {
-                  showToast(`${json.totalCount}건의 거래 내역을 인식했습니다.`, "success");
-                }
-              } catch {
-                showToast("엑셀 파일 처리 중 오류가 발생했습니다.", "error");
-              } finally {
-                setExcelLoading(false);
-              }
-            }}
-            className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-xs file:font-bold file:text-primary hover:file:bg-primary/20"
-          />
         </div>
+      )}
+
+      {/* OCR 상태 메시지 */}
+      {!ocrLoading && ocrStatus && (
+        <div className={cn(
+          "rounded-lg px-3 py-2 text-xs font-medium",
+          ocrStatus.includes("오류") || ocrStatus.includes("못했") || ocrStatus.includes("실패")
+            ? "bg-destructive/10 text-destructive"
+            : "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]"
+        )}>
+          {ocrStatus}
+        </div>
+      )}
+
+      {/* 업로드된 이미지 미리보기 */}
+      {bulkImage && (
+        <div className="max-h-[300px] overflow-auto rounded-lg border border-white/[0.06]">
+          <Image src={bulkImage} alt="거래내역 스크린샷" width={600} height={800} className="w-full" />
+        </div>
+      )}
+
+      {/* ── OCR 인식 결과 ── */}
+      {bulkRows.some((r) => r.date || r.amount || r.description) && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-muted-foreground">
+              인식 결과 ({bulkRows.length}건)
+            </p>
+            <Button
+              size="sm"
+              className="h-8 gap-1.5 active:scale-[0.97] transition-transform"
+              onClick={handleBulkSave}
+              disabled={bulkSaving || validBulkCount === 0}
+            >
+              <Check className="h-3.5 w-3.5" />
+              {bulkSaving ? (bulkProgress || "저장 중...") : "전체 저장"}
+            </Button>
+          </div>
+
+          <div className="space-y-3">
+            {bulkRows.map((row, index) => {
+              const errs = bulkErrors[index] ?? [];
+              return (
+                <Card
+                  key={index}
+                  className="border-white/[0.04] bg-card py-4"
+                >
+                  <CardContent className="px-4 space-y-3">
+                    {/* 행 번호 헤더 */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {index + 1}번째
+                      </span>
+                    </div>
+
+                    {/* Row 1: 날짜, 유형, 금액 */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-wide">날짜</label>
+                        <Input
+                          type="date"
+                          value={row.date}
+                          onChange={(e) => {
+                            updateBulkRow(index, "date", e.target.value);
+                            setBulkErrors((p) => { const n = { ...p }; delete n[index]; return n; });
+                          }}
+                          className={cn(
+                            "h-10 rounded-lg bg-secondary border-0 text-sm",
+                            errs.includes("date") && "ring-1 ring-destructive"
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-wide">유형</label>
+                        <Select
+                          value={row.type}
+                          onValueChange={(v) => updateBulkRow(index, "type", v as "INCOME" | "EXPENSE")}
+                        >
+                          <SelectTrigger className={cn(
+                            "h-10 rounded-lg bg-secondary border-0 text-sm",
+                            row.type === "INCOME" ? "text-[hsl(var(--success))]" : "text-destructive"
+                          )}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-card border-white/[0.06]">
+                            <SelectItem value="INCOME" className="text-[hsl(var(--success))]">입금</SelectItem>
+                            <SelectItem value="EXPENSE" className="text-destructive">출금</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-wide">금액</label>
+                        <div className="relative">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs pointer-events-none">₩</span>
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            value={formatCurrencyInput(row.amount)}
+                            onChange={(e) => {
+                              const digits = e.target.value.replace(/\D/g, "");
+                              updateBulkRow(index, "amount", digits);
+                              setBulkErrors((p) => { const n = { ...p }; delete n[index]; return n; });
+                            }}
+                            className={cn(
+                              "h-10 rounded-lg bg-secondary border-0 text-sm pl-5 text-right",
+                              errs.includes("amount") && "ring-1 ring-destructive"
+                            )}
+                            placeholder="0"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Row 2: 내용, 회원 매칭 */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-wide">내용</label>
+                        <Input
+                          value={row.description}
+                          onChange={(e) => {
+                            updateBulkRow(index, "description", e.target.value);
+                            setBulkErrors((p) => { const n = { ...p }; delete n[index]; return n; });
+                          }}
+                          className={cn(
+                            "h-10 rounded-lg bg-secondary border-0 text-sm",
+                            errs.includes("description") && "ring-1 ring-destructive"
+                          )}
+                          placeholder="예: 3월 회비"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-wide">회원 매칭</label>
+                        <Select
+                          value={row.memberName || "none"}
+                          onValueChange={(v) => updateBulkRow(index, "memberName", v === "none" ? "" : v)}
+                        >
+                          <SelectTrigger className="h-10 rounded-lg bg-secondary border-0 text-sm">
+                            <SelectValue placeholder="선택" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-card border-white/[0.06]">
+                            <SelectItem value="none">없음</SelectItem>
+                            {members.map((m) => (
+                              <SelectItem key={m.id} value={m.id}>
+                                {m.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* 삭제 버튼 */}
+                    <div className="flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-muted-foreground hover:text-destructive gap-1.5"
+                        onClick={() => removeBulkRow(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        삭제
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* 행 추가 버튼 */}
+          <Button type="button" variant="outline" size="sm" onClick={addBulkRow} className="w-full">
+            + 행 추가
+          </Button>
+        </div>
+      )}
+
+      {/* ── 엑셀 업로드 섹션 ── */}
+      <div className="space-y-3 pt-2" ref={bulkSectionRef}>
+        <p className="text-xs font-medium text-muted-foreground">엑셀 업로드</p>
+        <Card
+          className="border-dashed border-white/10 bg-card py-8 cursor-pointer hover:border-white/20 transition-colors active:scale-[0.99]"
+          onClick={() => excelFileInputRef.current?.click()}
+        >
+          <CardContent className="flex flex-col items-center gap-3 px-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[hsl(210,70%,60%)]/10">
+              <FileSpreadsheet className="h-6 w-6 text-[hsl(210,70%,60%)]" />
+            </div>
+            <div className="text-center space-y-1">
+              <p className="text-sm font-medium text-foreground">
+                은행 앱에서 다운로드한 거래내역 파일을 올려주세요
+              </p>
+              <p className="text-xs text-muted-foreground">
+                xlsx, xls, csv 형식 지원
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2 active:scale-[0.97] transition-transform"
+              disabled={excelLoading}
+              onClick={(e) => {
+                e.stopPropagation();
+                excelFileInputRef.current?.click();
+              }}
+            >
+              {excelLoading ? "처리 중..." : "파일 선택"}
+            </Button>
+          </CardContent>
+        </Card>
+        <input
+          ref={excelFileInputRef}
+          type="file"
+          accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
+          className="hidden"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            setExcelLoading(true);
+            setExcelRecords([]);
+            setExcelBalance(null);
+            try {
+              const formData = new FormData();
+              formData.append("file", file);
+              const res = await fetch("/api/dues/excel", { method: "POST", body: formData });
+              const json = await res.json();
+              if (!res.ok) {
+                showToast(json.error || "엑셀 파싱 실패", "error");
+                return;
+              }
+              // 기존 회비 내역과 중복 체크
+              const existingKeys = new Set(
+                summaryRecords.map((r) => `${r.recorded_at?.slice(0, 10)}_${r.amount}_${r.type}`)
+              );
+              const filtered = json.records.filter((r: { date: string; amount: number; type: string }) => {
+                const key = `${r.date}_${r.amount}_${r.type}`;
+                return !existingKeys.has(key);
+              });
+              const dupCount = json.totalCount - filtered.length;
+              setExcelRecords(filtered);
+              setExcelBalance(json.lastBalance);
+              if (dupCount > 0) {
+                showToast(`${json.totalCount}건 중 ${dupCount}건 중복 제외, ${filtered.length}건 새 내역`, "info");
+              } else {
+                showToast(`${json.totalCount}건의 거래 내역을 인식했습니다.`, "success");
+              }
+            } catch {
+              showToast("엑셀 파일 처리 중 오류가 발생했습니다.", "error");
+            } finally {
+              setExcelLoading(false);
+            }
+          }}
+        />
 
         {excelLoading && (
-          <div className="mt-4 flex items-center gap-2">
+          <div className="flex items-center gap-2 py-2">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-muted border-t-primary" />
             <span className="text-sm text-muted-foreground">파싱 중...</span>
           </div>
         )}
 
+        {/* 엑셀 파싱 결과 */}
         {(excelRecords.length > 0 || excelBalance !== null) && (
-          <div className="mt-4 space-y-3">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-foreground">
+              <p className="text-xs font-medium text-muted-foreground">
                 {excelRecords.length > 0 ? `${excelRecords.length}건 새 내역` : "새 내역 없음 (모두 중복)"}
               </p>
               {excelBalance !== null && (
@@ -376,6 +646,7 @@ function DuesBulkTabInner({
                 </p>
               )}
             </div>
+
             {excelRecords.length > 0 && (
               <div className="max-h-60 space-y-1 overflow-y-auto rounded-lg bg-secondary p-3">
                 {excelRecords.map((r, i) => (
@@ -394,6 +665,7 @@ function DuesBulkTabInner({
                 ))}
               </div>
             )}
+
             <Button
               className="w-full"
               onClick={async () => {
@@ -440,125 +712,12 @@ function DuesBulkTabInner({
             </Button>
           </div>
         )}
-      </Card>
+      </div>
 
-      {/* ── 스크린샷 일괄 등록 ── */}
-      <Card className="p-4 sm:p-6" ref={bulkSectionRef}>
-        <h3 className="font-heading text-base sm:text-lg font-bold uppercase text-foreground">
-          스크린샷 보고 일괄 등록
-        </h3>
-        <p className="mt-1 text-xs text-muted-foreground">
-          은행 앱 캡쳐를 올리면 자동으로 거래 내역을 인식합니다. 인식 결과를 확인 후 저장하세요.
-        </p>
-        {ocrLoading && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="flex flex-col items-center gap-3 rounded-2xl bg-background p-8 shadow-2xl">
-              <span className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-[hsl(var(--info))]" />
-              <p className="text-base font-semibold text-foreground">거래 내역 인식 중...</p>
-              <p className="text-sm text-muted-foreground">은행 앱 스크린샷을 인식하고 있습니다.</p>
-              <button
-                type="button"
-                onClick={() => { setOcrLoading(false); setOcrStatus("취소됨"); }}
-                className="mt-2 rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary transition-colors"
-              >
-                취소
-              </button>
-            </div>
-          </div>
-        )}
-        {!ocrLoading && ocrStatus && (
-          <div className={cn(
-            "mt-2 rounded-lg px-3 py-2 text-xs font-medium",
-            ocrStatus.includes("오류") || ocrStatus.includes("못했") || ocrStatus.includes("실패")
-              ? "bg-destructive/10 text-destructive"
-              : "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]"
-          )}>
-            {ocrStatus}
-          </div>
-        )}
-
-        <div className="mt-4 grid gap-4 lg:grid-cols-[300px_1fr]">
-          {/* 이미지 업로드 & 미리보기 */}
-          <div className="space-y-3">
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={handleBulkImageChange}
-              className="text-xs"
-            />
-            {bulkImage && (
-              <div className="max-h-[500px] overflow-auto rounded-lg border">
-                <Image src={bulkImage} alt="거래내역 스크린샷" width={600} height={800} className="w-full" />
-              </div>
-            )}
-          </div>
-
-          {/* 일괄 입력 테이블 */}
-          <div className="space-y-3">
-            <div className="space-y-2">
-              {bulkRows.map((row, index) => {
-                const errs = bulkErrors[index] ?? [];
-                return (
-                <Card key={index} className="border-0 bg-secondary p-3">
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
-                    <Input
-                      type="date"
-                      value={row.date}
-                      onChange={(e) => { updateBulkRow(index, "date", e.target.value); setBulkErrors((p) => { const n = { ...p }; delete n[index]; return n; }); }}
-                      className={cn("text-xs", errs.includes("date") && "border-destructive")}
-                      placeholder="날짜"
-                    />
-                    <NativeSelect
-                      value={row.type}
-                      onChange={(e) => updateBulkRow(index, "type", e.target.value as "INCOME" | "EXPENSE")}
-                      className="text-xs"
-                    >
-                      <option value="INCOME">입금</option>
-                      <option value="EXPENSE">출금</option>
-                    </NativeSelect>
-                    <Input
-                      type="number"
-                      value={row.amount}
-                      onChange={(e) => { updateBulkRow(index, "amount", e.target.value); setBulkErrors((p) => { const n = { ...p }; delete n[index]; return n; }); }}
-                      className={cn("text-xs", errs.includes("amount") && "border-destructive")}
-                      placeholder="금액"
-                      min={0}
-                    />
-                    <Input
-                      value={row.description}
-                      onChange={(e) => { updateBulkRow(index, "description", e.target.value); setBulkErrors((p) => { const n = { ...p }; delete n[index]; return n; }); }}
-                      className={cn("text-xs", errs.includes("description") && "border-destructive")}
-                      placeholder="내용 (예: 3월 회비)"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeBulkRow(index)}
-                      className="min-h-[44px] min-w-[44px] rounded px-2 text-xs bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] transition-colors active:scale-95 self-center"
-                    >
-                      삭제
-                    </button>
-                  </div>
-                </Card>
-                );
-              })}
-            </div>
-
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={addBulkRow}>
-                + 행 추가
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleBulkSave}
-                disabled={bulkSaving || bulkRows.every((r) => !r.amount || !r.description)}
-              >
-                {bulkSaving ? "저장 중..." : `${bulkRows.filter((r) => r.amount && r.description).length}건 일괄 저장`}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Card>
+      {/* 지원 은행 안내 */}
+      <p className="text-xs text-muted-foreground text-center">
+        국민, 신한, 우리, 하나, 농협, 카카오뱅크, 토스뱅크 지원
+      </p>
     </div>
   );
 }

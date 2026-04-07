@@ -9,9 +9,9 @@ import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { useToast } from "@/lib/ToastContext";
 import type { Role } from "@/lib/types";
 
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Check, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -376,144 +376,144 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
 
   if (loading) {
     return (
-      <div className="grid gap-5 stagger-children">
-        <Card className="p-4 sm:p-6"><div className="space-y-4">
-          <div className="flex items-center justify-between"><Skeleton className="h-5 w-32"/><Skeleton className="h-8 w-24"/></div>
-          <Skeleton className="h-10 w-48"/>
-          <Skeleton className="h-3 w-40"/>
-        </div></Card>
-        <Card className="p-4 sm:p-6"><div className="space-y-3">
-          <Skeleton className="h-5 w-24"/>
-          {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-12 w-full"/>)}
-        </div></Card>
+      <div className="space-y-5">
+        <Card className="relative overflow-hidden border-white/[0.06] bg-card py-5">
+          <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, hsl(16 85% 58% / 0.12) 0%, transparent 60%)" }} />
+          <CardContent className="relative space-y-4 px-5">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-10 w-48" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+            <div className="space-y-2.5 border-t border-white/[0.08] pt-4">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+        <div className="space-y-2.5">
+          {[1,2,3].map(i => <Skeleton key={i} className="h-20 w-full rounded-xl" />)}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="grid gap-5 stagger-children">
-      {/* ── Section 1: 회비 현황 (always visible) ── */}
-      <Card className="p-4 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="font-heading text-lg sm:text-2xl font-bold uppercase text-foreground">
-            회비 현황
-          </h2>
-        </div>
-
-        <div className="card-featured mt-5">
-          <div>
-            <p className="type-overline">통장 잔고</p>
+    <div className="space-y-5">
+      {/* ── Section 1: 잔고 카드 (코랄 gradient) ── */}
+      <Card className="relative overflow-hidden border-white/[0.06] bg-card py-5">
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, hsl(16 85% 58% / 0.12) 0%, transparent 60%)" }} />
+        <CardContent className="relative space-y-4 px-5">
+          <div className="space-y-1">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">통장 잔고</p>
             {summaryData.balance !== null ? (
-              <p className="mt-1 type-score text-[hsl(var(--primary))]">
+              <p className="text-[clamp(2rem,8vw,3rem)] font-bold leading-none tracking-wide text-primary tabular-nums">
                 {summaryData.balance.toLocaleString()}원
               </p>
             ) : (
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground/80">
                 내역 올리기 탭에서 스크린샷이나 엑셀을 올리면 잔고가 반영됩니다
               </p>
             )}
             {summaryData.balanceUpdatedAt && (
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground/80">
                 최종 업데이트: {new Date(summaryData.balanceUpdatedAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
               </p>
             )}
           </div>
-          {/* 월별 수지결산 한 줄 */}
           <MonthlySettlement records={records} />
-        </div>
+        </CardContent>
       </Card>
 
       {/* ── 평회원: 내 납부 상태 ── */}
       {!isStaffOrAbove(role) && _userId && (() => {
         const myStatus = duesStatus.find((m) => m.id === _userId);
+        const [, mm] = monthFilter.split("-");
+        const displayMonth = mm;
         return myStatus ? (
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="type-overline">{monthFilter.replace("-", "년 ")}월 내 납부 상태</p>
-                <p className={cn(
-                  "mt-1 text-lg font-bold",
-                  myStatus.status === "PAID" ? "text-[hsl(var(--success))]"
-                    : myStatus.status === "EXEMPT" ? "text-[hsl(var(--warning))]"
-                    : "text-[hsl(var(--loss))]"
-                )}>
-                  {myStatus.status === "PAID" ? "납부 완료" : myStatus.status === "EXEMPT" ? "면제" : "미납"}
-                </p>
-                {myStatus.paidAmount > 0 && (
-                  <p className="text-xs text-muted-foreground">{myStatus.paidAmount.toLocaleString()}원</p>
+          <Card className="border-white/[0.06] bg-card py-4">
+            <CardContent className="px-5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-foreground">내 납부 상태</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => { const [y, m] = monthFilter.split("-").map(Number); const prev = new Date(y, m - 2); setMonthFilter(`${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`); }}
+                    className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors active:scale-[0.97]"
+                    aria-label="이전 달"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <span className="min-w-[2.5rem] text-center text-sm font-medium text-foreground">{displayMonth}</span>
+                  <button
+                    type="button"
+                    onClick={() => { const [y, m] = monthFilter.split("-").map(Number); const next = new Date(y, m); setMonthFilter(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`); }}
+                    className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors active:scale-[0.97]"
+                    aria-label="다음 달"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+              <div className="mt-4">
+                {myStatus.status === "PAID" && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[hsl(var(--success))]/20">
+                        <Check className="h-4 w-4 text-[hsl(var(--success))]" />
+                      </div>
+                      <span className="text-lg font-semibold text-[hsl(var(--success))]">납부 완료</span>
+                    </div>
+                    {myStatus.paidAmount > 0 && <span className="text-sm font-medium text-foreground">{myStatus.paidAmount.toLocaleString()}원</span>}
+                  </div>
                 )}
                 {myStatus.status === "UNPAID" && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="mt-2"
-                    disabled={selfReporting}
-                    onClick={async () => {
-                      const ok = await confirm({
-                        title: "입금 사실을 운영진에게 알리시겠습니까?",
-                        variant: "default",
-                        confirmLabel: "신고하기",
-                      });
-                      if (!ok) return;
-                      setSelfReporting(true);
-                      const { error } = await apiMutate("/api/dues/payment-status", "POST", {
-                        memberId: _userId,
-                        month: monthFilter,
-                        status: "PAID",
-                        paidAmount: settings.length > 0 ? settings[0].monthlyAmount : 0,
-                        note: "회원 자기 신고 (확인 필요)",
-                        selfReport: true,
-                      });
-                      setSelfReporting(false);
-                      if (!error) {
-                        await refetchPaymentStatus();
-                        showToast("납부 신고 완료. 운영진이 확인 후 처리합니다.", "success");
-                      } else {
-                        showToast(error, "error");
-                      }
-                    }}
-                  >
-                    {selfReporting ? "신고 중..." : "입금했어요"}
-                  </Button>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-destructive/20">
+                        <X className="h-4 w-4 text-destructive" />
+                      </div>
+                      <span className="text-lg font-semibold text-destructive">미납</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {settings.length > 0 && <span className="text-sm font-medium text-foreground">{settings[0].monthlyAmount.toLocaleString()}원</span>}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 px-3 gap-1.5 border-destructive/50 text-destructive hover:bg-destructive/10 active:scale-[0.97] transition-transform"
+                        disabled={selfReporting}
+                        onClick={async () => {
+                          const ok = await confirm({ title: "입금 사실을 운영진에게 알리시겠습니까?", variant: "default", confirmLabel: "신고하기" });
+                          if (!ok) return;
+                          setSelfReporting(true);
+                          const { error } = await apiMutate("/api/dues/payment-status", "POST", { memberId: _userId, month: monthFilter, status: "PAID", paidAmount: settings.length > 0 ? settings[0].monthlyAmount : 0, note: "회원 자기 신고 (확인 필요)", selfReport: true });
+                          setSelfReporting(false);
+                          if (!error) { await refetchPaymentStatus(); showToast("납부 신고 완료. 운영진이 확인 후 처리합니다.", "success"); } else { showToast(error, "error"); }
+                        }}
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        {selfReporting ? "전송 중..." : "입금했어요"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {myStatus.status === "EXEMPT" && (
+                  <div>
+                    <span className="text-lg font-semibold italic text-[hsl(var(--warning))]">면제</span>
+                    {myStatus.note && <p className="text-xs text-muted-foreground mt-0.5">({myStatus.note})</p>}
+                  </div>
                 )}
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const [y, m] = monthFilter.split("-").map(Number);
-                    const prev = new Date(y, m - 2);
-                    setMonthFilter(`${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`);
-                  }}
-                  className="rounded-lg p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary transition-colors focus-visible:ring-2 focus-visible:ring-primary"
-                  aria-label="이전 달"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <span className="min-w-[60px] text-center text-xs font-medium">
-                  {monthFilter.replace("-", ".")}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const [y, m] = monthFilter.split("-").map(Number);
-                    const next = new Date(y, m);
-                    setMonthFilter(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`);
-                  }}
-                  className="rounded-lg p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary transition-colors focus-visible:ring-2 focus-visible:ring-primary"
-                  aria-label="다음 달"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+            </CardContent>
           </Card>
         ) : null;
       })()}
 
       {/* ── Dues Tab Bar ── */}
-      <div className="sticky top-0 z-10 -mx-1 px-1 bg-background/95 backdrop-blur-sm border-b border-border">
+      <nav className="sticky top-0 z-10 -mx-4 backdrop-blur-md bg-background/80">
+        <div className="border-b border-border px-4">
         <div className="flex" role="tablist">
           {([
             { key: "records" as const, label: "입출금", staffOnly: false },
@@ -539,7 +539,8 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
             </button>
           ))}
         </div>
-      </div>
+        </div>
+      </nav>
 
       {/* ── 온보딩 가이드 ── */}
       {showOnboarding && (
@@ -693,13 +694,24 @@ function MonthlySettlement({ records }: { records: SettlementRecord[] }) {
   const net = income - expense;
 
   return (
-    <div className="mt-3 pt-3 border-t border-border/30 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-      <span className="text-muted-foreground">{now.getMonth() + 1}월</span>
-      <span className="text-[hsl(var(--success))]">수입 +{income.toLocaleString()}</span>
-      <span className="text-[hsl(var(--loss))]">지출 -{expense.toLocaleString()}</span>
-      <span className={net >= 0 ? "font-bold text-[hsl(var(--success))]" : "font-bold text-[hsl(var(--loss))]"}>
-        {net >= 0 ? "+" : ""}{net.toLocaleString()}원
-      </span>
+    <div className="space-y-2.5 border-t border-white/[0.08] pt-4">
+      <p className="text-xs font-medium text-muted-foreground">월별 수지결산</p>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-foreground/80">{now.getMonth() + 1}월 수입</span>
+          <span className="font-medium text-[hsl(var(--success))]">+{income.toLocaleString()}원</span>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-foreground/80">{now.getMonth() + 1}월 지출</span>
+          <span className="font-medium text-[hsl(var(--loss))]">-{expense.toLocaleString()}원</span>
+        </div>
+        <div className="flex items-center justify-between text-sm pt-1 border-t border-white/[0.05]">
+          <span className="font-medium text-foreground">순이익</span>
+          <span className={cn("font-semibold", net >= 0 ? "text-[hsl(var(--success))]" : "text-[hsl(var(--loss))]")}>
+            {net >= 0 ? "+" : ""}{net.toLocaleString()}원
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

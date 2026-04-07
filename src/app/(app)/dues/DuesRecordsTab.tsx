@@ -3,9 +3,10 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { GA } from "@/lib/analytics";
 import { EmptyState } from "@/components/EmptyState";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -163,145 +164,44 @@ function DuesRecordsTabInner({
     }
   }, [monthRecords, summaryBalance, refetchSummary]);
 
+  const [y, m] = monthFilter.split("-").map(Number);
+  const displayMonth = String(m).padStart(2, "0");
+
   return (
-    <div role="tabpanel" id="tabpanel-records" aria-labelledby="tab-records">
-      {/* ── 입출금 기록 입력 (collapsible, staff only) ── */}
-      {isStaffOrAbove(role) && (
-        <div className="flex justify-end gap-2 mb-5">
-          <Button
+    <div role="tabpanel" id="tabpanel-records" aria-labelledby="tab-records" className="space-y-5">
+      {/* ── 헤더: 월 네비게이션 + 필터 ── */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1">
+          <span className="text-sm font-medium text-foreground">입출금 내역</span>
+          <button
             type="button"
-            size="sm"
-            onClick={() => { setIsFormOpen((prev) => { if (!prev) setFormErrors({}); return !prev; }); }}
+            aria-label="이전 달"
+            onClick={() => {
+              const prev = new Date(y, m - 2);
+              setMonthFilter(`${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`);
+            }}
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors active:scale-[0.97]"
           >
-            {isFormOpen ? "입력 닫기" : "입출금 기록 추가"}
-          </Button>
-        </div>
-      )}
-      {isFormOpen ? (
-        <Card className="p-4 sm:p-6 mb-5">
-          <h3 className="font-heading text-base sm:text-lg font-bold uppercase text-foreground">
-            입출금 기록 입력
-          </h3>
-
-          <form
-            className="mt-4 grid gap-4"
-            action={(formData) => handleAddRecord(formData)}
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <span className="min-w-[2.5rem] text-center text-sm font-medium text-foreground">
+            {displayMonth}
+          </span>
+          <button
+            type="button"
+            aria-label="다음 달"
+            onClick={() => {
+              const next = new Date(y, m);
+              setMonthFilter(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`);
+            }}
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors active:scale-[0.97]"
           >
-            <Card className="border-0 bg-secondary p-3 sm:p-5">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="font-semibold text-muted-foreground">
-                    구분
-                  </Label>
-                  <NativeSelect name="type">
-                    <option value="INCOME">입금</option>
-                    <option value="EXPENSE">출금</option>
-                  </NativeSelect>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="font-semibold text-muted-foreground">
-                    금액
-                  </Label>
-                  <Input
-                    name="amount"
-                    type="number"
-                    min={0}
-                    required
-                    className={formErrors.amount ? "border-destructive" : ""}
-                    onChange={() => setFormErrors((prev) => ({ ...prev, amount: "" }))}
-                  />
-                  {formErrors.amount && <p className="text-xs text-destructive">{formErrors.amount}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="font-semibold text-muted-foreground">
-                    날짜
-                  </Label>
-                  <Input
-                    name="recordedAt"
-                    type="date"
-                    required
-                    className={formErrors.recordedAt ? "border-destructive" : ""}
-                    onChange={() => setFormErrors((prev) => ({ ...prev, recordedAt: "" }))}
-                  />
-                  {formErrors.recordedAt && <p className="text-xs text-destructive">{formErrors.recordedAt}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">
-                    내용에 팀원 이름이 포함되면 해당 팀원의 납부 기록으로 자동 연결됩니다.
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-4 space-y-2">
-                <Label className="font-semibold text-muted-foreground">
-                  내용
-                </Label>
-                <Input
-                  name="description"
-                  required
-                  placeholder="예: 2월 회비 납부"
-                />
-              </div>
-
-              <div className="mt-4 space-y-2">
-                <Label className="font-semibold text-muted-foreground">
-                  결제 수단
-                </Label>
-                <Input name="method" placeholder="예: 카카오뱅크, 현금" />
-              </div>
-            </Card>
-
-            <Button type="submit" className="w-full" size="lg" disabled={saving}>
-              {saving ? "저장 중..." : "저장하기"}
-            </Button>
-          </form>
-        </Card>
-      ) : null}
-
-      {/* ── 입출금 내역 ── */}
-      <Card className="p-4 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h3 className="font-heading text-lg sm:text-2xl font-bold uppercase text-foreground">
-              입출금 내역
-            </h3>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              aria-label="이전 달"
-              onClick={() => {
-                const [y, m] = monthFilter.split("-").map(Number);
-                const prev = new Date(y, m - 2);
-                setMonthFilter(`${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`);
-              }}
-              className="rounded-lg p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary transition-colors focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <span className="min-w-[80px] text-center text-sm font-medium">
-              {monthFilter.replace("-", "년 ")}월
-            </span>
-            <button
-              type="button"
-              aria-label="다음 달"
-              onClick={() => {
-                const [y, m] = monthFilter.split("-").map(Number);
-                const next = new Date(y, m);
-                setMonthFilter(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`);
-              }}
-              className="rounded-lg p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary transition-colors focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <div className="w-full sm:w-40">
+
+        <div className="flex items-center gap-2">
+          <div className="w-full sm:w-36">
             <Input
               type="text"
               value={memberFilter}
@@ -309,112 +209,235 @@ function DuesRecordsTabInner({
               placeholder="이름 검색"
               list="dues-member-names"
               autoComplete="off"
-              className="text-xs"
+              className="h-9 text-xs bg-card border-white/[0.06]"
             />
             <datalist id="dues-member-names">
-              {members.map((m) => <option key={m.id} value={m.name} />)}
+              {members.map((mbr) => <option key={mbr.id} value={mbr.name} />)}
             </datalist>
           </div>
-          <div className="flex gap-1.5">
-            {(["ALL", "INCOME", "EXPENSE"] as RecordFilter[]).map((value) => (
-              <Button
-                key={value}
-                type="button"
-                size="sm"
-                variant={filter === value ? "default" : "outline"}
-                onClick={() => setFilter(value)}
-              >
-                {value === "ALL" ? "전체" : value === "INCOME" ? "입금" : "출금"}
-              </Button>
-            ))}
-          </div>
+          <NativeSelect
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as RecordFilter)}
+            className="h-9 w-20 bg-card border-white/[0.06] text-xs"
+          >
+            <option value="ALL">전체</option>
+            <option value="INCOME">입금</option>
+            <option value="EXPENSE">출금</option>
+          </NativeSelect>
         </div>
+      </div>
 
-        <div className="mt-4 space-y-2.5">
-          {filteredRecords.length === 0 ? (
-            <EmptyState
-              icon={ChevronRight}
-              title="아직 거래 내역이 없습니다"
-              description="위에서 수기 입력하거나, 내역 올리기 탭에서 스크린샷/엑셀을 올려보세요."
-            />
-          ) : filteredRecords.map((record) =>
-            editingRecord?.id === record.id ? (
-              <Card key={record.id} data-edit-id={record.id} className="border-0 bg-secondary p-4">
-                <form className="grid gap-3" action={(fd) => handleUpdateRecord(fd)}>
-                  <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                    <NativeSelect name="editType" defaultValue={record.type}>
-                      <option value="INCOME">입금</option>
-                      <option value="EXPENSE">출금</option>
-                    </NativeSelect>
-                    <Input name="editAmount" type="number" defaultValue={record.amount} min={0} required placeholder="금액" />
-                    <Input name="editDate" type="date" defaultValue={record.recordedAt.slice(0, 10)} />
-                    <Input name="editTime" type="time" defaultValue={record.recordedAt.includes("T") ? record.recordedAt.split("T")[1]?.slice(0, 5) : ""} />
+      {/* ── 수기 입력 폼 (Collapsible, staff only) ── */}
+      {isStaffOrAbove(role) && (
+        <div>
+          <button
+            type="button"
+            onClick={() => { setIsFormOpen((prev) => { if (!prev) setFormErrors({}); return !prev; }); }}
+            className="w-full flex items-center justify-between rounded-xl bg-card border border-white/[0.04] px-4 py-3 hover:bg-secondary/50 transition-colors active:scale-[0.99]"
+          >
+            <span className="text-sm font-medium text-foreground">수기 입력</span>
+            {isFormOpen ? (
+              <ChevronUp className="h-5 w-5 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-muted-foreground" />
+            )}
+          </button>
+
+          {isFormOpen && (
+            <Card className="border-white/[0.04] bg-card mt-2 border-t-0 rounded-t-none">
+              <CardContent className="space-y-4 px-4 py-4">
+                <form
+                  className="space-y-4"
+                  action={(formData) => handleAddRecord(formData)}
+                >
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">유형</Label>
+                      <NativeSelect
+                        name="type"
+                        className="h-12 rounded-xl bg-secondary border-0"
+                      >
+                        <option value="INCOME">입금</option>
+                        <option value="EXPENSE">출금</option>
+                      </NativeSelect>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">금액</Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₩</span>
+                        <Input
+                          name="amount"
+                          type="number"
+                          min={0}
+                          required
+                          placeholder="30,000"
+                          className={cn(
+                            "h-12 rounded-xl bg-secondary border-0 pl-7 text-right",
+                            formErrors.amount && "border border-destructive"
+                          )}
+                          onChange={() => setFormErrors((prev) => ({ ...prev, amount: "" }))}
+                        />
+                      </div>
+                      {formErrors.amount && <p className="text-xs text-destructive">{formErrors.amount}</p>}
+                    </div>
                   </div>
-                  <Input name="editDescription" defaultValue={record.description} required placeholder="내용" />
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" size="sm" onClick={() => setEditingRecord(null)}>취소</Button>
-                    <Button type="submit" size="sm">저장</Button>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">내용</Label>
+                    <Input
+                      name="description"
+                      required
+                      placeholder="예: 4월 회비, 구장 대여비"
+                      className="h-12 rounded-xl bg-secondary border-0"
+                    />
                   </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">날짜</Label>
+                      <Input
+                        name="recordedAt"
+                        type="date"
+                        required
+                        className={cn(
+                          "h-12 rounded-xl bg-secondary border-0",
+                          formErrors.recordedAt && "border border-destructive"
+                        )}
+                        onChange={() => setFormErrors((prev) => ({ ...prev, recordedAt: "" }))}
+                      />
+                      {formErrors.recordedAt && <p className="text-xs text-destructive">{formErrors.recordedAt}</p>}
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">결제 수단</Label>
+                      <Input
+                        name="method"
+                        placeholder="카카오뱅크, 현금"
+                        className="h-12 rounded-xl bg-secondary border-0"
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground">
+                    내용에 팀원 이름이 포함되면 해당 팀원의 납부 기록으로 자동 연결됩니다.
+                  </p>
+
+                  <Button
+                    type="submit"
+                    className="w-full h-12 rounded-xl active:scale-[0.97] transition-transform"
+                    disabled={saving}
+                  >
+                    {saving ? "저장 중..." : "저장하기"}
+                  </Button>
                 </form>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* ── 거래 내역 목록 ── */}
+      {filteredRecords.length === 0 ? (
+        <EmptyState
+          icon={Receipt}
+          title="아직 거래 내역이 없습니다"
+          description="위에서 수기 입력하거나, 내역 올리기 탭에서 스크린샷/엑셀을 올려보세요."
+        />
+      ) : (
+        <div className="space-y-2.5">
+          {filteredRecords.map((record) =>
+            editingRecord?.id === record.id ? (
+              <Card key={record.id} data-edit-id={record.id} className="border-white/[0.04] bg-card">
+                <CardContent className="px-4 py-4">
+                  <form className="grid gap-3" action={(fd) => handleUpdateRecord(fd)}>
+                    <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                      <NativeSelect name="editType" defaultValue={record.type} className="h-10 rounded-lg bg-secondary border-0">
+                        <option value="INCOME">입금</option>
+                        <option value="EXPENSE">출금</option>
+                      </NativeSelect>
+                      <Input name="editAmount" type="number" defaultValue={record.amount} min={0} required placeholder="금액" className="h-10 rounded-lg bg-secondary border-0" />
+                      <Input name="editDate" type="date" defaultValue={record.recordedAt.slice(0, 10)} className="h-10 rounded-lg bg-secondary border-0" />
+                      <Input name="editTime" type="time" defaultValue={record.recordedAt.includes("T") ? record.recordedAt.split("T")[1]?.slice(0, 5) : ""} className="h-10 rounded-lg bg-secondary border-0" />
+                    </div>
+                    <Input name="editDescription" defaultValue={record.description} required placeholder="내용" className="h-10 rounded-lg bg-secondary border-0" />
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => setEditingRecord(null)}>취소</Button>
+                      <Button type="submit" size="sm">저장</Button>
+                    </div>
+                  </form>
+                </CardContent>
               </Card>
             ) : (
-              <div
+              <Card
                 key={record.id}
-                className="card-list-item flex items-start justify-between gap-3"
+                className="border-white/[0.04] bg-card py-3 hover:bg-secondary/50 transition-colors"
               >
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground">
-                    {record.description}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {record.recordedAt.slice(0, 10)}
-                    {record.memberName ? <> · <span className="font-semibold text-foreground/80">{record.memberName}</span></> : ""}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  <span
-                    className={cn(
-                      "rounded-lg px-3 py-1 text-sm font-bold font-[family-name:var(--font-display)] whitespace-nowrap",
-                      record.type === "INCOME"
-                        ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]"
-                        : "bg-[hsl(var(--loss))]/20 text-[hsl(var(--loss))]"
-                    )}
-                  >
-                    {record.type === "INCOME" ? "+" : "-"}
-                    {record.amount.toLocaleString()}원
-                  </span>
-                  {isStaffOrAbove(role) && (
-                    <div className="flex gap-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingRecord(record);
-                          setTimeout(() => {
-                            document.querySelector(`[data-edit-id="${record.id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-                          }, 100);
-                        }}
-                        className="rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors active:scale-95"
-                      >
-                        수정
-                      </button>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          const ok = await confirm({ title: "이 내역을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
-                          if (ok) handleDeleteRecord(record.id);
-                        }}
-                        className="rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors active:scale-95"
-                      >
-                        삭제
-                      </button>
+                <CardContent className="px-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-0.5 flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">
+                        {record.description}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {record.recordedAt.slice(0, 10)}
+                        {record.memberName ? (
+                          <> · <span className="font-semibold text-foreground/80">{record.memberName}</span></>
+                        ) : null}
+                      </p>
                     </div>
-                  )}
-                </div>
-              </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={record.type === "INCOME" ? "success" : "destructive"}
+                          className="border-0"
+                        >
+                          {record.type === "INCOME" ? "입금" : "출금"}
+                        </Badge>
+                        <span
+                          className={cn(
+                            "text-sm font-bold whitespace-nowrap",
+                            record.type === "INCOME"
+                              ? "text-[hsl(var(--success))]"
+                              : "text-[hsl(var(--loss))]"
+                          )}
+                        >
+                          {record.type === "INCOME" ? "+" : "-"}
+                          {record.amount.toLocaleString()}원
+                        </span>
+                      </div>
+                      {isStaffOrAbove(role) && (
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingRecord(record);
+                              setTimeout(() => {
+                                document.querySelector(`[data-edit-id="${record.id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                              }, 100);
+                            }}
+                            className="rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors active:scale-95"
+                          >
+                            수정
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const ok = await confirm({ title: "이 내역을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
+                              if (ok) handleDeleteRecord(record.id);
+                            }}
+                            className="rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors active:scale-95"
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             )
           )}
         </div>
-      </Card>
+      )}
     </div>
   );
 }
