@@ -128,12 +128,13 @@ export default function MatchDetailClient({
 
   const {
     data: teamData,
-  } = useApi<{ team: { sport_type?: SportType; player_count?: number; uniform_primary?: string; uniform_secondary?: string; uniform_pattern?: string; default_formation_id?: string } }>("/api/teams", initialData?.team ?? { team: {} }, { skip: !!initialData?.team });
+  } = useApi<{ team: { sport_type?: SportType; player_count?: number; uniform_primary?: string; uniform_secondary?: string; uniform_pattern?: string; uniforms?: { home?: { primary: string; secondary: string; pattern: string }; away?: { primary: string; secondary: string; pattern: string }; third?: { primary: string; secondary: string; pattern: string } | null } | null; default_formation_id?: string } }>("/api/teams", initialData?.team ?? { team: {} }, { skip: !!initialData?.team });
 
   const sportType: SportType = teamData.team?.sport_type ?? "SOCCER";
-  const uniformPrimary = teamData.team?.uniform_primary ?? "hsl(var(--primary))";
-  const uniformSecondary = teamData.team?.uniform_secondary ?? "hsl(var(--muted-foreground))";
-  const uniformPattern = teamData.team?.uniform_pattern ?? "SOLID";
+  const uniforms = teamData.team?.uniforms;
+  const uniformPrimary = uniforms?.home?.primary ?? teamData.team?.uniform_primary ?? "hsl(var(--primary))";
+  const uniformSecondary = uniforms?.away?.primary ?? teamData.team?.uniform_secondary ?? "hsl(var(--muted-foreground))";
+  const uniformPattern = uniforms?.home?.pattern ?? teamData.team?.uniform_pattern ?? "SOLID";
   const defaultFormationId = teamData.team?.default_formation_id ?? "";
 
   const {
@@ -433,6 +434,7 @@ export default function MatchDetailClient({
           uniformPrimary={uniformPrimary}
           uniformSecondary={uniformSecondary}
           uniformPattern={uniformPattern}
+          uniforms={uniforms}
           internalTeams={internalTeams}
           refetchInternalTeams={refetchInternalTeams}
           comments={commentsData.comments}

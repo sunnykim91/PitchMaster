@@ -115,7 +115,7 @@ export type Match = {
   quarterDuration: number;
   breakDuration: number;
   status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
-  uniformType: "HOME" | "AWAY";
+  uniformType: "HOME" | "AWAY" | "THIRD";
   matchType: MatchType;
   statsIncluded: boolean;
   voteDeadline?: string | null;

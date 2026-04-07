@@ -29,17 +29,7 @@ type Profile = {
   profileImageUrl: string;
 };
 
-type TeamSettingsData = {
-  teamName: string;
-  logoUrl: string;
-  inviteCode: string;
-  uniformPrimary: string;
-  uniformSecondary: string;
-  uniformPattern: "SOLID" | "STRIPES_VERTICAL" | "STRIPES_HORIZONTAL" | "STRIPES_DIAGONAL";
-  isSearchable: boolean;
-  joinMode: "AUTO" | "MANUAL";
-  defaultFormationId: string;
-};
+import type { TeamSettingsData } from "./TeamSettings";
 
 type ProfileApiResponse = {
   profile: {
@@ -163,6 +153,7 @@ export default function SettingsClient({
         uniformPrimary: (t.uniform_primary as string) ?? sessionTeam.uniformPrimary,
         uniformSecondary: (t.uniform_secondary as string) ?? sessionTeam.uniformSecondary,
         uniformPattern: (t.uniform_pattern as TeamSettingsData["uniformPattern"]) ?? sessionTeam.uniformPattern,
+        uniforms: (t.uniforms as TeamSettingsData["uniforms"]) ?? sessionTeam.uniforms,
         isSearchable: (t.is_searchable as boolean) ?? sessionTeam.isSearchable,
         joinMode: (t.join_mode as TeamSettingsData["joinMode"]) ?? sessionTeam.joinMode,
         defaultFormationId: (t.default_formation_id as string) ?? sessionTeam.defaultFormationId,

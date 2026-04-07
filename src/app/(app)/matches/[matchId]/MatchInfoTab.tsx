@@ -45,6 +45,8 @@ export interface MatchInfoTabProps {
   uniformSecondary?: string;
   /** 팀 유니폼 패턴 */
   uniformPattern?: string;
+  /** 유니폼 홈/원정/써드 JSONB */
+  uniforms?: { home?: { primary: string; secondary: string; pattern: string }; away?: { primary: string; secondary: string; pattern: string }; third?: { primary: string; secondary: string; pattern: string } | null } | null;
   /** 자체전 팀 편성 데이터 */
   internalTeams?: InternalTeamAssignment[];
   /** 자체전 팀 편성 refetch */
@@ -89,6 +91,7 @@ function MatchInfoTabInner({
   uniformPrimary: _uniformPrimary,
   uniformSecondary: _uniformSecondary,
   uniformPattern: _uniformPattern,
+  uniforms: uniformsProp,
   internalTeams,
   refetchInternalTeams,
   memberVoteTimeMap,
@@ -137,10 +140,17 @@ function MatchInfoTabInner({
     () => ({ ...getUniformBg(uniformPrimary, uniformSecondary, uniformPattern), clipPath: JERSEY_CLIP }),
     [uniformPrimary, uniformSecondary, uniformPattern],
   );
-  const awayJerseyStyle = useMemo(
-    () => ({ ...getUniformBg(uniformSecondary, uniformPrimary, uniformPattern), clipPath: JERSEY_CLIP }),
-    [uniformPrimary, uniformSecondary, uniformPattern],
-  );
+  const awayJerseyStyle = useMemo(() => {
+    const away = uniformsProp?.away;
+    if (away) return { ...getUniformBg(away.primary, away.secondary, away.pattern), clipPath: JERSEY_CLIP };
+    return { ...getUniformBg(uniformSecondary, uniformPrimary, uniformPattern), clipPath: JERSEY_CLIP };
+  }, [uniformPrimary, uniformSecondary, uniformPattern, uniformsProp]);
+
+  const thirdJerseyStyle = useMemo(() => {
+    const third = uniformsProp?.third;
+    if (!third) return null;
+    return { ...getUniformBg(third.primary, third.secondary, third.pattern), clipPath: JERSEY_CLIP };
+  }, [uniformsProp]);
 
   /* ── 유니폼 변경 ── */
   async function handleUniformChange(type: "HOME" | "AWAY" | "THIRD") {
@@ -407,6 +417,7 @@ function MatchInfoTabInner({
                 {([
                   { type: "HOME" as const, label: "홈", style: homeJerseyStyle },
                   { type: "AWAY" as const, label: "원정", style: awayJerseyStyle },
+                  ...(thirdJerseyStyle ? [{ type: "THIRD" as const, label: "써드", style: thirdJerseyStyle }] : []),
                 ]).map((u) => (
                   <button key={u.type} type="button" onClick={() => handleUniformChange(u.type)} disabled={!canManage}
                     className={cn("flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",

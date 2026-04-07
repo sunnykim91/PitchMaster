@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
+import { cn } from "@/lib/utils";
 import TeamLogo from "@/components/TeamLogo";
 import { Camera, X } from "lucide-react";
 
@@ -19,7 +20,7 @@ type UniformPattern = "SOLID" | "STRIPES_VERTICAL" | "STRIPES_HORIZONTAL" | "STR
 type UniformSet = { primary: string; secondary: string; pattern: UniformPattern };
 type UniformsData = { home: UniformSet; away: UniformSet; third?: UniformSet | null };
 
-type TeamSettingsData = {
+export type TeamSettingsData = {
   teamName: string;
   logoUrl: string;
   inviteCode: string;

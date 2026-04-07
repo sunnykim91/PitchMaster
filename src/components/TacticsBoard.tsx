@@ -257,7 +257,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     });
   }, [debouncedSave]);
 
-  const [uniformMode, setUniformMode] = useState<"HOME" | "AWAY">("HOME");
+  const [uniformMode, setUniformMode] = useState<"HOME" | "AWAY" | "THIRD">("HOME");
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
   const [shareMsg, setShareMsg] = useState<string | null>(null);
   const sharingRef = useRef(false);
