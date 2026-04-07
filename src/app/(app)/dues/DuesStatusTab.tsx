@@ -252,70 +252,61 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
         key={m.id}
         className="border-white/[0.04] bg-card py-3 hover:bg-secondary/50 transition-colors"
       >
-        <CardContent className="px-4 space-y-0">
-          {/* Row 1: 이름 + 역할(회비유형) + 상태 뱃지 */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <span className="text-sm font-semibold text-foreground truncate">{m.name}</span>
-              {feeLabel && (
-                <span className="text-xs text-muted-foreground shrink-0">{feeLabel}</span>
-              )}
-            </div>
-            <div className="shrink-0">
-              {m.status === "PAID" && (
-                <Badge variant="success" className="border-0 text-xs">납부 완료</Badge>
-              )}
-              {m.status === "UNPAID" && (
-                <Badge variant="destructive" className="border-0 text-xs">미납</Badge>
-              )}
-              {m.status === "EXEMPT" && (
-                <Badge variant="warning" className="border-0 text-xs">면제</Badge>
-              )}
-            </div>
+        <CardContent className="px-4">
+          {/* Row 1: 이름 + 역할 */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-foreground truncate">{m.name}</span>
+            {feeLabel && (
+              <span className="text-[11px] text-muted-foreground shrink-0">{feeLabel}</span>
+            )}
           </div>
 
-          {/* Row 2: 면제사유 or 금액 + 상태 선택 */}
-          <div className="flex items-center justify-between mt-2">
-            <div className="flex-1">
-              {m.status === "EXEMPT" && m.note && (
-                <span className="text-xs text-muted-foreground italic">{m.note}</span>
-              )}
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {/* 금액 표시: 납부완료 = muted, 미납 = 빨간색, 면제 = 없음 */}
+          {/* Row 2: 금액 + 뱃지 + Select */}
+          <div className="flex items-center justify-between mt-1.5">
+            <div className="flex items-center gap-2 min-w-0">
+              {/* 금액 표시 */}
               {m.status === "PAID" && m.paidAmount > 0 && (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-sm text-muted-foreground tabular-nums">
                   {m.paidAmount.toLocaleString()}원
                 </span>
               )}
-              {m.status === "UNPAID" && (
-                <span className="text-xs font-medium" style={{ color: "hsl(0, 65%, 60%)" }}>
-                  {unpaidAmount != null
-                    ? `${unpaidAmount.toLocaleString()}원`
-                    : m.paidAmount > 0
-                    ? `${m.paidAmount.toLocaleString()}원`
-                    : ""}
+              {m.status === "UNPAID" && unpaidAmount != null && (
+                <span className="text-sm font-medium tabular-nums" style={{ color: "hsl(0, 65%, 60%)" }}>
+                  {unpaidAmount.toLocaleString()}원
                 </span>
               )}
-
-              {/* 스태프 이상: 상태 변경 셀렉트 / 그 외: 읽기전용 뱃지 */}
-              {isStaffOrAbove(role) ? (
-                <NativeSelect
-                  value={m.status}
-                  onChange={async (e) => {
-                    await handleStatusChange(m, e.target.value as "PAID" | "UNPAID" | "EXEMPT");
-                  }}
-                  className={cn(
-                    "h-8 w-24 text-xs bg-card border-white/[0.06] py-0",
-                    m.status === "EXEMPT" && "border-warning/40"
-                  )}
-                >
-                  <option value="PAID">납부 완료</option>
-                  <option value="UNPAID">미납</option>
-                  <option value="EXEMPT">면제</option>
-                </NativeSelect>
-              ) : null}
+              {m.status === "EXEMPT" && m.note && (
+                <span className="text-xs text-muted-foreground italic truncate">{m.note}</span>
+              )}
+              {/* 상태 뱃지 */}
+              {m.status === "PAID" && (
+                <Badge variant="success" className="border-0 text-[10px] px-1.5 py-0">납부 완료</Badge>
+              )}
+              {m.status === "UNPAID" && (
+                <Badge variant="destructive" className="border-0 text-[10px] px-1.5 py-0">미납</Badge>
+              )}
+              {m.status === "EXEMPT" && (
+                <Badge variant="warning" className="border-0 text-[10px] px-1.5 py-0">면제</Badge>
+              )}
             </div>
+
+            {/* 스태프 이상: 상태 변경 셀렉트 */}
+            {isStaffOrAbove(role) && (
+              <NativeSelect
+                value={m.status}
+                onChange={async (e) => {
+                  await handleStatusChange(m, e.target.value as "PAID" | "UNPAID" | "EXEMPT");
+                }}
+                className={cn(
+                  "h-8 w-[5.5rem] text-xs bg-card border-white/[0.06] py-0 shrink-0",
+                  m.status === "EXEMPT" && "border-[hsl(var(--warning))]/40"
+                )}
+              >
+                <option value="PAID">납부 완료</option>
+                <option value="UNPAID">미납</option>
+                <option value="EXEMPT">면제</option>
+              </NativeSelect>
+            )}
           </div>
         </CardContent>
       </Card>

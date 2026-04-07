@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, X, Search } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -51,8 +51,7 @@ function DuesSettingsTabInner({
   const [editingAmountId, setEditingAmountId] = useState<string | null>(null);
   const [editingAmountValue, setEditingAmountValue] = useState("");
 
-  /* ── 회원 검색 state ── */
-  const [searchQuery, setSearchQuery] = useState("");
+  /* (회원별 회비 유형 배정은 추후 구현) */
 
   /* ── 신규 회비 유형 추가 폼 state ── */
   const [newMemberType, setNewMemberType] = useState("");
@@ -171,10 +170,6 @@ function DuesSettingsTabInner({
     showToast(`납부 기준일: 매월 ${val}일로 설정됨`, "success");
   }
 
-  /* ── 검색 필터된 settings ── */
-  const filteredSettings = settings.filter((s) =>
-    s.memberType.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <div role="tabpanel" id="tabpanel-settings" aria-labelledby="tab-settings" className="space-y-5">
@@ -276,14 +271,15 @@ function DuesSettingsTabInner({
                   <button
                     type="button"
                     onClick={() => handleEditSetting(setting)}
-                    className="text-sm font-medium text-foreground hover:text-primary transition-colors text-left"
+                    className="text-sm font-medium text-foreground hover:text-primary transition-colors text-left min-w-0 flex-1 truncate"
+                    title={setting.description ? `${setting.memberType} (${setting.description})` : setting.memberType}
                   >
                     {setting.memberType}
                     {setting.description ? (
                       <span className="ml-1 text-xs text-muted-foreground">({setting.description})</span>
                     ) : null}
                   </button>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     {editingAmountId === setting.id ? (
                       <Input
                         type="text"
@@ -420,56 +416,7 @@ function DuesSettingsTabInner({
         )}
       </div>
 
-      {/* ── 회비 기준별 회원 목록 (검색) ── */}
-      {settings.length > 0 && (
-        <div className="space-y-3">
-          <p className="text-xs font-medium text-muted-foreground">회원별 회비 유형</p>
-
-          {/* 검색 */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input
-              placeholder="회원 검색"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-11 rounded-xl bg-secondary border-0 pl-10"
-            />
-          </div>
-
-          {filteredSettings.length > 0 ? (
-            <Card className="border-white/[0.06] bg-card py-0 divide-y divide-white/5">
-              {filteredSettings.map((setting) => (
-                <div key={setting.id} className="px-4 py-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-foreground">{setting.memberType}</span>
-                    <span className="text-sm font-semibold text-foreground">
-                      {setting.monthlyAmount.toLocaleString()}원
-                    </span>
-                  </div>
-                  {setting.description ? (
-                    <p className="mt-0.5 text-xs text-muted-foreground">{setting.description}</p>
-                  ) : null}
-                </div>
-              ))}
-            </Card>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-sm text-muted-foreground">검색 결과가 없습니다.</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── 저장 버튼 ── */}
-      {isStaffOrAbove(role) && (
-        <Button
-          className="w-full h-12 rounded-xl active:scale-[0.97] transition-transform"
-          type="button"
-          onClick={() => showToast("설정이 저장되었습니다.", "success")}
-        >
-          설정 저장
-        </Button>
-      )}
+      {/* 회비 유형은 개별 추가/수정/삭제 시 즉시 서버에 반영되므로 별도 저장 버튼 불필요 */}
     </div>
   );
 }
