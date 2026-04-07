@@ -193,6 +193,7 @@ export default function SettingsClient({
       uniform_primary: defaultTeam.uniformPrimary,
       uniform_secondary: defaultTeam.uniformSecondary,
       uniform_pattern: defaultTeam.uniformPattern,
+      uniforms: defaultTeam.uniforms,
       is_searchable: defaultTeam.isSearchable,
       join_mode: defaultTeam.joinMode,
       default_formation_id: defaultTeam.defaultFormationId,
