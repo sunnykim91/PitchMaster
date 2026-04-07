@@ -562,7 +562,7 @@ function UniformSettings({
       {/* 미리보기 */}
       <div className="flex items-center justify-center gap-4">
         <div className="flex flex-col items-center gap-1.5">
-          <div className="h-16 w-16 rounded-lg border-2 border-foreground/20 shadow-sm" style={jerseyStyle} />
+          <div className="h-16 w-16 rounded-lg border-2 border-foreground/40 shadow-md ring-1 ring-foreground/10" style={jerseyStyle} />
           <span className="text-xs font-medium text-muted-foreground">
             {activeTab === "home" ? "홈" : activeTab === "away" ? "원정" : "써드"}
           </span>

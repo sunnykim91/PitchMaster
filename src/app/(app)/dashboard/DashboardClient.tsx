@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/lib/ToastContext";
 import { EmptyState } from "@/components/EmptyState";
 import { shareTeamInvite } from "@/lib/kakaoShare";
+import { getUniformStyle } from "@/lib/uniformUtils";
 
 type UpcomingMatch = {
   id: string;
@@ -431,19 +432,29 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
               {(() => {
                 const uniformType = (upcomingMatch.uniform_type ?? "HOME") as "HOME" | "AWAY" | "THIRD";
                 const u = data.teamUniform;
-                const uniforms = u?.uniforms;
-                let bgColor: string;
-                let label: string;
-                if (uniformType === "THIRD" && uniforms?.third) {
-                  bgColor = uniforms.third.primary; label = "써드";
-                } else if (uniformType === "AWAY") {
-                  bgColor = uniforms?.away?.primary ?? u?.uniformSecondary ?? "hsl(var(--muted-foreground))"; label = "원정";
+                const unis = u?.uniforms;
+                let primary: string, secondary: string, pattern: string, label: string;
+                if (uniformType === "THIRD" && unis?.third) {
+                  primary = unis.third.primary; secondary = unis.third.secondary; pattern = unis.third.pattern; label = "써드";
+                } else if (uniformType === "AWAY" && unis?.away) {
+                  primary = unis.away.primary; secondary = unis.away.secondary; pattern = unis.away.pattern; label = "원정";
+                } else if (unis?.home) {
+                  primary = unis.home.primary; secondary = unis.home.secondary; pattern = unis.home.pattern; label = "홈";
                 } else {
-                  bgColor = uniforms?.home?.primary ?? u?.uniformPrimary ?? "hsl(var(--primary))"; label = "홈";
+                  primary = u?.uniformPrimary ?? "hsl(var(--primary))";
+                  secondary = u?.uniformSecondary ?? "hsl(var(--muted-foreground))";
+                  pattern = u?.uniformPattern ?? "SOLID";
+                  label = uniformType === "AWAY" ? "원정" : "홈";
                 }
                 return (
                   <span className="inline-flex items-center gap-1 shrink-0">
-                    <span className="h-3 w-3 rounded-full border border-border/60" style={{ backgroundColor: bgColor }} />
+                    <span
+                      className="h-4 w-3.5 border border-foreground/20 rounded-sm"
+                      style={{
+                        ...getUniformStyle(primary, secondary, pattern),
+                        clipPath: "polygon(12% 12%, 30% 12%, 34% 0%, 66% 0%, 70% 12%, 88% 12%, 100% 34%, 86% 48%, 86% 100%, 14% 100%, 14% 48%, 0% 34%)",
+                      }}
+                    />
                     <span>{label}</span>
                   </span>
                 );

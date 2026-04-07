@@ -133,7 +133,7 @@ export default function MatchDetailClient({
   const sportType: SportType = teamData.team?.sport_type ?? "SOCCER";
   const uniforms = teamData.team?.uniforms;
   const uniformPrimary = uniforms?.home?.primary ?? teamData.team?.uniform_primary ?? "hsl(var(--primary))";
-  const uniformSecondary = uniforms?.away?.primary ?? teamData.team?.uniform_secondary ?? "hsl(var(--muted-foreground))";
+  const uniformSecondary = uniforms?.home?.secondary ?? teamData.team?.uniform_secondary ?? "hsl(var(--muted-foreground))";
   const uniformPattern = uniforms?.home?.pattern ?? teamData.team?.uniform_pattern ?? "SOLID";
   const defaultFormationId = teamData.team?.default_formation_id ?? "";
 

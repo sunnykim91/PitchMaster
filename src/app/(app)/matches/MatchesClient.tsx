@@ -24,6 +24,7 @@ import { shareVoteLink } from "@/lib/kakaoShare";
 import { EmptyState } from "@/components/EmptyState";
 import { MatchCalendar } from "@/components/MatchCalendar";
 import { Calendar, Share2 } from "lucide-react";
+import { getUniformStyle } from "@/lib/uniformUtils";
 
 type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
 type AttendanceVote = "ATTEND" | "ABSENT" | "MAYBE";
@@ -727,18 +728,30 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       : match.matchType === "INTERNAL" ? "  ·  자체전"
                       : match.opponent ? `  ·  vs ${match.opponent}` : ""}
                   </p>
-                  {match.matchType !== "EVENT" && (
-                    <span
-                      className="h-5 w-5 rounded-full border border-border/60 shrink-0"
-                      style={{ backgroundColor: (() => {
-                        const u = teamUniform?.uniforms;
-                        if (match.uniformType === "THIRD" && u?.third) return u.third.primary;
-                        if (match.uniformType === "AWAY" && u?.away) return u.away.primary;
-                        if (u?.home) return u.home.primary;
-                        return teamUniform ? (match.uniformType === "HOME" ? teamUniform.primary ?? "hsl(var(--primary))" : teamUniform.secondary ?? "hsl(var(--muted-foreground))") : "hsl(var(--primary))";
-                      })() }}
-                    />
-                  )}
+                  {match.matchType !== "EVENT" && (() => {
+                    const u = teamUniform?.uniforms;
+                    let primary: string, secondary: string, pattern: string;
+                    if (match.uniformType === "THIRD" && u?.third) {
+                      primary = u.third.primary; secondary = u.third.secondary; pattern = u.third.pattern;
+                    } else if (match.uniformType === "AWAY" && u?.away) {
+                      primary = u.away.primary; secondary = u.away.secondary; pattern = u.away.pattern;
+                    } else if (u?.home) {
+                      primary = u.home.primary; secondary = u.home.secondary; pattern = u.home.pattern;
+                    } else {
+                      primary = teamUniform?.primary ?? "hsl(var(--primary))";
+                      secondary = teamUniform?.secondary ?? "hsl(var(--muted-foreground))";
+                      pattern = teamUniform?.pattern ?? "SOLID";
+                    }
+                    return (
+                      <span
+                        className="h-6 w-5 shrink-0 border border-foreground/20 rounded-sm"
+                        style={{
+                          ...getUniformStyle(primary, secondary, pattern),
+                          clipPath: "polygon(12% 12%, 30% 12%, 34% 0%, 66% 0%, 70% 12%, 88% 12%, 100% 34%, 86% 48%, 86% 100%, 14% 100%, 14% 48%, 0% 34%)",
+                        }}
+                      />
+                    );
+                  })()}
                 </div>
 
                 {/* 3줄: 예정 경기만 투표 현황 텍스트 */}
