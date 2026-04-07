@@ -47,10 +47,12 @@ type BoardState = {
   placements: Record<string, Placement | null>;
 };
 
+type UniformSet = { primary: string; secondary: string; pattern: string };
 type TeamSettings = {
   uniformPrimary: string;
   uniformSecondary: string;
   uniformPattern?: "SOLID" | "STRIPES_VERTICAL" | "STRIPES_HORIZONTAL" | "STRIPES_DIAGONAL";
+  uniforms?: { home?: UniformSet; away?: UniformSet; third?: UniformSet | null } | null;
 };
 
 type SquadRow = {
@@ -73,6 +75,7 @@ type TeamApiResponse = {
     uniform_primary: string;
     uniform_secondary: string;
     uniform_pattern: TeamSettings["uniformPattern"];
+    uniforms?: TeamSettings["uniforms"];
   };
 };
 
@@ -139,6 +142,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       uniformPrimary: t.uniform_primary || "#2563eb",
       uniformSecondary: t.uniform_secondary || "#f97316",
       uniformPattern: t.uniform_pattern || "SOLID",
+      uniforms: t.uniforms ?? null,
     };
   }, [teamSettingsProp, teamApiData]);
 
@@ -841,11 +845,27 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               const secondPlayer = placement.secondPlayerId
                 ? roster.find((item) => item.id === placement.secondPlayerId)
                 : null;
-              const homePrimary = resolvedTeamSettings.uniformPrimary || "#2563eb";
-              const homeSecondary = resolvedTeamSettings.uniformSecondary || "#f97316";
-              const badgePrimary = uniformMode === "HOME" ? homePrimary : homeSecondary;
-              const badgeSecondary = uniformMode === "HOME" ? homeSecondary : homePrimary;
-              const badgePattern = resolvedTeamSettings.uniformPattern || "SOLID";
+              const uniforms = resolvedTeamSettings.uniforms;
+              let badgePrimary: string, badgeSecondary: string, badgePattern: string;
+              if (uniformMode === "THIRD" && uniforms?.third) {
+                badgePrimary = uniforms.third.primary;
+                badgeSecondary = uniforms.third.secondary;
+                badgePattern = uniforms.third.pattern;
+              } else if (uniformMode === "AWAY" && uniforms?.away) {
+                badgePrimary = uniforms.away.primary;
+                badgeSecondary = uniforms.away.secondary;
+                badgePattern = uniforms.away.pattern;
+              } else if (uniforms?.home) {
+                badgePrimary = uniforms.home.primary;
+                badgeSecondary = uniforms.home.secondary;
+                badgePattern = uniforms.home.pattern;
+              } else {
+                const homePrimary = resolvedTeamSettings.uniformPrimary || "#2563eb";
+                const homeSecondary = resolvedTeamSettings.uniformSecondary || "#f97316";
+                badgePrimary = uniformMode === "HOME" ? homePrimary : homeSecondary;
+                badgeSecondary = uniformMode === "HOME" ? homeSecondary : homePrimary;
+                badgePattern = resolvedTeamSettings.uniformPattern || "SOLID";
+              }
               const uniformStyle = getJerseyStyle(badgePrimary, badgeSecondary, badgePattern);
               const displayName = secondPlayer
                 ? `${player?.name ?? "선수"}/${secondPlayer.name}`
@@ -1201,12 +1221,21 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             qPlacements[slot.id] = row?.positions?.[slot.id] ?? null;
           });
 
-          const homePrimary = resolvedTeamSettings.uniformPrimary || "#2563eb";
-          const homeSecondary = resolvedTeamSettings.uniformSecondary || "#f97316";
-          const badgePrimary = uniformMode === "HOME" ? homePrimary : homeSecondary;
-          const badgeSecondary = uniformMode === "HOME" ? homeSecondary : homePrimary;
-          const badgePattern = resolvedTeamSettings.uniformPattern || "SOLID";
-          const uStyle = getJerseyStyle(badgePrimary, badgeSecondary, badgePattern);
+          const capUniforms = resolvedTeamSettings.uniforms;
+          let capPrimary: string, capSecondary: string, capPattern: string;
+          if (uniformMode === "THIRD" && capUniforms?.third) {
+            capPrimary = capUniforms.third.primary; capSecondary = capUniforms.third.secondary; capPattern = capUniforms.third.pattern;
+          } else if (uniformMode === "AWAY" && capUniforms?.away) {
+            capPrimary = capUniforms.away.primary; capSecondary = capUniforms.away.secondary; capPattern = capUniforms.away.pattern;
+          } else if (capUniforms?.home) {
+            capPrimary = capUniforms.home.primary; capSecondary = capUniforms.home.secondary; capPattern = capUniforms.home.pattern;
+          } else {
+            const hp = resolvedTeamSettings.uniformPrimary || "#2563eb";
+            const hs = resolvedTeamSettings.uniformSecondary || "#f97316";
+            capPrimary = uniformMode === "HOME" ? hp : hs; capSecondary = uniformMode === "HOME" ? hs : hp;
+            capPattern = resolvedTeamSettings.uniformPattern || "SOLID";
+          }
+          const uStyle = getJerseyStyle(capPrimary, capSecondary, capPattern);
 
           // 쉬는 선수 계산
           const assignedIds = new Set<string>();
