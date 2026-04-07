@@ -27,6 +27,7 @@ export default async function SettingsPage() {
         uniformPrimary: "#2563eb",
         uniformSecondary: "#f97316",
         uniformPattern: "SOLID",
+        uniforms: null,
         isSearchable: false,
         joinMode: "MANUAL",
         defaultFormationId: "",
