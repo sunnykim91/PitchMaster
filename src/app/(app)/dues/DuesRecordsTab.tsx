@@ -378,7 +378,7 @@ function DuesRecordsTabInner({
                         {record.description}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {record.recordedAt.slice(0, 10)}
+                        {(() => { const d = new Date(record.recordedAt); return `${d.getMonth() + 1}월 ${d.getDate()}일`; })()}
                         {record.memberName ? (
                           <> · <span className="font-semibold text-foreground/80">{record.memberName}</span></>
                         ) : null}
