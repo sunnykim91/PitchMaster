@@ -168,7 +168,7 @@ function DuesRecordsTabInner({
   const displayMonth = String(m).padStart(2, "0");
 
   return (
-    <div role="tabpanel" id="tabpanel-records" aria-labelledby="tab-records" className="space-y-5">
+    <div role="tabpanel" id="tabpanel-records" aria-labelledby="tab-records" className="space-y-4">
       {/* ── 헤더: 월 네비게이션 + 필터 ── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
@@ -245,26 +245,26 @@ function DuesRecordsTabInner({
 
           {isFormOpen && (
             <Card className="border-white/[0.04] bg-card mt-2 border-t-0 rounded-t-none">
-              <CardContent className="space-y-4 px-4 py-4">
+              <CardContent className="space-y-3 px-4 py-3">
                 <form
-                  className="space-y-4"
+                  className="space-y-3"
                   action={(formData) => handleAddRecord(formData)}
                 >
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">유형</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-[11px] text-muted-foreground">유형</Label>
                       <NativeSelect
                         name="type"
-                        className="h-12 rounded-xl bg-secondary border-0"
+                        className="h-10 rounded-lg bg-secondary border-0"
                       >
                         <option value="INCOME">입금</option>
                         <option value="EXPENSE">출금</option>
                       </NativeSelect>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">금액</Label>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] text-muted-foreground">금액</Label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₩</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₩</span>
                         <Input
                           name="amount"
                           type="number"
@@ -272,7 +272,7 @@ function DuesRecordsTabInner({
                           required
                           placeholder="30,000"
                           className={cn(
-                            "h-12 rounded-xl bg-secondary border-0 pl-7 text-right",
+                            "h-10 rounded-lg bg-secondary border-0 pl-7 text-right",
                             formErrors.amount && "border border-destructive"
                           )}
                           onChange={() => setFormErrors((prev) => ({ ...prev, amount: "" }))}
@@ -282,52 +282,57 @@ function DuesRecordsTabInner({
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">내용</Label>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">내용</Label>
                     <Input
                       name="description"
                       required
                       placeholder="예: 4월 회비, 구장 대여비"
-                      className="h-12 rounded-xl bg-secondary border-0"
+                      className="h-10 rounded-lg bg-secondary border-0"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">날짜</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-[11px] text-muted-foreground">날짜</Label>
                       <Input
                         name="recordedAt"
                         type="date"
                         required
                         className={cn(
-                          "h-12 rounded-xl bg-secondary border-0",
+                          "h-10 rounded-lg bg-secondary border-0",
                           formErrors.recordedAt && "border border-destructive"
                         )}
                         onChange={() => setFormErrors((prev) => ({ ...prev, recordedAt: "" }))}
                       />
                       {formErrors.recordedAt && <p className="text-xs text-destructive">{formErrors.recordedAt}</p>}
                     </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">결제 수단</Label>
-                      <Input
+                    <div className="space-y-1">
+                      <Label className="text-[11px] text-muted-foreground">결제 수단</Label>
+                      <NativeSelect
                         name="method"
-                        placeholder="카카오뱅크, 현금"
-                        className="h-12 rounded-xl bg-secondary border-0"
-                      />
+                        className="h-10 rounded-lg bg-secondary border-0"
+                      >
+                        <option value="">선택</option>
+                        <option value="계좌이체">계좌이체</option>
+                        <option value="카드">카드</option>
+                        <option value="현금">현금</option>
+                      </NativeSelect>
+                    </div>
+                    <div className="flex items-end">
+                      <Button
+                        type="submit"
+                        className="w-full h-10 rounded-lg active:scale-[0.97] transition-transform"
+                        disabled={saving}
+                      >
+                        {saving ? "저장 중..." : "저장"}
+                      </Button>
                     </div>
                   </div>
 
-                  <p className="text-xs text-muted-foreground">
-                    내용에 팀원 이름이 포함되면 해당 팀원의 납부 기록으로 자동 연결됩니다.
+                  <p className="text-[11px] text-muted-foreground">
+                    내용에 팀원 이름이 포함되면 납부 기록으로 자동 연결됩니다.
                   </p>
-
-                  <Button
-                    type="submit"
-                    className="w-full h-12 rounded-xl active:scale-[0.97] transition-transform"
-                    disabled={saving}
-                  >
-                    {saving ? "저장 중..." : "저장하기"}
-                  </Button>
                 </form>
               </CardContent>
             </Card>

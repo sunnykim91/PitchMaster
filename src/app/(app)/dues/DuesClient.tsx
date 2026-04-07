@@ -401,24 +401,24 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* ── Section 1: 잔고 카드 (코랄 gradient) ── */}
-      <Card className="relative overflow-hidden border-white/[0.06] bg-card py-5">
+      <Card className="relative overflow-hidden border-white/[0.06] bg-card py-4">
         <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, hsl(16 85% 58% / 0.12) 0%, transparent 60%)" }} />
-        <CardContent className="relative space-y-4 px-5">
-          <div className="space-y-1">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">통장 잔고</p>
+        <CardContent className="relative space-y-3 px-4">
+          <div className="space-y-0.5">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">통장 잔고</p>
             {summaryData.balance !== null ? (
-              <p className="text-[clamp(2rem,8vw,3rem)] font-bold leading-none tracking-wide text-primary tabular-nums">
+              <p className="text-[clamp(1.75rem,7vw,2.5rem)] font-bold leading-none tracking-wide text-primary tabular-nums">
                 {summaryData.balance.toLocaleString()}원
               </p>
             ) : (
-              <p className="text-sm text-muted-foreground/80">
+              <p className="text-xs text-muted-foreground/80">
                 내역 올리기 탭에서 스크린샷이나 엑셀을 올리면 잔고가 반영됩니다
               </p>
             )}
             {summaryData.balanceUpdatedAt && (
-              <p className="text-sm text-muted-foreground/80">
+              <p className="text-xs text-muted-foreground/80">
                 최종 업데이트: {new Date(summaryData.balanceUpdatedAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
               </p>
             )}
@@ -694,9 +694,9 @@ function MonthlySettlement({ records }: { records: SettlementRecord[] }) {
   const net = income - expense;
 
   return (
-    <div className="space-y-2.5 border-t border-white/[0.08] pt-4">
-      <p className="text-xs font-medium text-muted-foreground">월별 수지결산</p>
-      <div className="space-y-1.5">
+    <div className="space-y-2 border-t border-white/[0.08] pt-3">
+      <p className="text-[11px] font-medium text-muted-foreground">월별 수지결산</p>
+      <div className="space-y-1">
         <div className="flex items-center justify-between text-sm">
           <span className="text-foreground/80">{now.getMonth() + 1}월 수입</span>
           <span className="font-medium text-[hsl(var(--success))]">+{income.toLocaleString()}원</span>

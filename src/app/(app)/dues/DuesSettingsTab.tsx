@@ -172,7 +172,7 @@ function DuesSettingsTabInner({
 
 
   return (
-    <div role="tabpanel" id="tabpanel-settings" aria-labelledby="tab-settings" className="space-y-5">
+    <div role="tabpanel" id="tabpanel-settings" aria-labelledby="tab-settings" className="space-y-4">
       <h2 className="text-sm font-medium text-foreground">회비 설정</h2>
 
       {/* ── 납부 기준일 설정 ── */}

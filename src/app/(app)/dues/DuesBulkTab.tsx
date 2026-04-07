@@ -312,18 +312,18 @@ function DuesBulkTabInner({
   const validBulkCount = bulkRows.filter((r) => r.amount && r.description).length;
 
   return (
-    <div role="tabpanel" id="tabpanel-bulk" aria-labelledby="tab-bulk" className="space-y-5">
+    <div role="tabpanel" id="tabpanel-bulk" aria-labelledby="tab-bulk" className="space-y-4">
       <h2 className="text-sm font-medium text-foreground">내역 올리기</h2>
 
       {/* ── OCR 섹션 ── */}
       <div className="space-y-3">
         <p className="text-xs font-medium text-muted-foreground">OCR (스크린샷)</p>
         <Card
-          className="border-dashed border-white/10 bg-card py-8 cursor-pointer hover:border-white/20 transition-colors active:scale-[0.99]"
+          className="border-dashed border-white/10 bg-card py-5 cursor-pointer hover:border-white/20 transition-colors active:scale-[0.99]"
           onClick={() => ocrFileInputRef.current?.click()}
         >
           <CardContent className="flex flex-col items-center gap-3 px-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
               <Camera className="h-6 w-6 text-primary" />
             </div>
             <div className="text-center space-y-1">
@@ -337,7 +337,7 @@ function DuesBulkTabInner({
             <Button
               variant="outline"
               size="sm"
-              className="mt-2 active:scale-[0.97] transition-transform"
+              className="active:scale-[0.97] transition-transform"
               disabled={ocrLoading}
               onClick={(e) => {
                 e.stopPropagation();
@@ -418,7 +418,7 @@ function DuesBulkTabInner({
               return (
                 <Card
                   key={index}
-                  className="border-white/[0.04] bg-card py-4"
+                  className="border-white/[0.04] bg-card py-3"
                 >
                   <CardContent className="px-4 space-y-3">
                     {/* 행 번호 헤더 */}
@@ -553,11 +553,11 @@ function DuesBulkTabInner({
       <div className="space-y-3 pt-2" ref={bulkSectionRef}>
         <p className="text-xs font-medium text-muted-foreground">엑셀 업로드</p>
         <Card
-          className="border-dashed border-white/10 bg-card py-8 cursor-pointer hover:border-white/20 transition-colors active:scale-[0.99]"
+          className="border-dashed border-white/10 bg-card py-5 cursor-pointer hover:border-white/20 transition-colors active:scale-[0.99]"
           onClick={() => excelFileInputRef.current?.click()}
         >
           <CardContent className="flex flex-col items-center gap-3 px-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[hsl(210,70%,60%)]/10">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(210,70%,60%)]/10">
               <FileSpreadsheet className="h-6 w-6 text-[hsl(210,70%,60%)]" />
             </div>
             <div className="text-center space-y-1">
@@ -571,7 +571,7 @@ function DuesBulkTabInner({
             <Button
               variant="outline"
               size="sm"
-              className="mt-2 active:scale-[0.97] transition-transform"
+              className="active:scale-[0.97] transition-transform"
               disabled={excelLoading}
               onClick={(e) => {
                 e.stopPropagation();

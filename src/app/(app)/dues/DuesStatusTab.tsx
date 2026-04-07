@@ -114,7 +114,7 @@ function DuesStatusTabInner({
   }
 
   return (
-    <div role="tabpanel" id="tabpanel-status" aria-labelledby="tab-status" className="space-y-5">
+    <div role="tabpanel" id="tabpanel-status" aria-labelledby="tab-status" className="space-y-4">
       {/* 헤더: 월 이동 */}
       <div className="space-y-1">
         <div className="flex items-center justify-between">
