@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Bell, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Users } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
@@ -165,6 +165,12 @@ function DuesStatusTabInner({
           );
         })()}
 
+        {/* 납부 통계 — 장기 미납자 + 월별 추이 */}
+        <PaymentStats
+          monthFilter={monthFilter}
+          duesStatus={duesStatus}
+        />
+
         {/* 경고: 회비 기준 미설정 */}
         {settings.length === 0 && (
           <div className="mt-3 rounded-lg bg-[hsl(var(--warning))]/10 px-3 py-2">
@@ -315,6 +321,75 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus }:
               {paid.map(renderRow)}
             </div>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── 납부 통계 (장기 미납자 + 납부율) ──
+function PaymentStats({ monthFilter, duesStatus }: {
+  monthFilter: string;
+  duesStatus: DuesStatusMember[];
+}) {
+  const [history, setHistory] = useState<{ month: string; rate: number }[]>([]);
+  const [longTermUnpaid, setLongTermUnpaid] = useState<{ name: string; months: number }[]>([]);
+
+  useEffect(() => {
+    fetch(`/api/dues/payment-stats`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.history) setHistory(data.history);
+        if (data.longTermUnpaid) setLongTermUnpaid(data.longTermUnpaid);
+      })
+      .catch(() => {});
+  }, [monthFilter]);
+
+  // 현재 월 납부율
+  const exempt = duesStatus.filter((m) => m.status === "EXEMPT").length;
+  const total = duesStatus.length - exempt;
+  const paid = duesStatus.filter((m) => m.status === "PAID").length;
+  const rate = total > 0 ? Math.round((paid / total) * 100) : 0;
+
+  if (duesStatus.length === 0) return null;
+
+  return (
+    <div className="mt-3 space-y-2">
+      {/* 납부율 프로그레스 바 */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-2 rounded-full bg-secondary/50 overflow-hidden">
+          <div
+            className="h-full bg-[hsl(var(--success))] transition-all duration-500"
+            style={{ width: `${rate}%` }}
+          />
+        </div>
+        <span className="text-xs font-bold text-[hsl(var(--success))] shrink-0">{rate}%</span>
+      </div>
+
+      {/* 장기 미납자 */}
+      {longTermUnpaid.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 text-xs">
+          <span className="text-muted-foreground">장기 미납:</span>
+          {longTermUnpaid.map((m) => (
+            <span key={m.name} className="text-[hsl(var(--loss))] font-medium">
+              ⚠️ {m.name} ({m.months}개월)
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* 월별 추이 */}
+      {history.length > 1 && (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground overflow-x-auto">
+          <span className="shrink-0">추이:</span>
+          {history.map((h, i) => (
+            <span key={h.month} className="shrink-0">
+              {i > 0 && <span className="mx-0.5">→</span>}
+              <span className={h.rate >= 80 ? "text-[hsl(var(--success))]" : h.rate >= 50 ? "text-[hsl(var(--warning))]" : "text-[hsl(var(--loss))]"}>
+                {h.rate}%
+              </span>
+            </span>
+          ))}
         </div>
       )}
     </div>

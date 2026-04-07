@@ -418,6 +418,8 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
               </p>
             )}
           </div>
+          {/* 월별 수지결산 한 줄 */}
+          <MonthlySettlement records={records} />
         </div>
       </Card>
 
@@ -671,6 +673,33 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         />
       </div>
 
+    </div>
+  );
+}
+
+// ── 월별 수지결산 (잔고 카드 하단) ──
+type SettlementRecord = { type: string; amount: number; recordedAt: string };
+
+function MonthlySettlement({ records }: { records: SettlementRecord[] }) {
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+  const monthRecords = records.filter((r) => r.recordedAt.startsWith(currentMonth));
+  const income = monthRecords.filter((r) => r.type === "INCOME").reduce((s, r) => s + r.amount, 0);
+  const expense = monthRecords.filter((r) => r.type === "EXPENSE").reduce((s, r) => s + r.amount, 0);
+
+  if (income === 0 && expense === 0) return null;
+
+  const net = income - expense;
+
+  return (
+    <div className="mt-3 pt-3 border-t border-border/30 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+      <span className="text-muted-foreground">{now.getMonth() + 1}월</span>
+      <span className="text-[hsl(var(--success))]">수입 +{income.toLocaleString()}</span>
+      <span className="text-[hsl(var(--loss))]">지출 -{expense.toLocaleString()}</span>
+      <span className={net >= 0 ? "font-bold text-[hsl(var(--success))]" : "font-bold text-[hsl(var(--loss))]"}>
+        {net >= 0 ? "+" : ""}{net.toLocaleString()}원
+      </span>
     </div>
   );
 }
