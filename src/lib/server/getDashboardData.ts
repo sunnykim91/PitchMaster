@@ -13,6 +13,7 @@ export type TeamUniformInfo = {
   uniformPrimary: string | null;
   uniformSecondary: string | null;
   uniformPattern: string | null;
+  uniforms?: { home?: { primary: string; secondary: string; pattern: string }; away?: { primary: string; secondary: string; pattern: string }; third?: { primary: string; secondary: string; pattern: string } | null } | null;
 };
 
 export type BirthdayMember = {
@@ -237,7 +238,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
   // 팀 유니폼 정보
   const { data: teamInfoData } = await db
     .from("teams")
-    .select("uniform_primary, uniform_secondary, uniform_pattern")
+    .select("uniform_primary, uniform_secondary, uniform_pattern, uniforms")
     .eq("id", teamId)
     .single();
 
@@ -246,6 +247,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
         uniformPrimary: teamInfoData.uniform_primary ?? null,
         uniformSecondary: teamInfoData.uniform_secondary ?? null,
         uniformPattern: teamInfoData.uniform_pattern ?? null,
+        uniforms: (teamInfoData as { uniforms?: unknown }).uniforms as TeamUniformInfo["uniforms"],
       }
     : null;
 

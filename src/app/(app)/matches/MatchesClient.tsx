@@ -42,7 +42,7 @@ type Match = {
   status: MatchStatus;
   voteDeadline?: string;
   score?: string | null;
-  uniformType: "HOME" | "AWAY";
+  uniformType: "HOME" | "AWAY" | "THIRD";
   matchType: "REGULAR" | "INTERNAL" | "EVENT";
   statsIncluded: boolean;
 };
@@ -94,13 +94,14 @@ function mapDbMatchToMatch(db: DbMatch): Match {
     status: db.status,
     voteDeadline: db.vote_deadline || undefined,
     score: db.score ?? null,
-    uniformType: (db.uniform_type === "AWAY" ? "AWAY" : "HOME") as "HOME" | "AWAY",
+    uniformType: (db.uniform_type === "THIRD" ? "THIRD" : db.uniform_type === "AWAY" ? "AWAY" : "HOME") as "HOME" | "AWAY" | "THIRD",
     matchType: (db.match_type === "INTERNAL" ? "INTERNAL" : db.match_type === "EVENT" ? "EVENT" : "REGULAR") as "REGULAR" | "INTERNAL" | "EVENT",
     statsIncluded: db.stats_included ?? true,
   };
 }
 
-type TeamUniform = { primary: string | null; secondary: string | null; pattern: string | null };
+type UniformSetInfo = { primary: string; secondary: string; pattern: string };
+type TeamUniform = { primary: string | null; secondary: string | null; pattern: string | null; uniforms?: { home?: UniformSetInfo; away?: UniformSetInfo; third?: UniformSetInfo | null } | null };
 
 export default function MatchesClient({ userId, userRole, initialMatches, sportType = "SOCCER", teamUniform }: { userId: string; userRole?: Role; initialMatches?: { matches: DbMatch[] }; sportType?: SportType; teamUniform?: TeamUniform }) {
   const { effectiveRole } = useViewAsRole();
@@ -729,7 +730,13 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   {match.matchType !== "EVENT" && (
                     <span
                       className="h-5 w-5 rounded-full border border-border/60 shrink-0"
-                      style={{ backgroundColor: teamUniform ? (match.uniformType === "HOME" ? teamUniform.primary ?? "hsl(var(--primary))" : teamUniform.secondary ?? "hsl(var(--muted-foreground))") : (match.uniformType === "HOME" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))") }}
+                      style={{ backgroundColor: (() => {
+                        const u = teamUniform?.uniforms;
+                        if (match.uniformType === "THIRD" && u?.third) return u.third.primary;
+                        if (match.uniformType === "AWAY" && u?.away) return u.away.primary;
+                        if (u?.home) return u.home.primary;
+                        return teamUniform ? (match.uniformType === "HOME" ? teamUniform.primary ?? "hsl(var(--primary))" : teamUniform.secondary ?? "hsl(var(--muted-foreground))") : "hsl(var(--primary))";
+                      })() }}
                     />
                   )}
                 </div>

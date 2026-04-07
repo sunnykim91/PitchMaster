@@ -55,10 +55,12 @@ type TeamRecord = {
   recent5: ("W" | "D" | "L")[];
 };
 
+type UniformSet = { primary: string; secondary: string; pattern: string };
 type TeamUniform = {
   uniformPrimary: string | null;
   uniformSecondary: string | null;
   uniformPattern: string | null;
+  uniforms?: { home?: UniformSet; away?: UniformSet; third?: UniformSet | null } | null;
 };
 
 type BirthdayMember = {
@@ -427,15 +429,22 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                 </span>
               </span>
               {(() => {
-                const uniformType = upcomingMatch.uniform_type ?? "HOME";
-                const isHome = uniformType !== "AWAY";
-                const bgColor = data.teamUniform
-                  ? (isHome ? data.teamUniform.uniformPrimary : data.teamUniform.uniformSecondary) ?? (isHome ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))")
-                  : (isHome ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))");
+                const uniformType = (upcomingMatch.uniform_type ?? "HOME") as "HOME" | "AWAY" | "THIRD";
+                const u = data.teamUniform;
+                const uniforms = u?.uniforms;
+                let bgColor: string;
+                let label: string;
+                if (uniformType === "THIRD" && uniforms?.third) {
+                  bgColor = uniforms.third.primary; label = "써드";
+                } else if (uniformType === "AWAY") {
+                  bgColor = uniforms?.away?.primary ?? u?.uniformSecondary ?? "hsl(var(--muted-foreground))"; label = "원정";
+                } else {
+                  bgColor = uniforms?.home?.primary ?? u?.uniformPrimary ?? "hsl(var(--primary))"; label = "홈";
+                }
                 return (
                   <span className="inline-flex items-center gap-1 shrink-0">
                     <span className="h-3 w-3 rounded-full border border-border/60" style={{ backgroundColor: bgColor }} />
-                    <span>{isHome ? "홈" : "원정"}</span>
+                    <span>{label}</span>
                   </span>
                 );
               })()}
