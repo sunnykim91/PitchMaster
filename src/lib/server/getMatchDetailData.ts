@@ -13,7 +13,7 @@ export async function getMatchDetailData(matchId: string, teamId: string) {
     db.from("match_internal_teams").select("player_id, side").eq("match_id", matchId),
     db.from("match_diaries").select("*").eq("match_id", matchId).maybeSingle(),
     db.from("team_members").select("id, role, user_id, pre_name, coach_positions, jersey_number, team_role, users(id, name, preferred_positions)").eq("team_id", teamId).in("status", ["ACTIVE", "DORMANT"]),
-    db.from("teams").select("sport_type, uniform_primary, uniform_secondary, uniform_pattern, default_formation_id").eq("id", teamId).single(),
+    db.from("teams").select("sport_type, uniform_primary, uniform_secondary, uniform_pattern, uniforms, default_formation_id").eq("id", teamId).single(),
     db.from("match_attendance").select("id, match_id, user_id, member_id, vote, voted_at, users(id, name, preferred_positions), member:team_members(id, pre_name, user_id, coach_positions, users(id, name, preferred_positions))").eq("match_id", matchId),
   ]);
 
