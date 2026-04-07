@@ -60,6 +60,7 @@ type TeamApiResponse = {
     uniform_primary: string;
     uniform_secondary: string;
     uniform_pattern: TeamSettingsData["uniformPattern"];
+    uniforms?: unknown;
     is_searchable: boolean;
     join_mode: "AUTO" | "MANUAL";
     sport_type?: string;
@@ -87,6 +88,7 @@ function mapTeamResponse(res: TeamApiResponse, fallback: TeamSettingsData): Team
     uniformPrimary: t.uniform_primary ?? fallback.uniformPrimary,
     uniformSecondary: t.uniform_secondary ?? fallback.uniformSecondary,
     uniformPattern: t.uniform_pattern ?? fallback.uniformPattern,
+    uniforms: (t.uniforms as TeamSettingsData["uniforms"]) ?? fallback.uniforms,
     isSearchable: t.is_searchable ?? fallback.isSearchable,
     joinMode: t.join_mode ?? fallback.joinMode,
     defaultFormationId: t.default_formation_id ?? fallback.defaultFormationId,

@@ -143,11 +143,11 @@ function MatchInfoTabInner({
   );
 
   /* ── 유니폼 변경 ── */
-  async function handleUniformChange(type: "HOME" | "AWAY") {
+  async function handleUniformChange(type: "HOME" | "AWAY" | "THIRD") {
     if (match.uniformType === type) return;
     const { error } = await apiMutate("/api/matches", "PUT", { id: matchId, uniformType: type });
     if (!error) {
-      showToast(type === "HOME" ? "홈 유니폼으로 변경" : "원정 유니폼으로 변경");
+      showToast(type === "HOME" ? "홈 유니폼으로 변경" : type === "AWAY" ? "원정 유니폼으로 변경" : "써드 유니폼으로 변경");
       await refetchMatches();
     }
   }

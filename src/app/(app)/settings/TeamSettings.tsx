@@ -15,13 +15,18 @@ import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
 import TeamLogo from "@/components/TeamLogo";
 import { Camera, X } from "lucide-react";
 
+type UniformPattern = "SOLID" | "STRIPES_VERTICAL" | "STRIPES_HORIZONTAL" | "STRIPES_DIAGONAL";
+type UniformSet = { primary: string; secondary: string; pattern: UniformPattern };
+type UniformsData = { home: UniformSet; away: UniformSet; third?: UniformSet | null };
+
 type TeamSettingsData = {
   teamName: string;
   logoUrl: string;
   inviteCode: string;
   uniformPrimary: string;
   uniformSecondary: string;
-  uniformPattern: "SOLID" | "STRIPES_VERTICAL" | "STRIPES_HORIZONTAL" | "STRIPES_DIAGONAL";
+  uniformPattern: UniformPattern;
+  uniforms?: UniformsData | null;
   isSearchable: boolean;
   joinMode: "AUTO" | "MANUAL";
   defaultFormationId: string;
@@ -193,6 +198,7 @@ function TeamSettingsComponent({
       uniformPrimary: team.uniformPrimary,
       uniformSecondary: team.uniformSecondary,
       uniformPattern: team.uniformPattern,
+      uniforms: team.uniforms,
       defaultFormationId: team.defaultFormationId || null,
     });
     setSaving(false);
@@ -321,76 +327,23 @@ function TeamSettingsComponent({
               </div>
             </div>
 
-            {/* 유니폼 */}
-            <div className="rounded-xl border border-border p-4 space-y-4">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">유니폼</p>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold text-muted-foreground">홈 색상</Label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={uniformPrimary}
-                      onChange={(event) => setTeam({ ...team, uniformPrimary: event.target.value })}
-                      disabled={!canEditTeam}
-                      className="h-11 w-11 shrink-0 cursor-pointer rounded-lg border border-input bg-transparent p-0.5"
-                    />
-                    <Input
-                      value={uniformPrimary}
-                      onChange={(event) => setTeam({ ...team, uniformPrimary: event.target.value })}
-                      disabled={!canEditTeam}
-                      className="flex-1 font-mono text-xs"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold text-muted-foreground">원정 색상</Label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={uniformSecondary}
-                      onChange={(event) => setTeam({ ...team, uniformSecondary: event.target.value })}
-                      disabled={!canEditTeam}
-                      className="h-11 w-11 shrink-0 cursor-pointer rounded-lg border border-input bg-transparent p-0.5"
-                    />
-                    <Input
-                      value={uniformSecondary}
-                      onChange={(event) => setTeam({ ...team, uniformSecondary: event.target.value })}
-                      disabled={!canEditTeam}
-                      className="flex-1 font-mono text-xs"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm font-semibold text-muted-foreground">패턴</Label>
-                <Select
-                  value={uniformPattern}
-                  onValueChange={(value) => setTeam({ ...team, uniformPattern: value as TeamSettingsData["uniformPattern"] })}
-                  disabled={!canEditTeam}
-                >
-                  <SelectTrigger className="w-full sm:w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="SOLID">단색</SelectItem>
-                    <SelectItem value="STRIPES_VERTICAL">세로 스트라이프</SelectItem>
-                    <SelectItem value="STRIPES_HORIZONTAL">가로 스트라이프</SelectItem>
-                    <SelectItem value="STRIPES_DIAGONAL">대각 스트라이프</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-6 pt-2">
-                <div className="flex flex-col items-center gap-1.5">
-                  <div className="h-14 w-14 rounded-lg border border-border shadow-sm" style={homeJerseyStyle} />
-                  <span className="text-xs font-medium text-muted-foreground">홈</span>
-                </div>
-                <div className="flex flex-col items-center gap-1.5">
-                  <div className="h-14 w-14 rounded-lg border border-border shadow-sm" style={awayJerseyStyle} />
-                  <span className="text-xs font-medium text-muted-foreground">원정</span>
-                </div>
-              </div>
-            </div>
+            {/* 유니폼 — 홈/원정/써드 탭 */}
+            <UniformSettings
+              uniforms={team.uniforms ?? {
+                home: { primary: team.uniformPrimary || "#2563eb", secondary: team.uniformSecondary || "#f97316", pattern: team.uniformPattern || "SOLID" },
+                away: { primary: team.uniformSecondary || "#f97316", secondary: team.uniformPrimary || "#2563eb", pattern: team.uniformPattern || "SOLID" },
+              }}
+              onChange={(uniforms) => {
+                setTeam({
+                  ...team,
+                  uniforms,
+                  uniformPrimary: uniforms.home.primary,
+                  uniformSecondary: uniforms.home.secondary,
+                  uniformPattern: uniforms.home.pattern,
+                });
+              }}
+              disabled={!canEditTeam}
+            />
 
             {/* 기본 포메이션 */}
             <div className="rounded-xl border border-border p-4 space-y-3">
@@ -514,6 +467,178 @@ function TeamSettingsComponent({
 }
 
 export const TeamSettings = memo(TeamSettingsComponent);
+
+/* ── UniformSettings sub-component ── */
+
+const PRESET_COLORS = [
+  { label: "검정", value: "#000000" },
+  { label: "흰색", value: "#FFFFFF" },
+  { label: "빨강", value: "#DC2626" },
+  { label: "파랑", value: "#2563EB" },
+  { label: "초록", value: "#16A34A" },
+  { label: "주황", value: "#EA580C" },
+  { label: "노랑", value: "#EAB308" },
+  { label: "보라", value: "#7C3AED" },
+  { label: "하늘", value: "#38BDF8" },
+  { label: "분홍", value: "#EC4899" },
+];
+
+const PATTERN_OPTIONS: { value: UniformPattern; label: string }[] = [
+  { value: "SOLID", label: "단색" },
+  { value: "STRIPES_VERTICAL", label: "세로 스트라이프" },
+  { value: "STRIPES_HORIZONTAL", label: "가로 스트라이프" },
+  { value: "STRIPES_DIAGONAL", label: "대각 스트라이프" },
+];
+
+function UniformSettings({
+  uniforms,
+  onChange,
+  disabled,
+}: {
+  uniforms: UniformsData;
+  onChange: (u: UniformsData) => void;
+  disabled: boolean;
+}) {
+  const [activeTab, setActiveTab] = useState<"home" | "away" | "third">("home");
+
+  const currentSet: UniformSet = activeTab === "third"
+    ? (uniforms.third ?? { primary: "#000000", secondary: "#FFFFFF", pattern: "SOLID" })
+    : uniforms[activeTab];
+
+  const updateCurrent = (partial: Partial<UniformSet>) => {
+    const updated = { ...currentSet, ...partial };
+    if (activeTab === "third") {
+      onChange({ ...uniforms, third: updated });
+    } else {
+      onChange({ ...uniforms, [activeTab]: updated });
+    }
+  };
+
+  const hasThird = !!uniforms.third;
+
+  const addThird = () => {
+    onChange({ ...uniforms, third: { primary: "#000000", secondary: "#FFFFFF", pattern: "SOLID" } });
+    setActiveTab("third");
+  };
+
+  const removeThird = () => {
+    const { third: _, ...rest } = uniforms;
+    onChange(rest as UniformsData);
+    setActiveTab("home");
+  };
+
+  const jerseyStyle = getJerseyStyle(currentSet.primary, currentSet.secondary, currentSet.pattern);
+
+  return (
+    <div className="rounded-xl border border-border p-4 space-y-4">
+      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">유니폼</p>
+
+      {/* 탭: 홈 | 원정 | 써드 */}
+      <div className="flex gap-2">
+        {(["home", "away"] as const).map((tab) => (
+          <button key={tab} type="button" onClick={() => setActiveTab(tab)}
+            className={cn("flex-1 rounded-lg py-2 text-sm font-medium transition-all",
+              activeTab === tab ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"
+            )}>
+            {tab === "home" ? "홈" : "원정"}
+          </button>
+        ))}
+        {hasThird ? (
+          <button type="button" onClick={() => setActiveTab("third")}
+            className={cn("flex-1 rounded-lg py-2 text-sm font-medium transition-all",
+              activeTab === "third" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"
+            )}>
+            써드
+          </button>
+        ) : (
+          <button type="button" onClick={addThird} disabled={disabled}
+            className="flex-1 rounded-lg border border-dashed border-border py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all">
+            + 써드 추가
+          </button>
+        )}
+      </div>
+
+      {/* 미리보기 */}
+      <div className="flex items-center justify-center gap-4">
+        <div className="flex flex-col items-center gap-1.5">
+          <div className="h-16 w-16 rounded-lg border border-border shadow-sm" style={jerseyStyle} />
+          <span className="text-xs font-medium text-muted-foreground">
+            {activeTab === "home" ? "홈" : activeTab === "away" ? "원정" : "써드"}
+          </span>
+        </div>
+      </div>
+
+      {/* 프리셋 색상 */}
+      <div className="space-y-1.5">
+        <p className="text-[11px] font-medium text-muted-foreground">메인 색상</p>
+        <div className="flex flex-wrap gap-2">
+          {PRESET_COLORS.map((c) => (
+            <button key={c.value} type="button" disabled={disabled}
+              onClick={() => updateCurrent({ primary: c.value })}
+              className={cn("h-8 w-8 rounded-full border-2 transition-all",
+                currentSet.primary === c.value ? "border-primary scale-110" : "border-border hover:scale-105"
+              )}
+              style={{ backgroundColor: c.value }}
+              title={c.label}
+            />
+          ))}
+          <input type="color" value={currentSet.primary} disabled={disabled}
+            onChange={(e) => updateCurrent({ primary: e.target.value })}
+            className="h-8 w-8 cursor-pointer rounded-full border-2 border-border p-0.5"
+            title="직접 선택"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <p className="text-[11px] font-medium text-muted-foreground">서브 색상</p>
+        <div className="flex flex-wrap gap-2">
+          {PRESET_COLORS.map((c) => (
+            <button key={c.value} type="button" disabled={disabled}
+              onClick={() => updateCurrent({ secondary: c.value })}
+              className={cn("h-8 w-8 rounded-full border-2 transition-all",
+                currentSet.secondary === c.value ? "border-primary scale-110" : "border-border hover:scale-105"
+              )}
+              style={{ backgroundColor: c.value }}
+              title={c.label}
+            />
+          ))}
+          <input type="color" value={currentSet.secondary} disabled={disabled}
+            onChange={(e) => updateCurrent({ secondary: e.target.value })}
+            className="h-8 w-8 cursor-pointer rounded-full border-2 border-border p-0.5"
+            title="직접 선택"
+          />
+        </div>
+      </div>
+
+      {/* 패턴 */}
+      <div className="space-y-1.5">
+        <p className="text-[11px] font-medium text-muted-foreground">패턴</p>
+        <div className="grid grid-cols-4 gap-2">
+          {PATTERN_OPTIONS.map((p) => (
+            <button key={p.value} type="button" disabled={disabled}
+              onClick={() => updateCurrent({ pattern: p.value })}
+              className={cn("rounded-lg border p-2 text-center text-xs font-medium transition-all",
+                currentSet.pattern === p.value
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:text-foreground"
+              )}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 써드 삭제 */}
+      {activeTab === "third" && hasThird && (
+        <button type="button" onClick={removeThird} disabled={disabled}
+          className="w-full rounded-lg py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors">
+          써드 유니폼 삭제
+        </button>
+      )}
+    </div>
+  );
+}
 
 /* ── LogoUpload sub-component (with crop) ── */
 
