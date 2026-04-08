@@ -321,9 +321,9 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       if (!isDuesPayment(r.amount)) continue;
       const matched = members.find((m) => r.memberName === m.name || r.description?.includes(m.name));
       if (matched) {
-        const existing = matches.find((m) => m.memberId === matched.id);
+        const existing = matches.find((m) => m.memberId === matched.memberId);
         if (existing) existing.amount += r.amount;
-        else matches.push({ memberId: matched.id, amount: r.amount, status: "PAID" });
+        else matches.push({ memberId: matched.memberId, amount: r.amount, status: "PAID" });
       }
     }
 
@@ -341,7 +341,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     if (!members.length) return [];
 
     const list = members.map((m) => {
-      const dbStatus = paymentStatusMap.get(m.id);
+      const dbStatus = paymentStatusMap.get(m.memberId) ?? paymentStatusMap.get(m.id);
 
       if (dbStatus) {
         return {

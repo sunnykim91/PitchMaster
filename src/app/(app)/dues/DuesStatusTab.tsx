@@ -268,7 +268,7 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
 
   async function handleStatusChange(m: DuesStatusMember, newStatus: "PAID" | "UNPAID" | "EXEMPT") {
     await apiMutate("/api/dues/payment-status", "POST", {
-      memberId: m.id,
+      memberId: m.memberId,
       month: monthFilter,
       status: newStatus,
       paidAmount: newStatus === "PAID" ? m.paidAmount : 0,
