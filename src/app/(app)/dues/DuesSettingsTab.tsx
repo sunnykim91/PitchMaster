@@ -417,6 +417,123 @@ function DuesSettingsTabInner({
       </div>
 
       {/* 회비 유형은 개별 추가/수정/삭제 시 즉시 서버에 반영되므로 별도 저장 버튼 불필요 */}
+
+      {/* ── 벌금 규칙 설정 ── */}
+      <PenaltyRulesSection />
+    </div>
+  );
+}
+
+// ── 벌금 규칙 관리 ──
+function PenaltyRulesSection() {
+  const [rules, setRules] = useState<{ id: string; name: string; trigger_type: string; amount: number; is_active: boolean }[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const confirm = useConfirm();
+
+  // 규칙 로드
+  React.useEffect(() => {
+    fetch("/api/dues/penalty-rules")
+      .then((r) => r.json())
+      .then((data) => { if (data.rules) setRules(data.rules); setLoaded(true); })
+      .catch(() => setLoaded(true));
+  }, []);
+
+  async function handleAdd(formData: FormData) {
+    const name = String(formData.get("name") || "").trim();
+    const triggerType = String(formData.get("triggerType") || "CUSTOM");
+    const amount = Number(formData.get("amount") || 0);
+    if (!name || amount <= 0) return;
+
+    const { data } = await apiMutate("/api/dues/penalty-rules", "POST", { name, triggerType, amount });
+    if (data) {
+      setRules((prev) => [...prev, data as typeof prev[0]]);
+      setAdding(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    const ok = await confirm({ title: "벌금 규칙을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
+    if (!ok) return;
+    await apiMutate("/api/dues/penalty-rules", "DELETE", { id });
+    setRules((prev) => prev.filter((r) => r.id !== id));
+  }
+
+  if (!loaded) return null;
+
+  const TRIGGER_LABELS: Record<string, string> = {
+    LATE: "지각",
+    ABSENT: "불참",
+    NO_VOTE: "미투표",
+    CUSTOM: "기타",
+  };
+
+  return (
+    <div className="mt-8 space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-bold text-foreground">벌금 규칙</h3>
+          <p className="text-xs text-muted-foreground">경기 완료 시 자동으로 벌금이 부과됩니다</p>
+        </div>
+        {!adding && (
+          <Button type="button" variant="outline" size="sm" onClick={() => setAdding(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1" /> 추가
+          </Button>
+        )}
+      </div>
+
+      {/* 규칙 목록 */}
+      {rules.length === 0 && !adding && (
+        <p className="text-xs text-muted-foreground/60 py-4 text-center">등록된 벌금 규칙이 없습니다</p>
+      )}
+
+      {rules.map((rule) => (
+        <Card key={rule.id} className="border-white/[0.04] bg-card p-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm font-semibold">{rule.name}</span>
+              <span className="ml-2 text-xs text-muted-foreground">({TRIGGER_LABELS[rule.trigger_type] || rule.trigger_type})</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-primary">{rule.amount.toLocaleString()}원</span>
+              <button type="button" onClick={() => handleDelete(rule.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </Card>
+      ))}
+
+      {/* 추가 폼 */}
+      {adding && (
+        <Card className="border-primary/20 bg-card p-3">
+          <form action={handleAdd} className="space-y-2">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">규칙 이름</Label>
+                <Input name="name" required placeholder="예: 지각비" className="h-9 text-sm" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">트리거</Label>
+                <NativeSelect name="triggerType" className="h-9 text-sm">
+                  <option value="LATE">지각</option>
+                  <option value="ABSENT">불참</option>
+                  <option value="NO_VOTE">미투표</option>
+                  <option value="CUSTOM">기타</option>
+                </NativeSelect>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">금액</Label>
+                <Input name="amount" type="number" min={0} required placeholder="5000" className="h-9 text-sm" />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(false)}>취소</Button>
+              <Button type="submit" size="sm">저장</Button>
+            </div>
+          </form>
+        </Card>
+      )}
     </div>
   );
 }

@@ -19,6 +19,7 @@ import { DuesRecordsTab } from "./DuesRecordsTab";
 import { DuesStatusTab } from "./DuesStatusTab";
 import { DuesBulkTab } from "./DuesBulkTab";
 import { DuesSettingsTab } from "./DuesSettingsTab";
+import { DuesPenaltyTab } from "./DuesPenaltyTab";
 
 /* ── API response types (snake_case from server) ── */
 
@@ -110,7 +111,7 @@ type DuesInitialData = {
   members?: ApiMemberRow[];
 };
 
-const validDuesTabs = ["records", "status", "bulk", "settings"] as const;
+const validDuesTabs = ["records", "status", "penalty", "bulk", "settings"] as const;
 type DuesTabKey = (typeof validDuesTabs)[number];
 
 /** 역할 우선순위 (높을수록 상단) */
@@ -414,7 +415,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
               </p>
             ) : (
               <p className="text-xs text-muted-foreground/80">
-                내역 올리기 탭에서 스크린샷이나 엑셀을 올리면 잔고가 반영됩니다
+                업로드 탭에서 스크린샷이나 엑셀을 올리면 잔고가 반영됩니다
               </p>
             )}
             {summaryData.balanceUpdatedAt && (
@@ -516,11 +517,12 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
         <div className="border-b border-border px-4">
         <div className="flex" role="tablist">
           {([
-            { key: "records" as const, label: "입출금", staffOnly: false },
-            { key: "status" as const, label: "납부현황", staffOnly: true },
-            { key: "bulk" as const, label: "내역 올리기", staffOnly: true },
-            { key: "settings" as const, label: "설정", staffOnly: true },
-          ]).filter((tab) => !tab.staffOnly || isStaffOrAbove(role)).map((tab) => (
+            { key: "records" as const, label: "입출금", staffOnly: false, show: true },
+            { key: "status" as const, label: "납부현황", staffOnly: true, show: true },
+            { key: "penalty" as const, label: "벌금", staffOnly: false, show: (summaryData.penaltyRules?.length ?? 0) > 0 },
+            { key: "bulk" as const, label: "업로드", staffOnly: true, show: true },
+            { key: "settings" as const, label: "설정", staffOnly: true, show: true },
+          ]).filter((tab) => tab.show && (!tab.staffOnly || isStaffOrAbove(role))).map((tab) => (
             <button
               key={tab.key}
               id={`tab-${tab.key}`}
@@ -592,7 +594,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                 2
               </span>
               <div>
-                <p className="font-medium text-sm text-foreground">내역 올리기</p>
+                <p className="font-medium text-sm text-foreground">업로드</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   통장 스크린샷(OCR) 또는 엑셀로 입출금 내역을 한 번에 올리세요
                 </p>
@@ -647,6 +649,10 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           setDuesTab={setDuesTab}
           showToast={showToast}
         />
+      </div>
+
+      <div className={duesTab === "penalty" ? "" : "hidden"}>
+        <DuesPenaltyTab role={role} />
       </div>
 
       <div className={duesTab === "bulk" ? "" : "hidden"}>
