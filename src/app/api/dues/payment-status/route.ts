@@ -22,8 +22,6 @@ export async function GET(req: NextRequest) {
   ]);
 
   if (statusRes.error) return apiError(statusRes.error.message);
-  if (exemptionRes.error) console.error("[payment-status] exemption query error:", exemptionRes.error.message);
-  console.log("[payment-status] exemptions count:", exemptionRes.data?.length ?? 0, "month:", month);
   const data = statusRes.data ?? [];
 
   // 활성 면제 상태 중 해당 월과 겹치는 회원 → 자동 EXEMPT 적용
@@ -34,34 +32,53 @@ export async function GET(req: NextRequest) {
 
   const TYPE_LABELS: Record<string, string> = { EXEMPT: "면제", LEAVE: "휴회", INJURED: "부상" };
 
-  const allPaymentMemberIds = data.map((d: any) => d.member_id);
-  console.log("[payment-status] payment member_ids sample:", allPaymentMemberIds.slice(0, 3));
-  console.log("[payment-status] exemption member_ids sample:", (exemptionRes.data ?? []).slice(0, 3).map((e: any) => ({ mid: e.member_id, type: e.exemption_type, start: e.start_date })));
+  // member_dues_exemptions.member_id = team_members.id
+  // dues_payment_status.member_id = users.id (또는 team_members.id)
+  // → team_members로 매핑 테이블 구축
+  const exemptions = exemptionRes.data ?? [];
+  if (exemptions.length > 0) {
+    const exemptMemberIds = [...new Set(exemptions.map((e: any) => e.member_id))];
+    const { data: tmRows } = await db
+      .from("team_members")
+      .select("id, user_id")
+      .eq("team_id", ctx.teamId)
+      .in("id", exemptMemberIds);
 
-  for (const ex of exemptionRes.data ?? []) {
-    const overlaps = ex.start_date <= monthEnd && (ex.end_date === null || ex.end_date >= monthStart);
-    if (!overlaps) { console.log("[payment-status] skip no overlap:", ex.member_id, ex.start_date, ex.end_date); continue; }
+    // team_members.id → users.id 매핑
+    const tmToUser = new Map<string, string>();
+    for (const tm of tmRows ?? []) {
+      if (tm.user_id) tmToUser.set(tm.id, tm.user_id);
+    }
 
-    const existing = data.find((d: any) => d.member_id === ex.member_id);
-    if (existing?.status === "PAID") { console.log("[payment-status] skip PAID:", ex.member_id); continue; }
+    for (const ex of exemptions) {
+      const overlaps = ex.start_date <= monthEnd && (ex.end_date === null || ex.end_date >= monthStart);
+      if (!overlaps) continue;
 
-    console.log("[payment-status] processing:", ex.member_id, "existing:", existing?.status ?? "NEW");
-    const note = `${TYPE_LABELS[ex.exemption_type] ?? ex.exemption_type}${ex.reason ? `: ${ex.reason}` : ""}`;
+      // exemption의 member_id(team_members.id)를 users.id로 변환
+      const userId = tmToUser.get(ex.member_id) ?? ex.member_id;
 
-    if (existing) {
-      if (existing.status !== "EXEMPT" || existing.note !== note) {
-        const { error: upErr } = await db.from("dues_payment_status").update({ status: "EXEMPT", paid_amount: 0, note, updated_at: new Date().toISOString() })
-          .eq("team_id", ctx.teamId).eq("member_id", ex.member_id).eq("month", month);
-        if (upErr) console.error("[payment-status] update EXEMPT error:", ex.member_id, upErr.message);
-        else { existing.status = "EXEMPT"; existing.note = note; existing.paid_amount = 0; }
+      // payment_status에서 team_members.id 또는 users.id 어느 쪽이든 매칭
+      const existing = data.find((d: any) => d.member_id === userId || d.member_id === ex.member_id);
+      if (existing?.status === "PAID") continue;
+
+      const note = `${TYPE_LABELS[ex.exemption_type] ?? ex.exemption_type}${ex.reason ? `: ${ex.reason}` : ""}`;
+      const matchId = existing?.member_id ?? userId; // DB에 저장된 ID 형식 유지
+
+      if (existing) {
+        if (existing.status !== "EXEMPT" || existing.note !== note) {
+          await db.from("dues_payment_status").update({ status: "EXEMPT", paid_amount: 0, note, updated_at: new Date().toISOString() })
+            .eq("team_id", ctx.teamId).eq("member_id", matchId).eq("month", month);
+          existing.status = "EXEMPT";
+          existing.note = note;
+          existing.paid_amount = 0;
+        }
+      } else {
+        await db.from("dues_payment_status").insert({
+          team_id: ctx.teamId, member_id: userId, month, status: "EXEMPT",
+          paid_amount: 0, note, updated_at: new Date().toISOString(),
+        });
+        data.push({ team_id: ctx.teamId, member_id: userId, month, status: "EXEMPT", paid_amount: 0, note });
       }
-    } else {
-      const { error: insErr } = await db.from("dues_payment_status").insert({
-        team_id: ctx.teamId, member_id: ex.member_id, month, status: "EXEMPT",
-        paid_amount: 0, note, updated_at: new Date().toISOString(),
-      });
-      if (insErr) console.error("[payment-status] insert EXEMPT error:", ex.member_id, insErr.message);
-      else data.push({ team_id: ctx.teamId, member_id: ex.member_id, month, status: "EXEMPT", paid_amount: 0, note });
     }
   }
 
