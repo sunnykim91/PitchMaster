@@ -30,46 +30,50 @@ export async function GET(req: NextRequest) {
   const monthEnd = `${month}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`;
   const TYPE_LABELS: Record<string, string> = { EXEMPT: "면제", LEAVE: "휴회", INJURED: "부상" };
 
+  // member_dues_exemptions.member_id = team_members.id
+  // DuesClient는 m.memberId(team_members.id)로 paymentStatusMap 조회
+  // → team_members.id 기준으로 통일
   const exemptions = exemptionRes.data ?? [];
   if (exemptions.length > 0) {
-    // team_members.id → users.id 매핑
-    const exemptTmIds = [...new Set(exemptions.map((e: any) => e.member_id))];
-    const { data: tmRows } = await db.from("team_members").select("id, user_id").eq("team_id", ctx.teamId).in("id", exemptTmIds);
-    const tmToUser = new Map<string, string>();
-    for (const tm of tmRows ?? []) { if (tm.user_id) tmToUser.set(tm.id, tm.user_id); }
+    // users.id → team_members.id 매핑 (기존 잘못된 데이터 정리용)
+    const { data: allTm } = await db.from("team_members").select("id, user_id").eq("team_id", ctx.teamId).not("user_id", "is", null);
+    const userToTm = new Map<string, string>();
+    for (const tm of allTm ?? []) { if (tm.user_id) userToTm.set(tm.user_id, tm.id); }
+
+    // 기존 데이터에서 users.id로 저장된 레코드를 team_members.id로 변환
+    for (const row of data) {
+      const tmId = userToTm.get(row.member_id);
+      if (tmId && tmId !== row.member_id) {
+        // DB에서 member_id를 team_members.id로 업데이트
+        await db.from("dues_payment_status").update({ member_id: tmId })
+          .eq("id", row.id);
+        row.member_id = tmId;
+      }
+    }
 
     for (const ex of exemptions) {
       if (!(ex.start_date <= monthEnd && (ex.end_date === null || ex.end_date >= monthStart))) continue;
 
-      const userId = tmToUser.get(ex.member_id) ?? ex.member_id;
+      const memberId = ex.member_id; // team_members.id
       const note = `${TYPE_LABELS[ex.exemption_type] ?? ex.exemption_type}${ex.reason ? `: ${ex.reason}` : ""}`;
 
-      // PAID는 건드리지 않음
-      const existingByUserId = data.find((d: any) => d.member_id === userId);
-      const existingByTmId = data.find((d: any) => d.member_id === ex.member_id);
-      if (existingByUserId?.status === "PAID" || existingByTmId?.status === "PAID") continue;
+      const existing = data.find((d: any) => d.member_id === memberId);
+      if (existing?.status === "PAID") continue;
 
-      // users.id 기준으로 UPSERT (일관된 ID 형식)
-      await db.from("dues_payment_status").upsert({
-        team_id: ctx.teamId, member_id: userId, month, status: "EXEMPT",
-        paid_amount: 0, note, updated_at: new Date().toISOString(),
-      }, { onConflict: "team_id,member_id,month" });
-
-      // 응답 데이터도 갱신
-      if (existingByUserId) {
-        existingByUserId.status = "EXEMPT";
-        existingByUserId.note = note;
-        existingByUserId.paid_amount = 0;
+      if (existing) {
+        if (existing.status !== "EXEMPT" || existing.note !== note) {
+          await db.from("dues_payment_status").update({ status: "EXEMPT", paid_amount: 0, note, updated_at: new Date().toISOString() })
+            .eq("team_id", ctx.teamId).eq("member_id", memberId).eq("month", month);
+          existing.status = "EXEMPT";
+          existing.note = note;
+          existing.paid_amount = 0;
+        }
       } else {
-        data.push({ team_id: ctx.teamId, member_id: userId, month, status: "EXEMPT", paid_amount: 0, note });
-      }
-
-      // team_members.id로 저장된 구 데이터가 있으면 삭제 (중복 방지)
-      if (existingByTmId && existingByTmId !== existingByUserId && userId !== ex.member_id) {
-        await db.from("dues_payment_status").delete()
-          .eq("team_id", ctx.teamId).eq("member_id", ex.member_id).eq("month", month);
-        const idx = data.indexOf(existingByTmId);
-        if (idx >= 0) data.splice(idx, 1);
+        await db.from("dues_payment_status").insert({
+          team_id: ctx.teamId, member_id: memberId, month, status: "EXEMPT",
+          paid_amount: 0, note, updated_at: new Date().toISOString(),
+        });
+        data.push({ team_id: ctx.teamId, member_id: memberId, month, status: "EXEMPT", paid_amount: 0, note });
       }
     }
   }
