@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const recordedAtValue = body.recordedAt ? `${body.recordedAt}T${body.recordedTime || "00:00"}:00` : new Date().toISOString();
+  const recordedAtValue = body.recordedAt ? `${body.recordedAt}T${body.recordedTime || "00:00"}:00+09:00` : new Date().toISOString();
   console.log("[DUES POST] recordedAt input:", body.recordedAt, "time:", body.recordedTime, "→ saved as:", recordedAtValue);
 
   const { data, error } = await db
@@ -150,7 +150,7 @@ export async function PUT(request: NextRequest) {
   if (description !== undefined) updates.description = description;
   if (userId !== undefined) updates.user_id = (userId && !userId.startsWith("unlinked_")) ? userId : null;
   if (recordedAt) {
-    updates.recorded_at = `${recordedAt}T${recordedTime || "00:00"}:00`;
+    updates.recorded_at = `${recordedAt}T${recordedTime || "00:00"}:00+09:00`;
   }
 
   const { data, error } = await db
