@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { apiMutate } from "@/lib/useApi";
+import { useItemAction } from "@/lib/useAsyncAction";
 import type { Role } from "@/lib/types";
 
 /* ── 타입 정의 ── */
@@ -256,24 +257,26 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
   refetchPaymentStatus: () => Promise<unknown>;
   settings: DuesSetting[];
 }) {
+  const [runFor, changingId] = useItemAction();
   const unpaid = duesStatus.filter((m) => m.status === "UNPAID");
   const exempt = duesStatus.filter((m) => m.status === "EXEMPT");
   const paid = duesStatus.filter((m) => m.status === "PAID");
 
-  // 회비 유형별 금액 조회 (memberType 기준)
   function getSettingAmount(memberType: string): number | null {
     const s = settings.find((s) => s.memberType === memberType);
     return s ? s.monthlyAmount : null;
   }
 
   async function handleStatusChange(m: DuesStatusMember, newStatus: "PAID" | "UNPAID" | "EXEMPT") {
-    await apiMutate("/api/dues/payment-status", "POST", {
-      memberId: m.memberId,
-      month: monthFilter,
-      status: newStatus,
-      paidAmount: newStatus === "PAID" ? m.paidAmount : 0,
+    await runFor(m.memberId, async () => {
+      await apiMutate("/api/dues/payment-status", "POST", {
+        memberId: m.memberId,
+        month: monthFilter,
+        status: newStatus,
+        paidAmount: newStatus === "PAID" ? m.paidAmount : 0,
+      });
+      await refetchPaymentStatus();
     });
-    await refetchPaymentStatus();
   }
 
   function renderCard(m: DuesStatusMember) {
@@ -308,18 +311,24 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
                 <span className="text-xs font-medium tabular-nums" style={{ color: "hsl(0, 65%, 60%)" }}>{unpaidAmount.toLocaleString()}원</span>
               )}
               {isStaffOrAbove(role) && (
-                <NativeSelect
-                  value={m.status}
-                  onChange={async (e) => { await handleStatusChange(m, e.target.value as "PAID" | "UNPAID" | "EXEMPT"); }}
-                  className={cn(
-                    "h-7 w-[5rem] text-[11px] bg-card border-white/[0.06] py-0",
-                    m.status === "EXEMPT" && "border-[hsl(var(--warning))]/40"
-                  )}
-                >
-                  <option value="PAID">납부</option>
-                  <option value="UNPAID">미납</option>
-                  <option value="EXEMPT">면제</option>
-                </NativeSelect>
+                changingId === m.memberId ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-muted border-t-primary shrink-0" />
+                ) : (
+                  <NativeSelect
+                    value={m.status}
+                    disabled={!!changingId}
+                    onChange={async (e) => { await handleStatusChange(m, e.target.value as "PAID" | "UNPAID" | "EXEMPT"); }}
+                    className={cn(
+                      "h-7 w-[5rem] text-[11px] bg-card border-white/[0.06] py-0",
+                      m.status === "EXEMPT" && "border-[hsl(var(--warning))]/40",
+                      changingId && "opacity-50"
+                    )}
+                  >
+                    <option value="PAID">납부</option>
+                    <option value="UNPAID">미납</option>
+                    <option value="EXEMPT">면제</option>
+                  </NativeSelect>
+                )
               )}
             </div>
           </div>

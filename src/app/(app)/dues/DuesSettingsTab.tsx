@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Plus, X, UserX } from "lucide-react";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -654,6 +655,7 @@ function MemberExemptionSection({ members, refetchPaymentStatus }: { members: Ap
   const [exemptions, setExemptions] = useState<Exemption[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [runAction, actionLoading] = useAsyncAction();
   const confirm = useConfirm();
 
   React.useEffect(() => {
@@ -671,22 +673,26 @@ function MemberExemptionSection({ members, refetchPaymentStatus }: { members: Ap
     const endDate = String(formData.get("endDate") || "");
     if (!memberId || !startDate) return;
 
-    const { data } = await apiMutate("/api/dues/member-status", "POST", {
-      memberId, exemptionType, reason: reason || null, startDate, endDate: endDate || null,
+    await runAction(async () => {
+      const { data } = await apiMutate("/api/dues/member-status", "POST", {
+        memberId, exemptionType, reason: reason || null, startDate, endDate: endDate || null,
+      });
+      if (data) {
+        setExemptions((prev) => [data as Exemption, ...prev]);
+        setAdding(false);
+        refetchPaymentStatus?.();
+      }
     });
-    if (data) {
-      setExemptions((prev) => [data as Exemption, ...prev]);
-      setAdding(false);
-      refetchPaymentStatus?.();
-    }
   }
 
   async function handleEnd(id: string) {
     const ok = await confirm({ title: "이 상태를 종료하시겠습니까?", confirmLabel: "종료" });
     if (!ok) return;
-    await apiMutate("/api/dues/member-status", "PUT", { id });
-    setExemptions((prev) => prev.map((e) => e.id === id ? { ...e, is_active: false, end_date: new Date().toISOString().slice(0, 10) } : e));
-    refetchPaymentStatus?.();
+    await runAction(async () => {
+      await apiMutate("/api/dues/member-status", "PUT", { id });
+      setExemptions((prev) => prev.map((e) => e.id === id ? { ...e, is_active: false, end_date: new Date().toISOString().slice(0, 10) } : e));
+      refetchPaymentStatus?.();
+    });
   }
 
   const activeExemptions = exemptions.filter((e) => e.is_active);
@@ -752,7 +758,7 @@ function MemberExemptionSection({ members, refetchPaymentStatus }: { members: Ap
             </div>
             <div className="flex gap-2 justify-end">
               <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(false)}>취소</Button>
-              <Button type="submit" size="sm">등록</Button>
+              <Button type="submit" size="sm" disabled={actionLoading}>{actionLoading ? "등록 중..." : "등록"}</Button>
             </div>
           </form>
         </Card>
@@ -779,7 +785,7 @@ function MemberExemptionSection({ members, refetchPaymentStatus }: { members: Ap
                   {ex.reason && <span className="ml-1">· {ex.reason}</span>}
                 </div>
               </div>
-              <Button type="button" variant="outline" size="sm" className="h-7 text-xs shrink-0" onClick={() => handleEnd(ex.id)}>
+              <Button type="button" variant="outline" size="sm" className="h-7 text-xs shrink-0" disabled={actionLoading} onClick={() => handleEnd(ex.id)}>
                 종료
               </Button>
             </div>

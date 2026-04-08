@@ -325,6 +325,7 @@ function DuesRecordsTabInner({
                   className="space-y-3"
                   action={(formData) => handleAddRecord(formData)}
                 >
+                <fieldset disabled={saving} className="space-y-3 disabled:opacity-60">
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <Label className="text-[11px] text-muted-foreground">유형</Label>
@@ -438,6 +439,7 @@ function DuesRecordsTabInner({
                       이름 포함 시 납부 자동 연결
                     </p>
                   </div>
+                </fieldset>
                 </form>
               </CardContent>
             </Card>
