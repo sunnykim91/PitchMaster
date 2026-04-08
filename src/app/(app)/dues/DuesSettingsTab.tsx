@@ -633,8 +633,8 @@ function MemberExemptionSection({ members, refetchPaymentStatus }: { members: Ap
   const historyExemptions = exemptions.filter((e) => !e.is_active);
   const [showHistory, setShowHistory] = useState(false);
 
-  function getMemberName(memberId: string): string {
-    return members.find((m) => m.id === memberId)?.name ?? "알 수 없음";
+  function getMemberName(mid: string): string {
+    return members.find((m) => m.memberId === mid || m.id === mid)?.name ?? "알 수 없음";
   }
 
   function getTypeInfo(type: string) {
@@ -666,7 +666,7 @@ function MemberExemptionSection({ members, refetchPaymentStatus }: { members: Ap
                 <Label className="text-[11px] text-muted-foreground">회원</Label>
                 <NativeSelect name="memberId" required className="h-9 text-sm">
                   <option value="">선택</option>
-                  {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  {members.map((m) => <option key={m.memberId} value={m.memberId}>{m.name}</option>)}
                 </NativeSelect>
               </div>
               <div className="space-y-1">
