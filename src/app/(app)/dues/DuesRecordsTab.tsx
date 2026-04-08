@@ -432,7 +432,7 @@ function DuesRecordsTabInner({
                         {record.description}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {(() => { const [, mm, dd] = record.recordedAt.slice(0, 10).split("-"); return `${Number(mm)}월 ${Number(dd)}일`; })()}
+                        {(() => { const d = new Date(record.recordedAt); const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000); const [, mm, dd] = kst.toISOString().slice(0, 10).split("-"); return `${Number(mm)}월 ${Number(dd)}일`; })()}
                         {record.memberName ? (
                           <> · <span className="font-semibold text-foreground/80">{record.memberName}</span></>
                         ) : null}

@@ -287,12 +287,15 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     };
   }, []);
 
-  /** 월별 필터 적용된 레코드 (기준일 기반) */
+  /** 월별 필터 적용된 레코드 (기준일 기반, KST 변환) */
   const monthRecords = useMemo(() => {
     if (!monthFilter) return records;
     const { from, to } = getDuesPeriod(monthFilter, periodConfig.startDay);
     return records.filter((r) => {
-      const date = r.recordedAt.slice(0, 10);
+      // KST 기준 날짜 추출 (UTC timestamptz → KST)
+      const d = new Date(r.recordedAt);
+      const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+      const date = kst.toISOString().slice(0, 10);
       return date >= from && date <= to;
     });
   }, [records, monthFilter, periodConfig.startDay, getDuesPeriod]);
