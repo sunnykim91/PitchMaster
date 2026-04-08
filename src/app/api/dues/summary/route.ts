@@ -30,13 +30,12 @@ export async function GET() {
     db
       .from("penalty_rules")
       .select("*")
-      .eq("team_id", ctx.teamId)
-      .order("created_at", { ascending: false }),
+      .eq("team_id", ctx.teamId),
     db
       .from("penalty_records")
-      .select("*, rule:rule_id(name), member:member_id(name), recorder:recorded_by(name)")
+      .select("*, rule:penalty_rules!rule_id(name)")
       .eq("team_id", ctx.teamId)
-      .order("created_at", { ascending: false }),
+      .order("date", { ascending: false }),
   ]);
 
   return apiSuccess({
