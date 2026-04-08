@@ -7,9 +7,10 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, Trash2, RefreshCw } from "lucide-react";
 import { apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
+import { useConfirm } from "@/lib/ConfirmContext";
 import { cn } from "@/lib/utils";
 import type { Role } from "@/lib/types";
 
@@ -35,8 +36,11 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
   const [penalties, setPenalties] = useState<PenaltyRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [paidExpanded, setPaidExpanded] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const confirm = useConfirm();
 
-  useEffect(() => {
+  function fetchPenalties() {
+    setLoading(true);
     fetch("/api/dues/penalties")
       .then((r) => r.json())
       .then((data) => {
@@ -44,14 +48,42 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(() => { fetchPenalties(); }, []);
 
   async function handleStatusChange(id: string, status: string) {
     const { error } = await apiMutate("/api/dues/penalties", "PUT", { id, status });
     if (!error) {
       setPenalties((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, status, is_paid: status === "PAID" } : p))
+        prev.map((p) => (p.id === id ? { ...p, status } : p))
       );
+    }
+  }
+
+  async function handleDelete(id: string) {
+    const ok = await confirm({
+      title: "벌금 기록을 삭제하시겠습니까?",
+      description: "삭제된 벌금 기록은 복구할 수 없습니다.",
+      variant: "destructive",
+      confirmLabel: "삭제",
+    });
+    if (!ok) return;
+    const { error } = await apiMutate(`/api/dues/penalties?id=${id}`, "DELETE", {});
+    if (!error) {
+      setPenalties((prev) => prev.filter((p) => p.id !== id));
+    }
+  }
+
+  async function handleSyncPayments() {
+    setSyncing(true);
+    const { data, error } = await apiMutate("/api/dues/penalties/sync", "POST", {});
+    setSyncing(false);
+    if (!error && data) {
+      const matched = (data as { matched: number }).matched ?? 0;
+      if (matched > 0) {
+        fetchPenalties();
+      }
     }
   }
 
@@ -73,7 +105,7 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
       <EmptyState
         icon={AlertTriangle}
         title="벌금 기록이 없습니다"
-        description="벌금 규칙을 설정하고 경기를 완료하면 자동으로 생성됩니다."
+        description="벌금 규칙을 설정하고 출석 체크에서 지각/불참을 등록하면 자동으로 생성됩니다."
       />
     );
   }
@@ -93,8 +125,8 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
     const opponent = Array.isArray(p.match) ? (p.match as unknown as { opponent_name: string | null }[])[0]?.opponent_name : p.match?.opponent_name;
 
     return (
-      <Card key={p.id} className="border-white/[0.04] bg-card py-3">
-        <CardContent className="px-4">
+      <Card key={p.id} className="border-white/[0.04] bg-card py-2">
+        <CardContent className="px-4 py-0">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
@@ -108,7 +140,7 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0">
               <span className={cn(
                 "text-sm font-bold tabular-nums",
                 p.status === "UNPAID" ? "text-[hsl(var(--loss))]" : "text-muted-foreground"
@@ -116,18 +148,27 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
                 {p.amount.toLocaleString()}원
               </span>
               {isStaffOrAbove(role) ? (
-                <NativeSelect
-                  value={p.status}
-                  onChange={(e) => handleStatusChange(p.id, e.target.value)}
-                  className={cn(
-                    "h-7 w-[4.5rem] text-[11px] py-0 bg-card border-white/[0.06]",
-                    p.status === "WAIVED" && "border-[hsl(var(--warning))]/40"
-                  )}
-                >
-                  <option value="UNPAID">미납</option>
-                  <option value="PAID">납부</option>
-                  <option value="WAIVED">면제</option>
-                </NativeSelect>
+                <>
+                  <NativeSelect
+                    value={p.status}
+                    onChange={(e) => handleStatusChange(p.id, e.target.value)}
+                    className={cn(
+                      "h-7 w-[4.5rem] text-[11px] py-0 bg-card border-white/[0.06]",
+                      p.status === "WAIVED" && "border-[hsl(var(--warning))]/40"
+                    )}
+                  >
+                    <option value="UNPAID">미납</option>
+                    <option value="PAID">납부</option>
+                    <option value="WAIVED">면제</option>
+                  </NativeSelect>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(p.id)}
+                    className="text-muted-foreground/50 hover:text-destructive transition-colors p-0.5"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </>
               ) : (
                 <Badge
                   variant={p.status === "PAID" ? "success" : p.status === "WAIVED" ? "warning" : "destructive"}
@@ -145,11 +186,26 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
 
   return (
     <div className="space-y-4">
-      {/* 미납 총액 */}
+      {/* 미납 총액 + 납부 확인 버튼 */}
       {totalUnpaid > 0 && (
         <div className="flex items-center justify-between rounded-xl bg-[hsl(var(--loss)/0.08)] px-4 py-3">
-          <span className="text-sm text-[hsl(var(--loss))]">미납 벌금</span>
-          <span className="text-lg font-bold text-[hsl(var(--loss))]">{totalUnpaid.toLocaleString()}원</span>
+          <div>
+            <span className="text-sm text-[hsl(var(--loss))]">미납 벌금</span>
+            <span className="text-lg font-bold text-[hsl(var(--loss))] ml-2">{totalUnpaid.toLocaleString()}원</span>
+          </div>
+          {isStaffOrAbove(role) && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 text-xs border-[hsl(var(--loss))]/30 text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss))]/10"
+              disabled={syncing}
+              onClick={handleSyncPayments}
+            >
+              <RefreshCw className={cn("h-3.5 w-3.5", syncing && "animate-spin")} />
+              {syncing ? "확인 중..." : "납부 확인"}
+            </Button>
+          )}
         </div>
       )}
 

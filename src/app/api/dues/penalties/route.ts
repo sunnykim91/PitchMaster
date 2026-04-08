@@ -67,6 +67,30 @@ export async function PUT(request: NextRequest) {
   return apiSuccess(data);
 }
 
+/** 벌금 기록 삭제 */
+export async function DELETE(request: NextRequest) {
+  const ctx = await getApiContext();
+  if (ctx instanceof NextResponse) return ctx;
+
+  const roleCheck = requireRole(ctx, PERMISSIONS.MATCH_CREATE);
+  if (roleCheck) return roleCheck;
+
+  const id = request.nextUrl.searchParams.get("id");
+  if (!id) return apiError("id required");
+
+  const db = getSupabaseAdmin();
+  if (!db) return apiError("Database not available", 503);
+
+  const { error } = await db
+    .from("penalty_records")
+    .delete()
+    .eq("id", id)
+    .eq("team_id", ctx.teamId);
+
+  if (error) return apiError(error.message);
+  return apiSuccess({ deleted: true });
+}
+
 /** 벌금 자동 생성 (경기별) */
 export async function POST(request: NextRequest) {
   const ctx = await getApiContext();
