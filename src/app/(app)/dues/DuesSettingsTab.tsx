@@ -33,6 +33,7 @@ export type DuesSettingsTabProps = {
   refetchSummary: () => Promise<void>;
   showToast: (msg: string, type?: "success" | "error" | "info") => void;
   members?: ApiMember[];
+  refetchPaymentStatus?: () => Promise<unknown>;
 };
 
 function DuesSettingsTabInner({
@@ -44,6 +45,7 @@ function DuesSettingsTabInner({
   refetchSummary,
   showToast,
   members,
+  refetchPaymentStatus,
 }: DuesSettingsTabProps) {
   const confirm = useConfirm();
   /* ── 탭 전용 state ── */
@@ -427,7 +429,7 @@ function DuesSettingsTabInner({
       <PenaltyRulesSection refetchSummary={refetchSummary} />
 
       {/* ── 회원 회비 상태 관리 ── */}
-      <MemberExemptionSection members={members ?? []} />
+      <MemberExemptionSection members={members ?? []} refetchPaymentStatus={refetchPaymentStatus} />
     </div>
   );
 }
@@ -588,7 +590,7 @@ type Exemption = {
   created_at: string;
 };
 
-function MemberExemptionSection({ members }: { members: ApiMember[] }) {
+function MemberExemptionSection({ members, refetchPaymentStatus }: { members: ApiMember[]; refetchPaymentStatus?: () => Promise<unknown> }) {
   const [exemptions, setExemptions] = useState<Exemption[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -615,6 +617,7 @@ function MemberExemptionSection({ members }: { members: ApiMember[] }) {
     if (data) {
       setExemptions((prev) => [data as Exemption, ...prev]);
       setAdding(false);
+      refetchPaymentStatus?.();
     }
   }
 
@@ -623,6 +626,7 @@ function MemberExemptionSection({ members }: { members: ApiMember[] }) {
     if (!ok) return;
     await apiMutate("/api/dues/member-status", "PUT", { id });
     setExemptions((prev) => prev.map((e) => e.id === id ? { ...e, is_active: false, end_date: new Date().toISOString().slice(0, 10) } : e));
+    refetchPaymentStatus?.();
   }
 
   const activeExemptions = exemptions.filter((e) => e.is_active);

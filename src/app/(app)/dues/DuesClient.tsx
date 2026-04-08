@@ -685,6 +685,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           refetchSummary={refetchSummary}
           showToast={showToast}
           members={members}
+          refetchPaymentStatus={refetchPaymentStatus}
         />
       </div>
 

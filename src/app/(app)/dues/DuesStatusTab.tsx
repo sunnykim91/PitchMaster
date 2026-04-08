@@ -250,63 +250,44 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
     return (
       <Card
         key={m.id}
-        className="border-white/[0.04] bg-card py-2 hover:bg-secondary/50 transition-colors"
+        className="border-white/[0.04] bg-card py-1.5"
       >
-        <CardContent className="px-4 pb-0">
-          {/* Row 1: 이름 + 역할 */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-foreground truncate">{m.name}</span>
-            {feeLabel && (
-              <span className="text-[11px] text-muted-foreground shrink-0">{feeLabel}</span>
-            )}
-          </div>
-
-          {/* Row 2: 금액 + 뱃지 + Select */}
-          <div className="flex items-center justify-between mt-1.5">
-            <div className="flex items-center gap-2 min-w-0">
-              {/* 금액 표시 */}
-              {m.status === "PAID" && m.paidAmount > 0 && (
-                <span className="text-sm text-muted-foreground tabular-nums">
-                  {m.paidAmount.toLocaleString()}원
-                </span>
-              )}
-              {m.status === "UNPAID" && unpaidAmount != null && (
-                <span className="text-sm font-medium tabular-nums" style={{ color: "hsl(0, 65%, 60%)" }}>
-                  {unpaidAmount.toLocaleString()}원
-                </span>
-              )}
-              {m.status === "EXEMPT" && m.note && (
-                <span className="text-xs text-muted-foreground italic truncate">{m.note}</span>
-              )}
-              {/* 상태 뱃지 */}
+        <CardContent className="px-3 pb-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <span className="text-sm font-semibold text-foreground truncate">{m.name}</span>
               {m.status === "PAID" && (
-                <Badge variant="success" className="border-0 text-[10px] px-1.5 py-0">납부 완료</Badge>
+                <Badge variant="success" className="border-0 text-[10px] px-1.5 py-0 shrink-0">납부</Badge>
               )}
               {m.status === "UNPAID" && (
-                <Badge variant="destructive" className="border-0 text-[10px] px-1.5 py-0">미납</Badge>
+                <Badge variant="destructive" className="border-0 text-[10px] px-1.5 py-0 shrink-0">미납</Badge>
               )}
               {m.status === "EXEMPT" && (
-                <Badge variant="warning" className="border-0 text-[10px] px-1.5 py-0">면제</Badge>
+                <Badge variant="warning" className="border-0 text-[10px] px-1.5 py-0 shrink-0">면제</Badge>
               )}
             </div>
-
-            {/* 스태프 이상: 상태 변경 셀렉트 */}
-            {isStaffOrAbove(role) && (
-              <NativeSelect
-                value={m.status}
-                onChange={async (e) => {
-                  await handleStatusChange(m, e.target.value as "PAID" | "UNPAID" | "EXEMPT");
-                }}
-                className={cn(
-                  "h-8 w-[5.5rem] text-xs bg-card border-white/[0.06] py-0 shrink-0",
-                  m.status === "EXEMPT" && "border-[hsl(var(--warning))]/40"
-                )}
-              >
-                <option value="PAID">납부 완료</option>
-                <option value="UNPAID">미납</option>
-                <option value="EXEMPT">면제</option>
-              </NativeSelect>
-            )}
+            <div className="flex items-center gap-1.5 shrink-0">
+              {m.status === "PAID" && m.paidAmount > 0 && (
+                <span className="text-xs text-muted-foreground tabular-nums">{m.paidAmount.toLocaleString()}원</span>
+              )}
+              {m.status === "UNPAID" && unpaidAmount != null && (
+                <span className="text-xs font-medium tabular-nums" style={{ color: "hsl(0, 65%, 60%)" }}>{unpaidAmount.toLocaleString()}원</span>
+              )}
+              {isStaffOrAbove(role) && (
+                <NativeSelect
+                  value={m.status}
+                  onChange={async (e) => { await handleStatusChange(m, e.target.value as "PAID" | "UNPAID" | "EXEMPT"); }}
+                  className={cn(
+                    "h-7 w-[5rem] text-[11px] bg-card border-white/[0.06] py-0",
+                    m.status === "EXEMPT" && "border-[hsl(var(--warning))]/40"
+                  )}
+                >
+                  <option value="PAID">납부</option>
+                  <option value="UNPAID">미납</option>
+                  <option value="EXEMPT">면제</option>
+                </NativeSelect>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -314,7 +295,7 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
   }
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-1.5">
       <p className="text-xs font-medium text-muted-foreground">회원별 현황</p>
 
       {/* 미납자 (항상 펼침) */}
@@ -329,13 +310,13 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
           <button
             type="button"
             onClick={() => setPaidExpanded((p) => !p)}
-            className="flex w-full items-center justify-between rounded-lg bg-[hsl(var(--success)/0.08)] px-3 py-2.5 text-sm font-medium text-[hsl(var(--success))] transition-colors hover:bg-[hsl(var(--success)/0.12)]"
+            className="flex w-full items-center justify-between rounded-lg bg-[hsl(var(--success)/0.08)] px-3 py-2 text-xs font-medium text-[hsl(var(--success))] transition-colors hover:bg-[hsl(var(--success)/0.12)]"
           >
             <span>납부 완료 ({paid.length}명)</span>
-            {paidExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {paidExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
           </button>
           {paidExpanded && (
-            <div className="mt-2 space-y-2.5">
+            <div className="mt-1.5 space-y-1.5">
               {paid.map(renderCard)}
             </div>
           )}
@@ -373,10 +354,10 @@ function PaymentStats({ monthFilter, duesStatus }: {
   return (
     <>
       {/* 납부 통계 카드 */}
-      <Card className="border-white/[0.06] bg-card py-4">
-        <CardContent className="px-4 space-y-3">
+      <Card className="border-white/[0.06] bg-card py-2.5">
+        <CardContent className="px-4 pb-0 space-y-2">
           <p className="text-xs font-medium text-muted-foreground">납부 통계</p>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <div className="flex items-center gap-3">
               <div
                 className="flex-1 h-3 rounded-full overflow-hidden"
@@ -409,8 +390,8 @@ function PaymentStats({ monthFilter, duesStatus }: {
 
       {/* 장기 미납자 경고 카드 */}
       {longTermUnpaid.length > 0 && (
-        <Card className="border-destructive/20 bg-destructive/10 py-3">
-          <CardContent className="px-4 flex items-start gap-3">
+        <Card className="border-destructive/20 bg-destructive/10 py-2">
+          <CardContent className="px-3 pb-0 flex items-start gap-2">
             <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
             <div className="space-y-1 min-w-0">
               <p className="text-xs font-medium text-destructive">장기 미납자</p>
