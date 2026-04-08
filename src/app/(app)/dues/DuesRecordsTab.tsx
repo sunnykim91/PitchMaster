@@ -287,7 +287,7 @@ function DuesRecordsTabInner({
                     />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <Label className="text-[11px] text-muted-foreground">날짜</Label>
                       <Input
@@ -303,6 +303,17 @@ function DuesRecordsTabInner({
                       />
                       {formErrors.recordedAt && <p className="text-xs text-destructive">{formErrors.recordedAt}</p>}
                     </div>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] text-muted-foreground">시간</Label>
+                      <Input
+                        name="recordedTime"
+                        type="time"
+                        className="h-10 rounded-lg bg-secondary border-0"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <Label className="text-[11px] text-muted-foreground">결제 수단</Label>
                       <NativeSelect
@@ -348,21 +359,38 @@ function DuesRecordsTabInner({
           {filteredRecords.map((record) =>
             editingRecord?.id === record.id ? (
               <Card key={record.id} data-edit-id={record.id} className="border-primary/30 bg-card py-2">
-                <CardContent className="px-3 pb-0">
-                  <form className="grid gap-2" action={(fd) => handleUpdateRecord(fd)}>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      <NativeSelect name="editType" defaultValue={record.type} className="h-9 rounded-md bg-secondary border-0 text-xs">
-                        <option value="INCOME">입금</option>
-                        <option value="EXPENSE">출금</option>
-                      </NativeSelect>
-                      <Input name="editAmount" type="number" defaultValue={record.amount} min={0} required placeholder="금액" className="h-9 rounded-md bg-secondary border-0 text-xs" />
-                      <Input name="editDate" type="date" defaultValue={record.recordedAt.slice(0, 10)} className="h-9 rounded-md bg-secondary border-0 text-xs" />
-                      <Input name="editTime" type="time" defaultValue={record.recordedAt.includes("T") ? record.recordedAt.split("T")[1]?.slice(0, 5) : ""} className="h-9 rounded-md bg-secondary border-0 text-xs" />
+                <CardContent className="px-4 pb-0">
+                  <form className="space-y-3" action={(fd) => handleUpdateRecord(fd)}>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-[11px] text-muted-foreground">유형</Label>
+                        <NativeSelect name="editType" defaultValue={record.type} className="h-10 rounded-lg bg-secondary border-0">
+                          <option value="INCOME">입금</option>
+                          <option value="EXPENSE">출금</option>
+                        </NativeSelect>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[11px] text-muted-foreground">금액</Label>
+                        <Input name="editAmount" type="number" defaultValue={record.amount} min={0} required placeholder="금액" className="h-10 rounded-lg bg-secondary border-0" />
+                      </div>
                     </div>
-                    <div className="flex gap-1.5">
-                      <Input name="editDescription" defaultValue={record.description} required placeholder="내용" className="h-9 rounded-md bg-secondary border-0 text-xs flex-1" />
-                      <Button type="button" variant="outline" size="sm" className="h-9 px-2.5 text-xs shrink-0" onClick={() => setEditingRecord(null)}>취소</Button>
-                      <Button type="submit" size="sm" className="h-9 px-2.5 text-xs shrink-0">저장</Button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-[11px] text-muted-foreground">날짜</Label>
+                        <Input name="editDate" type="date" defaultValue={record.recordedAt.slice(0, 10)} className="h-10 rounded-lg bg-secondary border-0" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[11px] text-muted-foreground">시간</Label>
+                        <Input name="editTime" type="time" defaultValue={record.recordedAt.includes("T") ? record.recordedAt.split("T")[1]?.slice(0, 5) : ""} className="h-10 rounded-lg bg-secondary border-0" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] text-muted-foreground">내용</Label>
+                      <Input name="editDescription" defaultValue={record.description} required placeholder="내용" className="h-10 rounded-lg bg-secondary border-0" />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => setEditingRecord(null)}>취소</Button>
+                      <Button type="submit" size="sm">저장</Button>
                     </div>
                   </form>
                 </CardContent>
