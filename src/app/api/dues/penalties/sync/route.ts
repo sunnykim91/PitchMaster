@@ -14,10 +14,10 @@ export async function POST() {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  // 1. 미납 벌금 조회
+  // 1. 미납 벌금 조회 (date = 벌금 발생일, 매칭 시 이 날짜 이후 입금만 대상)
   const { data: unpaidPenalties } = await db
     .from("penalty_records")
-    .select("id, member_id, amount")
+    .select("id, member_id, amount, date")
     .eq("team_id", ctx.teamId)
     .eq("status", "UNPAID")
     .order("date", { ascending: true });
@@ -29,10 +29,10 @@ export async function POST() {
   // 미납 멤버 ID 목록
   const memberIds = [...new Set(unpaidPenalties.map((p) => p.member_id))];
 
-  // 2. 해당 멤버들의 입금 내역 조회
+  // 2. 해당 멤버들의 입금 내역 조회 (recorded_at 포함, 날짜 비교용)
   const { data: incomeRecords } = await db
     .from("dues_records")
-    .select("id, user_id, amount")
+    .select("id, user_id, amount, recorded_at")
     .eq("team_id", ctx.teamId)
     .eq("type", "INCOME")
     .in("user_id", memberIds);
@@ -56,9 +56,14 @@ export async function POST() {
   const usedIncomeIds = new Set<string>();
 
   for (const penalty of unpaidPenalties) {
-    // 같은 멤버 + 같은 금액 + 아직 사용 안 한 입금 건 찾기
+    // 같은 멤버 + 같은 금액 + 벌금 발생일 이후 입금 + 아직 사용 안 한 건
+    const penaltyDate = penalty.date; // "2026-04-07"
     const matchingIncome = availableIncome.find(
-      (r) => r.user_id === penalty.member_id && r.amount === penalty.amount && !usedIncomeIds.has(r.id)
+      (r) =>
+        r.user_id === penalty.member_id &&
+        r.amount === penalty.amount &&
+        !usedIncomeIds.has(r.id) &&
+        ((r as { recorded_at?: string }).recorded_at?.slice(0, 10) ?? "") >= penaltyDate
     );
 
     if (!matchingIncome) continue;

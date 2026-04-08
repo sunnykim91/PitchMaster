@@ -80,9 +80,10 @@ export async function POST(request: NextRequest) {
   if (error) return apiError(error.message);
   console.log("[DUES POST] DB returned recorded_at:", data.recorded_at);
 
-  // 벌금 자동 납부 매칭: 같은 멤버 + 같은 금액의 미납 벌금이 있으면 자동 PAID
+  // 벌금 자동 납부 매칭: 같은 멤버 + 같은 금액 + 벌금 발생일 이후 입금
   if (body.type === "INCOME" && data.user_id) {
     try {
+      const incomeDate = data.recorded_at?.slice(0, 10) ?? new Date().toISOString().slice(0, 10);
       const { data: matchingPenalty } = await db
         .from("penalty_records")
         .select("id")
@@ -90,6 +91,7 @@ export async function POST(request: NextRequest) {
         .eq("member_id", data.user_id)
         .eq("amount", body.amount)
         .eq("status", "UNPAID")
+        .lte("date", incomeDate) // 벌금 발생일 ≤ 입금일
         .order("date", { ascending: true })
         .limit(1)
         .maybeSingle();
