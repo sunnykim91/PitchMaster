@@ -184,17 +184,19 @@ function DuesRecordsTabInner({
   }, []);
 
   const handleBulkDelete = useCallback(async () => {
-    if (selectedIds.size === 0) return;
-    const ok = await confirm({ title: `${selectedIds.size}건을 삭제하시겠습니까?`, variant: "destructive", confirmLabel: "삭제" });
+    const count = selectedIds.size;
+    if (count === 0) return;
+    const ok = await confirm({ title: `${count}건을 삭제하시겠습니까?`, variant: "destructive", confirmLabel: "삭제" });
     if (!ok) return;
     setBulkDeleting(true);
-    for (const id of selectedIds) {
+    const ids = [...selectedIds];
+    for (const id of ids) {
       await apiMutate(`/api/dues?id=${id}`, "DELETE");
     }
-    setSelectedIds(new Set());
     setBulkDeleting(false);
+    setSelectedIds(new Set());
     await refetchSummary();
-    showToast(`${selectedIds.size}건 삭제 완료`);
+    showToast(`${count}건 삭제 완료`);
   }, [selectedIds, confirm, refetchSummary, showToast]);
 
   const [y, m] = monthFilter.split("-").map(Number);
@@ -257,34 +259,51 @@ function DuesRecordsTabInner({
 
       {/* ── 선택 삭제 바 ── */}
       {isStaffOrAbove(role) && filteredRecords.length > 0 && (
-        <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground">
-            <input
-              type="checkbox"
-              checked={selectedIds.size > 0 && selectedIds.size === filteredRecords.length}
-              onChange={() => {
-                if (selectedIds.size === filteredRecords.length) {
-                  setSelectedIds(new Set());
-                } else {
-                  setSelectedIds(new Set(filteredRecords.map((r) => r.id)));
-                }
-              }}
-              className="h-3.5 w-3.5 rounded border-border accent-primary"
-            />
-            전체 선택
-          </label>
+        <div className="flex items-center justify-between rounded-lg bg-card border border-white/[0.04] px-3 py-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              if (selectedIds.size === filteredRecords.length) {
+                setSelectedIds(new Set());
+              } else {
+                setSelectedIds(new Set(filteredRecords.map((r) => r.id)));
+              }
+            }}
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <span className={cn(
+              "flex h-4 w-4 items-center justify-center rounded border transition-colors",
+              selectedIds.size > 0 && selectedIds.size === filteredRecords.length
+                ? "border-primary bg-primary text-white"
+                : selectedIds.size > 0
+                ? "border-primary bg-primary/30 text-primary"
+                : "border-muted-foreground/40"
+            )}>
+              {selectedIds.size > 0 && <span className="text-[9px] font-bold">✓</span>}
+            </span>
+            {selectedIds.size > 0 ? `${selectedIds.size}건 선택` : "선택"}
+          </button>
           {selectedIds.size > 0 && (
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              className="h-7 text-xs gap-1 active:scale-[0.97]"
-              disabled={bulkDeleting}
-              onClick={handleBulkDelete}
-            >
-              <Trash2 className="h-3 w-3" />
-              {bulkDeleting ? "삭제 중..." : `${selectedIds.size}건 삭제`}
-            </Button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedIds(new Set())}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                취소
+              </button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                className="h-7 text-xs gap-1 active:scale-[0.97]"
+                disabled={bulkDeleting}
+                onClick={handleBulkDelete}
+              >
+                <Trash2 className="h-3 w-3" />
+                {bulkDeleting ? "삭제 중..." : "삭제"}
+              </Button>
+            </div>
           )}
         </div>
       )}
@@ -488,12 +507,18 @@ function DuesRecordsTabInner({
                 <CardContent className="px-4 pb-0">
                   <div className="flex items-center justify-between gap-2">
                     {isStaffOrAbove(role) && (
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(record.id)}
-                        onChange={() => toggleSelect(record.id)}
-                        className="h-3.5 w-3.5 rounded border-border accent-primary shrink-0"
-                      />
+                      <button
+                        type="button"
+                        onClick={() => toggleSelect(record.id)}
+                        className={cn(
+                          "flex h-4 w-4 items-center justify-center rounded border shrink-0 transition-colors",
+                          selectedIds.has(record.id)
+                            ? "border-primary bg-primary text-white"
+                            : "border-muted-foreground/30"
+                        )}
+                      >
+                        {selectedIds.has(record.id) && <span className="text-[9px] font-bold">✓</span>}
+                      </button>
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-foreground line-clamp-2 break-all">
