@@ -157,18 +157,24 @@ function DuesBulkTabInner({
       // 잔액 판별: 50만원 이상이면 스킵
       if (num >= 500000) continue;
 
-      // 다음 줄에서 시간 추출
+      // 다음 줄에서 시간 + 메모 추출
+      // 은행 앱 형식: "23:04  음료비" 또는 "08:37  휴회회원 1회 참가비"
       let time = "";
+      let memo = "";
       if (i + 1 < lines.length) {
         const nextLine = lines[i + 1];
-        const timeMatch = nextLine.match(/^(\d{1,2}:\d{2})/);
+        const timeMatch = nextLine.match(/^(\d{1,2}:\d{2})\s*(.*)/);
         if (timeMatch) {
           time = timeMatch[1];
+          memo = timeMatch[2]?.trim() ?? "";
         }
       }
 
+      // description: 이름 + 메모 (메모가 있으면 합침)
+      const description = memo ? `${name} ${memo}` : name;
+
       const matchedMember = members.find(
-        (m) => m.name && (name.includes(m.name) || m.name.includes(name))
+        (m) => m.name && (description.includes(m.name) || m.name.includes(name))
       );
 
       rows.push({
@@ -176,7 +182,7 @@ function DuesBulkTabInner({
         time,
         type: isExpense ? "EXPENSE" : "INCOME",
         amount: rawAmount,
-        description: name,
+        description,
         memberName: matchedMember?.id || "",
       });
     }
@@ -437,8 +443,8 @@ function DuesBulkTabInner({
                       </span>
                     </div>
 
-                    {/* Row 1: 날짜, 유형, 금액 */}
-                    <div className="grid grid-cols-3 gap-2">
+                    {/* Row 1: 날짜(넓게), 유형, 금액 */}
+                    <div className="grid grid-cols-[1fr_5rem_6rem] gap-2">
                       <div className="space-y-1">
                         <label className="text-[10px] text-muted-foreground uppercase tracking-wide">날짜</label>
                         <Input
