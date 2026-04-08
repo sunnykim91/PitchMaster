@@ -79,6 +79,43 @@ export async function POST(request: NextRequest) {
 
   if (error) return apiError(error.message);
   console.log("[DUES POST] DB returned recorded_at:", data.recorded_at);
+
+  // 벌금 자동 납부 매칭: INCOME + 멤버 매칭 시 미납 벌금 자동 PAID 처리
+  if (body.type === "INCOME" && data.user_id) {
+    try {
+      // 해당 멤버의 미납 벌금 조회
+      const { data: unpaidPenalties } = await db
+        .from("penalty_records")
+        .select("id, amount")
+        .eq("team_id", ctx.teamId)
+        .eq("member_id", data.user_id)
+        .eq("status", "UNPAID")
+        .order("date", { ascending: true });
+
+      if (unpaidPenalties && unpaidPenalties.length > 0) {
+        let remaining = body.amount;
+        const toUpdate: string[] = [];
+
+        for (const p of unpaidPenalties) {
+          if (remaining >= p.amount) {
+            toUpdate.push(p.id);
+            remaining -= p.amount;
+          }
+          if (remaining <= 0) break;
+        }
+
+        if (toUpdate.length > 0) {
+          await db
+            .from("penalty_records")
+            .update({ status: "PAID", is_paid: true, dues_record_id: data.id })
+            .in("id", toUpdate);
+        }
+      }
+    } catch {
+      // 벌금 매칭 실패해도 입금 내역 등록은 성공
+    }
+  }
+
   return apiSuccess(data, 201);
 }
 
