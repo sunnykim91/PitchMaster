@@ -121,7 +121,11 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
         if (member) memberVoteMap.set(member.id, v.vote);
       }
     }
-    const votes = [...memberVoteMap.values()];
+    // 현재 활성 팀원의 투표만 카운트 (탈퇴/제명 회원 제외 — 경기 상세와 동일)
+    const activeMemberIds = new Set(teamMembers.map((m) => m.id));
+    const votes = [...memberVoteMap.entries()]
+      .filter(([id]) => activeMemberIds.has(id))
+      .map(([, vote]) => vote);
     const voteCounts = {
       attend: votes.filter((v) => v === "ATTEND").length,
       absent: votes.filter((v) => v === "ABSENT").length,

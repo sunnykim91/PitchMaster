@@ -203,16 +203,29 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     [matchesData.matches]
   );
 
+  // 멤버 목록 (투표 필터링용)
+  const {
+    data: teamMembersData,
+  } = useApi<{ members: { id: string; user_id: string | null }[] }>("/api/members", { members: [] });
+
   const attendance: AttendanceState = useMemo(() => {
     const state: AttendanceState = {};
+    const memberIds = new Set(teamMembersData.members.map((m) => m.id));
+    const userToMember = new Map(teamMembersData.members.filter((m) => m.user_id).map((m) => [m.user_id!, m.id]));
+
     for (const row of attendanceData.attendance ?? []) {
       if (!state[row.match_id]) state[row.match_id] = {};
-      // member_id 기준 정규화 (경기 상세와 동일 로직)
-      const key = row.member_id ?? row.member?.id ?? row.user_id;
+      // member_id로 정규화 (경기 상세와 동일)
+      let key: string | null = null;
+      if (row.member_id && memberIds.has(row.member_id)) {
+        key = row.member_id;
+      } else if (row.user_id) {
+        key = userToMember.get(row.user_id) ?? null;
+      }
       if (key) state[row.match_id][key] = row.vote;
     }
     return state;
-  }, [attendanceData.attendance]);
+  }, [attendanceData.attendance, teamMembersData.members]);
 
   const sortedMatches = useMemo(() => {
     const today = new Date().toISOString().split("T")[0];
