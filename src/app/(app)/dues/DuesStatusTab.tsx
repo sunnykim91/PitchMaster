@@ -250,9 +250,9 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
     return (
       <Card
         key={m.id}
-        className="border-white/[0.04] bg-card py-3 hover:bg-secondary/50 transition-colors"
+        className="border-white/[0.04] bg-card py-2 hover:bg-secondary/50 transition-colors"
       >
-        <CardContent className="px-4">
+        <CardContent className="px-4 pb-0">
           {/* Row 1: 이름 + 역할 */}
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-foreground truncate">{m.name}</span>
@@ -350,14 +350,12 @@ function PaymentStats({ monthFilter, duesStatus }: {
   monthFilter: string;
   duesStatus: DuesStatusMember[];
 }) {
-  const [history, setHistory] = useState<{ month: string; rate: number }[]>([]);
   const [longTermUnpaid, setLongTermUnpaid] = useState<{ name: string; months: number }[]>([]);
 
   useEffect(() => {
     fetch(`/api/dues/payment-stats`)
       .then((r) => r.json())
       .then((data) => {
-        if (data.history) setHistory(data.history);
         if (data.longTermUnpaid) setLongTermUnpaid(data.longTermUnpaid);
       })
       .catch(() => {});
@@ -406,26 +404,6 @@ function PaymentStats({ monthFilter, duesStatus }: {
             </p>
           </div>
 
-          {/* 월별 추이 */}
-          {history.length > 1 && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground overflow-x-auto">
-              <span className="shrink-0">추이:</span>
-              {history.map((h, i) => (
-                <span key={h.month} className="shrink-0">
-                  {i > 0 && <span className="mx-0.5">→</span>}
-                  <span className={
-                    h.rate >= 80
-                      ? "text-[hsl(var(--success))]"
-                      : h.rate >= 50
-                      ? "text-[hsl(var(--warning))]"
-                      : "text-destructive"
-                  }>
-                    {h.rate}%
-                  </span>
-                </span>
-              ))}
-            </div>
-          )}
         </CardContent>
       </Card>
 
