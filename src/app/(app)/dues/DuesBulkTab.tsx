@@ -166,7 +166,8 @@ function DuesBulkTabInner({
         const timeMatch = nextLine.match(/^(\d{1,2}:\d{2})\s*(.*)/);
         if (timeMatch) {
           time = timeMatch[1];
-          memo = timeMatch[2]?.trim() ?? "";
+          // 메모에서 잔고 금액 제거 (예: "음료비 1,055,382원" → "음료비")
+          memo = (timeMatch[2] ?? "").replace(/\s*[\d,]+원\s*$/, "").trim();
         }
       }
 
