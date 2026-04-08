@@ -81,17 +81,37 @@ export async function POST(request: NextRequest) {
   console.log("[DUES POST] DB returned recorded_at:", data.recorded_at);
 
   // 벌금 자동 납부 매칭: 같은 멤버 + 같은 금액 + 벌금 발생일 이후 입금
-  if (body.type === "INCOME" && data.user_id) {
+  if (body.type === "INCOME") {
     try {
       const incomeDate = data.recorded_at?.slice(0, 10) ?? new Date().toISOString().slice(0, 10);
+      let memberId = data.user_id;
+
+      // user_id가 없으면 description에서 이름으로 매칭 시도
+      if (!memberId && body.description) {
+        const { data: members } = await db
+          .from("team_members")
+          .select("user_id, users(name)")
+          .eq("team_id", ctx.teamId)
+          .eq("status", "ACTIVE")
+          .not("user_id", "is", null);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const match = (members ?? []).find((m: any) => {
+          const name = Array.isArray(m.users) ? m.users[0]?.name : m.users?.name;
+          return name && body.description.includes(name);
+        });
+        if (match) memberId = match.user_id;
+      }
+
+      if (!memberId) throw new Error("no member");
+
       const { data: matchingPenalty } = await db
         .from("penalty_records")
         .select("id")
         .eq("team_id", ctx.teamId)
-        .eq("member_id", data.user_id)
+        .eq("member_id", memberId)
         .eq("amount", body.amount)
         .eq("status", "UNPAID")
-        .lte("date", incomeDate) // 벌금 발생일 ≤ 입금일
+        .lte("date", incomeDate)
         .order("date", { ascending: true })
         .limit(1)
         .maybeSingle();

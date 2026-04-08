@@ -11,6 +11,7 @@ import { AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Trash
 import { apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useConfirm } from "@/lib/ConfirmContext";
+import { useToast } from "@/lib/ToastContext";
 import { cn } from "@/lib/utils";
 import type { Role } from "@/lib/types";
 
@@ -38,6 +39,7 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
   const [paidExpanded, setPaidExpanded] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const confirm = useConfirm();
+  const { showToast } = useToast();
 
   // 월별 필터
   const [monthFilter, setMonthFilter] = useState(() => {
@@ -97,11 +99,16 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
     setSyncing(true);
     const { data, error } = await apiMutate("/api/dues/penalties/sync", "POST", {});
     setSyncing(false);
-    if (!error && data) {
-      const matched = (data as { matched: number }).matched ?? 0;
-      if (matched > 0) {
-        fetchPenalties();
-      }
+    if (error) {
+      showToast("납부 확인 중 오류가 발생했습니다", "error");
+      return;
+    }
+    const matched = (data as { matched?: number; message?: string })?.matched ?? 0;
+    if (matched > 0) {
+      showToast(`${matched}건 납부 확인 완료`, "success");
+      fetchPenalties();
+    } else {
+      showToast("매칭 가능한 입금 내역이 없습니다", "info");
     }
   }
 
