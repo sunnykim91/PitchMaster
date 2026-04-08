@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useRef, useState, useCallback } from "react";
-import { flushSync } from "react-dom";
 import { GA } from "@/lib/analytics";
 import Image from "next/image";
 import { Camera, FileSpreadsheet, Check, AlertCircle, Trash2 } from "lucide-react";
@@ -89,6 +88,12 @@ function DuesBulkTabInner({
   showToast,
   autoMatchMember,
 }: DuesBulkTabProps) {
+  // props를 ref로 저장 — useCallback 내에서 항상 최신 값 참조
+  const recordsRef = useRef(records);
+  recordsRef.current = records;
+  const membersRef = useRef(members);
+  membersRef.current = members;
+
   /* ── 탭 전용 state ── */
   const [bulkImage, setBulkImage] = useState<string | null>(null);
   const [bulkRows, setBulkRows] = useState<BulkRow[]>([
@@ -205,7 +210,7 @@ function DuesBulkTabInner({
       // description: 이름 + 메모 (메모가 있으면 합침)
       const description = memo ? `${name} ${memo}` : name;
 
-      const matchedMember = members.find(
+      const matchedMember = membersRef.current.find(
         (m) => m.name && (description.includes(m.name) || m.name.includes(name))
       );
 
@@ -227,12 +232,9 @@ function DuesBulkTabInner({
     if (!file) return;
     const imageUrl = URL.createObjectURL(file);
 
-    // flushSync: 이미지 미리보기 + 로딩 오버레이를 즉시 DOM에 반영
-    flushSync(() => {
-      setBulkImage(imageUrl);
-      setOcrLoading(true);
-      setOcrStatus("스크린샷 분석 중...");
-    });
+    setBulkImage(imageUrl);
+    setOcrLoading(true);
+    setOcrStatus("스크린샷 분석 중...");
     try {
       const formData = new FormData();
       formData.append("image", file);
@@ -270,8 +272,9 @@ function DuesBulkTabInner({
       }
 
       // 기존 DB 레코드와 비교하여 중복 제거 (날짜 + 금액 + 타입으로 판단, description은 수정될 수 있으므로 제외)
+      const currentRecords = recordsRef.current;
       const newRows = parsed.filter((row) => {
-        const isDup = records.some(
+        const isDup = currentRecords.some(
           (r) =>
             r.recordedAt.startsWith(row.date) &&
             r.amount === Number(row.amount) &&
@@ -283,41 +286,32 @@ function DuesBulkTabInner({
       const duplicateCount = parsed.length - newRows.length;
       console.log("[OCR] newRows:", newRows.length, "duplicates:", duplicateCount, "records in DB:", records.length);
 
-      // flushSync: 로딩 오버레이 제거를 즉시 DOM에 반영한 뒤 결과 표시
-      flushSync(() => {
-        setOcrLoading(false);
-      });
+      setOcrLoading(false);
       if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
 
       if (newRows.length > 0) {
-        flushSync(() => {
-          setBulkRows(newRows);
-          const msg = [`${newRows.length}건의 새 거래를 인식했습니다.`];
-          if (duplicateCount > 0) msg.push(`(${duplicateCount}건 중복 제외)`);
-          if (latestBalance !== null) msg.push(`잔고: ${latestBalance.toLocaleString()}원`);
-          msg.push("확인 후 저장하세요.");
-          setOcrStatus(msg.join(" "));
-        });
+        setBulkRows(newRows);
+        const msg = [`${newRows.length}건의 새 거래를 인식했습니다.`];
+        if (duplicateCount > 0) msg.push(`(${duplicateCount}건 중복 제외)`);
+        if (latestBalance !== null) msg.push(`잔고: ${latestBalance.toLocaleString()}원`);
+        msg.push("확인 후 저장하세요.");
+        setOcrStatus(msg.join(" "));
         showToast(`${newRows.length}건 인식 완료`, "success");
       } else if (parsed.length > 0) {
-        flushSync(() => {
-          setOcrStatus(`⚠️ ${parsed.length}건 모두 이미 등록된 내역입니다. (중복)`);
-        });
+        setOcrStatus(`⚠️ ${parsed.length}건 모두 이미 등록된 내역입니다. (중복)`);
         showToast(`${parsed.length}건 모두 중복 — 이미 등록된 내역`, "info");
       } else {
-        flushSync(() => {
-          setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
-        });
+        setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
         showToast("거래 내역을 인식하지 못했습니다.", "error");
       }
     } catch {
-      flushSync(() => { setOcrLoading(false); });
+      setOcrLoading(false);
       if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
       setOcrStatus("OCR 처리 중 오류가 발생했습니다. 수동으로 입력해주세요.");
       showToast("OCR 처리 중 오류 발생", "error");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [records, members, refetchSummary]);
+  }, [refetchSummary]);
 
   function updateBulkRow(index: number, field: keyof BulkRow, value: string) {
     setBulkRows((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
