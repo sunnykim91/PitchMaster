@@ -347,22 +347,22 @@ function DuesRecordsTabInner({
         <div className="space-y-2">
           {filteredRecords.map((record) =>
             editingRecord?.id === record.id ? (
-              <Card key={record.id} data-edit-id={record.id} className="border-white/[0.04] bg-card">
-                <CardContent className="px-4 py-4">
-                  <form className="grid gap-3" action={(fd) => handleUpdateRecord(fd)}>
-                    <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                      <NativeSelect name="editType" defaultValue={record.type} className="h-10 rounded-lg bg-secondary border-0">
+              <Card key={record.id} data-edit-id={record.id} className="border-primary/30 bg-card py-2">
+                <CardContent className="px-3 pb-0">
+                  <form className="grid gap-2" action={(fd) => handleUpdateRecord(fd)}>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      <NativeSelect name="editType" defaultValue={record.type} className="h-9 rounded-md bg-secondary border-0 text-xs">
                         <option value="INCOME">입금</option>
                         <option value="EXPENSE">출금</option>
                       </NativeSelect>
-                      <Input name="editAmount" type="number" defaultValue={record.amount} min={0} required placeholder="금액" className="h-10 rounded-lg bg-secondary border-0" />
-                      <Input name="editDate" type="date" defaultValue={record.recordedAt.slice(0, 10)} className="h-10 rounded-lg bg-secondary border-0" />
-                      <Input name="editTime" type="time" defaultValue={record.recordedAt.includes("T") ? record.recordedAt.split("T")[1]?.slice(0, 5) : ""} className="h-10 rounded-lg bg-secondary border-0" />
+                      <Input name="editAmount" type="number" defaultValue={record.amount} min={0} required placeholder="금액" className="h-9 rounded-md bg-secondary border-0 text-xs" />
+                      <Input name="editDate" type="date" defaultValue={record.recordedAt.slice(0, 10)} className="h-9 rounded-md bg-secondary border-0 text-xs" />
+                      <Input name="editTime" type="time" defaultValue={record.recordedAt.includes("T") ? record.recordedAt.split("T")[1]?.slice(0, 5) : ""} className="h-9 rounded-md bg-secondary border-0 text-xs" />
                     </div>
-                    <Input name="editDescription" defaultValue={record.description} required placeholder="내용" className="h-10 rounded-lg bg-secondary border-0" />
-                    <div className="flex justify-end gap-2">
-                      <Button type="button" variant="outline" size="sm" onClick={() => setEditingRecord(null)}>취소</Button>
-                      <Button type="submit" size="sm">저장</Button>
+                    <div className="flex gap-1.5">
+                      <Input name="editDescription" defaultValue={record.description} required placeholder="내용" className="h-9 rounded-md bg-secondary border-0 text-xs flex-1" />
+                      <Button type="button" variant="outline" size="sm" className="h-9 px-2.5 text-xs shrink-0" onClick={() => setEditingRecord(null)}>취소</Button>
+                      <Button type="submit" size="sm" className="h-9 px-2.5 text-xs shrink-0">저장</Button>
                     </div>
                   </form>
                 </CardContent>
@@ -411,6 +411,7 @@ function DuesRecordsTabInner({
                             type="button"
                             onClick={() => {
                               setEditingRecord(record);
+                              setIsFormOpen(false);
                               setTimeout(() => {
                                 document.querySelector(`[data-edit-id="${record.id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
                               }, 100);
