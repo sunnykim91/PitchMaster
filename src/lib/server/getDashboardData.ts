@@ -109,10 +109,17 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
       db.from("match_guests").select("id").eq("match_id", upcomingRaw.id),
     ]);
     const voteList = (votesRes.data ?? []) as { vote: string; user_id: string | null; member_id: string | null }[];
+    // 중복 제거: user_id ?? member_id 기준으로 1인 1표 (경기 목록/상세와 동일 로직)
+    const deduped = new Map<string, string>();
+    for (const v of voteList) {
+      const key = v.user_id ?? v.member_id;
+      if (key) deduped.set(key, v.vote);
+    }
+    const votes = [...deduped.values()];
     const voteCounts = {
-      attend: voteList.filter((v) => v.vote === "ATTEND").length,
-      absent: voteList.filter((v) => v.vote === "ABSENT").length,
-      undecided: voteList.filter((v) => v.vote === "MAYBE").length,
+      attend: votes.filter((v) => v === "ATTEND").length,
+      absent: votes.filter((v) => v === "ABSENT").length,
+      undecided: votes.filter((v) => v === "MAYBE").length,
     };
     const myMemberId = myMemberRes.data?.id ?? null;
     const myVoteRow = voteList.find((v) => v.user_id === userId || v.member_id === myMemberId);
