@@ -147,8 +147,21 @@ function DuesBulkTabInner({
       }
 
       // 거래 줄: "양문주 -79,230원", "젤로스FC 73,000원"
-      const txMatch = line.match(/^(.+?)\s+([+-]?[\d,]+)원$/);
-      if (!txMatch) continue;
+      let txMatch = line.match(/^(.+?)\s+([+-]?[\d,]+)원$/);
+
+      // OCR이 이름과 금액을 별도 줄로 분리한 경우 처리
+      // 예: "올챙이fc" (이름만) + 다음 줄 "45,000원" (금액만)
+      if (!txMatch) {
+        const amountOnly = line.match(/^([+-]?[\d,]+)원$/);
+        if (amountOnly && i > 0) {
+          // 이전 줄이 이름만 있는 줄인지 확인 (날짜/시간/금액이 아닌 텍스트)
+          const prevLine = lines[i - 1];
+          if (prevLine && !prevLine.match(/^\d{1,2}\.\d{1,2}$/) && !prevLine.match(/^\d{1,2}:\d{2}/) && !prevLine.match(/[\d,]+원$/) && prevLine.match(/[\p{L}]/u)) {
+            txMatch = [line, prevLine.trim(), amountOnly[1]] as unknown as RegExpMatchArray;
+          }
+        }
+        if (!txMatch) continue;
+      }
 
       const name = txMatch[1].trim();
       const amountStr = txMatch[2];
