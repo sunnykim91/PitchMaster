@@ -8,7 +8,7 @@ export async function getMatchDetailData(matchId: string, teamId: string) {
     db.from("matches").select("*").eq("id", matchId).eq("team_id", teamId).single(),
     db.from("match_goals").select("*").eq("match_id", matchId).order("quarter_number").order("minute"),
     db.from("match_mvp_votes").select("*").eq("match_id", matchId),
-    db.from("match_attendance").select("user_id, actually_attended").eq("match_id", matchId),
+    db.from("match_attendance").select("user_id, member_id, actually_attended, attendance_status").eq("match_id", matchId),
     db.from("match_guests").select("*").eq("match_id", matchId),
     db.from("match_internal_teams").select("player_id, side").eq("match_id", matchId),
     db.from("match_diaries").select("*").eq("match_id", matchId).maybeSingle(),
