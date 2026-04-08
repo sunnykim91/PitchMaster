@@ -32,15 +32,6 @@ export async function GET(req: NextRequest) {
 
   const TYPE_LABELS: Record<string, string> = { EXEMPT: "면제", LEAVE: "휴회", INJURED: "부상" };
 
-  // 휴회비 설정 조회
-  const { data: leaveSetting } = await db
-    .from("dues_settings")
-    .select("monthly_amount")
-    .eq("team_id", ctx.teamId)
-    .eq("member_type", "__LEAVE__")
-    .maybeSingle();
-  const leaveDuesAmount = leaveSetting?.monthly_amount ?? 0;
-
   for (const ex of exemptionRes.data ?? []) {
     const overlaps = ex.start_date <= monthEnd && (ex.end_date === null || ex.end_date >= monthStart);
     if (!overlaps) continue;
@@ -48,24 +39,22 @@ export async function GET(req: NextRequest) {
     const existing = data.find((d: any) => d.member_id === ex.member_id);
     if (existing?.status === "PAID") continue; // PAID는 덮어쓰지 않음
 
-    // LEAVE + 휴회비 > 0이면 면제 아님 → UNPAID로 유지 (휴회비 납부 필요)
-    const isLeaveWithDues = ex.exemption_type === "LEAVE" && leaveDuesAmount > 0;
-    const note = `${TYPE_LABELS[ex.exemption_type] ?? ex.exemption_type}${ex.reason ? `: ${ex.reason}` : ""}${isLeaveWithDues ? ` (휴회비 ${leaveDuesAmount.toLocaleString()}원)` : ""}`;
-    const status = isLeaveWithDues ? (existing?.status ?? "UNPAID") : "EXEMPT";
+    const note = `${TYPE_LABELS[ex.exemption_type] ?? ex.exemption_type}${ex.reason ? `: ${ex.reason}` : ""}`;
 
     if (existing) {
-      if (existing.status !== status || existing.note !== note) {
-        await db.from("dues_payment_status").update({ status, note, updated_at: new Date().toISOString() })
+      if (existing.status !== "EXEMPT" || existing.note !== note) {
+        await db.from("dues_payment_status").update({ status: "EXEMPT", paid_amount: 0, note, updated_at: new Date().toISOString() })
           .eq("team_id", ctx.teamId).eq("member_id", ex.member_id).eq("month", month);
-        existing.status = status;
+        existing.status = "EXEMPT";
         existing.note = note;
+        existing.paid_amount = 0;
       }
     } else {
       await db.from("dues_payment_status").insert({
-        team_id: ctx.teamId, member_id: ex.member_id, month, status,
+        team_id: ctx.teamId, member_id: ex.member_id, month, status: "EXEMPT",
         paid_amount: 0, note, updated_at: new Date().toISOString(),
       });
-      data.push({ team_id: ctx.teamId, member_id: ex.member_id, month, status, paid_amount: 0, note });
+      data.push({ team_id: ctx.teamId, member_id: ex.member_id, month, status: "EXEMPT", paid_amount: 0, note });
     }
   }
 
