@@ -238,12 +238,18 @@ function DuesBulkTabInner({
       const json = await res.json();
 
       if (!res.ok) {
+        setOcrLoading(false);
+        if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
         setOcrStatus(`OCR 서버 오류 (${res.status}): ${json.error || "알 수 없는 오류"}. 수동으로 입력해주세요.`);
+        showToast("OCR 서버 오류", "error");
         return;
       }
 
       if (!json.text) {
+        setOcrLoading(false);
+        if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
         setOcrStatus("OCR 응답에 텍스트가 없습니다. 수동으로 입력해주세요.");
+        showToast("OCR 인식 실패", "error");
         return;
       }
 
@@ -274,6 +280,10 @@ function DuesBulkTabInner({
       const duplicateCount = parsed.length - newRows.length;
       console.log("[OCR] newRows:", newRows.length, "duplicates:", duplicateCount, "records in DB:", records.length);
 
+      // 로딩 해제를 먼저 하고, 결과를 showToast로도 알림 (오버레이 때문에 안 보일 수 있으므로)
+      setOcrLoading(false);
+      if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
+
       if (newRows.length > 0) {
         setBulkRows(newRows);
         const msg = [`${newRows.length}건의 새 거래를 인식했습니다.`];
@@ -281,17 +291,19 @@ function DuesBulkTabInner({
         if (latestBalance !== null) msg.push(`잔고: ${latestBalance.toLocaleString()}원`);
         msg.push("확인 후 저장하세요.");
         setOcrStatus(msg.join(" "));
+        showToast(`${newRows.length}건 인식 완료`, "success");
       } else if (parsed.length > 0) {
-        setOcrStatus(`${parsed.length}건 모두 이미 등록된 내역입니다.`);
+        setOcrStatus(`⚠️ ${parsed.length}건 모두 이미 등록된 내역입니다. (중복)`);
+        showToast(`${parsed.length}건 모두 중복 — 이미 등록된 내역`, "info");
       } else {
         setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
+        showToast("거래 내역을 인식하지 못했습니다.", "error");
       }
     } catch {
-      setOcrStatus("OCR 처리 중 오류가 발생했습니다. 수동으로 입력해주세요.");
-    } finally {
       setOcrLoading(false);
-      // 같은 파일 재선택 시에도 onChange 발생하도록 value 초기화 (처리 완료 후)
       if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
+      setOcrStatus("OCR 처리 중 오류가 발생했습니다. 수동으로 입력해주세요.");
+      showToast("OCR 처리 중 오류 발생", "error");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [records, members, refetchSummary]);
@@ -427,10 +439,12 @@ function DuesBulkTabInner({
       {/* OCR 상태 메시지 */}
       {!ocrLoading && ocrStatus && (
         <div className={cn(
-          "rounded-lg px-3 py-2 text-xs font-medium",
+          "rounded-xl px-4 py-3 text-sm font-medium",
           ocrStatus.includes("오류") || ocrStatus.includes("못했") || ocrStatus.includes("실패")
-            ? "bg-destructive/10 text-destructive"
-            : "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]"
+            ? "bg-destructive/10 text-destructive border border-destructive/20"
+            : ocrStatus.includes("중복") || ocrStatus.includes("이미")
+            ? "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border border-[hsl(var(--warning))]/20"
+            : "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border border-[hsl(var(--success))]/20"
         )}>
           {ocrStatus}
         </div>
