@@ -34,13 +34,18 @@ export async function GET(req: NextRequest) {
 
   const TYPE_LABELS: Record<string, string> = { EXEMPT: "면제", LEAVE: "휴회", INJURED: "부상" };
 
+  const allPaymentMemberIds = data.map((d: any) => d.member_id);
+  console.log("[payment-status] payment member_ids sample:", allPaymentMemberIds.slice(0, 3));
+  console.log("[payment-status] exemption member_ids sample:", (exemptionRes.data ?? []).slice(0, 3).map((e: any) => ({ mid: e.member_id, type: e.exemption_type, start: e.start_date })));
+
   for (const ex of exemptionRes.data ?? []) {
     const overlaps = ex.start_date <= monthEnd && (ex.end_date === null || ex.end_date >= monthStart);
-    if (!overlaps) continue;
+    if (!overlaps) { console.log("[payment-status] skip no overlap:", ex.member_id, ex.start_date, ex.end_date); continue; }
 
     const existing = data.find((d: any) => d.member_id === ex.member_id);
-    if (existing?.status === "PAID") continue; // PAID는 덮어쓰지 않음
+    if (existing?.status === "PAID") { console.log("[payment-status] skip PAID:", ex.member_id); continue; }
 
+    console.log("[payment-status] processing:", ex.member_id, "existing:", existing?.status ?? "NEW");
     const note = `${TYPE_LABELS[ex.exemption_type] ?? ex.exemption_type}${ex.reason ? `: ${ex.reason}` : ""}`;
 
     if (existing) {
