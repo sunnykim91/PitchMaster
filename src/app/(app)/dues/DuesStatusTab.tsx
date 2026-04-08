@@ -213,7 +213,42 @@ function DuesStatusTabInner({
   );
 }
 
-// ── 납부현황 목록 (미납→면제→납부 그룹, 납부자 접기) ──
+// ── 상태 그룹 (접기/펼치기) ──
+const COLOR_MAP = {
+  destructive: { bg: "bg-destructive/8", text: "text-destructive", hover: "hover:bg-destructive/12" },
+  warning: { bg: "bg-[hsl(var(--warning))]/8", text: "text-[hsl(var(--warning))]", hover: "hover:bg-[hsl(var(--warning))]/12" },
+  success: { bg: "bg-[hsl(var(--success))]/8", text: "text-[hsl(var(--success))]", hover: "hover:bg-[hsl(var(--success))]/12" },
+} as const;
+
+function StatusGroup<T>({ label, color, items, renderItem, defaultOpen = false }: {
+  label: string;
+  color: keyof typeof COLOR_MAP;
+  items: T[];
+  renderItem: (item: T) => React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const c = COLOR_MAP[color];
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((p) => !p)}
+        className={`flex w-full items-center justify-between rounded-lg ${c.bg} px-3 py-2 text-xs font-medium ${c.text} transition-colors ${c.hover}`}
+      >
+        <span>{label}</span>
+        {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+      </button>
+      {open && (
+        <div className="mt-1.5 space-y-1.5">
+          {items.map(renderItem)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── 납부현황 목록 (미납→면제→납부 그룹) ──
 function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, settings }: {
   duesStatus: DuesStatusMember[];
   role?: Role;
@@ -221,7 +256,6 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
   refetchPaymentStatus: () => Promise<unknown>;
   settings: DuesSetting[];
 }) {
-  const [paidExpanded, setPaidExpanded] = useState(false);
   const unpaid = duesStatus.filter((m) => m.status === "UNPAID");
   const exempt = duesStatus.filter((m) => m.status === "EXEMPT");
   const paid = duesStatus.filter((m) => m.status === "PAID");
@@ -298,29 +332,35 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
     <div className="space-y-1.5">
       <p className="text-xs font-medium text-muted-foreground">회원별 현황</p>
 
-      {/* 미납자 (항상 펼침) */}
-      {unpaid.map(renderCard)}
+      {/* 미납자 그룹 */}
+      {unpaid.length > 0 && (
+        <StatusGroup
+          label={`미납 (${unpaid.length}명)`}
+          color="destructive"
+          items={unpaid}
+          renderItem={renderCard}
+          defaultOpen
+        />
+      )}
 
-      {/* 면제자 */}
-      {exempt.map(renderCard)}
+      {/* 면제자 그룹 */}
+      {exempt.length > 0 && (
+        <StatusGroup
+          label={`면제 (${exempt.length}명)`}
+          color="warning"
+          items={exempt}
+          renderItem={renderCard}
+        />
+      )}
 
-      {/* 납부자 (접기/펼치기) */}
+      {/* 납부자 그룹 */}
       {paid.length > 0 && (
-        <div>
-          <button
-            type="button"
-            onClick={() => setPaidExpanded((p) => !p)}
-            className="flex w-full items-center justify-between rounded-lg bg-[hsl(var(--success)/0.08)] px-3 py-2 text-xs font-medium text-[hsl(var(--success))] transition-colors hover:bg-[hsl(var(--success)/0.12)]"
-          >
-            <span>납부 완료 ({paid.length}명)</span>
-            {paidExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-          </button>
-          {paidExpanded && (
-            <div className="mt-1.5 space-y-1.5">
-              {paid.map(renderCard)}
-            </div>
-          )}
-        </div>
+        <StatusGroup
+          label={`납부 완료 (${paid.length}명)`}
+          color="success"
+          items={paid}
+          renderItem={renderCard}
+        />
       )}
     </div>
   );
