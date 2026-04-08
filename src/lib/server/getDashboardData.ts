@@ -103,19 +103,25 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
   // 예정 경기 투표 현황
   let upcomingMatch: DashboardData["upcomingMatch"] = null;
   if (upcomingRaw) {
-    const [votesRes, myMemberRes, guestsRes] = await Promise.all([
+    const [votesRes, myMemberRes, guestsRes, teamMembersRes] = await Promise.all([
       db.from("match_attendance").select("vote, user_id, member_id").eq("match_id", upcomingRaw.id),
       db.from("team_members").select("id").eq("user_id", userId).limit(1).maybeSingle(),
       db.from("match_guests").select("id").eq("match_id", upcomingRaw.id),
+      db.from("team_members").select("id, user_id").eq("team_id", teamId).in("status", ["ACTIVE", "DORMANT"]),
     ]);
     const voteList = (votesRes.data ?? []) as { vote: string; user_id: string | null; member_id: string | null }[];
-    // 중복 제거: user_id ?? member_id 기준으로 1인 1표 (경기 목록/상세와 동일 로직)
-    const deduped = new Map<string, string>();
+    const teamMembers = (teamMembersRes.data ?? []) as { id: string; user_id: string | null }[];
+    // member_id 기준 정규화 (경기 상세와 동일 로직)
+    const memberVoteMap = new Map<string, string>();
     for (const v of voteList) {
-      const key = v.user_id ?? v.member_id;
-      if (key) deduped.set(key, v.vote);
+      if (v.member_id) {
+        memberVoteMap.set(v.member_id, v.vote);
+      } else if (v.user_id) {
+        const member = teamMembers.find((m) => m.user_id === v.user_id);
+        if (member) memberVoteMap.set(member.id, v.vote);
+      }
     }
-    const votes = [...deduped.values()];
+    const votes = [...memberVoteMap.values()];
     const voteCounts = {
       attend: votes.filter((v) => v === "ATTEND").length,
       absent: votes.filter((v) => v === "ABSENT").length,

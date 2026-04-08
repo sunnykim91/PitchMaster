@@ -76,6 +76,7 @@ type DbAttendance = {
   member_id: string | null;
   vote: AttendanceVote;
   users: { name: string } | null;
+  member?: { id: string; user_id: string | null } | null;
 };
 
 type AttendanceState = Record<string, Record<string, AttendanceVote>>;
@@ -206,8 +207,8 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     const state: AttendanceState = {};
     for (const row of attendanceData.attendance ?? []) {
       if (!state[row.match_id]) state[row.match_id] = {};
-      // 연동 멤버는 user_id, 미연동 멤버는 member_id로 키 설정
-      const key = row.user_id ?? row.member_id;
+      // member_id 기준 정규화 (경기 상세와 동일 로직)
+      const key = row.member_id ?? row.member?.id ?? row.user_id;
       if (key) state[row.match_id][key] = row.vote;
     }
     return state;
