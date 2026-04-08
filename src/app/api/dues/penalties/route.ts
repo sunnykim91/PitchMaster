@@ -101,7 +101,7 @@ export async function DELETE(request: NextRequest) {
   return apiSuccess({ deleted: true });
 }
 
-/** 벌금 자동 생성 (경기별) */
+/** 벌금 생성: 수동 추가(manual) 또는 자동 생성(matchId) */
 export async function POST(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
@@ -110,8 +110,36 @@ export async function POST(request: NextRequest) {
   if (roleCheck) return roleCheck;
 
   const body = await request.json();
-  const { matchId } = body;
 
+  // 수동 추가
+  if (body.manual) {
+    const { memberId, amount, note } = body;
+    if (!memberId || !amount) return apiError("memberId and amount required");
+
+    const db = getSupabaseAdmin();
+    if (!db) return apiError("Database not available", 503);
+
+    const { data, error } = await db
+      .from("penalty_records")
+      .insert({
+        team_id: ctx.teamId,
+        member_id: memberId,
+        rule_id: null,
+        match_id: null,
+        amount: Number(amount),
+        date: new Date().toISOString().slice(0, 10),
+        note: note || "수동 추가",
+        status: "UNPAID",
+        is_paid: false,
+      })
+      .select()
+      .single();
+
+    if (error) return apiError(error.message);
+    return apiSuccess(data, 201);
+  }
+
+  const { matchId } = body;
   if (!matchId) return apiError("matchId required");
 
   const db = getSupabaseAdmin();

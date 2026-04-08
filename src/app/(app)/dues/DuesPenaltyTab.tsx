@@ -7,7 +7,9 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Trash2, RefreshCw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Trash2, RefreshCw, Plus } from "lucide-react";
 import { apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useConfirm } from "@/lib/ConfirmContext";
@@ -38,8 +40,27 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
   const [loading, setLoading] = useState(true);
   const [paidExpanded, setPaidExpanded] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
   const confirm = useConfirm();
   const { showToast } = useToast();
+
+  // 멤버 목록 (수동 추가용)
+  useEffect(() => {
+    if (!isStaffOrAbove(role)) return;
+    fetch("/api/members")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.members) {
+          setMembers(
+            data.members
+              .filter((m: { users?: { id: string; name: string } | null }) => m.users?.name)
+              .map((m: { users: { id: string; name: string } }) => ({ id: m.users.id, name: m.users.name }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, [role]);
 
   // 월별 필터
   const [monthFilter, setMonthFilter] = useState(() => {
@@ -109,6 +130,24 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
       fetchPenalties();
     } else {
       showToast("매칭 가능한 입금 내역이 없습니다", "info");
+    }
+  }
+
+  async function handleManualAdd(formData: FormData) {
+    const memberId = String(formData.get("memberId") || "");
+    const amount = Number(formData.get("amount") || 0);
+    const note = String(formData.get("note") || "").trim();
+    if (!memberId || amount <= 0) {
+      showToast("멤버와 금액을 입력해주세요", "error");
+      return;
+    }
+    const { error } = await apiMutate("/api/dues/penalties", "POST", { manual: true, memberId, amount, note });
+    if (!error) {
+      setAdding(false);
+      fetchPenalties();
+      showToast("벌금 추가 완료", "success");
+    } else {
+      showToast("벌금 추가 실패", "error");
     }
   }
 
@@ -196,24 +235,60 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
 
   return (
     <div className="space-y-4">
-      {/* 월 선택 */}
-      <div className="flex items-center justify-center gap-1">
-        <button
-          type="button"
-          onClick={prevMonth}
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <span className="min-w-[4rem] text-center text-sm font-semibold text-foreground">{displayMonth}</span>
-        <button
-          type="button"
-          onClick={nextMonth}
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
+      {/* 월 선택 + 수동 추가 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={prevMonth}
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <span className="min-w-[4rem] text-center text-sm font-semibold text-foreground">{displayMonth}</span>
+          <button
+            type="button"
+            onClick={nextMonth}
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+        {isStaffOrAbove(role) && !adding && (
+          <Button type="button" variant="outline" size="sm" className="h-8 gap-1 text-xs" onClick={() => setAdding(true)}>
+            <Plus className="h-3.5 w-3.5" /> 수동 추가
+          </Button>
+        )}
       </div>
+
+      {/* 수동 추가 폼 */}
+      {adding && (
+        <Card className="border-primary/20 bg-card p-3">
+          <form action={handleManualAdd} className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">멤버</Label>
+                <NativeSelect name="memberId" required className="h-9 text-sm">
+                  <option value="">선택</option>
+                  {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </NativeSelect>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">금액</Label>
+                <Input name="amount" type="number" min={0} required placeholder="5000" className="h-9 text-sm" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px] text-muted-foreground">사유 (선택)</Label>
+              <Input name="note" placeholder="예: 회식 불참" className="h-9 text-sm" />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(false)}>취소</Button>
+              <Button type="submit" size="sm">추가</Button>
+            </div>
+          </form>
+        </Card>
+      )}
 
       {loading ? (
         <div className="space-y-3">
