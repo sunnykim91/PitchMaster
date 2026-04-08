@@ -262,14 +262,17 @@ function DuesBulkTabInner({
 
       // 기존 DB 레코드와 비교하여 중복 제거 (날짜 + 금액 + 타입으로 판단, description은 수정될 수 있으므로 제외)
       const newRows = parsed.filter((row) => {
-        return !records.some(
+        const isDup = records.some(
           (r) =>
             r.recordedAt.startsWith(row.date) &&
             r.amount === Number(row.amount) &&
             r.type === row.type
         );
+        if (isDup) console.log("[OCR] duplicate:", row.date, row.amount, row.description);
+        return !isDup;
       });
       const duplicateCount = parsed.length - newRows.length;
+      console.log("[OCR] newRows:", newRows.length, "duplicates:", duplicateCount, "records in DB:", records.length);
 
       if (newRows.length > 0) {
         setBulkRows(newRows);
