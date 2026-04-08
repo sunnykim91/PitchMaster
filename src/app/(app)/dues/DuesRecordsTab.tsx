@@ -416,7 +416,7 @@ function DuesRecordsTabInner({
                 <CardContent className="px-4 pb-0">
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-foreground truncate">
+                      <p className="text-sm font-semibold text-foreground line-clamp-2 break-all">
                         {record.description}
                       </p>
                       <p className="text-xs text-muted-foreground">
