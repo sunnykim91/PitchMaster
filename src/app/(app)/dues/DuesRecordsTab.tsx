@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { GA } from "@/lib/analytics";
 import { EmptyState } from "@/components/EmptyState";
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Receipt } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Receipt, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -165,14 +165,12 @@ function DuesRecordsTabInner({
   }, [monthRecords, summaryBalance, refetchSummary]);
 
   const [y, m] = monthFilter.split("-").map(Number);
-  const displayMonth = String(m).padStart(2, "0");
 
   return (
     <div role="tabpanel" id="tabpanel-records" aria-labelledby="tab-records" className="space-y-4">
-      {/* ── 헤더: 월 네비게이션 + 필터 ── */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1">
-          <span className="text-sm font-medium text-foreground">입출금 내역</span>
+      {/* ── 헤더: 월 네비게이션 (중앙) + 필터 ── */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-center gap-1">
           <button
             type="button"
             aria-label="이전 달"
@@ -180,12 +178,12 @@ function DuesRecordsTabInner({
               const prev = new Date(y, m - 2);
               setMonthFilter(`${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`);
             }}
-            className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors active:scale-[0.97]"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors active:scale-[0.97]"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="min-w-[2.5rem] text-center text-sm font-medium text-foreground">
-            {displayMonth}
+          <span className="min-w-[3rem] text-center text-sm font-semibold text-foreground">
+            {m}월
           </span>
           <button
             type="button"
@@ -194,31 +192,28 @@ function DuesRecordsTabInner({
               const next = new Date(y, m);
               setMonthFilter(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`);
             }}
-            className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors active:scale-[0.97]"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors active:scale-[0.97]"
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-4 w-4" />
           </button>
         </div>
-
         <div className="flex items-center gap-2">
-          <div className="w-full sm:w-36">
-            <Input
-              type="text"
-              value={memberFilter}
-              onChange={(event) => setMemberFilter(event.target.value)}
-              placeholder="이름 검색"
-              list="dues-member-names"
-              autoComplete="off"
-              className="h-9 text-xs bg-card border-white/[0.06]"
-            />
-            <datalist id="dues-member-names">
-              {members.map((mbr) => <option key={mbr.id} value={mbr.name} />)}
-            </datalist>
-          </div>
+          <Input
+            type="text"
+            value={memberFilter}
+            onChange={(event) => setMemberFilter(event.target.value)}
+            placeholder="이름 검색"
+            list="dues-member-names"
+            autoComplete="off"
+            className="h-8 text-xs bg-card border-white/[0.06] flex-1"
+          />
+          <datalist id="dues-member-names">
+            {members.map((mbr) => <option key={mbr.id} value={mbr.name} />)}
+          </datalist>
           <NativeSelect
             value={filter}
             onChange={(e) => setFilter(e.target.value as RecordFilter)}
-            className="h-9 w-20 bg-card border-white/[0.06] text-xs"
+            className="h-8 w-20 bg-card border-white/[0.06] text-xs"
           >
             <option value="ALL">전체</option>
             <option value="INCOME">입금</option>
@@ -299,6 +294,7 @@ function DuesRecordsTabInner({
                         name="recordedAt"
                         type="date"
                         required
+                        defaultValue={new Date().toISOString().slice(0, 10)}
                         className={cn(
                           "h-10 rounded-lg bg-secondary border-0",
                           formErrors.recordedAt && "border border-destructive"
@@ -348,7 +344,7 @@ function DuesRecordsTabInner({
           description="위에서 수기 입력하거나, 내역 올리기 탭에서 스크린샷/엑셀을 올려보세요."
         />
       ) : (
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           {filteredRecords.map((record) =>
             editingRecord?.id === record.id ? (
               <Card key={record.id} data-edit-id={record.id} className="border-white/[0.04] bg-card">
@@ -374,12 +370,12 @@ function DuesRecordsTabInner({
             ) : (
               <Card
                 key={record.id}
-                className="border-white/[0.04] bg-card py-3 hover:bg-secondary/50 transition-colors"
+                className="border-white/[0.04] bg-card py-2 hover:bg-secondary/50 transition-colors"
               >
                 <CardContent className="px-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-0.5 flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-foreground truncate">
                         {record.description}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -389,17 +385,17 @@ function DuesRecordsTabInner({
                         ) : null}
                       </p>
                     </div>
-                    <div className="flex shrink-0 flex-col items-end gap-1">
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-1.5">
                         <Badge
                           variant={record.type === "INCOME" ? "success" : "destructive"}
-                          className="border-0"
+                          className="border-0 text-[10px] px-1.5 py-0"
                         >
                           {record.type === "INCOME" ? "입금" : "출금"}
                         </Badge>
                         <span
                           className={cn(
-                            "text-sm font-bold whitespace-nowrap",
+                            "text-sm font-bold whitespace-nowrap tabular-nums",
                             record.type === "INCOME"
                               ? "text-[hsl(var(--success))]"
                               : "text-[hsl(var(--loss))]"
@@ -410,7 +406,7 @@ function DuesRecordsTabInner({
                         </span>
                       </div>
                       {isStaffOrAbove(role) && (
-                        <div className="flex gap-1">
+                        <>
                           <button
                             type="button"
                             onClick={() => {
@@ -419,9 +415,10 @@ function DuesRecordsTabInner({
                                 document.querySelector(`[data-edit-id="${record.id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
                               }, 100);
                             }}
-                            className="rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors active:scale-95"
+                            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors active:scale-95"
+                            aria-label="수정"
                           >
-                            수정
+                            <Pencil className="h-3.5 w-3.5" />
                           </button>
                           <button
                             type="button"
@@ -429,11 +426,12 @@ function DuesRecordsTabInner({
                               const ok = await confirm({ title: "이 내역을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
                               if (ok) handleDeleteRecord(record.id);
                             }}
-                            className="rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors active:scale-95"
+                            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors active:scale-95"
+                            aria-label="삭제"
                           >
-                            삭제
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
-                        </div>
+                        </>
                       )}
                     </div>
                   </div>
