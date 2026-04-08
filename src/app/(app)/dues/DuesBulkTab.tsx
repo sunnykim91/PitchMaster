@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useCallback } from "react";
+import { flushSync } from "react-dom";
 import { GA } from "@/lib/analytics";
 import Image from "next/image";
 import { Camera, FileSpreadsheet, Check, AlertCircle, Trash2 } from "lucide-react";
@@ -225,11 +226,13 @@ function DuesBulkTabInner({
     const file = event.target.files?.[0];
     if (!file) return;
     const imageUrl = URL.createObjectURL(file);
-    setBulkImage(imageUrl);
 
-    // Clova OCR API 호출
-    setOcrLoading(true);
-    setOcrStatus("스크린샷 분석 중...");
+    // flushSync: 이미지 미리보기 + 로딩 오버레이를 즉시 DOM에 반영
+    flushSync(() => {
+      setBulkImage(imageUrl);
+      setOcrLoading(true);
+      setOcrStatus("스크린샷 분석 중...");
+    });
     try {
       const formData = new FormData();
       formData.append("image", file);
@@ -280,27 +283,35 @@ function DuesBulkTabInner({
       const duplicateCount = parsed.length - newRows.length;
       console.log("[OCR] newRows:", newRows.length, "duplicates:", duplicateCount, "records in DB:", records.length);
 
-      // 로딩 해제를 먼저 하고, 결과를 showToast로도 알림 (오버레이 때문에 안 보일 수 있으므로)
-      setOcrLoading(false);
+      // flushSync: 로딩 오버레이 제거를 즉시 DOM에 반영한 뒤 결과 표시
+      flushSync(() => {
+        setOcrLoading(false);
+      });
       if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
 
       if (newRows.length > 0) {
-        setBulkRows(newRows);
-        const msg = [`${newRows.length}건의 새 거래를 인식했습니다.`];
-        if (duplicateCount > 0) msg.push(`(${duplicateCount}건 중복 제외)`);
-        if (latestBalance !== null) msg.push(`잔고: ${latestBalance.toLocaleString()}원`);
-        msg.push("확인 후 저장하세요.");
-        setOcrStatus(msg.join(" "));
+        flushSync(() => {
+          setBulkRows(newRows);
+          const msg = [`${newRows.length}건의 새 거래를 인식했습니다.`];
+          if (duplicateCount > 0) msg.push(`(${duplicateCount}건 중복 제외)`);
+          if (latestBalance !== null) msg.push(`잔고: ${latestBalance.toLocaleString()}원`);
+          msg.push("확인 후 저장하세요.");
+          setOcrStatus(msg.join(" "));
+        });
         showToast(`${newRows.length}건 인식 완료`, "success");
       } else if (parsed.length > 0) {
-        setOcrStatus(`⚠️ ${parsed.length}건 모두 이미 등록된 내역입니다. (중복)`);
+        flushSync(() => {
+          setOcrStatus(`⚠️ ${parsed.length}건 모두 이미 등록된 내역입니다. (중복)`);
+        });
         showToast(`${parsed.length}건 모두 중복 — 이미 등록된 내역`, "info");
       } else {
-        setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
+        flushSync(() => {
+          setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
+        });
         showToast("거래 내역을 인식하지 못했습니다.", "error");
       }
     } catch {
-      setOcrLoading(false);
+      flushSync(() => { setOcrLoading(false); });
       if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
       setOcrStatus("OCR 처리 중 오류가 발생했습니다. 수동으로 입력해주세요.");
       showToast("OCR 처리 중 오류 발생", "error");
