@@ -47,12 +47,21 @@ export async function GET() {
     };
   });
 
-  // 장기 미납자 (최근 3개월 연속 UNPAID)
+  // 활성 면제 회원 조회 (장기 미납자에서 제외)
+  const { data: activeExemptions } = await db
+    .from("member_dues_exemptions")
+    .select("member_id")
+    .eq("team_id", ctx.teamId)
+    .eq("is_active", true);
+  const exemptMemberIds = new Set((activeExemptions ?? []).map((e) => e.member_id));
+
+  // 장기 미납자 (최근 3개월 연속 UNPAID, 면제/휴회/부상 제외)
   const recentMonths = months.slice(-3);
   const unpaidCounts = new Map<string, number>();
 
   for (const m of members ?? []) {
     const memberId = m.user_id ?? m.id;
+    if (exemptMemberIds.has(memberId)) continue; // 면제 회원 스킵
     let consecutive = 0;
     for (const month of recentMonths) {
       const status = (allStatus ?? []).find(

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,8 @@ type DuesSetting = {
   description: string;
 };
 
+type ApiMember = { id: string; name: string; memberId: string; role: string };
+
 export type DuesSettingsTabProps = {
   role: Role | undefined;
   monthFilter: string;
@@ -30,6 +32,7 @@ export type DuesSettingsTabProps = {
   getDuesPeriod: (month: string, startDay: number) => { from: string; to: string };
   refetchSummary: () => Promise<void>;
   showToast: (msg: string, type?: "success" | "error" | "info") => void;
+  members?: ApiMember[];
 };
 
 function DuesSettingsTabInner({
@@ -40,6 +43,7 @@ function DuesSettingsTabInner({
   getDuesPeriod,
   refetchSummary,
   showToast,
+  members,
 }: DuesSettingsTabProps) {
   const confirm = useConfirm();
   /* ── 탭 전용 state ── */
@@ -421,6 +425,9 @@ function DuesSettingsTabInner({
 
       {/* ── 벌금 규칙 설정 ── */}
       <PenaltyRulesSection refetchSummary={refetchSummary} />
+
+      {/* ── 회원 회비 상태 관리 ── */}
+      <MemberExemptionSection members={members ?? []} />
     </div>
   );
 }
@@ -559,6 +566,188 @@ function PenaltyRulesSection({ refetchSummary }: { refetchSummary: () => Promise
           </form>
         </Card>
       )}
+    </div>
+  );
+}
+
+// ── 회원 회비 상태 관리 (면제/휴회/부상) ──
+const EXEMPTION_TYPES = [
+  { value: "EXEMPT", label: "면제", color: "text-[hsl(var(--warning))]" },
+  { value: "LEAVE", label: "휴회", color: "text-[hsl(var(--info))]" },
+  { value: "INJURED", label: "부상", color: "text-destructive" },
+] as const;
+
+type Exemption = {
+  id: string;
+  member_id: string;
+  exemption_type: string;
+  reason: string | null;
+  start_date: string;
+  end_date: string | null;
+  is_active: boolean;
+  created_at: string;
+};
+
+function MemberExemptionSection({ members }: { members: ApiMember[] }) {
+  const [exemptions, setExemptions] = useState<Exemption[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const confirm = useConfirm();
+
+  React.useEffect(() => {
+    fetch("/api/dues/member-status")
+      .then((r) => r.json())
+      .then((data) => { if (data.exemptions) setExemptions(data.exemptions); setLoaded(true); })
+      .catch(() => setLoaded(true));
+  }, []);
+
+  async function handleAdd(formData: FormData) {
+    const memberId = String(formData.get("memberId") || "");
+    const exemptionType = String(formData.get("exemptionType") || "EXEMPT");
+    const reason = String(formData.get("reason") || "").trim();
+    const startDate = String(formData.get("startDate") || "");
+    const endDate = String(formData.get("endDate") || "");
+    if (!memberId || !startDate) return;
+
+    const { data } = await apiMutate("/api/dues/member-status", "POST", {
+      memberId, exemptionType, reason: reason || null, startDate, endDate: endDate || null,
+    });
+    if (data) {
+      setExemptions((prev) => [data as Exemption, ...prev]);
+      setAdding(false);
+    }
+  }
+
+  async function handleEnd(id: string) {
+    const ok = await confirm({ title: "이 상태를 종료하시겠습니까?", confirmLabel: "종료" });
+    if (!ok) return;
+    await apiMutate("/api/dues/member-status", "PUT", { id });
+    setExemptions((prev) => prev.map((e) => e.id === id ? { ...e, is_active: false, end_date: new Date().toISOString().slice(0, 10) } : e));
+  }
+
+  const activeExemptions = exemptions.filter((e) => e.is_active);
+  const historyExemptions = exemptions.filter((e) => !e.is_active);
+  const [showHistory, setShowHistory] = useState(false);
+
+  function getMemberName(memberId: string): string {
+    return members.find((m) => m.id === memberId)?.name ?? "알 수 없음";
+  }
+
+  function getTypeInfo(type: string) {
+    return EXEMPTION_TYPES.find((t) => t.value === type) ?? EXEMPTION_TYPES[0];
+  }
+
+  if (!loaded) return null;
+
+  return (
+    <div className="mt-8 space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-bold text-foreground">회원 회비 상태</h3>
+          <p className="text-xs text-muted-foreground">면제/휴회/부상 설정 시 매월 자동 면제 처리</p>
+        </div>
+        {!adding && (
+          <Button type="button" variant="outline" size="sm" onClick={() => setAdding(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1" /> 추가
+          </Button>
+        )}
+      </div>
+
+      {/* 추가 폼 */}
+      {adding && (
+        <Card className="border-primary/20 bg-card p-3">
+          <form action={handleAdd} className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">회원</Label>
+                <NativeSelect name="memberId" required className="h-9 text-sm">
+                  <option value="">선택</option>
+                  {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </NativeSelect>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">상태</Label>
+                <NativeSelect name="exemptionType" className="h-9 text-sm">
+                  {EXEMPTION_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </NativeSelect>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px] text-muted-foreground">사유</Label>
+              <Input name="reason" placeholder="예: 무릎 부상, 해외 출장" className="h-9 text-sm" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">시작일</Label>
+                <Input name="startDate" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} className="h-9 text-sm" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">종료일 (미정이면 비움)</Label>
+                <Input name="endDate" type="date" className="h-9 text-sm" />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(false)}>취소</Button>
+              <Button type="submit" size="sm">등록</Button>
+            </div>
+          </form>
+        </Card>
+      )}
+
+      {/* 활성 목록 */}
+      {activeExemptions.length === 0 && !adding && (
+        <p className="text-xs text-muted-foreground/60 py-4 text-center">등록된 면제/휴회/부상 회원이 없습니다</p>
+      )}
+
+      {activeExemptions.map((ex) => {
+        const typeInfo = getTypeInfo(ex.exemption_type);
+        return (
+          <Card key={ex.id} className="border-white/[0.04] bg-card p-3">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold">{getMemberName(ex.member_id)}</span>
+                  <span className={`text-xs font-medium ${typeInfo.color}`}>{typeInfo.label}</span>
+                </div>
+                <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
+                  <span>{ex.start_date} ~</span>
+                  <span>{ex.end_date ?? "무기한"}</span>
+                  {ex.reason && <span className="ml-1">· {ex.reason}</span>}
+                </div>
+              </div>
+              <Button type="button" variant="outline" size="sm" className="h-7 text-xs shrink-0" onClick={() => handleEnd(ex.id)}>
+                종료
+              </Button>
+            </div>
+          </Card>
+        );
+      })}
+
+      {/* 이력 */}
+      {historyExemptions.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setShowHistory((p) => !p)}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          지난 이력 ({historyExemptions.length}건) {showHistory ? "접기" : "보기"}
+        </button>
+      )}
+      {showHistory && historyExemptions.map((ex) => {
+        const typeInfo = getTypeInfo(ex.exemption_type);
+        return (
+          <Card key={ex.id} className="border-white/[0.04] bg-card/50 p-3 opacity-60">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium">{getMemberName(ex.member_id)}</span>
+              <span className={`text-[10px] ${typeInfo.color}`}>{typeInfo.label}</span>
+              <span className="text-[10px] text-muted-foreground">
+                {ex.start_date} ~ {ex.end_date ?? "무기한"}
+                {ex.reason && ` · ${ex.reason}`}
+              </span>
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }

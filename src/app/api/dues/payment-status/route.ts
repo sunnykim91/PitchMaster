@@ -16,14 +16,51 @@ export async function GET(req: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  const { data, error } = await db
-    .from("dues_payment_status")
-    .select("*")
-    .eq("team_id", ctx.teamId)
-    .eq("month", month);
+  const [statusRes, exemptionRes] = await Promise.all([
+    db.from("dues_payment_status").select("*").eq("team_id", ctx.teamId).eq("month", month),
+    db.from("member_dues_exemptions").select("*").eq("team_id", ctx.teamId).eq("is_active", true),
+  ]);
 
-  if (error) return apiError(error.message);
-  return apiSuccess(data ?? []);
+  if (statusRes.error) return apiError(statusRes.error.message);
+  const data = statusRes.data ?? [];
+
+  // 활성 면제 상태 중 해당 월과 겹치는 회원 → 자동 EXEMPT 적용
+  const [y, m] = month.split("-").map(Number);
+  const monthStart = `${month}-01`;
+  const lastDay = new Date(y, m, 0).getDate();
+  const monthEnd = `${month}-${String(lastDay).padStart(2, "0")}`;
+
+  const TYPE_LABELS: Record<string, string> = { EXEMPT: "면제", LEAVE: "휴회", INJURED: "부상" };
+
+  for (const ex of exemptionRes.data ?? []) {
+    const overlaps = ex.start_date <= monthEnd && (ex.end_date === null || ex.end_date >= monthStart);
+    if (!overlaps) continue;
+
+    const existing = data.find((d: any) => d.member_id === ex.member_id);
+    if (existing?.status === "PAID") continue; // PAID는 덮어쓰지 않음
+
+    const note = `${TYPE_LABELS[ex.exemption_type] ?? ex.exemption_type}${ex.reason ? `: ${ex.reason}` : ""}`;
+
+    if (existing) {
+      // 이미 EXEMPT/UNPAID → note만 업데이트
+      if (existing.status !== "EXEMPT" || existing.note !== note) {
+        await db.from("dues_payment_status").update({ status: "EXEMPT", paid_amount: 0, note, updated_at: new Date().toISOString() })
+          .eq("team_id", ctx.teamId).eq("member_id", ex.member_id).eq("month", month);
+        existing.status = "EXEMPT";
+        existing.note = note;
+        existing.paid_amount = 0;
+      }
+    } else {
+      // 새로 EXEMPT 레코드 삽입
+      await db.from("dues_payment_status").insert({
+        team_id: ctx.teamId, member_id: ex.member_id, month, status: "EXEMPT",
+        paid_amount: 0, note, updated_at: new Date().toISOString(),
+      });
+      data.push({ team_id: ctx.teamId, member_id: ex.member_id, month, status: "EXEMPT", paid_amount: 0, note });
+    }
+  }
+
+  return apiSuccess(data);
 }
 
 /** POST: 납부 상태 설정 (upsert) */
