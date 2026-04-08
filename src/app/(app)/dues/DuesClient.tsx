@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { useConfirm } from "@/lib/ConfirmContext";
@@ -377,27 +377,31 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     return list;
   }, [members, monthRecords, isDuesPayment, paymentStatusMap]);
 
-  if (loading) {
+  /* 최초 로딩 시에만 스켈레톤 표시 (refetch 중에는 탭 콘텐츠 유지하여 state 보존) */
+  const [initialLoaded, setInitialLoaded] = useState(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!loading && !initialLoaded) setInitialLoaded(true); }, [loading]);
+
+  if (!initialLoaded && loading) {
     return (
-      <div className="space-y-5">
-        <Card className="relative overflow-hidden border-white/[0.06] bg-card py-5">
+      <div className="space-y-4">
+        <Card className="relative overflow-hidden border-white/[0.06] bg-card py-4">
           <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, hsl(16 85% 58% / 0.12) 0%, transparent 60%)" }} />
-          <CardContent className="relative space-y-4 px-5">
+          <CardContent className="relative space-y-3 px-4">
             <div className="space-y-2">
               <Skeleton className="h-3 w-16" />
               <Skeleton className="h-10 w-48" />
               <Skeleton className="h-3 w-32" />
             </div>
-            <div className="space-y-2.5 border-t border-white/[0.08] pt-4">
+            <div className="space-y-2 border-t border-white/[0.08] pt-3">
               <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-full" />
             </div>
           </CardContent>
         </Card>
-        <div className="space-y-2.5">
-          {[1,2,3].map(i => <Skeleton key={i} className="h-20 w-full rounded-xl" />)}
+        <div className="space-y-2">
+          {[1,2,3].map(i => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
         </div>
       </div>
     );

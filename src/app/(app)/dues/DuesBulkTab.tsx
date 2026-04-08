@@ -231,10 +231,6 @@ function DuesBulkTabInner({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // 모바일: 파일 선택 후 페이지 복귀 시 React 렌더가 누락될 수 있으므로
-    // setTimeout으로 다음 틱에서 상태 업데이트 시작
-    await new Promise((r) => setTimeout(r, 100));
-
     const imageUrl = URL.createObjectURL(file);
     setBulkImage(imageUrl);
     setOcrLoading(true);
@@ -265,15 +261,10 @@ function DuesBulkTabInner({
       console.log("[OCR] raw text:", json.text);
       const { rows: parsed, latestBalance } = parseTransactions(json.text);
       console.log("[OCR] parsed rows:", parsed.map((r) => ({ date: r.date, time: r.time, desc: r.description, amount: r.amount, type: r.type })));
-      // OCR 인식 데이터의 최신 날짜가 현재 잔고 날짜보다 새로울 때만 업데이트
-      const ocrLatestDate = parsed.length > 0 ? parsed[0].date : null; // parsed[0]이 가장 최신
+      // 잔고 업데이트는 결과 표시 이후로 지연 (refetchSummary가 컴포넌트를 언마운트시킬 수 있음)
+      const ocrLatestDate = parsed.length > 0 ? parsed[0].date : null;
       const curBalDate = balanceUpdatedAt ? balanceUpdatedAt.slice(0, 10) : null;
-      if (latestBalance !== null && ocrLatestDate && (!curBalDate || ocrLatestDate >= curBalDate)) {
-        await apiMutate("/api/dues/balance", "POST", { balance: latestBalance });
-        await refetchSummary();
-      } else if (latestBalance !== null && curBalDate && ocrLatestDate && ocrLatestDate < curBalDate) {
-        // 오래된 데이터이므로 잔고 업데이트 스킵
-      }
+      const shouldUpdateBalance = latestBalance !== null && ocrLatestDate && (!curBalDate || ocrLatestDate >= curBalDate);
 
       // 기존 DB 레코드와 비교하여 중복 제거 (날짜 + 금액 + 타입으로 판단, description은 수정될 수 있으므로 제외)
       const currentRecords = recordsRef.current;
@@ -307,6 +298,11 @@ function DuesBulkTabInner({
       } else {
         setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
         showToast("거래 내역을 인식하지 못했습니다.", "error");
+      }
+
+      // 잔고 업데이트는 UI 표시 후 백그라운드에서 실행 (refetchSummary 중 언마운트 방지)
+      if (shouldUpdateBalance) {
+        apiMutate("/api/dues/balance", "POST", { balance: latestBalance }).then(() => refetchSummary());
       }
     } catch {
       setOcrLoading(false);
