@@ -64,6 +64,7 @@ export type DuesBulkTabProps = {
   members: ApiMember[];
   summaryRecords: ApiDuesRecord[];
   summaryBalance: number | null;
+  balanceUpdatedAt: string | null;
   refetchSummary: () => Promise<void>;
   syncPaymentStatus: () => Promise<void>;
   showToast: (msg: string, type?: "success" | "error" | "info") => void;
@@ -81,6 +82,7 @@ function DuesBulkTabInner({
   members,
   summaryRecords,
   summaryBalance,
+  balanceUpdatedAt,
   refetchSummary,
   syncPaymentStatus,
   showToast,
@@ -211,9 +213,14 @@ function DuesBulkTabInner({
       console.log("[OCR] raw text:", json.text);
       const { rows: parsed, latestBalance } = parseTransactions(json.text);
       console.log("[OCR] parsed rows:", parsed.map((r) => ({ date: r.date, time: r.time, desc: r.description, amount: r.amount, type: r.type })));
-      if (latestBalance !== null) {
+      // OCR 인식 데이터의 최신 날짜가 현재 잔고 날짜보다 새로울 때만 업데이트
+      const ocrLatestDate = parsed.length > 0 ? parsed[0].date : null; // parsed[0]이 가장 최신
+      const curBalDate = balanceUpdatedAt ? balanceUpdatedAt.slice(0, 10) : null;
+      if (latestBalance !== null && ocrLatestDate && (!curBalDate || ocrLatestDate >= curBalDate)) {
         await apiMutate("/api/dues/balance", "POST", { balance: latestBalance });
         await refetchSummary();
+      } else if (latestBalance !== null && curBalDate && ocrLatestDate && ocrLatestDate < curBalDate) {
+        // 오래된 데이터이므로 잔고 업데이트 스킵
       }
 
       // 기존 DB 레코드와 비교하여 중복 제거 (날짜 + 금액 + 타입으로 판단, description은 수정될 수 있으므로 제외)
@@ -612,7 +619,19 @@ function DuesBulkTabInner({
               });
               const dupCount = json.totalCount - filtered.length;
               setExcelRecords(filtered);
-              setExcelBalance(json.lastBalance);
+              // 엑셀 마지막 거래 날짜가 현재 잔고 업데이트 날짜보다 최신일 때만 잔고 반영
+              const excelLastDate = json.records.length > 0
+                ? json.records[json.records.length - 1].date
+                : null;
+              const currentBalDate = balanceUpdatedAt ? balanceUpdatedAt.slice(0, 10) : null;
+              if (json.lastBalance !== null && excelLastDate && (!currentBalDate || excelLastDate >= currentBalDate)) {
+                setExcelBalance(json.lastBalance);
+              } else if (json.lastBalance !== null && currentBalDate && excelLastDate && excelLastDate < currentBalDate) {
+                setExcelBalance(null);
+                showToast(`엑셀 잔액(${excelLastDate})이 현재 잔고(${currentBalDate})보다 오래되어 잔고는 업데이트하지 않습니다.`, "info");
+              } else {
+                setExcelBalance(json.lastBalance);
+              }
               if (dupCount > 0) {
                 showToast(`${json.totalCount}건 중 ${dupCount}건 중복 제외, ${filtered.length}건 새 내역`, "info");
               } else {
