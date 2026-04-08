@@ -255,63 +255,54 @@ function DuesRecordsTabInner({
             <option value="INCOME">입금</option>
             <option value="EXPENSE">출금</option>
           </NativeSelect>
-          {isStaffOrAbove(role) && !selectMode && filteredRecords.length > 0 && (
+          {isStaffOrAbove(role) && filteredRecords.length > 0 && (
             <button
               type="button"
-              onClick={() => setSelectMode(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-              aria-label="선택 모드"
-              title="선택 삭제"
+              onClick={() => { if (selectMode) { setSelectMode(false); setSelectedIds(new Set()); } else setSelectMode(true); }}
+              className="text-xs font-medium text-primary hover:text-primary/80 transition-colors shrink-0"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              {selectMode ? "완료" : "편집"}
             </button>
           )}
         </div>
       </div>
 
-      {/* ── 선택 모드 바 ── */}
-      {isStaffOrAbove(role) && filteredRecords.length > 0 && (
-        selectMode ? (
-          <div className="flex items-center justify-between rounded-lg bg-secondary/80 px-3 py-2">
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  if (selectedIds.size === filteredRecords.length) setSelectedIds(new Set());
-                  else setSelectedIds(new Set(filteredRecords.map((r) => r.id)));
-                }}
-                className="text-xs font-medium text-foreground"
-              >
-                {selectedIds.size === filteredRecords.length ? "전체 해제" : "전체 선택"}
-              </button>
-              <span className="text-xs text-muted-foreground">{selectedIds.size}건</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {selectedIds.size > 0 && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  className="h-7 text-xs gap-1 active:scale-[0.97]"
-                  disabled={bulkDeleting}
-                  onClick={handleBulkDelete}
-                >
-                  <Trash2 className="h-3 w-3" />
-                  {bulkDeleting ? "삭제 중..." : "삭제"}
-                </Button>
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={() => { setSelectMode(false); setSelectedIds(new Set()); }}
-              >
-                취소
-              </Button>
-            </div>
-          </div>
-        ) : null
+      {/* ── 선택 모드 액션 바 ── */}
+      {selectMode && (
+        <div className="flex items-center justify-between rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (selectedIds.size === filteredRecords.length) setSelectedIds(new Set());
+              else setSelectedIds(new Set(filteredRecords.map((r) => r.id)));
+            }}
+            className={cn(
+              "flex items-center gap-2 text-xs font-medium transition-colors",
+              selectedIds.size === filteredRecords.length ? "text-destructive" : "text-foreground"
+            )}
+          >
+            <span className={cn(
+              "flex h-4.5 w-4.5 items-center justify-center rounded-full border-2 transition-all",
+              selectedIds.size > 0
+                ? "border-destructive bg-destructive text-white"
+                : "border-muted-foreground/40"
+            )}>
+              {selectedIds.size > 0 && <span className="text-[9px] font-bold">✓</span>}
+            </span>
+            {selectedIds.size > 0 ? `${selectedIds.size}건 선택됨` : "항목을 선택하세요"}
+          </button>
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            className="h-7 text-xs gap-1 active:scale-[0.97]"
+            disabled={bulkDeleting || selectedIds.size === 0}
+            onClick={handleBulkDelete}
+          >
+            <Trash2 className="h-3 w-3" />
+            {bulkDeleting ? "삭제 중..." : "삭제"}
+          </Button>
+        </div>
       )}
 
       {/* ── 수기 입력 폼 (Collapsible, staff only) ── */}
