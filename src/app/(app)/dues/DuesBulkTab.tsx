@@ -230,8 +230,12 @@ function DuesBulkTabInner({
   const handleBulkImageChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const imageUrl = URL.createObjectURL(file);
 
+    // 모바일: 파일 선택 후 페이지 복귀 시 React 렌더가 누락될 수 있으므로
+    // setTimeout으로 다음 틱에서 상태 업데이트 시작
+    await new Promise((r) => setTimeout(r, 100));
+
+    const imageUrl = URL.createObjectURL(file);
     setBulkImage(imageUrl);
     setOcrLoading(true);
     setOcrStatus("스크린샷 분석 중...");
