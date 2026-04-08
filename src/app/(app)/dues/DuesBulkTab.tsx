@@ -220,7 +220,7 @@ function DuesBulkTabInner({
         type: isExpense ? "EXPENSE" : "INCOME",
         amount: rawAmount,
         description,
-        memberName: matchedMember?.id || "",
+        memberName: matchedMember?.memberId || "",
       });
     }
 

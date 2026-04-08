@@ -341,7 +341,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     if (!members.length) return [];
 
     const list = members.map((m) => {
-      const dbStatus = paymentStatusMap.get(m.memberId) ?? paymentStatusMap.get(m.id);
+      const dbStatus = paymentStatusMap.get(m.memberId);
 
       if (dbStatus) {
         return {

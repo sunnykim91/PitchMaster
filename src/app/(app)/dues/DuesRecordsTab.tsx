@@ -140,11 +140,6 @@ function DuesRecordsTabInner({
     const recordedTime = String(formData.get("editTime") || "");
     const userId = autoMatchMember(description);
 
-    // 수정 전 잔고 차액 계산
-    const oldValue = editingRecord.type === "INCOME" ? editingRecord.amount : -editingRecord.amount;
-    const newValue = type === "INCOME" ? amount : -amount;
-    const diff = newValue - oldValue;
-
     const { error } = await apiMutate("/api/dues", "PUT", {
       id: editingRecord.id,
       type,
@@ -155,10 +150,7 @@ function DuesRecordsTabInner({
       recordedTime: recordedTime || undefined,
     });
     if (!error) {
-      // 잔고 조정
-      if (diff !== 0 && summaryBalance !== null) {
-        await apiMutate("/api/dues/balance", "POST", { balance: summaryBalance + diff });
-      }
+      // 수정 시 잔고는 건드리지 않음 (잔고는 OCR/엑셀 기준, 수기 추가 시 선택적)
       await refetchSummary();
       setEditingRecord(null);
     }
