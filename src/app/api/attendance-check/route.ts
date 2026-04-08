@@ -63,6 +63,14 @@ export async function POST(request: NextRequest) {
     if (error) return apiError(error.message);
   }
 
+  // 벌금 자동 생성 (지각/불참 시)
+  if (attendanceStatus === "LATE" || attendanceStatus === "ABSENT") {
+    const targetUserId = userId || null;
+    if (targetUserId) {
+      await generatePenalty(db, ctx.teamId, matchId, targetUserId, attendanceStatus);
+    }
+  }
+
   return apiSuccess({ ok: true });
 }
 
@@ -84,4 +92,61 @@ export async function GET(request: NextRequest) {
 
   if (error) return apiError(error.message);
   return apiSuccess({ attendance: data });
+}
+
+/** 출석 체크 시 벌금 자동 생성 (지각/불참) */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function generatePenalty(db: any, teamId: string, matchId: string, targetUserId: string, status: string) {
+  try {
+    const triggerType = status === "LATE" ? "LATE" : "ABSENT";
+
+    // 해당 트리거의 활성 규칙 조회
+    const { data: rule } = await db
+      .from("penalty_rules")
+      .select("id, amount, name")
+      .eq("team_id", teamId)
+      .eq("trigger_type", triggerType)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+
+    if (!rule) return;
+
+    // 중복 체크
+    const { data: existing } = await db
+      .from("penalty_records")
+      .select("id")
+      .eq("match_id", matchId)
+      .eq("member_id", targetUserId)
+      .eq("rule_id", rule.id)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) return;
+
+    // 경기 날짜 조회
+    const { data: match } = await db
+      .from("matches")
+      .select("match_date, opponent_name")
+      .eq("id", matchId)
+      .single();
+
+    const matchDate = match?.match_date ?? new Date().toISOString().slice(0, 10);
+    const opponent = match?.opponent_name ?? "경기";
+    const label = triggerType === "LATE" ? "지각" : "불참";
+
+    await db.from("penalty_records").insert({
+      team_id: teamId,
+      match_id: matchId,
+      member_id: targetUserId,
+      rule_id: rule.id,
+      amount: rule.amount,
+      date: matchDate,
+      note: `${matchDate} vs ${opponent} ${label}`,
+      status: "UNPAID",
+      is_paid: false,
+    });
+  } catch {
+    // 벌금 생성 실패해도 출석 체크는 성공으로 처리
+  }
 }
