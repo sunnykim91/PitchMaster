@@ -67,6 +67,7 @@ function DuesRecordsTabInner({
   const [filter, setFilter] = useState<RecordFilter>("ALL");
   const [memberFilter, setMemberFilter] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formType, setFormType] = useState<"INCOME" | "EXPENSE">("INCOME");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [editingRecord, setEditingRecord] = useState<DuesRecord | null>(null);
@@ -250,6 +251,8 @@ function DuesRecordsTabInner({
                       <Label className="text-[11px] text-muted-foreground">유형</Label>
                       <NativeSelect
                         name="type"
+                        value={formType}
+                        onChange={(e) => setFormType(e.target.value as "INCOME" | "EXPENSE")}
                         className="h-10 rounded-lg bg-secondary border-0"
                       >
                         <option value="INCOME">입금</option>
@@ -308,34 +311,44 @@ function DuesRecordsTabInner({
                       <Input
                         name="recordedTime"
                         type="time"
+                        defaultValue={`${String(new Date().getHours()).padStart(2, "0")}:${String(new Date().getMinutes()).padStart(2, "0")}`}
                         className="h-10 rounded-lg bg-secondary border-0"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-[11px] text-muted-foreground">결제 수단</Label>
-                      <NativeSelect
-                        name="method"
-                        className="h-10 rounded-lg bg-secondary border-0"
-                      >
-                        <option value="">선택</option>
-                        <option value="계좌이체">계좌이체</option>
-                        <option value="카드">카드</option>
-                        <option value="현금">현금</option>
-                      </NativeSelect>
+                  {formType === "EXPENSE" ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-[11px] text-muted-foreground">결제 수단</Label>
+                        <NativeSelect
+                          name="method"
+                          className="h-10 rounded-lg bg-secondary border-0"
+                        >
+                          <option value="계좌이체">계좌이체</option>
+                          <option value="카드">카드</option>
+                          <option value="현금">현금</option>
+                        </NativeSelect>
+                      </div>
+                      <div className="flex items-end">
+                        <Button
+                          type="submit"
+                          className="w-full h-10 rounded-lg active:scale-[0.97] transition-transform"
+                          disabled={saving}
+                        >
+                          {saving ? "저장 중..." : "저장"}
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-end">
-                      <Button
-                        type="submit"
-                        className="w-full h-10 rounded-lg active:scale-[0.97] transition-transform"
-                        disabled={saving}
-                      >
-                        {saving ? "저장 중..." : "저장"}
-                      </Button>
-                    </div>
-                  </div>
+                  ) : (
+                    <Button
+                      type="submit"
+                      className="w-full h-10 rounded-lg active:scale-[0.97] transition-transform"
+                      disabled={saving}
+                    >
+                      {saving ? "저장 중..." : "저장"}
+                    </Button>
+                  )}
 
                   <p className="text-[11px] text-muted-foreground">
                     내용에 팀원 이름이 포함되면 납부 기록으로 자동 연결됩니다.
