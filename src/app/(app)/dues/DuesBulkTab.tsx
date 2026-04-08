@@ -810,4 +810,4 @@ function DuesBulkTabInner({
   );
 }
 
-export const DuesBulkTab = React.memo(DuesBulkTabInner);
+export const DuesBulkTab = DuesBulkTabInner;
