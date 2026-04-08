@@ -94,6 +94,7 @@ export async function POST(req: NextRequest) {
     // 데이터 행 파싱
     const records: {
       date: string;
+      time: string;
       type: "INCOME" | "EXPENSE";
       amount: number;
       description: string;
@@ -106,16 +107,20 @@ export async function POST(req: NextRequest) {
       const row = rows[i];
       if (!row || !Array.isArray(row)) continue;
 
-      // 날짜 파싱
+      // 날짜 + 시간 파싱
       const dateCell = row[colDate];
       let dateParsed = "";
+      let timeParsed = "";
       if (dateCell instanceof Date) {
         dateParsed = dateCell.toISOString().split("T")[0];
+        timeParsed = dateCell.toTimeString().slice(0, 5); // "HH:mm"
       } else {
         const dateRaw = String(dateCell ?? "").trim();
         if (!dateRaw) continue;
         // "2025.03.20 10:24:09" or "2025-03-20"
-        dateParsed = dateRaw.replace(/\./g, "-").split(" ")[0];
+        const parts = dateRaw.replace(/\./g, "-").split(" ");
+        dateParsed = parts[0];
+        if (parts[1]) timeParsed = parts[1].slice(0, 5); // "10:24"
       }
       if (!dateParsed || dateParsed.length < 8) continue;
 
@@ -163,7 +168,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      records.push({ date: dateParsed, type, amount, description, balance });
+      records.push({ date: dateParsed, time: timeParsed, type, amount, description, balance });
     }
 
     console.log("[Excel] Parsed records:", records.length, "Last balance:", lastBalance);

@@ -98,7 +98,7 @@ function DuesBulkTabInner({
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrStatus, setOcrStatus] = useState("");
   const [excelLoading, setExcelLoading] = useState(false);
-  const [excelRecords, setExcelRecords] = useState<{ date: string; type: "INCOME" | "EXPENSE"; amount: number; description: string; balance: number | null }[]>([]);
+  const [excelRecords, setExcelRecords] = useState<{ date: string; time?: string; type: "INCOME" | "EXPENSE"; amount: number; description: string; balance: number | null }[]>([]);
   const [excelBalance, setExcelBalance] = useState<number | null>(null);
   const [bulkProgress, setBulkProgress] = useState("");
   const bulkSectionRef = useRef<HTMLDivElement>(null);
@@ -728,6 +728,7 @@ function DuesBulkTabInner({
                       description: r.description,
                       userId: autoMatchMember(r.description),
                       recordedAt: r.date,
+                      recordedTime: r.time || undefined,
                     });
                     if (!error) successCount++;
                   }
