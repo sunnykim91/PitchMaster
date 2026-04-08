@@ -91,7 +91,11 @@ export type MemberRow = {
   id: string;
   role: string;
   user_id: string | null;
+  status?: string;
   pre_name: string | null;
+  dormant_type?: string | null;
+  dormant_until?: string | null;
+  dormant_reason?: string | null;
   users: {
     id: string;
     name: string;
