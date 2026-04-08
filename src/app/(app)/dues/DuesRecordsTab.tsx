@@ -73,6 +73,7 @@ function DuesRecordsTabInner({
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [editingRecord, setEditingRecord] = useState<DuesRecord | null>(null);
+  const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
@@ -254,58 +255,63 @@ function DuesRecordsTabInner({
             <option value="INCOME">입금</option>
             <option value="EXPENSE">출금</option>
           </NativeSelect>
+          {isStaffOrAbove(role) && !selectMode && filteredRecords.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setSelectMode(true)}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+              aria-label="선택 모드"
+              title="선택 삭제"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* ── 선택 삭제 바 ── */}
+      {/* ── 선택 모드 바 ── */}
       {isStaffOrAbove(role) && filteredRecords.length > 0 && (
-        <div className="flex items-center justify-between rounded-lg bg-card border border-white/[0.04] px-3 py-1.5">
-          <button
-            type="button"
-            onClick={() => {
-              if (selectedIds.size === filteredRecords.length) {
-                setSelectedIds(new Set());
-              } else {
-                setSelectedIds(new Set(filteredRecords.map((r) => r.id)));
-              }
-            }}
-            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <span className={cn(
-              "flex h-4 w-4 items-center justify-center rounded border transition-colors",
-              selectedIds.size > 0 && selectedIds.size === filteredRecords.length
-                ? "border-primary bg-primary text-white"
-                : selectedIds.size > 0
-                ? "border-primary bg-primary/30 text-primary"
-                : "border-muted-foreground/40"
-            )}>
-              {selectedIds.size > 0 && <span className="text-[9px] font-bold">✓</span>}
-            </span>
-            {selectedIds.size > 0 ? `${selectedIds.size}건 선택` : "선택"}
-          </button>
-          {selectedIds.size > 0 && (
-            <div className="flex items-center gap-2">
+        selectMode ? (
+          <div className="flex items-center justify-between rounded-lg bg-secondary/80 px-3 py-2">
+            <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setSelectedIds(new Set())}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => {
+                  if (selectedIds.size === filteredRecords.length) setSelectedIds(new Set());
+                  else setSelectedIds(new Set(filteredRecords.map((r) => r.id)));
+                }}
+                className="text-xs font-medium text-foreground"
               >
-                취소
+                {selectedIds.size === filteredRecords.length ? "전체 해제" : "전체 선택"}
               </button>
+              <span className="text-xs text-muted-foreground">{selectedIds.size}건</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {selectedIds.size > 0 && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="h-7 text-xs gap-1 active:scale-[0.97]"
+                  disabled={bulkDeleting}
+                  onClick={handleBulkDelete}
+                >
+                  <Trash2 className="h-3 w-3" />
+                  {bulkDeleting ? "삭제 중..." : "삭제"}
+                </Button>
+              )}
               <Button
                 type="button"
-                variant="destructive"
+                variant="ghost"
                 size="sm"
-                className="h-7 text-xs gap-1 active:scale-[0.97]"
-                disabled={bulkDeleting}
-                onClick={handleBulkDelete}
+                className="h-7 text-xs"
+                onClick={() => { setSelectMode(false); setSelectedIds(new Set()); }}
               >
-                <Trash2 className="h-3 w-3" />
-                {bulkDeleting ? "삭제 중..." : "삭제"}
+                취소
               </Button>
             </div>
-          )}
-        </div>
+          </div>
+        ) : null
       )}
 
       {/* ── 수기 입력 폼 (Collapsible, staff only) ── */}
@@ -506,18 +512,18 @@ function DuesRecordsTabInner({
               >
                 <CardContent className="px-4 pb-0">
                   <div className="flex items-center justify-between gap-2">
-                    {isStaffOrAbove(role) && (
+                    {selectMode && (
                       <button
                         type="button"
                         onClick={() => toggleSelect(record.id)}
                         className={cn(
-                          "flex h-4 w-4 items-center justify-center rounded border shrink-0 transition-colors",
+                          "flex h-5 w-5 items-center justify-center rounded-full border-2 shrink-0 transition-all",
                           selectedIds.has(record.id)
-                            ? "border-primary bg-primary text-white"
+                            ? "border-destructive bg-destructive text-white"
                             : "border-muted-foreground/30"
                         )}
                       >
-                        {selectedIds.has(record.id) && <span className="text-[9px] font-bold">✓</span>}
+                        {selectedIds.has(record.id) && <span className="text-[10px] font-bold">✓</span>}
                       </button>
                     )}
                     <div className="min-w-0 flex-1">
@@ -551,7 +557,7 @@ function DuesRecordsTabInner({
                           {record.amount.toLocaleString()}원
                         </span>
                       </div>
-                      {isStaffOrAbove(role) && (
+                      {isStaffOrAbove(role) && !selectMode && (
                         <>
                           <button
                             type="button"
