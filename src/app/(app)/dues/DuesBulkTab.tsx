@@ -187,6 +187,8 @@ function DuesBulkTabInner({
   const handleBulkImageChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    // 같은 파일 재선택 시에도 onChange 발생하도록 value 초기화
+    event.target.value = "";
     const imageUrl = URL.createObjectURL(file);
     setBulkImage(imageUrl);
 
@@ -597,6 +599,7 @@ function DuesBulkTabInner({
           onChange={async (e) => {
             const file = e.target.files?.[0];
             if (!file) return;
+            e.target.value = "";
             setExcelLoading(true);
             setExcelRecords([]);
             setExcelBalance(null);
