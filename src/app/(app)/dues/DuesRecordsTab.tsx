@@ -402,11 +402,11 @@ function DuesRecordsTabInner({
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <Label className="text-[11px] text-muted-foreground">날짜</Label>
-                        <Input name="editDate" type="date" defaultValue={record.recordedAt.slice(0, 10)} className="h-10 rounded-lg bg-secondary border-0" />
+                        <Input name="editDate" type="date" defaultValue={(() => { const d = new Date(record.recordedAt); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })()} className="h-10 rounded-lg bg-secondary border-0" />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-[11px] text-muted-foreground">시간</Label>
-                        <Input name="editTime" type="time" defaultValue={record.recordedAt.includes("T") ? record.recordedAt.split("T")[1]?.slice(0, 5) : ""} className="h-10 rounded-lg bg-secondary border-0" />
+                        <Input name="editTime" type="time" defaultValue={(() => { const d = new Date(record.recordedAt); return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; })()} className="h-10 rounded-lg bg-secondary border-0" />
                       </div>
                     </div>
                     <div className="space-y-1">
