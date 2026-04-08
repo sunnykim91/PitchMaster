@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { isStaffOrAbove } from "@/lib/permissions";
+import { cn } from "@/lib/utils";
 import { apiMutate } from "@/lib/useApi";
 import { useConfirm } from "@/lib/ConfirmContext";
 import type { Role } from "@/lib/types";
@@ -419,13 +420,13 @@ function DuesSettingsTabInner({
       {/* 회비 유형은 개별 추가/수정/삭제 시 즉시 서버에 반영되므로 별도 저장 버튼 불필요 */}
 
       {/* ── 벌금 규칙 설정 ── */}
-      <PenaltyRulesSection />
+      <PenaltyRulesSection refetchSummary={refetchSummary} />
     </div>
   );
 }
 
 // ── 벌금 규칙 관리 ──
-function PenaltyRulesSection() {
+function PenaltyRulesSection({ refetchSummary }: { refetchSummary: () => Promise<void> }) {
   const [rules, setRules] = useState<{ id: string; name: string; trigger_type: string; amount: number; is_active: boolean }[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -449,6 +450,7 @@ function PenaltyRulesSection() {
     if (data) {
       setRules((prev) => [...prev, data as typeof prev[0]]);
       setAdding(false);
+      await refetchSummary();
     }
   }
 
@@ -457,6 +459,14 @@ function PenaltyRulesSection() {
     if (!ok) return;
     await apiMutate("/api/dues/penalty-rules", "DELETE", { id });
     setRules((prev) => prev.filter((r) => r.id !== id));
+    await refetchSummary();
+  }
+
+  async function handleToggleActive(id: string, currentActive: boolean) {
+    const { error } = await apiMutate("/api/dues/penalty-rules", "PUT", { id, isActive: !currentActive });
+    if (!error) {
+      setRules((prev) => prev.map((r) => r.id === id ? { ...r, is_active: !currentActive } : r));
+    }
   }
 
   if (!loaded) return null;
@@ -488,11 +498,26 @@ function PenaltyRulesSection() {
       )}
 
       {rules.map((rule) => (
-        <Card key={rule.id} className="border-white/[0.04] bg-card p-3">
+        <Card key={rule.id} className={cn("border-white/[0.04] bg-card p-3", !rule.is_active && "opacity-50")}>
           <div className="flex items-center justify-between">
-            <div>
-              <span className="text-sm font-semibold">{rule.name}</span>
-              <span className="ml-2 text-xs text-muted-foreground">({TRIGGER_LABELS[rule.trigger_type] || rule.trigger_type})</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleToggleActive(rule.id, rule.is_active)}
+                className={cn(
+                  "h-5 w-9 rounded-full transition-colors relative shrink-0",
+                  rule.is_active ? "bg-[hsl(var(--success))]" : "bg-muted"
+                )}
+              >
+                <span className={cn(
+                  "absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform",
+                  rule.is_active ? "left-[1.1rem]" : "left-0.5"
+                )} />
+              </button>
+              <div>
+                <span className="text-sm font-semibold">{rule.name}</span>
+                <span className="ml-2 text-xs text-muted-foreground">({TRIGGER_LABELS[rule.trigger_type] || rule.trigger_type})</span>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold text-primary">{rule.amount.toLocaleString()}원</span>

@@ -51,7 +51,8 @@ type ApiPenaltyRule = {
   team_id: string;
   name: string;
   amount: number;
-  description: string | null;
+  trigger_type: string;
+  is_active: boolean;
 };
 
 type ApiPenaltyRecord = {
@@ -61,6 +62,7 @@ type ApiPenaltyRecord = {
   member_id: string;
   amount: number;
   date: string;
+  status: string;
   is_paid: boolean;
   note: string | null;
   rule: { name: string };

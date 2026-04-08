@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   if (roleCheck) return roleCheck;
 
   const body = await request.json();
-  const { name, triggerType, amount, description } = body;
+  const { name, triggerType, amount } = body;
 
   if (!name || !amount) return apiError("name and amount required");
 
@@ -42,7 +42,6 @@ export async function POST(request: NextRequest) {
       name,
       trigger_type: triggerType || "CUSTOM",
       amount: Number(amount),
-      description: description || null,
       is_active: true,
     })
     .select()
