@@ -73,6 +73,8 @@ function DuesRecordsTabInner({
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [editingRecord, setEditingRecord] = useState<DuesRecord | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const filteredRecords = useMemo(() => {
     let list = filter === "ALL" ? monthRecords : monthRecords.filter((item) => item.type === filter);
@@ -173,6 +175,28 @@ function DuesRecordsTabInner({
     }
   }, [monthRecords, summaryBalance, refetchSummary]);
 
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    const ok = await confirm({ title: `${selectedIds.size}건을 삭제하시겠습니까?`, variant: "destructive", confirmLabel: "삭제" });
+    if (!ok) return;
+    setBulkDeleting(true);
+    for (const id of selectedIds) {
+      await apiMutate(`/api/dues?id=${id}`, "DELETE");
+    }
+    setSelectedIds(new Set());
+    setBulkDeleting(false);
+    await refetchSummary();
+    showToast(`${selectedIds.size}건 삭제 완료`);
+  }, [selectedIds, confirm, refetchSummary, showToast]);
+
   const [y, m] = monthFilter.split("-").map(Number);
 
   return (
@@ -230,6 +254,40 @@ function DuesRecordsTabInner({
           </NativeSelect>
         </div>
       </div>
+
+      {/* ── 선택 삭제 바 ── */}
+      {isStaffOrAbove(role) && filteredRecords.length > 0 && (
+        <div className="flex items-center justify-between">
+          <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={selectedIds.size > 0 && selectedIds.size === filteredRecords.length}
+              onChange={() => {
+                if (selectedIds.size === filteredRecords.length) {
+                  setSelectedIds(new Set());
+                } else {
+                  setSelectedIds(new Set(filteredRecords.map((r) => r.id)));
+                }
+              }}
+              className="h-3.5 w-3.5 rounded border-border accent-primary"
+            />
+            전체 선택
+          </label>
+          {selectedIds.size > 0 && (
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              className="h-7 text-xs gap-1 active:scale-[0.97]"
+              disabled={bulkDeleting}
+              onClick={handleBulkDelete}
+            >
+              <Trash2 className="h-3 w-3" />
+              {bulkDeleting ? "삭제 중..." : `${selectedIds.size}건 삭제`}
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* ── 수기 입력 폼 (Collapsible, staff only) ── */}
       {isStaffOrAbove(role) && (
@@ -429,6 +487,14 @@ function DuesRecordsTabInner({
               >
                 <CardContent className="px-4 pb-0">
                   <div className="flex items-center justify-between gap-2">
+                    {isStaffOrAbove(role) && (
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(record.id)}
+                        onChange={() => toggleSelect(record.id)}
+                        className="h-3.5 w-3.5 rounded border-border accent-primary shrink-0"
+                      />
+                    )}
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-foreground line-clamp-2 break-all">
                         {record.description}
