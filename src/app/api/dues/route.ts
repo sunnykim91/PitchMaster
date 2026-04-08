@@ -80,36 +80,25 @@ export async function POST(request: NextRequest) {
   if (error) return apiError(error.message);
   console.log("[DUES POST] DB returned recorded_at:", data.recorded_at);
 
-  // 벌금 자동 납부 매칭: INCOME + 멤버 매칭 시 미납 벌금 자동 PAID 처리
+  // 벌금 자동 납부 매칭: 같은 멤버 + 같은 금액의 미납 벌금이 있으면 자동 PAID
   if (body.type === "INCOME" && data.user_id) {
     try {
-      // 해당 멤버의 미납 벌금 조회
-      const { data: unpaidPenalties } = await db
+      const { data: matchingPenalty } = await db
         .from("penalty_records")
-        .select("id, amount")
+        .select("id")
         .eq("team_id", ctx.teamId)
         .eq("member_id", data.user_id)
+        .eq("amount", body.amount)
         .eq("status", "UNPAID")
-        .order("date", { ascending: true });
+        .order("date", { ascending: true })
+        .limit(1)
+        .maybeSingle();
 
-      if (unpaidPenalties && unpaidPenalties.length > 0) {
-        let remaining = body.amount;
-        const toUpdate: string[] = [];
-
-        for (const p of unpaidPenalties) {
-          if (remaining >= p.amount) {
-            toUpdate.push(p.id);
-            remaining -= p.amount;
-          }
-          if (remaining <= 0) break;
-        }
-
-        if (toUpdate.length > 0) {
-          await db
-            .from("penalty_records")
-            .update({ status: "PAID", is_paid: true, dues_record_id: data.id })
-            .in("id", toUpdate);
-        }
+      if (matchingPenalty) {
+        await db
+          .from("penalty_records")
+          .update({ status: "PAID", is_paid: true, dues_record_id: data.id })
+          .eq("id", matchingPenalty.id);
       }
     } catch {
       // 벌금 매칭 실패해도 입금 내역 등록은 성공
