@@ -22,6 +22,8 @@ export async function GET(req: NextRequest) {
   ]);
 
   if (statusRes.error) return apiError(statusRes.error.message);
+  if (exemptionRes.error) console.error("[payment-status] exemption query error:", exemptionRes.error.message);
+  console.log("[payment-status] exemptions count:", exemptionRes.data?.length ?? 0, "month:", month);
   const data = statusRes.data ?? [];
 
   // 활성 면제 상태 중 해당 월과 겹치는 회원 → 자동 EXEMPT 적용
