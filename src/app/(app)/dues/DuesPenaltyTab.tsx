@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, ChevronDown, ChevronUp, Trash2, RefreshCw } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Trash2, RefreshCw } from "lucide-react";
 import { apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useConfirm } from "@/lib/ConfirmContext";
@@ -39,18 +39,36 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
   const [syncing, setSyncing] = useState(false);
   const confirm = useConfirm();
 
-  function fetchPenalties() {
+  // 월별 필터
+  const [monthFilter, setMonthFilter] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
+
+  const fetchPenalties = useCallback(() => {
     setLoading(true);
-    fetch("/api/dues/penalties")
+    fetch(`/api/dues/penalties?month=${monthFilter}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.penalties) setPenalties(data.penalties);
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  }, [monthFilter]);
+
+  useEffect(() => { fetchPenalties(); }, [fetchPenalties]);
+
+  function prevMonth() {
+    const [y, m] = monthFilter.split("-").map(Number);
+    const prev = new Date(y, m - 2);
+    setMonthFilter(`${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`);
   }
 
-  useEffect(() => { fetchPenalties(); }, []);
+  function nextMonth() {
+    const [y, m] = monthFilter.split("-").map(Number);
+    const next = new Date(y, m);
+    setMonthFilter(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`);
+  }
 
   async function handleStatusChange(id: string, status: string) {
     const { error } = await apiMutate("/api/dues/penalties", "PUT", { id, status });
@@ -87,28 +105,13 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="space-y-3">
-        {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
-      </div>
-    );
-  }
+  const [, mm] = monthFilter.split("-");
+  const displayMonth = `${parseInt(mm)}월`;
 
   const unpaid = penalties.filter((p) => p.status === "UNPAID");
   const paid = penalties.filter((p) => p.status === "PAID");
   const waived = penalties.filter((p) => p.status === "WAIVED");
   const totalUnpaid = unpaid.reduce((s, p) => s + p.amount, 0);
-
-  if (penalties.length === 0) {
-    return (
-      <EmptyState
-        icon={AlertTriangle}
-        title="벌금 기록이 없습니다"
-        description="벌금 규칙을 설정하고 출석 체크에서 지각/불참을 등록하면 자동으로 생성됩니다."
-      />
-    );
-  }
 
   const TRIGGER_ICON: Record<string, string> = {
     LATE: "⏰",
@@ -186,60 +189,93 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
 
   return (
     <div className="space-y-4">
-      {/* 미납 총액 + 납부 확인 버튼 */}
-      {totalUnpaid > 0 && (
-        <div className="flex items-center justify-between rounded-xl bg-[hsl(var(--loss)/0.08)] px-4 py-3">
-          <div>
-            <span className="text-sm text-[hsl(var(--loss))]">미납 벌금</span>
-            <span className="text-lg font-bold text-[hsl(var(--loss))] ml-2">{totalUnpaid.toLocaleString()}원</span>
-          </div>
-          {isStaffOrAbove(role) && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1.5 text-xs border-[hsl(var(--loss))]/30 text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss))]/10"
-              disabled={syncing}
-              onClick={handleSyncPayments}
-            >
-              <RefreshCw className={cn("h-3.5 w-3.5", syncing && "animate-spin")} />
-              {syncing ? "확인 중..." : "납부 확인"}
-            </Button>
-          )}
-        </div>
-      )}
+      {/* 월 선택 */}
+      <div className="flex items-center justify-center gap-1">
+        <button
+          type="button"
+          onClick={prevMonth}
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <span className="min-w-[4rem] text-center text-sm font-semibold text-foreground">{displayMonth}</span>
+        <button
+          type="button"
+          onClick={nextMonth}
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
 
-      {/* 미납 목록 */}
-      {unpaid.length > 0 && (
-        <div className="space-y-2">
-          {unpaid.map(renderRow)}
+      {loading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}
         </div>
-      )}
-
-      {/* 면제 */}
-      {waived.length > 0 && (
-        <div className="space-y-2">
-          {waived.map(renderRow)}
-        </div>
-      )}
-
-      {/* 납부 완료 (접기) */}
-      {paid.length > 0 && (
-        <div>
-          <button
-            type="button"
-            onClick={() => setPaidExpanded((p) => !p)}
-            className="flex w-full items-center justify-between rounded-lg bg-[hsl(var(--success)/0.08)] px-3 py-2.5 text-sm font-medium text-[hsl(var(--success))] transition-colors hover:bg-[hsl(var(--success)/0.12)]"
-          >
-            <span>납부 완료 ({paid.length}건)</span>
-            {paidExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </button>
-          {paidExpanded && (
-            <div className="mt-2 space-y-2">
-              {paid.map(renderRow)}
+      ) : penalties.length === 0 ? (
+        <EmptyState
+          icon={AlertTriangle}
+          title={`${displayMonth} 벌금 기록이 없습니다`}
+          description="벌금 규칙을 설정하고 출석 체크에서 지각/불참을 등록하면 자동으로 생성됩니다."
+        />
+      ) : (
+        <>
+          {/* 미납 총액 + 납부 확인 버튼 */}
+          {totalUnpaid > 0 && (
+            <div className="flex items-center justify-between rounded-xl bg-[hsl(var(--loss)/0.08)] px-4 py-3">
+              <div>
+                <span className="text-sm text-[hsl(var(--loss))]">미납 벌금</span>
+                <span className="text-lg font-bold text-[hsl(var(--loss))] ml-2">{totalUnpaid.toLocaleString()}원</span>
+              </div>
+              {isStaffOrAbove(role) && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 text-xs border-[hsl(var(--loss))]/30 text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss))]/10"
+                  disabled={syncing}
+                  onClick={handleSyncPayments}
+                >
+                  <RefreshCw className={cn("h-3.5 w-3.5", syncing && "animate-spin")} />
+                  {syncing ? "확인 중..." : "납부 확인"}
+                </Button>
+              )}
             </div>
           )}
-        </div>
+
+          {/* 미납 목록 */}
+          {unpaid.length > 0 && (
+            <div className="space-y-2">
+              {unpaid.map(renderRow)}
+            </div>
+          )}
+
+          {/* 면제 */}
+          {waived.length > 0 && (
+            <div className="space-y-2">
+              {waived.map(renderRow)}
+            </div>
+          )}
+
+          {/* 납부 완료 (접기) */}
+          {paid.length > 0 && (
+            <div>
+              <button
+                type="button"
+                onClick={() => setPaidExpanded((p) => !p)}
+                className="flex w-full items-center justify-between rounded-lg bg-[hsl(var(--success)/0.08)] px-3 py-2.5 text-sm font-medium text-[hsl(var(--success))] transition-colors hover:bg-[hsl(var(--success)/0.12)]"
+              >
+                <span>납부 완료 ({paid.length}건)</span>
+                {paidExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </button>
+              {paidExpanded && (
+                <div className="mt-2 space-y-2">
+                  {paid.map(renderRow)}
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

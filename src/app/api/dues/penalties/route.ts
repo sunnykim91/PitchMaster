@@ -4,18 +4,28 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
 
 /** 벌금 기록 조회 */
-export async function GET() {
+export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  const { data: records, error } = await db
+  const month = request.nextUrl.searchParams.get("month"); // "2026-04"
+
+  let query = db
     .from("penalty_records")
     .select("*, rule:penalty_rules!rule_id(name, trigger_type), match:matches!match_id(match_date, opponent_name)")
     .eq("team_id", ctx.teamId)
     .order("date", { ascending: false });
+
+  if (month) {
+    const [y, m] = month.split("-").map(Number);
+    const lastDay = new Date(y, m, 0).getDate();
+    query = query.gte("date", `${month}-01`).lte("date", `${month}-${String(lastDay).padStart(2, "0")}`);
+  }
+
+  const { data: records, error } = await query;
 
   if (error) return apiError(error.message);
 
