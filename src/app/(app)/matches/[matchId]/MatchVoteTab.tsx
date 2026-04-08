@@ -12,6 +12,10 @@ import { useToast } from "@/lib/ToastContext";
 import type { Match, RosterPlayer } from "./matchDetailTypes";
 import { voteStyles as styles } from "@/lib/voteStyles";
 
+type ExemptionInfo = { type: string; reason: string | null; endDate: string | null };
+const DORMANT_LABEL: Record<string, string> = { INJURED: "부상", PERSONAL: "개인사정" };
+const DORMANT_ICON: Record<string, string> = { INJURED: "🏥", PERSONAL: "✈️" };
+
 export interface MatchVoteTabProps {
   matchId: string;
   userId: string;
@@ -23,6 +27,7 @@ export interface MatchVoteTabProps {
   guestCount?: number;
   refetchVote: () => Promise<unknown>;
   handleProxyVote: (memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") => Promise<void>;
+  exemptions?: Record<string, ExemptionInfo>;
 }
 
 function MatchVoteTabInner({
@@ -36,6 +41,7 @@ function MatchVoteTabInner({
   guestCount = 0,
   refetchVote,
   handleProxyVote,
+  exemptions = {},
 }: MatchVoteTabProps) {
   const { showToast } = useToast();
   const [voteSearch, setVoteSearch] = useState("");
@@ -85,10 +91,14 @@ function MatchVoteTabInner({
     setIsExpired(match.voteDeadline ? new Date(match.voteDeadline) < new Date() : false);
   }, [match.voteDeadline]);
 
-  const attend = baseRoster.filter((m) => memberVoteMap[m.memberId] === "ATTEND");
-  const absent = baseRoster.filter((m) => memberVoteMap[m.memberId] === "ABSENT");
-  const maybe = baseRoster.filter((m) => memberVoteMap[m.memberId] === "MAYBE");
-  const noVote = baseRoster.filter((m) => !memberVoteMap[m.memberId]);
+  // 휴면 회원은 투표 목록에서 제외
+  const dormantIds = new Set(Object.keys(exemptions));
+  const visibleRoster = baseRoster.filter((m) => !dormantIds.has(m.id));
+
+  const attend = visibleRoster.filter((m) => memberVoteMap[m.memberId] === "ATTEND");
+  const absent = visibleRoster.filter((m) => memberVoteMap[m.memberId] === "ABSENT");
+  const maybe = visibleRoster.filter((m) => memberVoteMap[m.memberId] === "MAYBE");
+  const noVote = visibleRoster.filter((m) => !memberVoteMap[m.memberId]);
 
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -245,7 +255,8 @@ function MatchVoteTabInner({
             </div>
 
             <ul className="max-h-[60vh] space-y-2 overflow-y-auto overscroll-contain" role="list">
-              {[...baseRoster].filter((m) => {
+              {[...visibleRoster].filter((m) => {
+                if (exemptions[m.id]) return false; // 부상/면제도 별도 표시
                 if (voteSearch && !m.name.includes(voteSearch)) return false;
                 if (voteFilter === "unvoted" && memberVoteMap[m.memberId]) return false;
                 return true;
@@ -295,10 +306,26 @@ function MatchVoteTabInner({
                 <Bell className="mr-2 h-4 w-4" />미투표 {noVote.length}명에게 알림 보내기
               </Button>
             )}
+            {/* 휴면 회원 (운영진 뷰) */}
+            {dormantIds.size > 0 && (
+              <div className="border-t border-border/30 pt-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">휴면 ({dormantIds.size}명)</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {baseRoster.filter((m) => dormantIds.has(m.id)).map((m) => {
+                    const info = exemptions[m.id];
+                    return (
+                      <Badge key={m.id} className="border-0 font-medium bg-secondary/50 text-muted-foreground/60">
+                        {DORMANT_ICON[info?.type] ?? ""} {m.name}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       ) : (
-        baseRoster.length > 0 && (
+        visibleRoster.length > 0 && (
           <Card className="rounded-xl border-border/30">
             <CardContent className="space-y-5 p-5">
               {([
@@ -323,6 +350,27 @@ function MatchVoteTabInner({
                   </div>
                 </div>
               ))}
+              {/* 휴면 회원 */}
+              {dormantIds.size > 0 && (
+                <div>
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+                    <span className="text-sm font-semibold text-muted-foreground">휴면</span>
+                    <Badge variant="secondary" className="text-xs">{dormantIds.size}</Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {baseRoster.filter((m) => dormantIds.has(m.id)).map((m) => {
+                      const info = exemptions[m.id];
+                      return (
+                        <Badge key={m.id} className="border-0 font-medium bg-secondary/50 text-muted-foreground/60">
+                          {DORMANT_ICON[info?.type] ?? ""} {m.name}
+                          {info?.type && <span className="ml-1 text-[10px]">({DORMANT_LABEL[info.type] ?? "휴면"})</span>}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )

@@ -19,8 +19,8 @@ export async function GET() {
 
   // Staff+ see all info, members see limited info
   const select = isStaff
-    ? "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, coach_positions, jersey_number, team_role, users(id, name, birth_date, phone, preferred_positions, preferred_foot, profile_image_url)"
-    : "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, coach_positions, jersey_number, team_role, users(id, name, preferred_positions)";
+    ? "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, coach_positions, jersey_number, team_role, dormant_type, dormant_until, dormant_reason, users(id, name, birth_date, phone, preferred_positions, preferred_foot, profile_image_url)"
+    : "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, coach_positions, jersey_number, team_role, dormant_type, dormant_until, dormant_reason, users(id, name, preferred_positions)";
 
   // ACTIVE + DORMANT 멤버 모두 조회
   const { data, error } = await db
@@ -128,18 +128,31 @@ export async function PUT(request: NextRequest) {
     return apiSuccess({ ok: true });
   }
 
-  // 회원 상태 변경 (ACTIVE ↔ DORMANT)
+  // 회원 상태 변경 (ACTIVE ↔ DORMANT, 세분화: INJURED / PERSONAL)
   if (body.action === "update_status") {
-    const { memberId, status } = body;
+    const { memberId, status, dormantType, dormantUntil, dormantReason } = body;
     if (!memberId || !status) return apiError("memberId and status required");
     if (!["ACTIVE", "DORMANT"].includes(status)) return apiError("status must be ACTIVE or DORMANT");
 
     const db = getSupabaseAdmin();
     if (!db) return apiError("Database not available", 503);
 
+    const updates: Record<string, unknown> = { status };
+
+    if (status === "DORMANT") {
+      updates.dormant_type = dormantType || null;
+      updates.dormant_until = dormantUntil || null;
+      updates.dormant_reason = dormantReason || null;
+    } else {
+      // ACTIVE로 복귀 시 휴면 정보 초기화
+      updates.dormant_type = null;
+      updates.dormant_until = null;
+      updates.dormant_reason = null;
+    }
+
     const { error } = await db
       .from("team_members")
-      .update({ status })
+      .update(updates)
       .eq("id", memberId)
       .eq("team_id", ctx.teamId);
 

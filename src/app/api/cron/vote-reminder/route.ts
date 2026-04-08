@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { sendTeamPush } from "@/lib/server/sendPush";
+import { getActiveExemptions } from "@/lib/server/getActiveExemptions";
 
 /** 투표 마감 하루 전 자동 알림 (Vercel Cron으로 매일 09:00 KST 실행) */
 export async function GET(request: NextRequest) {
@@ -60,7 +61,10 @@ export async function GET(request: NextRequest) {
       .eq("status", "ACTIVE")
       .not("user_id", "is", null);
 
-    const allIds = (members ?? []).map((m) => m.user_id).filter(Boolean) as string[];
+    const allIdsRaw = (members ?? []).map((m) => m.user_id).filter(Boolean) as string[];
+    // 면제/휴회/부상 회원 제외
+    const exemptions = await getActiveExemptions(match.team_id);
+    const allIds = allIdsRaw.filter((uid) => !exemptions.has(uid));
 
     const { data: voted } = await db
       .from("match_attendance")

@@ -98,6 +98,17 @@ export async function GET(request: NextRequest) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function generatePenalty(db: any, teamId: string, matchId: string, targetUserId: string, status: string) {
   try {
+    // 면제/휴회/부상 회원이면 벌금 생성 안 함
+    const { data: exemption } = await db
+      .from("member_dues_exemptions")
+      .select("id")
+      .eq("team_id", teamId)
+      .eq("member_id", targetUserId)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+    if (exemption) return;
+
     const triggerType = status === "LATE" ? "LATE" : "ABSENT";
 
     // 해당 트리거의 활성 규칙 조회

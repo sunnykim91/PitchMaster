@@ -3,6 +3,7 @@ import { getApiContext, requireRole, apiError, apiSuccess } from "@/lib/api-help
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
 import { sendTeamPush } from "@/lib/server/sendPush";
+import { getActiveExemptions } from "@/lib/server/getActiveExemptions";
 
 /** 운영진이 특정 경기의 미투표자에게 투표독려 알림 발송 */
 export async function POST(request: NextRequest) {
@@ -36,7 +37,10 @@ export async function POST(request: NextRequest) {
     .eq("status", "ACTIVE")
     .not("user_id", "is", null);
 
-  const allUserIds = (members ?? []).map((m) => m.user_id).filter(Boolean) as string[];
+  const allUserIdsRaw = (members ?? []).map((m) => m.user_id).filter(Boolean) as string[];
+  // 면제/휴회/부상 회원 제외
+  const exemptions = await getActiveExemptions(ctx.teamId);
+  const allUserIds = allUserIdsRaw.filter((uid) => !exemptions.has(uid));
 
   // 이미 투표한 유저 제외
   const { data: voted } = await db

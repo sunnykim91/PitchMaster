@@ -428,8 +428,68 @@ function DuesSettingsTabInner({
       {/* ── 벌금 규칙 설정 ── */}
       <PenaltyRulesSection refetchSummary={refetchSummary} />
 
-      {/* ── 회원 회비 상태 관리 ── */}
+      {/* ── 회원 회비 면제 관리 ── */}
       <MemberExemptionSection members={members ?? []} refetchPaymentStatus={refetchPaymentStatus} />
+    </div>
+  );
+}
+
+// ── 휴회비 설정 ──
+function LeaveDuesSetting({ refetchSummary }: { refetchSummary: () => Promise<void> }) {
+  const [amount, setAmount] = useState<string>("");
+  const [loaded, setLoaded] = useState(false);
+  const [settingId, setSettingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  React.useEffect(() => {
+    fetch("/api/dues-settings")
+      .then((r) => r.json())
+      .then((data) => {
+        const leaveRow = (data.settings ?? []).find((s: { member_type: string }) => s.member_type === "__LEAVE__");
+        if (leaveRow) {
+          setAmount(String(leaveRow.monthly_amount));
+          setSettingId(leaveRow.id);
+        }
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
+  }, []);
+
+  async function handleSave() {
+    const numAmount = Number(amount.replace(/\D/g, "")) || 0;
+    setSaving(true);
+
+    if (settingId) {
+      await apiMutate("/api/dues-settings", "PUT", { id: settingId, monthlyAmount: numAmount });
+    } else if (numAmount > 0) {
+      const { data } = await apiMutate("/api/dues-settings", "POST", { memberType: "__LEAVE__", monthlyAmount: numAmount, description: "휴회비" });
+      if (data && typeof data === "object" && "id" in data) setSettingId((data as { id: string }).id);
+    }
+
+    setSaving(false);
+    await refetchSummary();
+  }
+
+  if (!loaded) return null;
+
+  return (
+    <div className="mt-6 space-y-2">
+      <h3 className="text-sm font-bold text-foreground">휴회비</h3>
+      <p className="text-xs text-muted-foreground">휴회 중인 회원에게 적용되는 금액입니다. 0원이면 회비 면제.</p>
+      <div className="flex items-center gap-2">
+        <Input
+          type="text"
+          inputMode="numeric"
+          placeholder="10,000"
+          value={amount ? new Intl.NumberFormat("ko-KR").format(Number(amount.replace(/\D/g, ""))) : ""}
+          onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))}
+          className="h-10 w-32 text-sm"
+        />
+        <span className="text-sm text-muted-foreground">원</span>
+        <Button size="sm" className="h-10" disabled={saving} onClick={handleSave}>
+          {saving ? "저장 중..." : settingId ? "수정" : "설정"}
+        </Button>
+      </div>
     </div>
   );
 }

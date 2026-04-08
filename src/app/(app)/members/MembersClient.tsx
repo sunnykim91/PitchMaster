@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn, formatPhone } from "@/lib/utils";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Search } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { Users } from "lucide-react";
@@ -38,6 +39,9 @@ type Member = {
   joinedAt: string;
   jerseyNumber: number | null;
   teamRole: string | null;
+  dormantType: string | null;
+  dormantUntil: string | null;
+  dormantReason: string | null;
 };
 
 type ApiMemberRow = {
@@ -51,6 +55,9 @@ type ApiMemberRow = {
   coach_positions?: string[] | null;
   jersey_number?: number | null;
   team_role?: string | null;
+  dormant_type?: string | null;
+  dormant_until?: string | null;
+  dormant_reason?: string | null;
   users: {
     id: string;
     name: string;
@@ -79,6 +86,9 @@ function mapApiMembers(rows: ApiMemberRow[]): Member[] {
     joinedAt: row.joined_at,
     jerseyNumber: row.jersey_number ?? null,
     teamRole: row.team_role ?? null,
+    dormantType: row.dormant_type ?? null,
+    dormantUntil: row.dormant_until ?? null,
+    dormantReason: row.dormant_reason ?? null,
   }));
 }
 
@@ -142,6 +152,15 @@ export default function MembersClient({
 
   // 카드 확장 상태
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // 휴면 설정 폼
+  const [showDormantForm, setShowDormantForm] = useState<string | null>(null);
+  const [dormantType, setDormantType] = useState<string>("INJURED");
+  const [dormantUntil, setDormantUntil] = useState("");
+  const [dormantReason, setDormantReason] = useState("");
+
+  const DORMANT_LABELS: Record<string, string> = { INJURED: "부상", PERSONAL: "개인사정" };
+  const DORMANT_ICONS: Record<string, string> = { INJURED: "🏥", PERSONAL: "✈️" };
 
   const POSITIONS = ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"];
 
@@ -270,14 +289,21 @@ export default function MembersClient({
     }
   }
 
-  async function handleStatusChange(memberId: string, newStatus: "ACTIVE" | "DORMANT") {
+  async function handleStatusChange(memberId: string, newStatus: "ACTIVE" | "DORMANT", opts?: { dormantType?: string; dormantUntil?: string; dormantReason?: string }) {
     const { error: err } = await apiMutate("/api/members", "PUT", {
       action: "update_status",
       memberId,
       status: newStatus,
+      ...(opts ?? {}),
     });
     if (!err) {
-      showToast(newStatus === "DORMANT" ? "휴면 처리되었습니다." : "활동 회원으로 복귀했습니다.");
+      if (newStatus === "DORMANT") {
+        const label = DORMANT_LABELS[opts?.dormantType ?? ""] ?? "휴면";
+        showToast(`${label} 처리되었습니다.`);
+      } else {
+        showToast("활동 회원으로 복귀했습니다.");
+      }
+      setShowDormantForm(null);
       await refetch();
     } else {
       showToast("상태 변경에 실패했습니다.", "error");
@@ -654,6 +680,14 @@ export default function MembersClient({
                       {member.teamRole === "VICE_CAPTAIN" && (
                         <Badge variant="secondary" className="text-xs px-1.5 py-0 shrink-0">부주장</Badge>
                       )}
+                      {member.status === "DORMANT" && member.dormantType && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0 bg-muted-foreground/15 text-muted-foreground">
+                          {DORMANT_ICONS[member.dormantType]} {DORMANT_LABELS[member.dormantType] ?? "휴면"}
+                          {member.dormantUntil && (
+                            <span className="ml-0.5">~{member.dormantUntil.slice(5)}</span>
+                          )}
+                        </Badge>
+                      )}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground truncate">
                       {member.preferredPositions.join(" · ") || "포지션 미설정"}
@@ -793,10 +827,41 @@ export default function MembersClient({
                         )}
                         {canKick && member.userIdRaw !== userId && (
                           <>
-                            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => handleStatusChange(member.id, "DORMANT")}>휴면</Button>
+                            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setShowDormantForm(member.id); setDormantType("INJURED"); setDormantUntil(""); setDormantReason(""); }}>
+                              휴면 설정
+                            </Button>
                             <Button size="sm" variant="outline" className="h-8 text-xs text-destructive hover:bg-destructive/10" onClick={async () => { const ok = await confirm({ title: `${member.name} 님을 제명하시겠습니까?`, variant: "destructive", confirmLabel: "제명" }); if (ok) handleKick(member.id); }}>제명</Button>
                           </>
                         )}
+                      </div>
+                    )}
+
+                    {/* 휴면 설정 폼 */}
+                    {showDormantForm === member.id && (
+                      <div className="mt-3 rounded-lg border border-primary/20 bg-card p-3 space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-[11px] text-muted-foreground">사유</Label>
+                            <NativeSelect value={dormantType} onChange={(e) => setDormantType(e.target.value)} className="h-9 text-sm">
+                              <option value="INJURED">🏥 부상</option>
+                              <option value="PERSONAL">✈️ 개인사정</option>
+                            </NativeSelect>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[11px] text-muted-foreground">복귀 예정일</Label>
+                            <Input type="date" value={dormantUntil} onChange={(e) => setDormantUntil(e.target.value)} className="h-9 text-sm" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[11px] text-muted-foreground">메모 (선택)</Label>
+                          <Input value={dormantReason} onChange={(e) => setDormantReason(e.target.value)} placeholder="예: 무릎 인대 부상, 해외 출장" className="h-9 text-sm" />
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                          <Button type="button" variant="ghost" size="sm" onClick={() => setShowDormantForm(null)}>취소</Button>
+                          <Button size="sm" onClick={() => handleStatusChange(member.id, "DORMANT", { dormantType, dormantUntil: dormantUntil || undefined, dormantReason: dormantReason || undefined })}>
+                            휴면 처리
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -833,15 +898,23 @@ export default function MembersClient({
                   className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-secondary/30 px-4 py-3"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-muted-foreground">{member.name}</p>
-                    {member.isLinked && (
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-semibold text-muted-foreground">{member.name}</p>
+                      {member.dormantType && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-muted-foreground/15 text-muted-foreground">
+                          {DORMANT_ICONS[member.dormantType]} {DORMANT_LABELS[member.dormantType]}
+                          {member.dormantUntil && <span className="ml-0.5">~{member.dormantUntil.slice(5)}</span>}
+                        </Badge>
+                      )}
+                    </div>
+                    {(member.dormantReason || (member.isLinked && member.preferredPositions.length > 0)) && (
                       <p className="text-xs text-muted-foreground/60">
-                        {member.preferredPositions.length > 0 ? member.preferredPositions.join(", ") : "포지션 미설정"}
+                        {member.dormantReason || member.preferredPositions.join(", ")}
                       </p>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">휴면</Badge>
+                    {!member.dormantType && <Badge variant="secondary" className="text-xs">휴면</Badge>}
                     {canKick && (
                       <Button
                         variant="outline"

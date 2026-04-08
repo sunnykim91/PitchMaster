@@ -240,6 +240,12 @@ export default function MatchDetailClient({
   const canRecord = true; // 골/어시 기록은 모든 회원 가능
   const confirm = useConfirm();
 
+  // 면제/휴회/부상 데이터 (SSR에서 전달)
+  const exemptions = useMemo<Record<string, { type: string; reason: string | null; endDate: string | null }>>(
+    () => initialData?.exemptions ?? {},
+    [initialData?.exemptions]
+  );
+
   /* ── Attendance handler (출석 탭용) ── */
   const handleAttendance = useCallback(async (player: { id: string; memberId?: string; isLinked?: boolean }, status: "PRESENT" | "ABSENT" | "LATE") => {
     await apiMutate("/api/attendance-check", "POST", {
@@ -469,6 +475,7 @@ export default function MatchDetailClient({
           guestCount={guests.length}
           refetchVote={refetchVote}
           handleProxyVote={handleProxyVote}
+          exemptions={exemptions}
         />
       </div>
 

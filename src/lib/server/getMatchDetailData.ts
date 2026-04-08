@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getActiveExemptions } from "@/lib/server/getActiveExemptions";
 
 export async function getMatchDetailData(matchId: string, teamId: string) {
   const db = getSupabaseAdmin();
@@ -17,6 +18,13 @@ export async function getMatchDetailData(matchId: string, teamId: string) {
     db.from("match_attendance").select("id, match_id, user_id, member_id, vote, voted_at, users(id, name, preferred_positions), member:team_members(id, pre_name, user_id, coach_positions, users(id, name, preferred_positions))").eq("match_id", matchId),
   ]);
 
+  // 면제/휴회/부상 회원 조회
+  const exemptionMap = await getActiveExemptions(teamId);
+  const exemptions: Record<string, { type: string; reason: string | null; endDate: string | null }> = {};
+  for (const [mid, info] of exemptionMap) {
+    exemptions[mid] = { type: info.type ?? "DORMANT", reason: info.reason, endDate: info.until };
+  }
+
   return {
     matches: matchRes.data ? { matches: [matchRes.data] } : { matches: [] },
     goals: { goals: goalsRes.data ?? [] },
@@ -28,5 +36,6 @@ export async function getMatchDetailData(matchId: string, teamId: string) {
     members: { members: membersRes.data ?? [] },
     team: { team: teamRes.data ?? {} },
     vote: { attendance: voteRes.data ?? [] },
+    exemptions,
   };
 }

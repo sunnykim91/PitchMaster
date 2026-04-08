@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getActiveExemptions } from "@/lib/server/getActiveExemptions";
 
 /**
  * 미투표 벌금 자동 생성 크론 (매일 KST 23:00 실행)
@@ -83,8 +84,12 @@ export async function GET(request: NextRequest) {
       .eq("status", "ACTIVE")
       .not("user_id", "is", null);
 
-    const allUserIds = (members ?? []).map((m) => m.user_id).filter(Boolean) as string[];
-    if (allUserIds.length === 0) continue;
+    const allUserIdsRaw = (members ?? []).map((m) => m.user_id).filter(Boolean) as string[];
+    if (allUserIdsRaw.length === 0) continue;
+
+    // 면제/휴회/부상 회원 제외
+    const exemptions = await getActiveExemptions(match.team_id);
+    const allUserIds = allUserIdsRaw.filter((uid) => !exemptions.has(uid));
 
     // 투표한 멤버
     const { data: voted } = await db
