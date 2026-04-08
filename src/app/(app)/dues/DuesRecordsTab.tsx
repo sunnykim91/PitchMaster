@@ -48,6 +48,7 @@ export type DuesRecordsTabProps = {
   showToast: (msg: string, type?: "success" | "error" | "info") => void;
   autoMatchMember: (description: string) => string | undefined;
   summaryBalance: number | null;
+  duesAmounts: number[];
 };
 
 function DuesRecordsTabInner({
@@ -61,6 +62,7 @@ function DuesRecordsTabInner({
   showToast,
   autoMatchMember,
   summaryBalance,
+  duesAmounts,
 }: DuesRecordsTabProps) {
   const confirm = useConfirm();
   /* ── 탭 전용 state ── */
@@ -433,7 +435,7 @@ function DuesRecordsTabInner({
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {(() => { const d = new Date(record.recordedAt); const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000); const [, mm, dd] = kst.toISOString().slice(0, 10).split("-"); return `${Number(mm)}월 ${Number(dd)}일`; })()}
-                        {record.memberName && record.type === "INCOME" ? (
+                        {record.memberName && record.type === "INCOME" && duesAmounts.includes(record.amount) ? (
                           <> · <span className="text-[hsl(var(--info))]">회비 매칭</span></>
                         ) : null}
                       </p>

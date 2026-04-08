@@ -639,6 +639,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           showToast={showToast}
           autoMatchMember={autoMatchMember}
           summaryBalance={summaryData.balance}
+          duesAmounts={duesAmounts}
         />
       </div>
 
