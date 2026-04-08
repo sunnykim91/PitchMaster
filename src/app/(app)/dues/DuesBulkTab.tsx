@@ -115,7 +115,9 @@ function DuesBulkTabInner({
     const lines = ocrText.split("\n").map((l) => l.trim()).filter(Boolean);
     const year = new Date().getFullYear();
 
-    let currentDate = "";
+    // 날짜 헤더가 스크린샷 위에 잘려서 안 보일 수 있으므로 기본값은 오늘
+    const today = `${year}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}`;
+    let currentDate = today;
     let latestBalance: number | null = null;
     let isFirstBalance = true;
 
