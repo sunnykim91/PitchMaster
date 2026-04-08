@@ -115,9 +115,24 @@ function DuesBulkTabInner({
     const lines = ocrText.split("\n").map((l) => l.trim()).filter(Boolean);
     const year = new Date().getFullYear();
 
-    // 날짜 헤더가 스크린샷 위에 잘려서 안 보일 수 있으므로 기본값은 오늘
-    const today = `${year}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}`;
-    let currentDate = today;
+    // 첫 번째 날짜 헤더를 미리 찾아서, 그 위 거래들은 다음 날로 추정
+    let firstDateInText = "";
+    for (const l of lines) {
+      const dm = l.match(/^(\d{1,2})\.(\d{1,2})$/);
+      if (dm) {
+        firstDateInText = `${year}-${dm[1].padStart(2, "0")}-${dm[2].padStart(2, "0")}`;
+        break;
+      }
+    }
+    let currentDate: string;
+    if (firstDateInText) {
+      // 첫 날짜 헤더의 다음 날 (은행 앱은 최신순 → 위쪽이 더 최근)
+      const d = new Date(firstDateInText);
+      d.setDate(d.getDate() + 1);
+      currentDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    } else {
+      currentDate = `${year}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}`;
+    }
     let latestBalance: number | null = null;
     let isFirstBalance = true;
 
