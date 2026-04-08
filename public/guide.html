@@ -278,33 +278,87 @@
 
   <section id="dues">
     <h2><span class="num">5</span>회비 관리</h2>
-    <p>통장 내역을 올리면 자동으로 정리됩니다.</p>
+    <p>통장 내역을 올리면 자동으로 정리됩니다. 5개 탭으로 회비를 완벽하게 관리하세요.</p>
 
     <div class="step-flow">
+      <span class="step">회비 설정</span>
+      <span class="arrow">→</span>
       <span class="step">통장 내역 올리기</span>
       <span class="arrow">→</span>
-      <span class="step">이름·금액 자동 인식</span>
+      <span class="step">자동 인식</span>
       <span class="arrow">→</span>
-      <span class="step">납부 현황 자동 정리</span>
+      <span class="step">납부 현황 확인</span>
     </div>
 
+    <h3>📊 입출금 탭</h3>
     <div class="card">
       <div class="card-desc">
-        · <strong>엑셀 업로드</strong>: 은행 앱에서 다운로드한 거래내역 파일을 그대로 올리면 됩니다<br>
-        · <strong>스크린샷</strong>: 통장 거래내역 캡쳐 이미지를 올리면 글자를 자동 인식합니다<br>
-        · 입금자 이름으로 <strong>팀원을 자동 매칭</strong>합니다<br>
-        · 회원에게는 <strong>본인 납부 내역만</strong> 보여서 프라이버시가 보호됩니다
+        · 월별 입출금 내역을 한눈에 확인<br>
+        · <strong>수기 입력</strong>: 유형(입금/출금) · 금액 · 날짜 · 시간 · 결제수단(출금만) 직접 등록<br>
+        · 내용에 팀원 이름이 포함되면 <strong>납부 기록 자동 연결</strong><br>
+        · 잔고 반영 여부 선택 가능 (체크박스)<br>
+        · 수정/삭제는 아이콘 버튼으로 간편하게
       </div>
     </div>
 
-    <details>
-      <summary class="faq-q">📂 엑셀 업로드 형식 안내</summary>
-      <div class="faq-a">
-        <strong>지원 은행:</strong> 카카오뱅크, 토스뱅크, 국민, 신한, 우리, 하나 등 대부분의 은행<br><br>
-        은행 앱에서 내려받은 엑셀 파일을 <strong>편집 없이 그대로</strong> 올려주세요.<br>
-        "거래일시"와 "거래금액" 항목을 자동으로 찾아서 처리합니다.
+    <h3>✅ 납부현황 탭 <span class="badge badge-staff">운영진</span></h3>
+    <div class="card">
+      <div class="card-desc">
+        · 미납 · 면제 · 납부 완료 <strong>그룹별 접기/펼치기</strong><br>
+        · <strong>납부 자동 확인</strong>: 입금 내역에서 회비 금액과 이름을 매칭하여 자동 처리<br>
+        · <strong>미납 알림</strong>: 미납 회원에게 푸시 알림 일괄 전송<br>
+        · <strong>장기 미납자</strong> 자동 감지 (2개월 이상 연속 미납)<br>
+        · 회원별 납부 상태를 수동으로 변경 가능 (납부/미납/면제)
       </div>
-    </details>
+    </div>
+
+    <h3>📤 업로드 탭 <span class="badge badge-staff">운영진</span></h3>
+    <div class="card">
+      <div class="card-desc">
+        · <strong>스크린샷 OCR</strong>: 통장 거래내역 캡쳐를 올리면 자동 인식 (이름 · 금액 · 날짜 · 시간 · 메모)<br>
+        · <strong>엑셀 업로드</strong>: 은행 앱에서 다운로드한 파일을 그대로 올리면 됩니다<br>
+        · 중복 내역 자동 감지 및 제외<br>
+        · 인식 결과를 편집한 후 일괄 저장<br>
+        · 잔고 자동 반영 (기존 잔고보다 최신일 때만)
+      </div>
+    </div>
+    <div class="tip">지원 은행: 카카오뱅크, 토스뱅크, 국민, 신한, 우리, 하나, 농협</div>
+
+    <h3>⚙️ 설정 탭 <span class="badge badge-staff">운영진</span></h3>
+    <div class="card">
+      <div class="card-desc">
+        · <strong>납부 기준일</strong>: 매월 N일 기준으로 회비 기간 자동 계산<br>
+        · <strong>회비 유형</strong>: 일반 · 학생 · 신입 등 유형별 금액 설정, 인라인 편집<br>
+        · <strong>벌금 규칙</strong>: 지각 · 불참 · 미투표 시 자동 벌금 부과 규칙 등록<br>
+        · <strong>회원 회비 상태</strong>: 면제 · 휴회 · 부상 등 기간 설정 (아래 상세)
+      </div>
+    </div>
+
+    <h3>🏥 회원 회비 상태 (면제/휴회/부상)</h3>
+    <div class="card">
+      <div class="card-desc">
+        장기 면제가 필요한 회원을 등록하면 <strong>매월 자동으로 면제 처리</strong>됩니다.<br><br>
+        · <strong>면제</strong>: 운영진, 특별 면제 등 (예: "운영진 면제")<br>
+        · <strong>휴회</strong>: 장기 휴식 (예: "해외 출장 3개월")<br>
+        · <strong>부상</strong>: 부상으로 인한 면제 (예: "무릎 수술 회복")<br><br>
+        <strong>사용법:</strong><br>
+        1. 설정 탭 → 하단 "회원 회비 상태" → [추가]<br>
+        2. 회원 선택, 상태(면제/휴회/부상), 사유, 시작일~종료일 입력<br>
+        3. 등록 완료 → 해당 기간 동안 납부현황에서 <strong>자동 면제</strong> 처리<br>
+        4. 종료일이 지나면 자동으로 일반 상태 복귀<br>
+        5. [종료] 버튼으로 조기 종료 가능, 이력은 보존됨
+      </div>
+    </div>
+    <div class="tip">이미 "납부 완료"로 처리된 회원은 면제로 덮어쓰지 않습니다.</div>
+
+    <h3>💰 벌금 탭</h3>
+    <div class="card">
+      <div class="card-desc">
+        · 경기 완료 시 설정된 규칙에 따라 <strong>자동 벌금 부과</strong><br>
+        · 지각비 · 불참비 · 미투표 벌금 등 자유 설정<br>
+        · 회원별 벌금 현황 확인 및 납부 처리
+      </div>
+    </div>
   </section>
 
   <section id="lineup">
@@ -389,6 +443,18 @@
       <div class="card">
         <div class="card-title">🏃 용병 관리</div>
         <div class="card-desc">경기별 용병 등록 · 포지션 지정 · 전술판 배치</div>
+      </div>
+      <div class="card">
+        <div class="card-title">👕 유니폼 관리</div>
+        <div class="card-desc">홈 · 원정 · 써드 유니폼 색상+패턴 설정, 경기별 선택</div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 출석 체크</div>
+        <div class="card-desc">참석 · 지각 · 불참 기록, 전원 참석 처리, 출석 현황 요약</div>
+      </div>
+      <div class="card">
+        <div class="card-title">📆 팀 일정</div>
+        <div class="card-desc">경기 외 팀 행사(회식, 워크샵 등) 등록 및 참석 투표</div>
       </div>
       <div class="card">
         <div class="card-title">💸 회비 미납 알림</div>
@@ -566,6 +632,21 @@
     <details class="faq-item">
       <summary class="faq-q">완료된 경기의 참석자를 수정할 수 있나요?</summary>
       <div class="faq-a">네, 운영진 이상은 완료된 경기에서도 투표 탭에서 참석자를 추가/수정할 수 있습니다.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">회원을 장기 면제/휴회 처리하려면?</summary>
+      <div class="faq-a">회비 > 설정 탭 > 하단 <strong>"회원 회비 상태"</strong>에서 [추가]를 눌러 면제/휴회/부상 상태를 등록하세요. 시작일~종료일을 설정하면 해당 기간 동안 <strong>매월 자동으로 면제 처리</strong>됩니다. 종료일을 비워두면 무기한입니다.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">벌금 규칙은 어떻게 설정하나요?</summary>
+      <div class="faq-a">회비 > 설정 탭 > <strong>"벌금 규칙"</strong>에서 [추가]를 눌러 규칙 이름(예: 지각비), 트리거(지각/불참/미투표/기타), 금액을 설정합니다. 경기가 완료되면 해당 규칙에 따라 <strong>자동으로 벌금이 부과</strong>됩니다.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-q">유니폼은 어떻게 설정하나요?</summary>
+      <div class="faq-a">설정 > 팀 설정 > <strong>유니폼</strong>에서 홈/원정/써드 유니폼의 메인 색상, 서브 색상, 패턴(단색/세로줄/가로줄/대각선)을 설정합니다. 경기 정보 탭에서 어떤 유니폼을 입을지 선택할 수 있습니다.</div>
     </details>
 
     <details class="faq-item">
