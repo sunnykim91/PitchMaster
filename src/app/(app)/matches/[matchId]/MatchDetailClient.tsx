@@ -12,7 +12,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Check } from "lucide-react";
+import { useConfirm } from "@/lib/ConfirmContext";
 import Link from "next/link";
 import type { SportType } from "@/lib/types";
 
@@ -219,7 +220,7 @@ export default function MatchDetailClient({
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const validTabs = ["info", "vote", "tactics", "record", "diary"] as const;
+  const validTabs = ["info", "vote", "tactics", "attendance", "record", "diary"] as const;
   type TabKey = (typeof validTabs)[number];
   const tabFromUrl = searchParams.get("tab") as TabKey | null;
   const [activeTab, setActiveTabState] = useState<TabKey>(
@@ -237,6 +238,17 @@ export default function MatchDetailClient({
   const canManageAttendance = isStaffOrAbove(role);
   const canManage = isStaffOrAbove(role);
   const canRecord = true; // 골/어시 기록은 모든 회원 가능
+  const confirm = useConfirm();
+
+  /* ── Attendance handler (출석 탭용) ── */
+  const handleAttendance = useCallback(async (player: { id: string; memberId?: string; isLinked?: boolean }, status: "PRESENT" | "ABSENT" | "LATE") => {
+    await apiMutate("/api/attendance-check", "POST", {
+      matchId,
+      ...(player.isLinked !== false ? { userId: player.id } : { memberId: player.memberId }),
+      status,
+    });
+    await refetchAttendance();
+  }, [matchId, refetchAttendance]);
 
   const baseRoster = useMemo(
     () =>
@@ -394,6 +406,7 @@ export default function MatchDetailClient({
             { key: "vote", label: "투표" },
             ...(match.matchType !== "EVENT" ? [
               { key: "tactics" as const, label: "전술" },
+              { key: "attendance" as const, label: "출석" },
               { key: "record" as const, label: "기록" },
               { key: "diary" as const, label: "일지" },
             ] : []),
@@ -477,6 +490,115 @@ export default function MatchDetailClient({
         />
       </div>
 
+      {/* ── Tab: 출석 체크 ── */}
+      <div className={activeTab === "attendance" ? "" : "hidden"}>
+        <section className="space-y-4 py-4">
+          {canManageAttendance ? (
+            <Card className="rounded-xl border-border/30">
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <h3 className="text-base font-bold">출석 체크</h3>
+                {attendingMembers.length > 0 && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 px-3 text-sm font-medium text-primary"
+                    onClick={async () => {
+                      const ok = await confirm({
+                        title: "전원 참석 처리",
+                        description: `참석 투표한 ${attendingMembers.length}명 전원을 출석으로 처리합니다.`,
+                        confirmLabel: "전원 참석 처리",
+                        cancelLabel: "취소",
+                      });
+                      if (ok) {
+                        await Promise.all(
+                          attendingMembers.map((player) => handleAttendance(player, "PRESENT"))
+                        );
+                      }
+                    }}
+                  >
+                    전원 참석 처리
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                {attendingMembers.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">참석 투표한 멤버가 없습니다</p>
+                ) : (
+                  <div className="space-y-2">
+                    {attendingMembers.map((player) => {
+                      const status = attendance[player.id];
+                      return (
+                        <Card key={player.id} className="border-0 bg-secondary shadow-none">
+                          <CardContent className="flex items-center justify-between px-4 py-3">
+                            <div className="flex items-center gap-2 min-w-0">
+                              {status && (
+                                <div className={cn(
+                                  "flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
+                                  status === "PRESENT" && "bg-[hsl(var(--success))]/20",
+                                  status === "LATE" && "bg-[hsl(var(--warning))]/20",
+                                  status === "ABSENT" && "bg-destructive/20",
+                                )}>
+                                  <Check className={cn(
+                                    "h-3 w-3",
+                                    status === "PRESENT" && "text-[hsl(var(--success))]",
+                                    status === "LATE" && "text-[hsl(var(--warning))]",
+                                    status === "ABSENT" && "text-destructive",
+                                  )} />
+                                </div>
+                              )}
+                              <span className="text-sm font-semibold truncate">{player.name}</span>
+                            </div>
+                            <div className="flex gap-1 shrink-0">
+                              <Button type="button" variant={status === "PRESENT" ? "default" : "outline"} size="sm" onClick={() => handleAttendance(player, "PRESENT")}>참석</Button>
+                              <Button type="button" variant={status === "LATE" ? "warning" : "outline"} size="sm" onClick={() => handleAttendance(player, "LATE")}>지각</Button>
+                              <Button type="button" variant={status === "ABSENT" ? "destructive" : "outline"} size="sm" onClick={() => handleAttendance(player, "ABSENT")}>불참</Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+                {/* 출석 현황 요약 */}
+                {attendingMembers.length > 0 && (() => {
+                  const present = attendingMembers.filter((m) => attendance[m.id] === "PRESENT").length;
+                  const late = attendingMembers.filter((m) => attendance[m.id] === "LATE").length;
+                  const absent = attendingMembers.filter((m) => attendance[m.id] === "ABSENT").length;
+                  const unchecked = attendingMembers.length - present - late - absent;
+                  return (
+                    <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground border-t border-border/30 pt-3">
+                      <span>참석 <strong className="text-[hsl(var(--success))]">{present}</strong></span>
+                      <span>지각 <strong className="text-[hsl(var(--warning))]">{late}</strong></span>
+                      <span>불참 <strong className="text-destructive">{absent}</strong></span>
+                      {unchecked > 0 && <span>미체크 <strong>{unchecked}</strong></span>}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="rounded-xl border-border/30">
+              <CardContent className="py-8 text-center">
+                <p className="text-sm text-muted-foreground">출석 현황</p>
+                {attendingMembers.length > 0 && (() => {
+                  const present = attendingMembers.filter((m) => attendance[m.id] === "PRESENT").length;
+                  const late = attendingMembers.filter((m) => attendance[m.id] === "LATE").length;
+                  const absent = attendingMembers.filter((m) => attendance[m.id] === "ABSENT").length;
+                  return (
+                    <div className="mt-3 flex items-center justify-center gap-4 text-sm">
+                      <span>참석 <strong className="text-[hsl(var(--success))]">{present}</strong></span>
+                      <span>지각 <strong className="text-[hsl(var(--warning))]">{late}</strong></span>
+                      <span>불참 <strong className="text-destructive">{absent}</strong></span>
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          )}
+        </section>
+      </div>
+
       {/* ── Tab: 경기 기록 ── */}
       <div className={activeTab === "record" ? "" : "hidden"}>
         <MatchRecordTab
@@ -485,15 +607,12 @@ export default function MatchDetailClient({
           match={match}
           goals={goals}
           votes={votes}
-          attendance={attendance}
           guests={guests}
-          canManageAttendance={canManageAttendance}
           canRecord={canRecord}
           attendingMembers={attendingMembers}
           fullRoster={fullRoster}
           refetchGoals={refetchGoals}
           refetchMvp={refetchMvp}
-          refetchAttendance={refetchAttendance}
           internalTeams={internalTeams}
         />
       </div>

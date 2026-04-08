@@ -17,7 +17,7 @@ import type {
   GoalEvent,
   Guest,
   VoteState,
-  AttendanceState,
+
   RosterPlayer,
   SimpleRosterPlayer,
   InternalTeamAssignment,
@@ -30,9 +30,7 @@ export interface MatchRecordTabProps {
   match: Match;
   goals: GoalEvent[];
   votes: VoteState;
-  attendance: AttendanceState;
   guests: Guest[];
-  canManageAttendance: boolean;
   canRecord: boolean;
   attendingMembers: RosterPlayer[];
   fullRoster: SimpleRosterPlayer[];
@@ -40,8 +38,6 @@ export interface MatchRecordTabProps {
   refetchGoals: () => Promise<unknown>;
   /** MVP refetch */
   refetchMvp: () => Promise<unknown>;
-  /** 출석 refetch */
-  refetchAttendance: () => Promise<unknown>;
   /** 자체전 팀 편성 */
   internalTeams?: InternalTeamAssignment[];
 }
@@ -52,15 +48,12 @@ function MatchRecordTabInner({
   match,
   goals,
   votes,
-  attendance,
   guests,
-  canManageAttendance,
   canRecord,
   attendingMembers,
   fullRoster,
   refetchGoals,
   refetchMvp,
-  refetchAttendance,
   internalTeams,
 }: MatchRecordTabProps) {
   const { showToast } = useToast();
@@ -223,16 +216,6 @@ function MatchRecordTabInner({
   async function handleVote(candidateId: string) {
     await apiMutate("/api/mvp", "POST", { matchId, candidateId });
     await refetchMvp();
-  }
-
-  /* ── Attendance handler ── */
-  async function handleAttendance(player: RosterPlayer, status: "PRESENT" | "ABSENT" | "LATE") {
-    await apiMutate("/api/attendance-check", "POST", {
-      matchId,
-      ...(player.isLinked ? { userId: player.id } : { memberId: player.memberId }),
-      status,
-    });
-    await refetchAttendance();
   }
 
   return (
@@ -624,98 +607,7 @@ function MatchRecordTabInner({
             </CardContent>
           </Card>
 
-          {/* ── 출석 체크 (staff only) ── */}
-          {canManageAttendance && (
-            <Card className="rounded-xl border-border/30">
-              <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <CardTitle className="text-base font-bold">출석 체크</CardTitle>
-                {attendingMembers.length > 0 && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 px-3 text-sm font-medium text-primary"
-                    onClick={async () => {
-                      const ok = await confirm({
-                        title: "전원 참석 처리",
-                        description: `참석 투표한 ${attendingMembers.length}명 전원을 출석으로 처리합니다.`,
-                        confirmLabel: "전원 참석 처리",
-                        cancelLabel: "취소",
-                      });
-                      if (ok) {
-                        await Promise.all(
-                          attendingMembers.map((player) => handleAttendance(player, "PRESENT"))
-                        );
-                      }
-                    }}
-                  >
-                    전원 참석 처리
-                  </Button>
-                )}
-              </CardHeader>
-
-              <CardContent>
-                <div className="space-y-2">
-                  {attendingMembers.map((player) => {
-                    const status = attendance[player.id];
-                    return (
-                      <Card
-                        key={player.id}
-                        className="border-0 bg-secondary shadow-none"
-                      >
-                        <CardContent className="flex items-center justify-between px-4 py-3">
-                          <span className="text-sm font-semibold truncate">
-                            {player.name}
-                          </span>
-                          <div className="flex gap-1">
-                            <Button
-                              type="button"
-                              variant={
-                                status === "PRESENT" ? "default" : "outline"
-                              }
-                              size="sm"
-                              onClick={() =>
-                                handleAttendance(player, "PRESENT")
-                              }
-                            >
-                              참석
-                            </Button>
-                            <Button
-                              type="button"
-                              variant={
-                                status === "LATE" ? "warning" : "outline"
-                              }
-                              size="sm"
-                              onClick={() =>
-                                handleAttendance(player, "LATE")
-                              }
-                            >
-                              지각
-                            </Button>
-                            <Button
-                              type="button"
-                              variant={
-                                status === "ABSENT" ? "destructive" : "outline"
-                              }
-                              size="sm"
-                              onClick={() =>
-                                handleAttendance(player, "ABSENT")
-                              }
-                            >
-                              불참
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  스태프 이상 권한만 출석을 관리할 수 있습니다.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+          {/* 출석 체크는 별도 "출석" 탭으로 이동됨 */}
         </div>
       </section>
 
