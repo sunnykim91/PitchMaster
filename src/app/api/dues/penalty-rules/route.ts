@@ -13,8 +13,7 @@ export async function GET() {
   const { data, error } = await db
     .from("penalty_rules")
     .select("*")
-    .eq("team_id", ctx.teamId)
-    .order("created_at");
+    .eq("team_id", ctx.teamId);
 
   if (error) return apiError(error.message);
   return apiSuccess({ rules: data });

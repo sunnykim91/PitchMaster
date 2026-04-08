@@ -11,14 +11,28 @@ export async function GET() {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  const { data, error } = await db
+  const { data: records, error } = await db
     .from("penalty_records")
-    .select("*, users:member_id(name), rule:rule_id(name, trigger_type), match:match_id(match_date, opponent_name)")
+    .select("*, rule:penalty_rules!rule_id(name, trigger_type), match:matches!match_id(match_date, opponent_name)")
     .eq("team_id", ctx.teamId)
-    .order("created_at", { ascending: false });
+    .order("date", { ascending: false });
 
   if (error) return apiError(error.message);
-  return apiSuccess({ penalties: data });
+
+  // member_id → users 이름 매핑 (FK 힌트 문제 우회)
+  const memberIds = [...new Set((records ?? []).map((r: { member_id: string }) => r.member_id))];
+  let userMap = new Map<string, string>();
+  if (memberIds.length > 0) {
+    const { data: users } = await db.from("users").select("id, name").in("id", memberIds);
+    for (const u of users ?? []) userMap.set(u.id, u.name);
+  }
+
+  const penalties = (records ?? []).map((r: Record<string, unknown>) => ({
+    ...r,
+    users: { name: userMap.get(r.member_id as string) ?? null },
+  }));
+
+  return apiSuccess({ penalties });
 }
 
 /** 벌금 상태 변경 (PAID, WAIVED 등) */
