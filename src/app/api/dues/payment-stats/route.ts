@@ -72,6 +72,7 @@ export async function GET() {
   }
 
   const longTermUnpaid = [...unpaidCounts.entries()]
+    .filter(([name]) => name !== "알 수 없음")
     .map(([name, months]) => ({ name, months }))
     .sort((a, b) => b.months - a.months);
 
