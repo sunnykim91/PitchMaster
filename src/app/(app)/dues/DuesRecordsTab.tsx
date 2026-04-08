@@ -433,8 +433,8 @@ function DuesRecordsTabInner({
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {(() => { const d = new Date(record.recordedAt); const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000); const [, mm, dd] = kst.toISOString().slice(0, 10).split("-"); return `${Number(mm)}월 ${Number(dd)}일`; })()}
-                        {record.memberName && !record.description.includes(record.memberName) ? (
-                          <> · <span className="font-semibold text-foreground/80">{record.memberName}</span></>
+                        {record.memberName ? (
+                          <> · <span className="text-[hsl(var(--info))]">회비 매칭</span></>
                         ) : null}
                       </p>
                     </div>
