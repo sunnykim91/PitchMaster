@@ -45,18 +45,18 @@ export async function GET(req: NextRequest) {
 
     if (existing) {
       if (existing.status !== "EXEMPT" || existing.note !== note) {
-        await db.from("dues_payment_status").update({ status: "EXEMPT", paid_amount: 0, note, updated_at: new Date().toISOString() })
+        const { error: upErr } = await db.from("dues_payment_status").update({ status: "EXEMPT", paid_amount: 0, note, updated_at: new Date().toISOString() })
           .eq("team_id", ctx.teamId).eq("member_id", ex.member_id).eq("month", month);
-        existing.status = "EXEMPT";
-        existing.note = note;
-        existing.paid_amount = 0;
+        if (upErr) console.error("[payment-status] update EXEMPT error:", ex.member_id, upErr.message);
+        else { existing.status = "EXEMPT"; existing.note = note; existing.paid_amount = 0; }
       }
     } else {
-      await db.from("dues_payment_status").insert({
+      const { error: insErr } = await db.from("dues_payment_status").insert({
         team_id: ctx.teamId, member_id: ex.member_id, month, status: "EXEMPT",
         paid_amount: 0, note, updated_at: new Date().toISOString(),
       });
-      data.push({ team_id: ctx.teamId, member_id: ex.member_id, month, status: "EXEMPT", paid_amount: 0, note });
+      if (insErr) console.error("[payment-status] insert EXEMPT error:", ex.member_id, insErr.message);
+      else data.push({ team_id: ctx.teamId, member_id: ex.member_id, month, status: "EXEMPT", paid_amount: 0, note });
     }
   }
 

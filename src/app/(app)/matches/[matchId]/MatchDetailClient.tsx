@@ -240,11 +240,20 @@ export default function MatchDetailClient({
   const canRecord = true; // 골/어시 기록은 모든 회원 가능
   const confirm = useConfirm();
 
-  // 면제/휴회/부상 데이터 (SSR에서 전달)
-  const exemptions = useMemo<Record<string, { type: string; reason: string | null; endDate: string | null }>>(
-    () => initialData?.exemptions ?? {},
-    [initialData?.exemptions]
-  );
+  // 휴면 데이터 — DORMANT 멤버를 exemptions 맵으로 변환
+  const exemptions = useMemo<Record<string, { type: string; reason: string | null; endDate: string | null }>>(() => {
+    const map: Record<string, { type: string; reason: string | null; endDate: string | null }> = {};
+    for (const m of membersData.members) {
+      if (m.status === "DORMANT" && m.user_id) {
+        map[m.users?.id ?? m.id] = {
+          type: m.dormant_type ?? "DORMANT",
+          reason: m.dormant_reason ?? null,
+          endDate: m.dormant_until ?? null,
+        };
+      }
+    }
+    return map;
+  }, [membersData.members]);
 
   /* ── Attendance handler (출석 탭용) ── */
   const handleAttendance = useCallback(async (player: { id: string; memberId?: string; isLinked?: boolean }, status: "PRESENT" | "ABSENT" | "LATE") => {

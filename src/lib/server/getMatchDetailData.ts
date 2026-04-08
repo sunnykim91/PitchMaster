@@ -1,5 +1,4 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { getActiveExemptions } from "@/lib/server/getActiveExemptions";
 
 export async function getMatchDetailData(matchId: string, teamId: string) {
   const db = getSupabaseAdmin();
@@ -13,17 +12,10 @@ export async function getMatchDetailData(matchId: string, teamId: string) {
     db.from("match_guests").select("*").eq("match_id", matchId),
     db.from("match_internal_teams").select("player_id, side").eq("match_id", matchId),
     db.from("match_diaries").select("*").eq("match_id", matchId).maybeSingle(),
-    db.from("team_members").select("id, role, user_id, pre_name, coach_positions, jersey_number, team_role, users(id, name, preferred_positions)").eq("team_id", teamId).in("status", ["ACTIVE", "DORMANT"]),
+    db.from("team_members").select("id, role, user_id, status, pre_name, coach_positions, jersey_number, team_role, dormant_type, dormant_until, dormant_reason, users(id, name, preferred_positions)").eq("team_id", teamId).in("status", ["ACTIVE", "DORMANT"]),
     db.from("teams").select("sport_type, uniform_primary, uniform_secondary, uniform_pattern, uniforms, default_formation_id").eq("id", teamId).single(),
     db.from("match_attendance").select("id, match_id, user_id, member_id, vote, voted_at, users(id, name, preferred_positions), member:team_members(id, pre_name, user_id, coach_positions, users(id, name, preferred_positions))").eq("match_id", matchId),
   ]);
-
-  // 면제/휴회/부상 회원 조회
-  const exemptionMap = await getActiveExemptions(teamId);
-  const exemptions: Record<string, { type: string; reason: string | null; endDate: string | null }> = {};
-  for (const [mid, info] of exemptionMap) {
-    exemptions[mid] = { type: info.type ?? "DORMANT", reason: info.reason, endDate: info.until };
-  }
 
   return {
     matches: matchRes.data ? { matches: [matchRes.data] } : { matches: [] },
@@ -36,6 +28,5 @@ export async function getMatchDetailData(matchId: string, teamId: string) {
     members: { members: membersRes.data ?? [] },
     team: { team: teamRes.data ?? {} },
     vote: { attendance: voteRes.data ?? [] },
-    exemptions,
   };
 }
