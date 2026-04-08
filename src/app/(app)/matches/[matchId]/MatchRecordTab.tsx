@@ -2,6 +2,7 @@
 
 import { memo, useMemo, useRef, useState } from "react";
 import { apiMutate } from "@/lib/useApi";
+import { useAsyncAction, useItemAction } from "@/lib/useAsyncAction";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -60,6 +61,9 @@ function MatchRecordTabInner({
   const isInternal = match.matchType === "INTERNAL";
 
   const confirm = useConfirm();
+  const [runAddGoal, addingGoal] = useAsyncAction();
+  const [runDeleteGoal, deletingGoalId] = useItemAction();
+  const [runMvpVote, mvpVotingId] = useItemAction();
 
   /* ── Local UI state ── */
   const [showDetailForm, setShowDetailForm] = useState(false);
@@ -247,7 +251,8 @@ function MatchRecordTabInner({
                 {isInternal ? (
                   <>
                     <Button type="button" className="flex-1 min-h-[48px] bg-primary/20 text-primary hover:bg-primary/30 font-semibold"
-                      onClick={async () => {
+                      disabled={addingGoal}
+                      onClick={() => runAddGoal(async () => {
                         const formData = new FormData();
                         formData.set("scorerId", "UNKNOWN");
                         formData.set("assistId", "");
@@ -257,11 +262,12 @@ function MatchRecordTabInner({
                         formData.set("goalType", "NORMAL");
                         formData.set("side", "A");
                         await handleAddGoal(formData);
-                      }}>
-                      + A팀 골
+                      })}>
+                      {addingGoal ? "처리 중..." : "+ A팀 골"}
                     </Button>
                     <Button type="button" className="flex-1 min-h-[48px] bg-[hsl(var(--info))]/20 text-[hsl(var(--info))] hover:bg-[hsl(var(--info))]/30 font-semibold"
-                      onClick={async () => {
+                      disabled={addingGoal}
+                      onClick={() => runAddGoal(async () => {
                         const formData = new FormData();
                         formData.set("scorerId", "UNKNOWN");
                         formData.set("assistId", "");
@@ -271,17 +277,20 @@ function MatchRecordTabInner({
                         formData.set("goalType", "NORMAL");
                         formData.set("side", "B");
                         await handleAddGoal(formData);
-                      }}>
-                      + B팀 골
+                      })}>
+                      {addingGoal ? "처리 중..." : "+ B팀 골"}
                     </Button>
                   </>
                 ) : (
                   <>
-                    <Button type="button" className="flex-1 min-h-[48px] bg-[hsl(var(--success))]/20 text-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/30 font-semibold" onClick={() => setShowDetailForm(true)}>
+                    <Button type="button" className="flex-1 min-h-[48px] bg-[hsl(var(--success))]/20 text-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/30 font-semibold"
+                      disabled={addingGoal}
+                      onClick={() => setShowDetailForm(true)}>
                       + 득점
                     </Button>
                     <Button type="button" className="flex-1 min-h-[48px] bg-destructive/20 text-destructive hover:bg-destructive/30 font-semibold"
-                      onClick={async () => {
+                      disabled={addingGoal}
+                      onClick={() => runAddGoal(async () => {
                         const formData = new FormData();
                         formData.set("scorerId", "OPPONENT");
                         formData.set("assistId", "");
@@ -289,8 +298,8 @@ function MatchRecordTabInner({
                         formData.set("minute", "0");
                         formData.set("isOwnGoal", "");
                         await handleAddGoal(formData);
-                      }}>
-                      + 실점
+                      })}>
+                      {addingGoal ? "처리 중..." : "+ 실점"}
                     </Button>
                   </>
                 )}
@@ -521,6 +530,7 @@ function MatchRecordTabInner({
                         </button>
                         <button
                           type="button"
+                          disabled={deletingGoalId === goal.id}
                           onClick={async (e) => {
                             e.stopPropagation();
                             const ok = await confirm({
@@ -530,11 +540,11 @@ function MatchRecordTabInner({
                               confirmLabel: "삭제",
                               cancelLabel: "취소",
                             });
-                            if (ok) handleDeleteGoal(goal.id);
+                            if (ok) runDeleteGoal(goal.id, () => handleDeleteGoal(goal.id));
                           }}
-                          className="rounded-lg bg-[hsl(var(--loss)/0.15)] min-h-[44px] px-4 py-2 text-xs font-semibold text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] active:bg-[hsl(var(--loss)/0.35)] active:scale-95 transition-all cursor-pointer select-none"
+                          className="rounded-lg bg-[hsl(var(--loss)/0.15)] min-h-[44px] px-4 py-2 text-xs font-semibold text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] active:bg-[hsl(var(--loss)/0.35)] active:scale-95 transition-all cursor-pointer select-none disabled:opacity-50"
                         >
-                          삭제
+                          {deletingGoalId === goal.id ? "삭제 중..." : "삭제"}
                         </button>
                       </div>
                     )}
@@ -588,10 +598,12 @@ function MatchRecordTabInner({
                     <button
                       key={player.id}
                       type="button"
-                      onClick={() => handleVote(player.id)}
+                      disabled={!!mvpVotingId}
+                      onClick={() => runMvpVote(player.id, () => handleVote(player.id))}
                       className={cn(
                         "relative rounded-xl p-3 text-sm font-medium transition-all",
-                        isVoted ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                        isVoted ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+                        mvpVotingId === player.id && "opacity-70"
                       )}
                     >
                       {player.name}

@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useMemo, useState } from "react";
 import { apiMutate } from "@/lib/useApi";
+import { useAsyncAction, useItemAction } from "@/lib/useAsyncAction";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -101,6 +102,8 @@ function MatchInfoTabInner({
 }: MatchInfoTabProps) {
   const { showToast } = useToast();
   const confirm = useConfirm();
+  const [runUniform, uniformLoading] = useAsyncAction();
+  const [runDeleteComment, deletingCommentId] = useItemAction();
   const [savingTeams, setSavingTeams] = useState(false);
   const [teamSheetOpen, setTeamSheetOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -155,11 +158,13 @@ function MatchInfoTabInner({
   /* ── 유니폼 변경 ── */
   async function handleUniformChange(type: "HOME" | "AWAY" | "THIRD") {
     if (match.uniformType === type) return;
-    const { error } = await apiMutate("/api/matches", "PUT", { id: matchId, uniformType: type });
-    if (!error) {
-      showToast(type === "HOME" ? "홈 유니폼으로 변경" : type === "AWAY" ? "원정 유니폼으로 변경" : "써드 유니폼으로 변경");
-      await refetchMatches();
-    }
+    await runUniform(async () => {
+      const { error } = await apiMutate("/api/matches", "PUT", { id: matchId, uniformType: type });
+      if (!error) {
+        showToast(type === "HOME" ? "홈 유니폼으로 변경" : type === "AWAY" ? "원정 유니폼으로 변경" : "써드 유니폼으로 변경");
+        await refetchMatches();
+      }
+    });
   }
 
   /* ── 경기 일정 수정 ── */
@@ -419,9 +424,10 @@ function MatchInfoTabInner({
                   { type: "AWAY" as const, label: "원정", style: awayJerseyStyle },
                   ...(thirdJerseyStyle ? [{ type: "THIRD" as const, label: "써드", style: thirdJerseyStyle }] : []),
                 ]).map((u) => (
-                  <button key={u.type} type="button" onClick={() => handleUniformChange(u.type)} disabled={!canManage}
+                  <button key={u.type} type="button" onClick={() => handleUniformChange(u.type)} disabled={!canManage || uniformLoading}
                     className={cn("flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
-                      match.uniformType === u.type ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-secondary"
+                      match.uniformType === u.type ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-secondary",
+                      uniformLoading && "opacity-50"
                     )}>
                     <div className="h-5 w-5 shrink-0 rounded-sm" style={u.style} />
                     {u.label}
@@ -527,8 +533,9 @@ function MatchInfoTabInner({
                   </div>
                   {c.user_id === userId && (
                     <button type="button"
-                      onClick={async () => { await apiMutate(`/api/match-comments?id=${c.id}`, "DELETE"); refetchComments?.(); }}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      disabled={deletingCommentId === c.id}
+                      onClick={() => runDeleteComment(c.id, async () => { await apiMutate(`/api/match-comments?id=${c.id}`, "DELETE"); refetchComments?.(); })}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                       aria-label="댓글 삭제"
                     >
                       <X className="h-3.5 w-3.5" />

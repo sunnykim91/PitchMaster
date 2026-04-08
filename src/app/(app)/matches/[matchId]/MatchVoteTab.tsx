@@ -9,6 +9,7 @@ import { Bell, Users, HelpCircle, UserX, Check, Clock, Search, Lock, LockOpen } 
 import { cn } from "@/lib/utils";
 import { apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 import type { Match, RosterPlayer } from "./matchDetailTypes";
 import { voteStyles as styles } from "@/lib/voteStyles";
 
@@ -44,6 +45,8 @@ function MatchVoteTabInner({
   exemptions = {},
 }: MatchVoteTabProps) {
   const { showToast } = useToast();
+  const [runDeadline, deadlineLoading] = useAsyncAction();
+  const [runNudge, nudgeLoading] = useAsyncAction();
   const [voteSearch, setVoteSearch] = useState("");
   const [voteFilter, setVoteFilter] = useState<"all" | "unvoted">("all");
   const [voteSortBy, setVoteSortBy] = useState<"none" | "name-asc" | "name-desc" | "time-asc" | "time-desc">("none");
@@ -115,19 +118,19 @@ function MatchVoteTabInner({
               </div>
               {canManage && (
                 isExpired ? (
-                  <button type="button" onClick={async () => {
+                  <button type="button" disabled={deadlineLoading} onClick={() => runDeadline(async () => {
                     const future = new Date(); future.setMonth(future.getMonth() + 1);
                     const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, voteDeadline: future.toISOString() });
                     if (!err) { setIsExpired(false); showToast("투표가 재개되었습니다."); }
-                  }} className="flex shrink-0 items-center gap-1 rounded-lg border border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/10 px-2.5 py-1 text-[11px] font-semibold text-[hsl(var(--success))] transition-colors hover:bg-[hsl(var(--success))]/20">
-                    <LockOpen className="h-3 w-3" />재개
+                  })} className="flex shrink-0 items-center gap-1 rounded-lg border border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/10 px-2.5 py-1 text-[11px] font-semibold text-[hsl(var(--success))] transition-colors hover:bg-[hsl(var(--success))]/20 disabled:opacity-50">
+                    <LockOpen className="h-3 w-3" />{deadlineLoading ? "처리 중..." : "재개"}
                   </button>
                 ) : (
-                  <button type="button" onClick={async () => {
+                  <button type="button" disabled={deadlineLoading} onClick={() => runDeadline(async () => {
                     const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, voteDeadline: new Date().toISOString() });
                     if (!err) { setIsExpired(true); showToast("투표가 마감되었습니다."); }
-                  }} className="flex shrink-0 items-center gap-1 rounded-lg border border-destructive/30 bg-destructive/10 px-2.5 py-1 text-[11px] font-semibold text-destructive transition-colors hover:bg-destructive/20">
-                    <Lock className="h-3 w-3" />마감
+                  })} className="flex shrink-0 items-center gap-1 rounded-lg border border-destructive/30 bg-destructive/10 px-2.5 py-1 text-[11px] font-semibold text-destructive transition-colors hover:bg-destructive/20 disabled:opacity-50">
+                    <Lock className="h-3 w-3" />{deadlineLoading ? "처리 중..." : "마감"}
                   </button>
                 )
               )}
@@ -295,15 +298,16 @@ function MatchVoteTabInner({
             {noVote.length > 0 && (
               <Button
                 className="w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25 hover:bg-primary/90"
-                onClick={async () => {
+                disabled={nudgeLoading}
+                onClick={() => runNudge(async () => {
                   try {
                     const res = await fetch("/api/push/vote-nudge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ matchId: match.id }) });
                     const data = await res.json();
                     showToast(`미투표자 ${data.unvoted ?? 0}명에게 알림을 보냈습니다`);
                   } catch { showToast("알림 발송에 실패했습니다", "error"); }
-                }}
+                })}
               >
-                <Bell className="mr-2 h-4 w-4" />미투표 {noVote.length}명에게 알림 보내기
+                <Bell className="mr-2 h-4 w-4" />{nudgeLoading ? "발송 중..." : `미투표 ${noVote.length}명에게 알림 보내기`}
               </Button>
             )}
             {/* 휴면 회원 (운영진 뷰) */}

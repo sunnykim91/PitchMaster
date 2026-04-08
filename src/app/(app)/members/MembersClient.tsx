@@ -551,12 +551,13 @@ export default function MembersClient({
                         <Button
                           variant="outline"
                           size="sm"
+                          disabled={kickingId === member.id}
                           onClick={async () => {
                             const ok = await confirm({ title: `${member.name} 님을 제명하시겠습니까?`, variant: "destructive", confirmLabel: "제명" });
                             if (ok) handleKick(member.id);
                           }}
                         >
-                          제명
+                          {kickingId === member.id ? "처리 중..." : "제명"}
                         </Button>
                       </>
                     )}
@@ -830,7 +831,7 @@ export default function MembersClient({
                             <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setShowDormantForm(member.id); setDormantType("INJURED"); setDormantUntil(""); setDormantReason(""); }}>
                               휴면 설정
                             </Button>
-                            <Button size="sm" variant="outline" className="h-8 text-xs text-destructive hover:bg-destructive/10" onClick={async () => { const ok = await confirm({ title: `${member.name} 님을 제명하시겠습니까?`, variant: "destructive", confirmLabel: "제명" }); if (ok) handleKick(member.id); }}>제명</Button>
+                            <Button size="sm" variant="outline" className="h-8 text-xs text-destructive hover:bg-destructive/10" disabled={kickingId === member.id} onClick={async () => { const ok = await confirm({ title: `${member.name} 님을 제명하시겠습니까?`, variant: "destructive", confirmLabel: "제명" }); if (ok) handleKick(member.id); }}>{kickingId === member.id ? "처리 중..." : "제명"}</Button>
                           </>
                         )}
                       </div>
