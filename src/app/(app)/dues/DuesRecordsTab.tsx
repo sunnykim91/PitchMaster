@@ -101,14 +101,20 @@ function DuesRecordsTabInner({
     setSaving(true);
 
     try {
-      const { error } = await apiMutate("/api/dues", "POST", {
+      const { data, error } = await apiMutate<{ duplicate?: boolean }>("/api/dues", "POST", {
         type,
         amount,
         description,
         userId,
         recordedAt: recordedAt || undefined,
+        recordedTime: String(formData.get("recordedTime") || ""),
       });
-      if (!error) {
+      if (!error && !data?.duplicate) {
+        // 잔고 반영: 입금이면 +, 출금이면 -
+        if (summaryBalance !== null) {
+          const diff = type === "INCOME" ? amount : -amount;
+          await apiMutate("/api/dues/balance", "POST", { balance: summaryBalance + diff });
+        }
         GA.duesRecordAdd("manual");
         await refetchSummary();
         await syncPaymentStatus();
