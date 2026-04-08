@@ -354,9 +354,65 @@
     <h3>💰 벌금 탭</h3>
     <div class="card">
       <div class="card-desc">
-        · 경기 완료 시 설정된 규칙에 따라 <strong>자동 벌금 부과</strong><br>
-        · 지각비 · 불참비 · 미투표 벌금 등 자유 설정<br>
-        · 회원별 벌금 현황 확인 및 납부 처리
+        경기 완료 시 설정된 규칙에 따라 <strong>자동으로 벌금이 부과</strong>됩니다.<br><br>
+        <strong>벌금 규칙 등록:</strong><br>
+        1. 회비 > 설정 탭 > 하단 <strong>"벌금 규칙"</strong> → [추가]<br>
+        2. 규칙 이름 (예: "지각비"), 트리거 (지각/불참/미투표/기타), 금액 입력<br>
+        3. 저장 → 이후 경기 완료 시 자동 적용<br><br>
+        <strong>벌금 부과 흐름:</strong><br>
+        1. 경기 당일 → <strong>출석 탭</strong>에서 참석/지각/불참 체크<br>
+        2. 경기 완료 처리 시 → 지각/불참 회원에게 <strong>벌금 자동 부과</strong><br>
+        3. 회비 > 벌금 탭에서 회원별 벌금 현황 확인 및 납부 처리
+      </div>
+    </div>
+  </section>
+
+  <!-- 출석 체크 상세 -->
+  <section>
+    <h2><span class="num">5-1</span>출석 체크</h2>
+    <p>경기별로 참석/지각/불참을 기록합니다.</p>
+
+    <div class="step-flow">
+      <span class="step">경기 등록</span>
+      <span class="arrow">→</span>
+      <span class="step">참석 투표</span>
+      <span class="arrow">→</span>
+      <span class="step">출석 체크</span>
+      <span class="arrow">→</span>
+      <span class="step">벌금 자동 부과</span>
+    </div>
+
+    <div class="card">
+      <div class="card-desc">
+        <strong>사용법:</strong><br>
+        1. 경기 상세 → <strong>출석 탭</strong> 선택<br>
+        2. 참석 투표한 회원 목록이 표시됨<br>
+        3. 각 회원의 <strong>[참석] [지각] [불참]</strong> 버튼 클릭<br>
+        4. <strong>[전원 참석 처리]</strong> 버튼으로 일괄 처리 가능<br>
+        5. 하단에 <strong>출석 현황 요약</strong> (참석 N명, 지각 N명, 불참 N명) 표시<br><br>
+        <strong>권한:</strong> 운영진 이상만 출석 체크 가능<br>
+        <strong>벌금 연동:</strong> 벌금 규칙에 "지각" 또는 "불참"이 설정되어 있으면 경기 완료 시 자동 부과
+      </div>
+    </div>
+  </section>
+
+  <!-- 유니폼 관리 상세 -->
+  <section>
+    <h2><span class="num">5-2</span>유니폼 관리</h2>
+    <p>홈/원정/써드 유니폼을 설정하고 경기별로 선택합니다.</p>
+
+    <div class="card">
+      <div class="card-desc">
+        <strong>유니폼 설정:</strong><br>
+        1. <strong>설정 > 팀 설정</strong> → 하단 "유니폼" 섹션<br>
+        2. <strong>홈/원정</strong> 탭에서 메인 색상, 서브 색상, 패턴 선택<br>
+        3. 패턴: 단색 · 세로 스트라이프 · 가로 스트라이프 · 대각 스트라이프<br>
+        4. <strong>써드 유니폼</strong>: [+ 써드 추가] 버튼으로 추가 (선택사항)<br>
+        5. 저장 → 대시보드, 경기 목록에 미니 져지로 표시<br><br>
+        <strong>경기별 유니폼 선택:</strong><br>
+        1. 경기 상세 → <strong>정보 탭</strong><br>
+        2. "유니폼" 영역에서 <strong>[홈] [원정] [써드]</strong> 버튼 선택<br>
+        3. 선택한 유니폼이 경기 목록, 대시보드, 전술판에 반영
       </div>
     </div>
   </section>
