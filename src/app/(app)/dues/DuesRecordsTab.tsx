@@ -372,7 +372,7 @@ function DuesRecordsTabInner({
                 key={record.id}
                 className="border-white/[0.04] bg-card py-2 hover:bg-secondary/50 transition-colors"
               >
-                <CardContent className="px-4">
+                <CardContent className="px-4 pb-0">
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-foreground truncate">
