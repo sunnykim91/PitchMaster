@@ -259,7 +259,12 @@ function DuesRecordsTabInner({
             <button
               type="button"
               onClick={() => { if (selectMode) { setSelectMode(false); setSelectedIds(new Set()); } else setSelectMode(true); }}
-              className="text-xs font-medium text-primary hover:text-primary/80 transition-colors shrink-0"
+              className={cn(
+                "text-xs font-medium px-2.5 py-1 rounded-md transition-colors shrink-0 active:scale-[0.97]",
+                selectMode
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-foreground border border-white/[0.06]"
+              )}
             >
               {selectMode ? "완료" : "편집"}
             </button>
