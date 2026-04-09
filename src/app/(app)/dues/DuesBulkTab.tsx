@@ -293,10 +293,14 @@ function DuesBulkTabInner({
 
       // 기존 DB 레코드와 비교하여 중복 제거 (날짜 + 금액 + 타입으로 판단, description은 수정될 수 있으므로 제외)
       const currentRecords = recordsRef.current;
+      console.log("[OCR] checking duplicates against", currentRecords.length, "records");
+      if (currentRecords.length > 0) {
+        console.log("[OCR] sample record:", currentRecords[0].recordedAt, currentRecords[0].amount, currentRecords[0].type, currentRecords[0].description);
+      }
       const newRows = parsed.filter((row) => {
         const isDup = currentRecords.some(
           (r) =>
-            r.recordedAt.startsWith(row.date) &&
+            r.recordedAt.slice(0, 10) === row.date &&
             r.amount === Number(row.amount) &&
             r.type === row.type
         );
@@ -304,7 +308,7 @@ function DuesBulkTabInner({
         return !isDup;
       });
       const duplicateCount = parsed.length - newRows.length;
-      console.log("[OCR] newRows:", newRows.length, "duplicates:", duplicateCount, "records in DB:", records.length);
+      console.log("[OCR] newRows:", newRows.length, "duplicates:", duplicateCount);
 
       setOcrLoading(false);
       if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
