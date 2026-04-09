@@ -652,6 +652,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           autoMatchMember={autoMatchMember}
           summaryBalance={summaryData.balance}
           duesAmounts={duesAmounts}
+          refetchPaymentStatus={refetchPaymentStatus}
         />
       </div>
 

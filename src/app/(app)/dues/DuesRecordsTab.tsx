@@ -49,6 +49,7 @@ export type DuesRecordsTabProps = {
   autoMatchMember: (description: string) => string | undefined;
   summaryBalance: number | null;
   duesAmounts: number[];
+  refetchPaymentStatus?: () => Promise<unknown>;
 };
 
 function DuesRecordsTabInner({
@@ -63,6 +64,7 @@ function DuesRecordsTabInner({
   autoMatchMember,
   summaryBalance,
   duesAmounts,
+  refetchPaymentStatus,
 }: DuesRecordsTabProps) {
   const confirm = useConfirm();
   /* ── 탭 전용 state ── */
@@ -186,6 +188,7 @@ function DuesRecordsTabInner({
         }
       }
       await refetchSummary();
+      await refetchPaymentStatus?.();
     }
   }, [monthRecords, summaryBalance, refetchSummary, duesAmounts, members, monthFilter, syncPaymentStatus]);
 
