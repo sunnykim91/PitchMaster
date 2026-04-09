@@ -443,7 +443,6 @@ function DuesBulkTabInner({
           ref={ocrFileInputRef}
           type="file"
           accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
-          capture="environment"
           className="hidden"
           onChange={handleBulkImageChange}
         />
