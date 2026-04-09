@@ -71,10 +71,15 @@ export async function POST(request: NextRequest) {
 
     console.log("[OCR] inferResult:", inferResult, "fields:", fields.length);
 
-    if (inferResult === "ERROR" || fields.length === 0) {
-      const errorMsg = result.images?.[0]?.message ?? "인식 결과 없음";
-      console.error("[OCR] recognition failed:", errorMsg);
-      return apiError(`OCR 인식 실패: ${errorMsg}. 다른 이미지로 시도해주세요.`, 422);
+    if (inferResult === "ERROR") {
+      const errorMsg = result.images?.[0]?.message ?? "알 수 없는 오류";
+      console.error("[OCR] recognition error:", errorMsg);
+      return apiError(`OCR 인식 오류: ${errorMsg}. 다른 이미지로 시도해주세요.`, 422);
+    }
+
+    if (fields.length === 0) {
+      console.log("[OCR] no text found in image (inferResult:", inferResult, ")");
+      return apiError("이미지에서 텍스트를 찾지 못했습니다. 통장 거래내역 스크린샷인지 확인해주세요.", 422);
     }
 
     // fields → 텍스트 추출 (lineBreak 기준으로 줄바꿈)
