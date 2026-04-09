@@ -179,18 +179,27 @@ function DuesRecordsTabInner({
   const handleBulkDelete = useCallback(async () => {
     const count = selectedIds.size;
     if (count === 0) return;
-    const ok = await confirm({ title: `${count}건을 삭제하시겠습니까?`, variant: "destructive", confirmLabel: "삭제" });
+    const ok = await confirm({
+      title: `${count}건을 삭제하시겠습니까?`,
+      description: "해당 월의 납부 현황(납부/미납)도 함께 초기화됩니다. (면제는 유지)",
+      variant: "destructive",
+      confirmLabel: "삭제 + 납부 초기화",
+    });
     if (!ok) return;
     setBulkDeleting(true);
     const ids = [...selectedIds];
     for (const id of ids) {
       await apiMutate(`/api/dues?id=${id}`, "DELETE");
     }
+    // 해당 월 납부 현황 초기화 (PAID/UNPAID 삭제, EXEMPT 유지)
+    await fetch(`/api/dues/payment-status?month=${monthFilter}`, { method: "DELETE", credentials: "include" });
     setBulkDeleting(false);
     setSelectedIds(new Set());
+    setSelectMode(false);
     await refetchSummary();
-    showToast(`${count}건 삭제 완료`);
-  }, [selectedIds, confirm, refetchSummary, showToast]);
+    await syncPaymentStatus();
+    showToast(`${count}건 삭제 + 납부 현황 초기화 완료`);
+  }, [selectedIds, confirm, refetchSummary, syncPaymentStatus, showToast, monthFilter]);
 
   const [y, m] = monthFilter.split("-").map(Number);
 

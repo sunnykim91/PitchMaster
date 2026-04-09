@@ -163,3 +163,29 @@ export async function PUT(req: NextRequest) {
 
   return apiSuccess({ updated });
 }
+
+/** DELETE: 해당 월 납부 현황 초기화 (면제 제외, PAID/UNPAID만 삭제) */
+export async function DELETE(req: NextRequest) {
+  const ctx = await getApiContext();
+  if (ctx instanceof NextResponse) return ctx;
+
+  const roleCheck = requireRole(ctx, PERMISSIONS.DUES_RECORD_ADD);
+  if (roleCheck) return roleCheck;
+
+  const month = req.nextUrl.searchParams.get("month");
+  if (!month) return apiError("month parameter required", 400);
+
+  const db = getSupabaseAdmin();
+  if (!db) return apiError("Database not available", 503);
+
+  // 면제(EXEMPT)는 유지, PAID/UNPAID만 삭제
+  const { error, count } = await db
+    .from("dues_payment_status")
+    .delete({ count: "exact" })
+    .eq("team_id", ctx.teamId)
+    .eq("month", month)
+    .in("status", ["PAID", "UNPAID"]);
+
+  if (error) return apiError(error.message);
+  return apiSuccess({ deleted: count ?? 0 });
+}
