@@ -545,7 +545,7 @@ function DuesRecordsTabInner({
                         {record.description}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {(() => { const d = new Date(record.recordedAt); const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000); const [, mm, dd] = kst.toISOString().slice(0, 10).split("-"); return `${Number(mm)}월 ${Number(dd)}일`; })()}
+                        {(() => { const d = new Date(record.recordedAt); return `${d.getMonth() + 1}월 ${d.getDate()}일`; })()}
                         {record.type === "INCOME" && duesAmounts.includes(record.amount) && (record.memberName || members.some((m) => record.description.includes(m.name))) ? (
                           <> · <span className="text-[hsl(var(--info))]">납부</span></>
                         ) : null}

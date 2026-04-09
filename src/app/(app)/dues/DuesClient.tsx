@@ -287,15 +287,14 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     };
   }, []);
 
-  /** 월별 필터 적용된 레코드 (기준일 기반, KST 변환) */
+  /** 월별 필터 적용된 레코드 (기준일 기반, 로컬 시간 기준) */
   const monthRecords = useMemo(() => {
     if (!monthFilter) return records;
     const { from, to } = getDuesPeriod(monthFilter, periodConfig.startDay);
     return records.filter((r) => {
-      // KST 기준 날짜 추출 (UTC timestamptz → KST)
+      // 브라우저가 로컬(KST) 기준으로 파싱하므로 추가 변환 불필요
       const d = new Date(r.recordedAt);
-      const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
-      const date = kst.toISOString().slice(0, 10);
+      const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       return date >= from && date <= to;
     });
   }, [records, monthFilter, periodConfig.startDay, getDuesPeriod]);
