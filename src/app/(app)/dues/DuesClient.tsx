@@ -457,6 +457,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
             {summaryData.balanceUpdatedAt && (
               <p className="text-xs text-muted-foreground/80">
                 최종 업데이트: {new Date(summaryData.balanceUpdatedAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                <span className="ml-1 text-muted-foreground/50">· 스크린샷/엑셀 기준</span>
               </p>
             )}
           </div>
