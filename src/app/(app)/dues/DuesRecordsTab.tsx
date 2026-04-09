@@ -47,7 +47,6 @@ export type DuesRecordsTabProps = {
   syncPaymentStatus: () => Promise<void>;
   showToast: (msg: string, type?: "success" | "error" | "info") => void;
   autoMatchMember: (description: string) => string | undefined;
-  summaryBalance: number | null;
   duesAmounts: number[];
   refetchPaymentStatus?: () => Promise<unknown>;
 };
@@ -62,7 +61,6 @@ function DuesRecordsTabInner({
   syncPaymentStatus,
   showToast,
   autoMatchMember,
-  summaryBalance,
   duesAmounts,
   refetchPaymentStatus,
 }: DuesRecordsTabProps) {
@@ -95,7 +93,6 @@ function DuesRecordsTabInner({
     const amount = Number(formData.get("amount"));
     const description = String(formData.get("description"));
     const recordedAt = String(formData.get("recordedAt") || "");
-    const affectBalance = formData.get("affectBalance") === "on";
     const userId = autoMatchMember(description);
 
     const errors: Record<string, string> = {};
@@ -118,10 +115,6 @@ function DuesRecordsTabInner({
         recordedTime: String(formData.get("recordedTime") || ""),
       });
       if (!error && !data?.duplicate) {
-        if (affectBalance && summaryBalance !== null) {
-          const diff = type === "INCOME" ? amount : -amount;
-          await apiMutate("/api/dues/balance", "POST", { balance: summaryBalance + diff });
-        }
         GA.duesRecordAdd("manual");
         await refetchSummary();
         await syncPaymentStatus();
@@ -131,7 +124,7 @@ function DuesRecordsTabInner({
     } finally {
       setSaving(false);
     }
-  }, [autoMatchMember, refetchSummary, syncPaymentStatus, summaryBalance]);
+  }, [autoMatchMember, refetchSummary, syncPaymentStatus]);
 
   const handleUpdateRecord = useCallback(async (formData: FormData) => {
     if (!editingRecord) return;
@@ -156,23 +149,18 @@ function DuesRecordsTabInner({
       await refetchSummary();
       setEditingRecord(null);
     }
-  }, [editingRecord, autoMatchMember, summaryBalance, refetchSummary]);
+  }, [editingRecord, autoMatchMember, refetchSummary]);
 
-  const handleDeleteRecord = useCallback(async (id: string, revertBalance = false) => {
+  const handleDeleteRecord = useCallback(async (id: string) => {
     const record = monthRecords.find((r) => r.id === id);
     const { error } = await apiMutate(`/api/dues?id=${id}`, "DELETE");
     if (!error) {
-      if (revertBalance && record && summaryBalance !== null) {
-        const diff = record.type === "INCOME" ? -record.amount : record.amount;
-        await apiMutate("/api/dues/balance", "POST", { balance: summaryBalance + diff });
-      }
       await refetchSummary();
-      // 회비 관련 내역 삭제 시 납부 현황 갱신 안내
       if (record && record.type === "INCOME" && duesAmounts.includes(record.amount)) {
         showToast("납부현황 탭에서 '납부 자동 확인'을 눌러주세요", "info");
       }
     }
-  }, [monthRecords, summaryBalance, refetchSummary, duesAmounts, members, monthFilter, syncPaymentStatus]);
+  }, [monthRecords, refetchSummary, duesAmounts, showToast]);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -445,15 +433,9 @@ function DuesRecordsTabInner({
                     </Button>
                   )}
 
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" name="affectBalance" className="h-4 w-4 rounded border-border accent-primary" />
-                      <span className="text-[11px] text-muted-foreground">잔고에 반영</span>
-                    </label>
-                    <p className="text-[11px] text-muted-foreground">
-                      이름 포함 시 납부 자동 연결
-                    </p>
-                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    이름 포함 시 납부 자동 연결
+                  </p>
                 </fieldset>
                 </form>
               </CardContent>
@@ -581,8 +563,8 @@ function DuesRecordsTabInner({
                           <button
                             type="button"
                             onClick={async () => {
-                              const ok = await confirm({ title: "이 내역을 삭제하시겠습니까?", description: "잔고에도 반영된 내역이라면 잔고가 함께 조정됩니다.", variant: "destructive", confirmLabel: "삭제 (잔고 복원)", cancelLabel: "취소" });
-                              if (ok) handleDeleteRecord(record.id, true);
+                              const ok = await confirm({ title: "이 내역을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
+                              if (ok) handleDeleteRecord(record.id);
                             }}
                             className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors active:scale-95"
                             aria-label="삭제"

@@ -665,7 +665,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           syncPaymentStatus={syncPaymentStatus}
           showToast={showToast}
           autoMatchMember={autoMatchMember}
-          summaryBalance={summaryData.balance}
           duesAmounts={duesAmounts}
           refetchPaymentStatus={refetchPaymentStatus}
         />
