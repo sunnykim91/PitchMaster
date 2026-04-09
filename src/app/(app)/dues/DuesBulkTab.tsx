@@ -239,22 +239,25 @@ function DuesBulkTabInner({
       const formData = new FormData();
       formData.append("image", file);
 
+      const fileInfo = `${file.name} (${file.type || "unknown"}, ${(file.size / 1024).toFixed(0)}KB)`;
+      console.log("[OCR] uploading:", fileInfo);
+
       const res = await fetch("/api/ocr", { method: "POST", body: formData });
       const json = await res.json();
 
       if (!res.ok) {
         setOcrLoading(false);
         if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
-        setOcrStatus(`OCR 서버 오류 (${res.status}): ${json.error || "알 수 없는 오류"}. 수동으로 입력해주세요.`);
-        showToast("OCR 서버 오류", "error");
+        setOcrStatus(`OCR 오류: ${json.error || res.status}. 다른 이미지로 시도해주세요.`);
+        showToast(`OCR 실패 — ${fileInfo}`, "error");
         return;
       }
 
       if (!json.text) {
         setOcrLoading(false);
         if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
-        setOcrStatus("OCR 응답에 텍스트가 없습니다. 수동으로 입력해주세요.");
-        showToast("OCR 인식 실패", "error");
+        setOcrStatus("텍스트를 인식하지 못했습니다. 다른 이미지로 시도해주세요.");
+        showToast(`인식 실패 — ${fileInfo}`, "error");
         return;
       }
 
