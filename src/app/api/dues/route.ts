@@ -62,20 +62,24 @@ export async function POST(request: NextRequest) {
   const recordedAtValue = body.recordedAt ? `${body.recordedAt}T${body.recordedTime || "00:00"}:00+09:00` : new Date().toISOString();
   console.log("[DUES POST] recordedAt input:", body.recordedAt, "time:", body.recordedTime, "→ saved as:", recordedAtValue);
 
-  const { data, error } = await db
-    .from("dues_records")
-    .insert({
-      team_id: ctx.teamId,
-      user_id: (body.userId && !body.userId.startsWith("unlinked_")) ? body.userId : null,
-      type: body.type,
-      amount: body.amount,
-      description: body.description || null,
-      screenshot_url: body.screenshotUrl || null,
-      recorded_by: ctx.userId,
-      recorded_at: recordedAtValue,
-    })
-    .select()
-    .single();
+  const resolvedUserId = (body.userId && !body.userId.startsWith("unlinked_")) ? body.userId : null;
+  const insertPayload = {
+    team_id: ctx.teamId,
+    user_id: resolvedUserId,
+    type: body.type,
+    amount: body.amount,
+    description: body.description || null,
+    screenshot_url: body.screenshotUrl || null,
+    recorded_by: ctx.userId,
+    recorded_at: recordedAtValue,
+  };
+
+  let { data, error } = await db.from("dues_records").insert(insertPayload).select().single();
+
+  // FK 에러 시 user_id를 null로 재시도 (연동 해제/삭제된 사용자)
+  if (error && resolvedUserId && error.message.includes("foreign key")) {
+    ({ data, error } = await db.from("dues_records").insert({ ...insertPayload, user_id: null }).select().single());
+  }
 
   if (error) return apiError(error.message);
   console.log("[DUES POST] DB returned recorded_at:", data.recorded_at);
