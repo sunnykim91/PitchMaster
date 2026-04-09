@@ -3,7 +3,7 @@
 import React, { useRef, useState, useCallback } from "react";
 import { GA } from "@/lib/analytics";
 import Image from "next/image";
-import { Camera, FileSpreadsheet, Check, AlertCircle, Trash2 } from "lucide-react";
+import { Camera, FileSpreadsheet, Check, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -63,7 +63,6 @@ export type DuesBulkTabProps = {
   records: DuesRecord[];
   members: ApiMember[];
   summaryRecords: ApiDuesRecord[];
-  summaryBalance: number | null;
   balanceUpdatedAt: string | null;
   refetchSummary: () => Promise<void>;
   syncPaymentStatus: () => Promise<void>;
@@ -81,7 +80,6 @@ function DuesBulkTabInner({
   records,
   members,
   summaryRecords,
-  summaryBalance,
   balanceUpdatedAt,
   refetchSummary,
   syncPaymentStatus,
@@ -293,14 +291,17 @@ function DuesBulkTabInner({
 
       // 기존 DB 레코드와 비교하여 중복 제거 (날짜 + 금액 + 타입으로 판단, description은 수정될 수 있으므로 제외)
       const currentRecords = recordsRef.current;
+      // KST 기준 날짜 변환 함수 (UTC → KST)
+      const toKSTDate = (isoStr: string) => {
+        const d = new Date(isoStr);
+        const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+        return kst.toISOString().slice(0, 10);
+      };
       console.log("[OCR] checking duplicates against", currentRecords.length, "records");
-      if (currentRecords.length > 0) {
-        console.log("[OCR] sample record:", currentRecords[0].recordedAt, currentRecords[0].amount, currentRecords[0].type, currentRecords[0].description);
-      }
       const newRows = parsed.filter((row) => {
         const isDup = currentRecords.some(
           (r) =>
-            r.recordedAt.slice(0, 10) === row.date &&
+            toKSTDate(r.recordedAt) === row.date &&
             r.amount === Number(row.amount) &&
             r.type === row.type
         );
