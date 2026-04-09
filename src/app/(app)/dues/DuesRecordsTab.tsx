@@ -178,8 +178,8 @@ function DuesRecordsTabInner({
           });
         }
       }
+      // refetchSummary만 호출 (syncPaymentStatus 호출 시 잔여 내역으로 다시 PAID 될 수 있음)
       await refetchSummary();
-      await syncPaymentStatus();
     }
   }, [monthRecords, summaryBalance, refetchSummary, duesAmounts, members, monthFilter, syncPaymentStatus]);
 
