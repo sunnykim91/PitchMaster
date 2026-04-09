@@ -268,6 +268,7 @@ function DuesBulkTabInner({
       const ocrLatestDate = parsed.length > 0 ? parsed[0].date : null;
       const curBalDate = balanceUpdatedAt ? balanceUpdatedAt.slice(0, 10) : null;
       const shouldUpdateBalance = latestBalance !== null && ocrLatestDate && (!curBalDate || ocrLatestDate >= curBalDate);
+      console.log("[OCR] balance check:", { latestBalance, ocrLatestDate, curBalDate, shouldUpdateBalance });
 
       // 기존 DB 레코드와 비교하여 중복 제거 (날짜 + 금액 + 타입으로 판단, description은 수정될 수 있으므로 제외)
       const currentRecords = recordsRef.current;
@@ -294,25 +295,27 @@ function DuesBulkTabInner({
       setOcrLoading(false);
       if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
 
+      // 잔고 업데이트 (내역 중복 여부와 무관, 잔고는 항상 최신화)
+      if (shouldUpdateBalance) {
+        await apiMutate("/api/dues/balance", "POST", { balance: latestBalance });
+        await refetchSummary();
+      }
+
       if (newRows.length > 0) {
         setBulkRows(newRows);
         const msg = [`${newRows.length}건의 새 거래를 인식했습니다.`];
         if (duplicateCount > 0) msg.push(`(${duplicateCount}건 중복 제외)`);
-        if (latestBalance !== null) msg.push(`잔고: ${latestBalance.toLocaleString()}원`);
+        if (shouldUpdateBalance) msg.push(`잔고 ${latestBalance!.toLocaleString()}원 업데이트`);
         msg.push("확인 후 저장하세요.");
         setOcrStatus(msg.join(" "));
         showToast(`${newRows.length}건 인식 완료`, "success");
       } else if (parsed.length > 0) {
-        setOcrStatus(`⚠️ ${parsed.length}건 모두 이미 등록된 내역입니다. (중복)`);
-        showToast(`${parsed.length}건 모두 중복 — 이미 등록된 내역`, "info");
+        const balMsg = shouldUpdateBalance ? ` (잔고 ${latestBalance!.toLocaleString()}원 업데이트됨)` : "";
+        setOcrStatus(`${parsed.length}건 모두 이미 등록된 내역입니다.${balMsg}`);
+        showToast(shouldUpdateBalance ? "잔고 업데이트 완료" : `${parsed.length}건 모두 중복`, shouldUpdateBalance ? "success" : "info");
       } else {
         setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
         showToast("거래 내역을 인식하지 못했습니다.", "error");
-      }
-
-      // 잔고 업데이트는 UI 표시 후 백그라운드에서 실행 (refetchSummary 중 언마운트 방지)
-      if (shouldUpdateBalance) {
-        apiMutate("/api/dues/balance", "POST", { balance: latestBalance }).then(() => refetchSummary());
       }
     } catch {
       setOcrLoading(false);
