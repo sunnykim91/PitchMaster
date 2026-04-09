@@ -236,33 +236,39 @@ function DuesBulkTabInner({
     try {
       // 이미지 → JPEG 변환 + 리사이즈 (최대 2000px) — HEIC/대용량 대응
       let uploadFile: File | Blob = file;
+      let converted = false;
       try {
         const img = new window.Image();
+        img.crossOrigin = "anonymous";
         await new Promise<void>((resolve, reject) => {
           img.onload = () => resolve();
-          img.onerror = reject;
+          img.onerror = (e) => { console.error("[OCR] image load error:", e); reject(e); };
           img.src = imageUrl;
         });
         const MAX = 2000;
-        const needsResize = img.width > MAX || img.height > MAX;
-        const needsConvert = !file.type || !file.type.includes("jpeg");
-        if (needsResize || needsConvert) {
-          const scale = needsResize ? Math.min(MAX / img.width, MAX / img.height) : 1;
-          const canvas = document.createElement("canvas");
-          canvas.width = Math.round(img.width * scale);
-          canvas.height = Math.round(img.height * scale);
-          canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-          uploadFile = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), "image/jpeg", 0.9));
+        const scale = (img.width > MAX || img.height > MAX) ? Math.min(MAX / img.width, MAX / img.height) : 1;
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob((b) => resolve(b), "image/jpeg", 0.95));
+        if (blob && blob.size > 0 && blob.size > file.size * 0.3) {
+          // 변환 성공 + 크기가 원본의 30% 이상이면 사용 (너무 작으면 화질 손실)
+          uploadFile = blob;
+          converted = true;
+        } else if (blob && blob.size > 0 && blob.size <= file.size * 0.3) {
+          // 변환 결과가 너무 작으면 PNG 그대로 전송 (Clova는 PNG 지원)
+          console.log("[OCR] JPEG too small, using original PNG:", blob.size, "vs", file.size);
         }
-      } catch {
-        // 변환 실패 시 원본 사용
+      } catch (err) {
+        console.error("[OCR] canvas conversion failed:", err);
       }
 
       const formData = new FormData();
       formData.append("image", uploadFile, file.name.replace(/\.\w+$/, ".jpg"));
 
-      const fileInfo = `${file.name} (${file.type || "unknown"}, ${(file.size / 1024).toFixed(0)}KB → ${(uploadFile.size / 1024).toFixed(0)}KB)`;
-      console.log("[OCR] uploading:", fileInfo);
+      const fileInfo = `${file.name} (${file.type || "unknown"}, ${(file.size / 1024).toFixed(0)}KB → ${converted ? "JPEG " : "원본 "}${(uploadFile.size / 1024).toFixed(0)}KB)`;
+      console.log("[OCR] uploading:", fileInfo, converted ? "✓ converted" : "✗ original");
 
       const res = await fetch("/api/ocr", { method: "POST", body: formData });
       const json = await res.json();
