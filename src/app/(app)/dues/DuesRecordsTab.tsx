@@ -164,9 +164,24 @@ function DuesRecordsTabInner({
         const diff = record.type === "INCOME" ? -record.amount : record.amount;
         await apiMutate("/api/dues/balance", "POST", { balance: summaryBalance + diff });
       }
+      // 회비 납부 내역 삭제 시 해당 회원 납부 상태 초기화
+      if (record && record.type === "INCOME" && duesAmounts.includes(record.amount)) {
+        const matched = record.memberName
+          ? members.find((m) => m.name === record.memberName)
+          : members.find((m) => record.description.includes(m.name));
+        if (matched) {
+          await apiMutate("/api/dues/payment-status", "POST", {
+            memberId: matched.memberId,
+            month: monthFilter,
+            status: "UNPAID",
+            paidAmount: 0,
+          });
+        }
+      }
       await refetchSummary();
+      await syncPaymentStatus();
     }
-  }, [monthRecords, summaryBalance, refetchSummary]);
+  }, [monthRecords, summaryBalance, refetchSummary, duesAmounts, members, monthFilter, syncPaymentStatus]);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
