@@ -63,7 +63,6 @@ export type DuesBulkTabProps = {
   records: DuesRecord[];
   members: ApiMember[];
   summaryRecords: ApiDuesRecord[];
-  balanceUpdatedAt: string | null;
   refetchSummary: () => Promise<void>;
   syncPaymentStatus: () => Promise<void>;
   showToast: (msg: string, type?: "success" | "error" | "info") => void;
@@ -80,7 +79,6 @@ function DuesBulkTabInner({
   records,
   members,
   summaryRecords,
-  balanceUpdatedAt,
   refetchSummary,
   syncPaymentStatus,
   showToast,
@@ -101,6 +99,7 @@ function DuesBulkTabInner({
   const [bulkErrors, setBulkErrors] = useState<Record<number, string[]>>({});
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrStatus, setOcrStatus] = useState("");
+  const [pendingBalance, setPendingBalance] = useState<number | null>(null);
   const [excelLoading, setExcelLoading] = useState(false);
   const [excelRecords, setExcelRecords] = useState<{ date: string; time?: string; type: "INCOME" | "EXPENSE"; amount: number; description: string; balance: number | null }[]>([]);
   const [excelBalance, setExcelBalance] = useState<number | null>(null);
@@ -264,11 +263,8 @@ function DuesBulkTabInner({
       console.log("[OCR] raw text:", json.text);
       const { rows: parsed, latestBalance } = parseTransactions(json.text);
       console.log("[OCR] parsed rows:", parsed.map((r) => ({ date: r.date, time: r.time, desc: r.description, amount: r.amount, type: r.type })));
-      // 잔고 업데이트는 결과 표시 이후로 지연 (refetchSummary가 컴포넌트를 언마운트시킬 수 있음)
-      const ocrLatestDate = parsed.length > 0 ? parsed[0].date : null;
-      const curBalDate = balanceUpdatedAt ? balanceUpdatedAt.slice(0, 10) : null;
-      const shouldUpdateBalance = latestBalance !== null && ocrLatestDate && (!curBalDate || ocrLatestDate >= curBalDate);
-      console.log("[OCR] balance check:", { latestBalance, ocrLatestDate, curBalDate, shouldUpdateBalance });
+      // 잔고가 인식되면 항상 업데이트 (올린 시점이 곧 최신)
+      const shouldUpdateBalance = latestBalance !== null;
 
       // 기존 DB 레코드와 비교하여 중복 제거 (날짜 + 금액 + 타입으로 판단, description은 수정될 수 있으므로 제외)
       const currentRecords = recordsRef.current;
@@ -295,24 +291,21 @@ function DuesBulkTabInner({
       setOcrLoading(false);
       if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
 
-      // 잔고 업데이트 (내역 중복 여부와 무관, 잔고는 항상 최신화)
+      // 잔고가 인식되면 사용자 확인 대기 (바로 반영하지 않음)
       if (shouldUpdateBalance) {
-        await apiMutate("/api/dues/balance", "POST", { balance: latestBalance });
-        await refetchSummary();
+        setPendingBalance(latestBalance);
       }
 
       if (newRows.length > 0) {
         setBulkRows(newRows);
         const msg = [`${newRows.length}건의 새 거래를 인식했습니다.`];
         if (duplicateCount > 0) msg.push(`(${duplicateCount}건 중복 제외)`);
-        if (shouldUpdateBalance) msg.push(`잔고 ${latestBalance!.toLocaleString()}원 업데이트`);
         msg.push("확인 후 저장하세요.");
         setOcrStatus(msg.join(" "));
         showToast(`${newRows.length}건 인식 완료`, "success");
       } else if (parsed.length > 0) {
-        const balMsg = shouldUpdateBalance ? ` (잔고 ${latestBalance!.toLocaleString()}원 업데이트됨)` : "";
-        setOcrStatus(`${parsed.length}건 모두 이미 등록된 내역입니다.${balMsg}`);
-        showToast(shouldUpdateBalance ? "잔고 업데이트 완료" : `${parsed.length}건 모두 중복`, shouldUpdateBalance ? "success" : "info");
+        setOcrStatus(`${parsed.length}건 모두 이미 등록된 내역입니다.`);
+        showToast(`${parsed.length}건 모두 중복`, "info");
       } else {
         setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
         showToast("거래 내역을 인식하지 못했습니다.", "error");
@@ -466,6 +459,42 @@ function DuesBulkTabInner({
         )}>
           {ocrStatus}
         </div>
+      )}
+
+      {/* 잔고 확인 카드 */}
+      {pendingBalance !== null && (
+        <Card className="border-primary/30 bg-primary/5 py-2">
+          <CardContent className="px-4 pb-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">인식된 잔고</p>
+                <p className="text-lg font-bold text-primary tabular-nums">{pendingBalance.toLocaleString()}원</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-xs text-muted-foreground"
+                  onClick={() => setPendingBalance(null)}
+                >
+                  무시
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={async () => {
+                    await apiMutate("/api/dues/balance", "POST", { balance: pendingBalance });
+                    await refetchSummary();
+                    showToast(`잔고 ${pendingBalance.toLocaleString()}원 반영 완료`, "success");
+                    setPendingBalance(null);
+                  }}
+                >
+                  잔고 반영
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* 업로드된 이미지 미리보기 */}
@@ -693,17 +722,8 @@ function DuesBulkTabInner({
               });
               const dupCount = json.totalCount - filtered.length;
               setExcelRecords(filtered);
-              // 엑셀 마지막 거래 날짜가 현재 잔고 업데이트 날짜보다 최신일 때만 잔고 반영
-              const excelLastDate = json.records.length > 0
-                ? json.records[json.records.length - 1].date
-                : null;
-              const currentBalDate = balanceUpdatedAt ? balanceUpdatedAt.slice(0, 10) : null;
-              if (json.lastBalance !== null && excelLastDate && (!currentBalDate || excelLastDate >= currentBalDate)) {
-                setExcelBalance(json.lastBalance);
-              } else if (json.lastBalance !== null && currentBalDate && excelLastDate && excelLastDate < currentBalDate) {
-                setExcelBalance(null);
-                showToast(`엑셀 잔액(${excelLastDate})이 현재 잔고(${currentBalDate})보다 오래되어 잔고는 업데이트하지 않습니다.`, "info");
-              } else {
+              // 잔고가 있으면 항상 반영 (올린 시점이 곧 최신)
+              if (json.lastBalance !== null) {
                 setExcelBalance(json.lastBalance);
               }
               if (dupCount > 0) {

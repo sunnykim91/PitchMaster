@@ -698,7 +698,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           records={records}
           members={members}
           summaryRecords={summaryData.records}
-          balanceUpdatedAt={summaryData.balanceUpdatedAt}
           refetchSummary={refetchSummary}
           syncPaymentStatus={syncPaymentStatus}
           showToast={showToast}
