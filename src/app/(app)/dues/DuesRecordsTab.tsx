@@ -158,6 +158,9 @@ function DuesRecordsTabInner({
 
   const handleDeleteRecord = useCallback(async (id: string, revertBalance = false) => {
     const record = monthRecords.find((r) => r.id === id);
+    console.log("[DELETE] record:", record?.description, record?.amount, record?.type, "memberName:", record?.memberName);
+    console.log("[DELETE] duesAmounts:", duesAmounts, "includes:", record ? duesAmounts.includes(record.amount) : false);
+
     const { error } = await apiMutate(`/api/dues?id=${id}`, "DELETE");
     if (!error) {
       if (revertBalance && record && summaryBalance !== null) {
@@ -169,16 +172,19 @@ function DuesRecordsTabInner({
         const matched = record.memberName
           ? members.find((m) => m.name === record.memberName)
           : members.find((m) => record.description.includes(m.name));
+        console.log("[DELETE] matched member:", matched?.name, matched?.memberId, "month:", monthFilter);
         if (matched) {
-          await apiMutate("/api/dues/payment-status", "POST", {
+          const { error: statusErr } = await apiMutate("/api/dues/payment-status", "POST", {
             memberId: matched.memberId,
             month: monthFilter,
             status: "UNPAID",
             paidAmount: 0,
           });
+          console.log("[DELETE] payment status → UNPAID:", statusErr ? "FAILED: " + statusErr : "OK");
+        } else {
+          console.log("[DELETE] no member matched for:", record.description);
         }
       }
-      // refetchSummary만 호출 (syncPaymentStatus 호출 시 잔여 내역으로 다시 PAID 될 수 있음)
       await refetchSummary();
     }
   }, [monthRecords, summaryBalance, refetchSummary, duesAmounts, members, monthFilter, syncPaymentStatus]);
