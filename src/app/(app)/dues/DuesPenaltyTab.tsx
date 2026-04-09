@@ -151,8 +151,8 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
     }
   }
 
-  const [, mm] = monthFilter.split("-");
-  const displayMonth = `${parseInt(mm)}월`;
+  const [yy, mm] = monthFilter.split("-").map(Number);
+  const displayMonth = yy !== new Date().getFullYear() ? `${yy}. ${mm}월` : `${mm}월`;
 
   const unpaid = penalties.filter((p) => p.status === "UNPAID");
   const paid = penalties.filter((p) => p.status === "PAID");

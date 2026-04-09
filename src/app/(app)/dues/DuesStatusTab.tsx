@@ -133,7 +133,7 @@ function DuesStatusTabInner({
               <ChevronLeft className="h-5 w-5" />
             </button>
             <span className="min-w-[2.5rem] text-center text-sm font-medium text-foreground">
-              {displayMonth}
+              {y !== new Date().getFullYear() && <span className="text-muted-foreground">{y}. </span>}{displayMonth}
             </span>
             <button
               type="button"

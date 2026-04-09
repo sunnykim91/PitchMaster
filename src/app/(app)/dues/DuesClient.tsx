@@ -467,8 +467,8 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       {/* ── 평회원: 내 납부 상태 ── */}
       {!isStaffOrAbove(role) && _userId && (() => {
         const myStatus = duesStatus.find((m) => m.id === _userId);
-        const [, mm] = monthFilter.split("-");
-        const displayMonth = mm;
+        const [yy, mm] = monthFilter.split("-").map(Number);
+        const displayMonth = yy !== new Date().getFullYear() ? `${yy}. ${mm}` : String(mm);
         return myStatus ? (
           <Card className="border-white/[0.06] bg-card py-4">
             <CardContent className="px-5">

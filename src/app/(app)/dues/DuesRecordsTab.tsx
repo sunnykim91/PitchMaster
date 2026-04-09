@@ -226,7 +226,7 @@ function DuesRecordsTabInner({
             <ChevronLeft className="h-4 w-4" />
           </button>
           <span className="min-w-[3rem] text-center text-sm font-semibold text-foreground">
-            {m}월
+            {y !== new Date().getFullYear() && <span className="text-muted-foreground">{y}. </span>}{m}월
           </span>
           <button
             type="button"
