@@ -234,41 +234,13 @@ function DuesBulkTabInner({
     setOcrLoading(true);
     setOcrStatus("스크린샷 분석 중...");
     try {
-      // 이미지 → JPEG 변환 + 리사이즈 (최대 2000px) — HEIC/대용량 대응
-      let uploadFile: File | Blob = file;
-      let converted = false;
-      try {
-        const img = new window.Image();
-        img.crossOrigin = "anonymous";
-        await new Promise<void>((resolve, reject) => {
-          img.onload = () => resolve();
-          img.onerror = (e) => { console.error("[OCR] image load error:", e); reject(e); };
-          img.src = imageUrl;
-        });
-        const MAX = 2000;
-        const scale = (img.width > MAX || img.height > MAX) ? Math.min(MAX / img.width, MAX / img.height) : 1;
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob((b) => resolve(b), "image/jpeg", 0.95));
-        if (blob && blob.size > 0 && blob.size > file.size * 0.3) {
-          // 변환 성공 + 크기가 원본의 30% 이상이면 사용 (너무 작으면 화질 손실)
-          uploadFile = blob;
-          converted = true;
-        } else if (blob && blob.size > 0 && blob.size <= file.size * 0.3) {
-          // 변환 결과가 너무 작으면 PNG 그대로 전송 (Clova는 PNG 지원)
-          console.log("[OCR] JPEG too small, using original PNG:", blob.size, "vs", file.size);
-        }
-      } catch (err) {
-        console.error("[OCR] canvas conversion failed:", err);
-      }
-
+      // 원본 그대로 업로드 (Clova는 jpg, png, pdf, tiff 지원)
+      // 리사이즈는 서버에서 포맷 감지 후 처리
       const formData = new FormData();
-      formData.append("image", uploadFile, file.name.replace(/\.\w+$/, ".jpg"));
+      formData.append("image", file);
 
-      const fileInfo = `${file.name} (${file.type || "unknown"}, ${(file.size / 1024).toFixed(0)}KB → ${converted ? "JPEG " : "원본 "}${(uploadFile.size / 1024).toFixed(0)}KB)`;
-      console.log("[OCR] uploading:", fileInfo, converted ? "✓ converted" : "✗ original");
+      const fileInfo = `${file.name} (${file.type || "unknown"}, ${(file.size / 1024).toFixed(0)}KB)`;
+      console.log("[OCR] uploading:", fileInfo);
 
       const res = await fetch("/api/ocr", { method: "POST", body: formData });
       const json = await res.json();
