@@ -236,10 +236,32 @@ function DuesBulkTabInner({
     setOcrLoading(true);
     setOcrStatus("스크린샷 분석 중...");
     try {
-      const formData = new FormData();
-      formData.append("image", file);
+      // 이미지 리사이즈 (최대 2000px, JPEG 변환 — 아이폰 고해상도/HEIC 대응)
+      let uploadFile: File | Blob = file;
+      try {
+        const img = new window.Image();
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = reject;
+          img.src = imageUrl;
+        });
+        const MAX = 2000;
+        if (img.width > MAX || img.height > MAX) {
+          const scale = Math.min(MAX / img.width, MAX / img.height);
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+          uploadFile = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), "image/jpeg", 0.9));
+        }
+      } catch {
+        // 리사이즈 실패 시 원본 사용
+      }
 
-      const fileInfo = `${file.name} (${file.type || "unknown"}, ${(file.size / 1024).toFixed(0)}KB)`;
+      const formData = new FormData();
+      formData.append("image", uploadFile, file.name.replace(/\.\w+$/, ".jpg"));
+
+      const fileInfo = `${file.name} (${file.type || "unknown"}, ${(file.size / 1024).toFixed(0)}KB → ${(uploadFile.size / 1024).toFixed(0)}KB)`;
       console.log("[OCR] uploading:", fileInfo);
 
       const res = await fetch("/api/ocr", { method: "POST", body: formData });
