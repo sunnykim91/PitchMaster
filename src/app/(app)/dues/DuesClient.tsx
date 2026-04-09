@@ -339,14 +339,29 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
       }
     }
 
+    // 매칭된 멤버 ID 셋
+    const matchedMemberIds = new Set(matches.map((m) => m.memberId));
+
+    // 기존 PAID인데 이번 매칭에 없는 사람 → UNPAID로 변경
+    for (const ps of paymentStatusRaw ?? []) {
+      if (ps.status === "PAID" && !matchedMemberIds.has(ps.member_id)) {
+        matches.push({ memberId: ps.member_id, amount: 0, status: "UNPAID" });
+      }
+    }
+
     if (matches.length > 0) {
       await apiMutate("/api/dues/payment-status", "PUT", { month: monthFilter, matches });
       await refetchPaymentStatus();
-      showToast(`${matches.length}명 납부 확인`, "success");
+      const paidCount = matches.filter((m) => m.status === "PAID").length;
+      const unpaidCount = matches.filter((m) => m.status === "UNPAID").length;
+      const msg = [];
+      if (paidCount > 0) msg.push(`납부 ${paidCount}명`);
+      if (unpaidCount > 0) msg.push(`미납 전환 ${unpaidCount}명`);
+      showToast(msg.join(" · "), "success");
     } else {
       showToast("매칭된 회비 입금 내역이 없습니다", "info");
     }
-  }, [settings.length, monthRecords, isDuesPayment, members, monthFilter, refetchPaymentStatus, showToast]);
+  }, [settings.length, monthRecords, isDuesPayment, members, monthFilter, refetchPaymentStatus, showToast, paymentStatusRaw]);
 
   /** 월별 회비 납부 현황 계산 */
   const duesStatus = useMemo(() => {

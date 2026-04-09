@@ -160,35 +160,17 @@ function DuesRecordsTabInner({
 
   const handleDeleteRecord = useCallback(async (id: string, revertBalance = false) => {
     const record = monthRecords.find((r) => r.id === id);
-    console.log("[DELETE] record:", record?.description, record?.amount, record?.type, "memberName:", record?.memberName);
-    console.log("[DELETE] duesAmounts:", duesAmounts, "includes:", record ? duesAmounts.includes(record.amount) : false);
-
     const { error } = await apiMutate(`/api/dues?id=${id}`, "DELETE");
     if (!error) {
       if (revertBalance && record && summaryBalance !== null) {
         const diff = record.type === "INCOME" ? -record.amount : record.amount;
         await apiMutate("/api/dues/balance", "POST", { balance: summaryBalance + diff });
       }
-      // 회비 납부 내역 삭제 시 해당 회원 납부 상태 초기화
-      if (record && record.type === "INCOME" && duesAmounts.includes(record.amount)) {
-        const matched = record.memberName
-          ? members.find((m) => m.name === record.memberName)
-          : members.find((m) => record.description.includes(m.name));
-        console.log("[DELETE] matched member:", matched?.name, matched?.memberId, "month:", monthFilter);
-        if (matched) {
-          const { error: statusErr } = await apiMutate("/api/dues/payment-status", "POST", {
-            memberId: matched.memberId,
-            month: monthFilter,
-            status: "UNPAID",
-            paidAmount: 0,
-          });
-          console.log("[DELETE] payment status → UNPAID:", statusErr ? "FAILED: " + statusErr : "OK");
-        } else {
-          console.log("[DELETE] no member matched for:", record.description);
-        }
-      }
       await refetchSummary();
-      await refetchPaymentStatus?.();
+      // 회비 관련 내역 삭제 시 납부 현황 갱신 안내
+      if (record && record.type === "INCOME" && duesAmounts.includes(record.amount)) {
+        showToast("납부현황 탭에서 '납부 자동 확인'을 눌러주세요", "info");
+      }
     }
   }, [monthRecords, summaryBalance, refetchSummary, duesAmounts, members, monthFilter, syncPaymentStatus]);
 
