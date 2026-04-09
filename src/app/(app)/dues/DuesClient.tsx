@@ -287,12 +287,25 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
     };
   }, []);
 
-  /** 월별 필터 적용된 레코드 (기준일 기반, 로컬 시간 기준) */
+  /** 달력 기준 월별 레코드 (입출금 탭용: 4/1~4/30) */
+  const calendarMonthRecords = useMemo(() => {
+    if (!monthFilter) return records;
+    const [y, m] = monthFilter.split("-").map(Number);
+    const lastDay = new Date(y, m, 0).getDate();
+    const from = `${monthFilter}-01`;
+    const to = `${monthFilter}-${String(lastDay).padStart(2, "0")}`;
+    return records.filter((r) => {
+      const d = new Date(r.recordedAt);
+      const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      return date >= from && date <= to;
+    });
+  }, [records, monthFilter]);
+
+  /** 기준일 기반 레코드 (납부현황 탭용: 3/25~4/24) */
   const monthRecords = useMemo(() => {
     if (!monthFilter) return records;
     const { from, to } = getDuesPeriod(monthFilter, periodConfig.startDay);
     return records.filter((r) => {
-      // 브라우저가 로컬(KST) 기준으로 파싱하므로 추가 변환 불필요
       const d = new Date(r.recordedAt);
       const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       return date >= from && date <= to;
@@ -631,7 +644,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           role={role}
           monthFilter={monthFilter}
           setMonthFilter={setMonthFilter}
-          monthRecords={monthRecords}
+          monthRecords={calendarMonthRecords}
           members={members}
           refetchSummary={refetchSummary}
           syncPaymentStatus={syncPaymentStatus}
