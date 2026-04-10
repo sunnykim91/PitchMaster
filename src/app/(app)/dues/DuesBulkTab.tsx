@@ -266,7 +266,8 @@ function DuesBulkTabInner({
       // 잔고가 인식되면 항상 업데이트 (올린 시점이 곧 최신)
       const shouldUpdateBalance = latestBalance !== null;
 
-      // 기존 DB 레코드와 비교하여 중복 제거 (날짜 + 금액 + 타입으로 판단, description은 수정될 수 있으므로 제외)
+      // 기존 DB 레코드와 비교하여 중복 제거 (날짜 + 금액 + 타입 + description)
+      // description까지 비교해야 같은 날 같은 금액의 다른 입금자가 중복으로 잘못 묶이지 않음
       const currentRecords = recordsRef.current;
       // KST 기준 날짜 변환 함수 (UTC → KST)
       const toKSTDate = (isoStr: string) => {
@@ -274,13 +275,16 @@ function DuesBulkTabInner({
         const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
         return kst.toISOString().slice(0, 10);
       };
+      const normalizeDesc = (s: string | null | undefined) => (s ?? "").replace(/\s+/g, "").trim();
       console.log("[OCR] checking duplicates against", currentRecords.length, "records");
       const newRows = parsed.filter((row) => {
+        const rowDesc = normalizeDesc(row.description);
         const isDup = currentRecords.some(
           (r) =>
             toKSTDate(r.recordedAt) === row.date &&
             r.amount === Number(row.amount) &&
-            r.type === row.type
+            r.type === row.type &&
+            normalizeDesc(r.description) === rowDesc
         );
         if (isDup) console.log("[OCR] duplicate:", row.date, row.amount, row.description);
         return !isDup;
