@@ -1,6 +1,15 @@
 import { notFound } from "next/navigation";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type { Metadata } from "next";
+import {
+  classifyPosition,
+  generateSignature,
+  computeRankLabel,
+  computeStreak,
+  findBestMoments,
+  type MatchPerformance,
+  type BestMoment,
+} from "@/lib/playerCardUtils";
 
 type Props = { params: Promise<{ memberId: string }> };
 
@@ -59,46 +68,63 @@ async function getPlayerData(memberId: string) {
     .order("match_date", { ascending: false });
 
   const matchIds = (matches ?? []).map((m) => m.id);
-  if (matchIds.length === 0) return { name, teamName, positions, jerseyNumber: m.jersey_number, teamRole: m.team_role, stats: null, recentMatches: [], seasonName: season.name };
+  if (matchIds.length === 0) return {
+    name, teamName, positions, jerseyNumber: m.jersey_number, teamRole: m.team_role,
+    stats: null, recentMatches: [], seasonName: season.name,
+    signature: undefined, bestMoments: [],
+  };
 
-  // 출석한 경기
-  const { data: attendance } = await db
-    .from("match_attendance")
-    .select("match_id, user_id, member_id")
-    .in("match_id", matchIds)
-    .eq("vote", "ATTEND");
+  // 출석 + 팀 멤버 전체 (랭킹 산출용)
+  const [attendanceRes, allMembersRes] = await Promise.all([
+    db
+      .from("match_attendance")
+      .select("match_id, user_id, member_id")
+      .in("match_id", matchIds)
+      .eq("vote", "ATTEND"),
+    db
+      .from("team_members")
+      .select("id, user_id")
+      .eq("team_id", m.team_id)
+      .in("status", ["ACTIVE", "DORMANT"]),
+  ]);
+  const attendance = attendanceRes.data ?? [];
+  const allTeamMembers = (allMembersRes.data ?? []) as Array<{ id: string; user_id: string | null }>;
 
   const attendedMatchIds = new Set<string>();
-  for (const a of attendance ?? []) {
+  for (const a of attendance) {
     if (lookupIds.includes(a.user_id) || lookupIds.includes(a.member_id)) {
       attendedMatchIds.add(a.match_id);
     }
   }
 
-  // 골/어시/MVP
-  const [goalsRes, assistsRes, mvpRes, allGoalsRes] = await Promise.all([
-    db.from("match_goals").select("match_id, scorer_id").in("match_id", matchIds).in("scorer_id", lookupIds).eq("is_own_goal", false),
-    db.from("match_goals").select("match_id, assist_id").in("match_id", matchIds).in("assist_id", lookupIds),
-    db.from("match_mvp_votes").select("match_id, candidate_id").in("match_id", matchIds).in("candidate_id", lookupIds),
+  // 골/어시/MVP — 팀 전체로 로드 (랭킹 산출 + 본인 필터)
+  const [allGoalsByScorerRes, allAssistsRes, allMvpRes, allGoalsRes] = await Promise.all([
+    db.from("match_goals").select("match_id, scorer_id").in("match_id", matchIds).eq("is_own_goal", false),
+    db.from("match_goals").select("match_id, assist_id").in("match_id", matchIds).not("assist_id", "is", null),
+    db.from("match_mvp_votes").select("match_id, candidate_id").in("match_id", matchIds),
     db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", matchIds),
   ]);
 
-  // 집계
-  const totalGoals = (goalsRes.data ?? []).length;
-  const totalAssists = (assistsRes.data ?? []).length;
-  const totalMvp = (mvpRes.data ?? []).length;
+  // 본인 골/어시/MVP — lookupIds 로 필터
+  const myGoals = (allGoalsByScorerRes.data ?? []).filter((g) => lookupIds.includes(g.scorer_id));
+  const myAssists = (allAssistsRes.data ?? []).filter((a) => lookupIds.includes(a.assist_id));
+  const myMvp = (allMvpRes.data ?? []).filter((v) => lookupIds.includes(v.candidate_id));
 
-  // 경기별 골/어시
+  const totalGoals = myGoals.length;
+  const totalAssists = myAssists.length;
+  const totalMvp = myMvp.length;
+
+  // 경기별 골/어시 (본인)
   const goalsByMatch = new Map<string, number>();
-  for (const g of goalsRes.data ?? []) {
+  for (const g of myGoals) {
     goalsByMatch.set(g.match_id, (goalsByMatch.get(g.match_id) ?? 0) + 1);
   }
   const assistsByMatch = new Map<string, number>();
-  for (const a of assistsRes.data ?? []) {
+  for (const a of myAssists) {
     assistsByMatch.set(a.match_id, (assistsByMatch.get(a.match_id) ?? 0) + 1);
   }
   const mvpByMatch = new Set<string>();
-  for (const v of mvpRes.data ?? []) {
+  for (const v of myMvp) {
     mvpByMatch.add(v.match_id);
   }
 
@@ -124,21 +150,99 @@ async function getPlayerData(memberId: string) {
   const winRate = attended > 0 ? wins / attended : 0;
   const attendanceRate = matchIds.length > 0 ? attended / matchIds.length : 0;
 
-  // 최근 경기 (출전한 경기만, 최대 10개)
+  // === 팀 내 랭킹 산출 ===
+  type MemberAgg = { ids: string[]; goals: number; assists: number; mvp: number };
+  const memberAggs: MemberAgg[] = allTeamMembers.map((tm) => ({
+    ids: tm.user_id ? [tm.user_id, tm.id] : [tm.id],
+    goals: 0,
+    assists: 0,
+    mvp: 0,
+  }));
+  for (const g of allGoalsByScorerRes.data ?? []) {
+    const agg = memberAggs.find((mm) => mm.ids.includes(g.scorer_id));
+    if (agg) agg.goals++;
+  }
+  for (const a of allAssistsRes.data ?? []) {
+    const agg = memberAggs.find((mm) => mm.ids.includes(a.assist_id));
+    if (agg) agg.assists++;
+  }
+  for (const v of allMvpRes.data ?? []) {
+    const agg = memberAggs.find((mm) => mm.ids.includes(v.candidate_id));
+    if (agg) agg.mvp++;
+  }
+
+  const goalsRank = computeRankLabel(totalGoals, memberAggs.map((x) => x.goals));
+  const assistsRank = computeRankLabel(totalAssists, memberAggs.map((x) => x.assists));
+  const mvpRank = computeRankLabel(totalMvp, memberAggs.map((x) => x.mvp));
+
+  const isTopScorer = totalGoals > 0 && goalsRank === "🏆 팀 1위";
+  const isTopAssist = totalAssists > 0 && assistsRank === "🏆 팀 1위";
+  const isTopMvp = totalMvp > 0 && mvpRank === "🏆 팀 1위";
+
+  // === 연속 기록 산출 (날짜 오름차순) ===
+  const matchesAsc = [...(matches ?? [])].slice().sort((a, b) =>
+    a.match_date < b.match_date ? -1 : 1
+  );
+  const attendFlagsAsc = matchesAsc.map((mm) => attendedMatchIds.has(mm.id));
+  const attendanceStreak = computeStreak(attendFlagsAsc);
+
+  const goalFlagsAsc = matchesAsc
+    .filter((mm) => attendedMatchIds.has(mm.id))
+    .map((mm) => (goalsByMatch.get(mm.id) ?? 0) > 0);
+  const goalStreak = computeStreak(goalFlagsAsc);
+
+  // === 베스트 모먼트 산출 ===
+  const performanceHistory: MatchPerformance[] = matchesAsc.map((mm) => {
+    const s = scoreMap.get(mm.id) ?? { our: 0, opp: 0 };
+    return {
+      matchId: mm.id,
+      date: mm.match_date,
+      opponent: mm.opponent_name ?? (mm.match_type === "INTERNAL" ? "자체전" : ""),
+      ourScore: s.our,
+      oppScore: s.opp,
+      attended: attendedMatchIds.has(mm.id),
+      goals: goalsByMatch.get(mm.id) ?? 0,
+      assists: assistsByMatch.get(mm.id) ?? 0,
+      mvp: mvpByMatch.has(mm.id),
+    };
+  });
+  const bestMoments: BestMoment[] = findBestMoments(performanceHistory);
+
+  // === 시그니처 카피 ===
+  const cat = classifyPosition(positions);
+  const signature = generateSignature({
+    cat,
+    goals: totalGoals,
+    assists: totalAssists,
+    mvp: totalMvp,
+    cleanSheets,
+    matchCount: attended,
+    attendanceRate,
+    winRate,
+    isTopScorer,
+    isTopAssist,
+    isTopMvp,
+  });
+
+  // 최근 경기 (출전한 경기만, 최대 10개) — isHighlight 플래그 포함
   const recentMatches = (matches ?? [])
-    .filter((m) => attendedMatchIds.has(m.id))
+    .filter((mm) => attendedMatchIds.has(mm.id))
     .slice(0, 10)
-    .map((m) => {
-      const s = scoreMap.get(m.id) ?? { our: 0, opp: 0 };
+    .map((mm) => {
+      const s = scoreMap.get(mm.id) ?? { our: 0, opp: 0 };
       const result = s.our > s.opp ? "W" : s.our < s.opp ? "L" : "D";
+      const matchGoals = goalsByMatch.get(mm.id) ?? 0;
+      const matchAssists = assistsByMatch.get(mm.id) ?? 0;
+      const matchMvp = mvpByMatch.has(mm.id);
       return {
-        date: m.match_date,
-        opponent: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""),
+        date: mm.match_date,
+        opponent: mm.opponent_name ?? (mm.match_type === "INTERNAL" ? "자체전" : ""),
         score: `${s.our}:${s.opp}`,
         result,
-        goals: goalsByMatch.get(m.id) ?? 0,
-        assists: assistsByMatch.get(m.id) ?? 0,
-        mvp: mvpByMatch.has(m.id),
+        goals: matchGoals,
+        assists: matchAssists,
+        mvp: matchMvp,
+        isHighlight: matchGoals >= 2 || matchMvp,
       };
     });
 
@@ -149,6 +253,7 @@ async function getPlayerData(memberId: string) {
     jerseyNumber: m.jersey_number,
     teamRole: m.team_role,
     seasonName: season.name,
+    signature,
     stats: {
       goals: totalGoals,
       assists: totalAssists,
@@ -159,8 +264,14 @@ async function getPlayerData(memberId: string) {
       winRate,
       cleanSheets,
       attackPoints: totalGoals + totalAssists,
+      goalsRank,
+      assistsRank,
+      mvpRank,
+      attendanceStreak: attendanceStreak >= 5 ? attendanceStreak : undefined,
+      goalStreak: goalStreak >= 3 ? goalStreak : undefined,
     },
     recentMatches,
+    bestMoments,
   };
 }
 

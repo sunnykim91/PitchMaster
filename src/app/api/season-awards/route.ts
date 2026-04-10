@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import {
+  generateSeasonSummary,
+  awardContext,
+} from "@/lib/playerCardUtils";
 
 type MemberRow = {
   id: string;
@@ -431,6 +435,59 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // 어워드별 컨텍스트 라벨 부착
+  if (topScorer) {
+    const ctx = awardContext("topScorer", Number(topScorer.value), totalMatches);
+    if (ctx) topScorer.context = ctx;
+  }
+  if (topAssist) {
+    const ctx = awardContext("topAssist", Number(topAssist.value), totalMatches);
+    if (ctx) topAssist.context = ctx;
+  }
+  if (topMvp) {
+    const ctx = awardContext("topMvp", Number(topMvp.value), totalMatches);
+    if (ctx) topMvp.context = ctx;
+  }
+  if (ironWall) {
+    const ctx = awardContext("ironWall", Number(ironWall.value), totalMatches);
+    if (ctx) ironWall.context = ctx;
+  }
+  if (luckyCharm) {
+    const ctx = awardContext("luckyCharm", 0, totalMatches);
+    if (ctx) luckyCharm.context = ctx;
+  }
+
+  // 시즌 MVP 자동 선정 — topScorer > topMvp > topAssist 우선순위로 가장 임팩트 있는 1명
+  let mvpAward: { name: string; signature: string; keyStats: Array<{ label: string; value: string | number }> } | null = null;
+  const pickName = (a: AwardEntry | null) => (a ? a.name : null);
+  const mvpName = pickName(topScorer) ?? pickName(topMvp) ?? pickName(topAssist);
+  if (mvpName) {
+    const keyStats: Array<{ label: string; value: string | number }> = [];
+    if (topScorer && topScorer.name === mvpName)
+      keyStats.push({ label: "골", value: topScorer.value });
+    if (topAssist && topAssist.name === mvpName)
+      keyStats.push({ label: "어시", value: topAssist.value });
+    if (topMvp && topMvp.name === mvpName)
+      keyStats.push({ label: "MOM", value: topMvp.value });
+    if (topAttendance && topAttendance.name === mvpName)
+      keyStats.push({ label: "출석률", value: topAttendance.value });
+    if (ironWall && ironWall.name === mvpName)
+      keyStats.push({ label: "클린시트", value: ironWall.value });
+
+    // 시그니처 캐치프레이즈
+    const goalsVal = topScorer && topScorer.name === mvpName ? Number(topScorer.value) : 0;
+    const assistsVal = topAssist && topAssist.name === mvpName ? Number(topAssist.value) : 0;
+    const mvpVal = topMvp && topMvp.name === mvpName ? Number(topMvp.value) : 0;
+    let sig = `${mvpName} — 이 시즌의 주인공`;
+    if (goalsVal > 0 && assistsVal > 0)
+      sig = `${goalsVal}골 ${assistsVal}어시 — 이 시즌의 주인공`;
+    else if (goalsVal > 0) sig = `${goalsVal}골 — 시즌의 득점왕`;
+    else if (mvpVal > 0) sig = `${mvpVal}회 MOM — 팀의 주인공`;
+    else if (assistsVal > 0) sig = `${assistsVal}어시 — 시즌의 도움왕`;
+
+    mvpAward = { name: mvpName, signature: sig, keyStats };
+  }
+
   // 결과 조합
   const awards: Record<string, AwardEntry | BestMatchEntry> = {};
   if (topScorer) awards.topScorer = topScorer;
@@ -447,5 +504,7 @@ export async function GET(request: NextRequest) {
     teamName,
     totalMatches,
     record: { wins, draws, losses },
+    mvp: mvpAward,
+    seasonSummary: generateSeasonSummary({ wins, draws, losses }, totalMatches),
   });
 }

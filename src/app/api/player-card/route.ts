@@ -1,18 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getApiContext, apiError } from "@/lib/api-helpers";
+import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import {
+  classifyPosition,
+  getRarity,
+  getHeroStatKey,
+  generateSignature,
+  computeRankLabel,
+  computeStreak,
+  type PositionCategory,
+} from "@/lib/playerCardUtils";
 
-// 포지션 카테고리 분류
-type PosCategory = "GK" | "DEF" | "MID" | "FW" | "DEFAULT";
+type PosCategory = PositionCategory;
 
-function classifyPosition(positions: string[]): PosCategory {
-  if (!positions || positions.length === 0) return "DEFAULT";
-  const primary = positions[0].toUpperCase();
-  if (primary === "GK") return "GK";
-  if (["CB", "RB", "LB", "CDM"].includes(primary)) return "DEF";
-  if (["CM", "CAM", "LM", "RM"].includes(primary)) return "MID";
-  if (["FW", "LW", "RW", "CF", "ST"].includes(primary)) return "FW";
-  return "DEFAULT";
+// 포지션별 시그니처 hero stat 키 (PlayerCard JSON 의 isHero 마킹용)
+// — 라우트 내 stats key 와 매칭: goals/assists/cleanSheet
+function statKeyToHero(cat: PosCategory): string {
+  return getHeroStatKey(cat);
 }
 
 // 포지션 카테고리별 표시할 스탯 6개 정의
@@ -167,6 +171,8 @@ export async function GET(request: NextRequest) {
   const memberId = request.nextUrl.searchParams.get("memberId");
   if (!memberId) return apiError("memberId required");
   const seasonId = request.nextUrl.searchParams.get("seasonId");
+  const format = request.nextUrl.searchParams.get("format"); // "json" | null
+  const isJson = format === "json";
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
@@ -243,6 +249,27 @@ export async function GET(request: NextRequest) {
       attendanceRate: 0, winRate: 0, cleanSheet: 0,
       concededPerGame: 0, matchCount: 0,
     };
+
+    if (isJson) {
+      return apiSuccess({
+        ovr,
+        rarity: getRarity(ovr),
+        positionLabel: positions[0] ?? "-",
+        positionCategory: cat,
+        playerName,
+        jerseyNumber,
+        teamName,
+        teamPrimaryColor: primaryColor,
+        seasonName: season.name,
+        signature: "곧 첫 경기를 기다리는 선수",
+        stats: statDefs.map((def) => ({
+          label: def.label,
+          value: formatStat(def.key, stats),
+          isHero: def.key === statKeyToHero(cat),
+        })),
+      });
+    }
+
     const svg = buildSvg(
       ovr, positions[0] ?? "-", teamName, playerName,
       jerseyNumber, statDefs, stats, primaryColor, season.name
@@ -344,7 +371,119 @@ export async function GET(request: NextRequest) {
     matchCount,
   };
 
-  // 9. SVG 생성
+  // 9. JSON 응답이 필요하면 팀 내 랭킹/연속기록/시그니처까지 산출
+  let signature: string | undefined;
+  const rankByKey = new Map<string, string | undefined>();
+  const streakByKey = new Map<string, string | undefined>();
+
+  if (isJson) {
+    // 9-1. 팀 멤버 전체 조회 (랭킹 산출용)
+    const { data: allMembers } = await db
+      .from("team_members")
+      .select("id, user_id")
+      .eq("team_id", ctx.teamId)
+      .in("status", ["ACTIVE", "DORMANT"]);
+
+    type MemberLookup = { ids: string[]; goals: number; assists: number; mvp: number };
+    const memberAggs: MemberLookup[] = (allMembers ?? []).map((m) => ({
+      ids: m.user_id ? [m.user_id, m.id] : [m.id],
+      goals: 0,
+      assists: 0,
+      mvp: 0,
+    }));
+
+    // 9-2. 멤버별 골/어시/MVP 집계 (이미 로드된 데이터 재사용)
+    for (const row of goalsRes.data ?? []) {
+      const agg = memberAggs.find((m) => m.ids.includes(row.scorer_id));
+      if (agg) agg.goals++;
+    }
+    for (const row of assistsRes.data ?? []) {
+      const agg = memberAggs.find((m) => m.ids.includes(row.assist_id));
+      if (agg) agg.assists++;
+    }
+    for (const row of mvpRes.data ?? []) {
+      const agg = memberAggs.find((m) => m.ids.includes(row.candidate_id));
+      if (agg) agg.mvp++;
+    }
+
+    const allGoals = memberAggs.map((m) => m.goals);
+    const allAssists = memberAggs.map((m) => m.assists);
+    const allMvp = memberAggs.map((m) => m.mvp);
+
+    rankByKey.set("goals", computeRankLabel(goals, allGoals));
+    rankByKey.set("assists", computeRankLabel(assists, allAssists));
+    rankByKey.set("mvp", computeRankLabel(mvp, allMvp));
+    rankByKey.set("attackPoints", computeRankLabel(goals + assists, memberAggs.map((m) => m.goals + m.assists)));
+
+    const isTopScorer = goals > 0 && rankByKey.get("goals") === "🏆 팀 1위";
+    const isTopAssist = assists > 0 && rankByKey.get("assists") === "🏆 팀 1위";
+    const isTopMvp = mvp > 0 && rankByKey.get("mvp") === "🏆 팀 1위";
+
+    // 9-3. 연속 기록 — 경기 날짜 오름차순으로 정렬해서 walk
+    const matchesByDateAsc = [...(matches ?? [])]
+      .slice()
+      .sort((a, b) => (a.match_date < b.match_date ? -1 : 1));
+
+    const attendFlags = matchesByDateAsc.map((m) => attendedMatchIds.has(m.id));
+    const attendStreak = computeStreak(attendFlags);
+
+    // 골 연속 기록 — 출전한 경기 중 골을 넣은 경기 시퀀스
+    // 경기별 본인 골 수 산정
+    const myGoalsByMatch = new Map<string, number>();
+    for (const g of allGoalsRes.data ?? []) {
+      if (lookupIds.includes(g.scorer_id) && !g.is_own_goal) {
+        myGoalsByMatch.set(g.match_id, (myGoalsByMatch.get(g.match_id) ?? 0) + 1);
+      }
+    }
+    const goalFlags = matchesByDateAsc
+      .filter((m) => attendedMatchIds.has(m.id))
+      .map((m) => (myGoalsByMatch.get(m.id) ?? 0) > 0);
+    const goalStreak = computeStreak(goalFlags);
+
+    if (attendStreak >= 5) streakByKey.set("attendanceRate", `🔥 ${attendStreak}경기 연속`);
+    if (goalStreak >= 3) streakByKey.set("goals", `🔥 ${goalStreak}경기 연속`);
+
+    // 9-4. 시그니처 한 줄
+    signature = generateSignature({
+      cat,
+      goals,
+      assists,
+      mvp,
+      cleanSheets: cleanSheet,
+      matchCount,
+      attendanceRate,
+      winRate,
+      isTopScorer,
+      isTopAssist,
+      isTopMvp,
+    });
+  }
+
+  // 10. JSON 응답
+  if (isJson) {
+    const heroKey = statKeyToHero(cat);
+    return apiSuccess({
+      ovr,
+      rarity: getRarity(ovr),
+      positionLabel: positions[0] ?? "-",
+      positionCategory: cat,
+      playerName,
+      jerseyNumber,
+      teamName,
+      teamPrimaryColor: primaryColor,
+      seasonName: season.name,
+      signature,
+      stats: statDefs.map((def) => ({
+        label: def.label,
+        value: formatStat(def.key, stats),
+        rank: rankByKey.get(def.key),
+        streak: streakByKey.get(def.key),
+        isHero: def.key === heroKey,
+      })),
+    });
+  }
+
+  // 11. SVG 생성 (기존 경로)
   const svg = buildSvg(
     ovr, positions[0] ?? "-", teamName, playerName,
     jerseyNumber, statDefs, stats, primaryColor, season.name
