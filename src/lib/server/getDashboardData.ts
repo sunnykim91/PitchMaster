@@ -50,6 +50,7 @@ export type DashboardData = {
     matchDate: string;
     matchTime: string | null;
     opponentName: string | null;
+    matchType: "REGULAR" | "INTERNAL" | "EVENT";
     voteCounts: { attend: number; absent: number; undecided: number };
   }[];
   tasks: string[];
@@ -97,7 +98,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
       .limit(1)
       .maybeSingle(),
     db.from("matches")
-      .select("id, match_date, match_time, vote_deadline, opponent_name")
+      .select("id, match_date, match_time, vote_deadline, opponent_name, match_type")
       .eq("team_id", teamId)
       .eq("status", "SCHEDULED")
       .gt("vote_deadline", now)
@@ -184,6 +185,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
     match_time: string | null;
     vote_deadline: string;
     opponent_name: string | null;
+    match_type: string | null;
   };
   // 상단 "다가오는 경기" 카드와 중복되는 첫 번째 경기는 제외 + 최대 3개
   const voteMatchRows = ((activeVotesRes.data || []) as VoteMatchRow[])
@@ -234,6 +236,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
     matchDate: m.match_date,
     matchTime: m.match_time,
     opponentName: m.opponent_name,
+    matchType: (m.match_type === "INTERNAL" ? "INTERNAL" : m.match_type === "EVENT" ? "EVENT" : "REGULAR") as "REGULAR" | "INTERNAL" | "EVENT",
     voteCounts: voteCountsByMatch[m.id] ?? { attend: 0, absent: 0, undecided: 0 },
   }));
 
