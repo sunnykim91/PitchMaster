@@ -36,8 +36,6 @@ export async function POST(request: NextRequest) {
       else format = "jpg"; // 기본값
     }
 
-    console.log("[OCR] file:", file.name, "type:", file.type, "size:", (arrayBuffer.byteLength / 1024).toFixed(0) + "KB", "→ format:", format);
-
     const ocrResponse = await fetch(CLOVA_OCR_URL, {
       method: "POST",
       headers: {
@@ -69,8 +67,6 @@ export async function POST(request: NextRequest) {
     const inferResult = result.images?.[0]?.inferResult ?? "UNKNOWN";
     const fields = result.images?.[0]?.fields ?? [];
 
-    console.log("[OCR] inferResult:", inferResult, "fields:", fields.length);
-
     if (inferResult === "ERROR") {
       const errorMsg = result.images?.[0]?.message ?? "알 수 없는 오류";
       console.error("[OCR] recognition error:", errorMsg);
@@ -78,7 +74,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (fields.length === 0) {
-      console.log("[OCR] no text found in image (inferResult:", inferResult, ")");
       return apiError("이미지에서 텍스트를 찾지 못했습니다. 통장 거래내역 스크린샷인지 확인해주세요.", 422);
     }
 
@@ -88,8 +83,6 @@ export async function POST(request: NextRequest) {
         f.inferText + (f.lineBreak ? "\n" : " ")
       )
       .join("");
-
-    console.log("[OCR] text length:", text.length, "lines:", text.split("\n").length);
 
     return apiSuccess({ text, fields });
   } catch (err) {

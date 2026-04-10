@@ -60,7 +60,6 @@ export async function POST(request: NextRequest) {
   }
 
   const recordedAtValue = body.recordedAt ? `${body.recordedAt}T${body.recordedTime || "00:00"}:00+09:00` : new Date().toISOString();
-  console.log("[DUES POST] recordedAt input:", body.recordedAt, "time:", body.recordedTime, "→ saved as:", recordedAtValue);
 
   const resolvedUserId = (body.userId && !body.userId.startsWith("unlinked_")) ? body.userId : null;
   const insertPayload = {
@@ -82,7 +81,6 @@ export async function POST(request: NextRequest) {
   }
 
   if (error) return apiError(error.message);
-  console.log("[DUES POST] DB returned recorded_at:", data.recorded_at);
 
   // 벌금 자동 납부 매칭: 같은 멤버 + 같은 금액 + 벌금 발생일 이후 입금
   if (body.type === "INCOME") {

@@ -18,12 +18,6 @@ export async function POST(req: NextRequest) {
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
 
-    // 디버그용: 처음 15행 로그
-    console.log("[Excel] Total rows:", rows.length);
-    for (let i = 0; i < Math.min(rows.length, 15); i++) {
-      console.log(`[Excel] Row ${i}:`, JSON.stringify(rows[i]?.slice(0, 8)));
-    }
-
     // 헤더 행 찾기 — "거래일시" 텍스트가 포함된 행
     let headerIdx = -1;
     for (let i = 0; i < Math.min(rows.length, 30); i++) {
@@ -65,15 +59,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    console.log("[Excel] Header found at row:", headerIdx);
-
     if (headerIdx === -1) {
       return apiError("카카오뱅크 엑셀 형식을 인식할 수 없습니다.", 400);
     }
 
     // 헤더 정규화 (공백 제거)
     const headers = rows[headerIdx].map((h: any) => String(h ?? "").replace(/\s+/g, "").trim());
-    console.log("[Excel] Headers:", headers);
 
     // 컬럼 인덱스 찾기 (공백 무시 매칭)
     const colDate = headers.findIndex((h: string) => h.includes("거래일시"));
@@ -83,8 +74,6 @@ export async function POST(req: NextRequest) {
     const colContent = headers.findIndex((h: string) => h === "내용");
     const colMemo = headers.findIndex((h: string) => h === "메모");
     const colTxType = headers.findIndex((h: string) => h.includes("거래구분"));
-
-    console.log("[Excel] Columns:", { colDate, colType, colAmount, colBalance, colContent, colMemo, colTxType });
 
     // 최소한 날짜 컬럼은 필요
     if (colDate === -1) {
@@ -170,8 +159,6 @@ export async function POST(req: NextRequest) {
 
       records.push({ date: dateParsed, time: timeParsed, type, amount, description, balance });
     }
-
-    console.log("[Excel] Parsed records:", records.length, "Last balance:", lastBalance);
 
     if (records.length === 0) {
       return apiError("파싱된 거래 내역이 없습니다. 카카오뱅크에서 다운로드한 엑셀 파일인지 확인해주세요.", 400);
