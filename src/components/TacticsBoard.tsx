@@ -798,6 +798,27 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             </span>
             <span className="text-xs text-muted-foreground/50">PitchMaster</span>
           </div>
+          {/* 매칭 레전드 — 1개라도 매칭된 배치가 있을 때만 노출 */}
+          {(() => {
+            const matchedCount = formation.slots.reduce((acc, slot) => {
+              const placement = placements[slot.id];
+              if (!placement) return acc;
+              const player = roster.find((r) => r.id === placement.playerId);
+              const second = placement.secondPlayerId ? roster.find((r) => r.id === placement.secondPlayerId) : null;
+              const a = isPositionMatched(player, slot.role) ? 1 : 0;
+              const b = isPositionMatched(second, slot.role) ? 1 : 0;
+              return acc + a + b;
+            }, 0);
+            if (matchedCount === 0) return null;
+            return (
+              <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--success))]/10 px-3 py-1.5">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--success))]" />
+                <span className="text-[11px] font-semibold text-[hsl(var(--success))]">
+                  초록 표시 = 선호 포지션에 잘 배치된 선수 · {matchedCount}명
+                </span>
+              </div>
+            );
+          })()}
           <div
             ref={boardRef}
             className={cn("relative w-full overflow-hidden rounded-2xl border-2 border-white/20 shadow-xl shadow-black/30", isFutsal ? "aspect-[3/2]" : "aspect-[4/5]")}
@@ -929,26 +950,29 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                       >
                         <span className="flex items-center gap-0.5 text-[10px] font-bold text-white sm:text-xs">
                           <span className="rounded bg-sky-500/40 px-0.5">전</span>
-                          {firstMatched && <span>✓</span>}
+                          {firstMatched && <span className="rounded bg-white/25 px-0.5 text-[9px]">적합</span>}
                           {(player?.name ?? "선수").slice(0, 3)}
                         </span>
                         <span className="flex items-center gap-0.5 text-[10px] font-bold text-white sm:text-xs">
                           <span className="rounded bg-violet-500/40 px-0.5">후</span>
-                          {secondMatched && <span>✓</span>}
+                          {secondMatched && <span className="rounded bg-white/25 px-0.5 text-[9px]">적합</span>}
                           {secondPlayer.name.slice(0, 3)}
                         </span>
                       </span>
                     ) : (
                       <span
                         className={cn(
-                          "block max-w-[60px] truncate whitespace-nowrap rounded-md px-1 py-0.5 text-[10px] font-bold shadow-sm sm:max-w-[96px] sm:px-1.5 sm:text-xs",
+                          "flex max-w-[60px] items-center gap-1 whitespace-nowrap rounded-md px-1 py-0.5 text-[10px] font-bold shadow-sm sm:max-w-[110px] sm:px-1.5 sm:text-xs",
                           singleMatched
                             ? "bg-[hsl(var(--success))] text-white ring-2 ring-[hsl(var(--success))] shadow-[0_0_10px_hsl(var(--success)/0.6)]"
                             : "bg-black/60 text-foreground"
                         )}
                         title={singleMatched ? "선호 포지션과 일치" : undefined}
                       >
-                        {singleMatched && "✓ "}{displayName}
+                        {singleMatched && (
+                          <span className="shrink-0 rounded bg-white/25 px-1 text-[9px] font-bold text-white">적합</span>
+                        )}
+                        <span className="truncate">{displayName}</span>
                       </span>
                     )}
                   </span>
@@ -1089,59 +1113,89 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
 
             <Card className="border-0 bg-secondary">
               <CardContent className="p-4">
-                <p className="text-sm font-bold text-foreground">선수 선택</p>
-                <div className="mt-3 grid gap-2">
-                  {(() => {
-                    const activeSlotRole = activeSlotId
-                      ? formation.slots.find((s) => s.id === activeSlotId)?.role ?? null
-                      : null;
-                    return sortedRoster.map((player) => {
-                      const assignedSlot = assignedPlayers.get(player.id);
-                      const isAssigned = Boolean(assignedSlot);
-                      // 후반 모드에서는 현재 슬롯의 전반 선수도 비활성
-                      const isCurrentSlotPlayer = activeSlotId ? placements[activeSlotId]?.playerId === player.id : false;
-                      const isDisabled = !activeSlotId || isAssigned || (slotMode === "assign_second" && isCurrentSlotPlayer);
-                      const playedQuarters = playerQuarterMap.get(player.id) ?? [];
-                      const qCount = playedQuarters.length;
-                      const matched = !isDisabled && activeSlotRole
-                        ? isPositionMatched(player, activeSlotRole)
-                        : false;
-                      return (
-                        <Button
-                          key={player.id}
-                          type="button"
-                          variant={isDisabled ? "outline" : slotMode === "assign_second" ? "default" : "success"}
-                          disabled={isDisabled}
-                          onClick={() => activeSlotId && !isDisabled && handleAssignPlayer(activeSlotId, player.id)}
-                          title={matched ? "선호 포지션과 일치" : undefined}
-                          className={cn(
-                            "flex w-full min-w-0 items-center justify-between gap-2 overflow-hidden rounded-xl px-4 py-3 text-left text-sm h-auto",
-                            (!activeSlotId || isAssigned) && "text-muted-foreground",
-                            matched && "ring-2 ring-[hsl(var(--success))] shadow-[0_0_10px_hsl(var(--success)/0.4)]"
-                          )}
-                        >
-                          <span className="min-w-0 flex-1 truncate font-semibold">
-                            {matched && <span className="mr-1">✓</span>}
-                            {player.name}
+                {(() => {
+                  const activeSlotRole = activeSlotId
+                    ? formation.slots.find((s) => s.id === activeSlotId)?.role ?? null
+                    : null;
+                  const recommendCount = activeSlotRole
+                    ? sortedRoster.filter(
+                        (p) => !assignedPlayers.has(p.id) && isPositionMatched(p, activeSlotRole)
+                      ).length
+                    : 0;
+                  return (
+                    <>
+                      <div className="flex items-baseline justify-between gap-2">
+                        <p className="text-sm font-bold text-foreground">선수 선택</p>
+                        {activeSlotId && recommendCount > 0 && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(var(--success))]/15 px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--success))]">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--success))]" />
+                            추천 {recommendCount}명
                           </span>
-                          <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
-                            {qCount > 0 && (
+                        )}
+                      </div>
+                      {activeSlotId && (
+                        <p className="mt-1 text-[11px] text-muted-foreground">
+                          이 포지션의 선호 포지션과 일치하는 선수가 초록색으로 표시됩니다
+                        </p>
+                      )}
+                      <div className="mt-3 grid gap-2">
+                        {sortedRoster.map((player) => {
+                          const assignedSlot = assignedPlayers.get(player.id);
+                          const isAssigned = Boolean(assignedSlot);
+                          const isCurrentSlotPlayer = activeSlotId ? placements[activeSlotId]?.playerId === player.id : false;
+                          const isDisabled = !activeSlotId || isAssigned || (slotMode === "assign_second" && isCurrentSlotPlayer);
+                          const playedQuarters = playerQuarterMap.get(player.id) ?? [];
+                          const qCount = playedQuarters.length;
+                          const matched = !isDisabled && activeSlotRole
+                            ? isPositionMatched(player, activeSlotRole)
+                            : false;
+                          // variant 결정: 매칭 추천만 success(초록), 일반 선택은 outline(중립)
+                          const variant: "outline" | "success" | "default" = isDisabled
+                            ? "outline"
+                            : slotMode === "assign_second"
+                              ? "default"
+                              : matched
+                                ? "success"
+                                : "outline";
+                          return (
+                            <Button
+                              key={player.id}
+                              type="button"
+                              variant={variant}
+                              disabled={isDisabled}
+                              onClick={() => activeSlotId && !isDisabled && handleAssignPlayer(activeSlotId, player.id)}
+                              title={matched ? "선호 포지션과 일치" : undefined}
+                              className={cn(
+                                "flex w-full min-w-0 items-center justify-between gap-2 overflow-hidden rounded-xl px-4 py-3 text-left text-sm h-auto",
+                                isAssigned && "text-muted-foreground"
+                              )}
+                            >
+                              <span className="min-w-0 flex-1 truncate font-semibold">{player.name}</span>
                               <span className={cn(
-                                "rounded-full px-1.5 py-0.5 text-xs font-bold",
-                                "bg-primary/15 text-primary"
+                                "flex shrink-0 items-center gap-1.5 text-xs",
+                                matched ? "text-white/85" : "text-muted-foreground"
                               )}>
-                                {qCount}Q
+                                {matched && (
+                                  <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                                    추천
+                                  </span>
+                                )}
+                                {qCount > 0 && !matched && (
+                                  <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+                                    {qCount}Q
+                                  </span>
+                                )}
+                                {assignedSlot
+                                  ? formation.slots.find((slot) => slot.id === assignedSlot)?.label ?? "배치됨"
+                                  : qCount > 0 ? playedQuarters.map(q => `${q}Q`).join(" ") : "미출전"}
                               </span>
-                            )}
-                            {assignedSlot
-                              ? formation.slots.find((slot) => slot.id === assignedSlot)?.label ?? "배치됨"
-                              : qCount > 0 ? playedQuarters.map(q => `${q}Q`).join(" ") : "미출전"}
-                          </span>
-                        </Button>
-                      );
-                    });
-                  })()}
-                </div>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  );
+                })()}
               </CardContent>
             </Card>
 
@@ -1219,46 +1273,74 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                   </div>
                 )}
 
-                {(
-                <div className="mt-4 grid gap-2">
-                  {(() => {
-                    const activeSlotRole = activeSlotId
-                      ? formation.slots.find((s) => s.id === activeSlotId)?.role ?? null
-                      : null;
-                    return sortedRoster.map((player) => {
-                      const isAssigned = assignedPlayers.has(player.id);
-                      const isCurrentSlotPlayer = activeSlotId ? placements[activeSlotId]?.playerId === player.id : false;
-                      const isDisabled = !activeSlotId || isAssigned || (slotMode === "assign_second" && isCurrentSlotPlayer);
-                      const matched = !isDisabled && activeSlotRole
-                        ? isPositionMatched(player, activeSlotRole)
-                        : false;
-                      return (
-                        <Button
-                          key={player.id}
-                          type="button"
-                          variant={isDisabled ? "outline" : slotMode === "assign_second" ? "default" : "success"}
-                          disabled={isDisabled}
-                          onClick={() => activeSlotId && !isDisabled && handleAssignPlayer(activeSlotId, player.id)}
-                          title={matched ? "선호 포지션과 일치" : undefined}
-                          className={cn(
-                            "flex w-full items-center justify-between gap-2 rounded-xl px-4 py-3 text-left text-sm h-auto",
-                            isDisabled && "text-muted-foreground",
-                            matched && "ring-2 ring-[hsl(var(--success))] shadow-[0_0_10px_hsl(var(--success)/0.4)]"
-                          )}
-                        >
-                          <span className="truncate font-semibold">
-                            {matched && <span className="mr-1">✓</span>}
-                            {player.name}
+                {(() => {
+                  const activeSlotRole = activeSlotId
+                    ? formation.slots.find((s) => s.id === activeSlotId)?.role ?? null
+                    : null;
+                  const recommendCount = activeSlotRole
+                    ? sortedRoster.filter(
+                        (p) => !assignedPlayers.has(p.id) && isPositionMatched(p, activeSlotRole)
+                      ).length
+                    : 0;
+                  return (
+                    <>
+                      {activeSlotId && recommendCount > 0 && (
+                        <div className="mt-3 flex items-center gap-2 rounded-lg bg-[hsl(var(--success))]/10 px-3 py-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--success))]" />
+                          <span className="text-[11px] font-semibold text-[hsl(var(--success))]">
+                            추천 {recommendCount}명 · 선호 포지션과 일치하는 선수
                           </span>
-                          <span className="text-xs text-muted-foreground">
-                            {isAssigned ? formation.slots.find((s) => s.id === assignedPlayers.get(player.id))?.label ?? "배치됨" : ""}
-                          </span>
-                        </Button>
-                      );
-                    });
-                  })()}
-                </div>
-                )}
+                        </div>
+                      )}
+                      <div className="mt-4 grid gap-2">
+                        {sortedRoster.map((player) => {
+                          const isAssigned = assignedPlayers.has(player.id);
+                          const isCurrentSlotPlayer = activeSlotId ? placements[activeSlotId]?.playerId === player.id : false;
+                          const isDisabled = !activeSlotId || isAssigned || (slotMode === "assign_second" && isCurrentSlotPlayer);
+                          const matched = !isDisabled && activeSlotRole
+                            ? isPositionMatched(player, activeSlotRole)
+                            : false;
+                          const variant: "outline" | "success" | "default" = isDisabled
+                            ? "outline"
+                            : slotMode === "assign_second"
+                              ? "default"
+                              : matched
+                                ? "success"
+                                : "outline";
+                          return (
+                            <Button
+                              key={player.id}
+                              type="button"
+                              variant={variant}
+                              disabled={isDisabled}
+                              onClick={() => activeSlotId && !isDisabled && handleAssignPlayer(activeSlotId, player.id)}
+                              title={matched ? "선호 포지션과 일치" : undefined}
+                              className={cn(
+                                "flex w-full items-center justify-between gap-2 rounded-xl px-4 py-3 text-left text-sm h-auto",
+                                isDisabled && "text-muted-foreground"
+                              )}
+                            >
+                              <span className="truncate font-semibold">{player.name}</span>
+                              <span className={cn(
+                                "flex shrink-0 items-center gap-1.5 text-xs",
+                                matched ? "text-white/85" : "text-muted-foreground"
+                              )}>
+                                {matched && (
+                                  <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                                    추천
+                                  </span>
+                                )}
+                                {isAssigned && (
+                                  formation.slots.find((s) => s.id === assignedPlayers.get(player.id))?.label ?? "배치됨"
+                                )}
+                              </span>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  );
+                })()}
               </SheetContent>
             </Sheet>
           )}
