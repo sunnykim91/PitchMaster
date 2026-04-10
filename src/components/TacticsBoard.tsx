@@ -1091,43 +1091,56 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               <CardContent className="p-4">
                 <p className="text-sm font-bold text-foreground">선수 선택</p>
                 <div className="mt-3 grid gap-2">
-                  {sortedRoster.map((player) => {
-                    const assignedSlot = assignedPlayers.get(player.id);
-                    const isAssigned = Boolean(assignedSlot);
-                    // 후반 모드에서는 현재 슬롯의 전반 선수도 비활성
-                    const isCurrentSlotPlayer = activeSlotId ? placements[activeSlotId]?.playerId === player.id : false;
-                    const isDisabled = !activeSlotId || isAssigned || (slotMode === "assign_second" && isCurrentSlotPlayer);
-                    const playedQuarters = playerQuarterMap.get(player.id) ?? [];
-                    const qCount = playedQuarters.length;
-                    return (
-                      <Button
-                        key={player.id}
-                        type="button"
-                        variant={isDisabled ? "outline" : slotMode === "assign_second" ? "default" : "success"}
-                        disabled={isDisabled}
-                        onClick={() => activeSlotId && !isDisabled && handleAssignPlayer(activeSlotId, player.id)}
-                        className={cn(
-                          "flex w-full min-w-0 items-center justify-between gap-2 overflow-hidden rounded-xl px-4 py-3 text-left text-sm h-auto",
-                          (!activeSlotId || isAssigned) && "text-muted-foreground"
-                        )}
-                      >
-                        <span className="min-w-0 flex-1 truncate font-semibold">{player.name}</span>
-                        <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
-                          {qCount > 0 && (
-                            <span className={cn(
-                              "rounded-full px-1.5 py-0.5 text-xs font-bold",
-                              "bg-primary/15 text-primary"
-                            )}>
-                              {qCount}Q
-                            </span>
+                  {(() => {
+                    const activeSlotRole = activeSlotId
+                      ? formation.slots.find((s) => s.id === activeSlotId)?.role ?? null
+                      : null;
+                    return sortedRoster.map((player) => {
+                      const assignedSlot = assignedPlayers.get(player.id);
+                      const isAssigned = Boolean(assignedSlot);
+                      // 후반 모드에서는 현재 슬롯의 전반 선수도 비활성
+                      const isCurrentSlotPlayer = activeSlotId ? placements[activeSlotId]?.playerId === player.id : false;
+                      const isDisabled = !activeSlotId || isAssigned || (slotMode === "assign_second" && isCurrentSlotPlayer);
+                      const playedQuarters = playerQuarterMap.get(player.id) ?? [];
+                      const qCount = playedQuarters.length;
+                      const matched = !isDisabled && activeSlotRole
+                        ? isPositionMatched(player, activeSlotRole)
+                        : false;
+                      return (
+                        <Button
+                          key={player.id}
+                          type="button"
+                          variant={isDisabled ? "outline" : slotMode === "assign_second" ? "default" : "success"}
+                          disabled={isDisabled}
+                          onClick={() => activeSlotId && !isDisabled && handleAssignPlayer(activeSlotId, player.id)}
+                          title={matched ? "선호 포지션과 일치" : undefined}
+                          className={cn(
+                            "flex w-full min-w-0 items-center justify-between gap-2 overflow-hidden rounded-xl px-4 py-3 text-left text-sm h-auto",
+                            (!activeSlotId || isAssigned) && "text-muted-foreground",
+                            matched && "ring-2 ring-[hsl(var(--success))] shadow-[0_0_10px_hsl(var(--success)/0.4)]"
                           )}
-                          {assignedSlot
-                            ? formation.slots.find((slot) => slot.id === assignedSlot)?.label ?? "배치됨"
-                            : qCount > 0 ? playedQuarters.map(q => `${q}Q`).join(" ") : "미출전"}
-                        </span>
-                      </Button>
-                    );
-                  })}
+                        >
+                          <span className="min-w-0 flex-1 truncate font-semibold">
+                            {matched && <span className="mr-1">✓</span>}
+                            {player.name}
+                          </span>
+                          <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+                            {qCount > 0 && (
+                              <span className={cn(
+                                "rounded-full px-1.5 py-0.5 text-xs font-bold",
+                                "bg-primary/15 text-primary"
+                              )}>
+                                {qCount}Q
+                              </span>
+                            )}
+                            {assignedSlot
+                              ? formation.slots.find((slot) => slot.id === assignedSlot)?.label ?? "배치됨"
+                              : qCount > 0 ? playedQuarters.map(q => `${q}Q`).join(" ") : "미출전"}
+                          </span>
+                        </Button>
+                      );
+                    });
+                  })()}
                 </div>
               </CardContent>
             </Card>
@@ -1208,29 +1221,42 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
 
                 {(
                 <div className="mt-4 grid gap-2">
-                  {sortedRoster.map((player) => {
-                    const isAssigned = assignedPlayers.has(player.id);
-                    const isCurrentSlotPlayer = activeSlotId ? placements[activeSlotId]?.playerId === player.id : false;
-                    const isDisabled = !activeSlotId || isAssigned || (slotMode === "assign_second" && isCurrentSlotPlayer);
-                    return (
-                      <Button
-                        key={player.id}
-                        type="button"
-                        variant={isDisabled ? "outline" : slotMode === "assign_second" ? "default" : "success"}
-                        disabled={isDisabled}
-                        onClick={() => activeSlotId && !isDisabled && handleAssignPlayer(activeSlotId, player.id)}
-                        className={cn(
-                          "flex w-full items-center justify-between gap-2 rounded-xl px-4 py-3 text-left text-sm h-auto",
-                          isDisabled && "text-muted-foreground"
-                        )}
-                      >
-                        <span className="truncate font-semibold">{player.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {isAssigned ? formation.slots.find((s) => s.id === assignedPlayers.get(player.id))?.label ?? "배치됨" : ""}
-                        </span>
-                      </Button>
-                    );
-                  })}
+                  {(() => {
+                    const activeSlotRole = activeSlotId
+                      ? formation.slots.find((s) => s.id === activeSlotId)?.role ?? null
+                      : null;
+                    return sortedRoster.map((player) => {
+                      const isAssigned = assignedPlayers.has(player.id);
+                      const isCurrentSlotPlayer = activeSlotId ? placements[activeSlotId]?.playerId === player.id : false;
+                      const isDisabled = !activeSlotId || isAssigned || (slotMode === "assign_second" && isCurrentSlotPlayer);
+                      const matched = !isDisabled && activeSlotRole
+                        ? isPositionMatched(player, activeSlotRole)
+                        : false;
+                      return (
+                        <Button
+                          key={player.id}
+                          type="button"
+                          variant={isDisabled ? "outline" : slotMode === "assign_second" ? "default" : "success"}
+                          disabled={isDisabled}
+                          onClick={() => activeSlotId && !isDisabled && handleAssignPlayer(activeSlotId, player.id)}
+                          title={matched ? "선호 포지션과 일치" : undefined}
+                          className={cn(
+                            "flex w-full items-center justify-between gap-2 rounded-xl px-4 py-3 text-left text-sm h-auto",
+                            isDisabled && "text-muted-foreground",
+                            matched && "ring-2 ring-[hsl(var(--success))] shadow-[0_0_10px_hsl(var(--success)/0.4)]"
+                          )}
+                        >
+                          <span className="truncate font-semibold">
+                            {matched && <span className="mr-1">✓</span>}
+                            {player.name}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {isAssigned ? formation.slots.find((s) => s.id === assignedPlayers.get(player.id))?.label ?? "배치됨" : ""}
+                          </span>
+                        </Button>
+                      );
+                    });
+                  })()}
                 </div>
                 )}
               </SheetContent>
