@@ -104,7 +104,7 @@ describe("GET /api/dashboard", () => {
     expect(json.upcomingMatch.voteCounts).toBeDefined();
     expect(json.upcomingMatch.voteCounts.attend).toBe(1);
     expect(json.upcomingMatch.myMemberId).toBe("mem-1");
-    expect(json.tasks).toContain("다음 경기 참석 투표 완료하기");
+    expect(json.tasks.some((t: { label: string }) => t.label === "다음 경기 참석 투표 완료하기")).toBe(true);
   });
 
   it("200: 최근 경기 결과 스코어 및 MVP 포함", async () => {

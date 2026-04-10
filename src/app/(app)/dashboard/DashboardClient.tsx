@@ -79,7 +79,7 @@ type DashboardData = {
   upcomingMatch: UpcomingMatch | null;
   recentResult: RecentResult | null;
   activeVotes: ActiveVote[];
-  tasks: string[];
+  tasks: { label: string; href: string }[];
   teamRecord: TeamRecord;
   teamUniform?: TeamUniform | null;
   birthdayMembers?: BirthdayMember[];
@@ -660,12 +660,17 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
           <CardContent className="space-y-2">
             {tasks.length > 0 ? (
               tasks.map((task) => (
-                <Card key={task} className="border border-[hsl(var(--warning)/0.2)] bg-[hsl(var(--warning)/0.05)] hover:bg-[hsl(var(--warning)/0.1)]">
-                  <CardContent className="flex items-center gap-3 p-3 text-sm font-medium text-foreground">
+                <Link
+                  key={task.label}
+                  href={task.href}
+                  className="block rounded-lg border border-[hsl(var(--warning)/0.2)] bg-[hsl(var(--warning)/0.05)] p-3 transition-colors hover:bg-[hsl(var(--warning)/0.1)]"
+                >
+                  <div className="flex items-center gap-3 text-sm font-medium text-foreground">
                     <span className="h-2 w-2 shrink-0 rounded-full bg-[hsl(var(--warning))]" />
-                    {task}
-                  </CardContent>
-                </Card>
+                    <span className="flex-1">{task.label}</span>
+                    <span className="text-xs text-muted-foreground">→</span>
+                  </div>
+                </Link>
               ))
             ) : (
               <div className="flex items-center gap-3 rounded-lg bg-[hsl(var(--success)/0.1)] px-4 py-3">

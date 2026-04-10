@@ -53,7 +53,7 @@ export type DashboardData = {
     matchType: "REGULAR" | "INTERNAL" | "EVENT";
     voteCounts: { attend: number; absent: number; undecided: number };
   }[];
-  tasks: string[];
+  tasks: { label: string; href: string }[];
   teamRecord: TeamRecord;
   teamUniform: TeamUniformInfo | null;
   birthdayMembers: BirthdayMember[];
@@ -241,7 +241,26 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
   }));
 
   // Check pending tasks
-  const tasks: string[] = [];
+  const tasks: { label: string; href: string }[] = [];
+
+  // 본인 team_members.id 미리 조회 (회비 미납 체크용 — payment_status는 team_members.id 기준)
+  const { data: myTm } = await db
+    .from("team_members")
+    .select("id, role")
+    .eq("team_id", teamId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  const myTeamMemberId = (myTm as { id?: string } | null)?.id ?? null;
+  const myRole = (myTm as { role?: string } | null)?.role ?? "MEMBER";
+  const isStaff = myRole === "PRESIDENT" || myRole === "STAFF";
+
+  // KST 기준 이번 달 (YYYY-MM) + 오늘 일(day)
+  const kstNowDate = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const currentMonth = `${kstNowDate.getUTCFullYear()}-${String(kstNowDate.getUTCMonth() + 1).padStart(2, "0")}`;
+  const todayDay = kstNowDate.getUTCDate();
+  // 회비 납부 cutoff: 매월 10일 이후부터 미납 알림 노출 (dues_settings에 due_day 컬럼이 없어 보수적 하드코드)
+  const DUES_CUTOFF_DAY = 10;
+
   const taskChecks = await Promise.all([
     upcomingMatch
       ? db.from("match_attendance").select("vote").eq("match_id", upcomingMatch.id).eq("user_id", userId).maybeSingle()
@@ -249,9 +268,83 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
     recentMatch
       ? db.from("match_mvp_votes").select("id").eq("match_id", recentMatch.id).eq("voter_id", userId).maybeSingle()
       : Promise.resolve({ data: true }),
+    // 프로필 완성도
+    db.from("users").select("is_profile_complete").eq("id", userId).maybeSingle(),
+    // 팀 회비 설정 존재 여부 (회비 미납·OCR 미처리 두 항목 공통, __PERIOD__ 메타 행 제외)
+    db.from("dues_settings").select("id", { count: "exact", head: true }).eq("team_id", teamId).neq("member_type", "__PERIOD__"),
+    // 본인 이번 달 납부 상태
+    myTeamMemberId
+      ? db.from("dues_payment_status").select("status").eq("team_id", teamId).eq("member_id", myTeamMemberId).eq("month", currentMonth).maybeSingle()
+      : Promise.resolve({ data: null }),
+    // 본인 활성 면제 (start_date <= 이번 달 말, end_date >= 이번 달 1일)
+    myTeamMemberId
+      ? db.from("member_dues_exemptions").select("id, start_date, end_date").eq("team_id", teamId).eq("member_id", myTeamMemberId).eq("is_active", true)
+      : Promise.resolve({ data: [] }),
+    // 회비 OCR 미처리 (운영진 전용): 이번 달 dues_records 건수 조회
+    isStaff
+      ? db.from("dues_records").select("id", { count: "exact", head: true }).eq("team_id", teamId).gte("recorded_at", `${currentMonth}-01T00:00:00+09:00`)
+      : Promise.resolve({ count: 0 }),
+    // 회비 OCR 기준 C — 이번 달 활성 멤버 수 (전체 ACTIVE/DORMANT)
+    isStaff
+      ? db.from("team_members").select("id", { count: "exact", head: true }).eq("team_id", teamId).in("status", ["ACTIVE", "DORMANT"])
+      : Promise.resolve({ count: 0 }),
+    // 회비 OCR 기준 C — 이번 달 PAID 인원수
+    isStaff
+      ? db.from("dues_payment_status").select("id", { count: "exact", head: true }).eq("team_id", teamId).eq("month", currentMonth).eq("status", "PAID")
+      : Promise.resolve({ count: 0 }),
+    // 가입 대기자 (운영진 전용)
+    isStaff
+      ? db.from("team_join_requests").select("id", { count: "exact", head: true }).eq("team_id", teamId).eq("status", "PENDING")
+      : Promise.resolve({ count: 0 }),
   ]);
-  if (upcomingMatch && !taskChecks[0].data) tasks.push("다음 경기 참석 투표 완료하기");
-  if (recentMatch && !taskChecks[1].data) tasks.push("최근 경기 MVP 투표 완료하기");
+
+  // 1·2번: 기존 항목 (전체 회원)
+  if (upcomingMatch && !taskChecks[0].data) {
+    tasks.push({ label: "다음 경기 참석 투표 완료하기", href: `/matches/${upcomingMatch.id}?tab=vote` });
+  }
+  if (recentMatch && !taskChecks[1].data) {
+    tasks.push({ label: "최근 경기 MVP 투표 완료하기", href: `/matches/${recentMatch.id}?tab=record` });
+  }
+
+  // 3번: 프로필 완성하기
+  const profileRow = (taskChecks[2] as { data: { is_profile_complete?: boolean } | null }).data;
+  if (profileRow && profileRow.is_profile_complete === false) {
+    tasks.push({ label: "프로필 완성하기", href: "/settings" });
+  }
+
+  // 4번: 본인 회비 미납 (정의 B — dues_settings 있음 + 납부 cutoff 지남 + PAID/EXEMPT 아님 + 면제 없음)
+  const hasDuesSettings = ((taskChecks[3] as { count: number | null }).count ?? 0) > 0;
+  const myPaymentRow = (taskChecks[4] as { data: { status?: string } | null }).data;
+  const myExemptions = ((taskChecks[5] as { data: { start_date: string; end_date: string | null }[] | null }).data ?? []) as { start_date: string; end_date: string | null }[];
+  const monthStart = `${currentMonth}-01`;
+  const lastDay = new Date(kstNowDate.getUTCFullYear(), kstNowDate.getUTCMonth() + 1, 0).getDate();
+  const monthEnd = `${currentMonth}-${String(lastDay).padStart(2, "0")}`;
+  const hasActiveExemption = myExemptions.some((ex) => ex.start_date <= monthEnd && (ex.end_date === null || ex.end_date >= monthStart));
+  const myStatus = myPaymentRow?.status ?? null;
+  const isPaidOrExempt = myStatus === "PAID" || myStatus === "EXEMPT" || hasActiveExemption;
+  if (hasDuesSettings && myTeamMemberId && todayDay >= DUES_CUTOFF_DAY && !isPaidOrExempt) {
+    tasks.push({ label: "이번 달 회비 납부 확인", href: "/dues?tab=status" });
+  }
+
+  // 5번: 회비 영수증 업로드 (운영진 전용, 기준 C)
+  // 조건: dues_settings 있음 + cutoff 지남 + 이번 달 dues_records 0건 OR PAID 비율 50% 미만
+  if (isStaff && hasDuesSettings && todayDay >= DUES_CUTOFF_DAY) {
+    const monthRecordCount = (taskChecks[6] as { count: number | null }).count ?? 0;
+    const memberCount = (taskChecks[7] as { count: number | null }).count ?? 0;
+    const paidCount = (taskChecks[8] as { count: number | null }).count ?? 0;
+    const paidRatio = memberCount > 0 ? paidCount / memberCount : 0;
+    if (monthRecordCount === 0 || paidRatio < 0.5) {
+      tasks.push({ label: "회비 영수증 업로드", href: "/dues?tab=bulk" });
+    }
+  }
+
+  // 6번: 가입 대기자 승인 (운영진 전용)
+  if (isStaff) {
+    const pendingCount = (taskChecks[9] as { count: number | null }).count ?? 0;
+    if (pendingCount > 0) {
+      tasks.push({ label: `가입 대기자 ${pendingCount}명 승인`, href: "/members" });
+    }
+  }
 
   // ── 팀 전적 계산 (활성 시즌 기준) ──
   const { data: seasons } = await db
@@ -355,15 +448,6 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
         profileImageUrl: u.profile_image_url ?? null,
       };
     });
-
-  // ── 회비 설정 여부 ──
-  const { count: duesSettingsCount } = await db
-    .from("dues_settings")
-    .select("id", { count: "exact", head: true })
-    .eq("team_id", teamId)
-    .neq("member_type", "__PERIOD__");
-
-  const hasDuesSettings = (duesSettingsCount ?? 0) > 0;
 
   // ── 팀 전체 경기 수 (0건이면 한 번도 경기 등록 안 한 팀) ──
   const { count: totalMatchesCount } = await db
