@@ -9,7 +9,7 @@ import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role } from "@/lib/types";
-import { cn, formatTime, formatDateKo, formatDue } from "@/lib/utils";
+import { cn, formatTime, formatDateKo } from "@/lib/utils";
 import { voteStyles } from "@/lib/voteStyles";
 import { toKoreanError } from "@/lib/errorMessages";
 import { Button } from "@/components/ui/button";
@@ -609,20 +609,17 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                     href={`/matches/${vote.id}?tab=vote`}
                     className="block rounded-lg border border-border/50 border-l-2 border-l-primary/40 bg-secondary/50 p-3 hover:bg-secondary/70 transition-colors"
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-semibold">
-                        {vote.matchDate}
-                        {vote.matchTime ? ` ${vote.matchTime.slice(0, 5)}` : ""}
-                        {vote.matchType === "INTERNAL"
-                          ? " 자체전"
-                          : vote.matchType === "EVENT"
-                            ? vote.opponentName && vote.opponentName.trim() ? ` ${vote.opponentName}` : " 팀 이벤트"
-                            : vote.opponentName && vote.opponentName.trim()
-                              ? ` vs ${vote.opponentName}`
-                              : " 팀 일정"}
-                      </p>
-                      <span className="shrink-0 text-[11px] text-muted-foreground">마감 {formatDue(vote.due)}</span>
-                    </div>
+                    <p className="truncate text-sm font-semibold">
+                      {vote.matchDate}
+                      {vote.matchTime ? ` ${vote.matchTime.slice(0, 5)}` : ""}
+                      {vote.matchType === "INTERNAL"
+                        ? " 자체전"
+                        : vote.matchType === "EVENT"
+                          ? vote.opponentName && vote.opponentName.trim() ? ` ${vote.opponentName}` : " 팀 이벤트"
+                          : vote.opponentName && vote.opponentName.trim()
+                            ? ` vs ${vote.opponentName}`
+                            : " 팀 일정"}
+                    </p>
                     <div className="mt-2 flex items-center gap-3 text-[11px]">
                       <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--success))]" />참석 <strong className="text-[hsl(var(--success))]">{vote.voteCounts.attend}</strong></span>
                       <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--loss))]" />불참 <strong className="text-[hsl(var(--loss))]">{vote.voteCounts.absent}</strong></span>
