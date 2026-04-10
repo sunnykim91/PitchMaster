@@ -97,6 +97,9 @@ function DuesBulkTabInner({
   ]);
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkErrors, setBulkErrors] = useState<Record<number, string[]>>({});
+  // 부분 인식 거래 (시간 누락 / 날짜 추정) — 사용자가 명시적으로 추가해야만 정상 목록으로 이동
+  type PartialBulkRow = BulkRow & { reasons: ("date_inferred" | "date_fallback" | "time_missing")[] };
+  const [partialRows, setPartialRows] = useState<PartialBulkRow[]>([]);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrStatus, setOcrStatus] = useState("");
   const [pendingBalance, setPendingBalance] = useState<number | null>(null);
@@ -111,10 +114,12 @@ function DuesBulkTabInner({
   /**
    * 은행 앱 스크린샷 OCR 텍스트에서 거래 내역 파싱
    */
-  type ParseResult = { rows: BulkRow[]; latestBalance: number | null };
+  type PartialReason = "date_inferred" | "date_fallback" | "time_missing";
+  type ParsedRow = BulkRow & { _partialReasons: PartialReason[] };
+  type ParseResult = { rows: ParsedRow[]; latestBalance: number | null };
 
   function parseTransactions(ocrText: string): ParseResult {
-    const rows: BulkRow[] = [];
+    const rows: ParsedRow[] = [];
     const lines = ocrText.split("\n").map((l) => l.trim()).filter(Boolean);
     const year = new Date().getFullYear();
 
@@ -128,13 +133,16 @@ function DuesBulkTabInner({
       }
     }
     let currentDate: string;
+    let currentDateSource: "explicit" | "inferred" | "fallback";
     if (firstDateInText) {
       // 첫 날짜 헤더의 다음 날 (은행 앱은 최신순 → 위쪽이 더 최근)
       const d = new Date(firstDateInText);
       d.setDate(d.getDate() + 1);
       currentDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      currentDateSource = "inferred";
     } else {
       currentDate = `${year}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}`;
+      currentDateSource = "fallback";
     }
     let latestBalance: number | null = null;
     let isFirstBalance = true;
@@ -146,6 +154,7 @@ function DuesBulkTabInner({
       const dateMatch = line.match(/^(\d{1,2})\.(\d{1,2})$/);
       if (dateMatch) {
         currentDate = `${year}-${dateMatch[1].padStart(2, "0")}-${dateMatch[2].padStart(2, "0")}`;
+        currentDateSource = "explicit";
         continue;
       }
 
@@ -211,6 +220,11 @@ function DuesBulkTabInner({
         (m) => m.name && (description.includes(m.name) || m.name.includes(name))
       );
 
+      const partialReasons: PartialReason[] = [];
+      if (currentDateSource === "inferred") partialReasons.push("date_inferred");
+      else if (currentDateSource === "fallback") partialReasons.push("date_fallback");
+      if (!time) partialReasons.push("time_missing");
+
       rows.push({
         date: currentDate,
         time,
@@ -218,6 +232,7 @@ function DuesBulkTabInner({
         amount: rawAmount,
         description,
         memberName: matchedMember?.id || "",
+        _partialReasons: partialReasons,
       });
     }
 
@@ -232,6 +247,7 @@ function DuesBulkTabInner({
     setBulkImage(imageUrl);
     setOcrLoading(true);
     setOcrStatus("스크린샷 분석 중...");
+    setPartialRows([]);
     try {
       // 원본 그대로 업로드 (Clova는 jpg, png, pdf, tiff 지원)
       // 리사이즈는 서버에서 포맷 감지 후 처리
@@ -276,21 +292,35 @@ function DuesBulkTabInner({
         return kst.toISOString().slice(0, 10);
       };
       const normalizeDesc = (s: string | null | undefined) => (s ?? "").replace(/\s+/g, "").trim();
-      console.log("[OCR] checking duplicates against", currentRecords.length, "records");
-      const newRows = parsed.filter((row) => {
+      const isDupAgainstRecords = (row: { date: string; amount: string | number; type: "INCOME" | "EXPENSE"; description: string }) => {
         const rowDesc = normalizeDesc(row.description);
-        const isDup = currentRecords.some(
+        const amountNum = typeof row.amount === "number" ? row.amount : Number(row.amount);
+        return currentRecords.some(
           (r) =>
             toKSTDate(r.recordedAt) === row.date &&
-            r.amount === Number(row.amount) &&
+            r.amount === amountNum &&
             r.type === row.type &&
             normalizeDesc(r.description) === rowDesc
         );
-        if (isDup) console.log("[OCR] duplicate:", row.date, row.amount, row.description);
-        return !isDup;
+      };
+      console.log("[OCR] checking duplicates against", currentRecords.length, "records");
+
+      // 부분 인식 / 정상 분리
+      const fullParsed: ParsedRow[] = [];
+      const partialParsed: ParsedRow[] = [];
+      for (const row of parsed) {
+        if (row._partialReasons.length > 0) partialParsed.push(row);
+        else fullParsed.push(row);
+      }
+
+      // 중복 제거는 정상 행에만 적용 (부분 행은 사용자 명시 추가 시점에 한 번 더 검사)
+      const newRows = fullParsed.filter((row) => {
+        const dup = isDupAgainstRecords(row);
+        if (dup) console.log("[OCR] duplicate:", row.date, row.amount, row.description);
+        return !dup;
       });
-      const duplicateCount = parsed.length - newRows.length;
-      console.log("[OCR] newRows:", newRows.length, "duplicates:", duplicateCount);
+      const duplicateCount = fullParsed.length - newRows.length;
+      console.log("[OCR] newRows:", newRows.length, "duplicates:", duplicateCount, "partial:", partialParsed.length);
 
       setOcrLoading(false);
       if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
@@ -300,13 +330,34 @@ function DuesBulkTabInner({
         setPendingBalance(latestBalance);
       }
 
-      if (newRows.length > 0) {
-        setBulkRows(newRows);
-        const msg = [`${newRows.length}건의 새 거래를 인식했습니다.`];
-        if (duplicateCount > 0) msg.push(`(${duplicateCount}건 중복 제외)`);
-        msg.push("확인 후 저장하세요.");
-        setOcrStatus(msg.join(" "));
-        showToast(`${newRows.length}건 인식 완료`, "success");
+      // 부분 인식 행을 별도 영역으로 세팅 (메타데이터 분리)
+      const partialRowsForState: PartialBulkRow[] = partialParsed.map((r) => ({
+        date: r.date,
+        time: r.time,
+        type: r.type,
+        amount: r.amount,
+        description: r.description,
+        memberName: r.memberName,
+        reasons: r._partialReasons,
+      }));
+      setPartialRows(partialRowsForState);
+
+      // 정상 행: 메타데이터 제거 후 BulkRow로 캐스팅
+      const normalRowsForState: BulkRow[] = newRows.map(({ _partialReasons: _r, ...rest }) => rest);
+
+      if (normalRowsForState.length > 0) {
+        setBulkRows(normalRowsForState);
+      }
+
+      const msgParts: string[] = [];
+      if (normalRowsForState.length > 0) msgParts.push(`${normalRowsForState.length}건 인식`);
+      if (partialRowsForState.length > 0) msgParts.push(`${partialRowsForState.length}건 정보 부족`);
+      if (duplicateCount > 0) msgParts.push(`${duplicateCount}건 중복 제외`);
+
+      if (normalRowsForState.length > 0 || partialRowsForState.length > 0) {
+        const status = msgParts.join(", ") + (partialRowsForState.length > 0 ? ". 정보 부족 거래는 직접 확인 후 추가하세요." : ". 확인 후 저장하세요.");
+        setOcrStatus(status);
+        showToast(msgParts.join(", "), "success");
       } else if (parsed.length > 0) {
         setOcrStatus(`${parsed.length}건 모두 이미 등록된 내역입니다.`);
         showToast(`${parsed.length}건 모두 중복`, "info");
@@ -325,6 +376,44 @@ function DuesBulkTabInner({
 
   function updateBulkRow(index: number, field: keyof BulkRow, value: string) {
     setBulkRows((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
+  }
+
+  // 부분 인식 → 정상 행으로 추가 (입출금 내역 중복 한 번 더 검사)
+  function promotePartialRow(index: number) {
+    const row = partialRows[index];
+    if (!row) return;
+    // KST 변환
+    const toKSTDate = (isoStr: string) => {
+      const d = new Date(isoStr);
+      const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+      return kst.toISOString().slice(0, 10);
+    };
+    const normalizeDesc = (s: string | null | undefined) => (s ?? "").replace(/\s+/g, "").trim();
+    const rowDesc = normalizeDesc(row.description);
+    const isDup = recordsRef.current.some(
+      (r) =>
+        toKSTDate(r.recordedAt) === row.date &&
+        r.amount === Number(row.amount) &&
+        r.type === row.type &&
+        normalizeDesc(r.description) === rowDesc
+    );
+    if (isDup) {
+      showToast("이미 등록된 거래입니다", "info");
+      setPartialRows((prev) => prev.filter((_, i) => i !== index));
+      return;
+    }
+    const { reasons: _r, ...bulkRow } = row;
+    void _r;
+    setBulkRows((prev) => {
+      // 첫 행이 빈 자리면 교체, 아니면 끝에 추가
+      const isEmpty = prev.length === 1 && !prev[0].date && !prev[0].amount && !prev[0].description;
+      return isEmpty ? [bulkRow] : [...prev, bulkRow];
+    });
+    setPartialRows((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function removePartialRow(index: number) {
+    setPartialRows((prev) => prev.filter((_, i) => i !== index));
   }
 
   function addBulkRow() {
@@ -660,6 +749,73 @@ function DuesBulkTabInner({
           <Button type="button" variant="outline" size="sm" onClick={addBulkRow} className="w-full">
             + 행 추가
           </Button>
+        </div>
+      )}
+
+      {/* ── 부분 인식 거래 (정보 부족) ── */}
+      {partialRows.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-[hsl(var(--warning))]">
+              ⚠️ 정보가 부족한 거래 ({partialRows.length}건)
+            </p>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            날짜나 시간이 잘려 정확하지 않을 수 있습니다. 직접 확인 후 추가하거나 제외해주세요.
+          </p>
+          <div className="space-y-2">
+            {partialRows.map((row, index) => {
+              const reasonLabels: Record<string, string> = {
+                date_inferred: "날짜 추정",
+                date_fallback: "날짜 없음(오늘로 가정)",
+                time_missing: "시간 없음",
+              };
+              return (
+                <Card key={index} className="border border-[hsl(var(--warning)/0.3)] bg-[hsl(var(--warning)/0.05)] py-3">
+                  <CardContent className="px-4 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">
+                          {row.description || "(이름 없음)"}
+                          <span className={cn("ml-2", row.type === "INCOME" ? "text-[hsl(var(--success))]" : "text-destructive")}>
+                            {row.type === "INCOME" ? "+" : "-"}{Number(row.amount).toLocaleString("ko-KR")}원
+                          </span>
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          {row.date}{row.time ? ` ${row.time}` : ""}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {row.reasons.map((r) => (
+                        <span key={r} className="rounded bg-[hsl(var(--warning)/0.15)] px-1.5 py-0.5 text-[10px] text-[hsl(var(--warning))]">
+                          {reasonLabels[r] ?? r}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex justify-end gap-2 pt-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                        onClick={() => removePartialRow(index)}
+                      >
+                        제외
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => promotePartialRow(index)}
+                      >
+                        추가
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </div>
       )}
 
