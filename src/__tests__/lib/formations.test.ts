@@ -2,12 +2,23 @@ import { describe, it, expect } from "vitest";
 import { formationTemplates, getFormationsForSport, getFormationsForSportAndCount, getFutsalFieldCounts } from "@/lib/formations";
 
 describe("formationTemplates", () => {
-  it("축구 5개 + 풋살 다수 포메이션 정의", () => {
-    expect(getFormationsForSport("SOCCER")).toHaveLength(5);
+  it("축구 10개 + 풋살 다수 포메이션 정의", () => {
+    expect(getFormationsForSport("SOCCER")).toHaveLength(10);
     expect(getFormationsForSport("FUTSAL").length).toBeGreaterThanOrEqual(3);
     expect(formationTemplates.length).toBe(
       getFormationsForSport("SOCCER").length + getFormationsForSport("FUTSAL").length
     );
+  });
+
+  it("새 축구 포메이션 5종(4-1-4-1, 4-5-1, 5-3-2, 3-4-2-1, 4-3-2-1) 존재", () => {
+    const expected = ["4-1-4-1", "4-5-1", "5-3-2", "3-4-2-1", "4-3-2-1"];
+    for (const id of expected) {
+      const f = formationTemplates.find((t) => t.id === id);
+      expect(f, `${id} 포메이션이 없음`).toBeDefined();
+      expect(f!.sportType).toBe("SOCCER");
+      expect(f!.slots).toHaveLength(11);
+      expect(f!.slots.filter((s) => s.role === "GK")).toHaveLength(1);
+    }
   });
 
   it("각 포메이션은 고유 id와 name 보유", () => {
@@ -107,7 +118,7 @@ describe("getFormationsForSportAndCount", () => {
 
   it("축구에서는 fieldCount 무시하고 전체 반환", () => {
     const formations = getFormationsForSportAndCount("SOCCER", 11);
-    expect(formations).toHaveLength(5);
+    expect(formations).toHaveLength(10);
   });
 });
 
