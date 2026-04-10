@@ -1,13 +1,25 @@
 import { cookies } from "next/headers";
 import type { Session, SessionUser } from "@/lib/types";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { signSession, verifySession, isSessionSigningConfigured } from "@/lib/sessionSign";
 
 const SESSION_COOKIE = "pm_session";
 
+/**
+ * 서명된 세션 쿠키를 검증해 Session 객체로 복원.
+ * SESSION_SECRET이 없는 환경에서는 null을 반환하고 콘솔에 경고.
+ * 기존의 서명 없는 JSON 쿠키는 2026-04-10 배포 이후 무효화됨 (하드 컷오버).
+ */
 function parseSession(value?: string | null): Session | null {
   if (!value) return null;
+  if (!isSessionSigningConfigured()) {
+    console.warn("[auth] SESSION_SECRET is not configured — all sessions will be rejected");
+    return null;
+  }
+  const payload = verifySession(value);
+  if (!payload) return null;
   try {
-    const parsed = JSON.parse(value) as Session;
+    const parsed = JSON.parse(payload) as Session;
     if (!parsed?.user?.id) return null;
     return parsed;
   } catch {
@@ -46,15 +58,18 @@ export async function auth(): Promise<Session | null> {
         needSync = true;
       }
       if (needSync) {
-        try {
-          cookieStore.set(SESSION_COOKIE, JSON.stringify(session), {
-            httpOnly: true,
-            sameSite: "lax",
-            path: "/",
-            maxAge: 60 * 60 * 24 * 30,
-          });
-        } catch {
-          // API Route에서는 쿠키 설정 불가할 수 있음 — 무시
+        const signed = signSession(JSON.stringify(session));
+        if (signed) {
+          try {
+            cookieStore.set(SESSION_COOKIE, signed, {
+              httpOnly: true,
+              sameSite: "lax",
+              path: "/",
+              maxAge: 60 * 60 * 24 * 30,
+            });
+          } catch {
+            // API Route에서는 쿠키 설정 불가할 수 있음 — 무시
+          }
         }
       }
     }
@@ -64,8 +79,12 @@ export async function auth(): Promise<Session | null> {
 }
 
 export async function setSession(session: Session) {
+  const signed = signSession(JSON.stringify(session));
+  if (!signed) {
+    throw new Error("SESSION_SECRET is not configured — cannot issue session cookie");
+  }
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE, JSON.stringify(session), {
+  cookieStore.set(SESSION_COOKIE, signed, {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
