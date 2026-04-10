@@ -612,7 +612,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                       <p className="truncate text-sm font-semibold">
                         {vote.matchDate}
                         {vote.matchTime ? ` ${vote.matchTime.slice(0, 5)}` : ""}
-                        {vote.opponentName ? ` vs ${vote.opponentName}` : ""}
+                        {vote.opponentName && vote.opponentName.trim() ? ` vs ${vote.opponentName}` : " 팀 일정"}
                       </p>
                       <span className="shrink-0 text-[11px] text-muted-foreground">마감 {formatDue(vote.due)}</span>
                     </div>

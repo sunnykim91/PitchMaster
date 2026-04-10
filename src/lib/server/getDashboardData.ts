@@ -103,7 +103,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
       .gt("vote_deadline", now)
       .order("match_date", { ascending: true })
       .order("match_time", { ascending: true })
-      .limit(3),
+      .limit(4),
   ]);
 
   const upcomingRaw = upcomingRes.data ?? null;
@@ -185,7 +185,10 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
     vote_deadline: string;
     opponent_name: string | null;
   };
-  const voteMatchRows = (activeVotesRes.data || []) as VoteMatchRow[];
+  // 상단 "다가오는 경기" 카드와 중복되는 첫 번째 경기는 제외 + 최대 3개
+  const voteMatchRows = ((activeVotesRes.data || []) as VoteMatchRow[])
+    .filter((m) => !upcomingRaw || m.id !== upcomingRaw.id)
+    .slice(0, 3);
 
   // 활성 팀원 목록 (투표 카운트 정규화용 — 다가오는 경기 카드와 동일 로직)
   const activeMembersForVotesRes = voteMatchRows.length > 0
