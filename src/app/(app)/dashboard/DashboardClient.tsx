@@ -45,6 +45,10 @@ type ActiveVote = {
   id: string;
   title: string;
   due: string;
+  matchDate: string;
+  matchTime: string | null;
+  opponentName: string | null;
+  voteCounts: { attend: number; absent: number; undecided: number };
 };
 
 type TeamRecord = {
@@ -580,39 +584,56 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
       {/* ── Bento section: votes + tasks + season record (위자드 보일 때 숨김) ── */}
       {!showWizard && (
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-        {/* Votes */}
+        {/* Votes — 운영진 전용: 다가오는 경기 투표 현황 모니터링 */}
+        {isStaffOrAbove(role) && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">참석 투표</CardTitle>
+              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">투표 현황</CardTitle>
             </div>
             <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
-              <Link href="/matches">투표하기 &rarr;</Link>
+              <Link href="/matches">경기 일정 &rarr;</Link>
             </Button>
           </CardHeader>
           <CardContent className="space-y-2">
             {activeVotes.length > 0 ? (
-              activeVotes.map((vote) => (
-                <Card
-                  key={vote.id}
-                  className="cursor-pointer border border-border/50 border-l-2 border-l-primary/40 bg-secondary/50 hover:bg-secondary/70 transition-colors"
-                >
-                  <CardContent className="flex items-center justify-between p-3">
-                    <div>
-                      <p className="truncate text-sm font-semibold">{vote.title}</p>
-                      <p className="truncate text-xs text-muted-foreground">마감: {formatDue(vote.due)}</p>
+              activeVotes.map((vote) => {
+                const total = vote.voteCounts.attend + vote.voteCounts.absent + vote.voteCounts.undecided;
+                const attendPct = total > 0 ? (vote.voteCounts.attend / total) * 100 : 0;
+                const absentPct = total > 0 ? (vote.voteCounts.absent / total) * 100 : 0;
+                const undecidedPct = total > 0 ? (vote.voteCounts.undecided / total) * 100 : 0;
+                return (
+                  <Link
+                    key={vote.id}
+                    href={`/matches/${vote.id}?tab=vote`}
+                    className="block rounded-lg border border-border/50 border-l-2 border-l-primary/40 bg-secondary/50 p-3 hover:bg-secondary/70 transition-colors"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-sm font-semibold">
+                        {vote.matchDate}
+                        {vote.matchTime ? ` ${vote.matchTime.slice(0, 5)}` : ""}
+                        {vote.opponentName ? ` vs ${vote.opponentName}` : ""}
+                      </p>
+                      <span className="shrink-0 text-[11px] text-muted-foreground">마감 {formatDue(vote.due)}</span>
                     </div>
-                    <Button variant="link" size="sm" className="text-primary" asChild>
-                      <Link href={`/matches/${vote.id}?tab=vote`}>참여 &rarr;</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))
+                    <div className="mt-2 flex items-center gap-3 text-[11px]">
+                      <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--success))]" />참석 <strong className="text-[hsl(var(--success))]">{vote.voteCounts.attend}</strong></span>
+                      <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--loss))]" />불참 <strong className="text-[hsl(var(--loss))]">{vote.voteCounts.absent}</strong></span>
+                      <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--warning))]" />미정 <strong className="text-[hsl(var(--warning))]">{vote.voteCounts.undecided}</strong></span>
+                    </div>
+                    <div className="mt-1.5 flex h-1.5 overflow-hidden rounded-full bg-secondary/70">
+                      {attendPct > 0 && <div className="bg-[hsl(var(--success))] transition-all duration-500" style={{ width: `${attendPct}%` }} />}
+                      {absentPct > 0 && <div className="bg-[hsl(var(--loss))] transition-all duration-500" style={{ width: `${absentPct}%` }} />}
+                      {undecidedPct > 0 && <div className="bg-[hsl(var(--warning))] transition-all duration-500" style={{ width: `${undecidedPct}%` }} />}
+                    </div>
+                  </Link>
+                );
+              })
             ) : (
               <EmptyState
                 icon={Vote}
                 title="진행 중인 투표가 없습니다"
-                description="경기 일정이 등록되면 여기서 참석 투표를 할 수 있습니다."
+                description="경기 일정이 등록되면 여기서 투표 현황을 확인할 수 있습니다."
                 action={
                   <Button size="sm" asChild>
                     <Link href="/matches">일정 등록하기</Link>
@@ -622,6 +643,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
             )}
           </CardContent>
         </Card>
+        )}
 
         {/* Tasks */}
         <Card>

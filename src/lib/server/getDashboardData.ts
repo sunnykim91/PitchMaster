@@ -43,7 +43,15 @@ export type DashboardData = {
     opponent: string | null;
     mvp: string | null;
   } | null;
-  activeVotes: { id: string; title: string; due: string }[];
+  activeVotes: {
+    id: string;
+    title: string;
+    due: string;
+    matchDate: string;
+    matchTime: string | null;
+    opponentName: string | null;
+    voteCounts: { attend: number; absent: number; undecided: number };
+  }[];
   tasks: string[];
   teamRecord: TeamRecord;
   teamUniform: TeamUniformInfo | null;
@@ -89,12 +97,13 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
       .limit(1)
       .maybeSingle(),
     db.from("matches")
-      .select("id, match_date, vote_deadline, opponent_name")
+      .select("id, match_date, match_time, vote_deadline, opponent_name")
       .eq("team_id", teamId)
       .eq("status", "SCHEDULED")
       .gt("vote_deadline", now)
-      .order("vote_deadline", { ascending: true })
-      .limit(5),
+      .order("match_date", { ascending: true })
+      .order("match_time", { ascending: true })
+      .limit(3),
   ]);
 
   const upcomingRaw = upcomingRes.data ?? null;
@@ -169,11 +178,60 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
     };
   }
 
-  type VoteMatchRow = { id: string; match_date: string; vote_deadline: string };
-  const activeVotes = ((activeVotesRes.data || []) as VoteMatchRow[]).map((m) => ({
+  type VoteMatchRow = {
+    id: string;
+    match_date: string;
+    match_time: string | null;
+    vote_deadline: string;
+    opponent_name: string | null;
+  };
+  const voteMatchRows = (activeVotesRes.data || []) as VoteMatchRow[];
+
+  // 활성 팀원 목록 (투표 카운트 정규화용 — 다가오는 경기 카드와 동일 로직)
+  const activeMembersForVotesRes = voteMatchRows.length > 0
+    ? await db.from("team_members").select("id, user_id").eq("team_id", teamId).in("status", ["ACTIVE", "DORMANT"])
+    : { data: [] as { id: string; user_id: string | null }[] };
+  const activeMembersForVotes = (activeMembersForVotesRes.data ?? []) as { id: string; user_id: string | null }[];
+  const activeMemberIdSet = new Set(activeMembersForVotes.map((m) => m.id));
+
+  const voteCountsByMatch: Record<string, { attend: number; absent: number; undecided: number }> = {};
+  if (voteMatchRows.length > 0) {
+    const matchIds = voteMatchRows.map((m) => m.id);
+    const { data: attRows } = await db
+      .from("match_attendance")
+      .select("match_id, vote, user_id, member_id")
+      .in("match_id", matchIds);
+    const rows = (attRows ?? []) as { match_id: string; vote: string; user_id: string | null; member_id: string | null }[];
+    for (const m of voteMatchRows) {
+      const memberVoteMap = new Map<string, string>();
+      for (const r of rows) {
+        if (r.match_id !== m.id) continue;
+        if (r.member_id) {
+          memberVoteMap.set(r.member_id, r.vote);
+        } else if (r.user_id) {
+          const member = activeMembersForVotes.find((mb) => mb.user_id === r.user_id);
+          if (member) memberVoteMap.set(member.id, r.vote);
+        }
+      }
+      const votes = [...memberVoteMap.entries()]
+        .filter(([id]) => activeMemberIdSet.has(id))
+        .map(([, v]) => v);
+      voteCountsByMatch[m.id] = {
+        attend: votes.filter((v) => v === "ATTEND").length,
+        absent: votes.filter((v) => v === "ABSENT").length,
+        undecided: votes.filter((v) => v === "MAYBE").length,
+      };
+    }
+  }
+
+  const activeVotes = voteMatchRows.map((m) => ({
     id: m.id,
     title: `${m.match_date} 경기 참석 투표`,
     due: m.vote_deadline,
+    matchDate: m.match_date,
+    matchTime: m.match_time,
+    opponentName: m.opponent_name,
+    voteCounts: voteCountsByMatch[m.id] ?? { attend: 0, absent: 0, undecided: 0 },
   }));
 
   // Check pending tasks

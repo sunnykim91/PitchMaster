@@ -26,11 +26,16 @@ describe("GET /api/dashboard", () => {
     expect(res.status).toBe(403);
   });
 
-  it("503: DB 없는 경우", async () => {
+  it("200: DB 없는 경우 빈 대시보드 fallback", async () => {
+    // getDashboardData는 db null일 때 의도적으로 빈 데이터를 반환 (데모/SSR fallback)
     vi.mocked(auth).mockResolvedValue(memberSession);
     vi.mocked(getSupabaseAdmin).mockReturnValue(null);
     const res = await GET();
-    expect(res.status).toBe(503);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.upcomingMatch).toBeNull();
+    expect(json.activeVotes).toEqual([]);
+    expect(json.totalMatches).toBe(0);
   });
 
   it("200: 경기 없는 경우 — 빈 대시보드 반환", async () => {
@@ -82,7 +87,9 @@ describe("GET /api/dashboard", () => {
       ["matches", null],           // recent match → null
       ["matches", []],             // active votes
       ["match_attendance", [{ vote: "ATTEND", user_id: "other", member_id: null }]], // vote list
-      ["team_members", { id: "mem-1" }], // myMember
+      ["team_members", { id: "mem-1" }], // myMember (maybeSingle)
+      ["match_guests", []],        // guests
+      ["team_members", [{ id: "mem-other", user_id: "other" }]], // active member roster (정규화용)
       ["match_attendance", null],  // user vote check (tasks)
       ["match_mvp_votes", null],   // user mvp check (tasks)
       ["matches", []],             // completed matches
