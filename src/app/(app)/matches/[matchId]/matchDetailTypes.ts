@@ -167,6 +167,8 @@ export type RosterPlayer = {
   memberId: string;
   name: string;
   role: DetailedPosition;
+  /** 멤버 프로필의 전체 선호 포지션 배열 (전술판 포지션 매칭 표시용) */
+  preferredPositions?: DetailedPosition[];
   isLinked: boolean;
 };
 
@@ -175,6 +177,8 @@ export type SimpleRosterPlayer = {
   id: string;
   name: string;
   role: DetailedPosition;
+  /** 멤버 프로필의 전체 선호 포지션 배열 (전술판 포지션 매칭 표시용) */
+  preferredPositions?: DetailedPosition[];
 };
 
 /* ── 상수 ── */

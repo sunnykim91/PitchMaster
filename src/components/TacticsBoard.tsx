@@ -21,7 +21,27 @@ type Player = {
   id: string;
   name: string;
   role: DetailedPosition;
+  /** 멤버 프로필의 전체 선호 포지션 배열 (슬롯 포지션 매칭 표시용) */
+  preferredPositions?: DetailedPosition[];
 };
+
+/** DetailedPosition → 카테고리(GK/DF/MF/FW) */
+function positionCategory(role: DetailedPosition): "GK" | "DF" | "MF" | "FW" {
+  if (role === "GK") return "GK";
+  if (["RB", "RCB", "CB", "LCB", "LB", "RWB", "LWB"].includes(role)) return "DF";
+  if (["RDM", "LDM", "CDM", "RCM", "CM", "LCM", "CAM", "RAM", "LAM", "RM", "LM", "MF"].includes(role)) return "MF";
+  return "FW"; // RW, LW, CF, ST, RS, LS, FW
+}
+
+/** 선수의 선호 포지션 중 하나라도 슬롯 포지션과 같은 카테고리면 true */
+function isPositionMatched(player: Player | null | undefined, slotRole: DetailedPosition): boolean {
+  if (!player) return false;
+  const prefs = player.preferredPositions && player.preferredPositions.length > 0
+    ? player.preferredPositions
+    : [player.role];
+  const slotCat = positionCategory(slotRole);
+  return prefs.some((p) => positionCategory(p) === slotCat);
+}
 
 type TacticsBoardProps = {
   matchId: string;
@@ -871,6 +891,9 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                 ? `${player?.name ?? "선수"}/${secondPlayer.name}`
                 : (player?.name ?? "선수");
               const isActive = activeSlotId === slot.id;
+              const firstMatched = isPositionMatched(player, slot.role);
+              const secondMatched = isPositionMatched(secondPlayer, slot.role);
+              const singleMatched = !secondPlayer && firstMatched;
               return (
                 <button
                   key={slot.id}
@@ -896,17 +919,37 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                     <span className="block h-8 w-8 rounded-sm border border-white/40 shadow-md shadow-black/30 sm:h-10 sm:w-10" style={uniformStyle} />
                     {secondPlayer ? (
                       <span className="flex flex-col items-center rounded-md bg-black/70 px-1 py-0.5 shadow-sm sm:px-1.5">
-                        <span className="flex items-center gap-0.5 text-[10px] font-bold text-[hsl(var(--info))] sm:text-xs">
+                        <span
+                          className={cn(
+                            "flex items-center gap-0.5 text-[10px] font-bold text-[hsl(var(--info))] sm:text-xs",
+                            firstMatched && "ring-1 ring-[hsl(var(--success))]/70 rounded px-0.5"
+                          )}
+                          title={firstMatched ? "선호 포지션과 일치" : undefined}
+                        >
                           <span className="rounded bg-sky-500/30 px-0.5">전</span>
                           {(player?.name ?? "선수").slice(0, 3)}
                         </span>
-                        <span className="flex items-center gap-0.5 text-[10px] font-bold text-[hsl(var(--accent))] sm:text-xs">
+                        <span
+                          className={cn(
+                            "flex items-center gap-0.5 text-[10px] font-bold text-[hsl(var(--accent))] sm:text-xs",
+                            secondMatched && "ring-1 ring-[hsl(var(--success))]/70 rounded px-0.5"
+                          )}
+                          title={secondMatched ? "선호 포지션과 일치" : undefined}
+                        >
                           <span className="rounded bg-violet-500/30 px-0.5">후</span>
                           {secondPlayer.name.slice(0, 3)}
                         </span>
                       </span>
                     ) : (
-                      <span className="block max-w-[60px] truncate whitespace-nowrap rounded-md bg-black/60 px-1 py-0.5 text-[10px] font-bold text-foreground shadow-sm sm:max-w-[96px] sm:px-1.5 sm:text-xs">
+                      <span
+                        className={cn(
+                          "block max-w-[60px] truncate whitespace-nowrap rounded-md px-1 py-0.5 text-[10px] font-bold shadow-sm sm:max-w-[96px] sm:px-1.5 sm:text-xs",
+                          singleMatched
+                            ? "bg-[hsl(var(--success))]/25 text-[hsl(var(--success))] ring-1 ring-[hsl(var(--success))]/60"
+                            : "bg-black/60 text-foreground"
+                        )}
+                        title={singleMatched ? "선호 포지션과 일치" : undefined}
+                      >
                         {displayName}
                       </span>
                     )}

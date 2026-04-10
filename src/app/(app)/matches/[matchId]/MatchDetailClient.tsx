@@ -129,7 +129,7 @@ export default function MatchDetailClient({
 
   const {
     data: teamData,
-  } = useApi<{ team: { sport_type?: SportType; player_count?: number; uniform_primary?: string; uniform_secondary?: string; uniform_pattern?: string; uniforms?: { home?: { primary: string; secondary: string; pattern: string }; away?: { primary: string; secondary: string; pattern: string }; third?: { primary: string; secondary: string; pattern: string } | null } | null; default_formation_id?: string } }>("/api/teams", initialData?.team ?? { team: {} }, { skip: !!initialData?.team });
+  } = useApi<{ team: { sport_type?: SportType; player_count?: number; uniform_primary?: string; uniform_secondary?: string; uniform_pattern?: string; uniforms?: { home?: { primary: string; secondary: string; pattern: string }; away?: { primary: string; secondary: string; pattern: string }; third?: { primary: string; secondary: string; pattern: string } | null } | null; default_formation_id?: string; stats_recording_staff_only?: boolean } }>("/api/teams", initialData?.team ?? { team: {} }, { skip: !!initialData?.team });
 
   const sportType: SportType = teamData.team?.sport_type ?? "SOCCER";
   const uniforms = teamData.team?.uniforms;
@@ -137,6 +137,7 @@ export default function MatchDetailClient({
   const uniformSecondary = uniforms?.home?.secondary ?? teamData.team?.uniform_secondary ?? "hsl(var(--muted-foreground))";
   const uniformPattern = uniforms?.home?.pattern ?? teamData.team?.uniform_pattern ?? "SOLID";
   const defaultFormationId = teamData.team?.default_formation_id ?? "";
+  const statsRecordingStaffOnly = teamData.team?.stats_recording_staff_only ?? false;
 
   const {
     data: voteData,
@@ -237,7 +238,8 @@ export default function MatchDetailClient({
   const role = effectiveRole(userRole);
   const canManageAttendance = isStaffOrAbove(role);
   const canManage = isStaffOrAbove(role);
-  const canRecord = true; // 골/어시 기록은 모든 회원 가능
+  // 팀 설정에서 stats_recording_staff_only 가 켜져 있으면 STAFF 이상만 기록 가능
+  const canRecord = statsRecordingStaffOnly ? isStaffOrAbove(role) : true;
   const confirm = useConfirm();
 
   // 휴면 데이터 — DORMANT 멤버를 exemptions 맵으로 변환
@@ -267,13 +269,17 @@ export default function MatchDetailClient({
 
   const baseRoster = useMemo(
     () =>
-      membersData.members.map((m) => ({
-        id: m.users?.id ?? m.id,
-        memberId: m.id,
-        name: m.users?.name ?? m.pre_name ?? "미연동 멤버",
-        role: (m.users?.preferred_positions?.[0] ?? "MF") as DetailedPosition,
-        isLinked: m.users != null,
-      })),
+      membersData.members.map((m) => {
+        const prefs = (m.users?.preferred_positions ?? []) as DetailedPosition[];
+        return {
+          id: m.users?.id ?? m.id,
+          memberId: m.id,
+          name: m.users?.name ?? m.pre_name ?? "미연동 멤버",
+          role: (prefs[0] ?? "MF") as DetailedPosition,
+          preferredPositions: prefs.length > 0 ? prefs : undefined,
+          isLinked: m.users != null,
+        };
+      }),
     [membersData.members],
   );
 
@@ -299,21 +305,29 @@ export default function MatchDetailClient({
 
   /** 전술판 roster: 참석 멤버 + 용병 */
   const roster = useMemo(() => {
-    const guestRoster = guests.map((g) => ({
-      id: g.id,
-      name: g.name,
-      role: ((g.position?.split(",")[0]) || "MF") as DetailedPosition,
-    }));
+    const guestRoster = guests.map((g) => {
+      const positions = (g.position?.split(",").map((s) => s.trim()).filter(Boolean) ?? []) as DetailedPosition[];
+      return {
+        id: g.id,
+        name: g.name,
+        role: (positions[0] || "MF") as DetailedPosition,
+        preferredPositions: positions.length > 0 ? positions : undefined,
+      };
+    });
     return [...attendingMembers, ...guestRoster];
   }, [attendingMembers, guests]);
 
   /** 전체 로스터 (골 기록 시 이름 해석용) */
   const fullRoster = useMemo(() => {
-    const guestRoster = guests.map((g) => ({
-      id: g.id,
-      name: g.name,
-      role: ((g.position?.split(",")[0]) || "MF") as DetailedPosition,
-    }));
+    const guestRoster = guests.map((g) => {
+      const positions = (g.position?.split(",").map((s) => s.trim()).filter(Boolean) ?? []) as DetailedPosition[];
+      return {
+        id: g.id,
+        name: g.name,
+        role: (positions[0] || "MF") as DetailedPosition,
+        preferredPositions: positions.length > 0 ? positions : undefined,
+      };
+    });
     return [...baseRoster, ...guestRoster];
   }, [baseRoster, guests]);
 
