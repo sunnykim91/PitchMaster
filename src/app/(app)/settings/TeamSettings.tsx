@@ -31,6 +31,7 @@ export type TeamSettingsData = {
   isSearchable: boolean;
   joinMode: "AUTO" | "MANUAL";
   defaultFormationId: string;
+  statsRecordingStaffOnly: boolean;
 };
 
 type JoinRequest = {
@@ -117,6 +118,30 @@ function TeamSettingsComponent({
       await refetchTeam();
     }
     setTimeout(() => setMessage(null), 2000);
+  }
+
+  // ── 경기 기록 권한 토글 (운영진 이상만) ──
+  const [statsRecordingLoading, setStatsRecordingLoading] = useState(false);
+
+  async function handleToggleStatsRecordingStaffOnly() {
+    if (!canEditTeam) return;
+    setStatsRecordingLoading(true);
+    const newVal = !team.statsRecordingStaffOnly;
+    const { error } = await apiMutate("/api/teams", "PUT", { statsRecordingStaffOnly: newVal });
+    setStatsRecordingLoading(false);
+    if (error) {
+      setMessage(`오류: ${error}`);
+    } else {
+      setTeam({ ...team, statsRecordingStaffOnly: newVal });
+      setMessage(
+        newVal
+          ? "이제 운영진만 경기 기록을 입력할 수 있습니다."
+          : "모든 회원이 경기 기록을 입력할 수 있습니다."
+      );
+      teamSyncedRef.current = false;
+      await refetchTeam();
+    }
+    setTimeout(() => setMessage(null), 2500);
   }
 
   // ── 가입 모드 토글 ──
@@ -322,6 +347,42 @@ function TeamSettingsComponent({
                       pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg
                       ring-0 transition-transform duration-200 ease-in-out
                       ${team.joinMode === "MANUAL" ? "translate-x-5" : "translate-x-0.5"}
+                    `}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* 경기 기록 권한 (운영진 이상만) */}
+            <div className="rounded-xl border border-border p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <p className="text-sm font-semibold">경기 기록은 운영진만</p>
+                  <p className="text-xs text-muted-foreground">
+                    {team.statsRecordingStaffOnly
+                      ? "골/어시 기록은 운영진 이상만 입력할 수 있습니다. 평회원은 기록을 보기만 합니다."
+                      : "모든 회원이 골/어시 기록을 자유롭게 입력할 수 있습니다."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={team.statsRecordingStaffOnly}
+                  disabled={!canEditTeam || statsRecordingLoading}
+                  onClick={handleToggleStatsRecordingStaffOnly}
+                  className={`
+                    relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full
+                    transition-colors duration-200 ease-in-out
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
+                    disabled:cursor-not-allowed disabled:opacity-50
+                    ${team.statsRecordingStaffOnly ? "bg-primary" : "bg-muted"}
+                  `}
+                >
+                  <span
+                    className={`
+                      pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg
+                      ring-0 transition-transform duration-200 ease-in-out
+                      ${team.statsRecordingStaffOnly ? "translate-x-5" : "translate-x-0.5"}
                     `}
                   />
                 </button>

@@ -287,3 +287,103 @@ describe("DELETE /api/goals", () => {
     expect(json.error).toBe("delete failed");
   });
 });
+
+// ─── 팀 설정: stats_recording_staff_only 권한 게이트 ────────────────────────────
+describe("/api/goals — stats_recording_staff_only 권한 게이트", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const goalBody = {
+    matchId: "m1",
+    quarter: 1,
+    minute: 15,
+    scorerId: "u1",
+    assistId: null,
+    isOwnGoal: false,
+  };
+
+  it("POST 403: 토글 ON + MEMBER 는 차단", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+    const db = createMockDb(
+      ["teams", { stats_recording_staff_only: true }],
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const req = new NextRequest("http://localhost/api/goals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(goalBody),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(403);
+    const json = await res.json();
+    expect(json.error).toContain("운영진");
+  });
+
+  it("POST 201: 토글 ON + STAFF 는 허용", async () => {
+    vi.mocked(auth).mockResolvedValue(staffSession);
+    const newGoal = { id: "g-new", match_id: "m1" };
+    const db = createMockDb(
+      ["teams", { stats_recording_staff_only: true }],
+      ["matches", { id: "m1" }],
+      ["match_goals", newGoal],
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const req = new NextRequest("http://localhost/api/goals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(goalBody),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(201);
+  });
+
+  it("POST 201: 토글 OFF + MEMBER 는 기존대로 허용", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+    const newGoal = { id: "g-new", match_id: "m1" };
+    const db = createMockDb(
+      ["teams", { stats_recording_staff_only: false }],
+      ["matches", { id: "m1" }],
+      ["match_goals", newGoal],
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const req = new NextRequest("http://localhost/api/goals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(goalBody),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(201);
+  });
+
+  it("PUT 403: 토글 ON + MEMBER 는 차단", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+    const db = createMockDb(
+      ["teams", { stats_recording_staff_only: true }],
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const req = new NextRequest("http://localhost/api/goals", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: "g1", quarter: 1, minute: 5, scorerId: "u1" }),
+    });
+    const res = await PUT(req);
+    expect(res.status).toBe(403);
+  });
+
+  it("DELETE 403: 토글 ON + MEMBER 는 차단", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+    const db = createMockDb(
+      ["teams", { stats_recording_staff_only: true }],
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const req = new NextRequest("http://localhost/api/goals?id=g1", {
+      method: "DELETE",
+    });
+    const res = await DELETE(req);
+    expect(res.status).toBe(403);
+  });
+});

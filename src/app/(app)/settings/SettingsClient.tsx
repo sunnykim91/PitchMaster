@@ -55,6 +55,7 @@ type TeamApiResponse = {
     join_mode: "AUTO" | "MANUAL";
     sport_type?: string;
     default_formation_id?: string;
+    stats_recording_staff_only?: boolean;
   };
 };
 
@@ -82,6 +83,7 @@ function mapTeamResponse(res: TeamApiResponse, fallback: TeamSettingsData): Team
     isSearchable: t.is_searchable ?? fallback.isSearchable,
     joinMode: t.join_mode ?? fallback.joinMode,
     defaultFormationId: t.default_formation_id ?? fallback.defaultFormationId,
+    statsRecordingStaffOnly: t.stats_recording_staff_only ?? fallback.statsRecordingStaffOnly,
   };
 }
 
@@ -157,6 +159,8 @@ export default function SettingsClient({
         isSearchable: (t.is_searchable as boolean) ?? sessionTeam.isSearchable,
         joinMode: (t.join_mode as TeamSettingsData["joinMode"]) ?? sessionTeam.joinMode,
         defaultFormationId: (t.default_formation_id as string) ?? sessionTeam.defaultFormationId,
+        statsRecordingStaffOnly:
+          (t.stats_recording_staff_only as boolean) ?? sessionTeam.statsRecordingStaffOnly,
       };
     }
     return sessionTeam;
@@ -197,6 +201,7 @@ export default function SettingsClient({
       is_searchable: defaultTeam.isSearchable,
       join_mode: defaultTeam.joinMode,
       default_formation_id: defaultTeam.defaultFormationId,
+      stats_recording_staff_only: defaultTeam.statsRecordingStaffOnly,
     },
   }, { skip: hasInitialData });
 

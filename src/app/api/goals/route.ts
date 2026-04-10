@@ -1,6 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { isStaffOrAbove } from "@/lib/permissions";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+// 팀 설정에서 stats_recording_staff_only 가 true 면 STAFF 이상만 골 기록 가능
+async function checkStatsRecordingPermission(
+  db: SupabaseClient,
+  teamId: string,
+  teamRole: string
+): Promise<NextResponse | null> {
+  const { data: team } = await db
+    .from("teams")
+    .select("stats_recording_staff_only")
+    .eq("id", teamId)
+    .single();
+  if (team?.stats_recording_staff_only && !isStaffOrAbove(teamRole as "PRESIDENT" | "STAFF" | "MEMBER")) {
+    return apiError("운영진만 경기 기록을 입력할 수 있습니다", 403);
+  }
+  return null;
+}
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -34,6 +53,10 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  // 팀 설정 기반 권한 체크
+  const permErr = await checkStatsRecordingPermission(db, ctx.teamId, ctx.teamRole);
+  if (permErr) return permErr;
 
   // Verify match belongs to team
   const { data: matchCheck } = await db.from("matches").select("id").eq("id", body.matchId).eq("team_id", ctx.teamId).single();
@@ -71,6 +94,10 @@ export async function PUT(request: NextRequest) {
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  // 팀 설정 기반 권한 체크
+  const permErr = await checkStatsRecordingPermission(db, ctx.teamId, ctx.teamRole);
+  if (permErr) return permErr;
 
   // Verify goal belongs to a match that belongs to this team
   const { data: goalCheck } = await db
@@ -112,6 +139,10 @@ export async function DELETE(request: NextRequest) {
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  // 팀 설정 기반 권한 체크
+  const permErr = await checkStatsRecordingPermission(db, ctx.teamId, ctx.teamRole);
+  if (permErr) return permErr;
 
   // Verify goal belongs to a match that belongs to this team
   const { data: goalCheck } = await db
