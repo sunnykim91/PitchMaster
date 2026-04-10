@@ -918,25 +918,23 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                     )}
                     <span className="block h-8 w-8 rounded-sm border border-white/40 shadow-md shadow-black/30 sm:h-10 sm:w-10" style={uniformStyle} />
                     {secondPlayer ? (
-                      <span className="flex flex-col items-center rounded-md bg-black/70 px-1 py-0.5 shadow-sm sm:px-1.5">
-                        <span
-                          className={cn(
-                            "flex items-center gap-0.5 text-[10px] font-bold text-[hsl(var(--info))] sm:text-xs",
-                            firstMatched && "ring-1 ring-[hsl(var(--success))]/70 rounded px-0.5"
-                          )}
-                          title={firstMatched ? "선호 포지션과 일치" : undefined}
-                        >
-                          <span className="rounded bg-sky-500/30 px-0.5">전</span>
+                      <span
+                        className={cn(
+                          "flex flex-col items-center rounded-md px-1 py-0.5 shadow-sm sm:px-1.5",
+                          (firstMatched || secondMatched)
+                            ? "bg-[hsl(var(--success))]/90 ring-2 ring-[hsl(var(--success))] shadow-[0_0_10px_hsl(var(--success)/0.5)]"
+                            : "bg-black/70"
+                        )}
+                        title={(firstMatched || secondMatched) ? "선호 포지션과 일치" : undefined}
+                      >
+                        <span className="flex items-center gap-0.5 text-[10px] font-bold text-white sm:text-xs">
+                          <span className="rounded bg-sky-500/40 px-0.5">전</span>
+                          {firstMatched && <span>✓</span>}
                           {(player?.name ?? "선수").slice(0, 3)}
                         </span>
-                        <span
-                          className={cn(
-                            "flex items-center gap-0.5 text-[10px] font-bold text-[hsl(var(--accent))] sm:text-xs",
-                            secondMatched && "ring-1 ring-[hsl(var(--success))]/70 rounded px-0.5"
-                          )}
-                          title={secondMatched ? "선호 포지션과 일치" : undefined}
-                        >
-                          <span className="rounded bg-violet-500/30 px-0.5">후</span>
+                        <span className="flex items-center gap-0.5 text-[10px] font-bold text-white sm:text-xs">
+                          <span className="rounded bg-violet-500/40 px-0.5">후</span>
+                          {secondMatched && <span>✓</span>}
                           {secondPlayer.name.slice(0, 3)}
                         </span>
                       </span>
@@ -945,12 +943,12 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                         className={cn(
                           "block max-w-[60px] truncate whitespace-nowrap rounded-md px-1 py-0.5 text-[10px] font-bold shadow-sm sm:max-w-[96px] sm:px-1.5 sm:text-xs",
                           singleMatched
-                            ? "bg-[hsl(var(--success))]/25 text-[hsl(var(--success))] ring-1 ring-[hsl(var(--success))]/60"
+                            ? "bg-[hsl(var(--success))] text-white ring-2 ring-[hsl(var(--success))] shadow-[0_0_10px_hsl(var(--success)/0.6)]"
                             : "bg-black/60 text-foreground"
                         )}
                         title={singleMatched ? "선호 포지션과 일치" : undefined}
                       >
-                        {displayName}
+                        {singleMatched && "✓ "}{displayName}
                       </span>
                     )}
                   </span>
