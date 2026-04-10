@@ -8,9 +8,9 @@ export default async function MatchesPage() {
   const session = await auth();
   if (!session) return null;
 
-  // matches + sport_type 병렬 조회
+  // matches + sport_type + 가입 멤버 수(초대 CTA 조건) 병렬 조회
   const db = getSupabaseAdmin();
-  const [initialMatches, teamInfo] = await Promise.all([
+  const [initialMatches, teamInfo, registeredMemberCount] = await Promise.all([
     getMatchesData(session.user.teamId!),
     (async () => {
       if (!db || !session.user.teamId) return { sportType: "SOCCER" as SportType, uniformPrimary: null as string | null, uniformSecondary: null as string | null, uniformPattern: null as string | null };
@@ -23,6 +23,16 @@ export default async function MatchesPage() {
         uniforms: (team as { uniforms?: unknown })?.uniforms ?? null,
       };
     })(),
+    (async () => {
+      if (!db || !session.user.teamId) return 0;
+      const { count } = await db
+        .from("team_members")
+        .select("id", { count: "exact", head: true })
+        .eq("team_id", session.user.teamId)
+        .eq("status", "ACTIVE")
+        .not("user_id", "is", null);
+      return count ?? 0;
+    })(),
   ]);
 
   return (
@@ -32,6 +42,9 @@ export default async function MatchesPage() {
       initialMatches={initialMatches}
       sportType={teamInfo.sportType}
       teamUniform={{ primary: teamInfo.uniformPrimary, secondary: teamInfo.uniformSecondary, pattern: teamInfo.uniformPattern, uniforms: teamInfo.uniforms as any }}
+      inviteCode={session.user.inviteCode ?? ""}
+      teamName={session.user.teamName ?? ""}
+      registeredMemberCount={registeredMemberCount}
     />
   );
 }

@@ -105,7 +105,7 @@ function mapDbMatchToMatch(db: DbMatch): Match {
 type UniformSetInfo = { primary: string; secondary: string; pattern: string };
 type TeamUniform = { primary: string | null; secondary: string | null; pattern: string | null; uniforms?: { home?: UniformSetInfo; away?: UniformSetInfo; third?: UniformSetInfo | null } | null };
 
-export default function MatchesClient({ userId, userRole, initialMatches, sportType = "SOCCER", teamUniform }: { userId: string; userRole?: Role; initialMatches?: { matches: DbMatch[] }; sportType?: SportType; teamUniform?: TeamUniform }) {
+export default function MatchesClient({ userId, userRole, initialMatches, sportType = "SOCCER", teamUniform, inviteCode = "", teamName = "", registeredMemberCount = 0 }: { userId: string; userRole?: Role; initialMatches?: { matches: DbMatch[] }; sportType?: SportType; teamUniform?: TeamUniform; inviteCode?: string; teamName?: string; registeredMemberCount?: number }) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
   const { showToast } = useToast();
@@ -137,6 +137,9 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
 
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [isOpen, setIsOpen] = useState(searchParams.get("create") === "true");
+  // 경기 등록 직후 1인 팀 초대 CTA 모달
+  const [inviteCtaMatchId, setInviteCtaMatchId] = useState<string | null>(null);
+  const [inviteCopied, setInviteCopied] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [votingMatchId, setVotingMatchId] = useState<string | null>(null);
@@ -271,7 +274,11 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     if (!error) {
       GA.matchCreate(body.matchType ?? "REGULAR");
       showToast("경기 일정이 등록되었습니다.");
-      if (data?.id) {
+      // 가입 완료 멤버가 1명 이하(=회장만) + 초대 코드 있음 → 초대 CTA 모달
+      if (data?.id && registeredMemberCount <= 1 && inviteCode) {
+        setIsOpen(false);
+        setInviteCtaMatchId(data.id);
+      } else if (data?.id) {
         router.push(`/matches/${data.id}`);
       } else {
         await refetchMatches();
@@ -280,6 +287,44 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     } else {
       showToast(toKoreanError(error), "error");
     }
+  }
+
+  /** 초대 CTA 모달 — 링크 복사 */
+  async function handleCopyInvite() {
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/team?code=${inviteCode}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setInviteCopied(true);
+      showToast("초대 링크가 복사되었습니다");
+    } catch {
+      showToast("복사에 실패했습니다", "error");
+    }
+  }
+
+  /** 초대 CTA 모달 — 카카오 공유 */
+  async function handleKakaoInvite() {
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/team?code=${inviteCode}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${teamName || "우리 팀"} 초대`,
+          text: `${teamName || "우리 팀"}에 초대합니다. 링크를 눌러 가입해주세요.`,
+          url,
+        });
+      } else {
+        await handleCopyInvite();
+      }
+    } catch {
+      // 사용자 취소는 무시
+    }
+  }
+
+  /** 초대 CTA 모달 — 닫고 경기 상세로 이동 */
+  function closeInviteCta() {
+    const mid = inviteCtaMatchId;
+    setInviteCtaMatchId(null);
+    setInviteCopied(false);
+    if (mid) router.push(`/matches/${mid}`);
   }
 
   async function handleVote(matchId: string, vote: AttendanceVote) {
@@ -828,6 +873,69 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
           );
         })}
       </section>
+      )}
+
+      {/* 1인 팀 초대 CTA 모달 — 경기 등록 직후 표시 */}
+      {inviteCtaMatchId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm"
+          onClick={closeInviteCta}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-lg">
+                🎉
+              </div>
+              <div className="min-w-0">
+                <p className="text-base font-bold text-foreground">경기가 등록되었어요!</p>
+                <p className="text-xs text-muted-foreground">이제 팀원들을 초대해볼까요?</p>
+              </div>
+            </div>
+
+            <div className="mb-4 rounded-lg bg-[hsl(var(--warning)/0.08)] border border-[hsl(var(--warning)/0.2)] p-3 text-sm">
+              <p className="font-medium text-foreground">팀원이 없으면 경기는 시뮬레이션만 돼요.</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                초대 링크를 공유하면 팀원들이 바로 참석 투표, 출석, 골 기록까지 할 수 있어요.
+              </p>
+            </div>
+
+            {inviteCode && (
+              <div className="mb-4 rounded-lg border border-border bg-secondary/50 p-3">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">초대 코드</p>
+                <p className="mt-0.5 font-mono text-base font-bold text-primary">{inviteCode}</p>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Button
+                type="button"
+                className="w-full gap-2"
+                onClick={handleKakaoInvite}
+              >
+                <Share2 className="h-4 w-4" />
+                초대 링크 공유하기
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleCopyInvite}
+              >
+                {inviteCopied ? "✓ 복사됨" : "링크 복사"}
+              </Button>
+              <button
+                type="button"
+                className="w-full py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                onClick={closeInviteCta}
+              >
+                나중에 할게요 →
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
