@@ -1,9 +1,10 @@
 # PitchMaster 개선 백로그
 
-최종 업데이트: 2026-04-10 (15차)
-현재 점수 추정: Designer 92 / UX 95 / Dev 95 / Marketing 85 / Business 82 (평균 89.8)
-서비스 현황: 81팀 · 520명 · 170경기 (14일 내 신규 37팀, 활성 23팀)
+최종 업데이트: 2026-04-11 (16차)
+현재 점수 추정: Designer 93 / UX 96 / Dev 96 / Marketing 85 / Business 82 (평균 90.4)
+서비스 현황: 81팀 · 520명 · 170+경기 (LINEOUT FC vs fk리버스 포함)
 회비 운영: 실제 입금 내역 있는 팀 2 / 설정만 한 팀 9
+테스트: 649 passed (39 파일)
 
 ---
 
@@ -274,6 +275,27 @@
 - [x] penalties 고아 테스트 파일 삭제 (3745156에서 라우트 폐기, 테스트만 남아있던 회귀)
 - [x] dashboard.test.ts 회귀 수정 (match_guests / 활성 멤버 team_members mock 추가, db null fallback 200 검증)
 
+#### 16차 (2026-04-11)
+
+- [x] **세션 쿠키 HMAC 서명 도입** — pm_session 조작 위장 방지, `SESSION_SECRET` 환경변수 (8d32f4e)
+- [x] **경기 등록 직후 1인 팀 초대 CTA 모달** — 신규 팀 활성화 유도 (61464ce)
+- [x] **전술판 선호 포지션 매칭 하이라이트** — 필드 타일에 선호 포지션과 일치하는 선수 success ring + 글로우 (785772f, a663f1a)
+- [x] **전술판 선수 선택 패널 매칭 하이라이트** — 활성 슬롯과 카테고리 일치 선수만 success variant, 헤더 `추천 N명` 칩, 안내 한 줄 (a23844f)
+- [x] **전술판 매칭 표시 라벨 명시화** — ✓ 기호 → "추천" / "적합" 한국어 라벨, 필드 상단 레전드 추가 (5ac1f40)
+- [x] **모바일 전술판 — 적합 인라인 라벨 데스크탑(sm+) 전용** — 좁은 화면에서 이름 잘림 방지 (4860c89)
+- [x] **전술판 공유 캡처 시 적합 표시 숨김** — isCapturing state로 필드 링·pill·레전드 일시 제거 (a48c2d7)
+- [x] **축구 11인 포메이션 5종 추가** — 4-1-4-1 / 4-5-1 / 5-3-2 / 3-4-2-1 / 4-3-2-1 (3ce84e7)
+- [x] **경기 기록 입력 운영진 전용 토글** — teams.stats_recording_staff_only 컬럼 + 팀 설정 토글 + /api/goals 권한 게이트. 평회원은 기록 보기 전용 (03269da, migration 00024)
+- [x] **킬러 기능 백엔드 보강 — 선수 카드 JSON variant** — `/api/player-card?format=json` 추가. ovr/rarity/signature/stats[].rank/streak/isHero 필드. 팀 내 랭킹과 연속 기록 산출 (a37b57e)
+- [x] **킬러 기능 백엔드 보강 — 시즌 어워드 MVP/요약** — `/api/season-awards`에 mvp(자동 선정) / 어워드별 context / seasonSummary 필드 추가 (a37b57e)
+- [x] **킬러 기능 백엔드 보강 — 커리어 프로필 베스트 모먼트** — `/player/[memberId]`에 signature / bestMoments (베스트 경기·첫 골·연속 기록) / 랭킹 / streak / isHighlight 추가 (a37b57e)
+- [x] **playerCardUtils 공유 헬퍼 + 단위 테스트 42개** — rarity/signature/ranking/streak/bestMoments 순수 함수 (a37b57e)
+- [x] **경기 기록 탭 실점 수정 — 쿼터 UI 노출 + 취소 시 폼 닫기** (bd35300)
+- [x] **자동 경기 완료 — 당일 match_end_time 이 지난 경기 포함** — 이전엔 `match_date < today` 만 → 오늘 오전 경기가 오후에도 SCHEDULED 로 남는 버그. `autoCompleteTeamMatches` 헬퍼로 3곳 통합 + KST 시각 비교 단위 테스트 14개 (b453727)
+- [x] **골 기록 기본 정렬 등록순(created_at ASC)** — 최근 추가 순 → 경기 흐름 순 (ddd1af3)
+- [x] **골 카드 드래그 정렬 + display_order 컬럼** — @dnd-kit 도입, 운영진 이상만 PUT `/api/goals/reorder`, optimistic UI + 실패 롤백 (ddd1af3, migration 00025)
+- [x] **앱 복귀 자동 갱신 쿨타임 30초 → 10초** — 경기 끝나고 짧게 앱을 닫았다 열었을 때 즉시 반영 (d7f90c3)
+
 ### 접근성
 
 - [x] ARIA 속성 전면 추가 (탭바, 투표, 정렬 헤더, 랜딩 섹션)
@@ -314,9 +336,9 @@
 - [ ] 실제 사용자 후기로 소셜프루프 교체 (실명 + 팀명) **[수동+개발]**
 - [ ] 회비 선납 기능 (6개월/1년치 일괄 납부 처리)
 - [x] OG 이미지 수치 업데이트 (50→81팀 사용 중)
-- [ ] 선수 카드 디자인 개선 (FIFA 스타일 SVG — API 구현 완료, 디자인 리뉴얼 필요)
-- [ ] 시즌 어워드 디자인 개선 (7종 시상 — API 구현 완료, UI/공유카드 디자인 리뉴얼 필요)
-- [ ] 개인 커리어 프로필 디자인 개선 (/player/[id] 공개 페이지 — 구현 완료, 디자인 리뉴얼 필요)
+- [ ] 선수 카드 디자인 개선 (FIFA 스타일) — **백엔드 v2 완료** (JSON variant, rarity/signature/rank/streak/isHero). v0 컴포넌트 `v0card/` 에 이식, 실제 페이지 wiring 남음
+- [ ] 시즌 어워드 디자인 개선 (7종 시상) — **백엔드 v2 완료** (mvp/seasonSummary/context). v0 컴포넌트 이식 + 노출 경로 결정(/awards? 기록 탭 새 탭?) 남음
+- [ ] 개인 커리어 프로필 디자인 개선 (/player/[id] 공개 페이지) — **백엔드 v2 완료** (bestMoments/ranks/streaks). v0 디자인 wiring 남음
 - [x] 경기 종료 시간 필드 추가 (시작 시간 입력 시 +2시간 자동 설정, 수동 변경 가능)
 
 ## 미완료 — MEDIUM (팀 50개 이상 시)
@@ -343,7 +365,7 @@
 ### 풋살 특화
 - [ ] 쿼터 라벨 개선 ("1Q" → "전반/후반" 옵션)
 
-### 골 기록 순서 조정 (2026-04-11 완료)
+### 골 기록 순서 조정 (2026-04-11 완료 · 구현 노트)
 - [x] 골 기록 기본 정렬을 등록 순(created_at ASC)으로 변경
 - [x] 골 카드 길게 누르기(long-press 200ms)로 순서 재정렬
   - `supabase/migrations/00025_match_goals_display_order.sql` — display_order INT 컬럼 + 부분 인덱스 (**사용자가 Supabase 대시보드에서 직접 실행**)
@@ -351,6 +373,7 @@
   - PUT `/api/goals/reorder` 신규 — 운영진 이상만, matchId+goalIds 배열 순서대로 0,1,2... 할당
   - 프론트: @dnd-kit/core + @dnd-kit/sortable 도입, PointerSensor/TouchSensor delay 200ms
   - optimistic UI + 실패 시 롤백 + 에러 토스트
+  - ℹ️ 마이그레이션 00025는 2026-04-11 Supabase 대시보드에서 실행 확인
 
 ### 포메이션 확장 (2026-04-10 옵션A 완료 후 남은 작업)
 - [x] 축구 11인 포메이션 5종 추가 (4-1-4-1, 4-5-1, 5-3-2, 3-4-2-1, 4-3-2-1) — 2026-04-10 완료
