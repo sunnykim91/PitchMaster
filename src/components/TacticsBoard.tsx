@@ -950,19 +950,19 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                       >
                         <span className="flex items-center gap-0.5 text-[10px] font-bold text-white sm:text-xs">
                           <span className="rounded bg-sky-500/40 px-0.5">전</span>
-                          {firstMatched && <span className="rounded bg-white/25 px-0.5 text-[9px]">적합</span>}
+                          {firstMatched && <span className="hidden sm:inline rounded bg-white/25 px-0.5 text-[9px]">적합</span>}
                           {(player?.name ?? "선수").slice(0, 3)}
                         </span>
                         <span className="flex items-center gap-0.5 text-[10px] font-bold text-white sm:text-xs">
                           <span className="rounded bg-violet-500/40 px-0.5">후</span>
-                          {secondMatched && <span className="rounded bg-white/25 px-0.5 text-[9px]">적합</span>}
+                          {secondMatched && <span className="hidden sm:inline rounded bg-white/25 px-0.5 text-[9px]">적합</span>}
                           {secondPlayer.name.slice(0, 3)}
                         </span>
                       </span>
                     ) : (
                       <span
                         className={cn(
-                          "flex max-w-[60px] items-center gap-1 whitespace-nowrap rounded-md px-1 py-0.5 text-[10px] font-bold shadow-sm sm:max-w-[110px] sm:px-1.5 sm:text-xs",
+                          "flex max-w-[64px] items-center gap-1 whitespace-nowrap rounded-md px-1 py-0.5 text-[10px] font-bold shadow-sm sm:max-w-[110px] sm:px-1.5 sm:text-xs",
                           singleMatched
                             ? "bg-[hsl(var(--success))] text-white ring-2 ring-[hsl(var(--success))] shadow-[0_0_10px_hsl(var(--success)/0.6)]"
                             : "bg-black/60 text-foreground"
@@ -970,7 +970,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                         title={singleMatched ? "선호 포지션과 일치" : undefined}
                       >
                         {singleMatched && (
-                          <span className="shrink-0 rounded bg-white/25 px-1 text-[9px] font-bold text-white">적합</span>
+                          <span className="hidden sm:inline-block shrink-0 rounded bg-white/25 px-1 text-[9px] font-bold text-white">적합</span>
                         )}
                         <span className="truncate">{displayName}</span>
                       </span>
