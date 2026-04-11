@@ -21,7 +21,7 @@ export async function GET() {
   const { data, error } = await db
     .from("team_join_requests")
     .select(
-      "id, user_id, name, phone, position, message, status, reviewed_by, reviewed_at, created_at, updated_at"
+      "id, kakao_id, name, phone, position:preferred_position, message, status, reviewed_by, reviewed_at, created_at"
     )
     .eq("team_id", ctx.teamId)
     .order("created_at", { ascending: false });

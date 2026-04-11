@@ -78,14 +78,14 @@ export async function requestJoinTeam(formData: FormData) {
   const db = getSupabaseAdmin();
   if (!db) throw new Error("Database not configured");
 
-  // 사용자 정보 조회
+  // 사용자 정보 조회 (kakao_id 필수)
   const { data: user } = await db
     .from("users")
-    .select("name, phone, preferred_positions")
+    .select("kakao_id, name, phone, preferred_positions")
     .eq("id", session.user.id)
     .single();
 
-  if (!user) redirect("/login");
+  if (!user?.kakao_id) redirect("/login");
 
   // 이미 소속인지 체크
   const { data: existingMember } = await db
@@ -94,7 +94,7 @@ export async function requestJoinTeam(formData: FormData) {
     .eq("team_id", teamId)
     .eq("user_id", session.user.id)
     .eq("status", "ACTIVE")
-    .single();
+    .maybeSingle();
 
   if (existingMember) {
     redirect("/team?error=already_member");
@@ -106,10 +106,10 @@ export async function requestJoinTeam(formData: FormData) {
     .from("team_join_requests")
     .select("id, status")
     .eq("team_id", teamId)
-    .eq("user_id", session.user.id)
+    .eq("kakao_id", user.kakao_id)
     .order("created_at", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (existingRequest?.status === "PENDING") {
     redirect("/team?error=already_requested");
@@ -118,7 +118,7 @@ export async function requestJoinTeam(formData: FormData) {
 
   const userName = user.name ?? session.user.name ?? "사용자";
   const userPhone = user.phone ?? null;
-  const position = user.preferred_positions?.[0] ?? null;
+  const preferredPosition = user.preferred_positions?.[0] ?? null;
 
   if (existingRequest?.status === "REJECTED") {
     // 재신청: PENDING으로 업데이트
@@ -128,21 +128,20 @@ export async function requestJoinTeam(formData: FormData) {
         status: "PENDING",
         name: userName,
         phone: userPhone,
-        position,
+        preferred_position: preferredPosition,
         message: message || null,
         reviewed_by: null,
         reviewed_at: null,
-        updated_at: new Date().toISOString(),
       })
       .eq("id", existingRequest.id);
   } else {
     // 신규 신청
     await db.from("team_join_requests").insert({
       team_id: teamId,
-      user_id: session.user.id,
+      kakao_id: user.kakao_id,
       name: userName,
       phone: userPhone,
-      position,
+      preferred_position: preferredPosition,
       message: message || null,
     });
   }
@@ -256,23 +255,28 @@ export async function joinTeam(formData: FormData) {
   if (team.join_mode === "MANUAL") {
     const { data: userInfo } = await db
       .from("users")
-      .select("name, phone, preferred_positions")
+      .select("kakao_id, name, phone, preferred_positions")
       .eq("id", session.user.id)
       .single();
 
-    const applicantName = userInfo?.name ?? session.user.name ?? "사용자";
-    const applicantPhone = userInfo?.phone ?? null;
-    const applicantPosition = userInfo?.preferred_positions?.[0] ?? null;
+    if (!userInfo?.kakao_id) {
+      redirect("/team?error=user_not_found");
+      return;
+    }
+
+    const applicantName = userInfo.name ?? session.user.name ?? "사용자";
+    const applicantPhone = userInfo.phone ?? null;
+    const applicantPosition = userInfo.preferred_positions?.[0] ?? null;
 
     // 기존 신청 내역 확인 (PENDING이면 그대로, REJECTED면 재활성)
     const { data: prevRequest } = await db
       .from("team_join_requests")
       .select("id, status")
       .eq("team_id", team.id)
-      .eq("user_id", session.user.id)
+      .eq("kakao_id", userInfo.kakao_id)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (prevRequest?.status === "PENDING") {
       redirect("/team?pending=true");
@@ -286,19 +290,18 @@ export async function joinTeam(formData: FormData) {
           status: "PENDING",
           name: applicantName,
           phone: applicantPhone,
-          position: applicantPosition,
+          preferred_position: applicantPosition,
           reviewed_by: null,
           reviewed_at: null,
-          updated_at: new Date().toISOString(),
         })
         .eq("id", prevRequest.id);
     } else {
       await db.from("team_join_requests").insert({
         team_id: team.id,
-        user_id: session.user.id,
+        kakao_id: userInfo.kakao_id,
         name: applicantName,
         phone: applicantPhone,
-        position: applicantPosition,
+        preferred_position: applicantPosition,
       });
     }
 

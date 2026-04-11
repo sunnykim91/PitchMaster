@@ -39,12 +39,19 @@ export async function GET(request: NextRequest) {
     })
   );
 
-  // 현재 사용자의 PENDING 신청 목록 조회
-  const { data: myRequests } = await db
-    .from("team_join_requests")
-    .select("team_id")
-    .eq("user_id", session.user.id)
-    .eq("status", "PENDING");
+  // 현재 사용자의 PENDING 신청 목록 조회 (kakao_id로 조회)
+  const { data: me } = await db
+    .from("users")
+    .select("kakao_id")
+    .eq("id", session.user.id)
+    .single();
+  const { data: myRequests } = me?.kakao_id
+    ? await db
+        .from("team_join_requests")
+        .select("team_id")
+        .eq("kakao_id", me.kakao_id)
+        .eq("status", "PENDING")
+    : { data: [] as { team_id: string }[] };
 
   const pendingTeamIds = new Set((myRequests ?? []).map((r) => r.team_id));
 

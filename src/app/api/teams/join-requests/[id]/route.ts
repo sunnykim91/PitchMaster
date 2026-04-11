@@ -33,13 +33,21 @@ export async function PATCH(
   // 1. 가입 신청 + 팀 이름 함께 조회
   const { data: joinReq, error: fetchErr } = await db
     .from("team_join_requests")
-    .select("id, team_id, user_id, name, status")
+    .select("id, team_id, kakao_id, name, status")
     .eq("id", id)
     .eq("team_id", ctx.teamId)
     .single();
 
   if (fetchErr || !joinReq) return apiError("Join request not found", 404);
   if (joinReq.status !== "PENDING") return apiError("Already processed");
+
+  // 신청자 user_id 조회 (team_members / push는 UUID가 필요)
+  const { data: applicant } = await db
+    .from("users")
+    .select("id")
+    .eq("kakao_id", joinReq.kakao_id)
+    .single();
+  const applicantUserId = applicant?.id ?? null;
 
   // 팀 이름 조회 (알림 메시지에 사용)
   const { data: team } = await db
@@ -56,18 +64,19 @@ export async function PATCH(
       status,
       reviewed_by: ctx.userId,
       reviewed_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     })
     .eq("id", id);
 
   if (updateErr) return apiError(updateErr.message);
+
+  if (!applicantUserId) return apiSuccess({ ok: true });
 
   // 3. 승인 시: team_members에 추가 + 신청자에게 알림
   if (status === "APPROVED") {
     const { error: memberErr } = await db.from("team_members").upsert(
       {
         team_id: ctx.teamId,
-        user_id: joinReq.user_id,
+        user_id: applicantUserId,
         role: "MEMBER",
         status: "ACTIVE",
       },
@@ -79,14 +88,14 @@ export async function PATCH(
       title: "가입 승인",
       body: `${teamName} 가입이 승인되었습니다!`,
       url: "/dashboard",
-      userIds: [joinReq.user_id],
+      userIds: [applicantUserId],
     });
   } else {
     // 거절 시 알림
     await sendTeamPush(ctx.teamId, {
       title: "가입 거절",
       body: `${teamName} 가입 신청이 거절되었습니다.`,
-      userIds: [joinReq.user_id],
+      userIds: [applicantUserId],
     });
   }
 

@@ -35,22 +35,20 @@ export async function POST(request: NextRequest) {
 
   const userId = session.user.id;
 
-  // name이 없으면 DB에서 사용자 정보 자동 조회
-  let resolvedName = name?.trim() ?? "";
-  let resolvedPhone = phone ?? null;
-  let resolvedPosition = position ?? null;
+  // 사용자 정보 조회 (kakao_id는 team_join_requests에 필수)
+  const { data: userInfo } = await db
+    .from("users")
+    .select("kakao_id, name, phone, preferred_positions")
+    .eq("id", userId)
+    .single();
 
-  if (!resolvedName) {
-    const { data: userInfo } = await db
-      .from("users")
-      .select("name, phone, preferred_positions")
-      .eq("id", userId)
-      .single();
-
-    resolvedName = userInfo?.name ?? session.user.name ?? "사용자";
-    if (!phone) resolvedPhone = userInfo?.phone ?? null;
-    if (!position) resolvedPosition = userInfo?.preferred_positions?.[0] ?? null;
+  if (!userInfo?.kakao_id) {
+    return apiError("사용자 정보를 찾을 수 없습니다", 404);
   }
+
+  const resolvedName = name?.trim() || userInfo.name || session.user.name || "사용자";
+  const resolvedPhone = phone ?? userInfo.phone ?? null;
+  const resolvedPosition = position ?? userInfo.preferred_positions?.[0] ?? null;
 
   // 팀 존재 여부 + is_searchable 확인
   const { data: team } = await db
@@ -84,10 +82,10 @@ export async function POST(request: NextRequest) {
     .from("team_join_requests")
     .select("id, status")
     .eq("team_id", teamId)
-    .eq("user_id", userId)
+    .eq("kakao_id", userInfo.kakao_id)
     .order("created_at", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (prevRequest) {
     if (prevRequest.status === "PENDING") {
@@ -100,12 +98,11 @@ export async function POST(request: NextRequest) {
         .update({
           name: resolvedName,
           phone: resolvedPhone,
-          position: resolvedPosition,
+          preferred_position: resolvedPosition,
           message: message ?? null,
           status: "PENDING",
           reviewed_by: null,
           reviewed_at: null,
-          updated_at: new Date().toISOString(),
         })
         .eq("id", prevRequest.id);
 
@@ -123,10 +120,10 @@ export async function POST(request: NextRequest) {
   // 신규 신청 INSERT
   const { error } = await db.from("team_join_requests").insert({
     team_id: teamId,
-    user_id: userId,
+    kakao_id: userInfo.kakao_id,
     name: resolvedName,
     phone: resolvedPhone,
-    position: resolvedPosition,
+    preferred_position: resolvedPosition,
     message: message ?? null,
     status: "PENDING",
   });
