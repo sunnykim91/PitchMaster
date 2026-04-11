@@ -37,10 +37,9 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await db
     .from("match_goals")
-    .select("id, match_id, quarter_number, minute, scorer_id, assist_id, is_own_goal, goal_type, recorded_by, side")
+    .select("id, match_id, quarter_number, minute, scorer_id, assist_id, is_own_goal, goal_type, recorded_by, side, created_at")
     .eq("match_id", matchId)
-    .order("quarter_number")
-    .order("minute");
+    .order("created_at", { ascending: true });
 
   if (error) return apiError(error.message);
   return apiSuccess({ goals: data });
