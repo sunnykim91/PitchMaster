@@ -252,20 +252,67 @@ export async function joinTeam(formData: FormData) {
     return;
   }
 
-  // 매칭 없으면 새 row 생성
-  const status = team.join_mode === "MANUAL" ? "PENDING" : "ACTIVE";
+  // MANUAL 팀: team_join_requests로 일원화 (회장 가입 신청 목록에서 승인 필요)
+  if (team.join_mode === "MANUAL") {
+    const { data: userInfo } = await db
+      .from("users")
+      .select("name, phone, preferred_positions")
+      .eq("id", session.user.id)
+      .single();
 
+    const applicantName = userInfo?.name ?? session.user.name ?? "사용자";
+    const applicantPhone = userInfo?.phone ?? null;
+    const applicantPosition = userInfo?.preferred_positions?.[0] ?? null;
+
+    // 기존 신청 내역 확인 (PENDING이면 그대로, REJECTED면 재활성)
+    const { data: prevRequest } = await db
+      .from("team_join_requests")
+      .select("id, status")
+      .eq("team_id", team.id)
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (prevRequest?.status === "PENDING") {
+      redirect("/team?pending=true");
+      return;
+    }
+
+    if (prevRequest?.status === "REJECTED") {
+      await db
+        .from("team_join_requests")
+        .update({
+          status: "PENDING",
+          name: applicantName,
+          phone: applicantPhone,
+          position: applicantPosition,
+          reviewed_by: null,
+          reviewed_at: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", prevRequest.id);
+    } else {
+      await db.from("team_join_requests").insert({
+        team_id: team.id,
+        user_id: session.user.id,
+        name: applicantName,
+        phone: applicantPhone,
+        position: applicantPosition,
+      });
+    }
+
+    redirect("/team?pending=true");
+    return;
+  }
+
+  // AUTO 팀: 즉시 ACTIVE 멤버로 등록
   await db.from("team_members").insert({
     team_id: team.id,
     user_id: session.user.id,
     role: "MEMBER",
-    status,
+    status: "ACTIVE",
   });
-
-  if (status === "PENDING") {
-    redirect("/team?pending=true");
-    return;
-  }
 
   await updateSession({
     teamId: team.id,
