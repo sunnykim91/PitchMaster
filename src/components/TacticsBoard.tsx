@@ -387,6 +387,8 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   }, [roster, assignedPlayers]);
 
   const captureRef = useRef<HTMLDivElement | null>(null);
+  // 캡처 중에는 필드의 '적합' 표시(녹색 링·pill·상단 레전드) 숨김
+  const [isCapturing, setIsCapturing] = useState(false);
 
   /** 공통 캡처 → 클립보드 복사 / Web Share / 다운로드 */
   async function captureAndShare(target: HTMLElement, filename: string) {
@@ -394,6 +396,12 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     if (sharingRef.current) return;
     sharingRef.current = true;
     setShareMsg("캡처 중...");
+
+    // 적합 표시 숨기고 React 리렌더 반영까지 2 프레임 대기
+    setIsCapturing(true);
+    await new Promise<void>((r) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => r()))
+    );
 
     // 오프스크린 요소면 임시로 화면에 표시
     const wasOffScreen = target.style.left === "-9999px";
@@ -470,6 +478,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
         target.style.zIndex = "";
         target.style.opacity = "";
       }
+      setIsCapturing(false);
       sharingRef.current = false;
     }
   }
@@ -798,8 +807,8 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             </span>
             <span className="text-xs text-muted-foreground/50">PitchMaster</span>
           </div>
-          {/* 매칭 레전드 — 1개라도 매칭된 배치가 있을 때만 노출 */}
-          {(() => {
+          {/* 매칭 레전드 — 1개라도 매칭된 배치가 있을 때만 노출. 캡처 중엔 숨김 */}
+          {!isCapturing && (() => {
             const matchedCount = formation.slots.reduce((acc, slot) => {
               const placement = placements[slot.id];
               if (!placement) return acc;
@@ -912,8 +921,9 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                 ? `${player?.name ?? "선수"}/${secondPlayer.name}`
                 : (player?.name ?? "선수");
               const isActive = activeSlotId === slot.id;
-              const firstMatched = isPositionMatched(player, slot.role);
-              const secondMatched = isPositionMatched(secondPlayer, slot.role);
+              // 캡처 중엔 적합 표시 숨김 (공유 이미지에 노이즈 제거)
+              const firstMatched = !isCapturing && isPositionMatched(player, slot.role);
+              const secondMatched = !isCapturing && isPositionMatched(secondPlayer, slot.role);
               const singleMatched = !secondPlayer && firstMatched;
               return (
                 <button
