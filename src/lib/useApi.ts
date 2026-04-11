@@ -100,7 +100,7 @@ export function useApi<T>(
     };
   }, [fetchData, options?.skip]);
 
-  // 앱 복귀 시 자동 갱신 (30초 이내면 skip)
+  // 앱 복귀 시 자동 갱신 (10초 이내면 skip — 연타·빠른 전환 흡수)
   useEffect(() => {
     if (options?.skip) return;
 
@@ -108,7 +108,7 @@ export function useApi<T>(
 
     function handleVisibilityChange() {
       if (document.visibilityState !== "visible") return;
-      if (Date.now() - lastRefresh < 30_000) return;
+      if (Date.now() - lastRefresh < 10_000) return;
       lastRefresh = Date.now();
       fetchData(true);
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { apiMutate } from "@/lib/useApi";
 import { useAsyncAction, useItemAction } from "@/lib/useAsyncAction";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,26 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { EmptyState } from "@/components/EmptyState";
-import { Target, ChevronDown, Trophy, Check, Pencil, Trash2, Clock } from "lucide-react";
+import { Target, ChevronDown, Trophy, Check, Pencil, Trash2, Clock, GripVertical } from "lucide-react";
 import { useToast } from "@/lib/ToastContext";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { KeyboardSensor } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 import type {
   Match,
   GoalEvent,
@@ -70,6 +88,46 @@ function MatchRecordTabInner({
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [editingIsOpponent, setEditingIsOpponent] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+
+  /** 드래그 재정렬용 로컬 goals state (optimistic UI) */
+  const [orderedGoals, setOrderedGoals] = useState<GoalEvent[]>(goals);
+  useEffect(() => {
+    setOrderedGoals(goals);
+  }, [goals]);
+
+  /** dnd-kit sensors — long-press(200ms) 활성화 + 5px 이동 이후 드래그 시작 */
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = orderedGoals.findIndex((g) => g.id === active.id);
+    const newIndex = orderedGoals.findIndex((g) => g.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const previous = orderedGoals;
+    const next = arrayMove(orderedGoals, oldIndex, newIndex);
+    setOrderedGoals(next); // optimistic
+    const { error: err } = await apiMutate("/api/goals/reorder", "PUT", {
+      matchId,
+      goalIds: next.map((g) => g.id),
+    });
+    if (err) {
+      setOrderedGoals(previous); // rollback
+      showToast("순서 저장에 실패했습니다.", "error");
+      return;
+    }
+    await refetchGoals();
+  }
 
   const voteCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -481,59 +539,23 @@ function MatchRecordTabInner({
             )}
 
             <div className="space-y-2">
-              {goals.length === 0 ? (
+              {orderedGoals.length === 0 ? (
                 <EmptyState icon={Target} title="아직 기록이 없습니다" description="위의 +득점 버튼으로 골을 기록하세요" />
-              ) : (
-                goals.map((goal) => {
-                  const label = goal.scorerId === "OPPONENT"
-                    ? <span className="text-[hsl(var(--loss))]">실점</span>
-                    : goal.isOwnGoal
-                    ? <span className="text-[hsl(var(--warning))]">자책골</span>
-                    : goal.scorerId === "UNKNOWN"
-                    ? <span className="text-[hsl(var(--success))]">득점</span>
-                    : <span className="text-[hsl(var(--success))]">{resolvePlayerName(goal.scorerId)}</span>;
-                  return (
-                  <div
-                    key={goal.id}
-                    className="card-list-item flex items-center justify-between"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold truncate flex items-center gap-1.5">
-                        {isInternal && goal.side && (
-                          <Badge className={cn("text-[10px] px-1.5 py-0 border-0",
-                            goal.side === "A" ? "bg-primary/20 text-primary" : "bg-[hsl(var(--info))]/20 text-[hsl(var(--info))]"
-                          )}>{goal.side}팀</Badge>
-                        )}
-                        {label}
-                      </p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
-                        {goal.quarter > 0 && (
-                          <span className="flex items-center gap-0.5">
-                            <Clock className="h-3 w-3" />Q{goal.quarter}
-                          </span>
-                        )}
-                        {goal.goalType && goal.goalType !== "NORMAL" && goal.goalType !== "OWN_GOAL" && (
-                          <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">{goal.goalType}</span>
-                        )}
-                        {goal.assistId
-                          ? <span>{(goal.quarter > 0 || (goal.goalType && goal.goalType !== "NORMAL" && goal.goalType !== "OWN_GOAL")) ? " · " : ""}A: {resolvePlayerName(goal.assistId)}</span>
-                          : ""}
-                      </p>
-                    </div>
-                    {canRecord && (
-                      <div className="flex items-center gap-2 shrink-0" style={{ touchAction: "manipulation" }}>
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); handleEditGoal(goal); }}
-                          className="rounded-lg bg-secondary min-h-[44px] px-4 py-2 text-xs font-semibold text-foreground hover:bg-secondary/70 active:bg-secondary/50 active:scale-95 transition-all cursor-pointer select-none"
-                        >
-                          수정
-                        </button>
-                        <button
-                          type="button"
-                          disabled={deletingGoalId === goal.id}
-                          onClick={async (e) => {
-                            e.stopPropagation();
+              ) : canRecord ? (
+                <>
+                  <p className="text-[11px] text-muted-foreground">💡 카드를 길게 눌러 순서를 변경할 수 있어요</p>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={orderedGoals.map((g) => g.id)} strategy={verticalListSortingStrategy}>
+                      {orderedGoals.map((goal) => (
+                        <SortableGoalItem
+                          key={goal.id}
+                          goal={goal}
+                          isInternal={isInternal}
+                          resolvePlayerName={resolvePlayerName}
+                          canRecord={canRecord}
+                          deletingGoalId={deletingGoalId}
+                          onEdit={() => handleEditGoal(goal)}
+                          onDelete={async () => {
                             const ok = await confirm({
                               title: "골 기록 삭제",
                               description: "이 골 기록을 삭제하시겠습니까? 삭제된 기록은 복구할 수 없습니다.",
@@ -543,15 +565,20 @@ function MatchRecordTabInner({
                             });
                             if (ok) runDeleteGoal(goal.id, () => handleDeleteGoal(goal.id));
                           }}
-                          className="rounded-lg bg-[hsl(var(--loss)/0.15)] min-h-[44px] px-4 py-2 text-xs font-semibold text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] active:bg-[hsl(var(--loss)/0.35)] active:scale-95 transition-all cursor-pointer select-none disabled:opacity-50"
-                        >
-                          {deletingGoalId === goal.id ? "삭제 중..." : "삭제"}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  );
-                })
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+                </>
+              ) : (
+                orderedGoals.map((goal) => (
+                  <StaticGoalItem
+                    key={goal.id}
+                    goal={goal}
+                    isInternal={isInternal}
+                    resolvePlayerName={resolvePlayerName}
+                  />
+                ))
               )}
             </div>
           </CardContent>
@@ -629,3 +656,129 @@ function MatchRecordTabInner({
 }
 
 export const MatchRecordTab = memo(MatchRecordTabInner);
+
+/* ── 골 카드 내부 콘텐츠 (정적/드래그 공용) ── */
+function GoalCardContent({
+  goal,
+  isInternal,
+  resolvePlayerName,
+}: {
+  goal: GoalEvent;
+  isInternal: boolean;
+  resolvePlayerName: (id: string | undefined) => string;
+}) {
+  const label = goal.scorerId === "OPPONENT"
+    ? <span className="text-[hsl(var(--loss))]">실점</span>
+    : goal.isOwnGoal
+    ? <span className="text-[hsl(var(--warning))]">자책골</span>
+    : goal.scorerId === "UNKNOWN"
+    ? <span className="text-[hsl(var(--success))]">득점</span>
+    : <span className="text-[hsl(var(--success))]">{resolvePlayerName(goal.scorerId)}</span>;
+  return (
+    <div className="min-w-0">
+      <p className="text-sm font-semibold truncate flex items-center gap-1.5">
+        {isInternal && goal.side && (
+          <Badge className={cn("text-[10px] px-1.5 py-0 border-0",
+            goal.side === "A" ? "bg-primary/20 text-primary" : "bg-[hsl(var(--info))]/20 text-[hsl(var(--info))]"
+          )}>{goal.side}팀</Badge>
+        )}
+        {label}
+      </p>
+      <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
+        {goal.quarter > 0 && (
+          <span className="flex items-center gap-0.5">
+            <Clock className="h-3 w-3" />Q{goal.quarter}
+          </span>
+        )}
+        {goal.goalType && goal.goalType !== "NORMAL" && goal.goalType !== "OWN_GOAL" && (
+          <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">{goal.goalType}</span>
+        )}
+        {goal.assistId
+          ? <span>{(goal.quarter > 0 || (goal.goalType && goal.goalType !== "NORMAL" && goal.goalType !== "OWN_GOAL")) ? " · " : ""}A: {resolvePlayerName(goal.assistId)}</span>
+          : ""}
+      </p>
+    </div>
+  );
+}
+
+/* ── 드래그 가능 골 카드 (운영진) ── */
+function SortableGoalItem({
+  goal,
+  isInternal,
+  resolvePlayerName,
+  canRecord,
+  deletingGoalId,
+  onEdit,
+  onDelete,
+}: {
+  goal: GoalEvent;
+  isInternal: boolean;
+  resolvePlayerName: (id: string | undefined) => string;
+  canRecord: boolean;
+  deletingGoalId: string | null;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: goal.id,
+  });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+  };
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "card-list-item flex items-center justify-between gap-2 touch-none",
+        isDragging && "scale-[1.02] shadow-xl ring-2 ring-primary/40",
+      )}
+    >
+      {/* 드래그 핸들 영역: 카드 본문 전체 (long-press 후 드래그) */}
+      <div className="flex items-center gap-2 min-w-0 flex-1 cursor-grab active:cursor-grabbing select-none" {...attributes} {...listeners}>
+        <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground/40" />
+        <GoalCardContent goal={goal} isInternal={isInternal} resolvePlayerName={resolvePlayerName} />
+      </div>
+      {canRecord && (
+        <div className="flex items-center gap-2 shrink-0" style={{ touchAction: "manipulation" }}>
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            className="rounded-lg bg-secondary min-h-[44px] px-4 py-2 text-xs font-semibold text-foreground hover:bg-secondary/70 active:bg-secondary/50 active:scale-95 transition-all cursor-pointer select-none"
+          >
+            수정
+          </button>
+          <button
+            type="button"
+            disabled={deletingGoalId === goal.id}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            className="rounded-lg bg-[hsl(var(--loss)/0.15)] min-h-[44px] px-4 py-2 text-xs font-semibold text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)/0.25)] active:bg-[hsl(var(--loss)/0.35)] active:scale-95 transition-all cursor-pointer select-none disabled:opacity-50"
+          >
+            {deletingGoalId === goal.id ? "삭제 중..." : "삭제"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── 정적 골 카드 (일반 회원) ── */
+function StaticGoalItem({
+  goal,
+  isInternal,
+  resolvePlayerName,
+}: {
+  goal: GoalEvent;
+  isInternal: boolean;
+  resolvePlayerName: (id: string | undefined) => string;
+}) {
+  return (
+    <div className="card-list-item flex items-center justify-between">
+      <GoalCardContent goal={goal} isInternal={isInternal} resolvePlayerName={resolvePlayerName} />
+    </div>
+  );
+}

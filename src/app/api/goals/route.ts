@@ -35,10 +35,13 @@ export async function GET(request: NextRequest) {
   const { data: matchCheck } = await db.from("matches").select("id").eq("id", matchId).eq("team_id", ctx.teamId).single();
   if (!matchCheck) return apiError("Match not found", 404);
 
+  // 정렬 우선순위: display_order가 설정된 것 먼저(오름차순) → NULL은 created_at으로 fallback
+  // Supabase PostgREST의 order() nullsFirst 옵션 사용
   const { data, error } = await db
     .from("match_goals")
-    .select("id, match_id, quarter_number, minute, scorer_id, assist_id, is_own_goal, goal_type, recorded_by, side, created_at")
+    .select("id, match_id, quarter_number, minute, scorer_id, assist_id, is_own_goal, goal_type, recorded_by, side, created_at, display_order")
     .eq("match_id", matchId)
+    .order("display_order", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: true });
 
   if (error) return apiError(error.message);

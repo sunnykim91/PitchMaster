@@ -343,15 +343,14 @@
 ### 풋살 특화
 - [ ] 쿼터 라벨 개선 ("1Q" → "전반/후반" 옵션)
 
-### 골 기록 순서 조정 (신규)
-- [x] 골 기록 기본 정렬을 등록 순(created_at ASC)으로 변경 — 2026-04-11 완료
-- [ ] 골 카드 길게 누르기(long-press)로 순서 재정렬
-  - `match_goals`에 `display_order INT` 컬럼 추가 마이그레이션
-  - GET 시 `display_order ASC` → fallback `created_at ASC`
-  - 프론트: dnd-kit 또는 react-beautiful-dnd 도입 (모바일 터치 지원 필수)
-  - 재정렬 시 PUT `/api/goals/reorder` 새 엔드포인트 (전체 순서 일괄 저장)
-  - 운영진 이상 권한만 가능
-  - 정렬 변경 후 "저장됨" 토스트
+### 골 기록 순서 조정 (2026-04-11 완료)
+- [x] 골 기록 기본 정렬을 등록 순(created_at ASC)으로 변경
+- [x] 골 카드 길게 누르기(long-press 200ms)로 순서 재정렬
+  - `supabase/migrations/00025_match_goals_display_order.sql` — display_order INT 컬럼 + 부분 인덱스 (**사용자가 Supabase 대시보드에서 직접 실행**)
+  - GET 시 `display_order ASC (nullsFirst:false)` → fallback `created_at ASC`
+  - PUT `/api/goals/reorder` 신규 — 운영진 이상만, matchId+goalIds 배열 순서대로 0,1,2... 할당
+  - 프론트: @dnd-kit/core + @dnd-kit/sortable 도입, PointerSensor/TouchSensor delay 200ms
+  - optimistic UI + 실패 시 롤백 + 에러 토스트
 
 ### 포메이션 확장 (2026-04-10 옵션A 완료 후 남은 작업)
 - [x] 축구 11인 포메이션 5종 추가 (4-1-4-1, 4-5-1, 5-3-2, 3-4-2-1, 4-3-2-1) — 2026-04-10 완료

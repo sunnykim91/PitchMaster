@@ -6,7 +6,7 @@ export async function getMatchDetailData(matchId: string, teamId: string) {
 
   const [matchRes, goalsRes, mvpRes, attendanceCheckRes, guestsRes, internalTeamsRes, diaryRes, membersRes, teamRes, voteRes] = await Promise.all([
     db.from("matches").select("*").eq("id", matchId).eq("team_id", teamId).single(),
-    db.from("match_goals").select("*").eq("match_id", matchId).order("created_at", { ascending: true }),
+    db.from("match_goals").select("*").eq("match_id", matchId).order("display_order", { ascending: true, nullsFirst: false }).order("created_at", { ascending: true }),
     db.from("match_mvp_votes").select("*").eq("match_id", matchId),
     db.from("match_attendance").select("user_id, member_id, actually_attended, attendance_status").eq("match_id", matchId),
     db.from("match_guests").select("*").eq("match_id", matchId),
