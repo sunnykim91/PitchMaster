@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { GET, POST, DELETE } from "@/app/api/guests/route";
+import { GET, POST, PUT, DELETE } from "@/app/api/guests/route";
 import { createMockDb } from "../helpers/db";
 import { memberSession, staffSession, noTeamSession } from "../helpers/auth";
 
@@ -175,6 +175,120 @@ describe("POST /api/guests", () => {
     expect(res.status).toBe(400);
     const json = await res.json();
     expect(json.error).toBe("insert failed");
+  });
+});
+
+// ─── PUT /api/guests ──────────────────────────────────────────────────────────
+describe("PUT /api/guests", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const updateBody = {
+    id: "gu1",
+    name: "게스트A 수정",
+    position: "MF,FW",
+    phone: "010-9999-8888",
+    note: "이름 오타 수정",
+  };
+
+  function makeRequest(body: object) {
+    return new NextRequest("http://localhost/api/guests", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  }
+
+  it("401: 로그인하지 않은 경우", async () => {
+    vi.mocked(auth).mockResolvedValue(null);
+    const res = await PUT(makeRequest(updateBody));
+    expect(res.status).toBe(401);
+  });
+
+  it("403: 팀이 없는 경우", async () => {
+    vi.mocked(auth).mockResolvedValue(noTeamSession);
+    const res = await PUT(makeRequest(updateBody));
+    expect(res.status).toBe(403);
+  });
+
+  it("400: id 누락", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+    const db = createMockDb();
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await PUT(makeRequest({ name: "수정" }));
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain("id");
+  });
+
+  it("503: DB 없는 경우", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(null);
+    const res = await PUT(makeRequest(updateBody));
+    expect(res.status).toBe(503);
+  });
+
+  it("404: 다른 팀의 용병이면 접근 거부", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+    // guest check가 null 반환 → 팀 검증 실패
+    const db = createMockDb(["match_guests", null]);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await PUT(makeRequest(updateBody));
+    expect(res.status).toBe(404);
+    const json = await res.json();
+    expect(json.error).toContain("not found");
+  });
+
+  it("200: 용병 수정 성공", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+    const updated = {
+      id: "gu1",
+      match_id: "m1",
+      name: "게스트A 수정",
+      position: "MF,FW",
+      phone: "010-9999-8888",
+      note: "이름 오타 수정",
+    };
+    // 1st: team 검증, 2nd: update 반환
+    const db = createMockDb(
+      ["match_guests", { id: "gu1" }],
+      ["match_guests", updated],
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await PUT(makeRequest(updateBody));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.name).toBe("게스트A 수정");
+    expect(json.position).toBe("MF,FW");
+  });
+
+  it("200: STAFF 수정 성공", async () => {
+    vi.mocked(auth).mockResolvedValue(staffSession);
+    const updated = { id: "gu1", name: "staff 수정" };
+    const db = createMockDb(
+      ["match_guests", { id: "gu1" }],
+      ["match_guests", updated],
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await PUT(makeRequest({ id: "gu1", name: "staff 수정" }));
+    expect(res.status).toBe(200);
+  });
+
+  it("400: DB 에러 시 에러 반환", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+    const db = createMockDb(
+      ["match_guests", { id: "gu1" }],
+      ["match_guests", null, { message: "update failed" }],
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await PUT(makeRequest(updateBody));
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toBe("update failed");
   });
 });
 

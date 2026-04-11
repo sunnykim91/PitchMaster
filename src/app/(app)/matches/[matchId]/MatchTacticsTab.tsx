@@ -12,7 +12,7 @@ import type { Match, SimpleRosterPlayer, InternalTeamAssignment, Guest } from ".
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { X, ChevronDown, Sparkles, Users, Plus } from "lucide-react";
+import { X, ChevronDown, Sparkles, Users, Plus, Pencil } from "lucide-react";
 import { formatPhone } from "@/lib/utils";
 import type { SportType } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -65,6 +65,7 @@ function MatchTacticsTabInner({
   const [savingTeams, setSavingTeams] = useState(false);
   const [showTeamSplit, setShowTeamSplit] = useState(false);
   const [showGuestForm, setShowGuestForm] = useState(false);
+  const [editingGuestId, setEditingGuestId] = useState<string | null>(null);
   const { showToast } = useToast();
 
   // 자체전: 팀별 roster 필터링
@@ -278,27 +279,132 @@ function MatchTacticsTabInner({
               <p className="text-sm text-muted-foreground">등록된 용병이 없습니다.</p>
             ) : (
               <ul className="space-y-2">
-                {(guests ?? []).map((g) => (
-                  <li key={g.id} className="flex items-start justify-between rounded-xl bg-secondary/30 p-3">
-                    <div className="space-y-1">
-                      <p className="text-sm font-semibold">{g.name}</p>
-                      {g.position && (
-                        <div className="flex flex-wrap gap-1">
-                          {g.position.split(",").map((pos) => (
-                            <Badge key={pos} variant="secondary" className="text-[10px] px-1.5 py-0">{pos.trim()}</Badge>
-                          ))}
+                {(guests ?? []).map((g) => {
+                  const isEditing = editingGuestId === g.id;
+                  const existingPositions = (g.position ?? "")
+                    .split(",")
+                    .map((p) => p.trim())
+                    .filter(Boolean);
+                  return (
+                    <li key={g.id} className="rounded-xl bg-secondary/30 p-3">
+                      {isEditing ? (
+                        <form
+                          action={async (formData) => {
+                            const name = String(formData.get("editName") || "").trim();
+                            if (!name) return;
+                            const positions = formData.getAll("editPositions").map(String).filter(Boolean);
+                            const phone = String(formData.get("editPhone") || "") || undefined;
+                            const note = String(formData.get("editNote") || "") || undefined;
+                            const { error } = await apiMutate("/api/guests", "PUT", {
+                              id: g.id,
+                              name,
+                              position: positions.join(",") || null,
+                              phone,
+                              note,
+                            });
+                            if (error) {
+                              showToast("수정 실패: " + error, "error");
+                              return;
+                            }
+                            showToast("용병 정보가 수정되었습니다.");
+                            setEditingGuestId(null);
+                            refetchGuests?.();
+                          }}
+                          className="space-y-3"
+                        >
+                          <div>
+                            <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">
+                              이름 <span className="text-destructive">*</span>
+                            </p>
+                            <input
+                              name="editName"
+                              required
+                              defaultValue={g.name}
+                              placeholder="용병 이름"
+                              className="h-11 w-full rounded-xl border-0 bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                            />
+                          </div>
+                          <div>
+                            <p className="mb-2 text-[11px] font-medium text-muted-foreground">선호 포지션 (복수 선택)</p>
+                            <div className="grid grid-cols-4 gap-2">
+                              {(["GK","CB","LB","RB","CDM","CM","CAM","LW","RW","ST"] as const).map((pos) => (
+                                <label key={pos} className="flex cursor-pointer items-center gap-2 rounded-lg bg-background px-3 py-2">
+                                  <input
+                                    type="checkbox"
+                                    name="editPositions"
+                                    value={pos}
+                                    defaultChecked={existingPositions.includes(pos)}
+                                    className="h-4 w-4 rounded border-border accent-primary"
+                                  />
+                                  <span className="text-sm font-medium">{pos}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">연락처</p>
+                            <PhoneInput name="editPhone" defaultValue={g.phone ?? ""} />
+                          </div>
+                          <div>
+                            <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">메모</p>
+                            <input
+                              name="editNote"
+                              defaultValue={g.note ?? ""}
+                              placeholder="소속팀, 실력 등"
+                              className="h-11 w-full rounded-xl border-0 bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button type="submit" size="sm" className="flex-1 rounded-xl">저장</Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 rounded-xl"
+                              onClick={() => setEditingGuestId(null)}
+                            >
+                              취소
+                            </Button>
+                          </div>
+                        </form>
+                      ) : (
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold">{g.name}</p>
+                            {g.position && (
+                              <div className="flex flex-wrap gap-1">
+                                {existingPositions.map((pos) => (
+                                  <Badge key={pos} variant="secondary" className="text-[10px] px-1.5 py-0">{pos}</Badge>
+                                ))}
+                              </div>
+                            )}
+                            {(g.phone || g.note) && (
+                              <p className="text-xs text-muted-foreground">{[g.phone ? formatPhone(g.phone) : "", g.note].filter(Boolean).join(" · ")}</p>
+                            )}
+                          </div>
+                          <div className="flex shrink-0 items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setEditingGuestId(g.id)}
+                              title="수정"
+                              className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveGuest?.(g.id)}
+                              title="삭제"
+                              className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
                       )}
-                      {(g.phone || g.note) && (
-                        <p className="text-xs text-muted-foreground">{[g.phone ? formatPhone(g.phone) : "", g.note].filter(Boolean).join(" · ")}</p>
-                      )}
-                    </div>
-                    <button type="button" onClick={() => handleRemoveGuest?.(g.id)}
-                      className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive">
-                      <X className="h-4 w-4" />
-                    </button>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
