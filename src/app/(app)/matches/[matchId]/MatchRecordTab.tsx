@@ -214,6 +214,8 @@ function MatchRecordTabInner({
     setEditingGoalId(null);
     setEditingIsOpponent(false);
     formRef.current?.reset();
+    // 수정 취소 시 폼 자체도 닫음 (취소했는데 득점 추가 폼이 열려있으면 혼란)
+    setShowDetailForm(false);
   }
 
   /* ── MVP handler ── */
@@ -352,7 +354,6 @@ function MatchRecordTabInner({
                   )}
 
                   {!editingIsOpponent && (
-                  <>
                   <div className="space-y-4">
                     <div className="space-y-1.5">
                       <p className="text-[11px] font-medium text-muted-foreground">득점자</p>
@@ -425,8 +426,11 @@ function MatchRecordTabInner({
                         <option value="OWN_GOAL">자책골</option>
                       </select>
                     </div>
+                  </div>
+                  )}
 
-                  <div className="space-y-1.5">
+                  {/* 쿼터 UI — 득점/실점 수정 모두 표시 */}
+                  <div className={cn("space-y-1.5", !editingIsOpponent && "mt-4")}>
                     <p className="text-[11px] font-medium text-muted-foreground">쿼터</p>
                     <div className="flex gap-1 rounded-lg bg-secondary p-1">
                       <button
@@ -459,9 +463,6 @@ function MatchRecordTabInner({
                       <input name="quarter" type="hidden" defaultValue="0" />
                     </div>
                   </div>
-                  </div>
-                  </>
-                  )}
                   <input name="minute" type="hidden" value="0" />
 
                   <div className="mt-4 flex gap-2">
