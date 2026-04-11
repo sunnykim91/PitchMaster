@@ -41,12 +41,13 @@ describe("GET /api/dashboard", () => {
   it("200: 경기 없는 경우 — 빈 대시보드 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     // New API order:
-    // 1. matches.update (auto-complete)
+    // 1. matches.update x2 (auto-complete: past dates + today's end_time passed)
     // 2. matches(upcoming), matches(recent), matches(activeVotes) — Promise.all
     // 3. match_attendance(user vote) + match_mvp_votes(user mvp) — tasks
     // 4. matches(completed) — teamRecord
     const db = createMockDb(
-      ["matches", null],   // auto-complete update (returns null for no matches)
+      ["matches", null],   // auto-complete update #1 (past dates)
+      ["matches", null],   // auto-complete update #2 (today + end_time)
       ["matches", null],   // upcoming match → null
       ["matches", null],   // recent match → null
       ["matches", []],     // active votes → []
@@ -82,7 +83,8 @@ describe("GET /api/dashboard", () => {
     };
 
     const db = createMockDb(
-      ["matches", null],           // auto-complete
+      ["matches", null],           // auto-complete #1
+      ["matches", null],           // auto-complete #2
       ["matches", upcomingMatch],  // upcoming match
       ["matches", null],           // recent match → null
       ["matches", []],             // active votes
@@ -129,7 +131,8 @@ describe("GET /api/dashboard", () => {
     ];
 
     const db = createMockDb(
-      ["matches", null],             // auto-complete
+      ["matches", null],             // auto-complete #1
+      ["matches", null],             // auto-complete #2
       ["matches", null],             // upcoming → null
       ["matches", recentMatch],      // recent match
       ["matches", []],               // active votes
@@ -165,7 +168,8 @@ describe("GET /api/dashboard", () => {
     };
 
     const db = createMockDb(
-      ["matches", null],               // auto-complete
+      ["matches", null],               // auto-complete #1
+      ["matches", null],               // auto-complete #2
       ["matches", null],               // upcoming → null
       ["matches", null],               // recent → null
       ["matches", [activeVoteMatch]],  // active votes

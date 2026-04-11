@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { autoCompleteTeamMatches, shouldAutoComplete } from "@/lib/server/autoCompleteMatches";
 
 export type DbMatchRow = {
   id: string;
@@ -23,19 +24,15 @@ export async function getMatchesData(teamId: string): Promise<{ matches: DbMatch
   const db = getSupabaseAdmin();
   if (!db) return { matches: [] };
 
-  // 자동 완료 + matches 조회를 병렬 실행 (KST 기준)
-  const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
-  const today = kstNow.toISOString().split("T")[0];
-
   // 1단계: 자동 완료 + 전체 경기 조회 병렬
   const [, { data }] = await Promise.all([
-    db.from("matches").update({ status: "COMPLETED" }).eq("team_id", teamId).eq("status", "SCHEDULED").lt("match_date", today),
+    autoCompleteTeamMatches(db, teamId),
     db.from("matches").select("*").eq("team_id", teamId).order("match_date", { ascending: false }),
   ]);
 
   // 자동 완료된 경기 반영 (UPDATE가 SELECT보다 먼저 완료되면 이미 반영, 아니면 클라이언트에서 반영)
   const matches = ((data ?? []) as DbMatchRow[]).map((m) =>
-    m.status === "SCHEDULED" && m.match_date < today ? { ...m, status: "COMPLETED" as const } : m
+    shouldAutoComplete(m) ? { ...m, status: "COMPLETED" as const } : m
   );
 
   // 2단계: 스코어 계산

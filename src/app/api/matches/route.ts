@@ -3,6 +3,7 @@ import { getApiContext, requireRole, apiError, apiSuccess } from "@/lib/api-help
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
 import { sendTeamPush } from "@/lib/server/sendPush";
+import { autoCompleteTeamMatches } from "@/lib/server/autoCompleteMatches";
 
 /** datetime-local 값("2026-04-02T17:00")에 KST 오프셋이 없으면 붙여줌 */
 function toKSTTimestamp(v: string): string {
@@ -19,15 +20,8 @@ export async function GET() {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  // 날짜 지난 SCHEDULED 경기 → 자동 COMPLETED 처리 (KST 기준)
-  const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
-  const today = kstNow.toISOString().split("T")[0];
-  await db
-    .from("matches")
-    .update({ status: "COMPLETED" })
-    .eq("team_id", ctx.teamId)
-    .eq("status", "SCHEDULED")
-    .lt("match_date", today);
+  // 종료된 SCHEDULED 경기 → 자동 COMPLETED 처리 (KST 기준, 당일 match_end_time 포함)
+  await autoCompleteTeamMatches(db, ctx.teamId);
 
   const { data, error } = await db
     .from("matches")

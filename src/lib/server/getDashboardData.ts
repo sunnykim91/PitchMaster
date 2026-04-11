@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { autoCompleteTeamMatches, getKstToday } from "@/lib/server/autoCompleteMatches";
 
 export type TeamRecord = {
   wins: number;
@@ -70,16 +71,10 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
   if (!db) return { upcomingMatch: null, recentResult: null, activeVotes: [], tasks: [], teamRecord: emptyRecord, teamUniform: null, birthdayMembers: [], hasDuesSettings: false, totalMatches: 0, registeredMemberCount: 0 };
 
   const now = new Date().toISOString();
-  const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
-  const today = kstNow.toISOString().split("T")[0];
+  const today = getKstToday();
 
-  // 날짜 지난 SCHEDULED 경기 → 자동 COMPLETED 처리 (KST 기준)
-  await db
-    .from("matches")
-    .update({ status: "COMPLETED" })
-    .eq("team_id", teamId)
-    .eq("status", "SCHEDULED")
-    .lt("match_date", today);
+  // 종료된 SCHEDULED 경기 → 자동 COMPLETED 처리 (KST 기준, 당일 match_end_time 포함)
+  await autoCompleteTeamMatches(db, teamId);
 
   const [upcomingRes, recentRes, activeVotesRes] = await Promise.all([
     db.from("matches")
