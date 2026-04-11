@@ -6,6 +6,21 @@ import { signSession, verifySession, isSessionSigningConfigured } from "@/lib/se
 const SESSION_COOKIE = "pm_session";
 
 /**
+ * 세션 쿠키 기본 옵션.
+ * - httpOnly: JS 접근 차단 (XSS 쿠키 탈취 방지)
+ * - sameSite=lax: 크로스사이트 전송 제한 (CSRF 완화)
+ * - secure: 프로덕션에서만 true — HTTPS 전용 전송 (MITM/스니핑 방어)
+ *   localhost 개발은 HTTP라서 true면 쿠키가 아예 저장 안 되므로 NODE_ENV 분기
+ * - path=/: 전역
+ */
+const SESSION_COOKIE_BASE_OPTIONS = {
+  httpOnly: true,
+  sameSite: "lax" as const,
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+};
+
+/**
  * 서명된 세션 쿠키를 검증해 Session 객체로 복원.
  * SESSION_SECRET이 없는 환경에서는 null을 반환하고 콘솔에 경고.
  * 기존의 서명 없는 JSON 쿠키는 2026-04-10 배포 이후 무효화됨 (하드 컷오버).
@@ -62,9 +77,7 @@ export async function auth(): Promise<Session | null> {
         if (signed) {
           try {
             cookieStore.set(SESSION_COOKIE, signed, {
-              httpOnly: true,
-              sameSite: "lax",
-              path: "/",
+              ...SESSION_COOKIE_BASE_OPTIONS,
               maxAge: 60 * 60 * 24 * 30,
             });
           } catch {
@@ -85,9 +98,7 @@ export async function setSession(session: Session) {
   }
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, signed, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
+    ...SESSION_COOKIE_BASE_OPTIONS,
     maxAge: 60 * 60 * 24 * 30,
   });
 }
@@ -102,9 +113,7 @@ export async function updateSession(update: Partial<SessionUser>) {
 export async function clearSession() {
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
+    ...SESSION_COOKIE_BASE_OPTIONS,
     maxAge: 0,
   });
 }

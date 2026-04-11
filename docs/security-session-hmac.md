@@ -76,9 +76,9 @@ httpOnly는 **XSS로부터 쿠키 탈취를 막는 것**이지 쿠키 자체의 
 - 520명이 한꺼번에 재로그인하더라도 Supabase·Vercel 부하 관점에서 무의미한 규모.
 
 ### 2-6. 쿠키 옵션
-기존 옵션을 그대로 유지: `httpOnly`, `sameSite: lax`, `path: /`, `maxAge: 30일`.
-- `secure`는 추가하지 않음 → 현재 코드에 없는 필드인데, Vercel 배포는 HTTPS이므로 브라우저가 자동으로 HTTPS-only로 취급. localhost 개발을 위해 명시적으로 `secure: true`는 붙이지 않음.
-- 향후 프로덕션 전용으로 `secure: process.env.NODE_ENV === "production"`을 추가하는 것을 고려할 수 있음.
+현재 옵션: `httpOnly`, `sameSite: lax`, `secure: NODE_ENV === "production"`, `path: /`, `maxAge: 30일`.
+- **`secure` 추가 완료 (2026-04-11)**: 프로덕션에서만 활성화. 브라우저가 HTTPS 요청에서만 쿠키를 전송하도록 강제해 MITM/스니핑 방어 강화. 로컬 개발(`NODE_ENV !== "production"`)에서는 false라 `http://localhost` 쿠키 저장이 정상 동작.
+- 세 쿠키 설정 지점(auth()의 needSync 재동기화, setSession, clearSession)에 공통 상수 `SESSION_COOKIE_BASE_OPTIONS`로 추출해 일관성 유지.
 
 ### 2-7. Edge runtime 미고려
 Next.js middleware(Edge runtime)에서 `node:crypto`는 제한적으로만 쓸 수 있다. 이번 코드는 **미들웨어가 아닌 서버 컴포넌트/라우트 핸들러(Node runtime)**에서만 호출되므로 `crypto`를 자유롭게 사용. 향후 미들웨어에서 세션을 검증해야 한다면 `SubtleCrypto` API로 이식하거나 Edge-safe 라이브러리로 교체 필요.
@@ -157,7 +157,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ### 5-3. 후속 권장 작업
 1. **RLS Policy 작성** (이번 보안 작업의 자매편 — 1번 항목)
 2. **역할 변경 audit log 테이블** (`role_change_logs`: user_id, changed_by, old_role, new_role, reason, changed_at)
-3. **프로덕션 쿠키에 `secure: true` 명시**
+3. ~~**프로덕션 쿠키에 `secure: true` 명시**~~ → 2026-04-11 완료
 4. **시크릿 roll 절차 문서화** (이 파일 업데이트)
 
 ---
