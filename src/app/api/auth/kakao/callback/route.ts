@@ -42,10 +42,17 @@ export async function GET(request: NextRequest) {
     });
 
     await setSession(session);
-    const inviteCode = request.nextUrl.searchParams.get("state") ?? "";
-    const redirectUrl = inviteCode
-      ? `/?inviteCode=${encodeURIComponent(decodeURIComponent(inviteCode))}`
-      : "/";
+    const stateRaw = request.nextUrl.searchParams.get("state") ?? "";
+    const stateDecoded = stateRaw ? decodeURIComponent(stateRaw) : "";
+
+    let redirectUrl = "/";
+    if (stateDecoded.startsWith("__redirect__")) {
+      // 카카오 추가 동의 후 특정 페이지로 복귀
+      redirectUrl = stateDecoded.replace("__redirect__", "") || "/settings";
+    } else if (stateDecoded) {
+      // 초대 코드
+      redirectUrl = `/?inviteCode=${encodeURIComponent(stateDecoded)}`;
+    }
     return NextResponse.redirect(new URL(redirectUrl, request.url));
   } catch {
     return NextResponse.redirect(new URL("/login?error=auth_fail", request.url));

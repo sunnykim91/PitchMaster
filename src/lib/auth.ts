@@ -148,9 +148,12 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
     .single();
 
   if (existing) {
-    // 카카오 프로필 이미지가 있고 DB에 없으면 업데이트 (추가 동의 후 재로그인 시 반영)
+    // 카카오 프로필 이미지가 있으면 DB 업데이트 (추가 동의 후 재로그인 시 반영)
+    // 사용자가 직접 업로드한 커스텀 사진은 Supabase Storage URL(uploads/)이라
+    // 카카오 이미지(kakaocdn)와 구분 가능 — 커스텀 사진이 없을 때만 카카오 이미지 적용
     let profileImageUrl = existing.profile_image_url;
-    if (kakaoProfile.profileImage && !existing.profile_image_url) {
+    const isCustomUpload = existing.profile_image_url && existing.profile_image_url.includes("/uploads/profiles/");
+    if (kakaoProfile.profileImage && !isCustomUpload) {
       await db.from("users").update({ profile_image_url: kakaoProfile.profileImage }).eq("id", existing.id);
       profileImageUrl = kakaoProfile.profileImage;
     }

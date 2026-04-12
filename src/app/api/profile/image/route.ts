@@ -53,3 +53,26 @@ export async function POST(request: NextRequest) {
 
   return apiSuccess({ imageUrl });
 }
+
+/**
+ * DELETE /api/profile/image
+ * 프로필 사진 삭제 → users.profile_image_url = null → 세션 갱신
+ */
+export async function DELETE() {
+  const ctx = await getApiContext();
+  if (ctx instanceof NextResponse) return ctx;
+
+  const db = getSupabaseAdmin();
+  if (!db) return apiError("Database not available", 503);
+
+  const { error } = await db
+    .from("users")
+    .update({ profile_image_url: null })
+    .eq("id", ctx.userId);
+
+  if (error) return apiError(error.message);
+
+  await updateSession({ profileImageUrl: undefined });
+
+  return apiSuccess({ ok: true });
+}

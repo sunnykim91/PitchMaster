@@ -175,9 +175,21 @@ function PersonalSettingsComponent({
     finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = ""; }
   }
 
-  // 카카오 프로필 사진 연동 (추가 동의)
+  // 카카오 프로필 사진 연동 (추가 동의 → /settings로 복귀)
   function handleKakaoLink() {
-    window.location.href = "/api/auth/kakao?scope=profile_image";
+    window.location.href = "/api/auth/kakao?scope=profile_image&redirect=/settings";
+  }
+
+  // 프로필 사진 삭제
+  async function handleImageDelete() {
+    const res = await fetch("/api/profile/image", { method: "DELETE" });
+    if (res.ok) {
+      setLocalImage("");
+      setProfile({ ...profile, profileImageUrl: "" });
+      showToast("프로필 사진이 삭제되었습니다");
+    } else {
+      showToast("삭제에 실패했습니다", "error");
+    }
   }
 
   return (
@@ -218,12 +230,19 @@ function PersonalSettingsComponent({
             </button>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
           </div>
-          <div className="min-w-0 flex-1 space-y-1.5">
-            <p className="text-sm text-muted-foreground">사진을 클릭해서 변경하거나</p>
-            <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleKakaoLink}>
-              <Link2 className="h-3.5 w-3.5" />
-              카카오 프로필 사진 연동
-            </Button>
+          <div className="min-w-0 flex-1 space-y-2">
+            <p className="text-sm text-muted-foreground">사진을 클릭해서 변경</p>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleKakaoLink}>
+                <Link2 className="h-3.5 w-3.5" />
+                카카오 사진 연동
+              </Button>
+              {localImage && (
+                <Button type="button" variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-destructive" onClick={handleImageDelete}>
+                  삭제
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
