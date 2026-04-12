@@ -246,7 +246,7 @@ export default function MatchDetailClient({
   const exemptions = useMemo<Record<string, { type: string; reason: string | null; endDate: string | null }>>(() => {
     const map: Record<string, { type: string; reason: string | null; endDate: string | null }> = {};
     for (const m of membersData.members) {
-      if (m.status === "DORMANT" && m.user_id) {
+      if (m.status === "DORMANT") {
         map[m.users?.id ?? m.id] = {
           type: m.dormant_type ?? "DORMANT",
           reason: m.dormant_reason ?? null,
