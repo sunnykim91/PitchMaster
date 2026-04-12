@@ -242,6 +242,25 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
   const sidebarContent = (
     <>
+      {/* 프로필 영역 */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-border">
+          {session.user.profileImageUrl ? (
+            <img src={session.user.profileImageUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <span className="text-lg font-black text-muted-foreground">{(session.user.name ?? "?").charAt(0)}</span>
+          )}
+        </div>
+        <div className="min-w-0">
+          <p className="text-base font-bold text-foreground truncate">{session.user.name}</p>
+          <p className="text-xs text-muted-foreground truncate">
+            {session.user.teamName}
+            {session.user.teamRole === "PRESIDENT" ? " · 회장" : session.user.teamRole === "STAFF" ? " · 운영진" : ""}
+          </p>
+        </div>
+      </div>
+      <Separator className="mb-4" />
+
       <div className="space-y-1">
         <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">PitchMaster</p>
         <div className="relative" data-team-menu>
@@ -400,13 +419,6 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                 </span>
               </Link>
               <div className="flex items-center gap-1">
-                <Link href="/more" className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-1 ring-border">
-                  {session.user.profileImageUrl ? (
-                    <img src={session.user.profileImageUrl} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-xs font-bold text-muted-foreground">{(session.user.name ?? "?").charAt(0)}</span>
-                  )}
-                </Link>
                 <ThemeToggleButton />
                 <Sheet open={notiOpen} onOpenChange={(open) => { setNotiOpen(open); if (open) fetchNotifications(); }}>
                   <SheetTrigger asChild>
