@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, MessageSquare, Bell, BookOpen, Settings, Download, ExternalLink, Smartphone, HelpCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/lib/ToastContext";
+import { Users, MessageSquare, Bell, BookOpen, Settings, ExternalLink, Smartphone, HelpCircle, LogOut, Camera } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -19,11 +23,33 @@ const menuItems = [
   { href: "/guide.html", label: "사용 가이드", desc: "기능 안내 · FAQ", icon: HelpCircle, color: "text-[hsl(var(--info))]" },
 ];
 
-export default function MoreClient() {
+const roleLabels: Record<string, string> = {
+  PRESIDENT: "회장",
+  STAFF: "운영진",
+  MEMBER: "회원",
+};
+
+export default function MoreClient({
+  userName,
+  teamName,
+  teamRole,
+  profileImageUrl,
+}: {
+  userName: string;
+  teamName: string;
+  teamRole: string;
+  profileImageUrl: string | null;
+}) {
+  const router = useRouter();
+  const { showToast } = useToast();
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIos, setIsIos] = useState(false);
   const [isInApp, setIsInApp] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [localImage, setLocalImage] = useState<string | null>(profileImageUrl);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -64,14 +90,110 @@ export default function MoreClient() {
     setInstallPrompt(null);
   }
 
+  async function handleLogout() {
+    setLoggingOut(true);
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+  }
+
+  async function handleProfileImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 파일 크기 제한 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("파일 크기는 5MB 이하만 가능합니다", "error");
+      return;
+    }
+
+    // 이미지 타입 체크
+    if (!file.type.startsWith("image/")) {
+      showToast("이미지 파일만 업로드 가능합니다", "error");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch("/api/profile/image", { method: "POST", body: formData });
+      const json = await res.json();
+
+      if (!res.ok) {
+        showToast(json.error || "업로드에 실패했습니다", "error");
+        return;
+      }
+
+      setLocalImage(json.imageUrl);
+      showToast("프로필 사진이 변경되었습니다");
+    } catch {
+      showToast("업로드 중 오류가 발생했습니다", "error");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
   return (
     <div className="grid gap-5 stagger-children">
+      {/* 프로필 영역 */}
       <Card>
         <CardContent className="p-6">
-          <h2 className="font-heading text-lg sm:text-2xl font-bold uppercase">더보기</h2>
+          <div className="flex items-center gap-4">
+            {/* 프로필 사진 + 카메라 버튼 */}
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="group relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-border transition-all hover:ring-primary"
+                disabled={uploading}
+              >
+                {localImage ? (
+                  <Image
+                    src={localImage}
+                    alt={userName}
+                    width={64}
+                    height={64}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-2xl font-black text-muted-foreground">
+                    {userName.charAt(0) || "?"}
+                  </span>
+                )}
+                {/* 호버 오버레이 */}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                  <Camera className="h-5 w-5 text-white" />
+                </div>
+                {uploading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  </div>
+                )}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleProfileImageUpload}
+              />
+            </div>
+
+            {/* 이름 + 팀 + 역할 */}
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-bold text-foreground truncate">{userName}</h2>
+              <p className="text-sm text-muted-foreground truncate">
+                {teamName}
+                {teamRole && ` · ${roleLabels[teamRole] ?? teamRole}`}
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
+      {/* 메뉴 */}
       <div className="grid gap-3">
         {menuItems.map((item) => {
           const Icon = item.icon;
@@ -92,7 +214,7 @@ export default function MoreClient() {
           );
         })}
 
-        {/* 홈 화면에 추가 — 항상 표시 */}
+        {/* 홈 화면에 추가 */}
         <button onClick={handleInstall}>
           <Card className="transition-colors hover:bg-secondary/50 border-primary/20">
             <CardContent className="flex items-center gap-4 p-4">
@@ -110,6 +232,25 @@ export default function MoreClient() {
             </CardContent>
           </Card>
         </button>
+      </div>
+
+      {/* 하단 영역: 로그아웃 + 개인정보처리방침/이용약관 */}
+      <div className="space-y-4 pt-2">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive h-12"
+          onClick={handleLogout}
+          disabled={loggingOut}
+        >
+          <LogOut className="h-5 w-5" />
+          {loggingOut ? "로그아웃 중..." : "로그아웃"}
+        </Button>
+
+        <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground/60">
+          <a href="/privacy" className="hover:text-muted-foreground transition-colors">개인정보처리방침</a>
+          <span>·</span>
+          <a href="/terms" className="hover:text-muted-foreground transition-colors">이용약관</a>
+        </div>
       </div>
 
       {/* iOS 설치 가이드 모달 */}

@@ -311,3 +311,46 @@ export function findBestMoments(history: MatchPerformance[]): BestMoment[] {
 
   return moments;
 }
+
+/**
+ * OVR 계산 (45~99 범위).
+ * 포지션 카테고리별 가중치로 5개 지표를 평가한 뒤 경기 수 보정.
+ * 원본: /api/player-card/route.ts — 공유 유틸로 이동.
+ */
+export function calculateOVR(
+  cat: PositionCategory,
+  goalsPerGame: number,
+  assistsPerGame: number,
+  attendRate: number,
+  mvpRate: number,
+  winRate: number,
+  cleanSheetPerGame: number,
+  concededPerGame: number,
+  matchCount: number
+): number {
+  const minGames = 3;
+  let raw: number;
+
+  switch (cat) {
+    case "FW":
+      raw = goalsPerGame * 30 + assistsPerGame * 20 + attendRate * 15 + mvpRate * 20 + winRate * 15;
+      break;
+    case "DEF":
+      raw = cleanSheetPerGame * 25 + Math.max(0, 1 - concededPerGame) * 20 + attendRate * 20 + mvpRate * 20 + winRate * 15;
+      break;
+    case "GK":
+      raw = cleanSheetPerGame * 30 + Math.max(0, 1 - concededPerGame) * 25 + attendRate * 15 + mvpRate * 15 + winRate * 15;
+      break;
+    case "MID":
+      raw = assistsPerGame * 25 + goalsPerGame * 15 + attendRate * 15 + mvpRate * 25 + winRate * 20;
+      break;
+    default:
+      raw = goalsPerGame * 20 + assistsPerGame * 20 + attendRate * 20 + mvpRate * 20 + winRate * 20;
+  }
+
+  const gameScale = matchCount >= minGames ? 1 : matchCount / minGames;
+  raw = raw * gameScale;
+
+  const ovr = Math.round(45 + (raw / 100) * 54);
+  return Math.max(45, Math.min(99, ovr));
+}

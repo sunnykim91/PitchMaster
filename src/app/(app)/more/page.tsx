@@ -5,5 +5,12 @@ import MoreClient from "./MoreClient";
 export default async function MorePage() {
   const session = await auth();
   if (!session) redirect("/login");
-  return <MoreClient />;
+  return (
+    <MoreClient
+      userName={session.user.name ?? ""}
+      teamName={session.user.teamName ?? ""}
+      teamRole={session.user.teamRole ?? "MEMBER"}
+      profileImageUrl={session.user.profileImageUrl ?? null}
+    />
+  );
 }

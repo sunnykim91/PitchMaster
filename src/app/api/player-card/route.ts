@@ -8,6 +8,7 @@ import {
   generateSignature,
   computeRankLabel,
   computeStreak,
+  calculateOVR,
   type PositionCategory,
 } from "@/lib/playerCardUtils";
 
@@ -64,72 +65,6 @@ const STAT_DEFS: Record<PosCategory, StatDef[]> = {
     { label: "경기", key: "matchCount" },
   ],
 };
-
-// OVR 계산 (45~99)
-function calculateOVR(
-  cat: PosCategory,
-  goalsPerGame: number,
-  assistsPerGame: number,
-  attendRate: number,
-  mvpRate: number,
-  winRate: number,
-  cleanSheetPerGame: number,
-  concededPerGame: number,
-  matchCount: number
-): number {
-  const minGames = 3;
-  let raw: number;
-
-  switch (cat) {
-    case "FW":
-      raw =
-        goalsPerGame * 30 +
-        assistsPerGame * 20 +
-        attendRate * 15 +
-        mvpRate * 20 +
-        winRate * 15;
-      break;
-    case "DEF":
-      raw =
-        cleanSheetPerGame * 25 +
-        Math.max(0, 1 - concededPerGame) * 20 +
-        attendRate * 20 +
-        mvpRate * 20 +
-        winRate * 15;
-      break;
-    case "GK":
-      raw =
-        cleanSheetPerGame * 30 +
-        Math.max(0, 1 - concededPerGame) * 25 +
-        attendRate * 15 +
-        mvpRate * 15 +
-        winRate * 15;
-      break;
-    case "MID":
-      raw =
-        assistsPerGame * 25 +
-        goalsPerGame * 15 +
-        attendRate * 15 +
-        mvpRate * 25 +
-        winRate * 20;
-      break;
-    default:
-      raw =
-        goalsPerGame * 20 +
-        assistsPerGame * 20 +
-        attendRate * 20 +
-        mvpRate * 20 +
-        winRate * 20;
-  }
-
-  // 경기 수 기반 스케일링
-  const gameScale = matchCount >= minGames ? 1 : matchCount / minGames;
-  raw = raw * gameScale;
-
-  // 45~99 범위로 매핑 (raw는 대략 0~100)
-  const ovr = Math.round(45 + (raw / 100) * 54);
-  return Math.max(45, Math.min(99, ovr));
-}
 
 // 색상 밝기 조정
 function adjustColor(hex: string, amount: number): string {
