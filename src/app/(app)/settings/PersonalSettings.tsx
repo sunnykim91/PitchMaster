@@ -1,11 +1,13 @@
 "use client";
 
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { Bell, Sun, Moon, Monitor } from "lucide-react";
+import Image from "next/image";
+import { Bell, Sun, Moon, Monitor, Camera, Link2 } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { subscribeToPush } from "@/lib/pushSubscription";
 import { apiMutate } from "@/lib/useApi";
+import { useToast } from "@/lib/ToastContext";
 import type { PreferredPosition, PreferredFoot } from "@/lib/types";
 import { POSITION_GROUPS, PREF_POSITION_SHORT, FUTSAL_POSITION_GROUPS, FUTSAL_POSITION_SHORT } from "@/lib/types";
 import type { SportType } from "@/lib/types";
@@ -148,22 +150,42 @@ function PersonalSettingsComponent({
     setTimeout(() => setMessage(null), 2000);
   }
 
+  const { showToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [localImage, setLocalImage] = useState(profile.profileImageUrl || "");
+
+  // 프로필 사진 직접 업로드
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { showToast("파일 크기는 5MB 이하만 가능합니다", "error"); return; }
+    if (!file.type.startsWith("image/")) { showToast("이미지 파일만 업로드 가능합니다", "error"); return; }
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("/api/profile/image", { method: "POST", body: formData });
+      const json = await res.json();
+      if (!res.ok) { showToast(json.error || "업로드에 실패했습니다", "error"); return; }
+      setLocalImage(json.imageUrl);
+      setProfile({ ...profile, profileImageUrl: json.imageUrl });
+      showToast("프로필 사진이 변경되었습니다");
+    } catch { showToast("업로드 중 오류가 발생했습니다", "error"); }
+    finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = ""; }
+  }
+
+  // 카카오 프로필 사진 연동 (추가 동의)
+  function handleKakaoLink() {
+    window.location.href = "/api/auth/kakao?scope=profile_image";
+  }
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {profile.profileImageUrl ? (
-              <img src={profile.profileImageUrl} alt="프로필" className="h-11 w-11 rounded-full object-cover ring-2 ring-primary/20" />
-            ) : (
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
-                {profile.name?.charAt(0) || "?"}
-              </div>
-            )}
-            <div>
-              <CardTitle className="text-lg font-bold">개인 설정</CardTitle>
-              <p className="text-sm text-muted-foreground">프로필 및 알림을 관리합니다</p>
-            </div>
+            <CardTitle className="text-lg font-bold">개인 설정</CardTitle>
           </div>
           <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={onLogout}>
             로그아웃
@@ -171,6 +193,40 @@ function PersonalSettingsComponent({
         </div>
       </CardHeader>
       <CardContent className="space-y-5">
+        {/* 프로필 사진 영역 */}
+        <div className="flex items-center gap-4">
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="group relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-border transition-all hover:ring-primary"
+              disabled={uploading}
+            >
+              {localImage ? (
+                <Image src={localImage} alt="프로필" width={64} height={64} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-2xl font-black text-muted-foreground">{profile.name?.charAt(0) || "?"}</span>
+              )}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                <Camera className="h-5 w-5 text-white" />
+              </div>
+              {uploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                </div>
+              )}
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+          </div>
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <p className="text-sm text-muted-foreground">사진을 클릭해서 변경하거나</p>
+            <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleKakaoLink}>
+              <Link2 className="h-3.5 w-3.5" />
+              카카오 프로필 사진 연동
+            </Button>
+          </div>
+        </div>
+
         <form onSubmit={handleProfileSubmit} className="space-y-5">
           {/* 기본 정보 */}
           <div className="grid gap-4 sm:grid-cols-2">

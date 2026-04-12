@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/lib/ToastContext";
-import { Users, MessageSquare, Bell, BookOpen, Settings, ExternalLink, Smartphone, HelpCircle, LogOut, Camera } from "lucide-react";
+import { Users, MessageSquare, Bell, BookOpen, Settings, ExternalLink, Smartphone, HelpCircle, LogOut } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -41,15 +40,11 @@ export default function MoreClient({
   profileImageUrl: string | null;
 }) {
   const router = useRouter();
-  const { showToast } = useToast();
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIos, setIsIos] = useState(false);
   const [isInApp, setIsInApp] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [localImage, setLocalImage] = useState<string | null>(profileImageUrl);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -96,92 +91,19 @@ export default function MoreClient({
     router.push("/login");
   }
 
-  async function handleProfileImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // 파일 크기 제한 (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      showToast("파일 크기는 5MB 이하만 가능합니다", "error");
-      return;
-    }
-
-    // 이미지 타입 체크
-    if (!file.type.startsWith("image/")) {
-      showToast("이미지 파일만 업로드 가능합니다", "error");
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
-
-      const res = await fetch("/api/profile/image", { method: "POST", body: formData });
-      const json = await res.json();
-
-      if (!res.ok) {
-        showToast(json.error || "업로드에 실패했습니다", "error");
-        return;
-      }
-
-      setLocalImage(json.imageUrl);
-      showToast("프로필 사진이 변경되었습니다");
-    } catch {
-      showToast("업로드 중 오류가 발생했습니다", "error");
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  }
-
   return (
     <div className="grid gap-5 stagger-children">
-      {/* 프로필 영역 */}
+      {/* 프로필 영역 (읽기 전용 — 사진 변경은 설정에서) */}
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
-            {/* 프로필 사진 + 카메라 버튼 */}
-            <div className="relative shrink-0">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="group relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-border transition-all hover:ring-primary"
-                disabled={uploading}
-              >
-                {localImage ? (
-                  <Image
-                    src={localImage}
-                    alt={userName}
-                    width={64}
-                    height={64}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span className="text-2xl font-black text-muted-foreground">
-                    {userName.charAt(0) || "?"}
-                  </span>
-                )}
-                {/* 호버 오버레이 */}
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                  <Camera className="h-5 w-5 text-white" />
-                </div>
-                {uploading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  </div>
-                )}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleProfileImageUpload}
-              />
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-border">
+              {profileImageUrl ? (
+                <Image src={profileImageUrl} alt={userName} width={56} height={56} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-xl font-black text-muted-foreground">{userName.charAt(0) || "?"}</span>
+              )}
             </div>
-
-            {/* 이름 + 팀 + 역할 */}
             <div className="min-w-0 flex-1">
               <h2 className="text-lg font-bold text-foreground truncate">{userName}</h2>
               <p className="text-sm text-muted-foreground truncate">

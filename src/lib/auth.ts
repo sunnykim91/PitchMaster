@@ -148,6 +148,13 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
     .single();
 
   if (existing) {
+    // 카카오 프로필 이미지가 있고 DB에 없으면 업데이트 (추가 동의 후 재로그인 시 반영)
+    let profileImageUrl = existing.profile_image_url;
+    if (kakaoProfile.profileImage && !existing.profile_image_url) {
+      await db.from("users").update({ profile_image_url: kakaoProfile.profileImage }).eq("id", existing.id);
+      profileImageUrl = kakaoProfile.profileImage;
+    }
+
     // Load team memberships (여러 팀 가능 — 첫 번째를 활성 팀으로)
     const { data: memberships } = await db
       .from("team_members")
@@ -167,7 +174,7 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
         phone: existing.phone,
         preferredPositions: existing.preferred_positions,
         preferredFoot: existing.preferred_foot,
-        profileImageUrl: existing.profile_image_url,
+        profileImageUrl,
         isProfileComplete: existing.is_profile_complete,
         teamId: team?.id,
         teamName: team?.name,
