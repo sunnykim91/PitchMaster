@@ -54,10 +54,14 @@ export const CommentSection = memo(function CommentSection({
             const canDeleteComment = comment.authorId === userId || isStaff;
             return (
               <div key={comment.id} className="flex items-start gap-2 py-1.5 group">
-                <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-muted-foreground">
-                    {comment.authorName?.charAt(0) || "?"}
-                  </span>
+                <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5 overflow-hidden ring-1 ring-border">
+                  {comment.authorProfileImage ? (
+                    <img src={comment.authorProfileImage} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-xs font-bold text-muted-foreground">
+                      {comment.authorName?.charAt(0) || "?"}
+                    </span>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-1.5">

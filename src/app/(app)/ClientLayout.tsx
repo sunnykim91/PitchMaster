@@ -400,6 +400,13 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                 </span>
               </Link>
               <div className="flex items-center gap-1">
+                <Link href="/more" className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-1 ring-border">
+                  {session.user.profileImageUrl ? (
+                    <img src={session.user.profileImageUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-xs font-bold text-muted-foreground">{(session.user.name ?? "?").charAt(0)}</span>
+                  )}
+                </Link>
                 <ThemeToggleButton />
                 <Sheet open={notiOpen} onOpenChange={(open) => { setNotiOpen(open); if (open) fetchNotifications(); }}>
                   <SheetTrigger asChild>

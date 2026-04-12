@@ -6,7 +6,7 @@ export async function getBoardData(teamId: string, userId?: string) {
 
   const { data } = await db
     .from("posts")
-    .select("*, author:author_id(name), post_likes(count), post_comments(count)")
+    .select("*, author:author_id(name, profile_image_url), post_likes(count), post_comments(count)")
     .eq("team_id", teamId)
     .order("is_pinned", { ascending: false })
     .order("created_at", { ascending: false });

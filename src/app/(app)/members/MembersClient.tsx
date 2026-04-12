@@ -42,6 +42,7 @@ type Member = {
   dormantType: string | null;
   dormantUntil: string | null;
   dormantReason: string | null;
+  profileImageUrl: string | null;
 };
 
 type ApiMemberRow = {
@@ -65,6 +66,7 @@ type ApiMemberRow = {
     preferred_foot: "RIGHT" | "LEFT" | "BOTH" | null;
     phone: string | null;
     birth_date: string | null;
+    profile_image_url: string | null;
   } | null;
 };
 
@@ -89,6 +91,7 @@ function mapApiMembers(rows: ApiMemberRow[]): Member[] {
     dormantType: row.dormant_type ?? null,
     dormantUntil: row.dormant_until ?? null,
     dormantReason: row.dormant_reason ?? null,
+    profileImageUrl: row.users?.profile_image_url ?? null,
   }));
 }
 
@@ -671,6 +674,14 @@ export default function MembersClient({
                 >
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold truncate flex items-center gap-1.5">
+                      {/* 프로필 아바타 */}
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-1 ring-border">
+                        {member.profileImageUrl ? (
+                          <img src={member.profileImageUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-[10px] font-bold text-muted-foreground">{member.name.charAt(0)}</span>
+                        )}
+                      </span>
                       {member.jerseyNumber !== null && (
                         <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">#{member.jerseyNumber}</span>
                       )}

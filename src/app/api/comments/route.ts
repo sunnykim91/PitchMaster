@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await db
     .from("post_comments")
-    .select("*, author:author_id(name)")
+    .select("*, author:author_id(name, profile_image_url)")
     .eq("post_id", postId)
     .order("created_at");
 
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       author_id: ctx.userId,
       content: body.content,
     })
-    .select("*, author:author_id(name)")
+    .select("*, author:author_id(name, profile_image_url)")
     .single();
 
   if (error) return apiError(error.message);

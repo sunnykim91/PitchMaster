@@ -36,6 +36,7 @@ export type Post = {
   content: string;
   authorId: string;
   author: string;
+  authorProfileImage: string | null;
   createdAt: string;
   likes: number;
   comments: number;
@@ -49,6 +50,7 @@ export type Comment = {
   postId: string;
   authorId: string;
   authorName: string;
+  authorProfileImage: string | null;
   content: string;
   createdAt: string;
 };
@@ -72,7 +74,8 @@ function mapPost(raw: Record<string, unknown>): Post {
     title: raw.title as string,
     content: raw.content as string,
     authorId: raw.author_id as string,
-    author: (raw.author as { name: string })?.name ?? "",
+    author: (raw.author as { name: string; profile_image_url?: string })?.name ?? "",
+    authorProfileImage: (raw.author as { profile_image_url?: string })?.profile_image_url ?? null,
     createdAt: (raw.created_at as string) ?? "",
     likes: (raw.likes_count as number) ?? 0,
     comments: (raw.comments_count as number) ?? 0,
@@ -96,7 +99,8 @@ function mapComment(raw: Record<string, unknown>): Comment {
     id: raw.id as string,
     postId: raw.post_id as string,
     authorId: raw.author_id as string,
-    authorName: (raw.author as { name: string })?.name ?? "",
+    authorName: (raw.author as { name: string; profile_image_url?: string })?.name ?? "",
+    authorProfileImage: (raw.author as { profile_image_url?: string })?.profile_image_url ?? null,
     content: raw.content as string,
     createdAt: (raw.created_at as string) ?? "",
   };
