@@ -48,19 +48,33 @@ export async function auth(): Promise<Session | null> {
   const session = parseSession(cookie);
   if (!session) return null;
 
-  // DB에서 최신 역할 + 팀 로고를 확인하여 세션과 동기화
+  // DB에서 최신 역할 + 팀 로고 + 프로필 이미지를 확인하여 세션과 동기화
   if (session.user.teamId) {
     const db = getSupabaseAdmin();
     if (db) {
-      const { data: membership } = await db
-        .from("team_members")
-        .select("role, teams(logo_url)")
-        .eq("user_id", session.user.id)
-        .eq("team_id", session.user.teamId)
-        .eq("status", "ACTIVE")
-        .single();
+      const [membershipRes, userRes] = await Promise.all([
+        db.from("team_members")
+          .select("role, teams(logo_url)")
+          .eq("user_id", session.user.id)
+          .eq("team_id", session.user.teamId)
+          .eq("status", "ACTIVE")
+          .single(),
+        db.from("users")
+          .select("profile_image_url")
+          .eq("id", session.user.id)
+          .single(),
+      ]);
+      const membership = membershipRes.data;
 
       let needSync = false;
+
+      // 프로필 이미지 동기화
+      const dbProfileImage = (userRes.data as { profile_image_url: string | null } | null)?.profile_image_url ?? null;
+      if (dbProfileImage !== (session.user.profileImageUrl ?? null)) {
+        session.user.profileImageUrl = dbProfileImage ?? undefined;
+        needSync = true;
+      }
+
       if (membership && membership.role !== session.user.teamRole) {
         session.user.teamRole = membership.role;
         needSync = true;
