@@ -176,11 +176,29 @@ export async function shareTeamInvite({
 }
 
 /** Kakao SDK 없을 때 Web Share API / 클립보드 fallback */
+function isMobile(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
 function fallbackShare(url: string, text: string) {
-  if (typeof navigator !== "undefined" && navigator.share) {
+  if (typeof navigator === "undefined") return;
+
+  // 모바일에서만 Web Share API 사용 (PC Windows 공유 모달은 불편)
+  if (isMobile() && navigator.share) {
     navigator.share({ title: "PitchMaster", text: `${text}\n${url}` }).catch(() => {});
-  } else if (typeof navigator !== "undefined" && navigator.clipboard) {
-    navigator.clipboard.writeText(`${text}\n${url}`).catch(() => {});
-    alert("초대 링크가 클립보드에 복사되었습니다. 카카오톡에 붙여넣기 해주세요!");
+    return;
+  }
+
+  // PC: 클립보드 복사
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(`${text}\n${url}`)
+      .then(() => alert("링크가 클립보드에 복사되었습니다!"))
+      .catch(() => {
+        // clipboard 실패 시 prompt fallback
+        prompt("아래 링크를 복사해주세요:", `${text}\n${url}`);
+      });
+  } else {
+    prompt("아래 링크를 복사해주세요:", `${text}\n${url}`);
   }
 }

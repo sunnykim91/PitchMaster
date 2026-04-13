@@ -3,6 +3,15 @@ import { shareMatchResult, shareVoteLink, shareTeamInvite } from "@/lib/kakaoSha
 
 const APP_URL = "https://pitch-master.app";
 
+// navigator.share fallback 테스트에서 모바일 UA 모킹 (PC에서는 clipboard으로 분기)
+const MOBILE_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) Mobile/15E148";
+function mockMobileUA() {
+  Object.defineProperty(navigator, "userAgent", { value: MOBILE_UA, writable: true, configurable: true });
+}
+function restoreUA(original: string) {
+  Object.defineProperty(navigator, "userAgent", { value: original, writable: true, configurable: true });
+}
+
 // ─── Mock Kakao SDK ───────────────────────────────────────────────────────────
 const mockKakao = {
   isInitialized: vi.fn().mockReturnValue(true),
@@ -63,7 +72,9 @@ describe("shareMatchResult()", () => {
     expect(mockKakao.Share.sendDefault).toHaveBeenCalled();
   });
 
-  it("Kakao JS Key 없을 때 fallback으로 navigator.share 사용", async () => {
+  it("Kakao JS Key 없을 때 fallback으로 navigator.share 사용 (모바일)", async () => {
+    const origUA = navigator.userAgent;
+    mockMobileUA();
     mockKakao.isInitialized.mockReturnValueOnce(false);
     vi.stubEnv("NEXT_PUBLIC_KAKAO_JS_KEY", "");
 
@@ -82,9 +93,12 @@ describe("shareMatchResult()", () => {
         text: expect.stringContaining(`${APP_URL}/matches/match-001`),
       })
     );
+    restoreUA(origUA);
   });
 
-  it("Kakao 미사용 시 navigator.share fallback 호출", async () => {
+  it("Kakao 미사용 시 navigator.share fallback 호출 (모바일)", async () => {
+    const origUA = navigator.userAgent;
+    mockMobileUA();
     setKakaoUnavailable();
 
     const mockShare = vi.fn().mockResolvedValue(undefined);
@@ -102,6 +116,7 @@ describe("shareMatchResult()", () => {
         text: expect.stringContaining(`${APP_URL}/matches/match-001`),
       })
     );
+    restoreUA(origUA);
   });
 
   it("navigator.share도 없을 때 clipboard.writeText 호출", async () => {
@@ -169,7 +184,9 @@ describe("shareVoteLink()", () => {
     expect(description).toContain("서울 월드컵경기장");
   });
 
-  it("Kakao 미사용 시 navigator.share fallback", async () => {
+  it("Kakao 미사용 시 navigator.share fallback (모바일)", async () => {
+    const origUA = navigator.userAgent;
+    mockMobileUA();
     setKakaoUnavailable();
 
     const mockShare = vi.fn().mockResolvedValue(undefined);
@@ -183,6 +200,7 @@ describe("shareVoteLink()", () => {
 
     expect(mockKakao.Share.sendDefault).not.toHaveBeenCalled();
     expect(mockShare).toHaveBeenCalledTimes(1);
+    restoreUA(origUA);
   });
 });
 
@@ -228,7 +246,9 @@ describe("shareTeamInvite()", () => {
     expect(call.content.description).toBeDefined();
   });
 
-  it("Kakao 미사용 시 navigator.share fallback (초대 코드 URL 포함)", async () => {
+  it("Kakao 미사용 시 navigator.share fallback (모바일, 초대 코드 URL 포함)", async () => {
+    const origUA = navigator.userAgent;
+    mockMobileUA();
     setKakaoUnavailable();
 
     const mockShare = vi.fn().mockResolvedValue(undefined);
@@ -245,5 +265,6 @@ describe("shareTeamInvite()", () => {
         text: expect.stringContaining(`${APP_URL}/team?code=INVITE123`),
       })
     );
+    restoreUA(origUA);
   });
 });
