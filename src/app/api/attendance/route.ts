@@ -61,13 +61,15 @@ export async function POST(request: NextRequest) {
       return apiError("권한이 없습니다", 403);
     }
   } else {
-    // 본인 투표: 마감시간 체크
+    // 본인 투표: 팀 소속 + 마감시간 체크
     const { data: match } = await db
       .from("matches")
-      .select("vote_deadline")
+      .select("vote_deadline, team_id")
       .eq("id", matchId)
       .single();
-    if (match?.vote_deadline && new Date(match.vote_deadline) < new Date()) {
+    if (!match) return apiError("경기를 찾을 수 없습니다", 404);
+    if (match.team_id !== ctx.teamId) return apiError("해당 팀의 경기가 아닙니다", 403);
+    if (match.vote_deadline && new Date(match.vote_deadline) < new Date()) {
       return apiError("투표 마감 시간이 지났습니다", 400);
     }
   }

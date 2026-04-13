@@ -119,7 +119,7 @@ describe("POST /api/attendance", () => {
 
     // matches: vote_deadline이 미래
     const futureDeadline = new Date(Date.now() + 86400000).toISOString();
-    const matchData = { vote_deadline: futureDeadline };
+    const matchData = { vote_deadline: futureDeadline, team_id: "team-test-001" };
     // team_members: user의 member 레코드
     const memberData = { id: "mem-001" };
     // match_attendance: 기존 기록 없음
@@ -150,7 +150,7 @@ describe("POST /api/attendance", () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
 
     const pastDeadline = new Date(Date.now() - 86400000).toISOString();
-    const matchData = { vote_deadline: pastDeadline };
+    const matchData = { vote_deadline: pastDeadline, team_id: "team-test-001" };
     const memberData = { id: "mem-001" };
 
     const db = createMockDb(
@@ -169,7 +169,7 @@ describe("POST /api/attendance", () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
 
     const futureDeadline = new Date(Date.now() + 86400000).toISOString();
-    const matchData = { vote_deadline: futureDeadline };
+    const matchData = { vote_deadline: futureDeadline, team_id: "team-test-001" };
     const memberData = { id: "mem-001" };
     const existingAttendance = { id: "att-existing" };
     const updatedAttendance = {
