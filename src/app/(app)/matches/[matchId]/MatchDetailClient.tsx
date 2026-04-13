@@ -184,11 +184,24 @@ export default function MatchDetailClient({
     [diaryData.diary],
   );
 
+  /* ── 휴면 회원 ID 셋 (자동 편성/전술판에서 제외용) ── */
+  const dormantIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const m of membersData.members) {
+      if (m.status === "DORMANT") {
+        ids.add(m.users?.id ?? m.id);
+        ids.add(m.id);
+      }
+    }
+    return ids;
+  }, [membersData.members]);
+
   /* ── Attending players for auto formation ── */
   const attendingPlayers = useMemo<AttendingPlayer[]>(() => {
-    // 참석 투표한 선수 (연동 + 미연동 모두)
+    // 참석 투표한 선수 (연동 + 미연동 모두, 휴면 회원 제외)
     const members: AttendingPlayer[] = voteData.attendance
       .filter((a) => a.vote === "ATTEND")
+      .filter((a) => !dormantIds.has(a.user_id ?? "") && !dormantIds.has(a.member_id ?? ""))
       .map((a) => {
         const memberData = a.member;
         const userData = a.users ?? memberData?.users;
@@ -215,7 +228,7 @@ export default function MatchDetailClient({
       };
     });
     return [...members, ...guestPlayers];
-  }, [voteData.attendance, guests]);
+  }, [voteData.attendance, guests, dormantIds]);
 
   /* ── Tab state ── */
   const searchParams = useSearchParams();
@@ -283,19 +296,21 @@ export default function MatchDetailClient({
     [membersData.members],
   );
 
-  /** 참석 투표한 멤버 ID 셋 (baseRoster의 id 기준) */
+  /** 참석 투표한 멤버 ID 셋 (baseRoster의 id 기준, 휴면 회원 제외) */
   const attendingIds = useMemo(() => {
     const ids = new Set<string>();
     for (const a of voteData.attendance.filter((v) => v.vote === "ATTEND")) {
       if (a.member_id) {
+        if (dormantIds.has(a.member_id)) continue;
         const member = membersData.members.find((m) => m.id === a.member_id);
         if (member) ids.add(member.users?.id ?? member.id);
       } else if (a.user_id) {
+        if (dormantIds.has(a.user_id)) continue;
         ids.add(a.user_id);
       }
     }
     return ids;
-  }, [voteData.attendance, membersData.members]);
+  }, [voteData.attendance, membersData.members, dormantIds]);
 
   /** 참석 멤버만 (용병 제외) — MVP 투표, 출석 체크용 */
   const attendingMembers = useMemo(
