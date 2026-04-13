@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { RotateCcw, Coffee, Share2, Copy } from "lucide-react";
+import { RotateCcw, Coffee, Share2, Copy, BarChart3 } from "lucide-react";
 
 type Player = {
   id: string;
@@ -107,6 +107,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   const confirm = useConfirm();
   const isMobile = useIsMobile();
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  const [quarterMatrixOpen, setQuarterMatrixOpen] = useState(false);
   const isFutsal = sportType === "FUTSAL";
   const futsalFieldCounts = useMemo(() => (isFutsal ? getFutsalFieldCounts() : []), [isFutsal]);
   const [futsalFieldCount, setFutsalFieldCount] = useState(isFutsal ? 5 : 0);
@@ -725,28 +726,40 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
         </div>
 
         {/* 쿼터 선택 — 세그먼트 컨트롤 */}
-        <div className="mt-4 rounded-lg bg-secondary p-1">
-          <div className="grid grid-cols-4 gap-1">
-            {quarters.map((quarter) => (
-              <button
-                key={quarter}
-                type="button"
-                onClick={() => {
-                  flushPendingSave();
-                  setActiveQuarter(quarter);
-                  setActiveSlotId(null);
-                }}
-                className={cn(
-                  "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all",
-                  activeQuarter === quarter
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Q{quarter}
-              </button>
-            ))}
+        <div className="mt-4 flex items-center gap-2">
+          <div className="flex-1 rounded-lg bg-secondary p-1">
+            <div className="grid grid-cols-4 gap-1">
+              {quarters.map((quarter) => (
+                <button
+                  key={quarter}
+                  type="button"
+                  onClick={() => {
+                    flushPendingSave();
+                    setActiveQuarter(quarter);
+                    setActiveSlotId(null);
+                  }}
+                  className={cn(
+                    "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all",
+                    activeQuarter === quarter
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Q{quarter}
+                </button>
+              ))}
+            </div>
           </div>
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            className="h-10 w-10 shrink-0"
+            onClick={() => setQuarterMatrixOpen(true)}
+            title="쿼터별 출전 현황"
+          >
+            <BarChart3 className="h-4 w-4" />
+          </Button>
         </div>
 
         {/* 포메이션 + 유니폼 + 리셋 */}
@@ -1487,6 +1500,59 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
         })}
       </div>
     </div>
+
+    {/* 쿼터별 출전 현황 매트릭스 */}
+    <Sheet open={quarterMatrixOpen} onOpenChange={setQuarterMatrixOpen}>
+      <SheetContent side="bottom" className="max-h-[70vh] overflow-y-auto">
+        <SheetTitle className="flex items-center gap-2">
+          <BarChart3 className="h-4 w-4" />
+          쿼터별 출전 현황
+        </SheetTitle>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/30">
+                <th className="py-2 pr-3 text-left text-xs font-medium text-muted-foreground">선수</th>
+                {quarters.map((q) => (
+                  <th key={q} className="px-2 py-2 text-center text-xs font-medium text-muted-foreground">Q{q}</th>
+                ))}
+                <th className="pl-3 py-2 text-center text-xs font-medium text-muted-foreground">합계</th>
+              </tr>
+            </thead>
+            <tbody>
+              {roster.map((player) => {
+                const playedQuarters = playerQuarterMap.get(player.id) ?? [];
+                const qSet = new Set(playedQuarters);
+                return (
+                  <tr key={player.id} className="border-b border-border/10">
+                    <td className="py-2 pr-3 text-sm font-medium whitespace-nowrap">{player.name}</td>
+                    {quarters.map((q) => (
+                      <td key={q} className="px-2 py-2 text-center">
+                        {qSet.has(q) ? (
+                          <span className={cn(
+                            "inline-block h-5 w-5 rounded-full text-[10px] font-bold leading-5 text-center",
+                            q === activeQuarter
+                              ? "bg-primary text-white"
+                              : "bg-primary/20 text-primary"
+                          )}>●</span>
+                        ) : (
+                          <span className="inline-block h-5 w-5 text-center text-muted-foreground/30">—</span>
+                        )}
+                      </td>
+                    ))}
+                    <td className="pl-3 py-2 text-center">
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                        {playedQuarters.length}/{quarters.length}
+                      </Badge>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </SheetContent>
+    </Sheet>
     </>
   );
 }
