@@ -119,9 +119,12 @@ function MatchVoteTabInner({
               {canManage && (
                 isExpired ? (
                   <button type="button" disabled={deadlineLoading} onClick={() => runDeadline(async () => {
-                    const future = new Date(); future.setMonth(future.getMonth() + 1);
-                    const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, voteDeadline: future.toISOString() });
-                    if (!err) { setIsExpired(false); showToast("투표가 재개되었습니다."); }
+                    // 경기 전날 17시(KST)로 복원
+                    const prev = new Date(match.date + "T00:00:00+09:00");
+                    prev.setDate(prev.getDate() - 1);
+                    prev.setHours(17, 0, 0, 0);
+                    const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, voteDeadline: prev.toISOString() });
+                    if (!err) { setIsExpired(false); showToast("투표가 재개되었습니다."); await refetchVote(); }
                   })} className="flex shrink-0 items-center gap-1 rounded-lg border border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/10 px-2.5 py-1 text-[11px] font-semibold text-[hsl(var(--success))] transition-colors hover:bg-[hsl(var(--success))]/20 disabled:opacity-50">
                     <LockOpen className="h-3 w-3" />{deadlineLoading ? "처리 중..." : "재개"}
                   </button>
