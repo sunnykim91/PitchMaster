@@ -104,14 +104,16 @@ export async function PUT(request: NextRequest) {
 
   const body = await request.json();
 
-  // 등번호 변경은 본인도 가능하므로 별도 권한 체크
-  if (body.action !== "update_jersey_number") {
+  // 등번호 변경은 본인도 가능, 감독 지정은 운영진 이상 → 각각 별도 권한 체크
+  if (body.action !== "update_jersey_number" && body.action !== "update_coach_positions") {
     const roleCheck = requireRole(ctx, PERMISSIONS.MEMBER_ROLE_CHANGE);
     if (roleCheck) return roleCheck;
   }
 
-  // 감독 지정 포지션 변경
+  // 감독 지정 포지션 변경 (운영진 이상)
   if (body.action === "update_coach_positions") {
+    const roleCheck = requireRole(ctx, PERMISSIONS.MATCH_EDIT);
+    if (roleCheck) return roleCheck;
     const { memberId, coachPositions } = body;
     if (!memberId) return apiError("memberId required");
 
