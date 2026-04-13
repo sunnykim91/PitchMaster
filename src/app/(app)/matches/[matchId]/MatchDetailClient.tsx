@@ -283,7 +283,10 @@ export default function MatchDetailClient({
   const baseRoster = useMemo(
     () =>
       membersData.members.map((m) => {
-        const prefs = (m.users?.preferred_positions ?? []) as DetailedPosition[];
+        const coachPos = (m.coach_positions ?? []) as DetailedPosition[];
+        const playerPrefs = (m.users?.preferred_positions ?? []) as DetailedPosition[];
+        // 감독 지정 포지션 우선, 없으면 선수 본인 선호 (자동 배치와 동일 기준)
+        const prefs = coachPos.length > 0 ? coachPos : playerPrefs;
         return {
           id: m.users?.id ?? m.id,
           memberId: m.id,
