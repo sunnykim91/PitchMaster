@@ -169,7 +169,7 @@ function MatchDiaryTabInner({
   }
 
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="space-y-4">
       {/* ══ 경기 결과 공유 ══ */}
       <Card className="rounded-2xl border-0 overflow-hidden shadow-lg">
         <CardContent className="p-0">

@@ -104,7 +104,7 @@ function MatchVoteTabInner({
   const noVote = visibleRoster.filter((m) => !memberVoteMap[m.memberId]);
 
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="space-y-4">
       {/* ══ 내 참석 투표 ══ */}
       {match.status !== "COMPLETED" && myMember && (
         <Card className="rounded-xl border-border/30 overflow-hidden">

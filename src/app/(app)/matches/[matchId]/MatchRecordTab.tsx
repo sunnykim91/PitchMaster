@@ -284,7 +284,7 @@ function MatchRecordTabInner({
 
   return (
     <>
-      <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr] animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="space-y-5">
         {/* ── 스코어보드 ── */}
         <Card className="rounded-xl border-0 bg-gradient-to-br from-secondary to-background overflow-hidden">
