@@ -1,6 +1,6 @@
 # PitchMaster 개선 백로그
 
-최종 업데이트: 2026-04-14 (19차)
+최종 업데이트: 2026-04-14 (20차)
 현재 점수 추정: Designer 95 / UX 97 / Dev 98 / Marketing 85 / Business 82 (평균 91.4)
 서비스 현황: 81팀 · 520명 · 170+경기 (14일 신규 37팀 폭발 성장)
 회비 운영: 실제 입금 내역 있는 팀 2 / 설정만 한 팀 9
@@ -275,6 +275,35 @@
 - [x] OCR 부분 인식 거래 분리 처리 (시간 누락 / 날짜 추정 / 날짜 없음 사유 배지 + 추가·제외 액션, 자동 저장 차단)
 - [x] penalties 고아 테스트 파일 삭제 (3745156에서 라우트 폐기, 테스트만 남아있던 회귀)
 - [x] dashboard.test.ts 회귀 수정 (match_guests / 활성 멤버 team_members mock 추가, db null fallback 200 검증)
+
+#### 20차 (2026-04-14 밤) — 커리어 프로필 v0 UI 완성 + 카드 진입점 확장
+
+**커리어 프로필 v0 UI 완성도**
+- [x] 뒤로가기 버튼 추가 — PlayerProfilePage + PlayerProfileEmpty 상단 좌측 고정(fixed)
+- [x] PlayerCard 이미지 onError fallback — 로드 실패 시 등번호 워터마크로 자동 전환
+- [x] PlayerCard photoUrl 있을 때 이름과 간격 mb-4 sm:mb-5 추가
+- [x] globals.css v0 카드 CSS 복구 — sparkle/holographic-bg/card-shimmer-slide/glow-*/text-glow-*/noise-overlay/vignette/stadium-pattern/perspective-1000/preserve-3d/scrollbar-hide (이식 시 누락됐던 것)
+- [x] /player/[memberId] `?team=` URL 쿼리 지원 — 다중 팀 소속 시 올바른 팀 데이터 표시 (FCMZ/FCMZ 풋살 혼동 버그 수정)
+- [x] DORMANT 회원도 프로필 열람 가능 — BANNED만 제외 (휴면 회원 404 버그 수정)
+
+**카드 진입점 확장**
+- [x] 사이드바 프로필 영역 Link + ChevronRight — 어디서든 내 프로필 접근
+- [x] 대시보드 최상단 "내 프로필 보기 →" 한 줄 링크 — 최소 침해로 진입점 명시
+- [x] 기록 페이지 이름 점선 언더라인 + 링크 — 클릭 가능 시그널 + /player 이동
+
+**기록 페이지 "시즌 어워드" 4번째 탭 추가**
+- [x] 탭 구조 my/ranking/all → my/ranking/all/**awards**
+- [x] 기존 주석 처리된 SeasonAwardsCard 활용 (추후 v0 SeasonAwardsPage 연결 예정)
+- [x] 시즌 드롭다운 위치 변경: 탭 바 오른쪽 → 아래 독립 줄 (공간 부족 해소)
+- [x] 어워드 행 이모지 영역 고정 폭(h-6 w-6)으로 정렬 통일
+- [x] name 비어있는 어워드 행 스킵 (베스트매치 빈 카드 방지)
+
+**Rarity 기준 완화 (80/70/60)**
+- [x] ICON 90→**80**, HERO 80→**70**, RARE 70→**60** — 동호회 맥락에서 에이스도 COMMON만 나오던 문제 해결. 김선휘 OVR 67 → COMMON → RARE(에메랄드)로 승급
+
+**워딩 정리 — 무료 영구 약속 제거**
+- [x] guide.html FAQ "핵심 기능은 계속 무료로 유지할 계획" → "현재 무료, 추후 유료 요금제 도입 가능"
+- [x] terms 제6조 "유료 기능 도입 시 기존 무료 이용자의 기본 기능 사용에는 영향을 주지 않습니다" 삭제 → 변경 가능성 열어 둠
 
 #### 19차 (2026-04-14 저녁) — 출시 직전 최종 QA·MVP 규칙 변경
 

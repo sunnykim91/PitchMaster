@@ -110,13 +110,10 @@ export default function TermsPage() {
             제6조 (서비스 이용료)
           </h2>
           <ul className="mt-3 ml-5 list-decimal space-y-1 text-muted-foreground">
-            <li>서비스의 기본 기능은 무료로 제공됩니다.</li>
+            <li>서비스는 현재 무료로 제공됩니다.</li>
             <li>
-              향후 유료 기능이 추가될 수 있으며, 유료 전환 시 사전에 안내합니다.
-            </li>
-            <li>
-              유료 기능 도입 시 기존 무료 이용자의 기본 기능 사용에는 영향을
-              주지 않습니다.
+              추후 운영 정책에 따라 유료 요금제가 도입되거나 이용 범위·조건이
+              변경될 수 있으며, 변경 시 사전에 공지합니다.
             </li>
           </ul>
         </section>
