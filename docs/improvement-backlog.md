@@ -1,10 +1,11 @@
 # PitchMaster 개선 백로그
 
-최종 업데이트: 2026-04-11 (16차)
-현재 점수 추정: Designer 93 / UX 96 / Dev 96 / Marketing 85 / Business 82 (평균 90.4)
-서비스 현황: 81팀 · 520명 · 170+경기 (LINEOUT FC vs fk리버스 포함)
+최종 업데이트: 2026-04-12 (17차)
+현재 점수 추정: Designer 94 / UX 96 / Dev 96 / Marketing 85 / Business 82 (평균 90.6)
+서비스 현황: 81팀 · 520명 · 170+경기 (14일 신규 37팀 폭발 성장)
 회비 운영: 실제 입금 내역 있는 팀 2 / 설정만 한 팀 9
-테스트: 649 passed (39 파일)
+테스트: 657 passed (39 파일)
+앱 출시: Play Store 준비 중
 
 ---
 
@@ -274,6 +275,50 @@
 - [x] OCR 부분 인식 거래 분리 처리 (시간 누락 / 날짜 추정 / 날짜 없음 사유 배지 + 추가·제외 액션, 자동 저장 차단)
 - [x] penalties 고아 테스트 파일 삭제 (3745156에서 라우트 폐기, 테스트만 남아있던 회귀)
 - [x] dashboard.test.ts 회귀 수정 (match_guests / 활성 멤버 team_members mock 추가, db null fallback 200 검증)
+
+#### 17차 (2026-04-12)
+
+**v0 카드 UI 이식 — Phase 1, 2**
+- [x] **v0 컴포넌트 4종 src/components/pitchmaster/ 이식** — PlayerCard / PlayerProfilePage / SeasonAwardsPage / ShareCard (2,475줄)
+- [x] **globals.css에 v0 프리미엄 애니메이션 CSS 이식** — holographic/sparkle/card-shimmer/glow-pulse/float keyframes + 15개 유틸 클래스 (shimmer keyframe 충돌 방지 위해 card-shimmer-slide로 rename)
+- [x] **커리어 프로필 /player/[memberId] v0 UI 연결** — getPlayerData에 calculateOVR + PlayerCardProps 조립 + photoUrl 매핑
+- [x] **calculateOVR playerCardUtils.ts 공유 유틸화** — /api/player-card에서 이동 + export
+- [x] **dev 전용 /demo-cards 페이지 + 더보기 메뉴 항목** — 4탭 데모(카드/어워드/프로필/공유)
+- [x] **PlayerCard 옵션B 9종 개선** — OVR text-7xl~8xl, rarity별 text-shadow, sparkle 18+개 4크기 랜덤, 시그니처 카피 컬러/크기, 등번호 워터마크 opacity 0.22, 카드 뒷면 stats 잘림 방지, rarity별 glow 3겹
+- [x] **MVP 슈퍼카드 overflow-hidden 제거** — 외곽 wrapper 분리, PlayerCard max-w-[260px] sm:280px
+- [x] **베스트 모먼트 가로형 카드** — min-h-[120px] flex items-center, 좌측 이모지 박스(그라디언트+링) + sparkle dots 6개 + 카테고리별 포인트 컬러
+- [x] **시즌 어워드 1순위 featured 모드** — col-span-2, 좌측 큰 트로피(w-20~24) + 우측 큰 텍스트(3xl 이름 + 5~6xl 수치) + "시즌 1위" 라벨
+- [x] **ShareCard 미리보기 확대 + 가로 스크롤** — Story 320x568, Square 360x360, OG 480x252, rounded-2xl + 모바일 가로 스크롤 컨테이너
+- [x] **SeasonAwardsPage Award 타입 name/value optional** — bestMatch 호환
+- [x] **v0 최종 프롬프트 작성 docs/v0-prompt-killer-features-final.md** — 이전 문제점 14가지 + 5대 원칙 + 실루엣 SVG 요청
+
+**프로필 사진 기능**
+- [x] **설정 > 개인 설정 프로필 사진 업로드** — POST /api/profile/image (Supabase Storage uploads/profiles/) + DELETE + 카카오 연동 버튼(scope=profile_image)
+- [x] **카카오 프로필 이미지 자동 반영** — auth.ts findOrCreateKakaoUser에서 카카오 이미지가 있고 커스텀 업로드(uploads/profiles/)가 아니면 DB 업데이트
+- [x] **auth() 세션 동기화에 profile_image_url 포함** — 다음 페이지 이동 시 즉시 반영
+- [x] **카카오 OAuth redirect 쿼리 파라미터 지원** — state에 __redirect__ 마커 인코딩 → 연동 후 설정 페이지 복귀
+- [x] **next.config kakaocdn.net 도메인 허용** — 카카오 프로필 이미지 로드
+- [x] **프로필 이미지 3곳 적용** — 헤더(→사이드바), 회원 목록 각 카드, 게시판 글/댓글 아바타
+
+**더보기/헤더 개편**
+- [x] **더보기 페이지 상단 프로필 영역 + 하단 로그아웃** — Sparkles 아이콘 "카드 디자인 데모" 메뉴 항목 포함
+- [x] **헤더 프로필 아이콘 제거 → 사이드바 상단으로 이동** — 모바일 헤더 UI 복잡도 감소
+
+**보안 / 권한**
+- [x] **쿠키 secure 플래그 추가** — process.env.NODE_ENV === "production"일 때만, SESSION_COOKIE_BASE_OPTIONS 공통 상수 추출
+- [x] **투표 API 팀 소속 검증 추가** — POST /api/attendance에서 match.team_id !== ctx.teamId 시 403 (데모 계정이 FCMZ 경기에 투표 가능했던 버그 차단)
+- [x] **감독 지정 포지션 권한 수정** — PRESIDENT 전용 → STAFF 이상 (MATCH_EDIT 권한으로 분리)
+
+**전술판 / 자동 편성**
+- [x] **전술판 하이라이트 — 감독 지정 포지션 우선 적용** — baseRoster가 선수 선호만 썼던 것을 coach_positions > preferred_positions 순으로 통일 (자동 배치와 동일 기준)
+- [x] **자동 편성에서 휴면 회원 제외** — dormantIds 세트로 필터링
+
+**투표 / 경기**
+- [x] **투표 재개 버튼 — 경기 전날 17시로 복원** — 기존 new Date()+1달 임시값 버그 수정 (FCMZ 4/13 경기 마감일 5/5에서 4/12로 수동 정정)
+
+**기타**
+- [x] **PC 공유 클립보드 분기** — Windows 공유 모달 대신 clipboard.writeText, 모바일만 navigator.share
+- [x] **회비 OCR description 포함 중복 판정** — 이미 16차에 있음 (확인용)
 
 #### 16차 (2026-04-11)
 
