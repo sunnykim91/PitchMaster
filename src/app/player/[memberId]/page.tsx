@@ -30,7 +30,7 @@ type MemberRow = {
   team_role: string | null;
   team_id: string;
   users: { name: string; preferred_positions: string[]; profile_image_url: string | null } | null;
-  teams: { name: string; sport_type: string; uniform_primary: string | null } | null;
+  teams: { name: string; sport_type: string; uniform_primary: string | null; logo_url: string | null } | null;
 };
 
 async function getPlayerData(memberId: string, teamId?: string): Promise<PlayerProfile | null> {
@@ -41,7 +41,7 @@ async function getPlayerData(memberId: string, teamId?: string): Promise<PlayerP
   // ACTIVE + DORMANT 모두 허용 (휴면 회원도 프로필 열람 가능, BANNED만 제외)
   let query = db
     .from("team_members")
-    .select("id, user_id, pre_name, jersey_number, team_role, team_id, users(name, preferred_positions, profile_image_url), teams(name, sport_type, uniform_primary)")
+    .select("id, user_id, pre_name, jersey_number, team_role, team_id, users(name, preferred_positions, profile_image_url), teams(name, sport_type, uniform_primary, logo_url)")
     .or(`user_id.eq.${memberId},id.eq.${memberId}`)
     .in("status", ["ACTIVE", "DORMANT"]);
   if (teamId) query = query.eq("team_id", teamId);
@@ -54,6 +54,7 @@ async function getPlayerData(memberId: string, teamId?: string): Promise<PlayerP
   const name = user?.name ?? m.pre_name ?? "";
   const teamName = team?.name ?? "";
   const teamPrimaryColor = team?.uniform_primary ?? "#e8613a";
+  const teamLogoUrl = team?.logo_url ?? undefined;
   const positions = user?.preferred_positions ?? [];
   const photoUrl = user?.profile_image_url ?? undefined;
   const lookupIds = m.user_id ? [m.user_id, m.id] : [m.id];
@@ -278,7 +279,7 @@ async function getPlayerData(memberId: string, teamId?: string): Promise<PlayerP
   const playerCardProps: PlayerCardProps = {
     ovr, rarity, positionLabel: posLabel, positionCategory: cat,
     playerName: name, jerseyNumber: m.jersey_number, teamName,
-    teamPrimaryColor, seasonName: season.name, photoUrl,
+    teamPrimaryColor, teamLogoUrl, seasonName: season.name, photoUrl,
     signature, stats: cardStats,
   };
 

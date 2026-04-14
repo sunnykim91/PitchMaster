@@ -485,23 +485,32 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
           </h1>
 
           {/* Subtitle Line */}
-          <p className="text-sm sm:text-base text-white/60 mb-4 tracking-wide">
-            {teamName}
-            <span className="mx-2 text-white/30">·</span>
-            {positions.join(" / ")}
-            {jerseyNumber && (
-              <>
+          {(() => {
+            // 포지션이 4개 이상이면 상위 3개만 + "외 N" 표시 (라인 과밀 방지)
+            const maxShow = 3;
+            const shown = positions.slice(0, maxShow);
+            const rest = positions.length - shown.length;
+            const posText = shown.join(" / ") + (rest > 0 ? ` 외 ${rest}` : "");
+            return (
+              <p className="text-sm sm:text-base text-white/60 mb-4 tracking-wide">
+                {teamName}
                 <span className="mx-2 text-white/30">·</span>
-                <span className="font-semibold">#{jerseyNumber}</span>
-              </>
-            )}
-            {stats && (
-              <>
-                <span className="mx-2 text-white/30">·</span>
-                <span>{stats.attended}경기 출장</span>
-              </>
-            )}
-          </p>
+                {posText}
+                {jerseyNumber && (
+                  <>
+                    <span className="mx-2 text-white/30">·</span>
+                    <span className="font-semibold">#{jerseyNumber}</span>
+                  </>
+                )}
+                {stats && (
+                  <>
+                    <span className="mx-2 text-white/30">·</span>
+                    <span>{stats.attended}경기</span>
+                  </>
+                )}
+              </p>
+            );
+          })()}
 
           {/* Role Badge */}
           {teamRole && (
@@ -531,7 +540,7 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
       {/* ========================================= */}
       {/* SEASON DIGEST - Card + Stats             */}
       {/* ========================================= */}
-      <section className="max-w-4xl mx-auto px-4 py-10">
+      <section className="max-w-4xl mx-auto px-4 pt-10 pb-4">
         <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-10">
           {/* Player Card */}
           <div className="w-full max-w-[340px] shrink-0">

@@ -24,6 +24,7 @@ export type PlayerCardProps = {
   teamPrimaryColor: string;
   seasonName: string;
   photoUrl?: string;
+  teamLogoUrl?: string;
   signature?: string;
   stats: StatWithContext[];
 };
@@ -219,6 +220,7 @@ export function PlayerCard({
   jerseyNumber,
   teamName,
   teamPrimaryColor,
+  teamLogoUrl,
   seasonName,
   photoUrl,
   signature,
@@ -342,14 +344,21 @@ export function PlayerCard({
                   {rarity === "ICON" ? "★ LEGENDARY ★" : config.label}
                 </span>
                 <div
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-lg sm:text-xl font-black shadow-lg"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center overflow-hidden shadow-lg"
                   style={{
                     backgroundColor: teamPrimaryColor + "60",
-                    color: "white",
                     border: `1px solid ${teamPrimaryColor}80`,
                   }}
                 >
-                  {teamName.charAt(0)}
+                  {teamLogoUrl ? (
+                    <img
+                      src={teamLogoUrl}
+                      alt=""
+                      className="w-full h-full object-contain p-1"
+                    />
+                  ) : (
+                    <span className="text-lg sm:text-xl font-black text-white">{teamName.charAt(0)}</span>
+                  )}
                 </div>
               </div>
             </div>
