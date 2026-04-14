@@ -452,7 +452,7 @@ function DuesRecordsTabInner({
         <EmptyState
           icon={Receipt}
           title="아직 거래 내역이 없습니다"
-          description="위에서 수기 입력하거나, 내역 올리기 탭에서 스크린샷/엑셀을 올려보세요."
+          description="카카오뱅크 엑셀 1번 올리면 30명까지 자동 매칭돼요. 수기·스크린샷도 지원."
         />
       ) : (
         <div className="space-y-2">

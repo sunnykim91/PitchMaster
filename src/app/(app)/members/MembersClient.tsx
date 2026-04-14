@@ -882,7 +882,22 @@ export default function MembersClient({
               );
             })}
             {linkedMembers.length === 0 && (
-              <EmptyState icon={Users} title="가입된 멤버가 없습니다" description="초대 코드를 공유해보세요." />
+              <EmptyState
+                icon={Users}
+                title="가입된 멤버가 없습니다"
+                description={
+                  canPreRegister
+                    ? "초대 코드를 공유하거나, 전화번호로 사전 등록해두면 가입 시 자동 연동돼요."
+                    : "초대 코드를 공유해보세요."
+                }
+                action={
+                  canPreRegister && !showRegForm ? (
+                    <Button size="sm" variant="outline" onClick={() => setShowRegForm(true)}>
+                      팀원 사전 등록
+                    </Button>
+                  ) : undefined
+                }
+              />
             )}
             {linkedMembers.length > 0 && filteredLinkedMembers.length === 0 && (
               <p className="py-4 text-center text-sm text-muted-foreground">검색 결과가 없습니다.</p>

@@ -1,12 +1,19 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown, Target, BarChart3, Trophy, Swords, Hash, List, Users, Bell, BellRing, MessageSquare, Dribbble, FileText, ShieldCheck, Settings2, CalendarDays, ImageIcon, CloudSun, Moon, Share2, Crosshair, Image as ImageLucide } from "lucide-react";
+import { ChevronDown, Target, BarChart3, Trophy, Swords, Hash, List, Users, Bell, BellRing, MessageSquare, Dribbble, FileText, ShieldCheck, Settings2, CalendarDays, ImageIcon, CloudSun, Moon, Share2, Crosshair, Image as ImageLucide, Wallet, Grid3x3, CheckCircle2, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const primaryFeatures = [
+  { icon: Grid3x3, title: "쿼터별 출전 매트릭스", desc: "쿼터별 출전 현황 한눈에 + 감독 지정 포지션 우선 적용" },
+  { icon: Wallet, title: "자동 벌금 부과", desc: "지각·불참 자동 차감으로 총무가 일일이 안 챙겨도 OK" },
+  { icon: CheckCircle2, title: "자동 완료 처리", desc: "경기 시간 지나면 자동 완료 + 투표 마감일도 자동 설정" },
+  { icon: Smartphone, title: "PWA 즉시 사용", desc: "앱스토어 거치지 않고 카카오톡 링크 공유로 바로 실행" },
   { icon: Target, title: "원탭 득점 기록", desc: "쿼터별 스코어보드로 득점·어시스트 즉시 기록" },
   { icon: BarChart3, title: "시즌 통계 & 랭킹", desc: "승률, 출석률, 레이더 차트, 개인별 랭킹" },
+];
+
+const extraPromoted = [
   { icon: Trophy, title: "MVP 투표", desc: "경기 후 팀원이 직접 뽑는 MVP" },
   { icon: Swords, title: "자체전 (A팀 vs B팀)", desc: "랜덤 편성, 팀별 스코어보드, 전적 반영" },
   { icon: Hash, title: "등번호 & 주장/부주장", desc: "등번호 설정 + 주장·부주장 지정, 전술판 연동" },
@@ -18,7 +25,7 @@ const extraFeatures = [
   { icon: Bell, title: "회비 미납 알림", desc: "미납자 푸시 알림 + 매월 자동 리마인더" },
   { icon: BellRing, title: "투표 마감 리마인더", desc: "마감 전날 미투표자에게 자동 푸시" },
   { icon: MessageSquare, title: "팀 게시판", desc: "공지사항, 자유글, 투표까지 팀 전용 소통" },
-  { icon: Dribbble, title: "풋살 전용 지원", desc: "3~8인제, 풋살 포지션·전술판" },
+  { icon: Dribbble, title: "풋살 전용 지원", desc: "3~8인제 완전 지원, 풋살 전용 포지션·전술판 별도" },
   { icon: FileText, title: "경기 일지 & 공유", desc: "결과 카드 카카오톡 공유 + 댓글" },
   { icon: ShieldCheck, title: "회장 이임 & 승인제", desc: "회장 권한 이양, 가입 승인 모드" },
   { icon: Settings2, title: "회칙 · 유니폼 · 시즌", desc: "팀 운영에 필요한 부가 기능 일체" },
@@ -41,7 +48,8 @@ export default function MoreFeaturesSection() {
     return () => observer.disconnect();
   }, []);
 
-  const visibleExtra = expanded ? extraFeatures : [];
+  const visibleExtra = expanded ? [...extraPromoted, ...extraFeatures] : [];
+  const totalExtraCount = extraPromoted.length + extraFeatures.length;
 
   return (
     <section ref={ref} className="relative border-t border-border/30 bg-card/30 py-20 sm:py-28">
@@ -88,7 +96,7 @@ export default function MoreFeaturesSection() {
 
         <div className="mt-8 text-center">
           <Button variant="outline" size="lg" onClick={() => setExpanded(!expanded)} className="gap-2 rounded-full px-8">
-            {expanded ? "접기" : `더 많은 기능 보기 (${extraFeatures.length})`}
+            {expanded ? "접기" : `더 많은 기능 보기 (${totalExtraCount})`}
             <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} />
           </Button>
         </div>

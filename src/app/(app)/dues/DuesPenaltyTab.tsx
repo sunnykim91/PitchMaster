@@ -299,7 +299,7 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
         <EmptyState
           icon={AlertTriangle}
           title={`${displayMonth} 벌금 기록이 없습니다`}
-          description="벌금 규칙을 설정하고 출석 체크에서 지각/불참을 등록하면 자동으로 생성됩니다."
+          description="지각·불참 자동 부과 규칙 템플릿을 한 번만 적용하면 출석 체크할 때마다 자동 생성돼요."
         />
       ) : (
         <>

@@ -186,6 +186,23 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
     }
   }, [searchParams]);
 
+  // 첫 경기 완료 발견 유도 토스트 (팀 누적 완료 1건일 때 1회만)
+  const firstCompleteRecordTotal =
+    (data.teamRecord?.wins ?? 0) + (data.teamRecord?.draws ?? 0) + (data.teamRecord?.losses ?? 0);
+  useEffect(() => {
+    if (loading) return;
+    if (firstCompleteRecordTotal !== 1) return;
+    if (typeof window === "undefined") return;
+    const key = `first_complete_seen:${userId}`;
+    try {
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key, "1");
+      showToast("🎉 첫 경기 완료! MVP 투표·선수 카드·자동 편성도 둘러보세요.", "success");
+    } catch {
+      // localStorage 비활성화 환경은 조용히 스킵
+    }
+  }, [loading, firstCompleteRecordTotal, userId, showToast]);
+
   async function handleQuickVote(matchId: string, _memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
     // 현재 표시 중인 투표(낙관적 or 서버) 기준으로 중복 클릭 방지
     const currentVote = optimisticVote !== undefined ? optimisticVote : data.upcomingMatch?.myVote;
@@ -369,6 +386,16 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
             <Button className="mt-4" asChild>
               <Link href="/matches?create=true">경기 등록하러 가기</Link>
             </Button>
+            <div className="mt-3">
+              <Link
+                href="/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+              >
+                어떤 기능이 있는지 샘플 화면 미리보기 →
+              </Link>
+            </div>
           </CardContent>
         </Card>
       )}

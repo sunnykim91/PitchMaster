@@ -54,6 +54,14 @@ function PaymentVisual() {
           </div>
         </div>
       ))}
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(var(--info))]/10 px-2 py-0.5 text-[10px] font-semibold text-[hsl(var(--info))]">
+          <Check className="h-2.5 w-2.5" /> 카카오뱅크 엑셀 업로드
+        </span>
+        <span className="inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+          Naver Clova OCR
+        </span>
+      </div>
     </div>
   );
 }
@@ -95,12 +103,12 @@ function TacticsBoard() {
 const features = [
   {
     icon: Vote, label: "참석 투표", tagline: "링크 하나면 끝",
-    desc: "실시간 참석/불참 자동 집계, 마감 시간 설정으로 읽씹 걱정 제로",
+    desc: "경기 생성하면 마감일 자동 설정 + 실시간 자동 집계. 읽씹 걱정 제로",
     color: "primary", visual: "vote",
   },
   {
-    icon: CreditCard, label: "회비 정산", tagline: "캡쳐 한 장이면 끝",
-    desc: "은행 앱 이체 내역을 캡쳐해서 올리면 AI가 입금자와 금액을 자동 인식",
+    icon: CreditCard, label: "회비 정산", tagline: "엑셀·캡쳐면 끝",
+    desc: "카카오뱅크 엑셀 일괄 업로드 + Naver Clova OCR로 입금자·금액 자동 매칭",
     color: "info", visual: "payment",
   },
   {

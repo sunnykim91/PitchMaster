@@ -56,8 +56,11 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
             ))}
           </div>
           <div className="relative h-1 rounded-full bg-secondary">
-            <div className="absolute h-1 rounded-full bg-primary" style={{ width: "16%" }} />
+            <div className="absolute h-1 rounded-full bg-primary" style={{ width: "33%" }} />
           </div>
+          <p className="mt-2 text-xs text-muted-foreground text-center">
+            지금은 1단계예요. 다음에 팀을 선택하거나 만들고, 마지막에 첫 경기를 등록하면 끝!
+          </p>
         </div>
 
         {errorMsg && (

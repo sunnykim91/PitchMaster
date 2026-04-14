@@ -738,7 +738,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
               <EmptyState
                 icon={Calendar}
                 title="등록된 일정이 없습니다"
-                description="새 일정을 등록해보세요."
+                description="일정 하나면 투표·전술판 자동 편성·MVP 투표까지 한 번에 돌아가요."
                 action={
                   isStaffOrAbove(role) ? (
                     <Button size="sm" onClick={() => setIsOpen(true)}>

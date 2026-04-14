@@ -530,7 +530,7 @@ export default function BoardClient({
         <EmptyState
           icon={MessageSquare}
           title="아직 게시글이 없습니다"
-          description="첫 글을 작성해보세요."
+          description="공지 핀, 투표 게시글, 이미지 첨부까지 지원돼요. 첫 글 한번 올려볼까요?"
           action={
             <Button size="sm" onClick={() => setShowForm(true)}>
               글쓰기

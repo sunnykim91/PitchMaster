@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
-import { Vote, CreditCard, LayoutGrid, ArrowDown } from "lucide-react";
+import { Vote, CreditCard, LayoutGrid, ArrowDown, Smartphone, Dribbble } from "lucide-react";
 import AppScreenSlider from "../AppScreenSlider";
 
 /* PhoneMockup removed — using AppScreenSlider with real screenshots instead */
@@ -51,6 +51,18 @@ export default function HeroSection({
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-[hsl(var(--success))]" />
               </span>
               <span className="text-sm text-muted-foreground">{teamCount}개 팀 · {memberCount}+ 회원이 사용 중</span>
+            </div>
+
+            {/* Extra badges */}
+            <div className={`mb-6 flex flex-wrap items-center justify-center gap-2 lg:justify-start ${mounted ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "150ms" }}>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/40 px-3 py-1 text-xs text-muted-foreground">
+                <Smartphone className="h-3.5 w-3.5 text-primary" />
+                앱 설치 없이 카카오톡으로 바로
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/40 px-3 py-1 text-xs text-muted-foreground">
+                <Dribbble className="h-3.5 w-3.5 text-[hsl(var(--accent))]" />
+                풋살 3~8인제 완전 지원
+              </span>
             </div>
 
             <h1 className={`mb-6 font-heading text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl ${mounted ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "100ms" }}>
