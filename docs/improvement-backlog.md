@@ -1,11 +1,11 @@
 # PitchMaster 개선 백로그
 
-최종 업데이트: 2026-04-12 (17차)
-현재 점수 추정: Designer 94 / UX 96 / Dev 96 / Marketing 85 / Business 82 (평균 90.6)
+최종 업데이트: 2026-04-14 (18차)
+현재 점수 추정: Designer 95 / UX 97 / Dev 97 / Marketing 85 / Business 82 (평균 91.2)
 서비스 현황: 81팀 · 520명 · 170+경기 (14일 신규 37팀 폭발 성장)
 회비 운영: 실제 입금 내역 있는 팀 2 / 설정만 한 팀 9
 테스트: 657 passed (39 파일)
-앱 출시: Play Store 준비 중
+앱 출시: Play Store 비공개 테스트 14일 충족 예정 (4/20), 프로덕션 신청 예정
 
 ---
 
@@ -275,6 +275,36 @@
 - [x] OCR 부분 인식 거래 분리 처리 (시간 누락 / 날짜 추정 / 날짜 없음 사유 배지 + 추가·제외 액션, 자동 저장 차단)
 - [x] penalties 고아 테스트 파일 삭제 (3745156에서 라우트 폐기, 테스트만 남아있던 회귀)
 - [x] dashboard.test.ts 회귀 수정 (match_guests / 활성 멤버 team_members mock 추가, db null fallback 200 검증)
+
+#### 18차 (2026-04-14) — 앱 출시 직전 안정화·보안 스윕
+
+**크로스 팀 접근 취약점 일괄 수정 (1차: 92fa215)**
+- [x] **용병 API 권한 체크 추가** — POST/PUT/DELETE에 MATCH_EDIT(STAFF) 요구, 누구나 용병 추가·삭제 가능하던 버그 차단
+- [x] **MVP/다이어리/경기댓글/스쿼드 GET team_id 검증** — 다른 팀 matchId로 조회 시 민감 데이터 유출 차단
+- [x] **용병 DELETE team_id 검증** — PUT은 있고 DELETE만 누락된 비대칭 해소
+- [x] **notifications PUT 단일 id 업데이트 user_id 검증** — 방어 심화
+- [x] **벌금 API 권한 교체** — MATCH_CREATE → DUES_SETTING_EDIT / DUES_RECORD_ADD
+- [x] **admin stats·레코드·회비 쿼리 휴면 필터 보정** — BANNED 제외, 통계 분모에 DORMANT 포함
+
+**크로스 팀 접근 2차 패치 (10b6f1b)**
+- [x] **attendance-check GET/POST matchId 팀 검증 추가**
+- [x] **internal-teams GET matchId 팀 검증 추가**
+- [x] **seasons PUT 활성화 시 team_id 조건 추가** (다른 팀 시즌 활성화 교란 방지)
+- [x] **rules PUT 규칙 수정 시 team_id 조건 추가**
+- [x] posts DELETE / autoCompleteMatches 문자열 비교 / poll.ends_at null 가드 — 재검토 결과 false positive
+
+**출시 전 UX 일괄 개선 (079b16f)**
+- [x] **원시 에러 메시지 순화** — Season/Personal/Team Settings 5곳 toKoreanError() 적용 (DB 에러 직접 노출 차단)
+- [x] **위험 액션 모달 오터치 방지** — destructive variant일 때 "취소" 버튼에 autoFocus, 회장 이임 모달에 destructive 적용
+- [x] **Toast 지속시간 가변** — 에러·긴 메시지(30자+) 5초, 일반 3.5초
+- [x] **투표 버튼 로딩 상태 시각화** — Loader2 스피너, 실패 시 흔들림 애니메이션(animate-shake), 운영진 대리 투표에도 동일 적용 (loadingProxy)
+- [x] **"하시겠습니까" → "할까요" 톤 현대화** — 11곳 일괄 치환 (삭제/이임/종료/제명)
+- [x] **"유저" → "회원" 용어 통일** — admin 전체/신규 + 멤버 연동 셀렉트 문구
+- [x] **formatters.ts 신규** — formatDate/formatDateKo/formatTime/formatTimeKo/formatAmount (점진적 통일용, SeasonManagement 1곳 적용)
+
+**운영 기록**
+- [x] **Play Console 프로덕션 답변 자료 작성** — docs/play-console-production-answers.md (테스터 피드백·수정 내역·FAQ 답변 팁)
+- [x] **이근범 회장(불공FC) 앱 내 알림 발송** — 가입 대기 6명 안내 (카카오톡 채널 미보유, 푸시 미구독)
 
 #### 17차 (2026-04-12)
 
