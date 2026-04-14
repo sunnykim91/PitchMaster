@@ -13,6 +13,7 @@ import { POSITION_GROUPS, PREF_POSITION_SHORT, FUTSAL_POSITION_GROUPS, FUTSAL_PO
 import type { SportType } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toKoreanError } from "@/lib/errorMessages";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -104,7 +105,7 @@ function PersonalSettingsComponent({
     });
     setSaving(false);
     if (error) {
-      setMessage(`오류: ${error}`);
+      setMessage(toKoreanError(String(error)));
     } else {
       setMessage("프로필 설정이 저장되었습니다.");
       profileSyncedRef.current = false;
@@ -295,7 +296,7 @@ function PersonalSettingsComponent({
                         jerseyNumber: num,
                       });
                       setJerseySaving(false);
-                      if (error) setMessage(`오류: ${error}`);
+                      if (error) setMessage(toKoreanError(String(error)));
                       else setMessage("등번호가 저장되었습니다.");
                       setTimeout(() => setMessage(null), 2000);
                     }}

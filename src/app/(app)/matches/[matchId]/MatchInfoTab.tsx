@@ -213,7 +213,7 @@ function MatchInfoTabInner({
 
   async function handleDeleteMatch() {
     const ok = await confirm({
-      title: "경기를 삭제하시겠습니까?",
+      title: "경기를 삭제할까요?",
       description: "삭제된 경기의 모든 기록(골, MVP, 투표, 전술)이 함께 삭제되며 복구할 수 없습니다.",
       variant: "destructive",
       confirmLabel: "삭제",

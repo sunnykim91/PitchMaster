@@ -104,7 +104,7 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
 
   async function handleDelete(id: string) {
     const ok = await confirm({
-      title: "벌금 기록을 삭제하시겠습니까?",
+      title: "벌금 기록을 삭제할까요?",
       description: "삭제된 벌금 기록은 복구할 수 없습니다.",
       variant: "destructive",
       confirmLabel: "삭제",

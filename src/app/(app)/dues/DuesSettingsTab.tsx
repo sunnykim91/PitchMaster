@@ -318,7 +318,7 @@ function DuesSettingsTabInner({
                         className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
                         type="button"
                         onClick={async () => {
-                          const ok = await confirm({ title: "이 회비 기준을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
+                          const ok = await confirm({ title: "이 회비 기준을 삭제할까요?", variant: "destructive", confirmLabel: "삭제" });
                           if (ok) handleDeleteSetting(setting.id);
                         }}
                       >
@@ -525,7 +525,7 @@ function PenaltyRulesSection({ refetchSummary }: { refetchSummary: () => Promise
   }
 
   async function handleDelete(id: string) {
-    const ok = await confirm({ title: "벌금 규칙을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
+    const ok = await confirm({ title: "벌금 규칙을 삭제할까요?", variant: "destructive", confirmLabel: "삭제" });
     if (!ok) return;
     await apiMutate("/api/dues/penalty-rules", "DELETE", { id });
     setRules((prev) => prev.filter((r) => r.id !== id));
@@ -686,7 +686,7 @@ function MemberExemptionSection({ members, refetchPaymentStatus }: { members: Ap
   }
 
   async function handleEnd(id: string) {
-    const ok = await confirm({ title: "이 상태를 종료하시겠습니까?", confirmLabel: "종료" });
+    const ok = await confirm({ title: "이 상태를 종료할까요?", confirmLabel: "종료" });
     if (!ok) return;
     await runAction(async () => {
       await apiMutate("/api/dues/member-status", "PUT", { id });

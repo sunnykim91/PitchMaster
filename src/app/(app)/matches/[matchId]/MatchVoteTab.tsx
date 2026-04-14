@@ -5,7 +5,7 @@ import { GA } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Users, HelpCircle, UserX, Check, Clock, Search, Lock, LockOpen } from "lucide-react";
+import { Bell, Users, HelpCircle, UserX, Check, Clock, Search, Lock, LockOpen, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
@@ -54,6 +54,13 @@ function MatchVoteTabInner({
   const [optimisticMyVote, setOptimisticMyVote] = useState<"ATTEND" | "ABSENT" | "MAYBE" | null | undefined>(undefined);
   // 연속 클릭 방지용 (300ms)
   const [pendingVote, setPendingVote] = useState(false);
+  // 로딩 스피너 표시용: 현재 투표 중인 옵션
+  const [loadingVote, setLoadingVote] = useState<"ATTEND" | "ABSENT" | "MAYBE" | null>(null);
+  // 실패 시 흔들림 애니메이션 대상
+  const [shakeVote, setShakeVote] = useState<"ATTEND" | "ABSENT" | "MAYBE" | null>(null);
+  // 대리 투표: 멤버별 로딩/흔들림 상태 (key = `${memberId}:${vote}`)
+  const [loadingProxy, setLoadingProxy] = useState<string | null>(null);
+  const [shakeProxy, setShakeProxy] = useState<string | null>(null);
 
   const myMember = baseRoster.find((m) => m.id === userId);
   const serverMyVote = myMember ? memberVoteMap[myMember.memberId] : undefined;
@@ -71,8 +78,9 @@ function MatchVoteTabInner({
     // 즉시 UI 반영 (낙관적 업데이트)
     setOptimisticMyVote(vote);
 
-    // 연속 클릭 방지 (300ms)
+    // 연속 클릭 방지 (300ms) + 로딩 스피너 표시
     setPendingVote(true);
+    setLoadingVote(vote);
     setTimeout(() => setPendingVote(false), 300);
 
     // 백그라운드 API 호출
@@ -80,6 +88,9 @@ function MatchVoteTabInner({
     if (err) {
       // 실패 시 롤백
       setOptimisticMyVote(prevVote);
+      setLoadingVote(null);
+      setShakeVote(vote);
+      setTimeout(() => setShakeVote(null), 500);
       showToast("투표에 실패했습니다. 다시 시도해주세요.", "error");
     } else {
       GA.voteComplete(vote, "match_detail");
@@ -87,6 +98,22 @@ function MatchVoteTabInner({
       // 성공 시 백그라운드 refetch 후 낙관적 상태 초기화
       await refetchVote();
       setOptimisticMyVote(undefined);
+      setLoadingVote(null);
+    }
+  }
+
+  // 대리 투표 래퍼: 로딩/실패 시각화 추가
+  async function handleProxyVoteWithFeedback(memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
+    const key = `${memberId}:${vote}`;
+    if (loadingProxy) return;
+    setLoadingProxy(key);
+    try {
+      await handleProxyVote(memberId, vote);
+    } catch {
+      setShakeProxy(key);
+      setTimeout(() => setShakeProxy(null), 500);
+    } finally {
+      setLoadingProxy(null);
     }
   }
   const [isExpired, setIsExpired] = useState(false);
@@ -165,16 +192,20 @@ function MatchVoteTabInner({
                     key={opt.value}
                     role="radio"
                     aria-checked={myVote === opt.value}
-                    disabled={pendingVote}
+                    disabled={!!pendingVote}
                     onClick={() => handleMyVote(opt.value)}
                     className={cn(
                       "relative flex flex-col items-center justify-center gap-2 rounded-xl p-4 transition-all min-h-[80px]",
                       myVote === opt.value ? opt.activeClass : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-                      pendingVote && "opacity-50"
+                      pendingVote && loadingVote !== opt.value && "opacity-50",
+                      shakeVote === opt.value && "animate-shake ring-2 ring-destructive"
                     )}
                   >
-                    {myVote === opt.value && (
+                    {myVote === opt.value && loadingVote !== opt.value && (
                       <span className="absolute right-2 top-2"><Check className="h-4 w-4" /></span>
+                    )}
+                    {loadingVote === opt.value && (
+                      <span className="absolute right-2 top-2"><Loader2 className="h-4 w-4 animate-spin" /></span>
                     )}
                     <opt.Icon className="h-6 w-6" />
                     <span className="text-sm font-semibold">{opt.label}</span>
@@ -283,15 +314,24 @@ function MatchVoteTabInner({
                   )}>
                     <span className={cn("text-sm font-medium", !currentVote && "text-destructive")}>{member.name}</span>
                     <div className="flex gap-1" role="radiogroup">
-                      {([{ value: "ATTEND" as const, label: "참석" }, { value: "MAYBE" as const, label: "미정" }, { value: "ABSENT" as const, label: "불참" }]).map((opt) => (
-                        <button key={opt.value} role="radio" aria-checked={currentVote === opt.value}
-                          className={cn("min-h-[32px] rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
-                            currentVote === opt.value ? styles[opt.value].active : styles[opt.value].inactive
-                          )}
-                          onClick={() => handleProxyVote(member.memberId, opt.value)}>
-                          {opt.label}
-                        </button>
-                      ))}
+                      {([{ value: "ATTEND" as const, label: "참석" }, { value: "MAYBE" as const, label: "미정" }, { value: "ABSENT" as const, label: "불참" }]).map((opt) => {
+                        const proxyKey = `${member.memberId}:${opt.value}`;
+                        const isLoading = loadingProxy === proxyKey;
+                        const isShaking = shakeProxy === proxyKey;
+                        return (
+                          <button key={opt.value} role="radio" aria-checked={currentVote === opt.value}
+                            disabled={!!loadingProxy}
+                            className={cn("min-h-[32px] rounded-lg px-3 py-1.5 text-xs font-medium transition-all inline-flex items-center gap-1",
+                              currentVote === opt.value ? styles[opt.value].active : styles[opt.value].inactive,
+                              loadingProxy && !isLoading && "opacity-50",
+                              isShaking && "animate-shake ring-2 ring-destructive"
+                            )}
+                            onClick={() => handleProxyVoteWithFeedback(member.memberId, opt.value)}>
+                            {isLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+                            {opt.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </li>
                 );

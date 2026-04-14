@@ -174,7 +174,7 @@ function DuesRecordsTabInner({
     const count = selectedIds.size;
     if (count === 0) return;
     const ok = await confirm({
-      title: `${count}건을 삭제하시겠습니까?`,
+      title: `${count}건을 삭제할까요?`,
       description: "해당 월의 납부 현황(납부/미납)도 함께 초기화됩니다. (면제는 유지)",
       variant: "destructive",
       confirmLabel: "삭제 + 납부 초기화",
@@ -563,7 +563,7 @@ function DuesRecordsTabInner({
                           <button
                             type="button"
                             onClick={async () => {
-                              const ok = await confirm({ title: "이 내역을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
+                              const ok = await confirm({ title: "이 내역을 삭제할까요?", variant: "destructive", confirmLabel: "삭제" });
                               if (ok) handleDeleteRecord(record.id);
                             }}
                             className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors active:scale-95"

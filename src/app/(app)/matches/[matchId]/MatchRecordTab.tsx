@@ -558,7 +558,7 @@ function MatchRecordTabInner({
                           onDelete={async () => {
                             const ok = await confirm({
                               title: "골 기록 삭제",
-                              description: "이 골 기록을 삭제하시겠습니까? 삭제된 기록은 복구할 수 없습니다.",
+                              description: "이 골 기록을 삭제할까요? 삭제된 기록은 복구할 수 없습니다.",
                               variant: "destructive",
                               confirmLabel: "삭제",
                               cancelLabel: "취소",

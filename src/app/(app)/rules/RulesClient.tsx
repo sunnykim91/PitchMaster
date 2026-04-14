@@ -430,7 +430,7 @@ export default function RulesClient({ userRole, initialData }: { userRole?: Role
                             size="sm"
                             className="text-destructive hover:text-destructive"
                             onClick={async () => {
-                              const ok = await confirm({ title: "회칙을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
+                              const ok = await confirm({ title: "회칙을 삭제할까요?", variant: "destructive", confirmLabel: "삭제" });
                               if (ok) handleDelete(rule.id);
                             }}
                           >

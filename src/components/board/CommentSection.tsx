@@ -75,7 +75,7 @@ export const CommentSection = memo(function CommentSection({
                     type="button"
                     aria-label="댓글 삭제"
                     onClick={async () => {
-                      const ok = await confirm({ title: "댓글을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
+                      const ok = await confirm({ title: "댓글을 삭제할까요?", variant: "destructive", confirmLabel: "삭제" });
                       if (ok) onDelete(comment.id, postId);
                     }}
                     disabled={deletingCommentIds.has(comment.id)}

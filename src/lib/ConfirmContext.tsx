@@ -73,6 +73,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
                   size="sm"
                   className="flex-1"
                   onClick={handleCancel}
+                  autoFocus={state.variant === "destructive"}
                 >
                   {state.cancelLabel ?? "취소"}
                 </Button>
@@ -81,7 +82,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
                   size="sm"
                   className="flex-1"
                   onClick={handleConfirm}
-                  autoFocus
+                  autoFocus={state.variant !== "destructive"}
                 >
                   {state.confirmLabel ?? "확인"}
                 </Button>

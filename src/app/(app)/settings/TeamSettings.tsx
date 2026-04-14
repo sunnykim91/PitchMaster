@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
 import { cn } from "@/lib/utils";
+import { toKoreanError } from "@/lib/errorMessages";
 import TeamLogo from "@/components/TeamLogo";
 import { Camera, X } from "lucide-react";
 
@@ -110,7 +111,7 @@ function TeamSettingsComponent({
     const { error } = await apiMutate("/api/teams", "PUT", { isSearchable: newVal });
     setSearchableLoading(false);
     if (error) {
-      setMessage(`오류: ${error}`);
+      setMessage(toKoreanError(String(error)));
     } else {
       setTeam({ ...team, isSearchable: newVal });
       setMessage(newVal ? "팀 검색이 허용되었습니다." : "팀 검색이 비허용되었습니다.");
@@ -130,7 +131,7 @@ function TeamSettingsComponent({
     const { error } = await apiMutate("/api/teams", "PUT", { statsRecordingStaffOnly: newVal });
     setStatsRecordingLoading(false);
     if (error) {
-      setMessage(`오류: ${error}`);
+      setMessage(toKoreanError(String(error)));
     } else {
       setTeam({ ...team, statsRecordingStaffOnly: newVal });
       setMessage(
@@ -154,7 +155,7 @@ function TeamSettingsComponent({
     const { error } = await apiMutate("/api/teams", "PUT", { joinMode: newVal });
     setJoinModeLoading(false);
     if (error) {
-      setMessage(`오류: ${error}`);
+      setMessage(toKoreanError(String(error)));
     } else {
       setTeam({ ...team, joinMode: newVal });
       setMessage(newVal === "MANUAL" ? "가입 시 승인이 필요합니다." : "가입 시 자동 승인됩니다.");
@@ -202,7 +203,7 @@ function TeamSettingsComponent({
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setMessage(`오류: ${json.error || "처리 실패"}`);
+        setMessage(toKoreanError(json.error || "처리 실패"));
       } else {
         setMessage(action === "APPROVED" ? "가입 신청이 승인되었습니다." : "가입 신청이 거절되었습니다.");
         await fetchJoinRequests();
@@ -229,7 +230,7 @@ function TeamSettingsComponent({
     });
     setSaving(false);
     if (error) {
-      setMessage(`오류: ${error}`);
+      setMessage(toKoreanError(String(error)));
     } else {
       setMessage("팀 설정이 저장되었습니다.");
       teamSyncedRef.current = false;

@@ -219,7 +219,7 @@ export default function AdminClient() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">전체 유저</p>
+              <p className="text-sm text-muted-foreground">전체 회원</p>
             </div>
             <p className="mt-1 text-2xl font-bold">{overview.totalUsers}</p>
             <p className="text-xs text-muted-foreground">
@@ -297,7 +297,7 @@ export default function AdminClient() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <UserPlus className="h-4 w-4 text-primary" />
-              신규 유저 (3일)
+              신규 회원 (3일)
               <Badge variant="secondary" className="ml-auto">{recentSignups.users.length}</Badge>
             </CardTitle>
           </CardHeader>

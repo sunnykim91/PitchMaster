@@ -32,7 +32,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const showToast = useCallback((message: string, variant: ToastVariant = "success") => {
     const id = `toast-${++toastCounter}`;
     setToasts((prev) => [...prev, { id, message, variant }]);
-    setTimeout(() => removeToast(id), 3500);
+    // 에러·긴 메시지는 5초, 일반은 3.5초
+    const duration = variant === "error" || message.length > 30 ? 5000 : 3500;
+    setTimeout(() => removeToast(id), duration);
   }, [removeToast]);
 
   return (

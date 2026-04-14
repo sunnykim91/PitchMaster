@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/formatters";
+import { toKoreanError } from "@/lib/errorMessages";
 
 type Season = {
   id: string;
@@ -88,7 +90,7 @@ function SeasonManagementComponent() {
     setCreating(false);
 
     if (error) {
-      setSeasonMsg(`오류: ${error}`);
+      setSeasonMsg(toKoreanError(String(error)));
     } else {
       setSeasonMsg("시즌이 생성되었습니다.");
       setNewName("");
@@ -106,7 +108,7 @@ function SeasonManagementComponent() {
     setActivating(null);
 
     if (error) {
-      setSeasonMsg(`오류: ${error}`);
+      setSeasonMsg(toKoreanError(String(error)));
     } else {
       setSeasonMsg("시즌이 활성화되었습니다.");
       await refetch();
@@ -120,18 +122,12 @@ function SeasonManagementComponent() {
     setDeleting(null);
 
     if (error) {
-      setSeasonMsg(`오류: ${error}`);
+      setSeasonMsg(toKoreanError(String(error)));
     } else {
       setSeasonMsg("시즌이 삭제되었습니다.");
       await refetch();
     }
     setTimeout(() => setSeasonMsg(null), 2000);
-  }
-
-  function formatDate(dateStr: string): string {
-    if (!dateStr) return "";
-    const [y, m, d] = dateStr.split("-");
-    return `${y}.${m}.${d}`;
   }
 
   if (loading) {

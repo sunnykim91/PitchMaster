@@ -134,7 +134,7 @@ export const PostCard = memo(function PostCard({
                   <button
                     type="button"
                     onClick={async () => {
-                      const ok = await confirm({ title: "게시글을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" });
+                      const ok = await confirm({ title: "게시글을 삭제할까요?", variant: "destructive", confirmLabel: "삭제" });
                       if (ok) onDelete(post.id);
                     }}
                     disabled={deletingPostIds.has(post.id)}

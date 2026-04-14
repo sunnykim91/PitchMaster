@@ -230,9 +230,9 @@ export default function MembersClient({
     if (newRole === "PRESIDENT") {
       const target = members.find((m) => m.id === memberId);
       const ok = await confirm({
-        title: `${target?.name ?? "해당 회원"}에게 회장을 이임하시겠습니까?`,
+        title: `${target?.name ?? "해당 회원"}에게 회장을 이임할까요?`,
         description: "이임 후 본인은 운영진으로 변경됩니다.",
-        variant: "default",
+        variant: "destructive",
         confirmLabel: "이임",
       });
       if (ok) doRoleChange(memberId, newRole);
@@ -510,7 +510,7 @@ export default function MembersClient({
                               disabled={linkingId === member.id}
                             >
                               <SelectTrigger className="w-auto min-w-[110px] text-xs">
-                                <SelectValue placeholder={linkingId === member.id ? "연동 중..." : "가입된 유저 선택"} />
+                                <SelectValue placeholder={linkingId === member.id ? "연동 중..." : "가입된 회원 선택"} />
                               </SelectTrigger>
                               <SelectContent>
                                 {linkedMembers
@@ -556,7 +556,7 @@ export default function MembersClient({
                           size="sm"
                           disabled={kickingId === member.id}
                           onClick={async () => {
-                            const ok = await confirm({ title: `${member.name} 님을 제명하시겠습니까?`, variant: "destructive", confirmLabel: "제명" });
+                            const ok = await confirm({ title: `${member.name} 님을 제명할까요?`, variant: "destructive", confirmLabel: "제명" });
                             if (ok) handleKick(member.id);
                           }}
                         >
@@ -842,7 +842,7 @@ export default function MembersClient({
                             <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setShowDormantForm(member.id); setDormantType("INJURED"); setDormantUntil(""); setDormantReason(""); }}>
                               휴면 설정
                             </Button>
-                            <Button size="sm" variant="outline" className="h-8 text-xs text-destructive hover:bg-destructive/10" disabled={kickingId === member.id} onClick={async () => { const ok = await confirm({ title: `${member.name} 님을 제명하시겠습니까?`, variant: "destructive", confirmLabel: "제명" }); if (ok) handleKick(member.id); }}>{kickingId === member.id ? "처리 중..." : "제명"}</Button>
+                            <Button size="sm" variant="outline" className="h-8 text-xs text-destructive hover:bg-destructive/10" disabled={kickingId === member.id} onClick={async () => { const ok = await confirm({ title: `${member.name} 님을 제명할까요?`, variant: "destructive", confirmLabel: "제명" }); if (ok) handleKick(member.id); }}>{kickingId === member.id ? "처리 중..." : "제명"}</Button>
                           </>
                         )}
                       </div>
