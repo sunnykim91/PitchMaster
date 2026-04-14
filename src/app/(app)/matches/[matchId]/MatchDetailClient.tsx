@@ -276,8 +276,10 @@ export default function MatchDetailClient({
   const confirm = useConfirm();
 
   // 휴면 데이터 — DORMANT 멤버를 exemptions 맵으로 변환
+  // EVENT(팀일정)는 휴면회원도 투표 가능 → exemptions 비워 둠
   const exemptions = useMemo<Record<string, { type: string; reason: string | null; endDate: string | null }>>(() => {
     const map: Record<string, { type: string; reason: string | null; endDate: string | null }> = {};
+    if (match.matchType === "EVENT") return map;
     for (const m of membersData.members) {
       if (m.status === "DORMANT") {
         map[m.users?.id ?? m.id] = {
@@ -288,7 +290,7 @@ export default function MatchDetailClient({
       }
     }
     return map;
-  }, [membersData.members]);
+  }, [membersData.members, match.matchType]);
 
   /* ── Attendance handler (출석 탭용) ── */
   const handleAttendance = useCallback(async (player: { id: string; memberId?: string; isLinked?: boolean }, status: "PRESENT" | "ABSENT" | "LATE") => {

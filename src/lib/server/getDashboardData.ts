@@ -78,7 +78,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
 
   const [upcomingRes, recentRes, activeVotesRes] = await Promise.all([
     db.from("matches")
-      .select("id, match_date, match_time, match_end_time, vote_deadline, opponent_name, status, location, uniform_type")
+      .select("id, match_date, match_time, match_end_time, vote_deadline, opponent_name, status, location, uniform_type, match_type")
       .eq("team_id", teamId)
       .eq("status", "SCHEDULED")
       .gte("match_date", new Date().toISOString().split("T")[0])
@@ -112,10 +112,10 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
       db.from("match_attendance").select("vote, user_id, member_id").eq("match_id", upcomingRaw.id),
       db.from("team_members").select("id").eq("user_id", userId).limit(1).maybeSingle(),
       db.from("match_guests").select("id").eq("match_id", upcomingRaw.id),
-      db.from("team_members").select("id, user_id").eq("team_id", teamId).in("status", ["ACTIVE", "DORMANT"]),
+      db.from("team_members").select("id, user_id, status").eq("team_id", teamId).in("status", ["ACTIVE", "DORMANT"]),
     ]);
     const voteList = (votesRes.data ?? []) as { vote: string; user_id: string | null; member_id: string | null }[];
-    const teamMembers = (teamMembersRes.data ?? []) as { id: string; user_id: string | null }[];
+    const teamMembers = (teamMembersRes.data ?? []) as { id: string; user_id: string | null; status: string }[];
     // member_id 기준 정규화 (경기 상세와 동일 로직)
     const memberVoteMap = new Map<string, string>();
     for (const v of voteList) {
@@ -126,10 +126,13 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
         if (member) memberVoteMap.set(member.id, v.vote);
       }
     }
-    // 현재 활성 팀원의 투표만 카운트 (탈퇴/제명 회원 제외 — 경기 상세와 동일)
-    const activeMemberIds = new Set(teamMembers.map((m) => m.id));
+    // 카운트 대상: EVENT(팀일정)는 DORMANT 포함, REGULAR/INTERNAL은 ACTIVE만 (경기 상세와 동일)
+    const isEvent = upcomingRaw.match_type === "EVENT";
+    const countableMemberIds = new Set(
+      teamMembers.filter((m) => isEvent || m.status === "ACTIVE").map((m) => m.id)
+    );
     const votes = [...memberVoteMap.entries()]
-      .filter(([id]) => activeMemberIds.has(id))
+      .filter(([id]) => countableMemberIds.has(id))
       .map(([, vote]) => vote);
     const voteCounts = {
       attend: votes.filter((v) => v === "ATTEND").length,
@@ -189,10 +192,13 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
 
   // 활성 팀원 목록 (투표 카운트 정규화용 — 다가오는 경기 카드와 동일 로직)
   const activeMembersForVotesRes = voteMatchRows.length > 0
-    ? await db.from("team_members").select("id, user_id").eq("team_id", teamId).in("status", ["ACTIVE", "DORMANT"])
-    : { data: [] as { id: string; user_id: string | null }[] };
-  const activeMembersForVotes = (activeMembersForVotesRes.data ?? []) as { id: string; user_id: string | null }[];
-  const activeMemberIdSet = new Set(activeMembersForVotes.map((m) => m.id));
+    ? await db.from("team_members").select("id, user_id, status").eq("team_id", teamId).in("status", ["ACTIVE", "DORMANT"])
+    : { data: [] as { id: string; user_id: string | null; status: string }[] };
+  const activeMembersForVotes = (activeMembersForVotesRes.data ?? []) as { id: string; user_id: string | null; status: string }[];
+  const activeOnlyIdSet = new Set(
+    activeMembersForVotes.filter((m) => m.status === "ACTIVE").map((m) => m.id)
+  );
+  const allMemberIdSet = new Set(activeMembersForVotes.map((m) => m.id));
 
   const voteCountsByMatch: Record<string, { attend: number; absent: number; undecided: number }> = {};
   if (voteMatchRows.length > 0) {
@@ -213,8 +219,10 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
           if (member) memberVoteMap.set(member.id, r.vote);
         }
       }
+      // EVENT(팀일정)는 DORMANT 포함, 그 외는 ACTIVE만 카운트
+      const countableIds = m.match_type === "EVENT" ? allMemberIdSet : activeOnlyIdSet;
       const votes = [...memberVoteMap.entries()]
-        .filter(([id]) => activeMemberIdSet.has(id))
+        .filter(([id]) => countableIds.has(id))
         .map(([, v]) => v);
       voteCountsByMatch[m.id] = {
         attend: votes.filter((v) => v === "ATTEND").length,
