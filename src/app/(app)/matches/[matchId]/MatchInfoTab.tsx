@@ -110,6 +110,10 @@ function MatchInfoTabInner({
   const [sendingComment, setSendingComment] = useState(false);
   const isInternal = match.matchType === "INTERNAL";
 
+  // 시간 의존 렌더링(날씨 카드의 "오늘 날짜 비교" 등)은 hydration 이후에만 — SSR/CSR 불일치 방지
+  const [todayIso, setTodayIso] = useState<string | null>(null);
+  useEffect(() => { setTodayIso(new Date().toISOString().slice(0, 10)); }, []);
+
   /* ── 날씨 데이터 ── */
   const [weather, setWeather] = useState<{
     temp: number | null;
@@ -476,7 +480,7 @@ function MatchInfoTabInner({
           </CardContent>
         </Card>
       )}
-      {!weather && match.status !== "COMPLETED" && match.date > new Date().toISOString().slice(0, 10) && (
+      {!weather && match.status !== "COMPLETED" && todayIso && match.date > todayIso && (
         <Card className="rounded-xl border-border/30">
           <CardContent className="p-4 text-center text-xs text-muted-foreground/60">
             경기 5일 전부터 날씨가 표시됩니다
@@ -527,7 +531,7 @@ function MatchInfoTabInner({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold">{c.users?.name ?? "알 수 없음"}</span>
-                      <span className="text-xs text-muted-foreground">{formatCommentTime(c.created_at)}</span>
+                      <span className="text-xs text-muted-foreground" suppressHydrationWarning>{formatCommentTime(c.created_at)}</span>
                     </div>
                     <p className="mt-1 break-words text-sm leading-relaxed text-foreground/90">{c.content}</p>
                   </div>
