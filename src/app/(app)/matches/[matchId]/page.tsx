@@ -16,12 +16,16 @@ export default async function MatchDetailPage({
 
   const initialData = await getMatchDetailData(matchId, session.user.teamId!);
 
+  // 서버에서 "미래 경기" 여부 판단 → 클라이언트 hydration 일치 + LCP 개선
+  const todayIso = new Date().toISOString().slice(0, 10);
+
   return (
     <MatchDetailClient
       matchId={matchId}
       userId={session.user.id}
       userRole={session.user.teamRole}
       initialData={initialData}
+      todayIso={todayIso}
     />
   );
 }

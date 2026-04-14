@@ -58,6 +58,8 @@ export interface MatchInfoTabProps {
   comments?: { id: string; user_id: string; content: string; created_at: string; users: { name: string } | null }[];
   /** 댓글 refetch */
   refetchComments?: () => Promise<unknown>;
+  /** 서버에서 계산된 오늘 날짜 (YYYY-MM-DD, hydration 일치용) */
+  todayIso: string;
 }
 
 /* ── 유니폼 스타일 헬퍼 ── */
@@ -99,6 +101,7 @@ function MatchInfoTabInner({
   goals: goalsProp,
   comments,
   refetchComments,
+  todayIso,
 }: MatchInfoTabProps) {
   const { showToast } = useToast();
   const confirm = useConfirm();
@@ -109,10 +112,6 @@ function MatchInfoTabInner({
   const [commentText, setCommentText] = useState("");
   const [sendingComment, setSendingComment] = useState(false);
   const isInternal = match.matchType === "INTERNAL";
-
-  // 시간 의존 렌더링(날씨 카드의 "오늘 날짜 비교" 등)은 hydration 이후에만 — SSR/CSR 불일치 방지
-  const [todayIso, setTodayIso] = useState<string | null>(null);
-  useEffect(() => { setTodayIso(new Date().toISOString().slice(0, 10)); }, []);
 
   /* ── 날씨 데이터 ── */
   const [weather, setWeather] = useState<{
@@ -480,7 +479,7 @@ function MatchInfoTabInner({
           </CardContent>
         </Card>
       )}
-      {!weather && match.status !== "COMPLETED" && todayIso && match.date > todayIso && (
+      {!weather && match.status !== "COMPLETED" && match.date > todayIso && (
         <Card className="rounded-xl border-border/30">
           <CardContent className="p-4 text-center text-xs text-muted-foreground/60">
             경기 5일 전부터 날씨가 표시됩니다

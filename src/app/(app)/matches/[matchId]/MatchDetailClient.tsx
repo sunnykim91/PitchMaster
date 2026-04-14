@@ -67,11 +67,13 @@ export default function MatchDetailClient({
   userId,
   userRole,
   initialData,
+  todayIso,
 }: {
   matchId: string;
   userId: string;
   userRole?: Role;
   initialData?: InitialData;
+  todayIso: string;
 }) {
   /* ── API fetches (SSR initialData가 있으면 skip) ── */
   const {
@@ -518,6 +520,7 @@ export default function MatchDetailClient({
           comments={commentsData.comments}
           refetchComments={refetchComments}
           goals={goals}
+          todayIso={todayIso}
         />
       </div>
 
