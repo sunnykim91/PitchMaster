@@ -1,6 +1,7 @@
 "use client";
 
 import { useApi } from "@/lib/useApi";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,6 +37,7 @@ type RecentSignupUser = {
   name: string;
   createdAt: string;
   profileComplete: boolean;
+  teamName: string | null;
 };
 
 type RecentSignupTeam = {
@@ -308,6 +310,9 @@ export default function AdminClient() {
                   <li key={u.id} className="flex items-center justify-between gap-2 text-sm">
                     <span className="flex items-center gap-1.5 min-w-0">
                       <span className="font-medium truncate">{u.name}</span>
+                      <span className={cn("text-xs truncate", u.teamName ? "text-muted-foreground" : "text-muted-foreground/50 italic")}>
+                        {u.teamName ?? "팀 없음"}
+                      </span>
                       {!u.profileComplete && (
                         <Badge variant="outline" className="text-[10px] px-1 py-0 shrink-0">프로필 미완성</Badge>
                       )}

@@ -135,17 +135,35 @@ export async function GET() {
     }))
     .sort((a, b) => b.memberCount - a.memberCount);
 
-  // 최근 3일 내 신규 가입 (데모 제외)
+  // 최근 3일 내 신규 가입 유저 (데모 제외) + 소속 팀
+  const recentUsersList = users
+    .filter((u: { created_at?: string }) => u.created_at && u.created_at >= threeDaysAgo)
+    .sort((a: { created_at: string }, b: { created_at: string }) => b.created_at.localeCompare(a.created_at));
+
+  // 각 유저의 소속 팀 조회 (한 유저가 여러 팀이면 첫 번째만 표시, 데모 팀 제외)
+  const userTeamMap: Record<string, string> = {};
+  if (recentUsersList.length > 0) {
+    const userIds = recentUsersList.map((u: { id: string }) => u.id);
+    const { data: userTeams } = await db
+      .from("team_members")
+      .select("user_id, teams:team_id(name)")
+      .in("user_id", userIds)
+      .in("status", ["ACTIVE", "DORMANT"])
+      .neq("team_id", DEMO_TEAM_ID);
+    for (const row of (userTeams ?? []) as { user_id: string; teams: { name: string } | { name: string }[] | null }[]) {
+      const teamName = Array.isArray(row.teams) ? row.teams[0]?.name : row.teams?.name;
+      if (teamName && !userTeamMap[row.user_id]) userTeamMap[row.user_id] = teamName;
+    }
+  }
+
   const recentSignups = {
-    users: users
-      .filter((u: { created_at?: string }) => u.created_at && u.created_at >= threeDaysAgo)
-      .map((u: { id: string; name: string; created_at: string; is_profile_complete: boolean }) => ({
-        id: u.id,
-        name: u.name,
-        createdAt: u.created_at,
-        profileComplete: u.is_profile_complete,
-      }))
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    users: recentUsersList.map((u: { id: string; name: string; created_at: string; is_profile_complete: boolean }) => ({
+      id: u.id,
+      name: u.name,
+      createdAt: u.created_at,
+      profileComplete: u.is_profile_complete,
+      teamName: userTeamMap[u.id] ?? null,
+    })),
     teams: teams
       .filter((t) => t.created_at >= threeDaysAgo)
       .map((t) => ({
