@@ -31,8 +31,10 @@ export async function POST(request: NextRequest) {
   if (ctx instanceof NextResponse) return ctx;
 
   const body = await request.json();
-  if (!body.postId || !body.content)
-    return apiError("postId and content required");
+  const content = typeof body.content === "string" ? body.content.trim() : "";
+  if (!body.postId) return apiError("postId required");
+  if (!content) return apiError("댓글 내용을 입력해주세요");
+  if (content.length > 1000) return apiError("댓글은 1000자 이하로 입력해주세요");
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
@@ -42,7 +44,7 @@ export async function POST(request: NextRequest) {
     .insert({
       post_id: body.postId,
       author_id: ctx.userId,
-      content: body.content,
+      content,
     })
     .select("*, author:author_id(name, profile_image_url)")
     .single();

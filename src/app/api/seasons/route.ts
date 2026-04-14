@@ -39,6 +39,14 @@ export async function POST(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  const name = typeof body.name === "string" ? body.name.trim() : "";
+  if (!name) return apiError("시즌 이름을 입력해주세요");
+  if (name.length > 100) return apiError("시즌 이름은 100자 이하로 입력해주세요");
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!body.startDate || !dateRegex.test(body.startDate)) return apiError("시작일 형식이 올바르지 않습니다");
+  if (!body.endDate || !dateRegex.test(body.endDate)) return apiError("종료일 형식이 올바르지 않습니다");
+  if (body.startDate > body.endDate) return apiError("시작일은 종료일보다 앞서야 합니다");
+
   // If marking as active, deactivate others first
   if (body.isActive) {
     await db
@@ -51,7 +59,7 @@ export async function POST(request: NextRequest) {
     .from("seasons")
     .insert({
       team_id: ctx.teamId,
-      name: body.name,
+      name,
       start_date: body.startDate,
       end_date: body.endDate,
       is_active: body.isActive ?? false,

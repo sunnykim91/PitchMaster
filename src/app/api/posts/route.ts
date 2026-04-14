@@ -104,13 +104,19 @@ export async function POST(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  const title = typeof body.title === "string" ? body.title.trim() : "";
+  const content = typeof body.content === "string" ? body.content.trim() : "";
+  if (!title) return apiError("제목을 입력해주세요");
+  if (!content) return apiError("내용을 입력해주세요");
+  if (title.length > 200) return apiError("제목은 200자 이하로 입력해주세요");
+
   const { data, error } = await db
     .from("posts")
     .insert({
       team_id: ctx.teamId,
       author_id: ctx.userId,
-      title: body.title,
-      content: body.content,
+      title,
+      content,
       category: "FREE",
       image_urls: body.imageUrls || [],
     })
@@ -120,7 +126,10 @@ export async function POST(request: NextRequest) {
   if (error) return apiError(error.message);
 
   // Create poll if provided
-  if (body.poll && body.poll.question && body.poll.options?.length >= 2) {
+  const pollOptions: string[] = Array.isArray(body.poll?.options)
+    ? body.poll.options.map((o: unknown) => typeof o === "string" ? o.trim() : "").filter(Boolean)
+    : [];
+  if (body.poll && body.poll.question?.trim() && pollOptions.length >= 2) {
     const { data: pollData, error: pollError } = await db
       .from("post_polls")
       .insert({
@@ -132,7 +141,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!pollError && pollData) {
-      const options = (body.poll.options as string[]).map((label: string, i: number) => ({
+      const options = pollOptions.map((label, i) => ({
         poll_id: pollData.id,
         label,
         sort_order: i,

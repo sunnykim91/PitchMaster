@@ -79,6 +79,21 @@ export async function POST(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  // 날짜·시간 형식 검증
+  if (!body.date || !/^\d{4}-\d{2}-\d{2}$/.test(body.date)) {
+    return apiError("경기 날짜 형식이 올바르지 않습니다");
+  }
+  const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+  if (body.time && !timeRegex.test(body.time)) {
+    return apiError("경기 시간 형식이 올바르지 않습니다 (예: 14:30)");
+  }
+  if (body.endTime && !timeRegex.test(body.endTime)) {
+    return apiError("종료 시간 형식이 올바르지 않습니다");
+  }
+  if (body.endDate && !/^\d{4}-\d{2}-\d{2}$/.test(body.endDate)) {
+    return apiError("종료 날짜 형식이 올바르지 않습니다");
+  }
+
   const { data, error } = await db
     .from("matches")
     .insert({

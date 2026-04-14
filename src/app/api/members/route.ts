@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
   if (body.action === "pre_register") {
     const name = String(body.name || "").trim();
     if (!name) return apiError("이름은 필수입니다");
+    if (name.length > 50) return apiError("이름은 50자 이하로 입력해주세요");
     const phone = String(body.phone || "").replace(/\D/g, "") || null;
 
     const db = getSupabaseAdmin();

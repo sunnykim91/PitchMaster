@@ -15,8 +15,8 @@ describe("GET /api/dues", () => {
   beforeEach(() => vi.clearAllMocks());
 
   const duesRecords = [
-    { id: "rec-1", type: "DEPOSIT", amount: 10000, description: "월회비", user_id: "u1" },
-    { id: "rec-2", type: "WITHDRAW", amount: 5000, description: "장비구매", user_id: "u2" },
+    { id: "rec-1", type: "INCOME", amount: 10000, description: "월회비", user_id: "u1" },
+    { id: "rec-2", type: "EXPENSE", amount: 5000, description: "장비구매", user_id: "u2" },
   ];
 
   function makeRequest(params?: Record<string, string>) {
@@ -92,7 +92,7 @@ describe("POST /api/dues", () => {
   }
 
   const newRecordBody = {
-    type: "DEPOSIT",
+    type: "INCOME",
     amount: 10000,
     description: "월회비",
     userId: "u1",
@@ -145,7 +145,7 @@ describe("POST /api/dues", () => {
 
   it("201: 신규 레코드 생성 성공", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
-    const newRecord = { id: "rec-new", type: "DEPOSIT", amount: 10000, description: "월회비" };
+    const newRecord = { id: "rec-new", type: "INCOME", amount: 10000, description: "월회비" };
     // 첫 번째 dues_records 호출: 중복 체크 → 없음
     // 두 번째 dues_records 호출: insert 결과
     const db = createMockDb(
@@ -162,7 +162,7 @@ describe("POST /api/dues", () => {
 
   it("201: PRESIDENT 권한으로도 생성 가능", async () => {
     vi.mocked(auth).mockResolvedValue(presidentSession);
-    const newRecord = { id: "rec-pres", type: "DEPOSIT", amount: 20000 };
+    const newRecord = { id: "rec-pres", type: "INCOME", amount: 20000 };
     const db = createMockDb(
       ["dues_records", []],
       ["dues_records", newRecord]
@@ -173,10 +173,10 @@ describe("POST /api/dues", () => {
     expect(res.status).toBe(201);
   });
 
-  it("201: recordedAt/description/amount 없으면 중복 체크 건너뜀", async () => {
+  it("201: recordedAt/description 없으면 중복 체크 건너뜀", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
-    const bodyWithoutFields = { type: "DEPOSIT", userId: "u1" };
-    const newRecord = { id: "rec-no-dup", type: "DEPOSIT" };
+    const bodyWithoutFields = { type: "INCOME", amount: 5000, userId: "u1" };
+    const newRecord = { id: "rec-no-dup", type: "INCOME", amount: 5000 };
     // 중복 체크 없이 바로 insert
     const db = createMockDb(
       ["dues_records", newRecord]
@@ -202,7 +202,7 @@ describe("PUT /api/dues", () => {
 
   const updateBody = {
     id: "rec-1",
-    type: "DEPOSIT",
+    type: "INCOME",
     amount: 15000,
     description: "수정된 내역",
   };
@@ -227,13 +227,13 @@ describe("PUT /api/dues", () => {
     const db = createMockDb();
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
-    const res = await PUT(makeRequest({ type: "DEPOSIT", amount: 10000 }));
+    const res = await PUT(makeRequest({ type: "INCOME", amount: 10000 }));
     expect(res.status).toBe(400);
   });
 
   it("200: 레코드 업데이트 성공", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
-    const updatedRecord = { id: "rec-1", type: "DEPOSIT", amount: 15000, description: "수정된 내역" };
+    const updatedRecord = { id: "rec-1", type: "INCOME", amount: 15000, description: "수정된 내역" };
     const db = createMockDb(["dues_records", updatedRecord]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
@@ -246,7 +246,7 @@ describe("PUT /api/dues", () => {
 
   it("200: PRESIDENT 권한으로도 업데이트 가능", async () => {
     vi.mocked(auth).mockResolvedValue(presidentSession);
-    const updatedRecord = { id: "rec-1", type: "WITHDRAW", amount: 5000 };
+    const updatedRecord = { id: "rec-1", type: "EXPENSE", amount: 5000 };
     const db = createMockDb(["dues_records", updatedRecord]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 

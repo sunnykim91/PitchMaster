@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       .single();
     if (!match) return apiError("경기를 찾을 수 없습니다", 404);
     if (match.team_id !== ctx.teamId) return apiError("해당 팀의 경기가 아닙니다", 403);
-    if (match.vote_deadline && new Date(match.vote_deadline) < new Date()) {
+    if (match.vote_deadline && new Date(match.vote_deadline).getTime() <= Date.now()) {
       return apiError("투표 마감 시간이 지났습니다", 400);
     }
   }
@@ -101,10 +101,23 @@ export async function POST(request: NextRequest) {
       voted_at: new Date().toISOString(),
     };
 
-    const { data, error } = existing
+    let { data, error } = existing
       ? await db.from("match_attendance").update(row).eq("id", existing.id).select().single()
       : await db.from("match_attendance").insert(row).select().single();
 
+    // 레이스: 이미 다른 요청이 INSERT한 경우 UNIQUE 위반 → 재조회 후 UPDATE
+    if (error && (error.code === "23505" || error.message?.includes("duplicate"))) {
+      const { data: raced } = await db
+        .from("match_attendance")
+        .select("id")
+        .eq("match_id", matchId)
+        .or(`member_id.eq.${memberId}${linkedUserId ? `,user_id.eq.${linkedUserId}` : ""}`)
+        .limit(1)
+        .maybeSingle();
+      if (raced) {
+        ({ data, error } = await db.from("match_attendance").update(row).eq("id", raced.id).select().single());
+      }
+    }
     if (error) return apiError(error.message);
     return apiSuccess(data);
   }
@@ -137,10 +150,22 @@ export async function POST(request: NextRequest) {
     voted_at: new Date().toISOString(),
   };
 
-  const { data, error } = existing
+  let { data, error } = existing
     ? await db.from("match_attendance").update(row).eq("id", existing.id).select().single()
     : await db.from("match_attendance").insert(row).select().single();
 
+  if (error && (error.code === "23505" || error.message?.includes("duplicate"))) {
+    const { data: raced } = await db
+      .from("match_attendance")
+      .select("id")
+      .eq("match_id", matchId)
+      .or(`user_id.eq.${voteUserId}${resolvedMemberId ? `,member_id.eq.${resolvedMemberId}` : ""}`)
+      .limit(1)
+      .maybeSingle();
+    if (raced) {
+      ({ data, error } = await db.from("match_attendance").update(row).eq("id", raced.id).select().single());
+    }
+  }
   if (error) return apiError(error.message);
   return apiSuccess(data);
 }

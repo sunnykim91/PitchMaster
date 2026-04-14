@@ -4,6 +4,8 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
+  useRef,
   useState,
 } from "react";
 import { cn } from "@/lib/utils";
@@ -24,18 +26,34 @@ let toastCounter = 0;
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   const removeToast = useCallback((id: string) => {
+    const t = timersRef.current.get(id);
+    if (t) {
+      clearTimeout(t);
+      timersRef.current.delete(id);
+    }
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
   const showToast = useCallback((message: string, variant: ToastVariant = "success") => {
-    const id = `toast-${++toastCounter}`;
+    const id = `toast-${++toastCounter}-${Date.now()}`;
     setToasts((prev) => [...prev, { id, message, variant }]);
     // 에러·긴 메시지는 5초, 일반은 3.5초
     const duration = variant === "error" || message.length > 30 ? 5000 : 3500;
-    setTimeout(() => removeToast(id), duration);
+    const timer = setTimeout(() => removeToast(id), duration);
+    timersRef.current.set(id, timer);
   }, [removeToast]);
+
+  // 언마운트 시 남은 타이머 정리 (PWA 백그라운드 복귀 시 누적 방지)
+  useEffect(() => {
+    const timers = timersRef.current;
+    return () => {
+      timers.forEach((t) => clearTimeout(t));
+      timers.clear();
+    };
+  }, []);
 
   return (
     <ToastContext.Provider value={{ showToast }}>

@@ -64,6 +64,14 @@ export async function POST(request: NextRequest) {
   const { data: matchCheck } = await db.from("matches").select("id").eq("id", body.matchId).eq("team_id", ctx.teamId).single();
   if (!matchCheck) return apiError("Match not found", 404);
 
+  const quarter = Number(body.quarter);
+  if (!Number.isInteger(quarter) || quarter < 1 || quarter > 10) {
+    return apiError("쿼터 번호는 1 이상의 정수여야 합니다");
+  }
+  if (!body.scorerId || typeof body.scorerId !== "string") {
+    return apiError("득점자 정보가 필요합니다");
+  }
+
   const goalType = body.goalType ?? "NORMAL";
   const isOwnGoal = goalType === "OWN_GOAL" || (body.isOwnGoal ?? false);
 
@@ -71,7 +79,7 @@ export async function POST(request: NextRequest) {
     .from("match_goals")
     .insert({
       match_id: body.matchId,
-      quarter_number: body.quarter,
+      quarter_number: quarter,
       minute: body.minute ?? null,
       scorer_id: body.scorerId,
       assist_id: body.assistId || null,

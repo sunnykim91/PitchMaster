@@ -99,7 +99,18 @@ export async function GET(request: NextRequest) {
     const scorersLine = scorerNames.length > 0 ? `\n득점: ${scorerNames.join(", ")}` : "";
     const body = `${scoreLine}${scorersLine}`;
 
-    // 푸시 발송
+    // 멱등성 보장: 푸시 발송 전에 result_pushed=true로 먼저 claim
+    // 다른 크론이 동시에 실행되어도 조건부 UPDATE로 한 번만 발송됨
+    const { data: claimed } = await db
+      .from("matches")
+      .update({ result_pushed: true })
+      .eq("id", match.id)
+      .eq("result_pushed", false)
+      .select("id")
+      .maybeSingle();
+
+    if (!claimed) continue; // 이미 다른 실행에서 처리됨
+
     const pushResult = await sendTeamPush(match.team_id, {
       title,
       body,
@@ -108,12 +119,6 @@ export async function GET(request: NextRequest) {
 
     totalSent += pushResult.sent;
     processed++;
-
-    // result_pushed 업데이트
-    await db
-      .from("matches")
-      .update({ result_pushed: true })
-      .eq("id", match.id);
   }
 
   return NextResponse.json({ matches: processed, sent: totalSent });

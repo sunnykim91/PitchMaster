@@ -80,7 +80,8 @@ export async function POST(request: NextRequest) {
   } else {
     deleteQuery = deleteQuery.is("side", null);
   }
-  await deleteQuery;
+  const { error: delError } = await deleteQuery;
+  if (delError) return apiError(`편성 저장 실패: ${delError.message}`);
 
   const { data, error } = await db
     .from("match_squads")

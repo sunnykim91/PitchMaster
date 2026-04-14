@@ -510,6 +510,10 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     return luminance > 0.62 ? "hsl(var(--background))" : "hsl(var(--foreground))";
   }
 
+  // ref로 최신 updateBoardState 참조 (effect가 드래그 중 재등록되지 않도록)
+  const updateBoardStateRef = useRef(updateBoardState);
+  useEffect(() => { updateBoardStateRef.current = updateBoardState; }, [updateBoardState]);
+
   useEffect(() => {
     function handlePointerMove(event: Event) {
       if (!dragRef.current || !boardRef.current) return;
@@ -519,7 +523,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       const x = clamp(((pointerEvent.clientX - rect.left) / rect.width) * 100, 5, 95);
       const y = clamp(((pointerEvent.clientY - rect.top) / rect.height) * 100, 6, 94);
       const slotId = dragRef.current.slotId;
-      updateBoardState((prev) => {
+      updateBoardStateRef.current((prev) => {
         const current = prev.placements[slotId];
         if (!current) return prev;
         return {
@@ -543,7 +547,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       window.removeEventListener("pointermove", handlePointerMove, options);
       window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [updateBoardState]);
+  }, []);
 
   function handleFormationChange(nextId: string) {
     const nextFormation = formationTemplates.find((item) => item.id === nextId) ?? defaultFormation;

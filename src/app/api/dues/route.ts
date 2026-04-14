@@ -42,6 +42,14 @@ export async function POST(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  // 금액 검증: 양수만
+  if (typeof body.amount !== "number" || !Number.isFinite(body.amount) || body.amount <= 0) {
+    return apiError("금액은 0보다 큰 숫자여야 합니다");
+  }
+  if (body.type !== "INCOME" && body.type !== "EXPENSE") {
+    return apiError("type은 INCOME 또는 EXPENSE여야 합니다");
+  }
+
   // 중복 체크: 같은 날짜 + 금액 + 설명 + 구분이 이미 있으면 스킵
   if (body.recordedAt && body.description && body.amount) {
     const { data: existing } = await db

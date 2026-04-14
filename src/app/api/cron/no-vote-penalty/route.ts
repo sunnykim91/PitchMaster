@@ -127,8 +127,12 @@ export async function GET(request: NextRequest) {
       }));
 
     if (newPenalties.length > 0) {
-      const { error } = await db.from("penalty_records").insert(newPenalties);
-      if (!error) totalCreated += newPenalties.length;
+      // 레이스 컨디션 방지: UNIQUE(match_id, member_id, rule_id) 제약이 있으면 중복 무시
+      const { data: inserted, error } = await db
+        .from("penalty_records")
+        .upsert(newPenalties, { onConflict: "match_id,member_id,rule_id", ignoreDuplicates: true })
+        .select("id");
+      if (!error) totalCreated += inserted?.length ?? 0;
     }
   }
 
