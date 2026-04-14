@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import type { AttendingPlayer } from "@/components/AutoFormationBuilder";
 import { useApi, apiMutate } from "@/lib/useApi";
@@ -38,12 +39,25 @@ import {
   mapAttendance,
 } from "./matchDetailTypes";
 
-/* ── 탭 컴포넌트 ── */
+/* ── 탭 컴포넌트 ──
+ * info/vote는 기본 진입 탭이라 eager 유지.
+ * tactics/record/diary는 무거우므로 dynamic import + 조건부 렌더링으로
+ * 초기 JS 번들·TBT를 줄임. */
 import { MatchInfoTab } from "./MatchInfoTab";
 import { MatchVoteTab } from "./MatchVoteTab";
-import { MatchTacticsTab } from "./MatchTacticsTab";
-import { MatchRecordTab } from "./MatchRecordTab";
-import { MatchDiaryTab } from "./MatchDiaryTab";
+
+const MatchTacticsTab = dynamic(
+  () => import("./MatchTacticsTab").then((m) => m.MatchTacticsTab),
+  { ssr: false, loading: () => <div className="py-8 text-center text-sm text-muted-foreground">전술판 불러오는 중...</div> }
+);
+const MatchRecordTab = dynamic(
+  () => import("./MatchRecordTab").then((m) => m.MatchRecordTab),
+  { ssr: false, loading: () => <div className="py-8 text-center text-sm text-muted-foreground">기록 불러오는 중...</div> }
+);
+const MatchDiaryTab = dynamic(
+  () => import("./MatchDiaryTab").then((m) => m.MatchDiaryTab),
+  { ssr: false, loading: () => <div className="py-8 text-center text-sm text-muted-foreground">일지 불러오는 중...</div> }
+);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type InitialData = Record<string, any> | null;
@@ -521,22 +535,24 @@ export default function MatchDetailClient({
       </div>
 
       {/* ── Tab: 전술판 ── */}
-      <div className={activeTab === "tactics" ? "min-w-0" : "hidden"}>
-        <MatchTacticsTab
-          matchId={matchId}
-          match={match}
-          canManage={canManage}
-          attendingPlayers={attendingPlayers}
-          roster={roster}
-          sportType={sportType}
-          defaultFormationId={defaultFormationId}
-          internalTeams={internalTeams}
-          refetchInternalTeams={refetchInternalTeams}
-          guests={guests}
-          refetchGuests={refetchGuests}
-          handleRemoveGuest={handleRemoveGuest}
-        />
-      </div>
+      {activeTab === "tactics" && (
+        <div className="min-w-0">
+          <MatchTacticsTab
+            matchId={matchId}
+            match={match}
+            canManage={canManage}
+            attendingPlayers={attendingPlayers}
+            roster={roster}
+            sportType={sportType}
+            defaultFormationId={defaultFormationId}
+            internalTeams={internalTeams}
+            refetchInternalTeams={refetchInternalTeams}
+            guests={guests}
+            refetchGuests={refetchGuests}
+            handleRemoveGuest={handleRemoveGuest}
+          />
+        </div>
+      )}
 
       {/* ── Tab: 출석 체크 ── */}
       <div className={activeTab === "attendance" ? "" : "hidden"}>
@@ -648,36 +664,40 @@ export default function MatchDetailClient({
       </div>
 
       {/* ── Tab: 경기 기록 ── */}
-      <div className={activeTab === "record" ? "" : "hidden"}>
-        <MatchRecordTab
-          matchId={matchId}
-          userId={userId}
-          match={match}
-          goals={goals}
-          votes={votes}
-          guests={guests}
-          canRecord={canRecord}
-          attendingMembers={attendingMembers}
-          fullRoster={fullRoster}
-          refetchGoals={refetchGoals}
-          refetchMvp={refetchMvp}
-          internalTeams={internalTeams}
-        />
-      </div>
+      {activeTab === "record" && (
+        <div>
+          <MatchRecordTab
+            matchId={matchId}
+            userId={userId}
+            match={match}
+            goals={goals}
+            votes={votes}
+            guests={guests}
+            canRecord={canRecord}
+            attendingMembers={attendingMembers}
+            fullRoster={fullRoster}
+            refetchGoals={refetchGoals}
+            refetchMvp={refetchMvp}
+            internalTeams={internalTeams}
+          />
+        </div>
+      )}
 
       {/* ── Tab: 일지 ── */}
-      <div className={activeTab === "diary" ? "" : "hidden"}>
-        <MatchDiaryTab
-          matchId={matchId}
-          match={match}
-          diary={diary}
-          score={score}
-          canManage={canManage}
-          fullRoster={fullRoster}
-          voteCounts={voteCounts}
-          refetchDiary={refetchDiary}
-        />
-      </div>
+      {activeTab === "diary" && (
+        <div>
+          <MatchDiaryTab
+            matchId={matchId}
+            match={match}
+            diary={diary}
+            score={score}
+            canManage={canManage}
+            fullRoster={fullRoster}
+            voteCounts={voteCounts}
+            refetchDiary={refetchDiary}
+          />
+        </div>
+      )}
     </div>
   );
 }

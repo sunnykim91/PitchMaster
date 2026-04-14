@@ -93,6 +93,7 @@ export type MemberRow = {
   user_id: string | null;
   status?: string;
   pre_name: string | null;
+  coach_positions?: string[] | null;
   dormant_type?: string | null;
   dormant_until?: string | null;
   dormant_reason?: string | null;
