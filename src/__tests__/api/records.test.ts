@@ -96,12 +96,16 @@ describe("GET /api/records", () => {
       { assist_id: "user-2" }, // 이준혁 1어시
     ];
     const mvpData = [
-      { candidate_id: "user-1" }, // 김민준 MVP
+      { match_id: "match-a", candidate_id: "user-1" }, // 김민준 MVP (match-a)
     ];
     const attendanceData = [
       { user_id: "user-1", member_id: "mem-1" }, // match-a
       { user_id: "user-1", member_id: "mem-1" }, // match-b
       { user_id: "user-2", member_id: "mem-2" }, // match-a
+    ];
+    // 실제 참석(PRESENT/LATE): match-a 1명 → mvp 1표/1명 = 100% (≥70% 임계값 통과)
+    const actualAttendData = [
+      { match_id: "match-a" },
     ];
 
     const db = createMockDb(
@@ -110,7 +114,8 @@ describe("GET /api/records", () => {
       ["match_goals", goalsData],   // scorer_id 쿼리
       ["match_goals", assistsData], // assist_id 쿼리
       ["match_mvp_votes", mvpData],
-      ["match_attendance", attendanceData]
+      ["match_attendance", attendanceData],   // vote=ATTEND 쿼리
+      ["match_attendance", actualAttendData], // attendance_status=PRESENT/LATE 쿼리
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
@@ -149,7 +154,8 @@ describe("GET /api/records", () => {
       ["match_goals", []],
       ["match_goals", []],
       ["match_mvp_votes", []],
-      ["match_attendance", []]
+      ["match_attendance", []],
+      ["match_attendance", []]  // actual attendance (PRESENT/LATE)
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
@@ -168,7 +174,8 @@ describe("GET /api/records", () => {
       ["match_goals", []],
       ["match_goals", []],
       ["match_mvp_votes", []],
-      ["match_attendance", []]
+      ["match_attendance", []],
+      ["match_attendance", []]  // actual attendance (PRESENT/LATE)
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
@@ -190,7 +197,8 @@ describe("GET /api/records", () => {
       ["match_goals", []],
       ["match_goals", []],
       ["match_mvp_votes", []],
-      ["match_attendance", []]
+      ["match_attendance", []],
+      ["match_attendance", []]  // actual attendance (PRESENT/LATE)
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
@@ -222,7 +230,8 @@ describe("GET /api/records", () => {
       ["match_goals", []],
       ["match_goals", []],
       ["match_mvp_votes", []],
-      ["match_attendance", attendanceData]
+      ["match_attendance", attendanceData],
+      ["match_attendance", []]  // actual attendance (PRESENT/LATE)
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 

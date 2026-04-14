@@ -13,6 +13,14 @@ export async function POST(req: NextRequest) {
     const file = formData.get("file") as File | null;
     if (!file) return apiError("파일이 없습니다.", 400);
 
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_SIZE) return apiError("파일 크기는 10MB 이하만 가능합니다.", 400);
+    if (file.size === 0) return apiError("빈 파일입니다.", 400);
+    const name = (file.name || "").toLowerCase();
+    if (!name.endsWith(".xls") && !name.endsWith(".xlsx")) {
+      return apiError("엑셀 파일만 업로드 가능합니다. (.xls, .xlsx)", 400);
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const workbook = XLSX.read(buffer, { type: "buffer", cellDates: true });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];

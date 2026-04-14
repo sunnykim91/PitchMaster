@@ -38,8 +38,24 @@ export async function PUT(request: NextRequest) {
   if (!db) return apiError("Database not available", 503);
 
   const updates: Record<string, unknown> = {};
-  if (body.name) updates.name = body.name;
-  if (body.logoUrl !== undefined) updates.logo_url = body.logoUrl;
+  if (body.name !== undefined) {
+    const name = String(body.name).trim();
+    if (!name) return apiError("팀 이름을 입력해주세요");
+    if (name.length > 30) return apiError("팀 이름은 30자 이하로 입력해주세요");
+    updates.name = name;
+  }
+  if (body.logoUrl !== undefined) {
+    // 안전한 URL만 허용 (http/https/빈 값)
+    if (body.logoUrl && typeof body.logoUrl === "string") {
+      const url = body.logoUrl.trim();
+      if (url && !/^https?:\/\//i.test(url)) {
+        return apiError("로고 URL은 http 또는 https로 시작해야 합니다");
+      }
+      updates.logo_url = url || null;
+    } else {
+      updates.logo_url = null;
+    }
+  }
   if (body.inviteExpiresAt !== undefined)
     updates.invite_expires_at = body.inviteExpiresAt;
   if (body.joinMode) updates.join_mode = body.joinMode;

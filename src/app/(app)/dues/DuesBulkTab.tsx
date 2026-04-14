@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { apiMutate } from "@/lib/useApi";
+import { formatAmount } from "@/lib/formatters";
 
 /* ── 타입 정의 ── */
 
@@ -561,7 +562,7 @@ function DuesBulkTabInner({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">인식된 잔고</p>
-                <p className="text-lg font-bold text-primary tabular-nums">{pendingBalance.toLocaleString()}원</p>
+                <p className="text-lg font-bold text-primary tabular-nums">{formatAmount(pendingBalance)}</p>
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -578,7 +579,7 @@ function DuesBulkTabInner({
                   onClick={async () => {
                     await apiMutate("/api/dues/balance", "POST", { balance: pendingBalance });
                     await refetchSummary();
-                    showToast(`잔고 ${pendingBalance.toLocaleString()}원 반영 완료`, "success");
+                    showToast(`잔고 ${formatAmount(pendingBalance)} 반영 완료`, "success");
                     setPendingBalance(null);
                   }}
                 >
@@ -778,7 +779,7 @@ function DuesBulkTabInner({
                         <p className="truncate text-sm font-semibold">
                           {row.description || "(이름 없음)"}
                           <span className={cn("ml-2", row.type === "INCOME" ? "text-[hsl(var(--success))]" : "text-destructive")}>
-                            {row.type === "INCOME" ? "+" : "-"}{Number(row.amount).toLocaleString("ko-KR")}원
+                            {row.type === "INCOME" ? "+" : "-"}{formatAmount(Number(row.amount))}
                           </span>
                         </p>
                         <p className="mt-0.5 text-[11px] text-muted-foreground">
@@ -916,7 +917,7 @@ function DuesBulkTabInner({
               </p>
               {excelBalance !== null && (
                 <p className="text-xs text-muted-foreground">
-                  최종 잔액: <span className="font-bold text-primary">{excelBalance.toLocaleString()}원</span>
+                  최종 잔액: <span className="font-bold text-primary">{formatAmount(excelBalance)}</span>
                 </p>
               )}
             </div>
@@ -933,7 +934,7 @@ function DuesBulkTabInner({
                       "ml-2 shrink-0 font-bold",
                       r.type === "INCOME" ? "text-[hsl(var(--success))]" : "text-[hsl(var(--loss))]"
                     )}>
-                      {r.type === "INCOME" ? "+" : "-"}{r.amount.toLocaleString()}원
+                      {r.type === "INCOME" ? "+" : "-"}{formatAmount(r.amount)}
                     </span>
                   </div>
                 ))}

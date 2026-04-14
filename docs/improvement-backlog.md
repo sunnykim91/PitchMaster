@@ -1,7 +1,7 @@
 # PitchMaster 개선 백로그
 
-최종 업데이트: 2026-04-14 (18차)
-현재 점수 추정: Designer 95 / UX 97 / Dev 97 / Marketing 85 / Business 82 (평균 91.2)
+최종 업데이트: 2026-04-14 (19차)
+현재 점수 추정: Designer 95 / UX 97 / Dev 98 / Marketing 85 / Business 82 (평균 91.4)
 서비스 현황: 81팀 · 520명 · 170+경기 (14일 신규 37팀 폭발 성장)
 회비 운영: 실제 입금 내역 있는 팀 2 / 설정만 한 팀 9
 테스트: 657 passed (39 파일)
@@ -276,6 +276,33 @@
 - [x] penalties 고아 테스트 파일 삭제 (3745156에서 라우트 폐기, 테스트만 남아있던 회귀)
 - [x] dashboard.test.ts 회귀 수정 (match_guests / 활성 멤버 team_members mock 추가, db null fallback 200 검증)
 
+#### 19차 (2026-04-14 저녁) — 출시 직전 최종 QA·MVP 규칙 변경
+
+**입력 검증·업로드 경계**
+- [x] 이미지 업로드 크기·타입 제한 (OCR, 회비 엑셀) — 10MB + MIME/확장자 검증
+- [x] 팀 설정(teams PUT) 입력 검증 — 팀명 30자, 로고 URL http(s) 화이트리스트
+- [x] 경기 시작·종료 시간 순서 검증 (시작>종료, 같은 날 시간 역전)
+- [x] 경기 상태 머신 역행 차단 (COMPLETED → SCHEDULED 금지)
+
+**UX 포맷 통일**
+- [x] 회비·대시보드 금액 표기를 `formatAmount()`로 일괄 전환 (6개 파일, 19건 치환)
+
+**MVP 규칙 변경 — 참석자 70% 투표 시에만 실제 MVP로 인정**
+- [x] `src/lib/mvpThreshold.ts` 유틸 신규 — `MVP_VOTE_THRESHOLD = 0.7`, `isValidMvpVoteTurnout`, `resolveValidMvp`
+- [x] 대시보드 최근 경기 MVP 표시에 임계값 적용
+- [x] 시즌 어워드 MOM 집계에 임계값 필터 적용
+- [x] 선수 카드(player-card) 시즌 MVP 카운트에 임계값 적용
+- [x] 레코드(records) MVP 집계에 임계값 적용
+- [x] 효과: 참석 10명인 경기에서 MVP 투표 6명이면 → MVP 미확정 (투표 7명+ 필요)
+
+**옵티미스틱 에러 처리**
+- [x] 회비 삭제 실패 시 토스트 에러 노출 (기존 무반응 → `삭제에 실패했습니다` 안내)
+
+**테스트 조정**
+- [x] dues-excel 테스트: File 객체로 교체 (Blob의 "blob" 파일명 → ".xlsx" 보존)
+- [x] records/dashboard 테스트: MVP 임계값 mock 추가 (attendance PRESENT/LATE 쿼리 + voting turnout ≥ 70%)
+- [x] 전체 657 테스트 green 유지
+
 #### 18차 (2026-04-14) — 앱 출시 직전 안정화·보안 스윕
 
 **크로스 팀 접근 취약점 일괄 수정 (1차: 92fa215)**
@@ -405,6 +432,23 @@
 ---
 
 ## 미완료 — HIGH (현재 81팀 운영에 직접 영향)
+
+### 19차 보류(출시 후 첫 패치용)
+- [ ] **옵티미스틱 업데이트 롤백 패턴 도입** — MatchRecordTab/DuesRecordsTab 외 다른 곳에도 실패 시 rollback 적용 (현재는 pessimistic이라 당장 치명적이지 않음)
+- [ ] **MVP 후보자 팀 소속 검증** — POST /api/mvp에서 candidateId가 team_members에 속하는지 추가 검증 (UI에서 이미 필터링되지만 방어 심화)
+- [ ] **모바일 터치 타겟 44px** — MatchVoteTab 대리 투표/마감·재개 버튼 등 < 44px 높이 보정
+- [ ] **긴 텍스트 UI 넘침** — 멤버 이름 20자+/장소 긴 주소/게시글 제목 200자에 `truncate` 일괄 적용
+- [ ] **포지션 약자 설명** — GK/CB/CDM/FIXO/ALA/PIVO 첫 진입 시 튜토리얼 또는 long-press 툴팁
+- [ ] **댓글 Enter 자동 제출** — Shift+Enter 개행 + Enter 제출
+- [ ] **드롭다운 키보드 네비게이션** — MatchesClient 장소 자동완성 화살표 키/Enter 선택
+- [ ] **유니폼 색상 다크모드 대비** — 밝은 색 유니폼 border 자동 추가
+- [ ] **매우 큰 금액·매우 과거 날짜 경고** — 회비 1억+ / 경기 5년 전 등록 시 확인 모달
+- [ ] **경기 삭제 버튼 접기** — "위험한 작업" 섹션에 숨겨 오터치 방지
+- [ ] **ClientLayout fetchNotifications deps 안정화** — 유지보수 위험 예방
+- [ ] **useApi AbortController 패턴 강화**
+- [ ] **DB CASCADE 정책 검토** — users 삭제 시 goals/posts orphan 처리 확인
+- [ ] **파일 업로드 스토리지 쿼터 모니터링** — 팀별 쿼터 + 오래된 파일 자동 정리
+- [ ] **RLS Policy 활성화 검토** — 현재 서비스 롤로 전부 접근 중, 직접 SQL 노출 방어
 
 - [ ] 중복/테스트 팀 정리 (골드문FC/골드문, fc_libre/FC.LIBRE) **[수동 SQL]**
 - [ ] 활성 팀 CS 대응 — 피드백 수집 **[수동]**

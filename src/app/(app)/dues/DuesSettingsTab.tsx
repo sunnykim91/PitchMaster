@@ -12,6 +12,7 @@ import { isStaffOrAbove } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import { apiMutate } from "@/lib/useApi";
 import { useConfirm } from "@/lib/ConfirmContext";
+import { formatAmount } from "@/lib/formatters";
 import type { Role } from "@/lib/types";
 
 /* ── 타입 정의 ── */
@@ -308,7 +309,7 @@ function DuesSettingsTabInner({
                         onClick={() => handleStartEditAmount(setting)}
                         className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
                       >
-                        {setting.monthlyAmount.toLocaleString()}원
+                        {formatAmount(setting.monthlyAmount)}
                       </button>
                     )}
                     {isStaffOrAbove(role) && (
@@ -590,7 +591,7 @@ function PenaltyRulesSection({ refetchSummary }: { refetchSummary: () => Promise
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-primary">{rule.amount.toLocaleString()}원</span>
+              <span className="text-sm font-bold text-primary">{formatAmount(rule.amount)}</span>
               <button type="button" onClick={() => handleDelete(rule.id)} className="text-muted-foreground hover:text-destructive transition-colors">
                 <X className="h-4 w-4" />
               </button>

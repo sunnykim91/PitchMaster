@@ -15,6 +15,7 @@ import { isStaffOrAbove } from "@/lib/permissions";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { useToast } from "@/lib/ToastContext";
 import { cn } from "@/lib/utils";
+import { formatAmount } from "@/lib/formatters";
 import type { Role } from "@/lib/types";
 
 type PenaltyRecord = {
@@ -194,7 +195,7 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
                 "text-sm font-bold tabular-nums",
                 p.status === "UNPAID" ? "text-[hsl(var(--loss))]" : "text-muted-foreground"
               )}>
-                {p.amount.toLocaleString()}원
+                {formatAmount(p.amount)}
               </span>
               {isStaffOrAbove(role) ? (
                 <>
@@ -307,7 +308,7 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
             <div className="flex items-center justify-between rounded-xl bg-[hsl(var(--loss)/0.08)] px-4 py-3">
               <div>
                 <span className="text-sm text-[hsl(var(--loss))]">미납 벌금</span>
-                <span className="text-lg font-bold text-[hsl(var(--loss))] ml-2">{totalUnpaid.toLocaleString()}원</span>
+                <span className="text-lg font-bold text-[hsl(var(--loss))] ml-2">{formatAmount(totalUnpaid)}</span>
               </div>
               {isStaffOrAbove(role) && (
                 <Button

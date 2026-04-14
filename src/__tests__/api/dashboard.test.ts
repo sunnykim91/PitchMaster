@@ -139,6 +139,7 @@ describe("GET /api/dashboard", () => {
       // No upcoming → skip vote queries
       ["match_goals", goals],        // goals for recent
       ["match_mvp_votes", mvpVotes], // mvp votes for recent
+      ["match_attendance", [{ id: "a1" }, { id: "a2" }]], // actual attendance PRESENT/LATE (2명 참석 → 2/2 = 100%, MVP 유효)
       ["match_attendance", null],    // user vote (tasks)
       ["match_mvp_votes", { id: "v1" }], // user mvp voted
       ["matches", [recentMatch]],    // completed matches for teamRecord

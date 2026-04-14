@@ -235,11 +235,12 @@ export async function GET(request: NextRequest) {
   const matchCount = attendedMatchIds.size;
 
   // 6. 골/어시/MVP 조회
-  const [goalsRes, assistsRes, mvpRes, allGoalsRes] = await Promise.all([
+  const [goalsRes, assistsRes, mvpRes, allGoalsRes, actualAttendRes] = await Promise.all([
     db.from("match_goals").select("scorer_id").in("match_id", allMatchIds).eq("is_own_goal", false),
     db.from("match_goals").select("assist_id").in("match_id", allMatchIds).not("assist_id", "is", null),
-    db.from("match_mvp_votes").select("candidate_id").in("match_id", allMatchIds),
+    db.from("match_mvp_votes").select("match_id, candidate_id").in("match_id", allMatchIds),
     db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", allMatchIds),
+    db.from("match_attendance").select("match_id").in("match_id", allMatchIds).in("attendance_status", ["PRESENT", "LATE"]),
   ]);
 
   // 선수 골/어시/MVP 카운트
@@ -253,8 +254,24 @@ export async function GET(request: NextRequest) {
     if (lookupIds.includes(row.assist_id)) assists++;
   }
 
+  // MVP — 참석자 70% 이상 투표한 경기만 카운트
+  const { isValidMvpVoteTurnout } = await import("@/lib/mvpThreshold");
+  const attendedPerMatch = new Map<string, number>();
+  for (const a of actualAttendRes.data ?? []) {
+    attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
+  }
+  const votesPerMatch = new Map<string, number>();
+  for (const v of mvpRes.data ?? []) {
+    votesPerMatch.set(v.match_id, (votesPerMatch.get(v.match_id) ?? 0) + 1);
+  }
+  const validMvpMatchIds = new Set<string>();
+  for (const [mid, voteCount] of votesPerMatch) {
+    if (isValidMvpVoteTurnout(voteCount, attendedPerMatch.get(mid) ?? 0)) validMvpMatchIds.add(mid);
+  }
+
   let mvp = 0;
   for (const row of mvpRes.data ?? []) {
+    if (!validMvpMatchIds.has(row.match_id)) continue;
     if (lookupIds.includes(row.candidate_id)) mvp++;
   }
 

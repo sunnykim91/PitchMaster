@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { apiMutate } from "@/lib/useApi";
 import { useConfirm } from "@/lib/ConfirmContext";
+import { formatAmount } from "@/lib/formatters";
 import type { Role } from "@/lib/types";
 
 /* ── 타입 정의 ── */
@@ -154,11 +155,13 @@ function DuesRecordsTabInner({
   const handleDeleteRecord = useCallback(async (id: string) => {
     const record = monthRecords.find((r) => r.id === id);
     const { error } = await apiMutate(`/api/dues?id=${id}`, "DELETE");
-    if (!error) {
-      await refetchSummary();
-      if (record && record.type === "INCOME" && duesAmounts.includes(record.amount)) {
-        showToast("납부현황 탭에서 '납부 자동 확인'을 눌러주세요", "info");
-      }
+    if (error) {
+      showToast("삭제에 실패했습니다. 잠시 후 다시 시도해주세요.", "error");
+      return;
+    }
+    await refetchSummary();
+    if (record && record.type === "INCOME" && duesAmounts.includes(record.amount)) {
+      showToast("납부현황 탭에서 '납부 자동 확인'을 눌러주세요", "info");
     }
   }, [monthRecords, refetchSummary, duesAmounts, showToast]);
 
@@ -541,7 +544,7 @@ function DuesRecordsTabInner({
                           )}
                         >
                           {record.type === "INCOME" ? "+" : "-"}
-                          {record.amount.toLocaleString()}원
+                          {formatAmount(record.amount)}
                         </span>
                       </div>
                       {isStaffOrAbove(role) && !selectMode && (

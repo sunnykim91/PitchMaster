@@ -93,6 +93,16 @@ export async function POST(request: NextRequest) {
   if (body.endDate && !/^\d{4}-\d{2}-\d{2}$/.test(body.endDate)) {
     return apiError("종료 날짜 형식이 올바르지 않습니다");
   }
+  // 시간·날짜 순서 검증
+  if (body.endDate && body.endDate < body.date) {
+    return apiError("종료 날짜는 시작 날짜보다 뒤여야 합니다");
+  }
+  // 같은 날이면 시간 비교 (복수일 이벤트 제외)
+  if (body.time && body.endTime && (!body.endDate || body.endDate === body.date)) {
+    if (body.endTime <= body.time) {
+      return apiError("종료 시간은 시작 시간보다 뒤여야 합니다");
+    }
+  }
 
   const { data, error } = await db
     .from("matches")
@@ -150,6 +160,31 @@ export async function PUT(request: NextRequest) {
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  // 날짜·시간 형식·순서 검증
+  const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (body.date !== undefined && body.date && !dateRegex.test(body.date)) {
+    return apiError("경기 날짜 형식이 올바르지 않습니다");
+  }
+  if (body.time && !timeRegex.test(body.time)) return apiError("경기 시간 형식이 올바르지 않습니다");
+  if (body.endTime && !timeRegex.test(body.endTime)) return apiError("종료 시간 형식이 올바르지 않습니다");
+  if (body.endDate && !dateRegex.test(body.endDate)) return apiError("종료 날짜 형식이 올바르지 않습니다");
+  if (body.date && body.endDate && body.endDate < body.date) {
+    return apiError("종료 날짜는 시작 날짜보다 뒤여야 합니다");
+  }
+  if (body.time && body.endTime && (!body.endDate || body.endDate === body.date)) {
+    if (body.endTime <= body.time) {
+      return apiError("종료 시간은 시작 시간보다 뒤여야 합니다");
+    }
+  }
+  // 상태 머신 역행 차단: COMPLETED → SCHEDULED 금지
+  if (body.status === "SCHEDULED") {
+    const { data: current } = await db.from("matches").select("status").eq("id", body.id).eq("team_id", ctx.teamId).single();
+    if (current?.status === "COMPLETED") {
+      return apiError("완료된 경기는 예정 상태로 되돌릴 수 없습니다");
+    }
+  }
 
   const updates: Record<string, unknown> = {};
   if (body.date !== undefined) updates.match_date = body.date;

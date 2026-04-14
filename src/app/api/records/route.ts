@@ -196,12 +196,13 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Bulk 쿼리 4개로 전체 데이터 한번에 조회 (N+1 → 6회 고정)
-  const [goalsRes, assistsRes, mvpRes, attendanceRes] = await Promise.all([
+  // Bulk 쿼리 5개로 전체 데이터 한번에 조회
+  const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes] = await Promise.all([
     db.from("match_goals").select("scorer_id").in("match_id", matchIds).eq("is_own_goal", false),
     db.from("match_goals").select("assist_id").in("match_id", matchIds).not("assist_id", "is", null),
-    db.from("match_mvp_votes").select("candidate_id").in("match_id", matchIds),
+    db.from("match_mvp_votes").select("match_id, candidate_id").in("match_id", matchIds),
     db.from("match_attendance").select("user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
+    db.from("match_attendance").select("match_id").in("match_id", matchIds).in("attendance_status", ["PRESENT", "LATE"]),
   ]);
 
   // 카운트 맵 빌드
@@ -215,9 +216,25 @@ export async function GET(request: NextRequest) {
     if (row.assist_id) assistMap.set(row.assist_id, (assistMap.get(row.assist_id) ?? 0) + 1);
   }
 
+  // MVP 70% 임계값 필터링 — 투표 참여율이 낮은 경기는 제외
+  const { isValidMvpVoteTurnout } = await import("@/lib/mvpThreshold");
+  const attendedPerMatch = new Map<string, number>();
+  for (const a of actualAttendRes.data ?? []) {
+    attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
+  }
+  const votesPerMatch = new Map<string, number>();
+  for (const v of mvpRes.data ?? []) {
+    votesPerMatch.set(v.match_id, (votesPerMatch.get(v.match_id) ?? 0) + 1);
+  }
+  const validMvpMatchIds = new Set<string>();
+  for (const [mid, voteCount] of votesPerMatch) {
+    if (isValidMvpVoteTurnout(voteCount, attendedPerMatch.get(mid) ?? 0)) validMvpMatchIds.add(mid);
+  }
+
   const mvpMap = new Map<string, number>();
   for (const row of mvpRes.data ?? []) {
-    if (row.candidate_id) mvpMap.set(row.candidate_id, (mvpMap.get(row.candidate_id) ?? 0) + 1);
+    if (!row.candidate_id || !validMvpMatchIds.has(row.match_id)) continue;
+    mvpMap.set(row.candidate_id, (mvpMap.get(row.candidate_id) ?? 0) + 1);
   }
 
   const attendByUserId = new Map<string, number>();

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { formatAmount } from "@/lib/formatters";
 
 import { DuesRecordsTab } from "./DuesRecordsTab";
 import { DuesStatusTab } from "./DuesStatusTab";
@@ -447,7 +448,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
             <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">통장 잔고</p>
             {summaryData.balance !== null ? (
               <p className="text-[clamp(1.75rem,7vw,2.5rem)] font-bold leading-none tracking-wide text-primary tabular-nums">
-                {summaryData.balance.toLocaleString()}원
+                {formatAmount(summaryData.balance)}
               </p>
             ) : (
               <p className="text-xs text-muted-foreground/80">
@@ -504,7 +505,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                       </div>
                       <span className="text-lg font-semibold text-[hsl(var(--success))]">납부 완료</span>
                     </div>
-                    {myStatus.paidAmount > 0 && <span className="text-sm font-medium text-foreground">{myStatus.paidAmount.toLocaleString()}원</span>}
+                    {myStatus.paidAmount > 0 && <span className="text-sm font-medium text-foreground">{formatAmount(myStatus.paidAmount)}</span>}
                   </div>
                 )}
                 {myStatus.status === "UNPAID" && (
@@ -516,7 +517,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
                       <span className="text-lg font-semibold text-destructive">미납</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      {settings.length > 0 && <span className="text-sm font-medium text-foreground">{settings[0].monthlyAmount.toLocaleString()}원</span>}
+                      {settings.length > 0 && <span className="text-sm font-medium text-foreground">{formatAmount(settings[0].monthlyAmount)}</span>}
                       <Button
                         variant="outline"
                         size="sm"
@@ -744,16 +745,16 @@ function MonthlySettlement({ records }: { records: SettlementRecord[] }) {
       <div className="space-y-1">
         <div className="flex items-center justify-between text-sm">
           <span className="text-foreground/80">{now.getMonth() + 1}월 수입</span>
-          <span className="font-medium text-[hsl(var(--success))]">+{income.toLocaleString()}원</span>
+          <span className="font-medium text-[hsl(var(--success))]">+{formatAmount(income)}</span>
         </div>
         <div className="flex items-center justify-between text-sm">
           <span className="text-foreground/80">{now.getMonth() + 1}월 지출</span>
-          <span className="font-medium text-[hsl(var(--loss))]">-{expense.toLocaleString()}원</span>
+          <span className="font-medium text-[hsl(var(--loss))]">-{formatAmount(expense)}</span>
         </div>
         <div className="flex items-center justify-between text-sm pt-1 border-t border-white/[0.05]">
           <span className="font-medium text-foreground">순이익</span>
           <span className={cn("font-semibold", net >= 0 ? "text-[hsl(var(--success))]" : "text-[hsl(var(--loss))]")}>
-            {net >= 0 ? "+" : ""}{net.toLocaleString()}원
+            {net >= 0 ? "+" : ""}{formatAmount(net)}
           </span>
         </div>
       </div>

@@ -148,9 +148,10 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
 
   let recentResult = null;
   if (recentMatch) {
-    const [goalsRes, mvpRes] = await Promise.all([
+    const [goalsRes, mvpRes, attendanceRes] = await Promise.all([
       db.from("match_goals").select("scorer_id, is_own_goal").eq("match_id", recentMatch.id),
       db.from("match_mvp_votes").select("candidate_id, users:candidate_id(name)").eq("match_id", recentMatch.id),
+      db.from("match_attendance").select("id").eq("match_id", recentMatch.id).in("attendance_status", ["PRESENT", "LATE"]),
     ]);
     type GoalRow = { scorer_id: string; is_own_goal: boolean };
     const goalRows = (goalsRes.data || []) as GoalRow[];
@@ -168,12 +169,17 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
     });
     const topMvp = Object.values(mvpCounts).sort((a, b) => b.count - a.count)[0];
 
+    // 참석자 70% 이상 투표해야 실제 MVP로 인정
+    const attendedCount = attendanceRes.data?.length ?? 0;
+    const { isValidMvpVoteTurnout } = await import("@/lib/mvpThreshold");
+    const mvpConfirmed = topMvp && isValidMvpVoteTurnout(voteRows.length, attendedCount);
+
     recentResult = {
       id: recentMatch.id,
       date: recentMatch.match_date,
       score: `${ourGoals} : ${oppGoals}`,
       opponent: recentMatch.opponent_name,
-      mvp: topMvp?.name || null,
+      mvp: mvpConfirmed ? topMvp.name : null,
     };
   }
 

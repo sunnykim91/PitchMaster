@@ -137,20 +137,26 @@ export async function GET(request: NextRequest) {
   }));
 
   // Bulk 데이터 조회
-  const [goalsRes, mvpRes, attendanceRes] = await Promise.all([
+  const [goalsRes, mvpRes, attendanceRes, actualAttendRes] = await Promise.all([
     db
       .from("match_goals")
       .select("match_id, scorer_id, assist_id, is_own_goal")
       .in("match_id", matchIds),
     db
       .from("match_mvp_votes")
-      .select("candidate_id")
+      .select("match_id, candidate_id")
       .in("match_id", matchIds),
     db
       .from("match_attendance")
       .select("match_id, user_id, member_id, vote")
       .in("match_id", matchIds)
       .eq("vote", "ATTEND"),
+    // 실제 참석자 — MVP 70% 임계값 판정용
+    db
+      .from("match_attendance")
+      .select("match_id")
+      .in("match_id", matchIds)
+      .in("attendance_status", ["PRESENT", "LATE"]),
   ]);
 
   const allGoals = goalsRes.data ?? [];
@@ -289,14 +295,26 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // === 4. MOM (최다 MVP 득표) ===
+  // === 4. MOM (최다 MVP 득표) — 참석자 70% 이상 투표한 경기만 카운트 ===
+  const { isValidMvpVoteTurnout } = await import("@/lib/mvpThreshold");
+  const attendedPerMatch = new Map<string, number>();
+  for (const a of actualAttendRes.data ?? []) {
+    attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
+  }
+  const votesPerMatch = new Map<string, number>();
+  for (const v of allMvpVotes) {
+    votesPerMatch.set(v.match_id, (votesPerMatch.get(v.match_id) ?? 0) + 1);
+  }
+  const validMvpMatchIds = new Set<string>();
+  for (const [mid, voteCount] of votesPerMatch) {
+    const attended = attendedPerMatch.get(mid) ?? 0;
+    if (isValidMvpVoteTurnout(voteCount, attended)) validMvpMatchIds.add(mid);
+  }
+
   const mvpMap = new Map<string, number>();
   for (const v of allMvpVotes) {
-    if (v.candidate_id)
-      mvpMap.set(
-        v.candidate_id,
-        (mvpMap.get(v.candidate_id) ?? 0) + 1
-      );
+    if (!v.candidate_id || !validMvpMatchIds.has(v.match_id)) continue;
+    mvpMap.set(v.candidate_id, (mvpMap.get(v.candidate_id) ?? 0) + 1);
   }
 
   let topMvp: AwardEntry | null = null;

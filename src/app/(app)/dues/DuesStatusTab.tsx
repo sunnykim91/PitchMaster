@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { apiMutate } from "@/lib/useApi";
 import { useItemAction } from "@/lib/useAsyncAction";
+import { formatAmount } from "@/lib/formatters";
 import type { Role } from "@/lib/types";
 
 /* ── 타입 정의 ── */
@@ -305,10 +306,10 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               {m.status === "PAID" && m.paidAmount > 0 && (
-                <span className="text-xs text-muted-foreground tabular-nums">{m.paidAmount.toLocaleString()}원</span>
+                <span className="text-xs text-muted-foreground tabular-nums">{formatAmount(m.paidAmount)}</span>
               )}
               {m.status === "UNPAID" && unpaidAmount != null && (
-                <span className="text-xs font-medium tabular-nums" style={{ color: "hsl(0, 65%, 60%)" }}>{unpaidAmount.toLocaleString()}원</span>
+                <span className="text-xs font-medium tabular-nums" style={{ color: "hsl(0, 65%, 60%)" }}>{formatAmount(unpaidAmount)}</span>
               )}
               {isStaffOrAbove(role) && (
                 changingId === m.memberId ? (

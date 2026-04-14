@@ -17,6 +17,12 @@ export async function POST(request: NextRequest) {
     const file = formData.get("image") as File;
     if (!file) return apiError("이미지가 필요합니다", 400);
 
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_SIZE) return apiError("이미지 크기는 10MB 이하만 가능합니다", 400);
+    if (file.size === 0) return apiError("빈 파일입니다", 400);
+    const mime = (file.type || "").toLowerCase();
+    if (mime && !mime.startsWith("image/")) return apiError("이미지 파일만 업로드 가능합니다", 400);
+
     // File → base64
     const arrayBuffer = await file.arrayBuffer();
     const base64Image = Buffer.from(arrayBuffer).toString("base64");
