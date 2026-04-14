@@ -11,6 +11,7 @@ const rows = [
   { feature: "선수 배치", pm: "자동 배치 + 전술판", kakao: null, band: null },
   { feature: "경기 기록", pm: "골/어시/MVP 자동", kakao: null, band: null },
   { feature: "데이터 분석", pm: "레이더 차트 + 랭킹", kakao: null, band: null },
+  { feature: "선수 카드 & 시즌 어워드", pm: "FIFA 스타일 + 7종 자동 시상", kakao: null, band: null },
   { feature: "게시판 / 공지", pm: "고정 공지 + 투표", kakao: "공지 묻힘", band: "게시판" },
   { feature: "푸시 알림", pm: "투표 마감 자동 알림", kakao: null, band: "앱 알림" },
   { feature: "데모 체험", pm: "가입 없이 둘러보기", kakao: null, band: null },

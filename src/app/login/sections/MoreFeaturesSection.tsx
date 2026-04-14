@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown, Target, BarChart3, Trophy, Swords, Hash, List, Users, Bell, BellRing, MessageSquare, Dribbble, FileText, ShieldCheck, Settings2, CalendarDays, ImageIcon, CloudSun, Moon, Share2, Crosshair, Image as ImageLucide, Wallet, Grid3x3, CheckCircle2, Smartphone } from "lucide-react";
+import { ChevronDown, Target, BarChart3, Trophy, Swords, Hash, List, Users, Bell, BellRing, MessageSquare, Dribbble, FileText, ShieldCheck, Settings2, CalendarDays, ImageIcon, CloudSun, Moon, Share2, Crosshair, Image as ImageLucide, Wallet, Grid3x3, CheckCircle2, Smartphone, Sparkles, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const primaryFeatures = [
+  { icon: Sparkles, title: "FIFA 스타일 선수 카드", desc: "OVR·등급·시그니처 — 카톡 공유로 자랑하는 재미" },
+  { icon: Award, title: "시즌 어워드", desc: "MOM·득점왕·도움왕·철벽·개근 등 7종 자동 시상" },
   { icon: Grid3x3, title: "쿼터별 출전 매트릭스", desc: "쿼터별 출전 현황 한눈에 + 감독 지정 포지션 우선 적용" },
   { icon: Wallet, title: "자동 벌금 부과", desc: "지각·불참 자동 차감으로 총무가 일일이 안 챙겨도 OK" },
   { icon: CheckCircle2, title: "자동 완료 처리", desc: "경기 시간 지나면 자동 완료 + 투표 마감일도 자동 설정" },
   { icon: Smartphone, title: "PWA 즉시 사용", desc: "앱스토어 거치지 않고 카카오톡 링크 공유로 바로 실행" },
   { icon: Target, title: "원탭 득점 기록", desc: "쿼터별 스코어보드로 득점·어시스트 즉시 기록" },
-  { icon: BarChart3, title: "시즌 통계 & 랭킹", desc: "승률, 출석률, 레이더 차트, 개인별 랭킹" },
+  { icon: BarChart3, title: "커리어 프로필", desc: "베스트 모먼트·시즌 누적·승률·랭킹을 한 페이지에" },
 ];
 
 const extraPromoted = [

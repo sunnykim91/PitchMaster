@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Vote, CreditCard, LayoutGrid, Check } from "lucide-react";
+import { Vote, CreditCard, LayoutGrid, Check, Sparkles, Award, Crown, TrendingUp } from "lucide-react";
 
 function VoteVisual() {
   return (
@@ -171,6 +171,33 @@ export default function FeaturesSection() {
           </p>
         </div>
         <TacticsBoard />
+
+        {/* Player Card & Season Awards */}
+        <div className="mt-24 mb-14 text-center">
+          <p className="mb-3 text-xs font-bold uppercase tracking-[0.3em] text-[hsl(var(--warning))]">Player Card & Awards</p>
+          <h3 className="mb-2 font-heading text-2xl font-bold sm:text-3xl">
+            경기 끝나면 카드가 만들어집니다
+          </h3>
+          <p className="mx-auto max-w-lg text-sm text-muted-foreground">
+            FIFA 스타일 선수 카드와 시즌 어워드로 한 시즌의 기록이 자동으로 정리됩니다. 카톡 한 번에 자랑하세요.
+          </p>
+        </div>
+        <div className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { icon: Sparkles, label: "선수 카드", desc: "OVR·등급·시그니처 카피로 나만의 카드 생성" },
+            { icon: Crown, label: "MOM 어워드", desc: "참석자 70%+ 투표로 신뢰도 높은 MVP 선정" },
+            { icon: Award, label: "시즌 시상 7종", desc: "득점왕·도움왕·철벽·개근·올라운더 자동" },
+            { icon: TrendingUp, label: "커리어 프로필", desc: "베스트 모먼트·시즌 누적·랭킹 한 페이지" },
+          ].map((f) => (
+            <div key={f.label} className="rounded-xl border border-[hsl(var(--warning))]/20 bg-[hsl(var(--warning))]/5 p-5">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(var(--warning))]/15">
+                <f.icon className="h-5 w-5 text-[hsl(var(--warning))]" />
+              </div>
+              <h4 className="mb-1 text-sm font-semibold">{f.label}</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
