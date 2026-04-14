@@ -31,6 +31,21 @@ type PendingRequest = {
   createdAt: string;
 };
 
+type RecentSignupUser = {
+  id: string;
+  name: string;
+  createdAt: string;
+  profileComplete: boolean;
+};
+
+type RecentSignupTeam = {
+  id: string;
+  name: string;
+  sportType: string;
+  createdAt: string;
+  memberCount: number;
+};
+
 type AdminStats = {
   overview: {
     totalTeams: number;
@@ -44,6 +59,7 @@ type AdminStats = {
   };
   teams: TeamDetail[];
   pendingRequests: PendingRequest[];
+  recentSignups: { users: RecentSignupUser[]; teams: RecentSignupTeam[] };
 };
 
 const emptyData: AdminStats = {
@@ -59,6 +75,7 @@ const emptyData: AdminStats = {
   },
   teams: [],
   pendingRequests: [],
+  recentSignups: { users: [], teams: [] },
 };
 
 // ── Helpers ────────────────────────────────────────────
@@ -160,7 +177,7 @@ export default function AdminClient() {
     );
   }
 
-  const { overview, teams, pendingRequests } = data;
+  const { overview, teams, pendingRequests, recentSignups } = data;
   const profileRate =
     overview.totalUsers > 0
       ? Math.round((overview.profileComplete / overview.totalUsers) * 100)
@@ -268,6 +285,67 @@ export default function AdminClient() {
                 style={{ width: `${profileRate}%` }}
               />
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── 최근 3일 신규 가입 ── */}
+      <div className="grid gap-3 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <UserPlus className="h-4 w-4 text-primary" />
+              신규 유저 (3일)
+              <Badge variant="secondary" className="ml-auto">{recentSignups.users.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentSignups.users.length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">최근 3일 내 신규 가입자가 없습니다.</p>
+            ) : (
+              <ul className="space-y-2">
+                {recentSignups.users.map((u) => (
+                  <li key={u.id} className="flex items-center justify-between gap-2 text-sm">
+                    <span className="flex items-center gap-1.5 min-w-0">
+                      <span className="font-medium truncate">{u.name}</span>
+                      {!u.profileComplete && (
+                        <Badge variant="outline" className="text-[10px] px-1 py-0 shrink-0">프로필 미완성</Badge>
+                      )}
+                    </span>
+                    <span className="text-xs text-muted-foreground shrink-0" suppressHydrationWarning>{timeAgo(u.createdAt)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Users className="h-4 w-4 text-primary" />
+              신규 팀 (3일)
+              <Badge variant="secondary" className="ml-auto">{recentSignups.teams.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentSignups.teams.length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">최근 3일 내 생성된 팀이 없습니다.</p>
+            ) : (
+              <ul className="space-y-2">
+                {recentSignups.teams.map((t) => (
+                  <li key={t.id} className="flex items-center justify-between gap-2 text-sm">
+                    <span className="flex items-center gap-1.5 min-w-0">
+                      <span className="font-medium truncate">{t.name}</span>
+                      <Badge variant="outline" className="text-[10px] px-1 py-0 shrink-0">
+                        {t.sportType === "FUTSAL" ? "풋살" : "축구"}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground shrink-0">{t.memberCount}명</span>
+                    </span>
+                    <span className="text-xs text-muted-foreground shrink-0" suppressHydrationWarning>{timeAgo(t.createdAt)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
       </div>

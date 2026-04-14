@@ -16,6 +16,7 @@ export async function GET() {
   const DEMO_TEAM_ID = "192127c0-e2be-46b4-b340-7583730467da";
   const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
 
   // 전체 병렬 쿼리 (개별 팀 쿼리 제거)
   const [teamsRes, usersRes, matchesRes, postsRes, joinReqRes, recentUsersRes, membersRes, demoMembersRes, recentVotesRes, recentGoalsRes, recentPostsRes, recentDuesRes] =
@@ -26,8 +27,8 @@ export async function GET() {
       db.from("posts").select("id, team_id, created_at", { count: "exact" }),
       db.from("team_join_requests").select("id, team_id, name, status, created_at").eq("status", "PENDING"),
       db.from("users").select("id", { count: "exact" }).gte("created_at", sevenDaysAgo),
-      // 전체 멤버 한 번에 조회 (팀별 개별 쿼리 제거)
-      db.from("team_members").select("team_id, status"),
+      // 전체 멤버 한 번에 조회 (BANNED 제외)
+      db.from("team_members").select("team_id, status").in("status", ["ACTIVE", "DORMANT"]),
       // 데모 멤버
       db.from("team_members").select("user_id").eq("team_id", DEMO_TEAM_ID).not("user_id", "is", null),
       // 최근 투표 (14일)
@@ -134,6 +135,29 @@ export async function GET() {
     }))
     .sort((a, b) => b.memberCount - a.memberCount);
 
+  // 최근 3일 내 신규 가입 (데모 제외)
+  const recentSignups = {
+    users: users
+      .filter((u: { created_at?: string }) => u.created_at && u.created_at >= threeDaysAgo)
+      .map((u: { id: string; name: string; created_at: string; is_profile_complete: boolean }) => ({
+        id: u.id,
+        name: u.name,
+        createdAt: u.created_at,
+        profileComplete: u.is_profile_complete,
+      }))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    teams: teams
+      .filter((t) => t.created_at >= threeDaysAgo)
+      .map((t) => ({
+        id: t.id,
+        name: t.name,
+        sportType: t.sport_type,
+        createdAt: t.created_at,
+        memberCount: memberCounts[t.id] ?? 0,
+      }))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+  };
+
   return NextResponse.json({
     overview: {
       totalTeams: teams.length,
@@ -153,5 +177,6 @@ export async function GET() {
       name: r.name,
       createdAt: r.created_at,
     })),
+    recentSignups,
   });
 }
