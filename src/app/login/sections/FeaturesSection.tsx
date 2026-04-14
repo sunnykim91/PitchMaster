@@ -101,25 +101,88 @@ function TacticsBoard() {
   );
 }
 
-// 랜딩 데모용 ICON 카드 (PlayerCardDemo의 iconCard 기반)
-const landingDemoCard: PlayerCardProps = {
-  ovr: 92,
+// 랜딩 데모용 4단계 등급 카드 — 실제 등급 차이를 한눈에
+const landingIconCard: PlayerCardProps = {
+  ovr: 96,
   rarity: "ICON",
   positionLabel: "FW",
   positionCategory: "FW",
-  playerName: "김민수",
+  playerName: "홍길동",
   jerseyNumber: 10,
   teamName: "FC 피치마스터",
   teamPrimaryColor: "#e8613a",
   seasonName: "2026 시즌",
-  signature: "15골 8어시 — 시즌 MVP 후보",
+  signature: "32골 18어시 — 시즌 압도적 MVP",
   stats: [
-    { label: "골", value: "15", rank: "🏆 팀 1위", isHero: true },
-    { label: "어시", value: "8", rank: "상위 10%" },
-    { label: "공격P", value: "23", streak: "🔥 5경기 연속" },
-    { label: "MOM", value: "5" },
-    { label: "출석률", value: "82%" },
-    { label: "경기", value: "18" },
+    { label: "골", value: "32", rank: "🏆 팀 1위", isHero: true },
+    { label: "어시", value: "18", rank: "🏆 팀 1위" },
+    { label: "공격P", value: "50", streak: "🔥 9경기 연속" },
+    { label: "MOM", value: "12", rank: "🏆 팀 1위" },
+    { label: "출석률", value: "96%" },
+    { label: "승률", value: "82%" },
+  ],
+};
+
+const landingHeroCard: PlayerCardProps = {
+  ovr: 87,
+  rarity: "HERO",
+  positionLabel: "MID",
+  positionCategory: "MID",
+  playerName: "강민호",
+  jerseyNumber: 8,
+  teamName: "FC 피치마스터",
+  teamPrimaryColor: "#e8613a",
+  seasonName: "2026 시즌",
+  signature: "5경기 연속 MOM에 빛난 미드필더",
+  stats: [
+    { label: "어시", value: "15", rank: "🏆 팀 1위", isHero: true },
+    { label: "골", value: "7" },
+    { label: "MOM", value: "6", streak: "🔥 5연속" },
+    { label: "출석률", value: "91%" },
+    { label: "승률", value: "72%" },
+    { label: "경기", value: "20" },
+  ],
+};
+
+const landingRareCard: PlayerCardProps = {
+  ovr: 78,
+  rarity: "RARE",
+  positionLabel: "DEF",
+  positionCategory: "DEF",
+  playerName: "박성진",
+  jerseyNumber: 4,
+  teamName: "FC 피치마스터",
+  teamPrimaryColor: "#e8613a",
+  seasonName: "2026 시즌",
+  signature: "22경기 출장 · 클린시트 9회",
+  stats: [
+    { label: "클린시트", value: "9", rank: "🏆 팀 1위", isHero: true },
+    { label: "승률", value: "78%" },
+    { label: "출석률", value: "95%", streak: "🔥 13연속" },
+    { label: "MOM", value: "3" },
+    { label: "실점", value: "0.6" },
+    { label: "경기", value: "22" },
+  ],
+};
+
+const landingCommonCard: PlayerCardProps = {
+  ovr: 64,
+  rarity: "COMMON",
+  positionLabel: "GK",
+  positionCategory: "GK",
+  playerName: "최영호",
+  jerseyNumber: 1,
+  teamName: "FC 피치마스터",
+  teamPrimaryColor: "#e8613a",
+  seasonName: "2026 시즌",
+  signature: "꾸준함으로 시즌을 채운 선수",
+  stats: [
+    { label: "클린시트", value: "4", isHero: true },
+    { label: "실점", value: "1.2" },
+    { label: "승률", value: "55%" },
+    { label: "출석률", value: "75%" },
+    { label: "MOM", value: "1" },
+    { label: "경기", value: "12" },
   ],
 };
 
@@ -206,40 +269,51 @@ export default function FeaturesSection() {
           </p>
         </div>
 
-        {/* Live PlayerCard demo */}
-        <div className="rounded-3xl bg-[hsl(240,6%,6%)] py-12 px-4 sm:py-16 sm:px-8">
-          <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16 max-w-5xl mx-auto">
-            <div className="flex justify-center">
-              <div className="w-full max-w-[300px] sm:max-w-[340px]">
-                <PlayerCard {...landingDemoCard} />
-              </div>
-            </div>
-            <div className="space-y-4">
-              <p className="text-[10px] tracking-[0.3em] text-yellow-400/80 font-bold">TAP THE CARD</p>
-              <h4 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
-                나만의 시즌 카드,<br />홀로그래픽으로 빛나다
+        {/* Live PlayerCard demo — 4단계 등급 비교 */}
+        <div className="rounded-3xl bg-[hsl(240,6%,6%)] py-10 px-4 sm:py-14 sm:px-6">
+          <div className="max-w-6xl mx-auto">
+            {/* 헤드 + 상단 인터랙션 힌트 */}
+            <div className="text-center mb-8 sm:mb-10">
+              <p className="text-[10px] tracking-[0.3em] text-yellow-400/80 font-bold mb-3">TAP THE CARD · 홀로그래픽 라이브</p>
+              <h4 className="text-xl sm:text-2xl font-bold text-white leading-tight">
+                4단계 등급, 포지션별 스탯, 자동 시그니처
               </h4>
-              <p className="text-sm text-white/60 leading-relaxed">
-                4단계 등급(ICON·HERO·RARE·COMMON) · 포지션별 스탯 · 시그니처 카피.
-                골·어시·MOM 자동 집계로 카드 등급이 결정됩니다.
+              <p className="mt-2 text-xs sm:text-sm text-white/55">
+                골·어시·MOM·출석률을 기반으로 ICON / HERO / RARE / COMMON 자동 결정
               </p>
-              <div className="grid sm:grid-cols-1 gap-2.5 pt-2">
-                {[
-                  { icon: Crown, label: "MOM 어워드", desc: "참석자 70%+ 투표로 신뢰도 높은 MVP 선정" },
-                  { icon: Award, label: "시즌 시상 7종", desc: "득점왕·도움왕·철벽·개근·올라운더 자동" },
-                  { icon: TrendingUp, label: "커리어 프로필", desc: "베스트 모먼트·시즌 누적·랭킹 한 페이지" },
-                ].map((f) => (
-                  <div key={f.label} className="flex gap-3 rounded-xl border border-white/10 bg-white/5 p-3.5">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--warning))]/15">
-                      <f.icon className="h-4.5 w-4.5 text-[hsl(var(--warning))]" />
-                    </div>
-                    <div>
-                      <h5 className="text-sm font-semibold text-white">{f.label}</h5>
-                      <p className="text-xs text-white/55 leading-relaxed mt-0.5">{f.desc}</p>
-                    </div>
+            </div>
+
+            {/* 4장 카드 그리드 */}
+            <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-10">
+              {[landingIconCard, landingHeroCard, landingRareCard, landingCommonCard].map((card) => (
+                <div key={card.playerName} className="flex flex-col items-center gap-2">
+                  <div className="w-full max-w-[260px]">
+                    <PlayerCard {...card} />
                   </div>
-                ))}
-              </div>
+                  <span className="text-[10px] tracking-[0.2em] font-bold text-white/40">
+                    {card.rarity} · OVR {card.ovr}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* 추가 어워드/프로필 설명 */}
+            <div className="grid gap-3 sm:grid-cols-3 max-w-4xl mx-auto pt-4 border-t border-white/10">
+              {[
+                { icon: Crown, label: "MOM 어워드", desc: "참석자 70%+ 투표로 신뢰도 높은 MVP 선정" },
+                { icon: Award, label: "시즌 시상 7종", desc: "득점왕·도움왕·철벽·개근·올라운더 자동" },
+                { icon: TrendingUp, label: "커리어 프로필", desc: "베스트 모먼트·시즌 누적·랭킹 한 페이지" },
+              ].map((f) => (
+                <div key={f.label} className="flex gap-3 rounded-xl border border-white/10 bg-white/5 p-3.5">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--warning))]/15">
+                    <f.icon className="h-4.5 w-4.5 text-[hsl(var(--warning))]" />
+                  </div>
+                  <div className="min-w-0">
+                    <h5 className="text-sm font-semibold text-white">{f.label}</h5>
+                    <p className="text-xs text-white/55 leading-relaxed mt-0.5">{f.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
