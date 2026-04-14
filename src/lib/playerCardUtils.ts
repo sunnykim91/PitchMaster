@@ -6,9 +6,9 @@ export type Rarity = "ICON" | "HERO" | "RARE" | "COMMON";
 export type PositionCategory = "GK" | "DEF" | "MID" | "FW" | "DEFAULT";
 
 export function getRarity(ovr: number): Rarity {
-  if (ovr >= 90) return "ICON";
-  if (ovr >= 80) return "HERO";
-  if (ovr >= 70) return "RARE";
+  if (ovr >= 80) return "ICON";
+  if (ovr >= 70) return "HERO";
+  if (ovr >= 60) return "RARE";
   return "COMMON";
 }
 

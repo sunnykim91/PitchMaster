@@ -17,7 +17,10 @@ import { PlayerProfilePage, PlayerProfileEmpty } from "@/components/pitchmaster/
 import type { PlayerProfile, PlayerStats } from "@/components/pitchmaster/PlayerProfilePage";
 import type { PlayerCardProps, StatWithContext } from "@/components/pitchmaster/PlayerCard";
 
-type Props = { params: Promise<{ memberId: string }> };
+type Props = {
+  params: Promise<{ memberId: string }>;
+  searchParams: Promise<{ team?: string }>;
+};
 
 type MemberRow = {
   id: string;
@@ -30,17 +33,19 @@ type MemberRow = {
   teams: { name: string; sport_type: string; uniform_primary: string | null } | null;
 };
 
-async function getPlayerData(memberId: string): Promise<PlayerProfile | null> {
+async function getPlayerData(memberId: string, teamId?: string): Promise<PlayerProfile | null> {
   const db = getSupabaseAdmin();
   if (!db) return null;
 
-  const { data: member } = await db
+  // 여러 팀 소속일 때 team 쿼리로 지정 가능. 없으면 첫 번째 팀 fallback.
+  // ACTIVE + DORMANT 모두 허용 (휴면 회원도 프로필 열람 가능, BANNED만 제외)
+  let query = db
     .from("team_members")
     .select("id, user_id, pre_name, jersey_number, team_role, team_id, users(name, preferred_positions, profile_image_url), teams(name, sport_type, uniform_primary)")
     .or(`user_id.eq.${memberId},id.eq.${memberId}`)
-    .eq("status", "ACTIVE")
-    .limit(1)
-    .single();
+    .in("status", ["ACTIVE", "DORMANT"]);
+  if (teamId) query = query.eq("team_id", teamId);
+  const { data: member } = await query.limit(1).single();
 
   if (!member) return null;
   const m = member as unknown as MemberRow;
@@ -315,9 +320,10 @@ async function getPlayerData(memberId: string): Promise<PlayerProfile | null> {
   };
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { memberId } = await params;
-  const data = await getPlayerData(memberId);
+  const { team } = await searchParams;
+  const data = await getPlayerData(memberId, team);
   if (!data) return { title: "선수 프로필 | PitchMaster" };
   return {
     title: `${data.name} — ${data.teamName} | PitchMaster`,
@@ -330,9 +336,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // 공개 페이지 — 30분 ISR
 export const revalidate = 1800;
 
-export default async function PlayerProfilePageRoute({ params }: Props) {
+export default async function PlayerProfilePageRoute({ params, searchParams }: Props) {
   const { memberId } = await params;
-  const data = await getPlayerData(memberId);
+  const { team } = await searchParams;
+  const data = await getPlayerData(memberId, team);
   if (!data) return notFound();
 
   if (!data.stats) {

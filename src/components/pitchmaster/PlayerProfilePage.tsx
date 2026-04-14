@@ -349,8 +349,26 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
   const [showShareModal, setShowShareModal] = useState(false);
   const { name, teamName, teamPrimaryColor, positions, jerseyNumber, teamRole, seasonName, signature, playerCardProps, stats, bestMoments, recentMatches } = profile;
 
+  function handleBack() {
+    if (typeof window === "undefined") return;
+    if (window.history.length > 1) window.history.back();
+    else window.location.href = "/dashboard";
+  }
+
   return (
     <div className="min-h-screen bg-[hsl(240,6%,6%)] pb-24 sm:pb-8">
+      {/* 뒤로가기 버튼 — 상단 좌측 고정 */}
+      <button
+        type="button"
+        onClick={handleBack}
+        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70 transition-colors border border-white/10"
+        aria-label="뒤로가기"
+      >
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
       {/* ========================================= */}
       {/* HERO SECTION - CINEMATIC MOVIE POSTER    */}
       {/* ========================================= */}
@@ -636,8 +654,23 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
 
 // Empty State Component
 export function PlayerProfileEmpty({ name, teamName, positions }: { name: string; teamName: string; positions: string[] }) {
+  function handleBack() {
+    if (typeof window === "undefined") return;
+    if (window.history.length > 1) window.history.back();
+    else window.location.href = "/dashboard";
+  }
   return (
     <div className="min-h-screen bg-[hsl(240,6%,6%)] flex items-center justify-center px-4">
+      <button
+        type="button"
+        onClick={handleBack}
+        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70 transition-colors border border-white/10"
+        aria-label="뒤로가기"
+      >
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
       <div className="text-center max-w-sm">
         <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center">
           <svg className="w-12 h-12 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">

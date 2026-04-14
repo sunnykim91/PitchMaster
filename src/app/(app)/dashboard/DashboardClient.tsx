@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Cake, Calendar, Check, Copy, DollarSign, Link2, Loader2, Trophy, Users, Vote } from "lucide-react";
+import { Cake, Calendar, Check, ChevronRight, Copy, DollarSign, Link2, Loader2, Trophy, User, Users, Vote } from "lucide-react";
 import { GA } from "@/lib/analytics";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
@@ -162,7 +162,7 @@ function CardSkeleton() {
   );
 }
 
-export default function DashboardClient({ userId, userRole, initialData, inviteCode, teamName }: { userId: string; userRole?: Role; initialData?: DashboardData; inviteCode?: string; teamName?: string }) {
+export default function DashboardClient({ userId, userRole, initialData, inviteCode, teamName, teamId }: { userId: string; userRole?: Role; initialData?: DashboardData; inviteCode?: string; teamName?: string; teamId?: string }) {
   const { data, loading, error, refetch } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
   const { showToast } = useToast();
   const searchParams = useSearchParams();
@@ -304,6 +304,18 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
 
   return (
     <div className="grid gap-3 stagger-children min-w-0">
+      {/* ── 내 프로필 바로가기 (최상단 한 줄) ── */}
+      <div className="flex justify-end -mb-1">
+        <Link
+          href={`/player/${userId}${teamId ? `?team=${teamId}` : ""}`}
+          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+        >
+          <User className="h-3.5 w-3.5" />
+          내 프로필 보기
+          <ChevronRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+
       {/* ── Onboarding Wizard (new teams only) ── */}
       {showWizard && (
         <Card className="card-featured">

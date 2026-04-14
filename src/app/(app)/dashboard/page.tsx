@@ -18,6 +18,7 @@ export default async function DashboardPage() {
       userRole={session.user.teamRole}
       inviteCode={session.user.inviteCode ?? ""}
       teamName={session.user.teamName ?? ""}
+      teamId={session.user.teamId ?? ""}
       initialData={initialData}
     />
   );

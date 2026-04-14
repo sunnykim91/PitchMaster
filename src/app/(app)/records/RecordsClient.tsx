@@ -309,43 +309,45 @@ export default function RecordsClient({
 
   return (
     <div className="grid gap-5 stagger-children min-w-0">
-      {/* ── Tab Bar + Season Selector ── */}
+      {/* ── Tab Bar ── */}
       <div className="sticky top-0 z-10 -mx-1 px-1 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center gap-2">
-          <div role="tablist" aria-label="기록 탭" className="flex flex-1">
-            {tabItems.map((tab) => (
-              <button
-                key={tab.key}
-                role="tab"
-                aria-selected={activeTab === tab.key}
-                onClick={() => { setActiveTab(tab.key); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                className={cn(
-                  "flex-1 py-3 text-sm font-medium transition-colors border-b-2",
-                  activeTab === tab.key
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          <Select value={seasonId} onValueChange={handleSeasonChange}>
-            <SelectTrigger className="w-auto min-w-[80px] text-xs shrink-0">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_TIME_KEY} className="font-bold">
-                전체 통합
-              </SelectItem>
-              {seasons.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div role="tablist" aria-label="기록 탭" className="flex">
+          {tabItems.map((tab) => (
+            <button
+              key={tab.key}
+              role="tab"
+              aria-selected={activeTab === tab.key}
+              onClick={() => { setActiveTab(tab.key); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              className={cn(
+                "flex-1 py-3 text-sm font-medium transition-colors border-b-2",
+                activeTab === tab.key
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
+      </div>
+
+      {/* ── Season Selector (탭 바 아래 독립 줄) ── */}
+      <div className="flex justify-end -mt-1 -mb-2">
+        <Select value={seasonId} onValueChange={handleSeasonChange}>
+          <SelectTrigger className="h-8 w-auto min-w-[90px] text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_TIME_KEY} className="font-bold">
+              전체 통합
+            </SelectItem>
+            {seasons.map((item) => (
+              <SelectItem key={item.id} value={item.id}>
+                {item.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* ── Tab: 내 기록 ── */}
@@ -623,7 +625,7 @@ export default function RecordsClient({
                           {s.jerseyNumber !== null && (
                             <span className="shrink-0 rounded bg-primary/10 px-1 py-0.5 text-xs font-bold text-primary">#{s.jerseyNumber}</span>
                           )}
-                          <Link href={`/player/${s.memberId}`} className="font-semibold text-sm truncate hover:text-primary hover:underline">{s.memberName || "-"}</Link>
+                          <Link href={`/player/${s.memberId}${activeSeason?.teamId ? `?team=${activeSeason.teamId}` : ""}`} className="font-semibold text-sm truncate underline decoration-dotted decoration-muted-foreground/40 underline-offset-[3px] hover:text-primary hover:decoration-primary">{s.memberName || "-"}</Link>
                           {s.teamRole === "CAPTAIN" && <Badge variant="warning" className="text-xs px-1 py-0 shrink-0">C</Badge>}
                           {s.teamRole === "VICE_CAPTAIN" && <Badge variant="secondary" className="text-xs px-1 py-0 shrink-0">VC</Badge>}
                         </div>
@@ -703,7 +705,7 @@ export default function RecordsClient({
                             <td className={cn("sticky left-8 z-1 py-2.5 font-semibold max-w-[120px] truncate", stickyBg)}>
                               <span className="flex items-center gap-1">
                                 {s.jerseyNumber !== null && <span className="text-xs text-primary font-bold">#{s.jerseyNumber}</span>}
-                                <Link href={`/player/${s.memberId}`} className="hover:text-primary hover:underline">{s.memberName || "-"}</Link>
+                                <Link href={`/player/${s.memberId}${activeSeason?.teamId ? `?team=${activeSeason.teamId}` : ""}`} className="underline decoration-dotted decoration-muted-foreground/40 underline-offset-[3px] hover:text-primary hover:decoration-primary">{s.memberName || "-"}</Link>
                                 {s.teamRole === "CAPTAIN" && <Badge variant="warning" className="text-xs px-1 py-0">C</Badge>}
                                 {s.teamRole === "VICE_CAPTAIN" && <Badge variant="secondary" className="text-xs px-1 py-0">VC</Badge>}
                               </span>
@@ -965,10 +967,11 @@ function SeasonAwardsCard({ seasonId }: { seasonId: string }) {
         <div className="space-y-2.5">
           {awardItems.map(({ key, emoji, fallbackLabel }) => {
             const award = awards[key] as Award | null;
-            if (!award) return null;
+            // null·name 비어있으면 스킵 (데이터 없는 어워드)
+            if (!award || !award.name) return null;
             return (
               <div key={key} className="flex items-center gap-3 rounded-xl bg-secondary/50 px-3 py-2.5">
-                <span className="text-lg shrink-0">{emoji}</span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center text-lg leading-none">{emoji}</span>
                 <span className="text-sm font-medium text-muted-foreground w-16 shrink-0">
                   {award.label || fallbackLabel}
                 </span>

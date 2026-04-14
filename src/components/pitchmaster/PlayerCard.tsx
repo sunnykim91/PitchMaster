@@ -225,6 +225,8 @@ export function PlayerCard({
   stats,
 }: PlayerCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [photoFailed, setPhotoFailed] = useState(false);
+  const effectivePhotoUrl = photoUrl && !photoFailed ? photoUrl : undefined;
   const config = rarityConfig[rarity];
   
   // Find hero stat based on position
@@ -353,13 +355,16 @@ export function PlayerCard({
             </div>
 
             {/* Center: Giant Jersey Number Watermark OR Photo — 워터마크 강화 */}
-            <div className="flex-1 flex items-center justify-center relative -my-2">
-              {photoUrl ? (
+            <div className={cn(
+              "flex-1 flex items-center justify-center relative",
+              effectivePhotoUrl ? "mb-4 sm:mb-5" : "-my-2"
+            )}>
+              {effectivePhotoUrl ? (
                 <img
-                  src={photoUrl}
-                  alt={playerName}
+                  src={effectivePhotoUrl}
+                  alt=""
+                  onError={() => setPhotoFailed(true)}
                   className="w-32 h-32 sm:w-40 sm:h-40 object-cover rounded-full border-2 border-white/20"
-                  crossOrigin="anonymous"
                 />
               ) : (
                 <span

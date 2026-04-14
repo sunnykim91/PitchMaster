@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { Check, Copy, Link2, Menu, ChevronDown, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Sun, Moon } from "lucide-react";
+import { Check, Copy, Link2, Menu, ChevronDown, ChevronRight, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Sun, Moon } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
@@ -242,10 +242,10 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
   const sidebarContent = (
     <>
-      {/* 프로필 영역 — 클릭 시 내 커리어 프로필로 이동 */}
+      {/* 프로필 영역 — 클릭 시 내 커리어 프로필로 이동 (현재 팀 기준) */}
       <Link
-        href={`/player/${session.user.id}`}
-        className="flex items-center gap-3 mb-4 rounded-lg -mx-2 px-2 py-1.5 hover:bg-secondary/50 transition-colors"
+        href={`/player/${session.user.id}${session.user.teamId ? `?team=${session.user.teamId}` : ""}`}
+        className="group flex items-center gap-3 mb-4 rounded-lg -mx-2 px-2 py-1.5 hover:bg-secondary/50 transition-colors"
         title="내 프로필 보기"
       >
         <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-border">
@@ -255,13 +255,14 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             <span className="text-lg font-black text-muted-foreground">{(session.user.name ?? "?").charAt(0)}</span>
           )}
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-base font-bold text-foreground truncate">{session.user.name}</p>
           <p className="text-xs text-muted-foreground truncate">
             {session.user.teamName}
             {session.user.teamRole === "PRESIDENT" ? " · 회장" : session.user.teamRole === "STAFF" ? " · 운영진" : ""}
           </p>
         </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0 group-hover:text-primary transition-colors" />
       </Link>
       <Separator className="mb-4" />
 
