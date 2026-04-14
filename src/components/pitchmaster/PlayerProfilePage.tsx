@@ -76,7 +76,7 @@ function RoleBadge({ role }: { role: "CAPTAIN" | "VICE_CAPTAIN" }) {
 function SoccerFieldPattern() {
   return (
     <svg
-      className="absolute inset-0 w-full h-full opacity-[0.04]"
+      className="absolute inset-0 w-full h-full opacity-[0.1]"
       viewBox="0 0 400 600"
       fill="none"
       preserveAspectRatio="xMidYMid slice"
@@ -347,12 +347,56 @@ function StickyShareButton({ onClick }: { onClick: () => void }) {
 // Main Player Profile Page Component
 export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
   const [showShareModal, setShowShareModal] = useState(false);
+  const [shareToast, setShareToast] = useState<string | null>(null);
   const { name, teamName, teamPrimaryColor, positions, jerseyNumber, teamRole, seasonName, signature, playerCardProps, stats, bestMoments, recentMatches } = profile;
 
   function handleBack() {
     if (typeof window === "undefined") return;
     if (window.history.length > 1) window.history.back();
     else window.location.href = "/dashboard";
+  }
+
+  function showShareToast(msg: string) {
+    setShareToast(msg);
+    setTimeout(() => setShareToast(null), 2000);
+  }
+
+  async function handleCopyUrl() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      showShareToast("링크가 복사되었습니다");
+      setShowShareModal(false);
+    } catch {
+      showShareToast("복사에 실패했습니다");
+    }
+  }
+
+  async function handleNativeShare() {
+    const shareData = {
+      title: `${name} · ${seasonName} · ${teamName}`,
+      text: signature ? `"${signature}"` : `${name}의 ${seasonName} 카드`,
+      url: window.location.href,
+    };
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share(shareData);
+        setShowShareModal(false);
+      } catch {
+        // 사용자 취소 — 아무 처리 안 함
+      }
+    } else {
+      handleCopyUrl();
+    }
+  }
+
+  function handleSaveImage() {
+    // 이미지 다운로드는 별도 API 필요. 대안: 스크린샷 안내
+    showShareToast("스크린샷으로 저장해주세요 (이미지 다운로드 준비 중)");
+    setShowShareModal(false);
+  }
+
+  function handleStartOwnTeam() {
+    window.location.href = "/login";
   }
 
   return (
@@ -374,7 +418,7 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
       {/* ========================================= */}
       {/* min-h-screen fallback + 100svh (모바일 동적 viewport 대응) */}
       <section
-        className="relative min-h-screen min-h-[100svh] flex flex-col items-center justify-center px-4 py-12 overflow-hidden"
+        className="relative min-h-[85vh] flex flex-col items-center justify-center px-4 py-10 overflow-hidden"
       >
         {/* Base Gradient Background with Team Color */}
         <div 
@@ -424,13 +468,13 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
         {/* Main Content */}
         <div className="relative text-center z-10 max-w-4xl mx-auto">
           {/* Season Overline */}
-          <p className="text-[11px] sm:text-xs tracking-[0.4em] text-white/40 mb-6 uppercase font-medium">
+          <p className="text-[11px] sm:text-xs tracking-[0.4em] text-white/40 mb-4 uppercase font-medium">
             {seasonName}
           </p>
 
           {/* GIANT Player Name */}
           <h1
-            className="font-black text-white mb-5 leading-[0.9]"
+            className="font-black text-white mb-4 leading-[0.9]"
             style={{
               fontSize: "clamp(56px, 14vw, 120px)",
               letterSpacing: name.length <= 3 ? "0.1em" : name.length <= 4 ? "0.05em" : "0",
@@ -441,7 +485,7 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
           </h1>
 
           {/* Subtitle Line */}
-          <p className="text-sm sm:text-base text-white/60 mb-5 tracking-wide">
+          <p className="text-sm sm:text-base text-white/60 mb-4 tracking-wide">
             {teamName}
             <span className="mx-2 text-white/30">·</span>
             {positions.join(" / ")}
@@ -461,7 +505,7 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
 
           {/* Role Badge */}
           {teamRole && (
-            <div className="mb-6">
+            <div className="mb-4">
               <RoleBadge role={teamRole} />
             </div>
           )}
@@ -487,8 +531,8 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
       {/* ========================================= */}
       {/* SEASON DIGEST - Card + Stats             */}
       {/* ========================================= */}
-      <section className="max-w-4xl mx-auto px-4 py-16">
-        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+      <section className="max-w-4xl mx-auto px-4 py-10">
+        <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-10">
           {/* Player Card */}
           <div className="w-full max-w-[340px] shrink-0">
             <PlayerCard {...playerCardProps} />
@@ -497,10 +541,10 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
           {/* Key Stats */}
           {stats && (
             <div className="flex-1 w-full">
-              <h2 className="text-lg font-bold text-white mb-6 text-center lg:text-left">시즌 다이제스트</h2>
-              
+              <h2 className="text-lg font-bold text-white mb-4 text-center lg:text-left">시즌 다이제스트</h2>
+
               {/* Big Numbers Grid */}
-              <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="grid grid-cols-2 gap-3 mb-6">
                 <div className="bg-[hsl(240,5%,10%)] rounded-2xl p-4 text-center border border-white/10">
                   <p className="text-4xl font-black text-[hsl(16,85%,58%)]">{stats.goals}</p>
                   <p className="text-sm text-white/50 mt-1">골</p>
@@ -528,11 +572,11 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
 
       {/* Detailed Stats */}
       {stats && (
-        <section className="max-w-4xl mx-auto px-4 py-8">
-          <h3 className="text-lg font-bold text-white mb-6">시즌 통계 상세</h3>
+        <section className="max-w-4xl mx-auto px-4 py-6">
+          <h3 className="text-lg font-bold text-white mb-4">시즌 통계 상세</h3>
           
-          <div className="bg-[hsl(240,5%,10%)] rounded-2xl p-6 border border-white/10">
-            <div className="flex flex-wrap items-center gap-4 mb-6 pb-6 border-b border-white/10">
+          <div className="bg-[hsl(240,5%,10%)] rounded-2xl p-5 border border-white/10">
+            <div className="flex flex-wrap items-center gap-4 mb-4 pb-4 border-b border-white/10">
               <StatBar label="골" value={stats.goals} />
               <span className="text-white/20">·</span>
               <StatBar label="어시" value={stats.assists} />
@@ -540,12 +584,12 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
               <StatBar label="MOM" value={stats.mvp} />
             </div>
 
-            <div className="flex justify-center gap-8 sm:gap-16 mb-6">
+            <div className="flex justify-center gap-8 sm:gap-16 mb-4">
               <CircularProgress value={stats.attendanceRate * 100} label="출석률" color="coral" />
               <CircularProgress value={stats.winRate * 100} label="승률" color="teal" />
             </div>
 
-            <div className="flex flex-wrap justify-center gap-4 pt-6 border-t border-white/10">
+            <div className="flex flex-wrap justify-center gap-3 pt-4 border-t border-white/10">
               <div className="px-4 py-2 bg-white/5 rounded-lg text-center">
                 <p className="text-sm font-bold text-white">{stats.attended} / {stats.totalMatches}</p>
                 <p className="text-xs text-white/50">출전 경기</p>
@@ -565,8 +609,8 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
 
       {/* Best Moments */}
       {bestMoments.length > 0 && (
-        <section className="max-w-4xl mx-auto px-4 py-8">
-          <h3 className="text-lg font-bold text-white mb-6">시즌 베스트 모먼트</h3>
+        <section className="max-w-4xl mx-auto px-4 py-6">
+          <h3 className="text-lg font-bold text-white mb-4">시즌 베스트 모먼트</h3>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {bestMoments.map((moment, index) => (
@@ -578,8 +622,8 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
 
       {/* Recent Matches Timeline */}
       {recentMatches.length > 0 && (
-        <section className="max-w-4xl mx-auto px-4 py-8">
-          <h3 className="text-lg font-bold text-white mb-6">최근 경기</h3>
+        <section className="max-w-4xl mx-auto px-4 py-6">
+          <h3 className="text-lg font-bold text-white mb-4">최근 경기</h3>
           
           <div className="max-w-md mx-auto lg:mx-0">
             {recentMatches.map((match, index) => (
@@ -594,11 +638,11 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
       )}
 
       {/* Footer CTA */}
-      <section className="max-w-4xl mx-auto px-4 py-16">
-        <div className="bg-gradient-to-r from-[hsl(16,85%,58%)]/20 via-[hsl(240,5%,10%)] to-[hsl(16,85%,58%)]/20 rounded-2xl p-8 border border-[hsl(16,85%,58%)]/30 text-center">
+      <section className="max-w-4xl mx-auto px-4 py-10">
+        <div className="bg-gradient-to-r from-[hsl(16,85%,58%)]/20 via-[hsl(240,5%,10%)] to-[hsl(16,85%,58%)]/20 rounded-2xl p-6 border border-[hsl(16,85%,58%)]/30 text-center">
           <h3 className="text-xl font-bold text-white mb-2">내 카드 가져가세요</h3>
-          <p className="text-sm text-white/50 mb-6">이 시즌의 내 카드를 다운로드하고 공유하세요</p>
-          
+          <p className="text-sm text-white/50 mb-5">이 시즌의 내 카드를 다운로드하고 공유하세요</p>
+
           <div className="flex flex-wrap justify-center gap-3">
             <button
               onClick={() => setShowShareModal(true)}
@@ -606,13 +650,17 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
             >
               친구에게 공유
             </button>
-            <button className="px-6 py-3 rounded-xl border border-white/20 text-white/80 font-medium hover:bg-white/5 transition-colors">
-              우리 팀에도 PitchMaster
+            <button
+              onClick={handleStartOwnTeam}
+              className="px-6 py-3 rounded-xl border border-white/20 text-white/80 font-medium hover:bg-white/5 transition-colors"
+              title="PitchMaster로 우리 팀도 시작하기"
+            >
+              우리 팀도 시작하기 →
             </button>
           </div>
-          
+
           <p className="text-xs text-white/30 mt-4">
-            회원 가입 없이도 누구나 자기 시즌 카드를 만들 수 있습니다
+            PitchMaster는 풋살·축구 팀 관리 앱이에요. 참석 투표, 회비, 라인업, 기록을 한 번에.
           </p>
         </div>
       </section>
@@ -626,20 +674,36 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
       {/* Sticky Share Button (Mobile) */}
       <StickyShareButton onClick={() => setShowShareModal(true)} />
 
+      {/* Share Toast */}
+      {shareToast && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-full bg-black/80 text-white text-sm border border-white/10 backdrop-blur-sm">
+          {shareToast}
+        </div>
+      )}
+
       {/* Share Modal */}
       {showShareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setShowShareModal(false)}>
           <div className="bg-[hsl(240,5%,10%)] rounded-2xl p-6 max-w-sm w-full border border-white/10" onClick={(e) => e.stopPropagation()}>
             <h4 className="text-lg font-bold text-white mb-4">공유하기</h4>
             <div className="space-y-3">
-              <button className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium">
-                인스타 스토리
+              <button
+                onClick={handleNativeShare}
+                className="w-full py-3 rounded-lg bg-[hsl(16,85%,58%)] text-white font-medium hover:bg-[hsl(16,85%,50%)] transition-colors"
+              >
+                카카오톡·메시지로 공유
               </button>
-              <button className="w-full py-3 rounded-lg bg-yellow-500 text-black font-medium">
-                카카오톡
+              <button
+                onClick={handleCopyUrl}
+                className="w-full py-3 rounded-lg bg-white/10 text-white font-medium hover:bg-white/20 transition-colors"
+              >
+                링크 복사
               </button>
-              <button className="w-full py-3 rounded-lg bg-white/10 text-white font-medium">
-                URL 복사
+              <button
+                onClick={handleSaveImage}
+                className="w-full py-3 rounded-lg bg-white/5 text-white/70 font-medium hover:bg-white/10 transition-colors text-sm"
+              >
+                이미지로 저장 (준비 중)
               </button>
             </div>
             <button onClick={() => setShowShareModal(false)} className="w-full mt-4 py-2 text-white/50 text-sm">

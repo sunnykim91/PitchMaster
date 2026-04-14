@@ -357,14 +357,14 @@ export function PlayerCard({
             {/* Center: Giant Jersey Number Watermark OR Photo — 워터마크 강화 */}
             <div className={cn(
               "flex-1 flex items-center justify-center relative",
-              effectivePhotoUrl ? "mb-4 sm:mb-5" : "-my-2"
+              effectivePhotoUrl ? "mb-2" : "-my-2"
             )}>
               {effectivePhotoUrl ? (
                 <img
                   src={effectivePhotoUrl}
                   alt=""
                   onError={() => setPhotoFailed(true)}
-                  className="w-32 h-32 sm:w-40 sm:h-40 object-cover rounded-full border-2 border-white/20"
+                  className="w-28 h-28 sm:w-32 sm:h-32 object-cover rounded-full border-2 border-white/20"
                 />
               ) : (
                 <span
