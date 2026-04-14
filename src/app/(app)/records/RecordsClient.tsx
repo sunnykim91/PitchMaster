@@ -513,7 +513,7 @@ export default function RecordsClient({
             <EmptyState
               icon={BarChart3}
               title="아직 기록이 없습니다"
-              description="경기를 진행해보세요."
+              description="경기 1개만 완료해도 선수 카드·시즌 어워드가 자동으로 만들어져요."
               action={
                 <Button size="sm" variant="outline" asChild>
                   <Link href="/matches">경기 일정 보기</Link>
@@ -623,7 +623,7 @@ export default function RecordsClient({
                           {s.jerseyNumber !== null && (
                             <span className="shrink-0 rounded bg-primary/10 px-1 py-0.5 text-xs font-bold text-primary">#{s.jerseyNumber}</span>
                           )}
-                          <span className="font-semibold text-sm truncate">{s.memberName || "-"}</span>
+                          <Link href={`/player/${s.memberId}`} className="font-semibold text-sm truncate hover:text-primary hover:underline">{s.memberName || "-"}</Link>
                           {s.teamRole === "CAPTAIN" && <Badge variant="warning" className="text-xs px-1 py-0 shrink-0">C</Badge>}
                           {s.teamRole === "VICE_CAPTAIN" && <Badge variant="secondary" className="text-xs px-1 py-0 shrink-0">VC</Badge>}
                         </div>
@@ -703,7 +703,7 @@ export default function RecordsClient({
                             <td className={cn("sticky left-8 z-1 py-2.5 font-semibold max-w-[120px] truncate", stickyBg)}>
                               <span className="flex items-center gap-1">
                                 {s.jerseyNumber !== null && <span className="text-xs text-primary font-bold">#{s.jerseyNumber}</span>}
-                                {s.memberName || "-"}
+                                <Link href={`/player/${s.memberId}`} className="hover:text-primary hover:underline">{s.memberName || "-"}</Link>
                                 {s.teamRole === "CAPTAIN" && <Badge variant="warning" className="text-xs px-1 py-0">C</Badge>}
                                 {s.teamRole === "VICE_CAPTAIN" && <Badge variant="secondary" className="text-xs px-1 py-0">VC</Badge>}
                               </span>
