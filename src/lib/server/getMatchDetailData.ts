@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getWeatherData } from "@/lib/server/getWeather";
 
 export async function getMatchDetailData(matchId: string, teamId: string) {
   const db = getSupabaseAdmin();
@@ -18,6 +19,14 @@ export async function getMatchDetailData(matchId: string, teamId: string) {
     db.from("match_comments").select("id, user_id, content, created_at, users(name)").eq("match_id", matchId).order("created_at", { ascending: true }),
   ]);
 
+  // 날씨 prefetch — 미래 경기(≤5일)만 실제 호출, 아니면 null
+  // COMPLETED 경기는 호출 생략
+  const match = matchRes.data;
+  let weather: Awaited<ReturnType<typeof getWeatherData>> = null;
+  if (match && match.status !== "COMPLETED" && match.date) {
+    weather = await getWeatherData(match.date, match.location ?? "");
+  }
+
   return {
     matches: matchRes.data ? { matches: [matchRes.data] } : { matches: [] },
     goals: { goals: goalsRes.data ?? [] },
@@ -30,5 +39,6 @@ export async function getMatchDetailData(matchId: string, teamId: string) {
     team: { team: teamRes.data ?? {} },
     vote: { attendance: voteRes.data ?? [] },
     comments: { comments: commentsRes.data ?? [] },
+    weather,
   };
 }

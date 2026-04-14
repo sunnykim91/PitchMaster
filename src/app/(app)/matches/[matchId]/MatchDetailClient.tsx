@@ -521,6 +521,7 @@ export default function MatchDetailClient({
           refetchComments={refetchComments}
           goals={goals}
           todayIso={todayIso}
+          initialWeather={initialData?.weather ?? null}
         />
       </div>
 

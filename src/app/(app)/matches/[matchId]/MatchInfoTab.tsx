@@ -60,6 +60,14 @@ export interface MatchInfoTabProps {
   refetchComments?: () => Promise<unknown>;
   /** 서버에서 계산된 오늘 날짜 (YYYY-MM-DD, hydration 일치용) */
   todayIso: string;
+  /** 서버에서 prefetch된 날씨 — LCP 개선을 위해 초기 렌더에 포함 */
+  initialWeather?: {
+    temp: number;
+    description: string;
+    humidity: number;
+    windSpeed: number;
+    icon: string;
+  } | null;
 }
 
 /* ── 유니폼 스타일 헬퍼 ── */
@@ -102,6 +110,7 @@ function MatchInfoTabInner({
   comments,
   refetchComments,
   todayIso,
+  initialWeather,
 }: MatchInfoTabProps) {
   const { showToast } = useToast();
   const confirm = useConfirm();
@@ -113,16 +122,18 @@ function MatchInfoTabInner({
   const [sendingComment, setSendingComment] = useState(false);
   const isInternal = match.matchType === "INTERNAL";
 
-  /* ── 날씨 데이터 ── */
+  /* ── 날씨 데이터 (서버에서 prefetch된 initialWeather 사용, 없으면 클라에서 fetch) ── */
   const [weather, setWeather] = useState<{
     temp: number | null;
     description: string;
     humidity: number | null;
     windSpeed: number | null;
     icon: string;
-  } | null>(null);
+  } | null>(initialWeather ?? null);
 
   useEffect(() => {
+    // initialWeather가 있으면 서버에서 이미 조회됨 → 클라 재fetch 불필요
+    if (initialWeather !== undefined) return;
     if (match.status === "COMPLETED") return;
     if (!match.date) return;
 
@@ -135,7 +146,7 @@ function MatchInfoTabInner({
         if (data && data.icon) setWeather(data);
       })
       .catch(() => {});
-  }, [match.date, match.location, match.status]);
+  }, [match.date, match.location, match.status, initialWeather]);
 
   /* ── 유니폼 스타일 ── */
   const uniformPrimary = _uniformPrimary ?? "hsl(var(--primary))";
