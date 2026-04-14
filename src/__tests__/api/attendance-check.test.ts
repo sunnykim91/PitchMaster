@@ -82,6 +82,7 @@ describe("POST /api/attendance-check", () => {
   it("200: STAFF — 기존 레코드 있으면 update", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb(
+      ["matches", { id: "m1" }],
       ["match_attendance", { id: "att-1" }], // select existing
       ["match_attendance", null],              // update
     );
@@ -96,6 +97,7 @@ describe("POST /api/attendance-check", () => {
   it("200: STAFF — 기존 레코드 없으면 insert", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb(
+      ["matches", { id: "m1" }],
       ["match_attendance", null],  // select existing (없음)
       ["match_attendance", null],  // insert
     );
@@ -110,6 +112,7 @@ describe("POST /api/attendance-check", () => {
   it("200: PRESIDENT — 출석 체크 성공", async () => {
     vi.mocked(auth).mockResolvedValue(presidentSession);
     const db = createMockDb(
+      ["matches", { id: "m1" }],
       ["match_attendance", { id: "att-1" }],
       ["match_attendance", null],
     );
@@ -124,6 +127,7 @@ describe("POST /api/attendance-check", () => {
   it("200: memberId로도 출석 체크 가능", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb(
+      ["matches", { id: "m1" }],
       ["match_attendance", { id: "att-1" }],
       ["match_attendance", null],
     );
@@ -138,6 +142,7 @@ describe("POST /api/attendance-check", () => {
   it("200: attended 미지정시 기본값 true 처리", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb(
+      ["matches", { id: "m1" }],
       ["match_attendance", { id: "att-1" }],
       ["match_attendance", null],
     );
@@ -152,6 +157,7 @@ describe("POST /api/attendance-check", () => {
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb(
+      ["matches", { id: "m1" }],
       ["match_attendance", { id: "att-1" }],                      // select existing
       ["match_attendance", null, { message: "update failed" }],   // update error
     );
@@ -228,7 +234,10 @@ describe("GET /api/attendance-check", () => {
 
   it("200: 실제 출석 기록 반환 (actually_attended not null)", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_attendance", attendanceRecords]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_attendance", attendanceRecords],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
@@ -239,7 +248,10 @@ describe("GET /api/attendance-check", () => {
 
   it("200: 출석 기록 없으면 빈 배열 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_attendance", []]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_attendance", []],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
@@ -250,7 +262,10 @@ describe("GET /api/attendance-check", () => {
 
   it("400: DB 에러 발생시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_attendance", null, { message: "query failed" }]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_attendance", null, { message: "query failed" }],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));

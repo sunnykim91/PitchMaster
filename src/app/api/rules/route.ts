@@ -81,6 +81,7 @@ export async function PUT(request: NextRequest) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", body.id)
+    .eq("team_id", ctx.teamId)
     .select()
     .single();
 

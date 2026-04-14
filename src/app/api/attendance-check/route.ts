@@ -24,6 +24,14 @@ export async function POST(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  const { data: matchCheck } = await db
+    .from("matches")
+    .select("id")
+    .eq("id", matchId)
+    .eq("team_id", ctx.teamId)
+    .single();
+  if (!matchCheck) return apiError("Match not found", 404);
+
   // 기존 레코드 찾기: user_id 또는 member_id로 검색
   let query = db
     .from("match_attendance")
@@ -83,6 +91,14 @@ export async function GET(request: NextRequest) {
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  const { data: matchCheck } = await db
+    .from("matches")
+    .select("id")
+    .eq("id", matchId)
+    .eq("team_id", ctx.teamId)
+    .single();
+  if (!matchCheck) return apiError("Match not found", 404);
 
   const { data, error } = await db
     .from("match_attendance")

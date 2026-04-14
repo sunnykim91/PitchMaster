@@ -84,7 +84,8 @@ export async function PUT(request: NextRequest) {
   const { error } = await db
     .from("seasons")
     .update({ is_active: true })
-    .eq("id", body.id);
+    .eq("id", body.id)
+    .eq("team_id", ctx.teamId);
 
   if (error) return apiError(error.message);
   return apiSuccess({ ok: true });
