@@ -637,6 +637,7 @@ function PenaltyRulesSection({ refetchSummary }: { refetchSummary: () => Promise
 // ── 회원 회비 상태 관리 (면제/휴회/부상) ──
 const EXEMPTION_TYPES = [
   { value: "EXEMPT", label: "면제", color: "text-[hsl(var(--warning))]" },
+  { value: "PREPAID", label: "선납", color: "text-[hsl(var(--success))]" },
   { value: "LEAVE", label: "휴회", color: "text-[hsl(var(--info))]" },
   { value: "INJURED", label: "부상", color: "text-destructive" },
 ] as const;
@@ -715,7 +716,7 @@ function MemberExemptionSection({ members, refetchPaymentStatus }: { members: Ap
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-foreground">회원 회비 상태</h3>
-          <p className="text-xs text-muted-foreground">면제/휴회/부상 설정 시 매월 자동 면제 처리</p>
+          <p className="text-xs text-muted-foreground">면제/선납/휴회/부상 설정 시 매월 자동 면제 처리</p>
         </div>
         {!adding && (
           <Button type="button" variant="outline" size="sm" onClick={() => setAdding(true)}>
@@ -723,6 +724,20 @@ function MemberExemptionSection({ members, refetchPaymentStatus }: { members: Ap
           </Button>
         )}
       </div>
+
+      {/* 선납 안내 박스 */}
+      <Card className="border-success/30 bg-[hsl(var(--success))]/5 p-3">
+        <div className="flex gap-2">
+          <div className="text-lg leading-none">💡</div>
+          <div className="space-y-1 text-xs text-muted-foreground leading-relaxed">
+            <p className="font-semibold text-foreground">선납 회원은 이렇게 관리하세요</p>
+            <p>• 상태를 <b>&ldquo;선납&rdquo;</b>으로 선택하고 기간을 지정하세요 (예: 2026-01-01 ~ 2026-12-31)</p>
+            <p>• 실제 받은 금액은 <b>회비 기록 탭</b>에서 입금 1건으로 기록하세요</p>
+            <p>• 해당 기간 동안 월별 납부 상태는 자동으로 면제 처리됩니다</p>
+            <p className="text-muted-foreground/70">※ 정식 선납 관리 기능은 추후 업데이트 예정</p>
+          </div>
+        </div>
+      </Card>
 
       {/* 추가 폼 */}
       {adding && (
@@ -745,7 +760,7 @@ function MemberExemptionSection({ members, refetchPaymentStatus }: { members: Ap
             </div>
             <div className="space-y-1">
               <Label className="text-[11px] text-muted-foreground">사유</Label>
-              <Input name="reason" placeholder="예: 무릎 부상, 해외 출장" className="h-9 text-sm" />
+              <Input name="reason" placeholder="예: 1년치 선납, 6개월 선납, 무릎 부상, 해외 출장" className="h-9 text-sm" />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
@@ -767,7 +782,7 @@ function MemberExemptionSection({ members, refetchPaymentStatus }: { members: Ap
 
       {/* 활성 목록 */}
       {activeExemptions.length === 0 && !adding && (
-        <p className="text-xs text-muted-foreground/60 py-4 text-center">등록된 면제/휴회/부상 회원이 없습니다</p>
+        <p className="text-xs text-muted-foreground/60 py-4 text-center">등록된 면제/선납/휴회/부상 회원이 없습니다</p>
       )}
 
       {activeExemptions.map((ex) => {

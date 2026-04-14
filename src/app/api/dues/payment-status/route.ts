@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   const [y, m] = month.split("-").map(Number);
   const monthStart = `${month}-01`;
   const monthEnd = `${month}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`;
-  const TYPE_LABELS: Record<string, string> = { EXEMPT: "면제", LEAVE: "휴회", INJURED: "부상" };
+  const TYPE_LABELS: Record<string, string> = { EXEMPT: "면제", PREPAID: "선납", LEAVE: "휴회", INJURED: "부상" };
 
   // member_dues_exemptions.member_id = team_members.id
   // DuesClient는 m.memberId(team_members.id)로 paymentStatusMap 조회

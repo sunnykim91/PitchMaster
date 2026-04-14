@@ -36,8 +36,8 @@ export async function POST(request: NextRequest) {
     return apiError("memberId, exemptionType, startDate are required", 400);
   }
 
-  if (!["EXEMPT", "LEAVE", "INJURED"].includes(exemptionType)) {
-    return apiError("exemptionType must be EXEMPT, LEAVE, or INJURED", 400);
+  if (!["EXEMPT", "PREPAID", "LEAVE", "INJURED"].includes(exemptionType)) {
+    return apiError("exemptionType must be EXEMPT, PREPAID, LEAVE, or INJURED", 400);
   }
 
   if (endDate && startDate && endDate < startDate) {
