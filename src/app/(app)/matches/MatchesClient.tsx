@@ -23,7 +23,7 @@ import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
 import { shareVoteLink } from "@/lib/kakaoShare";
 import { EmptyState } from "@/components/EmptyState";
 import { MatchCalendar } from "@/components/MatchCalendar";
-import { Calendar, Share2 } from "lucide-react";
+import { Calendar, Loader2, Share2 } from "lucide-react";
 import { getUniformStyle } from "@/lib/uniformUtils";
 
 type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
@@ -143,6 +143,9 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [votingMatchId, setVotingMatchId] = useState<string | null>(null);
+  // 로딩 스피너·흔들림: "matchId:vote" 키
+  const [loadingVoteKey, setLoadingVoteKey] = useState<string | null>(null);
+  const [shakeVoteKey, setShakeVoteKey] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [now, setNow] = useState<number>(0);
   useEffect(() => { setNow(Date.now()); }, []);
@@ -328,14 +331,19 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   }
 
   async function handleVote(matchId: string, vote: AttendanceVote) {
+    const key = `${matchId}:${vote}`;
     setVotingMatchId(matchId);
+    setLoadingVoteKey(key);
     const { error } = await apiMutate("/api/attendance", "POST", { matchId, vote });
     setVotingMatchId(null);
+    setLoadingVoteKey(null);
     if (!error) {
       GA.voteComplete(vote, "match_list");
       await refetchAttendance();
       showToast("참석 의사를 저장했습니다.");
     } else {
+      setShakeVoteKey(key);
+      setTimeout(() => setShakeVoteKey(null), 500);
       showToast(toKoreanError(error), "error");
     }
   }
@@ -717,6 +725,8 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
               )}
               onVote={handleVote}
               votingMatchId={votingMatchId}
+              loadingVoteKey={loadingVoteKey}
+              shakeVoteKey={shakeVoteKey}
             />
           </CardContent>
         </Card>
@@ -837,17 +847,22 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       { value: "ABSENT" as const, label: "불참" },
                     ]).map((item) => {
                       const isSelected = vote === item.value;
+                      const key = `${match.id}:${item.value}`;
+                      const isLoading = loadingVoteKey === key;
+                      const isShaking = shakeVoteKey === key;
                       return (
                         <button
                           key={item.value}
                           type="button"
                           disabled={votingMatchId === match.id}
                           className={cn(
-                            "flex-1 rounded-lg py-1.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50",
-                            isSelected ? voteStyles[item.value].active : "border border-border text-muted-foreground hover:bg-secondary"
+                            "relative flex-1 rounded-lg py-1.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-1",
+                            isSelected ? voteStyles[item.value].active : "border border-border text-muted-foreground hover:bg-secondary",
+                            isShaking && "animate-shake ring-2 ring-destructive"
                           )}
                           onClick={() => handleVote(match.id, item.value)}
                         >
+                          {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                           {item.label}
                         </button>
                       );

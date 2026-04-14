@@ -2,7 +2,7 @@
 
 import { memo, useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { cn, formatTime } from "@/lib/utils";
@@ -29,6 +29,8 @@ interface MatchCalendarProps {
   myVotes?: Record<string, string>;  // matchId → vote value
   onVote?: (matchId: string, vote: "ATTEND" | "MAYBE" | "ABSENT") => void;
   votingMatchId?: string | null;
+  loadingVoteKey?: string | null;  // "matchId:vote"
+  shakeVoteKey?: string | null;
 }
 
 const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"];
@@ -54,7 +56,7 @@ const VOTE_STYLES: Record<string, { active: string }> = {
   ABSENT: { active: "bg-[hsl(var(--loss))] text-white" },
 };
 
-export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onVote, votingMatchId }: MatchCalendarProps) {
+export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onVote, votingMatchId, loadingVoteKey, shakeVoteKey }: MatchCalendarProps) {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
@@ -242,17 +244,22 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
                     {(["ATTEND", "MAYBE", "ABSENT"] as const).map((v) => {
                       const label = v === "ATTEND" ? "참석" : v === "MAYBE" ? "미정" : "불참";
                       const isSelected = myVote === v;
+                      const key = `${m.id}:${v}`;
+                      const isLoading = loadingVoteKey === key;
+                      const isShaking = shakeVoteKey === key;
                       return (
                         <button
                           key={v}
                           type="button"
                           disabled={votingMatchId === m.id}
                           className={cn(
-                            "flex-1 rounded-lg py-1.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50",
-                            isSelected ? VOTE_STYLES[v].active : "border border-border text-muted-foreground hover:bg-secondary"
+                            "relative flex-1 rounded-lg py-1.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-1",
+                            isSelected ? VOTE_STYLES[v].active : "border border-border text-muted-foreground hover:bg-secondary",
+                            isShaking && "animate-shake ring-2 ring-destructive"
                           )}
                           onClick={(e) => { e.preventDefault(); onVote(m.id, v); }}
                         >
+                          {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                           {label}
                         </button>
                       );

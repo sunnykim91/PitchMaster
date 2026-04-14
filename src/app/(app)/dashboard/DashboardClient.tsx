@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Cake, Calendar, Check, Copy, DollarSign, Link2, Trophy, Users, Vote } from "lucide-react";
+import { Cake, Calendar, Check, Copy, DollarSign, Link2, Loader2, Trophy, Users, Vote } from "lucide-react";
 import { GA } from "@/lib/analytics";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
@@ -171,6 +171,8 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
   const [optimisticCounts, setOptimisticCounts] = useState<{ attend: number; absent: number; undecided: number } | null>(null);
   // 연속 클릭 방지용 (300ms)
   const [pendingVote, setPendingVote] = useState(false);
+  const [loadingVote, setLoadingVote] = useState<"ATTEND" | "ABSENT" | "MAYBE" | null>(null);
+  const [shakeVote, setShakeVote] = useState<"ATTEND" | "ABSENT" | "MAYBE" | null>(null);
   const [inviteCopied, setInviteCopied] = useState(false);
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
@@ -209,14 +211,18 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
 
     // 연속 클릭 방지 (300ms)
     setPendingVote(true);
+    setLoadingVote(vote);
     setTimeout(() => setPendingVote(false), 300);
 
     // 백그라운드 API 호출
     const { error: err } = await apiMutate("/api/attendance", "POST", { matchId, vote });
+    setLoadingVote(null);
     if (err) {
-      // 실패 시 롤백
+      // 실패 시 롤백 + 흔들림
       setOptimisticVote(prevVote);
       setOptimisticCounts(prevCounts);
+      setShakeVote(vote);
+      setTimeout(() => setShakeVote(null), 500);
       showToast("투표에 실패했습니다. 다시 시도해주세요.", "error");
     } else {
       GA.voteComplete(vote, "dashboard");
@@ -488,18 +494,22 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                 { value: "ABSENT" as const, label: "불참" },
               ]).map((opt) => {
                 const isSelected = displayVote === opt.value;
+                const isLoading = loadingVote === opt.value;
+                const isShaking = shakeVote === opt.value;
                 return (
                   <button
                     key={opt.value}
                     type="button"
-                    disabled={pendingVote}
+                    disabled={pendingVote || !!loadingVote}
                     aria-pressed={displayVote === opt.value}
                     className={cn(
-                      "flex-1 rounded-lg py-1.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50",
-                      isSelected ? voteStyles[opt.value].active : "border border-border text-muted-foreground hover:bg-secondary"
+                      "relative flex-1 rounded-lg py-1.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-1",
+                      isSelected ? voteStyles[opt.value].active : "border border-border text-muted-foreground hover:bg-secondary",
+                      isShaking && "animate-shake ring-2 ring-destructive"
                     )}
                     onClick={() => handleQuickVote(upcomingMatch.id, upcomingMatch.myMemberId!, opt.value)}
                   >
+                    {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                     {opt.label}
                   </button>
                 );
