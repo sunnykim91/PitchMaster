@@ -113,8 +113,8 @@ export default function RecordsClient({
   const searchParams = useSearchParams();
 
   // ── Tab state ──
-  type RecordsTab = "my" | "ranking" | "all";
-  const validTabs: RecordsTab[] = ["my", "ranking", "all"];
+  type RecordsTab = "my" | "ranking" | "all" | "awards";
+  const validTabs: RecordsTab[] = ["my", "ranking", "all", "awards"];
   const tabFromUrl = searchParams.get("tab") as RecordsTab | null;
   const [activeTab, setActiveTabState] = useState<RecordsTab>(
     tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : "my"
@@ -129,6 +129,7 @@ export default function RecordsClient({
     { key: "my" as const, label: "내 기록" },
     { key: "ranking" as const, label: "팀 랭킹" },
     { key: "all" as const, label: "전체 기록" },
+    { key: "awards" as const, label: "시즌 어워드" },
   ];
 
   // ── Seasons (SSR 데이터 사용) ──
@@ -724,6 +725,19 @@ export default function RecordsClient({
           )}
         </CardContent>
       </Card>
+      </div>
+
+      {/* ── Tab: 시즌 어워드 ── */}
+      <div className={activeTab === "awards" ? "grid gap-5" : "hidden"}>
+        {isAllTime ? (
+          <Card>
+            <CardContent className="py-8 text-center text-sm text-muted-foreground">
+              시즌을 선택하면 어워드가 표시됩니다 (전체 기간은 제외).
+            </CardContent>
+          </Card>
+        ) : (
+          <SeasonAwardsCard seasonId={seasonId} />
+        )}
       </div>
 
       {/* ── 드릴다운 Sheet ── */}
