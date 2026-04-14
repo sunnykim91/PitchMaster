@@ -11,12 +11,16 @@ export const MVP_VOTE_THRESHOLD = 0.7;
  * 유효한 MVP 득표율인지 판정.
  * @param mvpVoteCount MVP 투표에 참여한 사람 수 (match_mvp_votes 고유 voter 수)
  * @param attendedCount 해당 경기 실제 참석 인원
+ *
+ * 폴백 정책: 참석 체크가 안 된 경기(attendedCount === 0)는 과거 로직 보존을 위해
+ * "참여율 불명"으로 간주하고 true 반환 — 기존 MVP 기록 유지.
+ * 참석 체크된 경기에만 70% 임계값 적용.
  */
 export function isValidMvpVoteTurnout(
   mvpVoteCount: number,
   attendedCount: number
 ): boolean {
-  if (attendedCount <= 0) return false;
+  if (attendedCount <= 0) return mvpVoteCount > 0; // 참석 체크 미기록 경기 폴백
   return mvpVoteCount / attendedCount >= MVP_VOTE_THRESHOLD;
 }
 

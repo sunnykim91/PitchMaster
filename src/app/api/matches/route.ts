@@ -83,7 +83,8 @@ export async function POST(request: NextRequest) {
   if (!body.date || !/^\d{4}-\d{2}-\d{2}$/.test(body.date)) {
     return apiError("경기 날짜 형식이 올바르지 않습니다");
   }
-  const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+  // HH:MM 또는 HH:MM:SS 모두 허용 (PG TIME 타입은 HH:MM:SS로 반환)
+  const timeRegex = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/;
   if (body.time && !timeRegex.test(body.time)) {
     return apiError("경기 시간 형식이 올바르지 않습니다 (예: 14:30)");
   }
@@ -161,8 +162,8 @@ export async function PUT(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  // 날짜·시간 형식·순서 검증
-  const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+  // 날짜·시간 형식·순서 검증 (HH:MM 또는 HH:MM:SS 허용)
+  const timeRegex = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/;
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (body.date !== undefined && body.date && !dateRegex.test(body.date)) {
     return apiError("경기 날짜 형식이 올바르지 않습니다");
