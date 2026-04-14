@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Vote, CreditCard, LayoutGrid, Check, Sparkles, Award, Crown, TrendingUp } from "lucide-react";
+import { Vote, CreditCard, LayoutGrid, Check, Award, Crown, TrendingUp } from "lucide-react";
+import { PlayerCard, type PlayerCardProps } from "@/components/pitchmaster/PlayerCard";
 
 function VoteVisual() {
   return (
@@ -100,6 +101,28 @@ function TacticsBoard() {
   );
 }
 
+// 랜딩 데모용 ICON 카드 (PlayerCardDemo의 iconCard 기반)
+const landingDemoCard: PlayerCardProps = {
+  ovr: 92,
+  rarity: "ICON",
+  positionLabel: "FW",
+  positionCategory: "FW",
+  playerName: "김민수",
+  jerseyNumber: 10,
+  teamName: "FC 피치마스터",
+  teamPrimaryColor: "#e8613a",
+  seasonName: "2026 시즌",
+  signature: "15골 8어시 — 시즌 MVP 후보",
+  stats: [
+    { label: "골", value: "15", rank: "🏆 팀 1위", isHero: true },
+    { label: "어시", value: "8", rank: "상위 10%" },
+    { label: "공격P", value: "23", streak: "🔥 5경기 연속" },
+    { label: "MOM", value: "5" },
+    { label: "출석률", value: "82%" },
+    { label: "경기", value: "18" },
+  ],
+};
+
 const features = [
   {
     icon: Vote, label: "참석 투표", tagline: "링크 하나면 끝",
@@ -173,30 +196,52 @@ export default function FeaturesSection() {
         <TacticsBoard />
 
         {/* Player Card & Season Awards */}
-        <div className="mt-24 mb-14 text-center">
+        <div className="mt-24 mb-10 text-center">
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.3em] text-[hsl(var(--warning))]">Player Card & Awards</p>
           <h3 className="mb-2 font-heading text-2xl font-bold sm:text-3xl">
             경기 끝나면 카드가 만들어집니다
           </h3>
           <p className="mx-auto max-w-lg text-sm text-muted-foreground">
-            FIFA 스타일 선수 카드와 시즌 어워드로 한 시즌의 기록이 자동으로 정리됩니다. 카톡 한 번에 자랑하세요.
+            FIFA 스타일 선수 카드와 시즌 어워드. 카톡 한 번에 자랑하세요.
           </p>
         </div>
-        <div className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { icon: Sparkles, label: "선수 카드", desc: "OVR·등급·시그니처 카피로 나만의 카드 생성" },
-            { icon: Crown, label: "MOM 어워드", desc: "참석자 70%+ 투표로 신뢰도 높은 MVP 선정" },
-            { icon: Award, label: "시즌 시상 7종", desc: "득점왕·도움왕·철벽·개근·올라운더 자동" },
-            { icon: TrendingUp, label: "커리어 프로필", desc: "베스트 모먼트·시즌 누적·랭킹 한 페이지" },
-          ].map((f) => (
-            <div key={f.label} className="rounded-xl border border-[hsl(var(--warning))]/20 bg-[hsl(var(--warning))]/5 p-5">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(var(--warning))]/15">
-                <f.icon className="h-5 w-5 text-[hsl(var(--warning))]" />
+
+        {/* Live PlayerCard demo */}
+        <div className="rounded-3xl bg-[hsl(240,6%,6%)] py-12 px-4 sm:py-16 sm:px-8">
+          <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16 max-w-5xl mx-auto">
+            <div className="flex justify-center">
+              <div className="w-full max-w-[300px] sm:max-w-[340px]">
+                <PlayerCard {...landingDemoCard} />
               </div>
-              <h4 className="mb-1 text-sm font-semibold">{f.label}</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
             </div>
-          ))}
+            <div className="space-y-4">
+              <p className="text-[10px] tracking-[0.3em] text-yellow-400/80 font-bold">TAP THE CARD</p>
+              <h4 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
+                나만의 시즌 카드,<br />홀로그래픽으로 빛나다
+              </h4>
+              <p className="text-sm text-white/60 leading-relaxed">
+                4단계 등급(ICON·HERO·RARE·COMMON) · 포지션별 스탯 · 시그니처 카피.
+                골·어시·MOM 자동 집계로 카드 등급이 결정됩니다.
+              </p>
+              <div className="grid sm:grid-cols-1 gap-2.5 pt-2">
+                {[
+                  { icon: Crown, label: "MOM 어워드", desc: "참석자 70%+ 투표로 신뢰도 높은 MVP 선정" },
+                  { icon: Award, label: "시즌 시상 7종", desc: "득점왕·도움왕·철벽·개근·올라운더 자동" },
+                  { icon: TrendingUp, label: "커리어 프로필", desc: "베스트 모먼트·시즌 누적·랭킹 한 페이지" },
+                ].map((f) => (
+                  <div key={f.label} className="flex gap-3 rounded-xl border border-white/10 bg-white/5 p-3.5">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--warning))]/15">
+                      <f.icon className="h-4.5 w-4.5 text-[hsl(var(--warning))]" />
+                    </div>
+                    <div>
+                      <h5 className="text-sm font-semibold text-white">{f.label}</h5>
+                      <p className="text-xs text-white/55 leading-relaxed mt-0.5">{f.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
