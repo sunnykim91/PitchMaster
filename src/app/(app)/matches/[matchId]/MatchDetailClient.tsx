@@ -110,7 +110,11 @@ export default function MatchDetailClient({
   const {
     data: commentsData,
     refetch: refetchComments,
-  } = useApi<{ comments: { id: string; user_id: string; content: string; created_at: string; users: { name: string } | null }[] }>(`/api/match-comments?matchId=${matchId}`, { comments: [] });
+  } = useApi<{ comments: { id: string; user_id: string; content: string; created_at: string; users: { name: string } | null }[] }>(
+    `/api/match-comments?matchId=${matchId}`,
+    initialData?.comments ?? { comments: [] },
+    { skip: !!initialData?.comments },
+  );
 
   // 실시간 동기화: 참석투표, 골 기록, MVP 투표
   useRealtimeSubscription({
@@ -135,7 +139,7 @@ export default function MatchDetailClient({
   const {
     data: diaryData,
     refetch: refetchDiary,
-  } = useApi<{ diary: DiaryRow }>(`/api/diary?matchId=${matchId}`, initialData?.diary ?? { diary: null });
+  } = useApi<{ diary: DiaryRow }>(`/api/diary?matchId=${matchId}`, initialData?.diary ?? { diary: null }, { skip: !!initialData?.diary });
 
   const {
     data: membersData,
