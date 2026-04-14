@@ -475,7 +475,7 @@ export default function MatchDetailClient({
             { key: "vote", label: "투표" },
             ...(match.matchType !== "EVENT" ? [
               { key: "tactics" as const, label: "전술" },
-              { key: "attendance" as const, label: "출석" },
+              ...(canManageAttendance ? [{ key: "attendance" as const, label: "출석" }] : []),
               { key: "record" as const, label: "기록" },
               { key: "diary" as const, label: "일지" },
             ] : []),

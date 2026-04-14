@@ -229,14 +229,22 @@ function MatchTacticsTabInner({
 
       {/* ── 용병 관리 ── */}
       {canManage && (
-        <details className="group rounded-xl border border-border/30 overflow-hidden" open={showGuestForm || (guests ?? []).length > 0}>
-          <summary className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-secondary/30 transition-colors list-none [&::-webkit-details-marker]:hidden" onClick={(e) => { e.preventDefault(); setShowGuestForm(!showGuestForm); }}>
-            <span className="flex items-center gap-1.5 text-base font-bold"><Plus className="h-4 w-4 text-primary" />용병 관리</span>
-            <div className="flex items-center gap-2">
+        <div className="rounded-xl border border-border/30 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4">
+            <span className="flex items-center gap-2 text-base font-bold">
+              용병
               <Badge variant="secondary" className="text-xs">{(guests ?? []).length}명</Badge>
-              <ChevronDown className={cn("h-5 w-5 text-muted-foreground transition-transform duration-200", showGuestForm && "rotate-180")} />
-            </div>
-          </summary>
+            </span>
+            <Button
+              type="button"
+              size="sm"
+              variant={showGuestForm ? "outline" : "default"}
+              onClick={() => setShowGuestForm(!showGuestForm)}
+              className="gap-1"
+            >
+              {showGuestForm ? "닫기" : (<><Plus className="h-4 w-4" />추가</>)}
+            </Button>
+          </div>
           <div className="space-y-4 px-5 pb-5">
             {showGuestForm && (
               <form action={async (formData) => {
@@ -408,7 +416,7 @@ function MatchTacticsTabInner({
               </ul>
             )}
           </div>
-        </details>
+        </div>
       )}
 
       {canManage && filteredAttending.length >= 5 && (() => {
