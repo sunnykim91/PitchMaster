@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
 
-  const roleCheck = requireRole(ctx, PERMISSIONS.MATCH_CREATE);
+  const roleCheck = requireRole(ctx, PERMISSIONS.DUES_SETTING_EDIT);
   if (roleCheck) return roleCheck;
 
   const body = await request.json();
@@ -54,7 +54,7 @@ export async function PUT(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
 
-  const roleCheck = requireRole(ctx, PERMISSIONS.MATCH_CREATE);
+  const roleCheck = requireRole(ctx, PERMISSIONS.DUES_SETTING_EDIT);
   if (roleCheck) return roleCheck;
 
   const body = await request.json();
@@ -87,7 +87,7 @@ export async function DELETE(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
 
-  const roleCheck = requireRole(ctx, PERMISSIONS.MATCH_CREATE);
+  const roleCheck = requireRole(ctx, PERMISSIONS.DUES_SETTING_EDIT);
   if (roleCheck) return roleCheck;
 
   const { id } = await request.json();

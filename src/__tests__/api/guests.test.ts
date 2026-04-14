@@ -60,7 +60,10 @@ describe("GET /api/guests", () => {
 
   it("200: 게스트 목록 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_guests", mockGuests]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_guests", mockGuests],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
@@ -71,7 +74,10 @@ describe("GET /api/guests", () => {
 
   it("200: 게스트 없으면 빈 배열 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_guests", []]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_guests", []],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
@@ -82,7 +88,10 @@ describe("GET /api/guests", () => {
 
   it("400: DB 에러 발생시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_guests", null, { message: "query failed" }]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_guests", null, { message: "query failed" }],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
@@ -125,16 +134,19 @@ describe("POST /api/guests", () => {
   });
 
   it("503: DB 없는 경우", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     vi.mocked(getSupabaseAdmin).mockReturnValue(null);
     const res = await POST(makeRequest(guestBody));
     expect(res.status).toBe(503);
   });
 
   it("201: 게스트 등록 성공", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     const newGuest = { id: "gu-new", match_id: "m1", name: "게스트C", position: "MF" };
-    const db = createMockDb(["match_guests", newGuest]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_guests", newGuest],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(guestBody));
@@ -147,7 +159,10 @@ describe("POST /api/guests", () => {
   it("201: STAFF — 게스트 등록 성공", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const newGuest = { id: "gu-staff", match_id: "m1", name: "게스트C" };
-    const db = createMockDb(["match_guests", newGuest]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_guests", newGuest],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(guestBody));
@@ -155,9 +170,12 @@ describe("POST /api/guests", () => {
   });
 
   it("201: 선택 필드 없이 등록 성공", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     const newGuest = { id: "gu-min", match_id: "m1", name: "게스트D", position: null, phone: null, note: null };
-    const db = createMockDb(["match_guests", newGuest]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_guests", newGuest],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ matchId: "m1", name: "게스트D" }));
@@ -167,8 +185,11 @@ describe("POST /api/guests", () => {
   });
 
   it("400: DB 에러 시 에러 반환", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_guests", null, { message: "insert failed" }]);
+    vi.mocked(auth).mockResolvedValue(staffSession);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_guests", null, { message: "insert failed" }],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(guestBody));
@@ -211,7 +232,7 @@ describe("PUT /api/guests", () => {
   });
 
   it("400: id 누락", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb();
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
@@ -222,14 +243,14 @@ describe("PUT /api/guests", () => {
   });
 
   it("503: DB 없는 경우", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     vi.mocked(getSupabaseAdmin).mockReturnValue(null);
     const res = await PUT(makeRequest(updateBody));
     expect(res.status).toBe(503);
   });
 
   it("404: 다른 팀의 용병이면 접근 거부", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     // guest check가 null 반환 → 팀 검증 실패
     const db = createMockDb(["match_guests", null]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
@@ -241,7 +262,7 @@ describe("PUT /api/guests", () => {
   });
 
   it("200: 용병 수정 성공", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     const updated = {
       id: "gu1",
       match_id: "m1",
@@ -278,7 +299,7 @@ describe("PUT /api/guests", () => {
   });
 
   it("400: DB 에러 시 에러 반환", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb(
       ["match_guests", { id: "gu1" }],
       ["match_guests", null, { message: "update failed" }],
@@ -316,7 +337,7 @@ describe("DELETE /api/guests", () => {
   });
 
   it("400: id 누락", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb();
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
@@ -327,15 +348,18 @@ describe("DELETE /api/guests", () => {
   });
 
   it("503: DB 없는 경우", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     vi.mocked(getSupabaseAdmin).mockReturnValue(null);
     const res = await DELETE(makeRequest("gu1"));
     expect(res.status).toBe(503);
   });
 
   it("200: 게스트 삭제 성공", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_guests", null]);
+    vi.mocked(auth).mockResolvedValue(staffSession);
+    const db = createMockDb(
+      ["match_guests", { id: "gu1" }],
+      ["match_guests", null],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await DELETE(makeRequest("gu1"));
@@ -345,8 +369,11 @@ describe("DELETE /api/guests", () => {
   });
 
   it("400: DB 에러 시 에러 반환", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_guests", null, { message: "delete failed" }]);
+    vi.mocked(auth).mockResolvedValue(staffSession);
+    const db = createMockDb(
+      ["match_guests", { id: "gu1" }],
+      ["match_guests", null, { message: "delete failed" }],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await DELETE(makeRequest("gu1"));

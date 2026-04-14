@@ -12,6 +12,15 @@ export async function GET(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  // 경기가 현재 팀 소속인지 검증
+  const { data: matchCheck } = await db
+    .from("matches")
+    .select("id")
+    .eq("id", matchId)
+    .eq("team_id", ctx.teamId)
+    .single();
+  if (!matchCheck) return apiError("Match not found", 404);
+
   const { data, error } = await db
     .from("match_mvp_votes")
     .select("*, users:candidate_id(id, name)")
@@ -32,6 +41,15 @@ export async function POST(request: NextRequest) {
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  // 경기가 현재 팀 소속인지 검증
+  const { data: matchCheck } = await db
+    .from("matches")
+    .select("id")
+    .eq("id", matchId)
+    .eq("team_id", ctx.teamId)
+    .single();
+  if (!matchCheck) return apiError("Match not found", 404);
 
   // Verify voter attended the match
   const { data: attendance } = await db

@@ -91,7 +91,7 @@ describe("GET /api/dashboard", () => {
       ["match_attendance", [{ vote: "ATTEND", user_id: "other", member_id: null }]], // vote list
       ["team_members", { id: "mem-1" }], // myMember (maybeSingle)
       ["match_guests", []],        // guests
-      ["team_members", [{ id: "mem-other", user_id: "other" }]], // active member roster (정규화용)
+      ["team_members", [{ id: "mem-other", user_id: "other", status: "ACTIVE" }]], // active member roster (정규화용)
       ["match_attendance", null],  // user vote check (tasks)
       ["match_mvp_votes", null],   // user mvp check (tasks)
       ["matches", []],             // completed matches

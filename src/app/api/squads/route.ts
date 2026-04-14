@@ -18,6 +18,14 @@ export async function GET(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  const { data: matchCheck } = await db
+    .from("matches")
+    .select("id")
+    .eq("id", matchId)
+    .eq("team_id", ctx.teamId)
+    .single();
+  if (!matchCheck) return apiError("Match not found", 404);
+
   const side = request.nextUrl.searchParams.get("side");
 
   let query = db
@@ -45,8 +53,18 @@ export async function POST(request: NextRequest) {
   if (roleCheck) return roleCheck;
 
   const body = await request.json();
+  if (!body.matchId) return apiError("matchId required");
+
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  const { data: matchCheck } = await db
+    .from("matches")
+    .select("id")
+    .eq("id", body.matchId)
+    .eq("team_id", ctx.teamId)
+    .single();
+  if (!matchCheck) return apiError("Match not found", 404);
 
   const side = body.side ?? null;
 

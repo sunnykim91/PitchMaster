@@ -12,6 +12,14 @@ export async function GET(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  const { data: matchCheck } = await db
+    .from("matches")
+    .select("id")
+    .eq("id", matchId)
+    .eq("team_id", ctx.teamId)
+    .single();
+  if (!matchCheck) return apiError("Match not found", 404);
+
   const { data, error } = await db
     .from("match_comments")
     .select("id, match_id, user_id, content, created_at, users(name)")
@@ -33,6 +41,14 @@ export async function POST(request: NextRequest) {
 
   const { matchId, content } = await request.json();
   if (!matchId || !content?.trim()) return apiError("matchId and content required");
+
+  const { data: matchCheck } = await db
+    .from("matches")
+    .select("id")
+    .eq("id", matchId)
+    .eq("team_id", ctx.teamId)
+    .single();
+  if (!matchCheck) return apiError("Match not found", 404);
 
   const { data, error } = await db
     .from("match_comments")

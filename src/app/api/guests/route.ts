@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
+import { getApiContext, apiError, apiSuccess, requireRole } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { PERMISSIONS } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -11,6 +12,15 @@ export async function GET(request: NextRequest) {
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  // 경기가 현재 팀 소속인지 검증
+  const { data: matchCheck } = await db
+    .from("matches")
+    .select("id")
+    .eq("id", matchId)
+    .eq("team_id", ctx.teamId)
+    .single();
+  if (!matchCheck) return apiError("Match not found", 404);
 
   const { data, error } = await db
     .from("match_guests")
@@ -25,9 +35,22 @@ export async function POST(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
 
+  const roleCheck = requireRole(ctx, PERMISSIONS.MATCH_EDIT);
+  if (roleCheck) return roleCheck;
+
   const body = await request.json();
+  if (!body.matchId) return apiError("matchId required");
+
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  const { data: matchCheck } = await db
+    .from("matches")
+    .select("id")
+    .eq("id", body.matchId)
+    .eq("team_id", ctx.teamId)
+    .single();
+  if (!matchCheck) return apiError("Match not found", 404);
 
   const { data, error } = await db
     .from("match_guests")
@@ -47,6 +70,9 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
+
+  const roleCheck = requireRole(ctx, PERMISSIONS.MATCH_EDIT);
+  if (roleCheck) return roleCheck;
 
   const body = await request.json();
   if (!body.id) return apiError("id required");
@@ -83,11 +109,23 @@ export async function DELETE(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
 
+  const roleCheck = requireRole(ctx, PERMISSIONS.MATCH_EDIT);
+  if (roleCheck) return roleCheck;
+
   const id = request.nextUrl.searchParams.get("id");
   if (!id) return apiError("id required");
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  // 용병이 이 팀의 경기에 속하는지 검증
+  const { data: check } = await db
+    .from("match_guests")
+    .select("id, matches!inner(team_id)")
+    .eq("id", id)
+    .eq("matches.team_id", ctx.teamId)
+    .single();
+  if (!check) return apiError("Guest not found", 404);
 
   const { error } = await db
     .from("match_guests")

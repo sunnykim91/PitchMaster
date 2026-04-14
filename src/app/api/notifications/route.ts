@@ -39,7 +39,8 @@ export async function PUT(request: NextRequest) {
     const { error } = await db
       .from("notifications")
       .update({ is_read: body.isRead ?? true })
-      .eq("id", body.id);
+      .eq("id", body.id)
+      .eq("user_id", ctx.userId);
     if (error) return apiError(error.message);
   }
 

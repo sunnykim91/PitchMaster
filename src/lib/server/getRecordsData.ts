@@ -40,7 +40,7 @@ export async function getRecordsData(teamId: string) {
     .from("team_members")
     .select("id, user_id, pre_name, jersey_number, team_role, users(id, name, preferred_positions)")
     .eq("team_id", teamId)
-    .eq("status", "ACTIVE");
+    .in("status", ["ACTIVE", "DORMANT"]);
 
   if (!members) return { seasons: seasonList, activeSeasonId, records: [] };
 

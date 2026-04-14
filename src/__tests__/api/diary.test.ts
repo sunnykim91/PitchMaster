@@ -66,7 +66,10 @@ describe("GET /api/diary", () => {
 
   it("200: 다이어리 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_diaries", mockDiary]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_diaries", mockDiary],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
@@ -77,7 +80,10 @@ describe("GET /api/diary", () => {
 
   it("200: 다이어리 없는 경우 null 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_diaries", null]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_diaries", null],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
@@ -88,7 +94,10 @@ describe("GET /api/diary", () => {
 
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_diaries", null, { message: "DB error" }]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_diaries", null, { message: "DB error" }],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
@@ -139,7 +148,10 @@ describe("POST /api/diary", () => {
 
   it("201: 다이어리 upsert 성공", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_diaries", mockDiary]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_diaries", mockDiary],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(diaryBody));
@@ -152,7 +164,10 @@ describe("POST /api/diary", () => {
   it("201: 선택적 필드 없이도 저장 가능", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const minimalDiary = { id: "d2", match_id: "m1", weather: null, condition: null, memo: null, photos: [] };
-    const db = createMockDb(["match_diaries", minimalDiary]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_diaries", minimalDiary],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ matchId: "m1" }));
@@ -163,7 +178,10 @@ describe("POST /api/diary", () => {
 
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_diaries", null, { message: "upsert failed" }]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_diaries", null, { message: "upsert failed" }],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(diaryBody));

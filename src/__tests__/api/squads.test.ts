@@ -62,7 +62,10 @@ describe("GET /api/squads", () => {
 
   it("200: MEMBER — 스쿼드 목록 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_squads", squadData]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_squads", squadData],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest({ matchId: "m1" }));
@@ -73,7 +76,10 @@ describe("GET /api/squads", () => {
 
   it("200: STAFF — 스쿼드 목록 반환", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
-    const db = createMockDb(["match_squads", squadData]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_squads", squadData],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest({ matchId: "m1" }));
@@ -84,7 +90,10 @@ describe("GET /api/squads", () => {
 
   it("200: 스쿼드 없으면 빈 배열 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_squads", []]);
+    const db = createMockDb(
+      ["matches", { id: "m-empty" }],
+      ["match_squads", []],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest({ matchId: "m-empty" }));
@@ -95,7 +104,10 @@ describe("GET /api/squads", () => {
 
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_squads", null, { message: "query error" }]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_squads", null, { message: "query error" }],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest({ matchId: "m1" }));
@@ -156,6 +168,7 @@ describe("POST /api/squads", () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const savedSquad = { id: "sq-1", match_id: "m1", quarter_number: 1, formation: "4-3-3" };
     const db = createMockDb(
+      ["matches", { id: "m1" }],
       ["match_squads", null],        // delete (기존 삭제)
       ["match_squads", savedSquad],  // insert (새로 저장)
     );
@@ -171,6 +184,7 @@ describe("POST /api/squads", () => {
     vi.mocked(auth).mockResolvedValue(presidentSession);
     const savedSquad = { id: "sq-2", match_id: "m1", quarter_number: 2, formation: "4-4-2" };
     const db = createMockDb(
+      ["matches", { id: "m1" }],
       ["match_squads", null],        // delete
       ["match_squads", savedSquad],  // insert
     );
@@ -183,6 +197,7 @@ describe("POST /api/squads", () => {
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb(
+      ["matches", { id: "m1" }],
       ["match_squads", null],                                    // delete 성공
       ["match_squads", null, { message: "insert failed" }],      // insert 실패
     );

@@ -59,7 +59,10 @@ describe("GET /api/mvp", () => {
 
   it("200: 투표 목록 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_mvp_votes", mockVotes]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_mvp_votes", mockVotes],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
@@ -70,7 +73,10 @@ describe("GET /api/mvp", () => {
 
   it("400: DB 에러 발생시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["match_mvp_votes", null, { message: "DB connection failed" }]);
+    const db = createMockDb(
+      ["matches", { id: "m1" }],
+      ["match_mvp_votes", null, { message: "DB connection failed" }],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
@@ -142,6 +148,7 @@ describe("POST /api/mvp", () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     // attendance.vote가 ATTEND가 아님
     const db = createMockDb(
+      ["matches", { id: "m1" }],
       ["match_attendance", { vote: "ABSENT" }]
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
@@ -156,6 +163,7 @@ describe("POST /api/mvp", () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     // attendance null (single()이 null 반환)
     const db = createMockDb(
+      ["matches", { id: "m1" }],
       ["match_attendance", null]
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
@@ -173,6 +181,7 @@ describe("POST /api/mvp", () => {
       candidate_id: "u2",
     };
     const db = createMockDb(
+      ["matches", { id: "m1" }],
       ["match_attendance", { vote: "ATTEND" }],
       ["match_mvp_votes", voteData]
     );
@@ -194,6 +203,7 @@ describe("POST /api/mvp", () => {
       candidate_id: "u3",
     };
     const db = createMockDb(
+      ["matches", { id: "m1" }],
       ["match_attendance", { vote: "ATTEND" }],
       ["match_mvp_votes", updatedVote]
     );
@@ -208,6 +218,7 @@ describe("POST /api/mvp", () => {
   it("400: 투표 DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(
+      ["matches", { id: "m1" }],
       ["match_attendance", { vote: "ATTEND" }],
       ["match_mvp_votes", null, { message: "upsert failed" }]
     );

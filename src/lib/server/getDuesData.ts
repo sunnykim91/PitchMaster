@@ -25,9 +25,9 @@ export async function getDuesData(teamId: string) {
       .eq("team_id", teamId)
       .order("date", { ascending: false }),
     db.from("team_members")
-      .select("id, user_id, pre_name, users(id, name)")
+      .select("id, user_id, pre_name, users(id, name), status")
       .eq("team_id", teamId)
-      .eq("status", "ACTIVE"),
+      .in("status", ["ACTIVE", "DORMANT"]),
   ]);
 
   return {
