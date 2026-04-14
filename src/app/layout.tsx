@@ -1,20 +1,19 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bebas_Neue } from "next/font/google";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
 
 const GA_ID = "G-XWRB861513";
 
-const geist = Geist({
-  variable: "--font-geist",
+// 대시보드/기록 페이지의 숫자 디스플레이에만 사용. display: swap으로 render-blocking 회피.
+const bebasNeue = Bebas_Neue({
+  weight: "400",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-display-bebas",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -72,14 +71,11 @@ export default function RootLayout({
         {/* FOUC 방지: 페이지 로드 전 테마 즉시 적용 */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme');var d;if(t==='dark')d=true;else if(t==='light')d=false;else d=true;if(!d){var s=document.createElement('style');s.id='pm-theme-light';s.textContent=':root{--background:220 14% 96%;--foreground:220 20% 14%;--card:0 0% 100%;--card-foreground:220 20% 14%;--popover:0 0% 100%;--popover-foreground:220 20% 14%;--primary:16 85% 48%;--primary-foreground:0 0% 100%;--secondary:220 12% 91%;--secondary-foreground:220 10% 30%;--muted:220 12% 93%;--muted-foreground:220 8% 42%;--accent:40 65% 46%;--accent-foreground:0 0% 100%;--destructive:0 72% 46%;--destructive-foreground:0 0% 100%;--border:220 12% 84%;--input:220 12% 84%;--ring:16 85% 48%;--success:152 60% 34%;--warning:38 90% 44%;--info:210 75% 42%;--win:152 60% 34%;--draw:220 8% 54%;--loss:0 68% 44%;--pitch:152 45% 32%;--sidebar-background:220 14% 94%;--sidebar-foreground:220 20% 14%;--sidebar-primary:16 85% 48%;--sidebar-primary-foreground:0 0% 100%;--sidebar-accent:220 12% 91%;--sidebar-accent-foreground:220 10% 30%;--sidebar-border:220 12% 84%;--sidebar-ring:16 85% 48%}';document.head.appendChild(s)}}catch(e){}})()` }} />
         {/* Pretendard: npm 패키지에서 로컬 로드 (CORS 이슈 해결) */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://t1.kakaocdn.net" />
         <link rel="preconnect" href="https://t1.kakaocdn.net" crossOrigin="anonymous" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
-      <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${bebasNeue.variable} antialiased`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
