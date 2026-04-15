@@ -542,7 +542,11 @@ export default function AutoFormationBuilder({
   // 경기 인원 수에 맞는 포메이션만 필터 (미지정 시 축구 11, 풋살 5 기본)
   const effectiveFieldCount = playerCount ?? (sportType === "FUTSAL" ? 5 : 11);
   const filteredFormations = useMemo(
-    () => getFormationsForSportAndCount(sportType, effectiveFieldCount),
+    () => {
+      const filtered = getFormationsForSportAndCount(sportType, effectiveFieldCount);
+      // 폴백: 매칭 없으면 해당 스포츠 전체 (레거시 player_count=7 등 대응)
+      return filtered.length > 0 ? filtered : getFormationsForSportAndCount(sportType);
+    },
     [sportType, effectiveFieldCount]
   );
   const [isOpen, setIsOpen] = useState(false);

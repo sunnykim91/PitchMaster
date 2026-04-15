@@ -118,10 +118,14 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   const soccerFieldCount = !isFutsal ? (playerCount ?? 11) : undefined;
 
   const filteredFormations = useMemo(
-    () => getFormationsForSportAndCount(
-      sportType,
-      isFutsal ? futsalFieldCount : soccerFieldCount
-    ),
+    () => {
+      const filtered = getFormationsForSportAndCount(
+        sportType,
+        isFutsal ? futsalFieldCount : soccerFieldCount
+      );
+      // 매칭 포메이션 없을 때 폴백: 해당 스포츠 전체 반환 (player_count=7 같은 레거시 데이터 대응)
+      return filtered.length > 0 ? filtered : getFormationsForSportAndCount(sportType);
+    },
     [sportType, isFutsal, futsalFieldCount, soccerFieldCount]
   );
   const defaultFormation = (teamDefaultFormationId ? filteredFormations.find(f => f.id === teamDefaultFormationId) : null) ?? filteredFormations[0] ?? formationTemplates[0];
