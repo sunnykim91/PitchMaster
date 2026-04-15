@@ -422,18 +422,7 @@ function MatchTacticsTabInner({
         </div>
       )}
 
-      {/* 추천 포메이션 섹션은 자동 편성 카드 상단 힌트로 통합됨 (recommendationHint prop) */}
-
-      {canManage && filteredAttending.length > 0 && generatedSquads.length === 0 && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="p-4 text-xs leading-relaxed text-foreground/80">
-            <p className="font-semibold text-foreground">처음이신가요?</p>
-            <p className="mt-1 text-muted-foreground">
-              참석 투표한 선수들로 쿼터별 자동 편성이 가능해요. 아래 &quot;자동 편성&quot; 버튼 한 번이면 끝.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      {/* 추천 포메이션 + "처음이신가요?" 안내는 자동 편성 카드 내부 힌트·설명으로 통합됨 */}
 
       {canManage && (() => {
         // 참석 5명 이상이면 룰 기반 포메이션 추천 (자동 편성 상단 힌트로 노출)
