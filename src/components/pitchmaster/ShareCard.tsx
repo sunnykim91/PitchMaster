@@ -343,10 +343,10 @@ export function PremiumShareCard({ playerCardProps, teamName, seasonName }: {
           <p className="text-[11px] text-white/70 font-medium">{seasonName}</p>
         </div>
 
-        {/* Actual PlayerCard — 정중앙, 좀 더 넉넉히 */}
+        {/* Actual PlayerCard — 정중앙, 항상 앞면 고정 (캡처 시 거울상 방지) */}
         <div className="flex-1 flex items-center justify-center py-2">
           <div className="w-full max-w-[260px]">
-            <PlayerCard {...playerCardProps} />
+            <PlayerCard {...playerCardProps} lockFront />
           </div>
         </div>
 
@@ -400,6 +400,28 @@ export function ShareModal({
   function makeFilename(ext: "png" = "png") {
     const safeName = (playerName || "player").replace(/[^\w\uAC00-\uD7AF]+/g, "_");
     return `pitchmaster_${safeName}.${ext}`;
+  }
+
+  // 외부 이미지를 프록시 URL로 임시 교체 (CORS 우회)
+  function proxifyExternalImages(root: HTMLElement): () => void {
+    const imgs = Array.from(root.querySelectorAll("img")) as HTMLImageElement[];
+    const originals: Array<{ el: HTMLImageElement; src: string }> = [];
+    for (const img of imgs) {
+      const src = img.src;
+      if (!src) continue;
+      if (src.startsWith("data:") || src.startsWith("blob:")) continue;
+      try {
+        const u = new URL(src, window.location.href);
+        if (u.origin === window.location.origin) continue;
+        originals.push({ el: img, src });
+        img.src = `/api/proxy-image?url=${encodeURIComponent(src)}`;
+      } catch {
+        /* invalid url, skip */
+      }
+    }
+    return () => {
+      for (const { el, src } of originals) el.src = src;
+    };
   }
 
   async function captureCardAsBlob(): Promise<{ blob: Blob; dataUrl: string } | null> {

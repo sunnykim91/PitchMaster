@@ -27,6 +27,8 @@ export type PlayerCardProps = {
   teamLogoUrl?: string;
   signature?: string;
   stats: StatWithContext[];
+  /** 캡처/공유용 — 항상 앞면만 표시 + 탭 플립 비활성화 */
+  lockFront?: boolean;
 };
 
 // Sparkle dots for premium cards — 크기 다양화 + 수량 ↑로 화려함 강화
@@ -257,11 +259,13 @@ export function PlayerCard({
   photoUrl,
   signature,
   stats,
+  lockFront,
 }: PlayerCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [photoFailed, setPhotoFailed] = useState(false);
   const effectivePhotoUrl = photoUrl && !photoFailed ? photoUrl : undefined;
   const config = rarityConfig[rarity];
+  const actuallyFlipped = !lockFront && isFlipped;
   
   // Find hero stat based on position
   const heroStat = stats.find((s) => s.isHero);
@@ -269,14 +273,14 @@ export function PlayerCard({
 
   return (
     <div
-      className="perspective-1000 cursor-pointer w-full"
-      onClick={() => setIsFlipped(!isFlipped)}
+      className={cn("perspective-1000 w-full", lockFront ? "cursor-default" : "cursor-pointer")}
+      onClick={lockFront ? undefined : () => setIsFlipped(!isFlipped)}
     >
       <div
         className={cn(
           "relative preserve-3d transition-transform duration-700 ease-in-out",
           "aspect-[3/4]",
-          isFlipped && "rotate-y-180"
+          actuallyFlipped && "rotate-y-180"
         )}
       >
         {/* Card Front */}
@@ -386,7 +390,6 @@ export function PlayerCard({
                     <img
                       src={teamLogoUrl}
                       alt=""
-                      crossOrigin="anonymous"
                       className="w-full h-full object-contain p-1"
                     />
                   ) : (
@@ -405,7 +408,6 @@ export function PlayerCard({
                 <img
                   src={effectivePhotoUrl}
                   alt=""
-                  crossOrigin="anonymous"
                   onError={() => setPhotoFailed(true)}
                   className="w-28 h-28 sm:w-32 sm:h-32 object-cover rounded-full border-2 border-white/20"
                 />
@@ -488,10 +490,15 @@ export function PlayerCard({
             {/* Footer */}
             <div className="mt-auto pt-3 flex items-center justify-between">
               <span className="text-[9px] text-white/40">{seasonName}</span>
-              <span className="text-[9px] text-white/50 flex items-center gap-1 font-medium">
-                <span className="text-xs animate-pulse">↻</span>
-                <span>탭해서 뒤집기</span>
-              </span>
+              {!lockFront && (
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 border border-white/20 animate-pulse">
+                  <svg className="w-3 h-3 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12a9 9 0 11-3-6.7" />
+                    <path d="M21 3v6h-6" />
+                  </svg>
+                  <span className="text-[10px] font-bold text-white/90 tracking-wide">탭해서 기록 보기</span>
+                </span>
+              )}
             </div>
           </div>
         </div>
