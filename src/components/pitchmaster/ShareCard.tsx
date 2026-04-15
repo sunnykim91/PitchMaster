@@ -443,16 +443,19 @@ export function ShareModal({
     } catch {
       /* ignore */
     }
-    // 이미지(카카오 프로필 등) CORS 문제로 캡처 실패 가능성 → decode 완료까지 대기
-    const imgs = Array.from(target.querySelectorAll("img"));
+
+    // 카카오 CDN 등 외부 이미지 → /api/proxy-image 로 src 임시 교체 (CORS 우회)
+    const restoreImages = proxifyExternalImages(target);
+
+    // 프록시 이미지 decode 완료까지 대기 (최대 3초)
+    const imgs = Array.from(target.querySelectorAll("img")) as HTMLImageElement[];
     await Promise.all(
       imgs.map((img) => {
         if (img.complete && img.naturalWidth > 0) return Promise.resolve();
         return new Promise<void>((resolve) => {
           img.addEventListener("load", () => resolve(), { once: true });
-          img.addEventListener("error", () => resolve(), { once: true }); // 실패해도 계속
-          // 타임아웃 2초
-          setTimeout(() => resolve(), 2000);
+          img.addEventListener("error", () => resolve(), { once: true });
+          setTimeout(() => resolve(), 3000);
         });
       })
     );
@@ -472,16 +475,13 @@ export function ShareModal({
     try {
       dataUrl = await toPng(target, captureOpts);
     } catch (err) {
-      // CORS-tainted canvas 등의 이유로 실패 시: 이미지를 건너뛰고 재시도
       const msg = err instanceof Error ? err.message : String(err);
       console.warn("1차 캡처 실패, 이미지 제외하고 재시도:", msg);
       dataUrl = await toPng(target, {
         ...captureOpts,
         filter: (node) => {
-          // 외부 이미지(프로필 사진 등) 제외 — 팀 로고 svg는 유지
           if (node.nodeName === "IMG") {
             const src = (node as HTMLImageElement).src || "";
-            // 외부 CDN 이미지만 제외 (data:, blob:, 같은 origin은 유지)
             if (src.startsWith("http") && !src.startsWith(window.location.origin)) {
               return false;
             }
@@ -489,6 +489,9 @@ export function ShareModal({
           return true;
         },
       });
+    } finally {
+      // 원본 src로 복원 (UI에서 계속 표시되어야 하므로)
+      restoreImages();
     }
 
     const res = await fetch(dataUrl);
