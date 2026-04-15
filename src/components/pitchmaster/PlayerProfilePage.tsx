@@ -727,24 +727,10 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
       <ShareModal
         isOpen={showImageShareModal}
         onClose={() => setShowImageShareModal(false)}
-        data={{
-          playerName: profile.name,
-          teamName: profile.teamName,
-          seasonName: profile.seasonName,
-          teamPrimaryColor: profile.teamPrimaryColor,
-          ovr: profile.playerCardProps.ovr,
-          rarity: profile.playerCardProps.rarity,
-          positionLabel: profile.playerCardProps.positionLabel,
-          jerseyNumber: profile.jerseyNumber,
-          signature: profile.signature,
-          stats: profile.playerCardProps.stats
-            .slice(0, 3)
-            .map((s) => ({
-              label: s.label,
-              value: String(s.value),
-              rank: s.rank,
-            })),
-        }}
+        playerName={profile.name}
+        teamName={profile.teamName}
+        seasonName={profile.seasonName}
+        playerCardProps={profile.playerCardProps}
       />
     </div>
   );

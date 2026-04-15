@@ -3,16 +3,11 @@
 import { useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import { cn } from "@/lib/utils";
+import { PlayerCard, type PlayerCardProps } from "./PlayerCard";
 
 // Types
 export type ShareCardVariant = "story" | "square" | "og";
 
-// 미리보기 → 실제 공유 해상도 배수
-const VARIANT_SCALE: Record<ShareCardVariant, number> = {
-  story: 3.375,   // 320 × 3.375 = 1080, 568 × 3.375 ≈ 1920
-  square: 3,      // 360 × 3 = 1080
-  og: 2.5,        // 480 × 2.5 = 1200
-};
 
 export type ShareCardData = {
   variant: ShareCardVariant;
@@ -317,6 +312,54 @@ function OGShareCard({ data }: { data: ShareCardData }) {
   );
 }
 
+/**
+ * Premium Share Card — 실제 PlayerCard 컴포넌트를 임베드해 holographic·sparkle·glow 효과 보존.
+ * 1080 x 1350 (Instagram 4:5 비율, 피드/스토리 모두 호환).
+ */
+export function PremiumShareCard({ playerCardProps, teamName, seasonName }: {
+  playerCardProps: PlayerCardProps;
+  teamName: string;
+  seasonName: string;
+}) {
+  const primary = playerCardProps.teamPrimaryColor;
+  return (
+    <div
+      className="relative overflow-hidden bg-[hsl(240,6%,6%)]"
+      style={{ width: 360, height: 450 }}
+    >
+      {/* Background glows */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full blur-3xl opacity-40"
+        style={{ background: primary }}
+      />
+      <div className="absolute inset-0 stadium-pattern opacity-20" />
+      <div className="absolute inset-0 vignette" />
+
+      {/* Content */}
+      <div className="relative h-full flex flex-col px-5 py-5">
+        {/* Top brand + season */}
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[9px] tracking-[0.35em] text-white/40 font-bold">PITCHMASTER</p>
+          <p className="text-[10px] text-white/60 font-medium">{seasonName}</p>
+        </div>
+
+        {/* Actual PlayerCard — 정중앙 */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-full max-w-[220px]">
+            <PlayerCard {...playerCardProps} />
+          </div>
+        </div>
+
+        {/* Bottom team + footer */}
+        <div className="text-center mt-3">
+          <p className="text-xs text-white/70 font-semibold tracking-wide">{teamName}</p>
+          <p className="text-[9px] tracking-[0.25em] text-white/30 mt-1.5">pitch-master.app</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Main ShareCard Component
 export function ShareCard({ data }: { data: ShareCardData }) {
   switch (data.variant) {
@@ -335,13 +378,18 @@ export function ShareCard({ data }: { data: ShareCardData }) {
 export function ShareModal({
   isOpen,
   onClose,
-  data,
+  playerName,
+  teamName,
+  seasonName,
+  playerCardProps,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  data: Omit<ShareCardData, "variant">;
+  playerName: string;
+  teamName: string;
+  seasonName: string;
+  playerCardProps: PlayerCardProps;
 }) {
-  const [variant, setVariant] = useState<ShareCardVariant>("story");
   const cardRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -349,11 +397,9 @@ export function ShareModal({
 
   if (!isOpen) return null;
 
-  // 파일명 정리 (이름에 공백·특수문자 있을 수 있음)
   function makeFilename(ext: "png" = "png") {
-    const safeName = (data.playerName || "player").replace(/[^\w\uAC00-\uD7AF]+/g, "_");
-    const variantLabel = variant === "story" ? "story" : variant === "square" ? "square" : "og";
-    return `pitchmaster_${safeName}_${variantLabel}.${ext}`;
+    const safeName = (playerName || "player").replace(/[^\w\uAC00-\uD7AF]+/g, "_");
+    return `pitchmaster_${safeName}.${ext}`;
   }
 
   async function captureCardAsBlob(): Promise<{ blob: Blob; dataUrl: string } | null> {
@@ -362,19 +408,18 @@ export function ShareModal({
       setStatusMsg({ text: "카드 요소를 찾지 못했습니다.", tone: "error" });
       return null;
     }
-
-    // 폰트·이미지 로딩 대기
     try {
       const fonts = (document as unknown as { fonts?: { ready?: Promise<void> } }).fonts;
       if (fonts?.ready) await fonts.ready;
     } catch {
       /* ignore */
     }
+    // 애니메이션 "좋은 프레임" 대기 (sparkle·holographic이 보기 좋은 순간)
+    await new Promise((r) => setTimeout(r, 250));
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-    const scale = VARIANT_SCALE[variant] ?? 3;
     const dataUrl = await toPng(target, {
-      pixelRatio: scale,
+      pixelRatio: 3,  // 360x450 × 3 = 1080x1350 (Instagram 4:5 최적)
       cacheBust: true,
       backgroundColor: "#0a0e14",
       width: target.offsetWidth,
@@ -421,8 +466,8 @@ export function ShareModal({
       if (navigator.share && nav.canShare?.({ files: [file] })) {
         try {
           await navigator.share({
-            title: `${data.playerName} · ${data.seasonName}`,
-            text: `${data.playerName}의 시즌 카드`,
+            title: `${playerName} · ${seasonName}`,
+            text: `${playerName}의 시즌 카드`,
             files: [file],
           });
           setStatusMsg({ text: "공유 완료!", tone: "success" });
@@ -463,13 +508,13 @@ export function ShareModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
-      <div 
-        className="bg-[hsl(240,5%,10%)] rounded-2xl p-6 max-w-lg w-full border border-white/10 max-h-[90vh] overflow-y-auto"
+      <div
+        className="bg-[hsl(240,5%,10%)] rounded-2xl p-5 max-w-md w-full border border-white/10 max-h-[95vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-bold text-white">공유하기</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-white">카드 공유하기</h3>
           <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -477,28 +522,10 @@ export function ShareModal({
           </button>
         </div>
 
-        {/* Variant Selector */}
-        <div className="flex gap-2 mb-6">
-          {(["story", "square", "og"] as const).map((v) => (
-            <button
-              key={v}
-              onClick={() => setVariant(v)}
-              className={cn(
-                "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors",
-                variant === v
-                  ? "bg-[hsl(16,85%,58%)] text-white"
-                  : "bg-white/5 text-white/60 hover:bg-white/10"
-              )}
-            >
-              {v === "story" ? "스토리" : v === "square" ? "정사각형" : "OG 카드"}
-            </button>
-          ))}
-        </div>
-
-        {/* Preview */}
-        <div className="flex justify-center mb-6" ref={cardRef}>
-          <div data-share-card-root className="shadow-2xl">
-            <ShareCard data={{ ...data, variant }} />
+        {/* Preview — 실제 PlayerCard 임베드 */}
+        <div className="flex justify-center mb-5" ref={cardRef}>
+          <div data-share-card-root className="rounded-2xl overflow-hidden shadow-2xl">
+            <PremiumShareCard playerCardProps={playerCardProps} teamName={teamName} seasonName={seasonName} />
           </div>
         </div>
 
@@ -519,26 +546,23 @@ export function ShareModal({
         {/* Actions */}
         <div className="space-y-3">
           <button
-            onClick={handleExport}
+            onClick={handleShare}
             disabled={isExporting || isSharing}
             className="w-full py-3 rounded-xl bg-[hsl(16,85%,58%)] text-white font-medium hover:bg-[hsl(16,85%,50%)] transition-colors disabled:opacity-50"
           >
-            {isExporting ? "저장 중..." : "이미지로 저장"}
+            {isSharing ? "준비 중..." : "카톡·앱으로 공유"}
           </button>
           <button
-            onClick={handleShare}
+            onClick={handleExport}
             disabled={isExporting || isSharing}
             className="w-full py-3 rounded-xl border border-white/20 text-white/80 font-medium hover:bg-white/5 transition-colors disabled:opacity-50"
           >
-            {isSharing ? "준비 중..." : "공유하기"}
+            {isExporting ? "저장 중..." : "이미지로 저장"}
           </button>
         </div>
 
-        {/* Dimensions Info */}
-        <p className="text-[10px] text-white/30 text-center mt-4">
-          {variant === "story" && "인스타 스토리: 1080 x 1920px"}
-          {variant === "square" && "정사각형: 1080 x 1080px"}
-          {variant === "og" && "카카오톡/링크 미리보기: 1200 x 630px"}
+        <p className="text-[10px] text-white/30 text-center mt-3">
+          고해상도 1080 × 1350 PNG · Instagram 피드·스토리 호환
         </p>
       </div>
     </div>
@@ -627,7 +651,27 @@ export function ShareCardDemo() {
       <ShareModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        data={mockData}
+        playerName={mockData.playerName}
+        teamName={mockData.teamName}
+        seasonName={mockData.seasonName}
+        playerCardProps={{
+          ovr: mockData.ovr ?? 92,
+          rarity: mockData.rarity ?? "ICON",
+          positionLabel: mockData.positionLabel ?? "FW",
+          positionCategory: "FW",
+          playerName: mockData.playerName,
+          jerseyNumber: mockData.jerseyNumber ?? null,
+          teamName: mockData.teamName,
+          teamPrimaryColor: mockData.teamPrimaryColor,
+          seasonName: mockData.seasonName,
+          signature: mockData.signature,
+          stats: (mockData.stats ?? []).map((s) => ({
+            label: s.label,
+            value: s.value,
+            rank: s.rank,
+            isHero: false,
+          })),
+        }}
       />
     </div>
   );
