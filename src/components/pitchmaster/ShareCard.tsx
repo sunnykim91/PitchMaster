@@ -1,11 +1,18 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { toPng } from "html-to-image";
 import { cn } from "@/lib/utils";
-import { type PlayerCardProps } from "./PlayerCard";
 
 // Types
 export type ShareCardVariant = "story" | "square" | "og";
+
+// 미리보기 → 실제 공유 해상도 배수
+const VARIANT_SCALE: Record<ShareCardVariant, number> = {
+  story: 3.375,   // 320 × 3.375 = 1080, 568 × 3.375 ≈ 1920
+  square: 3,      // 360 × 3 = 1080
+  og: 2.5,        // 480 × 2.5 = 1200
+};
 
 export type ShareCardData = {
   variant: ShareCardVariant;
@@ -337,33 +344,120 @@ export function ShareModal({
   const [variant, setVariant] = useState<ShareCardVariant>("story");
   const cardRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<{ text: string; tone: "success" | "error" } | null>(null);
 
   if (!isOpen) return null;
 
+  // 파일명 정리 (이름에 공백·특수문자 있을 수 있음)
+  function makeFilename(ext: "png" = "png") {
+    const safeName = (data.playerName || "player").replace(/[^\w\uAC00-\uD7AF]+/g, "_");
+    const variantLabel = variant === "story" ? "story" : variant === "square" ? "square" : "og";
+    return `pitchmaster_${safeName}_${variantLabel}.${ext}`;
+  }
+
+  async function captureCardAsBlob(): Promise<{ blob: Blob; dataUrl: string } | null> {
+    const target = cardRef.current?.querySelector("[data-share-card-root]") as HTMLElement | null;
+    if (!target) {
+      setStatusMsg({ text: "카드 요소를 찾지 못했습니다.", tone: "error" });
+      return null;
+    }
+
+    // 폰트·이미지 로딩 대기
+    try {
+      const fonts = (document as unknown as { fonts?: { ready?: Promise<void> } }).fonts;
+      if (fonts?.ready) await fonts.ready;
+    } catch {
+      /* ignore */
+    }
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+    const scale = VARIANT_SCALE[variant] ?? 3;
+    const dataUrl = await toPng(target, {
+      pixelRatio: scale,
+      cacheBust: true,
+      backgroundColor: "#0a0e14",
+      width: target.offsetWidth,
+      height: target.offsetHeight,
+    });
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    return { blob, dataUrl };
+  }
+
   const handleExport = async () => {
+    if (isExporting) return;
     setIsExporting(true);
-    // In a real implementation, you would use html2canvas or similar
-    // to capture the card as an image
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsExporting(false);
-    alert("이미지가 저장되었습니다!");
+    setStatusMsg(null);
+    try {
+      const cap = await captureCardAsBlob();
+      if (!cap) return;
+      const a = document.createElement("a");
+      a.href = cap.dataUrl;
+      a.download = makeFilename();
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setStatusMsg({ text: "이미지가 저장되었습니다!", tone: "success" });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "이미지 생성 실패";
+      setStatusMsg({ text: `저장 실패: ${msg}`, tone: "error" });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `${data.playerName} - ${data.seasonName}`,
-          text: `${data.playerName}의 시즌 카드를 확인하세요!`,
-          url: window.location.href,
-        });
-      } catch {
-        console.log("Share cancelled");
+    if (isSharing) return;
+    setIsSharing(true);
+    setStatusMsg(null);
+    try {
+      const cap = await captureCardAsBlob();
+      if (!cap) return;
+      const file = new File([cap.blob], makeFilename(), { type: "image/png" });
+
+      // 1순위: Web Share API with files (모바일 카톡·인스타 등)
+      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+      if (navigator.share && nav.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: `${data.playerName} · ${data.seasonName}`,
+            text: `${data.playerName}의 시즌 카드`,
+            files: [file],
+          });
+          setStatusMsg({ text: "공유 완료!", tone: "success" });
+          return;
+        } catch (err) {
+          // 사용자 취소는 조용히 무시
+          if (err instanceof Error && err.name === "AbortError") return;
+        }
       }
-    } else {
-      // Fallback: copy URL
-      navigator.clipboard.writeText(window.location.href);
-      alert("링크가 복사되었습니다!");
+
+      // 2순위: 클립보드에 이미지 복사 (PC 브라우저)
+      const canClipboardWrite = typeof ClipboardItem !== "undefined" && navigator.clipboard?.write;
+      if (canClipboardWrite) {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ "image/png": cap.blob })]);
+          setStatusMsg({ text: "클립보드에 복사됨! 원하는 곳에 붙여넣기하세요.", tone: "success" });
+          return;
+        } catch {
+          /* 폴백 */
+        }
+      }
+
+      // 3순위: 다운로드
+      const a = document.createElement("a");
+      a.href = cap.dataUrl;
+      a.download = makeFilename();
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setStatusMsg({ text: "이미지로 다운로드되었습니다.", tone: "success" });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "공유 실패";
+      setStatusMsg({ text: `공유 실패: ${msg}`, tone: "error" });
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -403,25 +497,40 @@ export function ShareModal({
 
         {/* Preview */}
         <div className="flex justify-center mb-6" ref={cardRef}>
-          <div className="rounded-lg overflow-hidden shadow-2xl">
+          <div data-share-card-root className="shadow-2xl">
             <ShareCard data={{ ...data, variant }} />
           </div>
         </div>
+
+        {/* Status message */}
+        {statusMsg && (
+          <div
+            className={cn(
+              "mb-3 rounded-lg px-3 py-2 text-center text-xs",
+              statusMsg.tone === "success"
+                ? "bg-[hsl(152,55%,55%)]/15 text-[hsl(152,55%,75%)]"
+                : "bg-destructive/20 text-destructive"
+            )}
+          >
+            {statusMsg.text}
+          </div>
+        )}
 
         {/* Actions */}
         <div className="space-y-3">
           <button
             onClick={handleExport}
-            disabled={isExporting}
+            disabled={isExporting || isSharing}
             className="w-full py-3 rounded-xl bg-[hsl(16,85%,58%)] text-white font-medium hover:bg-[hsl(16,85%,50%)] transition-colors disabled:opacity-50"
           >
             {isExporting ? "저장 중..." : "이미지로 저장"}
           </button>
           <button
             onClick={handleShare}
-            className="w-full py-3 rounded-xl border border-white/20 text-white/80 font-medium hover:bg-white/5 transition-colors"
+            disabled={isExporting || isSharing}
+            className="w-full py-3 rounded-xl border border-white/20 text-white/80 font-medium hover:bg-white/5 transition-colors disabled:opacity-50"
           >
-            공유하기
+            {isSharing ? "준비 중..." : "공유하기"}
           </button>
         </div>
 
