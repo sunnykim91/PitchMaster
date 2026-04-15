@@ -164,6 +164,8 @@ export default function SettingsClient({
         defaultFormationId: (t.default_formation_id as string) ?? sessionTeam.defaultFormationId,
         statsRecordingStaffOnly:
           (t.stats_recording_staff_only as boolean) ?? sessionTeam.statsRecordingStaffOnly,
+        sportType: ((t.sport_type as string) === "FUTSAL" ? "FUTSAL" : "SOCCER") as "SOCCER" | "FUTSAL",
+        defaultPlayerCount: (t.default_player_count as number) ?? sessionTeam.defaultPlayerCount,
       };
     }
     return sessionTeam;
