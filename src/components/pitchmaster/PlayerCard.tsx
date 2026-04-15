@@ -354,6 +354,7 @@ export function PlayerCard({
                     <img
                       src={teamLogoUrl}
                       alt=""
+                      crossOrigin="anonymous"
                       className="w-full h-full object-contain p-1"
                     />
                   ) : (
@@ -372,6 +373,7 @@ export function PlayerCard({
                 <img
                   src={effectivePhotoUrl}
                   alt=""
+                  crossOrigin="anonymous"
                   onError={() => setPhotoFailed(true)}
                   className="w-28 h-28 sm:w-32 sm:h-32 object-cover rounded-full border-2 border-white/20"
                 />

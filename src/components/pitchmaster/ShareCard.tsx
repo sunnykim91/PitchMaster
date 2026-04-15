@@ -325,35 +325,35 @@ export function PremiumShareCard({ playerCardProps, teamName, seasonName }: {
   return (
     <div
       className="relative overflow-hidden bg-[hsl(240,6%,6%)]"
-      style={{ width: 360, height: 450 }}
+      style={{ width: 400, height: 520 }}
     >
       {/* Background glows */}
       <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full blur-3xl opacity-40"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[28rem] h-[28rem] rounded-full blur-3xl opacity-40"
         style={{ background: primary }}
       />
       <div className="absolute inset-0 stadium-pattern opacity-20" />
       <div className="absolute inset-0 vignette" />
 
       {/* Content */}
-      <div className="relative h-full flex flex-col px-5 py-5">
+      <div className="relative h-full flex flex-col px-6 py-5">
         {/* Top brand + season */}
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-[9px] tracking-[0.35em] text-white/40 font-bold">PITCHMASTER</p>
-          <p className="text-[10px] text-white/60 font-medium">{seasonName}</p>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[10px] tracking-[0.35em] text-white/50 font-bold">PITCHMASTER</p>
+          <p className="text-[11px] text-white/70 font-medium">{seasonName}</p>
         </div>
 
-        {/* Actual PlayerCard — 정중앙 */}
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-full max-w-[220px]">
+        {/* Actual PlayerCard — 정중앙, 좀 더 넉넉히 */}
+        <div className="flex-1 flex items-center justify-center py-2">
+          <div className="w-full max-w-[260px]">
             <PlayerCard {...playerCardProps} />
           </div>
         </div>
 
         {/* Bottom team + footer */}
-        <div className="text-center mt-3">
-          <p className="text-xs text-white/70 font-semibold tracking-wide">{teamName}</p>
-          <p className="text-[9px] tracking-[0.25em] text-white/30 mt-1.5">pitch-master.app</p>
+        <div className="text-center mt-2">
+          <p className="text-sm text-white/80 font-semibold tracking-wide">{teamName}</p>
+          <p className="text-[10px] tracking-[0.25em] text-white/40 mt-1.5">pitch-master.app</p>
         </div>
       </div>
     </div>
@@ -414,17 +414,54 @@ export function ShareModal({
     } catch {
       /* ignore */
     }
-    // 애니메이션 "좋은 프레임" 대기 (sparkle·holographic이 보기 좋은 순간)
+    // 이미지(카카오 프로필 등) CORS 문제로 캡처 실패 가능성 → decode 완료까지 대기
+    const imgs = Array.from(target.querySelectorAll("img"));
+    await Promise.all(
+      imgs.map((img) => {
+        if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+        return new Promise<void>((resolve) => {
+          img.addEventListener("load", () => resolve(), { once: true });
+          img.addEventListener("error", () => resolve(), { once: true }); // 실패해도 계속
+          // 타임아웃 2초
+          setTimeout(() => resolve(), 2000);
+        });
+      })
+    );
     await new Promise((r) => setTimeout(r, 250));
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-    const dataUrl = await toPng(target, {
-      pixelRatio: 3,  // 360x450 × 3 = 1080x1350 (Instagram 4:5 최적)
+    // CORS 이미지 실패 시 폴백: 문제있는 img 건너뛰고 재시도
+    const captureOpts = {
+      pixelRatio: 2.7,  // 400x520 × 2.7 ≈ 1080x1404
       cacheBust: true,
       backgroundColor: "#0a0e14",
       width: target.offsetWidth,
       height: target.offsetHeight,
-    });
+    };
+
+    let dataUrl: string;
+    try {
+      dataUrl = await toPng(target, captureOpts);
+    } catch (err) {
+      // CORS-tainted canvas 등의 이유로 실패 시: 이미지를 건너뛰고 재시도
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn("1차 캡처 실패, 이미지 제외하고 재시도:", msg);
+      dataUrl = await toPng(target, {
+        ...captureOpts,
+        filter: (node) => {
+          // 외부 이미지(프로필 사진 등) 제외 — 팀 로고 svg는 유지
+          if (node.nodeName === "IMG") {
+            const src = (node as HTMLImageElement).src || "";
+            // 외부 CDN 이미지만 제외 (data:, blob:, 같은 origin은 유지)
+            if (src.startsWith("http") && !src.startsWith(window.location.origin)) {
+              return false;
+            }
+          }
+          return true;
+        },
+      });
+    }
+
     const res = await fetch(dataUrl);
     const blob = await res.blob();
     return { blob, dataUrl };
@@ -509,7 +546,7 @@ export function ShareModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
       <div
-        className="bg-[hsl(240,5%,10%)] rounded-2xl p-5 max-w-md w-full border border-white/10 max-h-[95vh] overflow-y-auto"
+        className="bg-[hsl(240,5%,10%)] rounded-2xl p-4 sm:p-5 max-w-[460px] w-full border border-white/10 max-h-[95vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -522,10 +559,15 @@ export function ShareModal({
           </button>
         </div>
 
-        {/* Preview — 실제 PlayerCard 임베드 */}
-        <div className="flex justify-center mb-5" ref={cardRef}>
-          <div data-share-card-root className="rounded-2xl overflow-hidden shadow-2xl">
-            <PremiumShareCard playerCardProps={playerCardProps} teamName={teamName} seasonName={seasonName} />
+        {/* Preview — 실제 PlayerCard 임베드. 미리보기는 축소 래퍼로 표시하되 캡처 대상은 원본 크기 유지 */}
+        <div className="flex justify-center mb-4 overflow-hidden" ref={cardRef}>
+          <div
+            className="origin-top"
+            style={{ transform: "scale(0.85)", transformOrigin: "top center", marginBottom: "-78px", marginTop: "-10px" }}
+          >
+            <div data-share-card-root className="rounded-2xl overflow-hidden shadow-2xl">
+              <PremiumShareCard playerCardProps={playerCardProps} teamName={teamName} seasonName={seasonName} />
+            </div>
           </div>
         </div>
 
