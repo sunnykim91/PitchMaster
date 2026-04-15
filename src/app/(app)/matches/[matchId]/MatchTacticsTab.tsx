@@ -12,7 +12,7 @@ import type { Match, SimpleRosterPlayer, InternalTeamAssignment, Guest } from ".
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { X, ChevronDown, Sparkles, Users, Plus, Pencil } from "lucide-react";
+import { X, ChevronDown, Sparkles, Users, Plus, Pencil, Lightbulb } from "lucide-react";
 import { formatPhone } from "@/lib/utils";
 import type { SportType } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -435,7 +435,7 @@ function MatchTacticsTabInner({
           <details className="group rounded-xl border border-border/30 bg-gradient-to-br from-primary/5 to-background overflow-hidden">
             <summary className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-secondary/30 transition-colors list-none [&::-webkit-details-marker]:hidden">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
+                <Lightbulb className="h-4 w-4 text-[hsl(var(--warning))]" />
                 <span className="text-base font-bold">추천 포메이션</span>
               </div>
               <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />

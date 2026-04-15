@@ -521,12 +521,18 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
           )}
 
           {/* Signature Statement - Primary Color, Italic */}
-          <p 
-            className="text-lg sm:text-xl italic font-medium max-w-lg mx-auto leading-relaxed"
-            style={{ color: teamPrimaryColor }}
-          >
-            &ldquo;{signature}&rdquo;
-          </p>
+          <div className="flex flex-col items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] tracking-[0.15em] text-white/50 uppercase">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
+              AI 카피
+            </span>
+            <p
+              className="text-lg sm:text-xl italic font-medium max-w-lg mx-auto leading-relaxed"
+              style={{ color: teamPrimaryColor }}
+            >
+              &ldquo;{signature}&rdquo;
+            </p>
+          </div>
         </div>
 
         {/* Scroll Cue - Bottom Center */}
