@@ -216,7 +216,7 @@ function CardBack({
         <div className={cn("h-px w-full mb-3", config.labelColor.replace("text-", "bg-"), "opacity-30")} />
 
         {/* Stats Table — 여유 있게 */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="flex-1 min-h-0">
           <p className="text-[9px] tracking-[0.25em] text-white/40 uppercase mb-2 font-bold">시즌 기록</p>
           <div className="space-y-0">
             {stats.map((stat, i) => (
