@@ -154,14 +154,18 @@ const rarityConfig = {
 
 // Card Back Component
 function CardBack({
+  ovr,
   playerName,
   teamName,
+  teamPrimaryColor,
   seasonName,
+  jerseyNumber,
   stats,
   rarity,
-}: Pick<PlayerCardProps, "playerName" | "teamName" | "seasonName" | "stats" | "rarity">) {
+  positionLabel,
+}: Pick<PlayerCardProps, "ovr" | "playerName" | "teamName" | "teamPrimaryColor" | "seasonName" | "jerseyNumber" | "stats" | "rarity" | "positionLabel">) {
   const config = rarityConfig[rarity];
-  
+
   return (
     <div
       className={cn(
@@ -171,25 +175,49 @@ function CardBack({
       )}
       style={{ boxShadow: config.glowStyle }}
     >
-      <div className="relative h-full p-3 sm:p-4 flex flex-col">
-        {/* Header — 컴팩트 */}
-        <div className="text-center mb-2">
-          <p className={cn("text-[9px] tracking-[0.3em] font-semibold mb-0.5", config.labelColor)}>
-            {config.label}
-          </p>
-          <h3 className="text-xl sm:text-2xl font-black text-white tracking-wide">{playerName}</h3>
-          <p className="text-[11px] text-white/50 mt-0.5">{teamName} · {seasonName}</p>
+      {/* Background team color glow */}
+      <div
+        className="absolute top-0 right-0 w-56 h-56 rounded-full blur-3xl opacity-25 pointer-events-none"
+        style={{ background: teamPrimaryColor }}
+      />
+      {/* 큰 등번호 워터마크 */}
+      <div
+        className="absolute bottom-4 right-4 text-[160px] leading-none font-black select-none pointer-events-none opacity-[0.06]"
+        style={{ color: teamPrimaryColor }}
+      >
+        {jerseyNumber ?? "?"}
+      </div>
+
+      <div className="relative h-full p-4 sm:p-5 flex flex-col">
+        {/* Header — 넉넉하게 */}
+        <div className="mb-3">
+          <div className="flex items-center justify-between mb-2">
+            <p className={cn("text-[10px] tracking-[0.3em] font-bold", config.labelColor)}>
+              {config.label}
+            </p>
+            <p className="text-[10px] tracking-[0.2em] text-white/40 font-semibold">{positionLabel}</p>
+          </div>
+          <div className="flex items-end gap-2">
+            <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-none">{playerName}</h3>
+            <span className={cn("text-2xl sm:text-3xl font-black leading-none pb-0.5", config.labelColor)}>
+              {ovr}
+            </span>
+          </div>
+          <p className="text-[11px] text-white/50 mt-1.5">{teamName} · {seasonName}</p>
         </div>
 
-        {/* Stats Table — 패딩·간격 축소 */}
-        <div className="flex-1 min-h-0">
-          <p className="text-[9px] tracking-[0.2em] text-white/40 uppercase mb-1.5">시즌 기록</p>
+        {/* Divider with rarity color */}
+        <div className={cn("h-px w-full mb-3", config.labelColor.replace("text-", "bg-"), "opacity-30")} />
+
+        {/* Stats Table — 여유 있게 */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <p className="text-[9px] tracking-[0.25em] text-white/40 uppercase mb-2 font-bold">시즌 기록</p>
           <div className="space-y-0">
             {stats.map((stat, i) => (
-              <div key={i} className="flex items-center justify-between py-1.5 border-b border-white/10">
-                <span className="text-xs text-white/60">{stat.label}</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-base sm:text-lg font-bold text-white">{stat.value}</span>
+              <div key={i} className="flex items-center justify-between py-2 border-b border-white/10 last:border-0">
+                <span className="text-sm text-white/70 font-medium">{stat.label}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg sm:text-xl font-black text-white">{stat.value}</span>
                   {(stat.rank || stat.streak) && (
                     <ContextChip text={stat.rank || stat.streak || ""} />
                   )}
@@ -199,9 +227,13 @@ function CardBack({
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-auto pt-2 text-center">
-          <p className="text-[9px] tracking-[0.3em] text-white/30">PITCHMASTER</p>
+        {/* Footer — 뒤집기 힌트 */}
+        <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between">
+          <p className="text-[9px] tracking-[0.3em] text-white/30 font-bold">PITCHMASTER</p>
+          <p className="text-[9px] text-white/30 flex items-center gap-1">
+            <span>탭하면 앞면</span>
+            <span className="text-sm">↻</span>
+          </p>
         </div>
       </div>
     </div>
@@ -456,18 +488,25 @@ export function PlayerCard({
             {/* Footer */}
             <div className="mt-auto pt-3 flex items-center justify-between">
               <span className="text-[9px] text-white/40">{seasonName}</span>
-              <span className="text-[8px] tracking-[0.25em] text-white/30">PITCHMASTER</span>
+              <span className="text-[9px] text-white/50 flex items-center gap-1 font-medium">
+                <span className="text-xs animate-pulse">↻</span>
+                <span>탭해서 뒤집기</span>
+              </span>
             </div>
           </div>
         </div>
 
         {/* Card Back */}
         <CardBack
+          ovr={ovr}
           playerName={playerName}
           teamName={teamName}
+          teamPrimaryColor={teamPrimaryColor}
           seasonName={seasonName}
+          jerseyNumber={jerseyNumber}
           stats={stats}
           rarity={rarity}
+          positionLabel={positionLabel}
         />
       </div>
     </div>
