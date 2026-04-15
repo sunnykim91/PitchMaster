@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { PlayerCard, type PlayerCardProps } from "./PlayerCard";
+import { ShareModal } from "./ShareCard";
 
 // Types
 export type PlayerStats = {
@@ -347,6 +348,7 @@ function StickyShareButton({ onClick }: { onClick: () => void }) {
 // Main Player Profile Page Component
 export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showImageShareModal, setShowImageShareModal] = useState(false);
   const [shareToast, setShareToast] = useState<string | null>(null);
   const { name, teamName, teamPrimaryColor, positions, jerseyNumber, teamRole, seasonName, signature, playerCardProps, stats, bestMoments, recentMatches } = profile;
 
@@ -390,9 +392,8 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
   }
 
   function handleSaveImage() {
-    // 이미지 다운로드는 별도 API 필요. 대안: 스크린샷 안내
-    showShareToast("스크린샷으로 저장해주세요 (이미지 다운로드 준비 중)");
     setShowShareModal(false);
+    setShowImageShareModal(true);
   }
 
   function handleStartOwnTeam() {
@@ -710,9 +711,9 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
               </button>
               <button
                 onClick={handleSaveImage}
-                className="w-full py-3 rounded-lg bg-white/5 text-white/70 font-medium hover:bg-white/10 transition-colors text-sm"
+                className="w-full py-3 rounded-lg bg-white/10 text-white font-medium hover:bg-white/20 transition-colors"
               >
-                이미지로 저장 (준비 중)
+                이미지 카드로 저장
               </button>
             </div>
             <button onClick={() => setShowShareModal(false)} className="w-full mt-4 py-2 text-white/50 text-sm">
@@ -721,6 +722,30 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
           </div>
         </div>
       )}
+
+      {/* 이미지 카드 공유 모달 (실제 캡처 동작) */}
+      <ShareModal
+        isOpen={showImageShareModal}
+        onClose={() => setShowImageShareModal(false)}
+        data={{
+          playerName: profile.name,
+          teamName: profile.teamName,
+          seasonName: profile.seasonName,
+          teamPrimaryColor: profile.teamPrimaryColor,
+          ovr: profile.playerCardProps.ovr,
+          rarity: profile.playerCardProps.rarity,
+          positionLabel: profile.playerCardProps.positionLabel,
+          jerseyNumber: profile.jerseyNumber,
+          signature: profile.signature,
+          stats: profile.playerCardProps.stats
+            .slice(0, 3)
+            .map((s) => ({
+              label: s.label,
+              value: String(s.value),
+              rank: s.rank,
+            })),
+        }}
+      />
     </div>
   );
 }
