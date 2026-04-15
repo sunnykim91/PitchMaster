@@ -56,6 +56,7 @@ type TeamApiResponse = {
     sport_type?: string;
     default_formation_id?: string;
     stats_recording_staff_only?: boolean;
+    default_player_count?: number;
   };
 };
 
@@ -84,6 +85,8 @@ function mapTeamResponse(res: TeamApiResponse, fallback: TeamSettingsData): Team
     joinMode: t.join_mode ?? fallback.joinMode,
     defaultFormationId: t.default_formation_id ?? fallback.defaultFormationId,
     statsRecordingStaffOnly: t.stats_recording_staff_only ?? fallback.statsRecordingStaffOnly,
+    sportType: (t.sport_type === "FUTSAL" ? "FUTSAL" : "SOCCER"),
+    defaultPlayerCount: t.default_player_count ?? fallback.defaultPlayerCount,
   };
 }
 

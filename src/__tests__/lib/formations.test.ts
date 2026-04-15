@@ -2,8 +2,9 @@ import { describe, it, expect } from "vitest";
 import { formationTemplates, getFormationsForSport, getFormationsForSportAndCount, getFutsalFieldCounts } from "@/lib/formations";
 
 describe("formationTemplates", () => {
-  it("축구 10개 + 풋살 다수 포메이션 정의", () => {
-    expect(getFormationsForSport("SOCCER")).toHaveLength(10);
+  it("축구 19개(11인제 10 + 8/9/10인제 9) + 풋살 다수 포메이션 정의", () => {
+    // 축구 11인제 10 + 10인제 3 + 9인제 3 + 8인제 3 = 19
+    expect(getFormationsForSport("SOCCER")).toHaveLength(19);
     expect(getFormationsForSport("FUTSAL").length).toBeGreaterThanOrEqual(3);
     expect(formationTemplates.length).toBe(
       getFormationsForSport("SOCCER").length + getFormationsForSport("FUTSAL").length
@@ -27,9 +28,16 @@ describe("formationTemplates", () => {
     expect(uniqueIds.size).toBe(formationTemplates.length);
   });
 
-  it("축구 포메이션은 정확히 11개 슬롯 보유", () => {
-    for (const formation of getFormationsForSport("SOCCER")) {
+  it("축구 11인제 포메이션은 정확히 11개 슬롯 보유", () => {
+    for (const formation of getFormationsForSport("SOCCER").filter((f) => f.fieldCount === 11)) {
       expect(formation.slots).toHaveLength(11);
+    }
+  });
+
+  it("축구 8/9/10인제 포메이션 슬롯 수 = fieldCount", () => {
+    for (const formation of getFormationsForSport("SOCCER").filter((f) => f.fieldCount !== 11)) {
+      expect(formation.fieldCount).toBeDefined();
+      expect(formation.slots).toHaveLength(formation.fieldCount!);
     }
   });
 
@@ -116,9 +124,16 @@ describe("getFormationsForSportAndCount", () => {
     }
   });
 
-  it("축구에서는 fieldCount 무시하고 전체 반환", () => {
+  it("축구 11인제 fieldCount 필터", () => {
     const formations = getFormationsForSportAndCount("SOCCER", 11);
     expect(formations).toHaveLength(10);
+    formations.forEach((f) => expect(f.fieldCount).toBe(11));
+  });
+
+  it("축구 8인제 / 9인제 / 10인제 각 3개", () => {
+    expect(getFormationsForSportAndCount("SOCCER", 8)).toHaveLength(3);
+    expect(getFormationsForSportAndCount("SOCCER", 9)).toHaveLength(3);
+    expect(getFormationsForSportAndCount("SOCCER", 10)).toHaveLength(3);
   });
 });
 

@@ -22,6 +22,7 @@ export const formationTemplates: FormationTemplate[] = [
     id: "4-4-2",
     name: "4-4-2",
     sportType: "SOCCER",
+    fieldCount: 11,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
       { id: "lb", role: "LB", label: "LB", x: 15, y: 72 },
@@ -40,6 +41,7 @@ export const formationTemplates: FormationTemplate[] = [
     id: "4-2-3-1",
     name: "4-2-3-1",
     sportType: "SOCCER",
+    fieldCount: 11,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
       { id: "lb", role: "LB", label: "LB", x: 15, y: 74 },
@@ -58,6 +60,7 @@ export const formationTemplates: FormationTemplate[] = [
     id: "4-3-3",
     name: "4-3-3",
     sportType: "SOCCER",
+    fieldCount: 11,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
       { id: "lb", role: "LB", label: "LB", x: 16, y: 74 },
@@ -76,6 +79,7 @@ export const formationTemplates: FormationTemplate[] = [
     id: "3-5-2",
     name: "3-5-2",
     sportType: "SOCCER",
+    fieldCount: 11,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
       { id: "lcb", role: "LCB", label: "LCB", x: 30, y: 76 },
@@ -94,6 +98,7 @@ export const formationTemplates: FormationTemplate[] = [
     id: "3-4-3",
     name: "3-4-3",
     sportType: "SOCCER",
+    fieldCount: 11,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
       { id: "lcb", role: "LCB", label: "LCB", x: 30, y: 76 },
@@ -112,6 +117,7 @@ export const formationTemplates: FormationTemplate[] = [
     id: "4-1-4-1",
     name: "4-1-4-1",
     sportType: "SOCCER",
+    fieldCount: 11,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
       { id: "lb", role: "LB", label: "LB", x: 15, y: 74 },
@@ -130,6 +136,7 @@ export const formationTemplates: FormationTemplate[] = [
     id: "4-5-1",
     name: "4-5-1",
     sportType: "SOCCER",
+    fieldCount: 11,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
       { id: "lb", role: "LB", label: "LB", x: 15, y: 74 },
@@ -148,6 +155,7 @@ export const formationTemplates: FormationTemplate[] = [
     id: "5-3-2",
     name: "5-3-2",
     sportType: "SOCCER",
+    fieldCount: 11,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
       { id: "lwb", role: "LWB", label: "LWB", x: 12, y: 72 },
@@ -166,6 +174,7 @@ export const formationTemplates: FormationTemplate[] = [
     id: "3-4-2-1",
     name: "3-4-2-1",
     sportType: "SOCCER",
+    fieldCount: 11,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
       { id: "lcb", role: "LCB", label: "LCB", x: 28, y: 76 },
@@ -184,6 +193,7 @@ export const formationTemplates: FormationTemplate[] = [
     id: "4-3-2-1",
     name: "4-3-2-1",
     sportType: "SOCCER",
+    fieldCount: 11,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
       { id: "lb", role: "LB", label: "LB", x: 15, y: 74 },
@@ -198,6 +208,166 @@ export const formationTemplates: FormationTemplate[] = [
       { id: "st", role: "ST", label: "ST", x: 50, y: 20 },
     ],
   },
+
+  // ── 축구 10인제 (GK + 9 필드) ──
+  {
+    id: "soccer-10-3-3-3",
+    name: "3-3-3",
+    sportType: "SOCCER",
+    fieldCount: 10,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
+      { id: "lcb", role: "LCB", label: "LCB", x: 25, y: 74 },
+      { id: "cb", role: "CB", label: "CB", x: 50, y: 76 },
+      { id: "rcb", role: "RCB", label: "RCB", x: 75, y: 74 },
+      { id: "lcm", role: "LCM", label: "LCM", x: 25, y: 50 },
+      { id: "cm", role: "CM", label: "CM", x: 50, y: 52 },
+      { id: "rcm", role: "RCM", label: "RCM", x: 75, y: 50 },
+      { id: "lw", role: "LW", label: "LW", x: 25, y: 24 },
+      { id: "st", role: "ST", label: "ST", x: 50, y: 22 },
+      { id: "rw", role: "RW", label: "RW", x: 75, y: 24 },
+    ],
+  },
+  {
+    id: "soccer-10-4-3-2",
+    name: "4-3-2",
+    sportType: "SOCCER",
+    fieldCount: 10,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
+      { id: "lb", role: "LB", label: "LB", x: 15, y: 72 },
+      { id: "lcb", role: "LCB", label: "LCB", x: 38, y: 75 },
+      { id: "rcb", role: "RCB", label: "RCB", x: 62, y: 75 },
+      { id: "rb", role: "RB", label: "RB", x: 85, y: 72 },
+      { id: "lcm", role: "LCM", label: "LCM", x: 30, y: 50 },
+      { id: "cm", role: "CM", label: "CM", x: 50, y: 52 },
+      { id: "rcm", role: "RCM", label: "RCM", x: 70, y: 50 },
+      { id: "ls", role: "LS", label: "LS", x: 38, y: 24 },
+      { id: "rs", role: "RS", label: "RS", x: 62, y: 24 },
+    ],
+  },
+  {
+    id: "soccer-10-3-4-2",
+    name: "3-4-2",
+    sportType: "SOCCER",
+    fieldCount: 10,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
+      { id: "lcb", role: "LCB", label: "LCB", x: 28, y: 74 },
+      { id: "cb", role: "CB", label: "CB", x: 50, y: 76 },
+      { id: "rcb", role: "RCB", label: "RCB", x: 72, y: 74 },
+      { id: "lm", role: "LM", label: "LM", x: 15, y: 52 },
+      { id: "lcm", role: "LCM", label: "LCM", x: 38, y: 54 },
+      { id: "rcm", role: "RCM", label: "RCM", x: 62, y: 54 },
+      { id: "rm", role: "RM", label: "RM", x: 85, y: 52 },
+      { id: "ls", role: "LS", label: "LS", x: 38, y: 24 },
+      { id: "rs", role: "RS", label: "RS", x: 62, y: 24 },
+    ],
+  },
+
+  // ── 축구 9인제 (GK + 8 필드) ──
+  {
+    id: "soccer-9-3-3-2",
+    name: "3-3-2",
+    sportType: "SOCCER",
+    fieldCount: 9,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
+      { id: "lcb", role: "LCB", label: "LCB", x: 25, y: 74 },
+      { id: "cb", role: "CB", label: "CB", x: 50, y: 76 },
+      { id: "rcb", role: "RCB", label: "RCB", x: 75, y: 74 },
+      { id: "lcm", role: "LCM", label: "LCM", x: 25, y: 50 },
+      { id: "cm", role: "CM", label: "CM", x: 50, y: 52 },
+      { id: "rcm", role: "RCM", label: "RCM", x: 75, y: 50 },
+      { id: "ls", role: "LS", label: "LS", x: 38, y: 24 },
+      { id: "rs", role: "RS", label: "RS", x: 62, y: 24 },
+    ],
+  },
+  {
+    id: "soccer-9-3-4-1",
+    name: "3-4-1",
+    sportType: "SOCCER",
+    fieldCount: 9,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
+      { id: "lcb", role: "LCB", label: "LCB", x: 25, y: 74 },
+      { id: "cb", role: "CB", label: "CB", x: 50, y: 76 },
+      { id: "rcb", role: "RCB", label: "RCB", x: 75, y: 74 },
+      { id: "lm", role: "LM", label: "LM", x: 15, y: 50 },
+      { id: "lcm", role: "LCM", label: "LCM", x: 38, y: 52 },
+      { id: "rcm", role: "RCM", label: "RCM", x: 62, y: 52 },
+      { id: "rm", role: "RM", label: "RM", x: 85, y: 50 },
+      { id: "st", role: "ST", label: "ST", x: 50, y: 22 },
+    ],
+  },
+  {
+    id: "soccer-9-4-3-1",
+    name: "4-3-1",
+    sportType: "SOCCER",
+    fieldCount: 9,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
+      { id: "lb", role: "LB", label: "LB", x: 15, y: 72 },
+      { id: "lcb", role: "LCB", label: "LCB", x: 38, y: 75 },
+      { id: "rcb", role: "RCB", label: "RCB", x: 62, y: 75 },
+      { id: "rb", role: "RB", label: "RB", x: 85, y: 72 },
+      { id: "lcm", role: "LCM", label: "LCM", x: 30, y: 50 },
+      { id: "cm", role: "CM", label: "CM", x: 50, y: 52 },
+      { id: "rcm", role: "RCM", label: "RCM", x: 70, y: 50 },
+      { id: "st", role: "ST", label: "ST", x: 50, y: 22 },
+    ],
+  },
+
+  // ── 축구 8인제 (GK + 7 필드) ──
+  {
+    id: "soccer-8-3-3-1",
+    name: "3-3-1",
+    sportType: "SOCCER",
+    fieldCount: 8,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
+      { id: "lcb", role: "LCB", label: "LCB", x: 25, y: 74 },
+      { id: "cb", role: "CB", label: "CB", x: 50, y: 76 },
+      { id: "rcb", role: "RCB", label: "RCB", x: 75, y: 74 },
+      { id: "lm", role: "LM", label: "LM", x: 25, y: 50 },
+      { id: "cm", role: "CM", label: "CM", x: 50, y: 52 },
+      { id: "rm", role: "RM", label: "RM", x: 75, y: 50 },
+      { id: "st", role: "ST", label: "ST", x: 50, y: 22 },
+    ],
+  },
+  {
+    id: "soccer-8-2-3-2",
+    name: "2-3-2",
+    sportType: "SOCCER",
+    fieldCount: 8,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
+      { id: "lcb", role: "LCB", label: "LCB", x: 35, y: 74 },
+      { id: "rcb", role: "RCB", label: "RCB", x: 65, y: 74 },
+      { id: "lm", role: "LM", label: "LM", x: 22, y: 50 },
+      { id: "cm", role: "CM", label: "CM", x: 50, y: 52 },
+      { id: "rm", role: "RM", label: "RM", x: 78, y: 50 },
+      { id: "ls", role: "LS", label: "LS", x: 38, y: 24 },
+      { id: "rs", role: "RS", label: "RS", x: 62, y: 24 },
+    ],
+  },
+  {
+    id: "soccer-8-3-2-2",
+    name: "3-2-2",
+    sportType: "SOCCER",
+    fieldCount: 8,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 92 },
+      { id: "lcb", role: "LCB", label: "LCB", x: 25, y: 74 },
+      { id: "cb", role: "CB", label: "CB", x: 50, y: 76 },
+      { id: "rcb", role: "RCB", label: "RCB", x: 75, y: 74 },
+      { id: "lcm", role: "LCM", label: "LCM", x: 35, y: 50 },
+      { id: "rcm", role: "RCM", label: "RCM", x: 65, y: 50 },
+      { id: "ls", role: "LS", label: "LS", x: 38, y: 24 },
+      { id: "rs", role: "RS", label: "RS", x: 62, y: 24 },
+    ],
+  },
+
   // ── Futsal 3인 (GK + 2 필드) ──
   {
     id: "futsal-3-1-1",
@@ -411,9 +581,9 @@ export function getFormationsForSport(sportType: SportType): FormationTemplate[]
   return formationTemplates.filter((f) => f.sportType === sportType);
 }
 
-/** 풋살: 스포츠 타입 + 필드 인원 수로 포메이션 필터 */
+/** 스포츠 타입 + 인원 수로 포메이션 필터 (축구·풋살 공용) */
 export function getFormationsForSportAndCount(sportType: SportType, fieldCount?: number): FormationTemplate[] {
-  if (sportType !== "FUTSAL" || fieldCount == null) {
+  if (fieldCount == null) {
     return getFormationsForSport(sportType);
   }
   return formationTemplates.filter((f) => f.sportType === sportType && f.fieldCount === fieldCount);
@@ -421,9 +591,19 @@ export function getFormationsForSportAndCount(sportType: SportType, fieldCount?:
 
 /** 풋살에서 지원하는 필드 인원 수 목록 (중복 제거, 정렬) */
 export function getFutsalFieldCounts(): number[] {
+  return getSportFieldCounts("FUTSAL");
+}
+
+/** 축구에서 지원하는 인원 수 목록 (11/10/9/8) */
+export function getSoccerFieldCounts(): number[] {
+  return getSportFieldCounts("SOCCER");
+}
+
+/** 주어진 스포츠의 지원 인원 수 목록 */
+export function getSportFieldCounts(sportType: SportType): number[] {
   const counts = new Set<number>();
   formationTemplates
-    .filter((f) => f.sportType === "FUTSAL" && f.fieldCount != null)
+    .filter((f) => f.sportType === sportType && f.fieldCount != null)
     .forEach((f) => counts.add(f.fieldCount!));
   return [...counts].sort((a, b) => a - b);
 }

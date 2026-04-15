@@ -33,6 +33,8 @@ export type TeamSettingsData = {
   joinMode: "AUTO" | "MANUAL";
   defaultFormationId: string;
   statsRecordingStaffOnly: boolean;
+  sportType?: "SOCCER" | "FUTSAL";
+  defaultPlayerCount?: number;
 };
 
 type JoinRequest = {
@@ -227,6 +229,7 @@ function TeamSettingsComponent({
       uniformPattern: team.uniformPattern,
       uniforms: team.uniforms,
       defaultFormationId: team.defaultFormationId || null,
+      defaultPlayerCount: team.defaultPlayerCount ?? undefined,
     });
     setSaving(false);
     if (error) {
@@ -407,6 +410,32 @@ function TeamSettingsComponent({
               }}
               disabled={!canEditTeam}
             />
+
+            {/* 기본 참가 인원 */}
+            <div className="rounded-xl border border-border p-4 space-y-3">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">기본 참가 인원</p>
+              <p className="text-xs text-muted-foreground">
+                새 경기 등록 시 자동 적용됩니다. 경기별로 개별 변경 가능.
+              </p>
+              <Select
+                value={String(team.defaultPlayerCount ?? (team.sportType === "FUTSAL" ? 6 : 11))}
+                onValueChange={(v) => setTeam({ ...team, defaultPlayerCount: Number(v) })}
+                disabled={!canEditTeam}
+              >
+                <SelectTrigger className="w-full text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {team.sportType === "FUTSAL"
+                    ? [3, 4, 5, 6].map((n) => (
+                        <SelectItem key={n} value={String(n)}>{n}:{n} (GK 포함 {n}명)</SelectItem>
+                      ))
+                    : [8, 9, 10, 11].map((n) => (
+                        <SelectItem key={n} value={String(n)}>{n}:{n} (GK 포함 {n}명)</SelectItem>
+                      ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* 기본 포메이션 */}
             <div className="rounded-xl border border-border p-4 space-y-3">

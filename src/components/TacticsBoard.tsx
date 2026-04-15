@@ -48,6 +48,8 @@ type TacticsBoardProps = {
   roster: Player[];
   quarterCount: number;
   sportType?: SportType;
+  /** 경기별 참가 인원 (축구 8/9/10/11, 풋살 3~6). 미지정 시 11(축구) 또는 기존 풋살 UI */
+  playerCount?: number;
   teamSettings?: TeamSettings;
   initialSquads?: SquadRow[]; // 외부에서 주입 시 API fetch skip
   defaultFormationId?: string; // 팀 기본 포메이션
@@ -103,18 +105,24 @@ const SAVE_DEBOUNCE_MS = 300;
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
-export default function TacticsBoard({ matchId, roster, quarterCount, sportType = "SOCCER", teamSettings: teamSettingsProp, initialSquads, defaultFormationId: teamDefaultFormationId, readOnly = false, side }: TacticsBoardProps) {
+export default function TacticsBoard({ matchId, roster, quarterCount, sportType = "SOCCER", playerCount, teamSettings: teamSettingsProp, initialSquads, defaultFormationId: teamDefaultFormationId, readOnly = false, side }: TacticsBoardProps) {
   const confirm = useConfirm();
   const isMobile = useIsMobile();
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [quarterMatrixOpen, setQuarterMatrixOpen] = useState(false);
   const isFutsal = sportType === "FUTSAL";
   const futsalFieldCounts = useMemo(() => (isFutsal ? getFutsalFieldCounts() : []), [isFutsal]);
-  const [futsalFieldCount, setFutsalFieldCount] = useState(isFutsal ? 5 : 0);
+  const [futsalFieldCount, setFutsalFieldCount] = useState(isFutsal ? (playerCount ?? 5) : 0);
+
+  // 축구: 경기 playerCount (8~11) 로 포메이션 필터
+  const soccerFieldCount = !isFutsal ? (playerCount ?? 11) : undefined;
 
   const filteredFormations = useMemo(
-    () => getFormationsForSportAndCount(sportType, isFutsal ? futsalFieldCount : undefined),
-    [sportType, isFutsal, futsalFieldCount]
+    () => getFormationsForSportAndCount(
+      sportType,
+      isFutsal ? futsalFieldCount : soccerFieldCount
+    ),
+    [sportType, isFutsal, futsalFieldCount, soccerFieldCount]
   );
   const defaultFormation = (teamDefaultFormationId ? filteredFormations.find(f => f.id === teamDefaultFormationId) : null) ?? filteredFormations[0] ?? formationTemplates[0];
   const quarters = useMemo(

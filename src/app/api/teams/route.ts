@@ -68,6 +68,13 @@ export async function PUT(request: NextRequest) {
   if (body.defaultFormationId !== undefined) updates.default_formation_id = body.defaultFormationId;
   if (body.statsRecordingStaffOnly !== undefined)
     updates.stats_recording_staff_only = body.statsRecordingStaffOnly;
+  if (body.defaultPlayerCount !== undefined) {
+    const n = Number(body.defaultPlayerCount);
+    if (!Number.isInteger(n) || n < 3 || n > 11) {
+      return apiError("default player count는 3~11 사이 정수여야 합니다");
+    }
+    updates.default_player_count = n;
+  }
 
   const { error } = await db.from("teams").update(updates).eq("id", ctx.teamId);
   if (error) return apiError(error.message);

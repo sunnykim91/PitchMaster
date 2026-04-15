@@ -16,6 +16,7 @@ export type MatchRow = {
   quarter_count: number;
   quarter_duration: number;
   break_duration: number;
+  player_count?: number;
   status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
   uniform_type?: "HOME" | "AWAY";
   match_type?: "REGULAR" | "INTERNAL" | "EVENT";
@@ -119,6 +120,7 @@ export type Match = {
   quarterCount: number;
   quarterDuration: number;
   breakDuration: number;
+  playerCount?: number;
   status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
   uniformType: "HOME" | "AWAY" | "THIRD";
   matchType: MatchType;
@@ -223,6 +225,7 @@ export function mapMatch(row: MatchRow): Match {
     location: row.location ?? "",
     opponent: row.opponent_name ?? undefined,
     quarterCount: row.quarter_count,
+    playerCount: row.player_count,
     quarterDuration: row.quarter_duration,
     breakDuration: row.break_duration,
     status: row.status,

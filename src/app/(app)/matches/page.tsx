@@ -14,13 +14,14 @@ export default async function MatchesPage() {
     getMatchesData(session.user.teamId!),
     (async () => {
       if (!db || !session.user.teamId) return { sportType: "SOCCER" as SportType, uniformPrimary: null as string | null, uniformSecondary: null as string | null, uniformPattern: null as string | null };
-      const { data: team } = await db.from("teams").select("sport_type, uniform_primary, uniform_secondary, uniform_pattern, uniforms").eq("id", session.user.teamId).single();
+      const { data: team } = await db.from("teams").select("sport_type, uniform_primary, uniform_secondary, uniform_pattern, uniforms, default_player_count").eq("id", session.user.teamId).single();
       return {
         sportType: (team?.sport_type as SportType) ?? "SOCCER",
         uniformPrimary: team?.uniform_primary ?? null,
         uniformSecondary: team?.uniform_secondary ?? null,
         uniformPattern: team?.uniform_pattern ?? null,
         uniforms: (team as { uniforms?: unknown })?.uniforms ?? null,
+        defaultPlayerCount: (team as { default_player_count?: number })?.default_player_count,
       };
     })(),
     (async () => {
@@ -45,6 +46,7 @@ export default async function MatchesPage() {
       inviteCode={session.user.inviteCode ?? ""}
       teamName={session.user.teamName ?? ""}
       registeredMemberCount={registeredMemberCount}
+      teamDefaultPlayerCount={teamInfo.defaultPlayerCount}
     />
   );
 }

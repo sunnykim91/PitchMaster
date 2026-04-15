@@ -79,6 +79,17 @@ export async function POST(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  // 팀 기본 참가 인원 상속 (body.playerCount 없을 때만)
+  let resolvedPlayerCount = body.playerCount;
+  if (resolvedPlayerCount == null) {
+    const { data: team } = await db
+      .from("teams")
+      .select("default_player_count")
+      .eq("id", ctx.teamId)
+      .single();
+    resolvedPlayerCount = team?.default_player_count ?? 11;
+  }
+
   // 날짜·시간 형식 검증
   if (!body.date || !/^\d{4}-\d{2}-\d{2}$/.test(body.date)) {
     return apiError("경기 날짜 형식이 올바르지 않습니다");
@@ -119,7 +130,7 @@ export async function POST(request: NextRequest) {
       quarter_count: body.quarterCount ?? 4,
       quarter_duration: body.quarterDuration ?? 25,
       break_duration: body.breakDuration ?? 5,
-      player_count: body.playerCount ?? 11,
+      player_count: resolvedPlayerCount,
       uniform_type: body.uniformType ?? "HOME",
       match_type: body.matchType ?? "REGULAR",
       stats_included: body.matchType === "EVENT" ? false : (body.statsIncluded ?? true),

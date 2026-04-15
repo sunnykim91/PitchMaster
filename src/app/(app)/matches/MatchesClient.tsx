@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
@@ -105,7 +106,7 @@ function mapDbMatchToMatch(db: DbMatch): Match {
 type UniformSetInfo = { primary: string; secondary: string; pattern: string };
 type TeamUniform = { primary: string | null; secondary: string | null; pattern: string | null; uniforms?: { home?: UniformSetInfo; away?: UniformSetInfo; third?: UniformSetInfo | null } | null };
 
-export default function MatchesClient({ userId, userRole, initialMatches, sportType = "SOCCER", teamUniform, inviteCode = "", teamName = "", registeredMemberCount = 0 }: { userId: string; userRole?: Role; initialMatches?: { matches: DbMatch[] }; sportType?: SportType; teamUniform?: TeamUniform; inviteCode?: string; teamName?: string; registeredMemberCount?: number }) {
+export default function MatchesClient({ userId, userRole, initialMatches, sportType = "SOCCER", teamUniform, inviteCode = "", teamName = "", registeredMemberCount = 0, teamDefaultPlayerCount }: { userId: string; userRole?: Role; initialMatches?: { matches: DbMatch[] }; sportType?: SportType; teamUniform?: TeamUniform; inviteCode?: string; teamName?: string; registeredMemberCount?: number; teamDefaultPlayerCount?: number }) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
   const { showToast } = useToast();
@@ -169,7 +170,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     const dd = String(prev.getDate()).padStart(2, "0");
     setVoteDeadline(`${yyyy}-${mm}-${dd}T17:00`);
   }, [matchDate]);
-  const [playerCount, setPlayerCount] = useState(defaults.playerCount);
+  const [playerCount, setPlayerCount] = useState(teamDefaultPlayerCount ?? defaults.playerCount);
   const [matchType, setMatchType] = useState<"REGULAR" | "INTERNAL" | "EVENT">("REGULAR");
   const [statsIncluded, setStatsIncluded] = useState(true);
 
@@ -673,20 +674,21 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       />
                     </div>
                   </div>
-                  {isFutsal && (
-                    <div className="space-y-2">
-                      <Label htmlFor="playerCount">참가 인원 (명)</Label>
-                      <Input
-                        id="playerCount"
-                        name="playerCount"
-                        type="number"
-                        min={3}
-                        max={8}
-                        value={playerCount}
-                        onChange={(e) => setPlayerCount(Number(e.target.value))}
-                      />
-                    </div>
-                  )}
+                  <div className="space-y-2">
+                    <Label htmlFor="playerCount">참가 인원</Label>
+                    <NativeSelect
+                      id="playerCount"
+                      name="playerCount"
+                      value={String(playerCount)}
+                      onChange={(e) => setPlayerCount(Number(e.target.value))}
+                    >
+                      {(isFutsal ? [3, 4, 5, 6] : [8, 9, 10, 11]).map((n) => (
+                        <option key={n} value={n}>
+                          {n}:{n} (GK 포함 {n}명)
+                        </option>
+                      ))}
+                    </NativeSelect>
+                  </div>
                 </div>
               )}
               <Button type="submit" variant="default" disabled={submitting} className="mt-2 w-full h-12 text-base font-bold rounded-xl">
