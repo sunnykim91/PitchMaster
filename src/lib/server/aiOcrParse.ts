@@ -1,0 +1,217 @@
+import Anthropic from "@anthropic-ai/sdk";
+
+/**
+ * Claude Haiku Vision으로 통장 거래내역 이미지 → 거래 JSON 배열 파싱.
+ *
+ * 기존 Clova OCR은 텍스트만 추출 → 클라이언트에서 정규식 파싱 (부분 인식 문제 多).
+ * Vision 모델은 이미지 전체 맥락을 이해해서 거래 단위로 바로 구조화.
+ *
+ * 호출당 약 3~5원 (이미지 ~1,500 토큰 + 프롬프트 + JSON 출력 ~800).
+ */
+
+const MODEL = "claude-haiku-4-5";
+const MAX_OUTPUT_TOKENS = 2000;
+const TEMPERATURE = 0.1; // 구조화 작업은 낮은 온도
+
+const SYSTEM_PROMPT = `당신은 한국 은행 통장 거래내역 스크린샷을 읽어 구조화된 JSON을 반환하는 파서입니다.
+
+## 입력
+
+사용자가 업로드한 이미지입니다. 주로 다음 중 하나:
+- 카카오뱅크 / 토스뱅크 / 국민·신한·우리·하나은행 등 모바일 앱 거래내역
+- 개별 거래 상세 화면
+- 종이 통장 사본
+
+## 출력 규칙 (절대 엄수)
+
+**순수 JSON 배열만** 반환하세요. 마크다운 코드 블록, 설명문, 메타 텍스트 절대 금지.
+
+\`\`\`
+[
+  { "date": "2026-04-12", "time": "13:45", "counterparty": "홍길동", "amount": 50000, "type": "입금", "balance": 1243000, "memo": null },
+  { "date": "2026-04-10", "time": null, "counterparty": "김철수", "amount": 50000, "type": "입금", "balance": 1193000, "memo": "4월 회비" }
+]
+\`\`\`
+
+## 필드 규칙
+
+- **date**: "YYYY-MM-DD" 형식. 연도 안 보이면 현재 연도 2026 가정. 월/일만 보이면 "2026-MM-DD".
+- **time**: "HH:MM" 형식. 없으면 null.
+- **counterparty**: 입금자/출금자 이름. "홍길동", "FCMZ 김철수" 등. 이름 없으면 null.
+- **amount**: 정수 (원 단위, 쉼표·원 표시 없이). 항상 양수.
+- **type**: "입금" 또는 "출금" (문자열). 판단 기준:
+  - "+", 입금, 이체입금 → "입금"
+  - "-", 출금, 이체출금, 수수료 → "출금"
+  - 잔액 변화 방향으로 판단 가능하면 그걸로.
+- **balance**: 거래 후 잔액 (정수). 안 보이면 null.
+- **memo**: 추가 메모/태그. 없으면 null.
+
+## 파싱 원칙
+
+1. **화면에 표시된 모든 거래를 빠짐없이**. 위에서 아래 순서로.
+2. 한 거래의 일부만 보이면 (잘림) → **보이는 필드만 채우고 나머진 null**. 무리하게 추정 X.
+3. "출금" 거래도 포함 (회비 환급·경비 지출 분석에 필요).
+4. 잔액 조회·화면 헤더·광고 영역은 거래가 아님 → 배제.
+5. 금액이 0원이거나 확실히 거래가 아닌 항목 → 배제.
+6. **거래 0개인 이미지** (예: 계좌 초기화면·카드 혜택 안내) → 빈 배열 \`[]\` 반환.
+
+## 이름 파싱 특수 케이스
+
+- "이체입금 홍길동" → counterparty: "홍길동", type: "입금"
+- "FCMZ 김민수" 같이 팀명 포함 → 그대로 "FCMZ 김민수"로 유지
+- "(주)XX" "카드수수료" 같은 비-회원 입출금 → counterparty 그대로, type은 실제 방향
+
+## 한국 은행 앱 팁
+
+- 카카오뱅크: 거래 한 건이 보통 2줄 (이름 + 금액 + 날짜/잔액)
+- 토스: 금액 크게 + 이름 작게, 색깔로 입출금 구분
+- 국민·신한 등: 표 형식, 날짜/시간/적요/입금/출금/잔액 컬럼
+
+## 응답 형식
+
+JSON 배열만. 첫 글자가 \`[\`이고 마지막 글자가 \`]\`여야 합니다.
+코드 블록 감싸기 금지. 설명문 금지.`;
+
+export type ParsedTransaction = {
+  date: string | null;
+  time: string | null;
+  counterparty: string | null;
+  amount: number | null;
+  type: "입금" | "출금" | null;
+  balance: number | null;
+  memo: string | null;
+};
+
+export type OcrParseResult = {
+  transactions: ParsedTransaction[];
+  source: "ai" | "error";
+  error?: string;
+  model?: string;
+};
+
+const client = process.env.ANTHROPIC_API_KEY
+  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  : null;
+
+function resolveMediaType(mimeType: string | undefined): "image/jpeg" | "image/png" | "image/gif" | "image/webp" {
+  const m = (mimeType ?? "").toLowerCase();
+  if (m.includes("png")) return "image/png";
+  if (m.includes("webp")) return "image/webp";
+  if (m.includes("gif")) return "image/gif";
+  return "image/jpeg"; // 기본
+}
+
+/** JSON 추출 — 모델이 코드블록을 붙이거나 앞뒤 설명을 섞어도 안전 */
+function extractJsonArray(raw: string): unknown[] | null {
+  const trimmed = raw.trim();
+  // 1) 그대로 [...] 인지 시도
+  if (trimmed.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      return Array.isArray(parsed) ? parsed : null;
+    } catch {
+      // continue
+    }
+  }
+  // 2) 코드블록 제거 시도
+  const codeBlockMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (codeBlockMatch) {
+    try {
+      const parsed = JSON.parse(codeBlockMatch[1].trim());
+      return Array.isArray(parsed) ? parsed : null;
+    } catch {
+      // continue
+    }
+  }
+  // 3) 첫 [ 부터 마지막 ] 까지 추출
+  const first = trimmed.indexOf("[");
+  const last = trimmed.lastIndexOf("]");
+  if (first >= 0 && last > first) {
+    try {
+      const parsed = JSON.parse(trimmed.slice(first, last + 1));
+      return Array.isArray(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function normalizeTransaction(raw: unknown): ParsedTransaction | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const amount = typeof r.amount === "number" ? Math.abs(Math.round(r.amount)) : null;
+  const balance = typeof r.balance === "number" ? Math.round(r.balance) : null;
+  const type = r.type === "입금" || r.type === "출금" ? (r.type as "입금" | "출금") : null;
+  return {
+    date: typeof r.date === "string" ? r.date : null,
+    time: typeof r.time === "string" ? r.time : null,
+    counterparty: typeof r.counterparty === "string" ? r.counterparty : null,
+    amount,
+    type,
+    balance,
+    memo: typeof r.memo === "string" ? r.memo : null,
+  };
+}
+
+export async function parseReceiptWithVision(
+  imageBuffer: Buffer,
+  mimeType: string | undefined
+): Promise<OcrParseResult> {
+  if (!client) {
+    return { transactions: [], source: "error", error: "API key not configured" };
+  }
+
+  try {
+    const base64 = imageBuffer.toString("base64");
+    const mediaType = resolveMediaType(mimeType);
+
+    const response = await client.messages.create({
+      model: MODEL,
+      max_tokens: MAX_OUTPUT_TOKENS,
+      temperature: TEMPERATURE,
+      system: [
+        {
+          type: "text",
+          text: SYSTEM_PROMPT,
+          cache_control: { type: "ephemeral" },
+        },
+      ],
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "image",
+              source: { type: "base64", media_type: mediaType, data: base64 },
+            },
+            {
+              type: "text",
+              text: "위 이미지의 통장 거래내역을 파싱해 JSON 배열로만 반환하세요. 코드 블록·설명 금지.",
+            },
+          ],
+        },
+      ],
+    });
+
+    const textBlock = response.content.find((b) => b.type === "text");
+    if (!textBlock || textBlock.type !== "text") {
+      return { transactions: [], source: "error", error: "no text in response" };
+    }
+
+    const arr = extractJsonArray(textBlock.text);
+    if (!arr) {
+      console.warn("[aiOcrParse] JSON 파싱 실패. raw=", textBlock.text.slice(0, 200));
+      return { transactions: [], source: "error", error: "invalid JSON" };
+    }
+
+    const transactions = arr
+      .map(normalizeTransaction)
+      .filter((t): t is ParsedTransaction => t !== null);
+
+    return { transactions, source: "ai", model: MODEL };
+  } catch (err) {
+    console.error("[aiOcrParse] Vision API 호출 실패:", err);
+    return { transactions: [], source: "error", error: String(err) };
+  }
+}

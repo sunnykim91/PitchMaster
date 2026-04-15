@@ -121,7 +121,7 @@ type DuesTabKey = (typeof validDuesTabs)[number];
 const ROLE_PRIORITY: Record<string, number> = { OWNER: 0, MANAGER: 1, STAFF: 2, MEMBER: 3 };
 const STATUS_PRIORITY: Record<string, number> = { UNPAID: 0, PAID: 1, EXEMPT: 2 };
 
-export default function DuesClient({ userId: _userId, userRole, initialData }: { userId?: string; userRole?: Role; initialData?: DuesInitialData }) {
+export default function DuesClient({ userId: _userId, userRole, initialData, enableAi = false }: { userId?: string; userRole?: Role; initialData?: DuesInitialData; enableAi?: boolean }) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
   const { showToast } = useToast();
@@ -703,6 +703,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData }: {
           syncPaymentStatus={syncPaymentStatus}
           showToast={showToast}
           autoMatchMember={autoMatchMember}
+          enableAi={enableAi}
         />
       </div>
 

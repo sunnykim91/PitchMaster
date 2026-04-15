@@ -295,6 +295,17 @@
 - 결과 예시: "상대가 가장 먼저 쳐다보는 뒷공간을 장악한다" — 룰 기반 불가 표현
 - 월 비용 예상: ~1,200원 (활성 선수 300명 주 1회 가정)
 
+**Phase 3 — AI OCR (Claude Haiku Vision) — 회비 영수증 스마트 파싱**
+- [x] `src/lib/server/aiOcrParse.ts`: 이미지 → 거래 JSON 배열 파싱
+  프롬프트에 한국 은행 앱(카뱅/토스/국민 등) 파싱 가이드 + JSON 스키마
+  extractJsonArray: 코드블록/설명문 섞여도 안전하게 추출
+- [x] `POST /api/ocr/smart`: 김선휘 Feature Flag 라우트
+- [x] DuesBulkTab에 "✨ AI OCR로 시도하기 (베타)" 버튼 추가
+  기존 Clova OCR은 그대로 유지, AI는 선택지로 병존
+  AI 결과를 Clova 스타일 텍스트로 재구성 → 기존 parseTransactions 재사용
+- 호출당 ~3~5원 (이미지 ~1,500 + 프롬프트/출력 ~1,000)
+- 기존 Clova 대비 장점: 부분 인식 거의 없음, 이미지 맥락 이해
+
 **Phase 2 — AI 코치 분석 (Claude Haiku, Phase 1은 경기 후기로 확정)**
 - [x] `src/lib/server/aiTacticsAnalysis.ts`: 편성 결과 + 참석자 스탯 → 코치식 1~2단락 분석 생성
   프롬프트에 1단락(편성 콘셉트) + 2단락(핵심 플레이어·주의점) 구조 가이드

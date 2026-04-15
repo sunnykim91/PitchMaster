@@ -68,6 +68,8 @@ export type DuesBulkTabProps = {
   syncPaymentStatus: () => Promise<void>;
   showToast: (msg: string, type?: "success" | "error" | "info") => void;
   autoMatchMember: (description: string) => string | undefined;
+  /** AI OCR(Claude Vision) 활성화 여부 — 김선휘 Feature Flag */
+  enableAi?: boolean;
 };
 
 function formatCurrencyInput(value: string): string {
@@ -84,6 +86,7 @@ function DuesBulkTabInner({
   syncPaymentStatus,
   showToast,
   autoMatchMember,
+  enableAi = false,
 }: DuesBulkTabProps) {
   // props를 ref로 저장 — useCallback 내에서 항상 최신 값 참조
   const recordsRef = useRef(records);
@@ -110,6 +113,7 @@ function DuesBulkTabInner({
   const [bulkProgress, setBulkProgress] = useState("");
   const bulkSectionRef = useRef<HTMLDivElement>(null);
   const ocrFileInputRef = useRef<HTMLInputElement>(null);
+  const aiOcrFileInputRef = useRef<HTMLInputElement>(null);
   const excelFileInputRef = useRef<HTMLInputElement>(null);
 
   /**
@@ -239,6 +243,80 @@ function DuesBulkTabInner({
 
     return { rows, latestBalance };
   }
+
+  /**
+   * AI(Claude Vision) OCR — 이미지 → 거래 JSON 배열을 직접 반환.
+   * 응답을 기존 parseTransactions가 처리할 수 있는 텍스트로 재구성해
+   * 이후 워크플로우(중복 제거·저장)를 그대로 재사용한다.
+   */
+  async function runAiOcr(file: File): Promise<string | null> {
+    const formData = new FormData();
+    formData.append("image", file);
+    const res = await fetch("/api/ocr/smart", { method: "POST", body: formData });
+    const json = await res.json();
+    if (!res.ok) {
+      const msg = json.error === "ai_not_available"
+        ? "AI OCR은 관리자 계정 전용입니다"
+        : `AI OCR 실패: ${json.error ?? res.status}`;
+      showToast(msg, "error");
+      return null;
+    }
+    type Tx = { date: string | null; time: string | null; counterparty: string | null; amount: number | null; type: "입금" | "출금" | null; balance: number | null };
+    const txs = (json.transactions as Tx[]) ?? [];
+    // 기존 parseTransactions가 인식하는 간단한 줄 단위 포맷으로 재구성
+    // 예: "2026-04-12 13:45 홍길동 입금 50,000 1,243,000"
+    const lines = txs
+      .filter((t) => t.amount && t.amount > 0)
+      .map((t) => {
+        const date = t.date ?? "";
+        const time = t.time ?? "";
+        const name = t.counterparty ?? "";
+        const sign = t.type === "출금" ? "-" : "+";
+        const amt = t.amount!.toLocaleString("ko-KR");
+        const bal = t.balance != null ? t.balance.toLocaleString("ko-KR") : "";
+        return `${date} ${time} ${name} ${sign}${amt} ${bal}`.trim();
+      });
+    return lines.join("\n");
+  }
+
+  const handleAiOcrImageChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const imageUrl = URL.createObjectURL(file);
+    setBulkImage(imageUrl);
+    setOcrLoading(true);
+    setOcrStatus("AI OCR로 분석 중... (정확도 더 높음, 응답 ~3~5초)");
+    setPartialRows([]);
+    try {
+      const synthesized = await runAiOcr(file);
+      if (!synthesized) {
+        setOcrLoading(false);
+        if (aiOcrFileInputRef.current) aiOcrFileInputRef.current.value = "";
+        setOcrStatus("AI OCR 처리 실패. 일반 OCR을 사용해주세요.");
+        return;
+      }
+      console.log("[AI OCR] synthesized text:\n", synthesized);
+      const { rows: parsed, latestBalance } = parseTransactions(synthesized);
+      console.log("[AI OCR] parsed rows:", parsed.length);
+      // 기존 흐름과 동일한 후처리를 위해 handleBulkImageChange 로직을 복제 대신
+      // 결과를 UI state에 주입 (가장 단순한 방법)
+      setOcrLoading(false);
+      if (aiOcrFileInputRef.current) aiOcrFileInputRef.current.value = "";
+      if (parsed.length === 0) {
+        setOcrStatus("AI가 거래 내역을 찾지 못했습니다. 다른 이미지로 시도해주세요.");
+        return;
+      }
+      setOcrStatus(`AI OCR로 ${parsed.length}건 인식됨. 아래 표에서 확인 후 저장하세요.`);
+      // 부분 인식은 AI 결과가 정제되어 거의 없음 — fullParsed로 바로
+      setBulkRows((prev) => [...prev, ...parsed]);
+      if (latestBalance !== null) setPendingBalance(latestBalance);
+    } catch (err) {
+      console.error("[AI OCR] error:", err);
+      setOcrLoading(false);
+      if (aiOcrFileInputRef.current) aiOcrFileInputRef.current.value = "";
+      setOcrStatus("AI OCR 중 오류가 발생했습니다.");
+    }
+  }, [showToast]);
 
   const handleBulkImageChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -521,6 +599,27 @@ function DuesBulkTabInner({
           className="hidden"
           onChange={handleBulkImageChange}
         />
+
+        {/* AI OCR (Claude Vision) — 김선휘 Feature Flag */}
+        {enableAi && (
+          <>
+            <button
+              type="button"
+              disabled={ocrLoading}
+              onClick={() => aiOcrFileInputRef.current?.click()}
+              className="w-full flex items-center justify-center gap-2 text-xs text-primary hover:text-primary/80 underline underline-offset-4 disabled:opacity-50"
+            >
+              ✨ AI OCR로 시도하기 (베타)
+            </button>
+            <input
+              ref={aiOcrFileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
+              className="hidden"
+              onChange={handleAiOcrImageChange}
+            />
+          </>
+        )}
       </div>
 
       {/* OCR 로딩 오버레이 */}
