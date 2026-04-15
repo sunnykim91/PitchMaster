@@ -326,7 +326,7 @@ export function PremiumShareCard({ playerCardProps, teamName, seasonName, side =
   return (
     <div
       className="relative overflow-hidden bg-[hsl(240,6%,6%)]"
-      style={{ width: 420, height: 620 }}
+      style={{ width: 420, height: 660 }}
     >
       {/* Background glows */}
       <div
@@ -346,7 +346,7 @@ export function PremiumShareCard({ playerCardProps, teamName, seasonName, side =
 
         {/* Actual PlayerCard — 정중앙, side에 따라 앞/뒷면 고정 */}
         <div className="flex-1 flex items-center justify-center py-1">
-          <div className="w-full max-w-[320px]">
+          <div className="w-full max-w-[360px]">
             <PlayerCard
               {...playerCardProps}
               lockFront={side === "front"}
@@ -461,7 +461,7 @@ export function ShareModal({
 
     // CORS 이미지 실패 시 폴백: 문제있는 img 건너뛰고 재시도
     const captureOpts = {
-      pixelRatio: 2.7,  // 400x520 × 2.7 ≈ 1080x1404
+      pixelRatio: 3.5,  // 420x620 × 3.5 = 1470x2170 (고해상도)
       cacheBust: true,
       backgroundColor: "#0a0e14",
       width: target.offsetWidth,
@@ -613,7 +613,7 @@ export function ShareModal({
         <div className="flex justify-center mb-4 overflow-hidden" ref={cardRef}>
           <div
             className="origin-top"
-            style={{ transform: "scale(0.72)", transformOrigin: "top center", marginBottom: "-170px", marginTop: "-10px" }}
+            style={{ transform: "scale(0.68)", transformOrigin: "top center", marginBottom: "-210px", marginTop: "-10px" }}
           >
             <div data-share-card-root className="rounded-2xl overflow-hidden shadow-2xl">
               <PremiumShareCard

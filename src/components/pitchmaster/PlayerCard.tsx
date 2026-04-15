@@ -497,33 +497,41 @@ export function PlayerCard({
             {/* Footer */}
             <div className="mt-auto pt-3 flex items-center justify-between">
               <span className="text-[9px] text-white/40">{seasonName}</span>
-              {!lockFront && (
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 border border-white/20 animate-pulse">
-                  <svg className="w-3 h-3 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 12a9 9 0 11-3-6.7" />
-                    <path d="M21 3v6h-6" />
-                  </svg>
-                  <span className="text-[10px] font-bold text-white/90 tracking-wide">탭해서 기록 보기</span>
-                </span>
-              )}
+              <span className="text-[8px] tracking-[0.25em] text-white/30">PITCHMASTER</span>
             </div>
           </div>
+
+          {/* Flip affordance — 하단 중앙 플로팅 배지 (overflow 무관하게 항상 표시) */}
+          {!locked && (
+            <div
+              aria-hidden="true"
+              className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-sm border border-white/30 animate-pulse shadow-lg pointer-events-none"
+            >
+              <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12a9 9 0 11-3-6.7" />
+                <path d="M21 3v6h-6" />
+              </svg>
+              <span className="text-[10px] font-bold text-white tracking-wide whitespace-nowrap">탭해서 기록 보기</span>
+            </div>
+          )}
         </div>
         )}
 
-        {/* Card Back */}
-        <CardBack
-          ovr={ovr}
-          playerName={playerName}
-          teamName={teamName}
-          teamPrimaryColor={teamPrimaryColor}
-          seasonName={seasonName}
-          jerseyNumber={jerseyNumber}
-          stats={stats}
-          rarity={rarity}
-          positionLabel={positionLabel}
-          lockBack={lockBack}
-        />
+        {/* Card Back — lockFront 시 완전히 숨김 (캡처에서 거울상 뒷면 제거) */}
+        {!lockFront && (
+          <CardBack
+            ovr={ovr}
+            playerName={playerName}
+            teamName={teamName}
+            teamPrimaryColor={teamPrimaryColor}
+            seasonName={seasonName}
+            jerseyNumber={jerseyNumber}
+            stats={stats}
+            rarity={rarity}
+            positionLabel={positionLabel}
+            lockBack={lockBack}
+          />
+        )}
       </div>
     </div>
   );
