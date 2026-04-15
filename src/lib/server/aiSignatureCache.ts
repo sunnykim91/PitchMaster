@@ -54,8 +54,10 @@ export async function getOrGenerateSignature(params: CacheParams): Promise<strin
   // fallback이어도 DB에 저장? 아니, 룰 기반 결과는 다음 호출 때 재시도 기회 주기 위해 저장 안 함
   if (result.source === "ai") {
     const db = getSupabaseAdmin();
-    if (db) {
-      await db
+    if (!db) {
+      console.warn("[aiSignatureCache] getSupabaseAdmin null — 저장 스킵");
+    } else {
+      const { error } = await db
         .from("team_members")
         .update({
           ai_signature: result.signature,
@@ -63,7 +65,14 @@ export async function getOrGenerateSignature(params: CacheParams): Promise<strin
           ai_signature_model: result.model ?? null,
         })
         .eq("id", teamMemberId);
+      if (error) {
+        console.error("[aiSignatureCache] DB update 실패 — memberId=", teamMemberId, "err=", error.message);
+      } else {
+        console.log("[aiSignatureCache] DB 저장 성공 — memberId=", teamMemberId);
+      }
     }
+  } else {
+    console.warn("[aiSignatureCache] AI 결과가 'rule' fallback — 저장 스킵. memberId=", teamMemberId);
   }
 
   return result.signature;

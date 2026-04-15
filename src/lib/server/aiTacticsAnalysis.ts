@@ -8,7 +8,7 @@ import Anthropic from "@anthropic-ai/sdk";
  */
 
 const MODEL = "claude-haiku-4-5";
-const MAX_OUTPUT_TOKENS = 400;
+const MAX_OUTPUT_TOKENS = 700; // 한글 분석 2단락 200~300자 + 여유
 const TEMPERATURE = 0.8;
 
 const SYSTEM_PROMPT = `당신은 아마추어 축구·풋살 동호회의 감독 역할을 하는 전술 분석가입니다.

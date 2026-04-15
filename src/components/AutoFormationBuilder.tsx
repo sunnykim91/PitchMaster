@@ -828,7 +828,7 @@ export default function AutoFormationBuilder({
       {!isOpen && (
         <div className="px-5 pb-4">
           <p className="text-sm text-muted-foreground">
-            참석 인원을 기반으로 공정하게 쿼터를 분배하고 포메이션을 자동으로 편성합니다.
+            쿼터별로 공정하게 돌리며 포지션을 자동 배치합니다{enableAi ? ". 편성 후 AI 코치 분석도 받을 수 있어요." : "."}
           </p>
         </div>
       )}

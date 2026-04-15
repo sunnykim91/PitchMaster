@@ -30,8 +30,10 @@ export async function getOrGenerateMatchSummary(params: MatchSummaryCacheParams)
   const result = await generateAiMatchSummary(input);
   if (result.source === "ai") {
     const db = getSupabaseAdmin();
-    if (db) {
-      await db
+    if (!db) {
+      console.warn("[aiMatchSummaryCache] getSupabaseAdmin null — 저장 스킵");
+    } else {
+      const { error } = await db
         .from("matches")
         .update({
           ai_summary: result.summary,
@@ -39,7 +41,14 @@ export async function getOrGenerateMatchSummary(params: MatchSummaryCacheParams)
           ai_summary_model: result.model ?? null,
         })
         .eq("id", matchId);
+      if (error) {
+        console.error("[aiMatchSummaryCache] DB update 실패 — matchId=", matchId, "err=", error.message);
+      } else {
+        console.log("[aiMatchSummaryCache] DB 저장 성공 — matchId=", matchId);
+      }
     }
+  } else {
+    console.warn("[aiMatchSummaryCache] AI 결과가 'rule' fallback — 저장 스킵. matchId=", matchId);
   }
   return result.summary;
 }

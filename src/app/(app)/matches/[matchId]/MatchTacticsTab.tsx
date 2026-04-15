@@ -81,7 +81,7 @@ function MatchTacticsTabInner({
 
   return (
     <div className="grid gap-5 min-w-0 overflow-x-hidden">
-      {/* ── AI 포메이션 추천 ── */}
+      {/* ── 추천 포메이션 (룰 기반 제안) ── */}
       {/* 자체전: 팀 편성 + A/B 토글 통합 */}
       {isInternal && (() => {
         const teamMap: Record<string, "A" | "B"> = {};
@@ -436,7 +436,7 @@ function MatchTacticsTabInner({
             <summary className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-secondary/30 transition-colors list-none [&::-webkit-details-marker]:hidden">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-base font-bold">AI 포메이션 추천</span>
+                <span className="text-base font-bold">추천 포메이션</span>
               </div>
               <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
             </summary>
