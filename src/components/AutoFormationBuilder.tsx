@@ -839,14 +839,14 @@ export default function AutoFormationBuilder({
       {!isOpen && (
         <div className="px-5 pb-3 space-y-1.5">
           {recommendationHint && (
-            <div className="flex items-center gap-1.5 rounded-lg border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/8 px-2.5 py-1.5">
-              <Lightbulb className="h-3 w-3 shrink-0 text-[hsl(var(--warning))]" />
-              <p className="min-w-0 flex-1 truncate text-[11px] leading-tight">
-                <span className="font-bold text-foreground">
-                  {attendingPlayers.length}명 → {recommendationHint.formationName}
-                </span>
-                <span className="text-muted-foreground"> · {recommendationHint.reason}</span>
-              </p>
+            <div className="flex items-start gap-1.5 rounded-lg border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/8 px-2.5 py-1.5">
+              <Lightbulb className="mt-0.5 h-3 w-3 shrink-0 text-[hsl(var(--warning))]" />
+              <div className="min-w-0 flex-1 text-[11px] leading-snug">
+                <p className="font-bold text-foreground">
+                  {attendingPlayers.length}명 → {recommendationHint.formationName} 추천
+                </p>
+                <p className="text-muted-foreground">{recommendationHint.reason}</p>
+              </div>
             </div>
           )}
           <p className="text-[11px] text-muted-foreground">
