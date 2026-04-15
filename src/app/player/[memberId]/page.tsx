@@ -14,7 +14,7 @@ import {
   type MatchPerformance,
   type BestMoment,
 } from "@/lib/playerCardUtils";
-import { generateAiSignature } from "@/lib/server/aiSignature";
+import { getOrGenerateSignature } from "@/lib/server/aiSignatureCache";
 import { PlayerProfilePage, PlayerProfileEmpty } from "@/components/pitchmaster/PlayerProfilePage";
 import type { PlayerProfile, PlayerStats } from "@/components/pitchmaster/PlayerProfilePage";
 import type { PlayerCardProps, StatWithContext } from "@/components/pitchmaster/PlayerCard";
@@ -31,6 +31,8 @@ type MemberRow = {
   jersey_number: number | null;
   team_role: string | null;
   team_id: string;
+  ai_signature: string | null;
+  ai_signature_generated_at: string | null;
   users: { name: string; preferred_positions: string[]; profile_image_url: string | null } | null;
   teams: { name: string; sport_type: string; uniform_primary: string | null; logo_url: string | null } | null;
 };
@@ -43,7 +45,7 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
   // ACTIVE + DORMANT 모두 허용 (휴면 회원도 프로필 열람 가능, BANNED만 제외)
   let query = db
     .from("team_members")
-    .select("id, user_id, pre_name, jersey_number, team_role, team_id, users(name, preferred_positions, profile_image_url), teams(name, sport_type, uniform_primary, logo_url)")
+    .select("id, user_id, pre_name, jersey_number, team_role, team_id, ai_signature, ai_signature_generated_at, users(name, preferred_positions, profile_image_url), teams(name, sport_type, uniform_primary, logo_url)")
     .or(`user_id.eq.${memberId},id.eq.${memberId}`)
     .in("status", ["ACTIVE", "DORMANT"]);
   if (teamId) query = query.eq("team_id", teamId);
@@ -216,15 +218,20 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
   });
   const bestMoments: BestMoment[] = findBestMoments(performanceHistory);
 
-  // 시그니처 — AI 플래그가 켜진 경우 Claude Haiku 호출, 실패/미활성 시 룰 기반
+  // 시그니처 — DB 캐시(7일 TTL) 우선. 캐시 miss/stale + 김선휘(enableAi)면 Claude 호출 + DB 저장.
+  // 비-김선휘 사용자는 기존 DB 캐시만 사용 (새 호출은 안 함).
   const signatureInput = {
     cat, goals: totalGoals, assists: totalAssists, mvp: totalMvp,
     cleanSheets, matchCount: attended, attendanceRate, winRate,
     isTopScorer, isTopAssist, isTopMvp,
   };
-  const signature = enableAi
-    ? (await generateAiSignature({ ...signatureInput, playerName: name })).signature
-    : generateSignature(signatureInput);
+  const signature = await getOrGenerateSignature({
+    teamMemberId: m.id,
+    cachedSignature: m.ai_signature,
+    cachedGeneratedAt: m.ai_signature_generated_at,
+    enableGenerate: enableAi,
+    input: { ...signatureInput, playerName: name },
+  });
 
   // === OVR + PlayerCardProps 산출 ===
   const concededPerGame = attended > 0
