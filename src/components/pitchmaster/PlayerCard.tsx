@@ -29,6 +29,8 @@ export type PlayerCardProps = {
   stats: StatWithContext[];
   /** 캡처/공유용 — 항상 앞면만 표시 + 탭 플립 비활성화 */
   lockFront?: boolean;
+  /** 캡처/공유용 — 뒷면만 거울상 없이 표시 + 탭 플립 비활성화 */
+  lockBack?: boolean;
 };
 
 // Sparkle dots for premium cards — 크기 다양화 + 수량 ↑로 화려함 강화
@@ -165,13 +167,15 @@ function CardBack({
   stats,
   rarity,
   positionLabel,
-}: Pick<PlayerCardProps, "ovr" | "playerName" | "teamName" | "teamPrimaryColor" | "seasonName" | "jerseyNumber" | "stats" | "rarity" | "positionLabel">) {
+  lockBack,
+}: Pick<PlayerCardProps, "ovr" | "playerName" | "teamName" | "teamPrimaryColor" | "seasonName" | "jerseyNumber" | "stats" | "rarity" | "positionLabel" | "lockBack">) {
   const config = rarityConfig[rarity];
 
   return (
     <div
       className={cn(
-        "absolute inset-0 backface-hidden rotate-y-180 rounded-3xl overflow-hidden",
+        "absolute inset-0 backface-hidden rounded-3xl overflow-hidden",
+        !lockBack && "rotate-y-180",
         "bg-[hsl(240,5%,10%)]",
         config.innerBorderClass
       )}
@@ -260,12 +264,14 @@ export function PlayerCard({
   signature,
   stats,
   lockFront,
+  lockBack,
 }: PlayerCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [photoFailed, setPhotoFailed] = useState(false);
   const effectivePhotoUrl = photoUrl && !photoFailed ? photoUrl : undefined;
   const config = rarityConfig[rarity];
-  const actuallyFlipped = !lockFront && isFlipped;
+  const locked = lockFront || lockBack;
+  const actuallyFlipped = lockBack ? true : lockFront ? false : isFlipped;
   
   // Find hero stat based on position
   const heroStat = stats.find((s) => s.isHero);
@@ -273,17 +279,18 @@ export function PlayerCard({
 
   return (
     <div
-      className={cn("perspective-1000 w-full", lockFront ? "cursor-default" : "cursor-pointer")}
-      onClick={lockFront ? undefined : () => setIsFlipped(!isFlipped)}
+      className={cn("perspective-1000 w-full", locked ? "cursor-default" : "cursor-pointer")}
+      onClick={locked ? undefined : () => setIsFlipped(!isFlipped)}
     >
       <div
         className={cn(
           "relative preserve-3d transition-transform duration-700 ease-in-out",
           "aspect-[3/4]",
-          actuallyFlipped && "rotate-y-180"
+          actuallyFlipped && !lockBack && "rotate-y-180"
         )}
       >
-        {/* Card Front */}
+        {/* Card Front — lockBack 시 완전히 숨김 */}
+        {!lockBack && (
         <div
           className={cn(
             "absolute inset-0 backface-hidden rounded-3xl overflow-hidden",
@@ -502,6 +509,7 @@ export function PlayerCard({
             </div>
           </div>
         </div>
+        )}
 
         {/* Card Back */}
         <CardBack
@@ -514,6 +522,7 @@ export function PlayerCard({
           stats={stats}
           rarity={rarity}
           positionLabel={positionLabel}
+          lockBack={lockBack}
         />
       </div>
     </div>

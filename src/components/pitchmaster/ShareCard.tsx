@@ -316,16 +316,17 @@ function OGShareCard({ data }: { data: ShareCardData }) {
  * Premium Share Card — 실제 PlayerCard 컴포넌트를 임베드해 holographic·sparkle·glow 효과 보존.
  * 1080 x 1350 (Instagram 4:5 비율, 피드/스토리 모두 호환).
  */
-export function PremiumShareCard({ playerCardProps, teamName, seasonName }: {
+export function PremiumShareCard({ playerCardProps, teamName, seasonName, side = "front" }: {
   playerCardProps: PlayerCardProps;
   teamName: string;
   seasonName: string;
+  side?: "front" | "back";
 }) {
   const primary = playerCardProps.teamPrimaryColor;
   return (
     <div
       className="relative overflow-hidden bg-[hsl(240,6%,6%)]"
-      style={{ width: 400, height: 520 }}
+      style={{ width: 420, height: 620 }}
     >
       {/* Background glows */}
       <div
@@ -338,20 +339,24 @@ export function PremiumShareCard({ playerCardProps, teamName, seasonName }: {
       {/* Content */}
       <div className="relative h-full flex flex-col px-6 py-5">
         {/* Top brand + season */}
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-3">
           <p className="text-[10px] tracking-[0.35em] text-white/50 font-bold">PITCHMASTER</p>
           <p className="text-[11px] text-white/70 font-medium">{seasonName}</p>
         </div>
 
-        {/* Actual PlayerCard — 정중앙, 항상 앞면 고정 (캡처 시 거울상 방지) */}
-        <div className="flex-1 flex items-center justify-center py-2">
-          <div className="w-full max-w-[260px]">
-            <PlayerCard {...playerCardProps} lockFront />
+        {/* Actual PlayerCard — 정중앙, side에 따라 앞/뒷면 고정 */}
+        <div className="flex-1 flex items-center justify-center py-1">
+          <div className="w-full max-w-[320px]">
+            <PlayerCard
+              {...playerCardProps}
+              lockFront={side === "front"}
+              lockBack={side === "back"}
+            />
           </div>
         </div>
 
         {/* Bottom team + footer */}
-        <div className="text-center mt-2">
+        <div className="text-center mt-3">
           <p className="text-sm text-white/80 font-semibold tracking-wide">{teamName}</p>
           <p className="text-[10px] tracking-[0.25em] text-white/40 mt-1.5">pitch-master.app</p>
         </div>
@@ -394,12 +399,14 @@ export function ShareModal({
   const [isExporting, setIsExporting] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ text: string; tone: "success" | "error" } | null>(null);
+  const [side, setSide] = useState<"front" | "back">("front");
 
   if (!isOpen) return null;
 
   function makeFilename(ext: "png" = "png") {
     const safeName = (playerName || "player").replace(/[^\w\uAC00-\uD7AF]+/g, "_");
-    return `pitchmaster_${safeName}.${ext}`;
+    const sideLabel = side === "front" ? "front" : "back";
+    return `pitchmaster_${safeName}_${sideLabel}.${ext}`;
   }
 
   // 외부 이미지를 프록시 URL로 임시 교체 (CORS 우회)
@@ -581,14 +588,40 @@ export function ShareModal({
           </button>
         </div>
 
+        {/* 앞면/뒷면 토글 */}
+        <div className="flex gap-2 mb-4">
+          {([
+            { v: "front" as const, label: "앞면 (카드)" },
+            { v: "back" as const, label: "뒷면 (시즌 기록)" },
+          ]).map(({ v, label }) => (
+            <button
+              key={v}
+              onClick={() => setSide(v)}
+              className={cn(
+                "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors",
+                side === v
+                  ? "bg-[hsl(16,85%,58%)] text-white"
+                  : "bg-white/5 text-white/60 hover:bg-white/10"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         {/* Preview — 실제 PlayerCard 임베드. 미리보기는 축소 래퍼로 표시하되 캡처 대상은 원본 크기 유지 */}
         <div className="flex justify-center mb-4 overflow-hidden" ref={cardRef}>
           <div
             className="origin-top"
-            style={{ transform: "scale(0.85)", transformOrigin: "top center", marginBottom: "-78px", marginTop: "-10px" }}
+            style={{ transform: "scale(0.72)", transformOrigin: "top center", marginBottom: "-170px", marginTop: "-10px" }}
           >
             <div data-share-card-root className="rounded-2xl overflow-hidden shadow-2xl">
-              <PremiumShareCard playerCardProps={playerCardProps} teamName={teamName} seasonName={seasonName} />
+              <PremiumShareCard
+                playerCardProps={playerCardProps}
+                teamName={teamName}
+                seasonName={seasonName}
+                side={side}
+              />
             </div>
           </div>
         </div>
