@@ -124,7 +124,7 @@ const landingIconCard: PlayerCardProps = {
 };
 
 const landingHeroCard: PlayerCardProps = {
-  ovr: 87,
+  ovr: 73,
   rarity: "HERO",
   positionLabel: "MID",
   positionCategory: "MID",
@@ -135,17 +135,17 @@ const landingHeroCard: PlayerCardProps = {
   seasonName: "2026 시즌",
   signature: "5경기 연속 MOM에 빛난 미드필더",
   stats: [
-    { label: "어시", value: "15", rank: "🏆 팀 1위", isHero: true },
-    { label: "골", value: "7" },
-    { label: "MOM", value: "6", streak: "🔥 5연속" },
-    { label: "출석률", value: "91%" },
-    { label: "승률", value: "72%" },
+    { label: "어시", value: "12", rank: "🏆 팀 1위", isHero: true },
+    { label: "골", value: "5" },
+    { label: "MOM", value: "5", streak: "🔥 5연속" },
+    { label: "출석률", value: "88%" },
+    { label: "승률", value: "68%" },
     { label: "경기", value: "20" },
   ],
 };
 
 const landingRareCard: PlayerCardProps = {
-  ovr: 78,
+  ovr: 64,
   rarity: "RARE",
   positionLabel: "DEF",
   positionCategory: "DEF",
@@ -154,19 +154,19 @@ const landingRareCard: PlayerCardProps = {
   teamName: "FC 피치마스터",
   teamPrimaryColor: "#e8613a",
   seasonName: "2026 시즌",
-  signature: "22경기 출장 · 클린시트 9회",
+  signature: "꾸준한 출석과 안정된 수비",
   stats: [
-    { label: "클린시트", value: "9", rank: "🏆 팀 1위", isHero: true },
-    { label: "승률", value: "78%" },
-    { label: "출석률", value: "95%", streak: "🔥 13연속" },
-    { label: "MOM", value: "3" },
-    { label: "실점", value: "0.6" },
-    { label: "경기", value: "22" },
+    { label: "클린시트", value: "5", rank: "🏆 팀 1위", isHero: true },
+    { label: "승률", value: "65%" },
+    { label: "출석률", value: "88%", streak: "🔥 8연속" },
+    { label: "MOM", value: "2" },
+    { label: "실점", value: "1.0" },
+    { label: "경기", value: "20" },
   ],
 };
 
 const landingCommonCard: PlayerCardProps = {
-  ovr: 64,
+  ovr: 55,
   rarity: "COMMON",
   positionLabel: "GK",
   positionCategory: "GK",
@@ -175,14 +175,14 @@ const landingCommonCard: PlayerCardProps = {
   teamName: "FC 피치마스터",
   teamPrimaryColor: "#e8613a",
   seasonName: "2026 시즌",
-  signature: "꾸준함으로 시즌을 채운 선수",
+  signature: "성장 중인 골키퍼",
   stats: [
-    { label: "클린시트", value: "4", isHero: true },
-    { label: "실점", value: "1.2" },
-    { label: "승률", value: "55%" },
-    { label: "출석률", value: "75%" },
-    { label: "MOM", value: "1" },
-    { label: "경기", value: "12" },
+    { label: "클린시트", value: "1", isHero: true },
+    { label: "실점", value: "2.0" },
+    { label: "승률", value: "45%" },
+    { label: "출석률", value: "62%" },
+    { label: "MOM", value: "0" },
+    { label: "경기", value: "10" },
   ],
 };
 
@@ -279,7 +279,7 @@ export default function FeaturesSection() {
                 4단계 등급, 포지션별 스탯, 자동 시그니처
               </h4>
               <p className="mt-2 text-xs sm:text-sm text-white/55">
-                골·어시·MOM·출석률을 기반으로 ICON / HERO / RARE / COMMON 자동 결정
+                OVR 80+ ICON / 70~79 HERO / 60~69 RARE / 그 외 COMMON — 골·어시·MOM·출석률·승률로 자동 결정
               </p>
             </div>
 
