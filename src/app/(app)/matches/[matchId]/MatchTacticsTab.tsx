@@ -426,6 +426,8 @@ function MatchTacticsTabInner({
 
       {canManage && (() => {
         // 참석 5명 이상이면 룰 기반 포메이션 추천 (자동 편성 상단 힌트로 노출)
+        // 경기 설정의 playerCount(8인제/풋살 5인제 등)를 기준으로 삼아야
+        // 자동 편성 내부 포메이션 선택과 일치함
         let recommendationHint: { formationName: string; formationId: string; reason: string } | undefined;
         if (filteredAttending.length >= 5) {
           const aiPlayers: PlayerInput[] = filteredAttending.map((p) => ({
@@ -433,8 +435,10 @@ function MatchTacticsTabInner({
             name: p.name,
             preferredPositions: p.preferredPositions ?? [p.preferredPosition],
           }));
-          const maxPlayers = sportType === "FUTSAL" ? Math.min(filteredAttending.length, 8) : 11;
-          const rec = recommendFormation(aiPlayers, Math.min(filteredAttending.length, maxPlayers), sportType);
+          // 경기 설정 인원수 > 없으면 종목별 기본값 (축구 11, 풋살 5)
+          const fieldCount = match.playerCount ?? (sportType === "FUTSAL" ? 5 : 11);
+          const maxPlayers = Math.min(filteredAttending.length, fieldCount);
+          const rec = recommendFormation(aiPlayers, maxPlayers, sportType);
           if (rec) {
             recommendationHint = {
               formationName: rec.formation.name,
