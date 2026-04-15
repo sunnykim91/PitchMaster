@@ -422,78 +422,7 @@ function MatchTacticsTabInner({
         </div>
       )}
 
-      {canManage && filteredAttending.length >= 5 && (() => {
-        const aiPlayers: PlayerInput[] = filteredAttending.map((p) => ({
-          id: p.id,
-          name: p.name,
-          preferredPositions: p.preferredPositions ?? [p.preferredPosition],
-        }));
-        const maxPlayers = sportType === "FUTSAL" ? Math.min(filteredAttending.length, 8) : 11;
-        const rec = recommendFormation(aiPlayers, Math.min(filteredAttending.length, maxPlayers), sportType);
-        if (!rec) return null;
-        return (
-          <details className="group rounded-xl border border-border/30 bg-gradient-to-br from-primary/5 to-background overflow-hidden">
-            <summary className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-secondary/30 transition-colors list-none [&::-webkit-details-marker]:hidden">
-              <div className="flex items-center gap-2">
-                <Lightbulb className="h-4 w-4 text-[hsl(var(--warning))]" />
-                <span className="text-base font-bold">추천 포메이션</span>
-              </div>
-              <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
-            </summary>
-            <div className="px-6 pb-5">
-              <p className="text-sm text-foreground/80">{rec.reason}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {rec.formation.slots.map((slot) => {
-                  const playerId = rec.assignments[slot.id];
-                  const player = aiPlayers.find((p) => p.id === playerId);
-                  return (
-                    <Badge key={slot.id} variant={player ? "default" : "secondary"} className="text-xs">
-                      {slot.label}: {player?.name ?? "미배정"}
-                    </Badge>
-                  );
-                })}
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                className="mt-4"
-                onClick={async () => {
-                  const squads: GeneratedSquad[] = Array.from(
-                    { length: match.quarterCount },
-                    (_, i) => ({
-                      quarter_number: i + 1,
-                      formation: rec.formation.id,
-                      positions: Object.fromEntries(
-                        rec.formation.slots.map((slot) => [
-                          slot.id,
-                          {
-                            playerId: rec.assignments[slot.id] ?? "",
-                            x: slot.x,
-                            y: slot.y,
-                          },
-                        ])
-                      ),
-                    })
-                  );
-                  // API에 저장 (나갔다 들어와도 유지)
-                  for (const sq of squads) {
-                    await apiMutate("/api/squads", "POST", {
-                      matchId,
-                      quarterNumber: sq.quarter_number,
-                      formation: sq.formation,
-                      positions: sq.positions,
-                    });
-                  }
-                  setGeneratedSquads(squads);
-                  setTacticsKey((k) => k + 1);
-                }}
-              >
-                AI 추천 적용하기
-              </Button>
-            </div>
-          </details>
-        );
-      })()}
+      {/* 추천 포메이션 섹션은 자동 편성 카드 상단 힌트로 통합됨 (recommendationHint prop) */}
 
       {canManage && filteredAttending.length > 0 && generatedSquads.length === 0 && (
         <Card className="border-primary/20 bg-primary/5">
@@ -506,26 +435,47 @@ function MatchTacticsTabInner({
         </Card>
       )}
 
-      {canManage && (
-        <AutoFormationBuilder
-          matchId={matchId}
-          quarterCount={match.quarterCount}
-          attendingPlayers={filteredAttending}
-          sportType={sportType}
-          playerCount={match.playerCount}
-          defaultFormationId={defaultFormationId}
-          side={isInternal ? activeSide : undefined}
-          onGenerated={(squads) => {
-            setGeneratedSquads(squads);
-            setTacticsKey((k) => k + 1);
-          }}
-          enableAi={enableAi}
-          matchContext={{
-            matchType: (match.matchType ?? "REGULAR"),
-            opponent: match.opponent ?? null,
-          }}
-        />
-      )}
+      {canManage && (() => {
+        // 참석 5명 이상이면 룰 기반 포메이션 추천 (자동 편성 상단 힌트로 노출)
+        let recommendationHint: { formationName: string; formationId: string; reason: string } | undefined;
+        if (filteredAttending.length >= 5) {
+          const aiPlayers: PlayerInput[] = filteredAttending.map((p) => ({
+            id: p.id,
+            name: p.name,
+            preferredPositions: p.preferredPositions ?? [p.preferredPosition],
+          }));
+          const maxPlayers = sportType === "FUTSAL" ? Math.min(filteredAttending.length, 8) : 11;
+          const rec = recommendFormation(aiPlayers, Math.min(filteredAttending.length, maxPlayers), sportType);
+          if (rec) {
+            recommendationHint = {
+              formationName: rec.formation.name,
+              formationId: rec.formation.id,
+              reason: rec.reason,
+            };
+          }
+        }
+        return (
+          <AutoFormationBuilder
+            matchId={matchId}
+            quarterCount={match.quarterCount}
+            attendingPlayers={filteredAttending}
+            sportType={sportType}
+            playerCount={match.playerCount}
+            defaultFormationId={recommendationHint?.formationId ?? defaultFormationId}
+            side={isInternal ? activeSide : undefined}
+            onGenerated={(squads) => {
+              setGeneratedSquads(squads);
+              setTacticsKey((k) => k + 1);
+            }}
+            enableAi={enableAi}
+            matchContext={{
+              matchType: (match.matchType ?? "REGULAR"),
+              opponent: match.opponent ?? null,
+            }}
+            recommendationHint={recommendationHint}
+          />
+        );
+      })()}
 
       <TacticsBoard
         key={`${tacticsKey}-${activeSide}`}

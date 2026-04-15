@@ -19,7 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
-import { Zap, Sparkles, Loader2 } from "lucide-react";
+import { Zap, Sparkles, Loader2, Lightbulb } from "lucide-react";
 
 /* ── Types ── */
 
@@ -70,6 +70,12 @@ type Props = {
   matchContext?: {
     matchType: "REGULAR" | "INTERNAL" | "EVENT";
     opponent: string | null;
+  };
+  /** 참석 인원 기반 포메이션 추천 힌트 (카드 상단 배너) */
+  recommendationHint?: {
+    formationName: string;
+    formationId: string;
+    reason: string;
   };
 };
 
@@ -531,6 +537,7 @@ export default function AutoFormationBuilder({
   onGenerated,
   enableAi = false,
   matchContext,
+  recommendationHint,
 }: Props) {
   // 경기 인원 수에 맞는 포메이션만 필터 (미지정 시 축구 11, 풋살 5 기본)
   const effectiveFieldCount = playerCount ?? (sportType === "FUTSAL" ? 5 : 11);
@@ -826,7 +833,18 @@ export default function AutoFormationBuilder({
       </button>
 
       {!isOpen && (
-        <div className="px-5 pb-4">
+        <div className="px-5 pb-4 space-y-3">
+          {recommendationHint && (
+            <div className="flex items-start gap-2 rounded-lg border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/8 px-3 py-2">
+              <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[hsl(var(--warning))]" />
+              <div className="min-w-0 flex-1 text-xs leading-relaxed">
+                <span className="font-bold text-foreground">
+                  참석 {attendingPlayers.length}명 → {recommendationHint.formationName} 추천
+                </span>
+                <span className="text-muted-foreground"> · {recommendationHint.reason}</span>
+              </div>
+            </div>
+          )}
           <p className="text-sm text-muted-foreground">
             쿼터별로 공정하게 돌리며 포지션을 자동 배치합니다{enableAi ? ". 편성 후 AI 코치 분석도 받을 수 있어요." : "."}
           </p>
