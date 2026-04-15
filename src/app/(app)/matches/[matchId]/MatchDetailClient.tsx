@@ -68,12 +68,14 @@ export default function MatchDetailClient({
   userRole,
   initialData,
   todayIso,
+  enableAi = false,
 }: {
   matchId: string;
   userId: string;
   userRole?: Role;
   initialData?: InitialData;
   todayIso: string;
+  enableAi?: boolean;
 }) {
   /* ── API fetches (SSR initialData가 있으면 skip) ── */
   const {
@@ -560,6 +562,7 @@ export default function MatchDetailClient({
             guests={guests}
             refetchGuests={refetchGuests}
             handleRemoveGuest={handleRemoveGuest}
+            enableAi={enableAi}
           />
         </div>
       )}

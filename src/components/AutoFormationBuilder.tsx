@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  getFormationsForSport,
+  getFormationsForSportAndCount,
   type FormationSlot,
   type FormationTemplate,
 } from "@/lib/formations";
@@ -19,7 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
-import { Zap } from "lucide-react";
+import { Zap, Sparkles, Loader2 } from "lucide-react";
 
 /* ── Types ── */
 
@@ -59,9 +59,18 @@ type Props = {
   quarterCount: number;
   attendingPlayers: AttendingPlayer[];
   sportType?: SportType;
+  /** 경기별 참가 인원 (축구 8/9/10/11, 풋살 3~6) */
+  playerCount?: number;
   defaultFormationId?: string;
   side?: "A" | "B";
   onGenerated?: (squads: GeneratedSquad[]) => void;
+  /** AI 코치 분석 버튼 표시 여부 (김선휘 Feature Flag) */
+  enableAi?: boolean;
+  /** 분석에 전달할 경기 맥락 */
+  matchContext?: {
+    matchType: "REGULAR" | "INTERNAL" | "EVENT";
+    opponent: string | null;
+  };
 };
 
 /* ── Position helpers ── */
@@ -516,11 +525,19 @@ export default function AutoFormationBuilder({
   quarterCount,
   attendingPlayers,
   sportType = "SOCCER",
+  playerCount,
   defaultFormationId,
   side,
   onGenerated,
+  enableAi = false,
+  matchContext,
 }: Props) {
-  const filteredFormations = getFormationsForSport(sportType);
+  // 경기 인원 수에 맞는 포메이션만 필터 (미지정 시 축구 11, 풋살 5 기본)
+  const effectiveFieldCount = playerCount ?? (sportType === "FUTSAL" ? 5 : 11);
+  const filteredFormations = useMemo(
+    () => getFormationsForSportAndCount(sportType, effectiveFieldCount),
+    [sportType, effectiveFieldCount]
+  );
   const [isOpen, setIsOpen] = useState(false);
   const defaultId = (defaultFormationId && filteredFormations.some(f => f.id === defaultFormationId)) ? defaultFormationId : (filteredFormations[0]?.id ?? "");
   const [formationId, setFormationId] = useState(defaultId);
@@ -530,6 +547,10 @@ export default function AutoFormationBuilder({
   const [results, setResults] = useState<QuarterResult[] | null>(null);
   const [previewQuarter, setPreviewQuarter] = useState(1);
   const [saving, setSaving] = useState(false);
+  // AI 코치 분석 상태 (Phase 2 Feature Flag)
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const formation = useMemo(
     () =>
@@ -571,7 +592,7 @@ export default function AutoFormationBuilder({
         return { ...p, isGK: false, quarters: q };
       }),
     );
-    setResults(null);
+    setResults(null); setAiAnalysis(null); setAiError(null);
   }, [attendingPlayers, quarterCount, formationId]);
 
   const gks = useMemo(
@@ -618,14 +639,14 @@ export default function AutoFormationBuilder({
         return { ...a, quarters: dist.low };
       });
     });
-    setResults(null);
+    setResults(null); setAiAnalysis(null); setAiError(null);
   }
 
   function setPlayerQuarters(id: string, q: number) {
     setAssignments((prev) =>
       prev.map((a) => (a.id === id ? { ...a, quarters: q } : a)),
     );
-    setResults(null);
+    setResults(null); setAiAnalysis(null); setAiError(null);
   }
 
   function toggleGK(id: string) {
@@ -645,7 +666,7 @@ export default function AutoFormationBuilder({
         };
       }),
     );
-    setResults(null);
+    setResults(null); setAiAnalysis(null); setAiError(null);
   }
 
   function generate() {
@@ -694,6 +715,48 @@ export default function AutoFormationBuilder({
 
     setSaving(false);
     onGenerated?.(squads);
+  }
+
+  async function handleAiAnalyze() {
+    if (!results || aiLoading) return;
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const firstQuarter = results[0];
+      const placement = firstQuarter.assignments.map((a) => ({
+        slot: a.slotLabel,
+        playerName: a.playerName,
+      }));
+      const attendees = attendingPlayers.map((p) => ({
+        name: p.name,
+        preferredPosition: p.preferredPosition,
+      }));
+      const payload = {
+        formationName: formation.name,
+        quarterCount,
+        attendees,
+        placement,
+        matchType: matchContext?.matchType ?? "REGULAR",
+        opponent: matchContext?.opponent ?? null,
+        warnings: [],
+      };
+      const res = await fetch("/api/ai/tactics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setAiError(body.error === "ai_not_available" ? "AI 분석은 관리자 계정 전용입니다" : "AI 분석 요청 실패");
+        return;
+      }
+      const data = await res.json();
+      setAiAnalysis(data.text);
+    } catch {
+      setAiError("네트워크 오류가 발생했습니다");
+    } finally {
+      setAiLoading(false);
+    }
   }
 
   // Player × quarter map for result display
@@ -998,10 +1061,43 @@ export default function AutoFormationBuilder({
                   {saving ? "저장 중..." : "→ 전술판에 적용"}
                 </Button>
                 <Button variant="ghost" className="w-full text-muted-foreground hover:text-foreground"
-                  onClick={() => { setResults(null); }}>
+                  onClick={() => { setResults(null); setAiAnalysis(null); setAiError(null); }}>
                   ↻ 초기화
                 </Button>
               </div>
+
+              {/* AI 코치 분석 (김선휘 Feature Flag) */}
+              {enableAi && (
+                <div className="mt-4 border-t border-border/30 pt-4">
+                  {!aiAnalysis ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full gap-2 rounded-xl border-primary/40 text-primary hover:bg-primary/5"
+                      onClick={handleAiAnalyze}
+                      disabled={aiLoading}
+                    >
+                      {aiLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4" />
+                      )}
+                      {aiLoading ? "분석 중..." : "AI 코치 분석 보기"}
+                    </Button>
+                  ) : (
+                    <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4">
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">AI</span>
+                        <span className="text-sm font-bold text-foreground">코치 분석</span>
+                      </div>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{aiAnalysis}</p>
+                    </div>
+                  )}
+                  {aiError && (
+                    <p className="mt-2 text-xs text-destructive">{aiError}</p>
+                  )}
+                </div>
+              )}
             </div>
           );
         })()}

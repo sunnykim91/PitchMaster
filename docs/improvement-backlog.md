@@ -295,6 +295,15 @@
 - 결과 예시: "상대가 가장 먼저 쳐다보는 뒷공간을 장악한다" — 룰 기반 불가 표현
 - 월 비용 예상: ~1,200원 (활성 선수 300명 주 1회 가정)
 
+**Phase 2 — AI 코치 분석 (Claude Haiku, Phase 1은 경기 후기로 확정)**
+- [x] `src/lib/server/aiTacticsAnalysis.ts`: 편성 결과 + 참석자 스탯 → 코치식 1~2단락 분석 생성
+  프롬프트에 1단락(편성 콘셉트) + 2단락(핵심 플레이어·주의점) 구조 가이드
+- [x] `POST /api/ai/tactics` 라우트: 김선휘 Feature Flag(403) + 저품질 자동 fallback
+- [x] AutoFormationBuilder에 "AI 코치 분석 보기" 버튼 + 결과 카드 UI
+  편성 변경 시 자동 초기화, 에러 메시지 표시
+- Props 연쇄: page.tsx → MatchDetailClient → MatchTacticsTab → AutoFormationBuilder
+- 호출당 ~2.5원 (입력 ~1,500 + 출력 ~250)
+
 **Phase 1 — AI 경기 후기 (Claude Haiku)**
 - [x] migration 00028: matches.ai_summary / generated_at / model 3컬럼 추가
 - [x] `src/lib/server/aiMatchSummary.ts`: 카톡 공유용 2~3단락(200~350자) 생성

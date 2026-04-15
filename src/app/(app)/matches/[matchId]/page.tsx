@@ -14,7 +14,7 @@ export default async function MatchDetailPage({
     return null;
   }
 
-  // Phase 1 Feature Flag: 김선휘만 AI 경기 후기 새 생성 트리거
+  // AI Feature Flag: 김선휘만 AI 생성 트리거 (경기 후기·AI 코치 분석 공통)
   const enableAi = session.user.name === "김선휘";
   const initialData = await getMatchDetailData(matchId, session.user.teamId!, enableAi);
 
@@ -28,6 +28,7 @@ export default async function MatchDetailPage({
       userRole={session.user.teamRole}
       initialData={initialData}
       todayIso={todayIso}
+      enableAi={enableAi}
     />
   );
 }

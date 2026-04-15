@@ -42,6 +42,8 @@ export interface MatchTacticsTabProps {
   guests?: Guest[];
   refetchGuests?: () => Promise<unknown>;
   handleRemoveGuest?: (guestId: string) => Promise<void>;
+  /** AI 코치 분석 활성화 여부 (김선휘 Feature Flag) */
+  enableAi?: boolean;
 }
 
 function MatchTacticsTabInner({
@@ -57,6 +59,7 @@ function MatchTacticsTabInner({
   guests,
   refetchGuests,
   handleRemoveGuest,
+  enableAi = false,
 }: MatchTacticsTabProps) {
   const [tacticsKey, setTacticsKey] = useState(0);
   const [generatedSquads, setGeneratedSquads] = useState<GeneratedSquad[]>([]);
@@ -509,11 +512,17 @@ function MatchTacticsTabInner({
           quarterCount={match.quarterCount}
           attendingPlayers={filteredAttending}
           sportType={sportType}
+          playerCount={match.playerCount}
           defaultFormationId={defaultFormationId}
           side={isInternal ? activeSide : undefined}
           onGenerated={(squads) => {
             setGeneratedSquads(squads);
             setTacticsKey((k) => k + 1);
+          }}
+          enableAi={enableAi}
+          matchContext={{
+            matchType: (match.matchType ?? "REGULAR"),
+            opponent: match.opponent ?? null,
           }}
         />
       )}
@@ -524,6 +533,7 @@ function MatchTacticsTabInner({
         roster={filteredRoster}
         quarterCount={match.quarterCount}
         sportType={sportType}
+        playerCount={match.playerCount}
         defaultFormationId={defaultFormationId}
         readOnly={!canManage}
         side={isInternal ? activeSide : undefined}
