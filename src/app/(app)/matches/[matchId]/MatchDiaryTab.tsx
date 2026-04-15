@@ -173,44 +173,6 @@ function MatchDiaryTabInner({
 
   return (
     <div className="space-y-4">
-      {/* ══ AI 경기 후기 ══ */}
-      {aiSummary && (
-        <Card className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-bold">
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">AI</span>
-              경기 후기
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{aiSummary}</p>
-            <div className="mt-3 flex gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="gap-1.5 text-xs"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(aiSummary);
-                    setShareMessage("후기가 복사되었습니다");
-                    setTimeout(() => setShareMessage(null), 2000);
-                  } catch {
-                    setShareMessage("복사에 실패했습니다");
-                  }
-                }}
-              >
-                <Copy className="h-3.5 w-3.5" />
-                복사
-              </Button>
-            </div>
-            {shareMessage && (
-              <p className="mt-2 text-xs text-muted-foreground">{shareMessage}</p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
       {/* ══ 경기 결과 공유 ══ */}
       <Card className="rounded-2xl border-0 overflow-hidden shadow-lg">
         <CardContent className="p-0">
@@ -308,10 +270,76 @@ function MatchDiaryTabInner({
         </CardContent>
       </Card>
 
-      {/* ══ 경기 일지 ══ */}
+      {/* ══ AI가 정리한 경기 (수동 작성 일지와 구분 위해 스코어·사진 아래에 배치) ══ */}
+      {aiSummary && (
+        <Card className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-bold">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">AI</span>
+              AI가 정리한 경기
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{aiSummary}</p>
+            <div className="mt-3 flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="gap-1.5 text-xs"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(aiSummary);
+                    setShareMessage("후기가 복사되었습니다");
+                    setTimeout(() => setShareMessage(null), 2000);
+                  } catch {
+                    setShareMessage("복사에 실패했습니다");
+                  }
+                }}
+              >
+                <Copy className="h-3.5 w-3.5" />
+                복사
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                className="gap-1.5 text-xs bg-[hsl(var(--kakao))] text-[hsl(var(--kakao-foreground))] hover:bg-[hsl(var(--kakao))]/90"
+                onClick={async () => {
+                  const url = typeof window !== "undefined" ? window.location.href : "";
+                  const shareData = {
+                    title: `⚽ ${match.date} 경기 후기`,
+                    text: aiSummary,
+                    url,
+                  };
+                  try {
+                    if (typeof navigator !== "undefined" && navigator.share) {
+                      await navigator.share(shareData);
+                    } else {
+                      await navigator.clipboard.writeText(`${aiSummary}\n\n${url}`);
+                      setShareMessage("후기+링크가 복사되었습니다. 카톡에 붙여넣기 하세요");
+                      setTimeout(() => setShareMessage(null), 2500);
+                    }
+                  } catch {
+                    /* 사용자 취소 — 무시 */
+                  }
+                }}
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+                카톡 공유
+              </Button>
+            </div>
+            <p className="mt-2 text-[11px] text-muted-foreground/70">경기 데이터를 기반으로 AI가 작성했어요. 한 번만 생성되고 팀원 전체가 같은 후기를 봅니다.</p>
+            {shareMessage && (
+              <p className="mt-2 text-xs text-muted-foreground">{shareMessage}</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ══ 경기 일지 (수동 작성) ══ */}
       <Card className="rounded-xl border-border/30">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-base font-bold">경기 일지</CardTitle>
+          <CardTitle className="text-base font-bold">우리 팀 경기 일지</CardTitle>
           {canManage && !isDiaryEditing && (
             <Button type="button" size="sm" variant="ghost" className="h-8 px-3 text-sm font-medium text-primary"
               onClick={() => setIsDiaryEditing(true)}>

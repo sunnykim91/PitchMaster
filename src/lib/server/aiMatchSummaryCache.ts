@@ -13,15 +13,21 @@ import { generateAiMatchSummary, type MatchSummaryInput } from "@/lib/server/aiM
 export type MatchSummaryCacheParams = {
   matchId: string;
   cachedSummary: string | null;
+  /** ai_summary_generated_at 값 — 이미 생성된 경기는 재생성 금지 (토큰 낭비 방지) */
+  cachedGeneratedAt?: string | null;
   enableGenerate: boolean;
   input: MatchSummaryInput;
 };
 
 export async function getOrGenerateMatchSummary(params: MatchSummaryCacheParams): Promise<string | null> {
-  const { matchId, cachedSummary, enableGenerate, input } = params;
+  const { matchId, cachedSummary, cachedGeneratedAt, enableGenerate, input } = params;
 
   // 1. 캐시 hit → 재사용
   if (cachedSummary) return cachedSummary;
+
+  // 1-b. 한 번이라도 생성된 기록이 있으면 재생성 금지 (텍스트가 비었어도 토큰 낭비 방지)
+  //      경기 후기는 경기당 1회 영구 생성 원칙 — 모든 팀이 동일 정책
+  if (cachedGeneratedAt) return null;
 
   // 2. 생성 권한 없음 + 캐시 없음 → null (UI에서 안 보이게)
   if (!enableGenerate) return null;

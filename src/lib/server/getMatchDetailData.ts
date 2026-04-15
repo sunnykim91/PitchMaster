@@ -90,6 +90,7 @@ export async function getMatchDetailData(matchId: string, teamId: string, enable
     aiSummary = await getOrGenerateMatchSummary({
       matchId: match.id,
       cachedSummary: match.ai_summary ?? null,
+      cachedGeneratedAt: match.ai_summary_generated_at ?? null,
       enableGenerate: enableAi,
       input: summaryInput,
     });
