@@ -14,7 +14,9 @@ export default async function MatchDetailPage({
     return null;
   }
 
-  const initialData = await getMatchDetailData(matchId, session.user.teamId!);
+  // Phase 1 Feature Flag: 김선휘만 AI 경기 후기 새 생성 트리거
+  const enableAi = session.user.name === "김선휘";
+  const initialData = await getMatchDetailData(matchId, session.user.teamId!, enableAi);
 
   // 서버에서 "미래 경기" 여부 판단 → 클라이언트 hydration 일치 + LCP 개선
   const todayIso = new Date().toISOString().slice(0, 10);

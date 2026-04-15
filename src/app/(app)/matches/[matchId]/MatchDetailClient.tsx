@@ -705,6 +705,7 @@ export default function MatchDetailClient({
             fullRoster={fullRoster}
             voteCounts={voteCounts}
             refetchDiary={refetchDiary}
+            aiSummary={initialData?.aiSummary ?? null}
           />
         </div>
       )}

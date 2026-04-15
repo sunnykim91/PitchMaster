@@ -30,6 +30,8 @@ export interface MatchDiaryTabProps {
   voteCounts: Record<string, number>;
   /** 일지 refetch */
   refetchDiary: () => Promise<unknown>;
+  /** AI 경기 후기 (COMPLETED 경기 + 캐시 있을 때만) */
+  aiSummary?: string | null;
 }
 
 function MatchDiaryTabInner({
@@ -41,6 +43,7 @@ function MatchDiaryTabInner({
   fullRoster,
   voteCounts,
   refetchDiary,
+  aiSummary,
 }: MatchDiaryTabProps) {
   const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [isDiaryEditing, setIsDiaryEditing] = useState(false);
@@ -170,6 +173,44 @@ function MatchDiaryTabInner({
 
   return (
     <div className="space-y-4">
+      {/* ══ AI 경기 후기 ══ */}
+      {aiSummary && (
+        <Card className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-bold">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">AI</span>
+              경기 후기
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{aiSummary}</p>
+            <div className="mt-3 flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="gap-1.5 text-xs"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(aiSummary);
+                    setShareMessage("후기가 복사되었습니다");
+                    setTimeout(() => setShareMessage(null), 2000);
+                  } catch {
+                    setShareMessage("복사에 실패했습니다");
+                  }
+                }}
+              >
+                <Copy className="h-3.5 w-3.5" />
+                복사
+              </Button>
+            </div>
+            {shareMessage && (
+              <p className="mt-2 text-xs text-muted-foreground">{shareMessage}</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* ══ 경기 결과 공유 ══ */}
       <Card className="rounded-2xl border-0 overflow-hidden shadow-lg">
         <CardContent className="p-0">

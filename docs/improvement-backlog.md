@@ -1,6 +1,6 @@
 # PitchMaster 개선 백로그
 
-최종 업데이트: 2026-04-14 (20차)
+최종 업데이트: 2026-04-14 (21차)
 현재 점수 추정: Designer 95 / UX 97 / Dev 98 / Marketing 85 / Business 82 (평균 91.4)
 서비스 현황: 81팀 · 520명 · 170+경기 (14일 신규 37팀 폭발 성장)
 회비 운영: 실제 입금 내역 있는 팀 2 / 설정만 한 팀 9
@@ -275,6 +275,43 @@
 - [x] OCR 부분 인식 거래 분리 처리 (시간 누락 / 날짜 추정 / 날짜 없음 사유 배지 + 추가·제외 액션, 자동 저장 차단)
 - [x] penalties 고아 테스트 파일 삭제 (3745156에서 라우트 폐기, 테스트만 남아있던 회귀)
 - [x] dashboard.test.ts 회귀 수정 (match_guests / 활성 멤버 team_members mock 추가, db null fallback 200 검증)
+
+#### 21차 (2026-04-14 심야) — AI 기능 Phase 0 + Phase 1 도입
+
+**AI 멀티 모델 전략 확정**
+- 사용자 접점 한국어 텍스트 = Claude Haiku 4.5 (한국어 톤 섬세함)
+- 백엔드 분석·분류·구조화 = Gemini 2.0 Flash (비용 극소)
+- 환경변수 기반 모델 스위칭, Prompt Caching 필수
+- 문서: `docs/business-costs-pricing.md`, `memory/project_ai_roadmap.md`
+
+**Phase 0 — AI 시그니처 카피 (Claude Haiku)**
+- [x] `@anthropic-ai/sdk` v0.89 설치 + ANTHROPIC_API_KEY 환경변수 연동
+- [x] `src/lib/server/aiSignature.ts` — Claude Haiku 호출 + prompt caching(`cache_control`) + 룰 기반 fallback (71f71ca)
+- [x] 프롬프트 대폭 튜닝: 5가지 유형(장면·대조·인과·단언·헌신), 금지어 블랙리스트, 상투 표현 차단 (b7a16c9, 732a2cb, c30e2d0)
+- [x] 품질 가드 (`isLowQuality`): 메타 텍스트, 약어 손상(MO·MV), 숫자 붙여쓰기, 상투어 자동 fallback
+- [x] migration 00027: team_members.ai_signature / generated_at / model 3컬럼 추가
+- [x] `src/lib/server/aiSignatureCache.ts` — TTL 7일 캐시 (e19067e)
+- [x] `/player/[memberId]` 통합: 김선휘 Feature Flag + 모든 사용자에게 캐시 노출
+- 결과 예시: "상대가 가장 먼저 쳐다보는 뒷공간을 장악한다" — 룰 기반 불가 표현
+- 월 비용 예상: ~1,200원 (활성 선수 300명 주 1회 가정)
+
+**Phase 1 — AI 경기 후기 (Claude Haiku)**
+- [x] migration 00028: matches.ai_summary / generated_at / model 3컬럼 추가
+- [x] `src/lib/server/aiMatchSummary.ts`: 카톡 공유용 2~3단락(200~350자) 생성
+  프롬프트에 승리/패배/무승부/자체전/이벤트 상황별 톤 가이드 + 좋은 예시 3개
+- [x] `src/lib/server/aiMatchSummaryCache.ts`: 경기 1회 생성 후 영구 캐시
+- [x] `getMatchDetailData`에 aiSummary 통합 (COMPLETED 경기만, 김선휘 flag)
+- [x] MatchDiaryTab 상단 "AI 경기 후기" 카드 + 복사 버튼
+- 월 비용 예상: ~300원 (월 100경기 가정)
+
+**워딩 정리 — 영구 무료 약속 제거**
+- [x] `public/guide.html` FAQ: "핵심 기능 계속 무료" → "추후 유료 도입 가능"
+- [x] `src/app/terms/page.tsx` 제6조: 유료 전환 여지 유지 개정
+
+**운영 비용·가격 정책 문서화**
+- [x] `docs/business-costs-pricing.md` 작성 (272줄)
+- [x] 메모리 3종 갱신: `reference_infra.md`, `project_ai_roadmap.md`, `project_pricing.md`
+- Claude Code Max는 본업 공유 자산으로 손익 분리, 사이드 회수는 선택적 목표
 
 #### 20차 (2026-04-14 밤) — 커리어 프로필 v0 UI 완성 + 카드 진입점 확장
 
