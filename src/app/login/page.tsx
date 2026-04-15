@@ -80,11 +80,11 @@ export default async function LoginPage({
         memberCount={memberCount}
       />
       <BeforeAfterSection />
+      <HowItWorksSection />
       <FeaturesSection />
       <MoreFeaturesSection />
       <ComparisonSection />
       <TestimonialsSection />
-      <HowItWorksSection />
       <FaqSection />
       <FinalCtaSection
         kakaoButton={kakaoButtonFinal}
