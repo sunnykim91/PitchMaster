@@ -14,20 +14,20 @@ import {
 } from "@/lib/playerCardUtils";
 
 describe("getRarity", () => {
-  it("OVR 90+ → ICON", () => {
+  it("OVR 80+ → ICON", () => {
     expect(getRarity(99)).toBe("ICON");
-    expect(getRarity(90)).toBe("ICON");
+    expect(getRarity(80)).toBe("ICON");
   });
-  it("OVR 80~89 → HERO", () => {
-    expect(getRarity(89)).toBe("HERO");
-    expect(getRarity(80)).toBe("HERO");
+  it("OVR 70~79 → HERO", () => {
+    expect(getRarity(79)).toBe("HERO");
+    expect(getRarity(70)).toBe("HERO");
   });
-  it("OVR 70~79 → RARE", () => {
-    expect(getRarity(79)).toBe("RARE");
-    expect(getRarity(70)).toBe("RARE");
+  it("OVR 60~69 → RARE", () => {
+    expect(getRarity(69)).toBe("RARE");
+    expect(getRarity(60)).toBe("RARE");
   });
-  it("OVR 69 이하 → COMMON", () => {
-    expect(getRarity(69)).toBe("COMMON");
+  it("OVR 59 이하 → COMMON", () => {
+    expect(getRarity(59)).toBe("COMMON");
     expect(getRarity(45)).toBe("COMMON");
   });
 });

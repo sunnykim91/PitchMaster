@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { auth } from "@/lib/auth";
 import type { Metadata } from "next";
 import {
   classifyPosition,
@@ -13,6 +14,7 @@ import {
   type MatchPerformance,
   type BestMoment,
 } from "@/lib/playerCardUtils";
+import { generateAiSignature } from "@/lib/server/aiSignature";
 import { PlayerProfilePage, PlayerProfileEmpty } from "@/components/pitchmaster/PlayerProfilePage";
 import type { PlayerProfile, PlayerStats } from "@/components/pitchmaster/PlayerProfilePage";
 import type { PlayerCardProps, StatWithContext } from "@/components/pitchmaster/PlayerCard";
@@ -33,7 +35,7 @@ type MemberRow = {
   teams: { name: string; sport_type: string; uniform_primary: string | null; logo_url: string | null } | null;
 };
 
-async function getPlayerData(memberId: string, teamId?: string): Promise<PlayerProfile | null> {
+async function getPlayerData(memberId: string, teamId?: string, enableAi: boolean = false): Promise<PlayerProfile | null> {
   const db = getSupabaseAdmin();
   if (!db) return null;
 
@@ -214,12 +216,15 @@ async function getPlayerData(memberId: string, teamId?: string): Promise<PlayerP
   });
   const bestMoments: BestMoment[] = findBestMoments(performanceHistory);
 
-  // 시그니처
-  const signature = generateSignature({
+  // 시그니처 — AI 플래그가 켜진 경우 Claude Haiku 호출, 실패/미활성 시 룰 기반
+  const signatureInput = {
     cat, goals: totalGoals, assists: totalAssists, mvp: totalMvp,
     cleanSheets, matchCount: attended, attendanceRate, winRate,
     isTopScorer, isTopAssist, isTopMvp,
-  });
+  };
+  const signature = enableAi
+    ? (await generateAiSignature({ ...signatureInput, playerName: name })).signature
+    : generateSignature(signatureInput);
 
   // === OVR + PlayerCardProps 산출 ===
   const concededPerGame = attended > 0
@@ -340,7 +345,13 @@ export const revalidate = 1800;
 export default async function PlayerProfilePageRoute({ params, searchParams }: Props) {
   const { memberId } = await params;
   const { team } = await searchParams;
-  const data = await getPlayerData(memberId, team);
+
+  // Phase 0 Feature Flag: 김선휘 계정으로 로그인된 경우에만 AI 시그니처 활성화.
+  // auth() 호출로 페이지가 dynamic rendering 됨 (ISR revalidate 무력화되지만 의도한 바).
+  const session = await auth().catch(() => null);
+  const enableAi = session?.user?.name === "김선휘";
+
+  const data = await getPlayerData(memberId, team, enableAi);
   if (!data) return notFound();
 
   if (!data.stats) {
