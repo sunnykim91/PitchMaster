@@ -524,6 +524,7 @@ export default function MatchDetailClient({
           comments={commentsData.comments}
           refetchComments={refetchComments}
           goals={goals}
+          sportType={sportType}
           todayIso={todayIso}
           initialWeather={initialData?.weather ?? null}
         />

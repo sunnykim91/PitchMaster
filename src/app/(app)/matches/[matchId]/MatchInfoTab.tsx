@@ -58,6 +58,8 @@ export interface MatchInfoTabProps {
   comments?: { id: string; user_id: string; content: string; created_at: string; users: { name: string } | null }[];
   /** 댓글 refetch */
   refetchComments?: () => Promise<unknown>;
+  /** 스포츠 타입 (참가 인원 셀렉트용) */
+  sportType?: "SOCCER" | "FUTSAL";
   /** 서버에서 계산된 오늘 날짜 (YYYY-MM-DD, hydration 일치용) */
   todayIso: string;
   /** 서버에서 prefetch된 날씨 — LCP 개선을 위해 초기 렌더에 포함 */
@@ -109,9 +111,11 @@ function MatchInfoTabInner({
   goals: goalsProp,
   comments,
   refetchComments,
+  sportType = "SOCCER",
   todayIso,
   initialWeather,
 }: MatchInfoTabProps) {
+  const isFutsal = sportType === "FUTSAL";
   const { showToast } = useToast();
   const confirm = useConfirm();
   const [runUniform, uniformLoading] = useAsyncAction();
@@ -189,6 +193,7 @@ function MatchInfoTabInner({
     e.preventDefault();
     setSaving(true);
     const fd = new FormData(e.currentTarget);
+    const playerCountVal = fd.get("playerCount");
     const { error } = await apiMutate("/api/matches", "PUT", {
       id: matchId,
       date: fd.get("date"),
@@ -197,6 +202,7 @@ function MatchInfoTabInner({
       location: fd.get("location"),
       opponent: fd.get("opponent"),
       voteDeadline: fd.get("voteDeadline") || null,
+      playerCount: playerCountVal ? Number(playerCountVal) : undefined,
     });
     setSaving(false);
     if (!error) {
@@ -403,9 +409,19 @@ function MatchInfoTabInner({
                   <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">장소</p>
                   <input name="location" defaultValue={match.location} required className="h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
                 </div>
-                <div>
-                  <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">투표 마감</p>
-                  <input type="datetime-local" name="voteDeadline" defaultValue={match.voteDeadline?.slice(0, 16) ?? ""} className="relative h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">참가 인원</p>
+                    <select name="playerCount" defaultValue={String(match.playerCount ?? (isFutsal ? 6 : 11))} className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+                      {(isFutsal ? [3, 4, 5, 6] : [8, 9, 10, 11]).map((n) => (
+                        <option key={n} value={n}>{n}:{n} ({n}명)</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">투표 마감</p>
+                    <input type="datetime-local" name="voteDeadline" defaultValue={match.voteDeadline?.slice(0, 16) ?? ""} className="relative h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+                  </div>
                 </div>
                 <div className="flex gap-3 pt-1">
                   <Button type="button" variant="outline" className="flex-1 h-12 rounded-xl" onClick={() => setEditing(false)}>취소</Button>
