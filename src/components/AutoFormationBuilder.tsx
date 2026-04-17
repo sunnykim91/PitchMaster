@@ -564,6 +564,13 @@ export default function AutoFormationBuilder({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
+  // Phase C — AI 풀 플랜 (쿼터별 다른 포메이션 추천)
+  const [aiPlanMode, setAiPlanMode] = useState(false);
+  const [aiPlans, setAiPlans] = useState<Array<{ quarter: number; formation: string; placement: Array<{ slot: string; playerName: string }>; note?: string }> | null>(null);
+  const [aiPlanLoading, setAiPlanLoading] = useState(false);
+  const [aiPlanError, setAiPlanError] = useState<string | null>(null);
+  const [aiPlanSource, setAiPlanSource] = useState<"ai" | "rule" | null>(null);
+
   const formation = useMemo(
     () =>
       filteredFormations.find((f) => f.id === formationId) ??
@@ -727,6 +734,49 @@ export default function AutoFormationBuilder({
 
     setSaving(false);
     onGenerated?.(squads);
+  }
+
+  async function handleAiPlanGenerate() {
+    if (aiPlanLoading) return;
+    setAiPlanLoading(true);
+    setAiPlanError(null);
+    setAiPlans(null);
+    setAiPlanSource(null);
+    try {
+      const attendees = attendingPlayers.map((p) => ({
+        name: p.name,
+        preferredPosition: p.preferredPosition,
+      }));
+      const payload = {
+        formationName: formation.name,
+        quarterCount,
+        attendees,
+        placement: [], // 빈 — AI가 알아서
+        matchType: matchContext?.matchType ?? "REGULAR",
+        opponent: matchContext?.opponent ?? null,
+        warnings: [],
+      };
+      const res = await fetch("/api/ai/full-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        if (res.status === 429) setAiPlanError(body.message ?? "일일 사용 한도 도달");
+        else if (body.error === "ai_not_available") setAiPlanError("AI 풀 플랜은 관리자 계정 전용");
+        else setAiPlanError("AI 풀 플랜 요청 실패");
+        return;
+      }
+      const data = await res.json();
+      setAiPlans(data.plans);
+      setAiPlanSource(data.source ?? null);
+      if (data.error) setAiPlanError(data.error);
+    } catch {
+      setAiPlanError("네트워크 오류");
+    } finally {
+      setAiPlanLoading(false);
+    }
   }
 
   async function handleAiAnalyze() {
@@ -1001,6 +1051,68 @@ export default function AutoFormationBuilder({
         >
           {results ? "다시 생성" : "자동 편성 실행"}
         </Button>
+
+        {/* Phase C — AI 풀 플랜 (김선휘 Feature Flag) */}
+        {enableAi && (
+          <div className="mt-3 space-y-2">
+            <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={aiPlanMode}
+                onChange={(e) => setAiPlanMode(e.target.checked)}
+                className="h-4 w-4 rounded border-border"
+              />
+              <span>🤖 AI 최적 포메이션 (쿼터별 변경)</span>
+            </label>
+            {aiPlanMode && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-2 rounded-xl border-primary/40 text-primary hover:bg-primary/5"
+                onClick={handleAiPlanGenerate}
+                disabled={aiPlanLoading || fieldPlayers.length === 0}
+              >
+                {aiPlanLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {aiPlanLoading ? "AI 풀 플랜 생성 중..." : "AI에게 4쿼터 풀 플랜 받기"}
+              </Button>
+            )}
+            {aiPlanError && (
+              <p className="text-xs text-destructive">{aiPlanError}</p>
+            )}
+            {aiPlans && aiPlans.length > 0 && (
+              <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">
+                    {aiPlanSource === "ai" ? "AI" : "⚙"}
+                  </span>
+                  <span className="text-sm font-bold">
+                    {aiPlanSource === "ai" ? "AI 풀 플랜" : "기본 플랜 (AI 실패)"}
+                  </span>
+                </div>
+                {aiPlans.map((p) => (
+                  <div key={p.quarter} className="rounded-lg border border-border/40 bg-card/40 p-2">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="text-sm font-bold text-foreground">
+                        {p.quarter}쿼터 · {p.formation}
+                      </span>
+                      {p.note && <span className="text-[11px] text-muted-foreground">{p.note}</span>}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 text-[11px] text-foreground/80">
+                      {p.placement.map((x, i) => (
+                        <span key={i} className="rounded bg-secondary px-1.5 py-0.5">
+                          {x.slot}: {x.playerName}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <p className="mt-1 text-[10px] text-muted-foreground/70">
+                  ⚠️ 베타 — 자동 적용 미지원. 위 편성을 참고해서 수동으로 슬롯 배치하세요.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── 쿼터별 미리보기 + 액션 버튼 ── */}
         {results && playerQuarterMap && (() => {

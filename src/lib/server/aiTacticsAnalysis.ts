@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { recordAiUsage, extractTokenUsage } from "@/lib/server/aiUsageLog";
+import { getOrComputeTeamStats, findOpponentHistory, type TeamStats } from "@/lib/server/aiTeamStats";
 
 /**
  * Claude Haiku로 AI 전술 분석 생성.
@@ -39,6 +40,47 @@ const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의
 - **상황**: "수적 열세 수비", "세트피스 준비", "후반 피로 관리"
 
 과하게 현학적으로 쓰지 말고, 해당 편성의 **실제 구도**와 맞는 용어만 선택.
+
+## 포메이션별 일반 원리 (EPL/분데스 참고 — 동호회 맥락에서 재해석)
+
+- **4-3-3**: 측면 공격 강점, 중원 3명 압박이 핵심.
+  - 강점: 풀백-윙어 콤비로 폭넓은 공격, 압박 시 라인 끌어올림 가능.
+  - 약점: 역습 시 측면 뒷공간, 풀백 체력 부담 큼.
+  - 참고: 펩 시티는 풀백 인버티드로 중원 과부하 만듦.
+
+- **4-4-2**: 밸런스 좋고 단순 명확. 단순 패싱.
+  - 강점: 좌우 대칭으로 책임 명확, 카운터 공격에 유리.
+  - 약점: 중원 수적 열세 (3인 중원 상대 시), 창의성 제한.
+  - 참고: 레스터(2016)는 단단한 4-4-2 + 빠른 공격 전환.
+
+- **4-2-3-1**: 공격형 미드(10번) 중심 + 더블 피봇.
+  - 강점: 10번 창의성 + 두 수비형 미드의 안정감, 역습·점유 모두 가능.
+  - 약점: 10번이 봉쇄되면 공격 고립, 풀백 가담 필수.
+  - 참고: 뮌헨·맨유 다수 시즌 — 10번 자리 핵심 선수 의존도.
+
+- **5-3-2 (3-5-2)**: 수비 안정 + 윙백 공수 활용.
+  - 강점: 뒷선 3CB 안정, 윙백이 공격 시 5미드처럼.
+  - 약점: 윙백 체력 부담 극대, 공격 창의성 부족.
+  - 참고: 콘테 첼시 — 윙백(알론소·모지스)이 핵심.
+
+- **3-4-3**: 공격형 3CB. 윙백 + 윙어 더블 측면.
+  - 강점: 측면 4명 동시 활용 (윙백 + 윙어), 공격 인원 다수.
+  - 약점: CB 3명 사이 빈공간, 측면 봉쇄당하면 중앙 막힘.
+  - 참고: 콘테 인터·튀헬 첼시.
+
+- **3-4-2-1**: 3-4-3의 축소 — 두 섀도우 스트라이커.
+  - 강점: 중원 4명 + 처진 공격수 2명으로 중앙 과부하.
+  - 약점: 진짜 윙어 없음, 측면은 윙백에 의존.
+
+- **4-1-4-1**: 수비형 미드(앵커) 한 명 + 4명 미드.
+  - 강점: 압박 라인 높이 가능, 측면 미드 4명으로 폭 확보.
+  - 약점: 앵커 봉쇄 시 수비 노출, 원톱 고립.
+
+- **5-3-2 풋살 전용**: 풋살 5명 (FIXO + 2 ALA + PIVO).
+  - 강점: FIXO가 빌드업 시작, ALA 측면 공수 전환.
+  - 약점: PIVO 고립, 공수 전환 빠름 필수.
+
+과거 전적 기반 평가가 일반 원리보다 우선. 우리 팀이 어떤 포메이션을 잘 쓰는지가 더 중요.
 
 ## 3단락 구조
 
@@ -252,10 +294,16 @@ export async function generateAiTacticsAnalysis(
     warnings: input.warnings ?? [],
   });
 
+  // Phase D + E: 팀 히스토리 + 상대팀 이력 (24h 캐시 적용)
+  const historyBlock = await fetchHistoryBlock(input);
+
   const callOnce = async (temperature: number, feedbackNote?: string) => {
-    const userMsg = feedbackNote
-      ? `이전 응답이 ${feedbackNote} 때문에 실패했습니다. 시스템 지침 엄수 후 재작성.\n\n${userContent}`
-      : `다음 편성 정보를 바탕으로 코치식 3단락 분석을 작성해 주세요. 본문만 출력.\n\n${userContent}`;
+    const headerLine = feedbackNote
+      ? `이전 응답이 ${feedbackNote} 때문에 실패했습니다. 시스템 지침 엄수 후 재작성.`
+      : `다음 편성 정보를 바탕으로 코치식 3단락 분석을 작성해 주세요. 우리 팀 히스토리와 상대팀 이력이 있으면 자연스럽게 반영. 본문만 출력.`;
+    const userMsg = historyBlock
+      ? `${headerLine}\n\n${historyBlock}\n\n## 이번 경기 편성\n${userContent}`
+      : `${headerLine}\n\n${userContent}`;
     return client.messages.create({
       model: MODEL,
       max_tokens: MAX_OUTPUT_TOKENS,
@@ -353,6 +401,12 @@ export async function* generateAiTacticsAnalysisStream(
     warnings: input.warnings ?? [],
   });
 
+  // Phase D + E: 팀 히스토리 + 상대팀 이력 (24h 캐시 적용)
+  const historyBlock = await fetchHistoryBlock(input);
+  const userMessageContent = historyBlock
+    ? `다음 편성 정보를 바탕으로 코치식 3단락 분석을 작성해 주세요. 우리 팀 히스토리와 상대팀 이력이 있으면 자연스럽게 반영. 본문만 출력.\n\n${historyBlock}\n\n## 이번 경기 편성\n${userContent}`
+    : `다음 편성 정보를 바탕으로 코치식 3단락 분석을 작성해 주세요. 본문만 출력.\n\n${userContent}`;
+
   let accumulated = "";
 
   try {
@@ -361,10 +415,7 @@ export async function* generateAiTacticsAnalysisStream(
       max_tokens: MAX_OUTPUT_TOKENS,
       temperature: TEMPERATURE,
       system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
-      messages: [{
-        role: "user",
-        content: `다음 편성 정보를 바탕으로 코치식 3단락 분석을 작성해 주세요. 본문만 출력.\n\n${userContent}`,
-      }],
+      messages: [{ role: "user", content: userMessageContent }],
     });
 
     for await (const event of stream) {
@@ -395,3 +446,63 @@ export async function* generateAiTacticsAnalysisStream(
     await recordAiUsage({ ...logBase, source: "error", model: MODEL, latencyMs: Date.now() - started, errorReason: "api_error" });
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+// Phase D + E — 팀 히스토리 / 상대팀 이력 user 메시지 빌더
+// ─────────────────────────────────────────────────────────────
+
+/** 팀 히스토리 + 상대팀 이력 텍스트 블록 */
+function buildHistoryBlock(stats: TeamStats, opponent: string | null | undefined): string {
+  if (stats.totalCompletedMatches === 0) return "";
+
+  const lines: string[] = [];
+  lines.push(`## 우리 팀 히스토리 (최근 ${stats.totalCompletedMatches}경기, REGULAR)`);
+
+  if (stats.formationStats.length > 0) {
+    lines.push("\n### 포메이션별 전적");
+    for (const f of stats.formationStats.slice(0, 5)) {
+      const winRate = f.played > 0 ? Math.round((f.won / f.played) * 100) : 0;
+      lines.push(`- ${f.name}: ${f.played}전 ${f.won}승 ${f.drawn}무 ${f.lost}패 (승률 ${winRate}%, 득실 ${f.goalsFor}/${f.goalsAgainst})`);
+    }
+  }
+
+  if (stats.playerPositionStats.length > 0) {
+    lines.push("\n### 핵심 선수 포지션 활약 (Top 10)");
+    for (const p of stats.playerPositionStats.slice(0, 10)) {
+      const extras: string[] = [];
+      if (p.goals > 0) extras.push(`${p.goals}골`);
+      if (p.assists > 0) extras.push(`${p.assists}어시`);
+      const extra = extras.length > 0 ? ` (${extras.join(", ")})` : "";
+      lines.push(`- ${p.playerName} ${p.position}: ${p.matches}경기${extra}`);
+    }
+  }
+
+  const opp = findOpponentHistory(stats, opponent);
+  if (opp && opp.played > 0) {
+    lines.push(`\n## 상대팀 ${opp.opponentName} 과거 이력`);
+    lines.push(`- 통산 ${opp.played}전 ${opp.won}승 ${opp.drawn}무 ${opp.lost}패`);
+    if (opp.recentScores.length > 0) {
+      lines.push("- 최근 경기:");
+      for (const s of opp.recentScores) {
+        lines.push(`  - ${s.date}: ${s.us}-${s.opp} (${s.result})`);
+      }
+    }
+  }
+
+  return lines.join("\n");
+}
+
+/** input.teamId가 있으면 통계 fetch 후 텍스트 블록 반환. 없으면 빈 문자열 */
+async function fetchHistoryBlock(input: TacticsAnalysisInput): Promise<string> {
+  if (!input.teamId) return "";
+  try {
+    const stats = await getOrComputeTeamStats(input.teamId);
+    return buildHistoryBlock(stats, input.opponent);
+  } catch (err) {
+    console.warn("[aiTacticsAnalysis] 히스토리 fetch 실패 (무시):", err);
+    return "";
+  }
+}
+
+/** 외부에서 사용 가능 — Phase C(full plan)에서도 동일 블록 재사용 */
+export { fetchHistoryBlock };
