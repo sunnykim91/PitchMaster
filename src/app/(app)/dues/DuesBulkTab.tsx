@@ -69,6 +69,7 @@ export type DuesBulkTabProps = {
   showToast: (msg: string, type?: "success" | "error" | "info") => void;
   autoMatchMember: (description: string) => string | undefined;
   /** AI OCR(Claude Vision) 활성화 여부 — 김선휘 Feature Flag */
+  /** @deprecated Phase B에서 AI OCR이 모든 사용자에게 공개됨. 필드는 하위 호환용 */
   enableAi?: boolean;
 };
 
@@ -245,11 +246,11 @@ function DuesBulkTabInner({
   }
 
   /**
-   * AI(Claude Vision) OCR — 이미지 → 거래 JSON 배열을 직접 반환.
-   * 응답을 기존 parseTransactions가 처리할 수 있는 텍스트로 재구성해
-   * 이후 워크플로우(중복 제거·저장)를 그대로 재사용한다.
+   * AI(Claude Vision) OCR — 이미지 → 거래 JSON 배열을 BulkRow로 직접 변환.
+   * 기존엔 텍스트로 재합성 후 parseTransactions를 거쳤으나, Clova용 정규식과 포맷이
+   * 맞지 않아 매번 0건으로 떨어짐. 이미 구조화된 JSON을 직접 쓰는 게 정답.
    */
-  async function runAiOcr(file: File): Promise<string | null> {
+  async function runAiOcr(file: File): Promise<{ rows: BulkRow[]; latestBalance: number | null } | null> {
     const formData = new FormData();
     formData.append("image", file);
     const res = await fetch("/api/ocr/smart", { method: "POST", body: formData });
@@ -261,22 +262,46 @@ function DuesBulkTabInner({
       showToast(msg, "error");
       return null;
     }
-    type Tx = { date: string | null; time: string | null; counterparty: string | null; amount: number | null; type: "입금" | "출금" | null; balance: number | null };
+
+    type Tx = {
+      date: string | null;
+      time: string | null;
+      counterparty: string | null;
+      amount: number | null;
+      type: "입금" | "출금" | null;
+      balance: number | null;
+      memo?: string | null;
+    };
     const txs = (json.transactions as Tx[]) ?? [];
-    // 기존 parseTransactions가 인식하는 간단한 줄 단위 포맷으로 재구성
-    // 예: "2026-04-12 13:45 홍길동 입금 50,000 1,243,000"
-    const lines = txs
-      .filter((t) => t.amount && t.amount > 0)
-      .map((t) => {
-        const date = t.date ?? "";
-        const time = t.time ?? "";
-        const name = t.counterparty ?? "";
-        const sign = t.type === "출금" ? "-" : "+";
-        const amt = t.amount!.toLocaleString("ko-KR");
-        const bal = t.balance != null ? t.balance.toLocaleString("ko-KR") : "";
-        return `${date} ${time} ${name} ${sign}${amt} ${bal}`.trim();
+
+    const today = new Date().toISOString().slice(0, 10);
+    const rows: BulkRow[] = [];
+    let latestBalance: number | null = null;
+
+    for (const t of txs) {
+      if (!t.amount || t.amount <= 0) continue;
+
+      const name = t.counterparty ?? "";
+      const memo = t.memo ?? "";
+      const description = memo ? `${name} ${memo}`.trim() : name;
+
+      const matchedMember = membersRef.current.find(
+        (m) => m.name && (description.includes(m.name) || (name && m.name.includes(name)))
+      );
+
+      rows.push({
+        date: t.date || today,
+        time: t.time || "",
+        type: t.type === "출금" ? "EXPENSE" : "INCOME",
+        amount: String(t.amount),
+        description,
+        memberName: matchedMember?.id || "",
       });
-    return lines.join("\n");
+
+      if (t.balance != null) latestBalance = t.balance;
+    }
+
+    return { rows, latestBalance };
   }
 
   const handleAiOcrImageChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -288,26 +313,20 @@ function DuesBulkTabInner({
     setOcrStatus("AI OCR로 분석 중... (정확도 더 높음, 응답 ~3~5초)");
     setPartialRows([]);
     try {
-      const synthesized = await runAiOcr(file);
-      if (!synthesized) {
-        setOcrLoading(false);
-        if (aiOcrFileInputRef.current) aiOcrFileInputRef.current.value = "";
+      const result = await runAiOcr(file);
+      setOcrLoading(false);
+      if (aiOcrFileInputRef.current) aiOcrFileInputRef.current.value = "";
+      if (!result) {
         setOcrStatus("AI OCR 처리 실패. 일반 OCR을 사용해주세요.");
         return;
       }
-      console.log("[AI OCR] synthesized text:\n", synthesized);
-      const { rows: parsed, latestBalance } = parseTransactions(synthesized);
+      const { rows: parsed, latestBalance } = result;
       console.log("[AI OCR] parsed rows:", parsed.length);
-      // 기존 흐름과 동일한 후처리를 위해 handleBulkImageChange 로직을 복제 대신
-      // 결과를 UI state에 주입 (가장 단순한 방법)
-      setOcrLoading(false);
-      if (aiOcrFileInputRef.current) aiOcrFileInputRef.current.value = "";
       if (parsed.length === 0) {
         setOcrStatus("AI가 거래 내역을 찾지 못했습니다. 다른 이미지로 시도해주세요.");
         return;
       }
       setOcrStatus(`AI OCR로 ${parsed.length}건 인식됨. 아래 표에서 확인 후 저장하세요.`);
-      // 부분 인식은 AI 결과가 정제되어 거의 없음 — fullParsed로 바로
       setBulkRows((prev) => [...prev, ...parsed]);
       if (latestBalance !== null) setPendingBalance(latestBalance);
     } catch (err) {
@@ -559,15 +578,17 @@ function DuesBulkTabInner({
     <div role="tabpanel" id="tabpanel-bulk" aria-labelledby="tab-bulk" className="space-y-4">
       <h2 className="text-sm font-medium text-foreground">내역 올리기</h2>
 
-      {/* ── OCR 섹션 ── */}
+      {/* ── OCR 섹션 — AI OCR이 기본, Clova OCR이 폴백 ── */}
       <div className="space-y-3">
         <p className="text-xs font-medium text-muted-foreground">OCR (스크린샷)</p>
+
+        {/* 메인: AI OCR (Claude Vision) */}
         <Card
-          className="border-dashed border-white/10 bg-card py-5 cursor-pointer hover:border-white/20 transition-colors active:scale-[0.99]"
-          onClick={() => ocrFileInputRef.current?.click()}
+          className="border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-card py-5 cursor-pointer hover:border-primary/50 transition-colors active:scale-[0.99]"
+          onClick={() => aiOcrFileInputRef.current?.click()}
         >
           <CardContent className="flex flex-col items-center gap-3 px-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15">
               <Camera className="h-6 w-6 text-primary" />
             </div>
             <div className="text-center space-y-1">
@@ -575,17 +596,16 @@ function DuesBulkTabInner({
                 통장 거래내역 캡쳐를 올려주세요
               </p>
               <p className="text-xs text-muted-foreground">
-                은행 앱 스크린샷을 올리면 자동으로 인식합니다
+                AI가 은행 앱 스크린샷을 자동으로 인식합니다
               </p>
             </div>
             <Button
-              variant="outline"
               size="sm"
               className="active:scale-[0.97] transition-transform"
               disabled={ocrLoading}
               onClick={(e) => {
                 e.stopPropagation();
-                ocrFileInputRef.current?.click();
+                aiOcrFileInputRef.current?.click();
               }}
             >
               {ocrLoading ? "처리 중..." : "사진 선택"}
@@ -593,33 +613,29 @@ function DuesBulkTabInner({
           </CardContent>
         </Card>
         <input
+          ref={aiOcrFileInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
+          className="hidden"
+          onChange={handleAiOcrImageChange}
+        />
+
+        {/* 폴백: Clova OCR (AI 실패/한도 초과 시) */}
+        <button
+          type="button"
+          disabled={ocrLoading}
+          onClick={() => ocrFileInputRef.current?.click()}
+          className="w-full flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground underline underline-offset-4 disabled:opacity-50"
+        >
+          인식 안 되면 기본 OCR로 시도
+        </button>
+        <input
           ref={ocrFileInputRef}
           type="file"
           accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
           className="hidden"
           onChange={handleBulkImageChange}
         />
-
-        {/* AI OCR (Claude Vision) — 김선휘 Feature Flag */}
-        {enableAi && (
-          <>
-            <button
-              type="button"
-              disabled={ocrLoading}
-              onClick={() => aiOcrFileInputRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2 text-xs text-primary hover:text-primary/80 underline underline-offset-4 disabled:opacity-50"
-            >
-              ✨ AI OCR로 시도하기 (베타)
-            </button>
-            <input
-              ref={aiOcrFileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
-              className="hidden"
-              onChange={handleAiOcrImageChange}
-            />
-          </>
-        )}
       </div>
 
       {/* OCR 로딩 오버레이 */}

@@ -24,9 +24,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  if (session.user.name !== "김선휘") {
-    return NextResponse.json({ error: "ai_not_available" }, { status: 403 });
-  }
+  // Phase B: Feature Flag 해제 — 모든 팀에 AI OCR 공개.
+  // 레이트리밋(user 20/team 100 per day) + 이미지 해시 캐시로 비용 안전권.
 
   // 레이트리밋 체크
   const rate = await checkRateLimit("ocr", session.user.id, session.user.teamId ?? null);
