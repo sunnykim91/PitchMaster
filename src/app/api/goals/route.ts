@@ -65,9 +65,12 @@ export async function POST(request: NextRequest) {
   if (!matchCheck) return apiError("Match not found", 404);
 
   const quarter = Number(body.quarter);
-  if (!Number.isInteger(quarter) || quarter < 1 || quarter > 10) {
-    return apiError("쿼터 번호는 1 이상의 정수여야 합니다");
+  if (!Number.isInteger(quarter) || quarter < 0 || quarter > 10) {
+    return apiError("쿼터 번호가 올바르지 않습니다");
   }
+  // 0 = 쿼터 모름 → DB에 null 저장
+  const quarterValue = quarter === 0 ? null : quarter;
+
   if (!body.scorerId || typeof body.scorerId !== "string") {
     return apiError("득점자 정보가 필요합니다");
   }
@@ -79,7 +82,7 @@ export async function POST(request: NextRequest) {
     .from("match_goals")
     .insert({
       match_id: body.matchId,
-      quarter_number: quarter,
+      quarter_number: quarterValue,
       minute: body.minute ?? null,
       scorer_id: body.scorerId,
       assist_id: body.assistId || null,
@@ -121,10 +124,13 @@ export async function PUT(request: NextRequest) {
   const updGoalType = body.goalType ?? "NORMAL";
   const updIsOwnGoal = updGoalType === "OWN_GOAL" || (body.isOwnGoal ?? false);
 
+  const updQuarter = Number(body.quarter ?? 0);
+  const updQuarterValue = updQuarter === 0 ? null : updQuarter;
+
   const { data, error } = await db
     .from("match_goals")
     .update({
-      quarter_number: body.quarter,
+      quarter_number: updQuarterValue,
       minute: body.minute ?? null,
       scorer_id: body.scorerId,
       assist_id: body.assistId || null,

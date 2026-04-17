@@ -2,51 +2,32 @@
   "permissions": {
     "allow": [
       "Bash(git add:*)",
-      "Bash(ls /Users/sunny/develop/pitchmaster/PitchMaster/.env*)",
-      "Bash(wc -l \"src/app/\\(app\\)/matches/[matchId]/MatchDetailClient.tsx\")",
-      "Bash(find /Users/sunny/develop/pitchmaster/PitchMaster/src/app -name *record* -o -name *Record*)",
-      "Bash(grep -r \"시즌\\\\|season\" /Users/sunny/develop/pitchmaster/PitchMaster/src --include=*.ts --include=*.tsx -l)",
-      "Bash(ls -la \"/Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\(app\\)/records/\")",
-      "Bash(wc -l /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/records/RecordsClient.tsx /Users/sunny/develop/pitchmaster/PitchMaster/src/lib/server/getRecordsData.ts /Users/sunny/develop/pitchmaster/PitchMaster/src/app/api/records/route.ts)",
-      "Bash(find /Users/sunny/develop/pitchmaster/PitchMaster/src -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.js -o -name *.jsx \\\\\\))",
-      "Bash(find /Users/sunny/develop/pitchmaster/PitchMaster -name *.sql -type f)",
-      "Bash(find /Users/sunny/develop/pitchmaster/PitchMaster/src -type f \\\\\\(-name *comment* -o -name *post* -o -name *board* \\\\\\))",
-      "WebFetch(domain:support.google.com)",
-      "Bash(grep -n \"post_likes\\\\|post_comments\" /Users/sunny/develop/pitchmaster/PitchMaster/supabase/migrations/*.sql)",
-      "WebFetch(domain:views4you.com)",
-      "WebFetch(domain:clipchamp.com)",
-      "WebFetch(domain:ionicdesignkit.com)",
-      "Bash(pip3 install:*)",
-      "Bash(python3:*)",
-      "Bash(grep -n \"tab\\\\|Tab\\\\|attendance\\\\|Attendance\\\\|voting\\\\|Voting\" /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/matches/[matchId]/MatchDetailClient.tsx)",
-      "Bash(wc -l /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/matches/[matchId]/MatchDetailClient.tsx)",
-      "Bash(grep -n \"참석\\\\|출석\\\\|투표\" /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/matches/[matchId]/MatchDetailClient.tsx)",
-      "Bash(grep -n \"search\\\\|filter\\\\|Search\\\\|Filter\" /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/matches/[matchId]/MatchDetailClient.tsx)",
-      "Bash(ls -la /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/matches/[matchId\\\\\\)/)",
-      "Bash(ls -la /Users/sunny/develop/pitchmaster/PitchMaster/public/screenshot/*.xlsx)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git status:*)",
+      "Bash(npx tsc --noEmit*)",
+      "Bash(npx vitest*)",
+      "Bash(npm run build*)",
+      "Bash(npm run lint*)",
       "Bash(npx web-push:*)",
-      "Bash(grep -r \"INSERT INTO notifications\\\\|notifications.*INSERT\" /Users/sunny/develop/pitchmaster/PitchMaster/src --include=*.ts --include=*.tsx)",
-      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
-      "Bash(grep -r \"notifications.*insert\\\\|\\\\.insert.*notifications\" /Users/sunny/develop/pitchmaster/PitchMaster/src --include=*.ts -n)",
-      "Bash(grep -r from.*notifications.*insert /Users/sunny/develop/pitchmaster/PitchMaster/src --include=*.ts -n)",
-      "Bash(find /Users/sunny/develop/pitchmaster/PitchMaster -type f -name *notif*)",
-      "Bash(grep -n \"CardHeader\\\\|CardContent\\\\|CardTitle\" /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/matches/[matchId]/MatchDetailClient.tsx)",
       "Bash(openssl rand:*)",
-      "Bash(ls /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/notifications/)",
-      "Bash(SUPABASE_URL=\"https://agcmuvjwiydfppjlbhcx.supabase.co\" SUPABASE_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnY211dmp3aXlkZnBwamxiaGN4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzkxMjQyMywiZXhwIjoyMDg5NDg4NDIzfQ.gQXLyXoVL2lOuXLpHjpl3TwINWTPFBQrtyPCNRW2xho\" __NEW_LINE_d1bff125debbcd72__ curl -s \"$SUPABASE_URL/rest/v1/push_subscriptions?select=id,user_id,endpoint&limit=5\" -H \"apikey: $SUPABASE_KEY\" -H \"Authorization: Bearer $SUPABASE_KEY\")",
-      "Read(//Users/sunny/.claude/plugins/**)",
-      "Read(//Users/sunny/.claude/**)",
-      "Bash(find ~/.claude/plugins/ -name *.md -path */impeccable/*)",
-      "WebFetch(domain:impeccable.style)",
-      "Bash(npx skills:*)",
-      "Bash(grep -v \"^ui$\")",
-      "Bash(wc -l /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/matches/[matchId]/MatchDetailClient.tsx /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/board/BoardClient.tsx /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/dues/DuesClient.tsx)",
-      "Bash(wc -l /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/matches/[matchId]/MatchDetailClient.tsx /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/dues/DuesClient.tsx /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/board/BoardClient.tsx /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/records/RecordsClient.tsx /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/settings/SettingsClient.tsx /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/members/MembersClient.tsx /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/dashboard/DashboardClient.tsx /Users/sunny/develop/pitchmaster/PitchMaster/src/components/TacticsBoard.tsx)",
-      "Bash(grep -n \"const \\\\[.*Tab\\\\|{/\\\\* ──\\\\|section className\\\\|Tab:\" /Users/sunny/develop/pitchmaster/PitchMaster/src/app/\\\\\\(app\\\\\\)/matches/[matchId]/MatchDetailClient.tsx)",
-      "Bash(node -e \":*)",
-      "Bash(grep -l \"create table\" /Users/sunny/develop/pitchmaster/PitchMaster/supabase/migrations/*.sql)",
-      "Bash(kill 31667)",
-      "Bash(ls /Users/sunny/develop/pitchmaster/PitchMaster/src/app/opengraph-image*)"
+      "Bash(ls supabase/migrations/*)",
+      "WebFetch(domain:supabase.com)",
+      "WebFetch(domain:nextjs.org)",
+      "WebFetch(domain:tailwindcss.com)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd C:/Users/온유아빠/develop/PitchMaster && npx tsc --noEmit 2>&1 | head -30"
+          }
+        ]
+      }
     ]
   }
 }

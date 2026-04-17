@@ -37,7 +37,7 @@ export const GOAL_TYPES: { value: GoalType; label: string }[] = [
 export type GoalRow = {
   id: string;
   match_id: string;
-  quarter_number: number;
+  quarter_number: number | null;
   minute: number | null;
   scorer_id: string;
   assist_id: string | null;
@@ -132,7 +132,7 @@ export type GoalEvent = {
   id: string;
   scorerId: string;
   assistId?: string;
-  quarter: number;
+  quarter: number | null;
   minute: number;
   isOwnGoal?: boolean;
   goalType: GoalType;
