@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { parseReceiptWithVision } from "@/lib/server/aiOcrParse";
 import { checkRateLimit } from "@/lib/server/aiUsageLog";
 import { getCachedOcrResult, saveCachedOcrResult, hashImage } from "@/lib/server/aiOcrCache";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 /**
  * POST /api/ocr/smart
@@ -77,9 +78,29 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // 팀 멤버 이름 리스트 조회 — Vision이 한글 이름 오인식(종/중 등) 시 fuzzy matching에 사용
+    let teamMemberNames: string[] | undefined;
+    const db = getSupabaseAdmin();
+    if (db && session.user.teamId) {
+      const { data: members } = await db
+        .from("team_members")
+        .select("pre_name, users(name)")
+        .eq("team_id", session.user.teamId)
+        .in("status", ["ACTIVE", "DORMANT"]);
+      if (members) {
+        teamMemberNames = members
+          .map((m) => {
+            const u = Array.isArray(m.users) ? m.users[0] : m.users;
+            return (u?.name ?? m.pre_name ?? "").trim();
+          })
+          .filter((n): n is string => !!n);
+      }
+    }
+
     const result = await parseReceiptWithVision(buffer, file.type, {
       userId: session.user.id,
       teamId: session.user.teamId ?? null,
+      teamMemberNames,
     });
 
     if (result.source === "error") {
