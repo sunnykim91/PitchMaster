@@ -29,7 +29,7 @@ export default function DemoButton({ compact }: { compact?: boolean } = {}) {
   }
 
   return (
-    <div>
+    <div className="inline-flex flex-col items-center">
       <button
         onClick={handleDemo}
         disabled={loading}

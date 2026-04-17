@@ -404,23 +404,29 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             <CardContent className="flex items-center justify-between p-4">
               <Link href="/dashboard" className="block">
                 <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary block">PitchMaster</span>
-                <span className="text-lg font-bold flex items-center gap-1.5">
-                  <TeamLogo logoUrl={session.user.teamLogoUrl} teamName={session.user.teamName ?? "T"} size="sm" />
-                  {session.user.teamName}
-                  {(() => {
-                    const current = teams.find((t) => t.isCurrent);
-                    const st = current?.sportType ?? "SOCCER";
-                    return (
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${st === "FUTSAL" ? "bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]" : "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"}`}>
-                        {st === "FUTSAL" ? "풋살" : "축구"}
-                      </span>
-                    );
-                  })()}
-                  {teams.length > 1 && (
-                    <Badge variant="secondary" className="text-xs px-1.5 py-0">
-                      {teams.length}팀
-                    </Badge>
-                  )}
+                <span className="text-lg font-bold flex flex-col gap-0.5">
+                  {/* 줄 1: 로고 + 팀이름 */}
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    <TeamLogo logoUrl={session.user.teamLogoUrl} teamName={session.user.teamName ?? "T"} size="sm" />
+                    <span className="truncate">{session.user.teamName}</span>
+                  </span>
+                  {/* 줄 2: 배지들 (스포츠타입 + 팀 개수) */}
+                  <span className="flex items-center gap-1.5">
+                    {(() => {
+                      const current = teams.find((t) => t.isCurrent);
+                      const st = current?.sportType ?? "SOCCER";
+                      return (
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${st === "FUTSAL" ? "bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]" : "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"}`}>
+                          {st === "FUTSAL" ? "풋살" : "축구"}
+                        </span>
+                      );
+                    })()}
+                    {teams.length > 1 && (
+                      <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                        {teams.length}팀
+                      </Badge>
+                    )}
+                  </span>
                 </span>
               </Link>
               <div className="flex items-center gap-1">
