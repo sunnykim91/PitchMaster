@@ -56,16 +56,23 @@ function MatchDiaryTabInner({
   async function handleRegenerateAi() {
     setRegenerating(true);
     setRegenerateError(null);
+    setCurrentAiSummary(""); // 스트리밍 시작 — 빈 문자열로 초기화해 progressive 렌더
     try {
-      const res = await fetch(`/api/ai/match-summary/${matchId}`, { method: "POST" });
-      const data = await res.json();
-      if (res.ok && data.summary) {
-        setCurrentAiSummary(data.summary);
-      } else {
-        setRegenerateError(data.message ?? data.error ?? "재생성 실패");
-      }
+      const { consumeSseStream } = await import("@/lib/sseStream");
+      await consumeSseStream(`/api/ai/match-summary/${matchId}`, {}, {
+        onChunk: (text) => {
+          setCurrentAiSummary((prev) => (prev ?? "") + text);
+        },
+        onReplace: (text) => {
+          setCurrentAiSummary(text);
+        },
+        onError: (msg) => {
+          setRegenerateError(msg);
+        },
+      });
     } catch (err) {
       setRegenerateError(err instanceof Error ? err.message : "네트워크 오류");
+      setCurrentAiSummary(aiSummary ?? null); // 실패 시 원래 값으로 복귀
     } finally {
       setRegenerating(false);
     }
@@ -304,7 +311,10 @@ function MatchDiaryTabInner({
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{currentAiSummary}</p>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+              {currentAiSummary}
+              {regenerating && <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-primary/60 align-middle" />}
+            </p>
             <div className="mt-3 flex gap-2">
               <Button
                 type="button"

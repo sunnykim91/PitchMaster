@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { getOrGenerateMatchSummary } from "@/lib/server/aiMatchSummaryCache";
+import { generateAiMatchSummaryStream, type MatchSummaryInput } from "@/lib/server/aiMatchSummary";
 import { checkRateLimit } from "@/lib/server/aiUsageLog";
-import type { MatchSummaryInput } from "@/lib/server/aiMatchSummary";
 
 /**
  * POST /api/ai/match-summary/[matchId]
- * AI 경기 후기 재생성. 김선휘 Feature Flag 전용.
+ * AI 경기 후기 재생성 (SSE 스트리밍).
  *
- * 기존 캐시된 후기를 무시하고 새로 생성 (forceRegenerate: true).
- * 레이트리밋 체크.
+ * 기존 캐시 무시하고 Claude Haiku 스트리밍. 완료 시 matches 테이블에 저장.
+ * Response: text/event-stream (타입은 MatchSummaryStreamEvent)
  */
 export async function POST(
   req: NextRequest,
@@ -36,7 +35,6 @@ export async function POST(
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: "db_unavailable" }, { status: 503 });
 
-  // 경기 데이터 조회 (팀 검증 포함)
   const { data: match } = await db
     .from("matches")
     .select("*")
@@ -48,7 +46,7 @@ export async function POST(
     return NextResponse.json({ error: "match_not_found" }, { status: 404 });
   }
 
-  // MatchSummaryInput 조립 — getMatchDetailData의 로직 간소화 버전
+  // MatchSummaryInput 조립
   const [goalsRes, mvpRes, attendanceRes] = await Promise.all([
     db.from("match_goals").select("*").eq("match_id", matchId),
     db.from("match_mvp_votes").select("*").eq("match_id", matchId),
@@ -109,22 +107,58 @@ export async function POST(
     location: match.location ?? null,
     weather: null,
     date: match.date ?? "",
-  };
-
-  const summary = await getOrGenerateMatchSummary({
-    matchId,
-    cachedSummary: null,
-    cachedGeneratedAt: null,
-    enableGenerate: true,
-    input,
     userId: session.user.id,
     teamId: session.user.teamId!,
-    forceRegenerate: true,
+    matchId,
+  };
+
+  // 스트리밍 + 완료 시 DB 저장
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      let accumulated = "";
+      let finalText: string | null = null;
+      let finalSource: "ai" | "rule" = "ai";
+      let finalModel: string | undefined;
+
+      try {
+        for await (const event of generateAiMatchSummaryStream(input)) {
+          const line = `data: ${JSON.stringify(event)}\n\n`;
+          controller.enqueue(encoder.encode(line));
+
+          if (event.type === "chunk") accumulated += event.text;
+          else if (event.type === "replace") { finalText = event.text; finalSource = event.source; }
+          else if (event.type === "done") { finalSource = event.source; finalModel = event.model; }
+        }
+
+        // 스트림 완료 후 DB 저장 (AI 성공 시에만 — rule fallback은 저장 안 함, 재시도 여지 보존)
+        if (finalSource === "ai" && accumulated) {
+          const summary = finalText ?? accumulated;
+          await db
+            .from("matches")
+            .update({
+              ai_summary: summary,
+              ai_summary_generated_at: new Date().toISOString(),
+              ai_summary_model: finalModel ?? null,
+            })
+            .eq("id", matchId);
+        }
+
+        controller.close();
+      } catch (err) {
+        console.error("[/api/ai/match-summary stream] error:", err);
+        const errLine = `data: ${JSON.stringify({ type: "error", message: "stream_failed" })}\n\n`;
+        controller.enqueue(encoder.encode(errLine));
+        controller.close();
+      }
+    },
   });
 
-  if (!summary) {
-    return NextResponse.json({ error: "generation_failed" }, { status: 502 });
-  }
-
-  return NextResponse.json({ summary });
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      "Connection": "keep-alive",
+    },
+  });
 }

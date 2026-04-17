@@ -280,3 +280,103 @@ export async function generateAiMatchSummary(input: MatchSummaryInput): Promise<
     return { summary: ruleSummary, source: "rule" };
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+// Streaming 버전 (Phase B — 재생성 시 체감 latency 개선)
+// ─────────────────────────────────────────────────────────────
+
+export type MatchSummaryStreamEvent =
+  | { type: "chunk"; text: string }
+  | { type: "replace"; text: string; source: "rule"; reason?: string }
+  | { type: "done"; source: "ai" | "rule"; model?: string };
+
+export async function* generateAiMatchSummaryStream(
+  input: MatchSummaryInput
+): AsyncGenerator<MatchSummaryStreamEvent, void, unknown> {
+  const ruleSummary = generateRuleBasedSummary(input);
+  const started = Date.now();
+  const logBase = {
+    feature: "match_summary" as const,
+    userId: input.userId ?? null,
+    teamId: input.teamId ?? null,
+    entityId: input.matchId ?? null,
+  };
+
+  if (!client) {
+    yield { type: "replace", text: ruleSummary, source: "rule", reason: "no_api_key" };
+    yield { type: "done", source: "rule" };
+    await recordAiUsage({ ...logBase, source: "rule", errorReason: "no_api_key" });
+    return;
+  }
+
+  const userContent = JSON.stringify({
+    matchType: input.matchType,
+    score: input.score,
+    result: input.result,
+    opponent: input.opponent,
+    goals: input.goals.slice(0, 20),
+    assists: input.assists.slice(0, 20),
+    mom: input.mom,
+    topScorerName: input.topScorerName,
+    attendanceCount: input.attendanceCount,
+    location: input.location,
+    weather: input.weather,
+    date: input.date,
+  });
+
+  let accumulated = "";
+
+  try {
+    const stream = client.messages.stream({
+      model: MODEL,
+      max_tokens: MAX_OUTPUT_TOKENS,
+      temperature: TEMPERATURE,
+      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+      messages: [{
+        role: "user",
+        content: `다음 경기 정보를 바탕으로 카톡 단톡에 올릴 경기 후기를 작성해 주세요. 본문 텍스트만 출력.\n\n${userContent}`,
+      }],
+    });
+
+    for await (const event of stream) {
+      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+        const delta = event.delta.text;
+        accumulated += delta;
+        yield { type: "chunk", text: delta };
+      }
+    }
+
+    const final = await stream.finalMessage();
+    const tokens = extractTokenUsage(final);
+    const cleaned = sanitize(accumulated);
+
+    if (isLowQuality(cleaned)) {
+      yield { type: "replace", text: ruleSummary, source: "rule", reason: "low_quality" };
+      yield { type: "done", source: "rule", model: MODEL };
+      await recordAiUsage({ ...logBase, source: "rule", model: MODEL, ...tokens, latencyMs: Date.now() - started, errorReason: "low_quality" });
+      return;
+    }
+
+    yield { type: "done", source: "ai", model: MODEL };
+    await recordAiUsage({ ...logBase, source: "ai", model: MODEL, ...tokens, latencyMs: Date.now() - started });
+  } catch (err) {
+    console.error("[aiMatchSummary stream] 호출 실패:", err);
+    yield { type: "replace", text: ruleSummary, source: "rule", reason: "api_error" };
+    yield { type: "done", source: "rule" };
+    await recordAiUsage({ ...logBase, source: "error", model: MODEL, latencyMs: Date.now() - started, errorReason: "api_error" });
+  }
+}
+
+/** 스트리밍 성공 후 DB에 저장 — 스트리밍이 완료되면 accumulated를 DB에 캐시 */
+export function extractStreamFullText(events: MatchSummaryStreamEvent[]): { text: string; source: "ai" | "rule"; model?: string } | null {
+  let accumulated = "";
+  let replaced: string | null = null;
+  let source: "ai" | "rule" = "rule";
+  let model: string | undefined;
+  for (const e of events) {
+    if (e.type === "chunk") accumulated += e.text;
+    else if (e.type === "replace") { replaced = e.text; source = e.source; }
+    else if (e.type === "done") { source = e.source; model = e.model; }
+  }
+  return { text: replaced ?? accumulated, source, model };
+}

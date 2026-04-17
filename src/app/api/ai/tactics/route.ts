@@ -1,28 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { generateAiTacticsAnalysis, type TacticsAnalysisInput } from "@/lib/server/aiTacticsAnalysis";
+import { generateAiTacticsAnalysisStream, type TacticsAnalysisInput } from "@/lib/server/aiTacticsAnalysis";
 import { checkRateLimit } from "@/lib/server/aiUsageLog";
 
 /**
  * POST /api/ai/tactics
- * 김선휘 Feature Flag 전용. 편성 데이터 받아 Claude Haiku로 코치식 3단락 분석 생성.
+ * 김선휘 Feature Flag 전용. SSE로 코치식 3단락 분석 스트리밍.
  *
  * Body: TacticsAnalysisInput
- * Response: { text: string, source: "ai" | "rule" }
- * 429: 일일 호출 한도 초과
+ * Response: text/event-stream
+ *   data: {"type":"chunk","text":"참석 "}
+ *   data: {"type":"replace","text":"룰기반텍스트","source":"rule","reason":"low_quality"}  // 선택
+ *   data: {"type":"done","source":"ai"|"rule","model":"..."}
+ *
+ * 429: 일일 한도 초과 (JSON 응답)
  */
 export async function POST(req: NextRequest) {
   const session = await auth().catch(() => null);
   if (!session?.user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-
-  // Phase 2 Feature Flag: 김선휘만
   if (session.user.name !== "김선휘") {
     return NextResponse.json({ error: "ai_not_available" }, { status: 403 });
   }
 
-  // 레이트리밋 체크 (24시간 내 user/team 일일 캡)
   const rate = await checkRateLimit("tactics", session.user.id, session.user.teamId ?? null);
   if (!rate.allowed) {
     return NextResponse.json({
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
       count: rate.userCount ?? rate.teamCount,
       cap: rate.cap,
       message: rate.reason === "user_cap"
-        ? `하루 ${rate.cap}회까지만 사용 가능합니다. (현재 ${rate.userCount}회)`
+        ? `하루 ${rate.cap}회까지만 사용 가능합니다.`
         : `팀 전체 하루 ${rate.cap}회 한도에 도달했습니다.`,
     }, { status: 429 });
   }
@@ -47,10 +48,35 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
   }
 
-  const result = await generateAiTacticsAnalysis({
+  const inputWithContext: TacticsAnalysisInput = {
     ...body,
     userId: session.user.id,
     teamId: session.user.teamId ?? null,
+  };
+
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        for await (const event of generateAiTacticsAnalysisStream(inputWithContext)) {
+          const line = `data: ${JSON.stringify(event)}\n\n`;
+          controller.enqueue(encoder.encode(line));
+        }
+        controller.close();
+      } catch (err) {
+        console.error("[/api/ai/tactics] stream error:", err);
+        const errLine = `data: ${JSON.stringify({ type: "error", message: "stream_failed" })}\n\n`;
+        controller.enqueue(encoder.encode(errLine));
+        controller.close();
+      }
+    },
   });
-  return NextResponse.json({ text: result.text, source: result.source });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      "Connection": "keep-alive",
+    },
+  });
 }

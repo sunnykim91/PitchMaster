@@ -215,6 +215,11 @@ export async function PUT(request: NextRequest) {
   if (body.matchType !== undefined) updates.match_type = body.matchType;
   if (body.statsIncluded !== undefined) updates.stats_included = body.statsIncluded;
 
+  // 상태 전환 직전 조회 (SCHEDULED → COMPLETED 감지용)
+  const prevStatus = body.status !== undefined
+    ? (await db.from("matches").select("status").eq("id", body.id).eq("team_id", ctx.teamId).single()).data?.status
+    : null;
+
   const { data, error } = await db
     .from("matches")
     .update(updates)
@@ -224,6 +229,13 @@ export async function PUT(request: NextRequest) {
     .single();
 
   if (error) return apiError(error.message);
+
+  // 수동 COMPLETED 전환 시 시그니처 invalidate (백그라운드)
+  if (body.status === "COMPLETED" && prevStatus !== "COMPLETED") {
+    const { invalidateSignaturesForMatch } = await import("@/lib/server/aiSignatureInvalidate");
+    invalidateSignaturesForMatch(db, body.id).catch(() => {});
+  }
+
   return apiSuccess(data);
 }
 

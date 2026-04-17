@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { invalidateSignaturesForMatches } from "@/lib/server/aiSignatureInvalidate";
 
 /**
  * KST 기준 현재 시각 계산.
@@ -79,22 +80,32 @@ export async function autoCompleteTeamMatches(
 ): Promise<void> {
   const today = getKstToday(nowMs);
   const nowTime = getKstTimeOfDay(nowMs);
+  const completedIds: string[] = [];
 
-  // 1) 날짜 지난 경기 일괄 완료
-  await db
+  // 1) 날짜 지난 경기 일괄 완료 (returning으로 ID 수집)
+  const past = await db
     .from("matches")
     .update({ status: "COMPLETED" })
     .eq("team_id", teamId)
     .eq("status", "SCHEDULED")
-    .lt("match_date", today);
+    .lt("match_date", today)
+    .select("id");
+  if (Array.isArray(past.data)) completedIds.push(...past.data.map((m) => m.id));
 
   // 2) 당일 경기 중 종료 시각이 지난 것
-  await db
+  const todayEnded = await db
     .from("matches")
     .update({ status: "COMPLETED" })
     .eq("team_id", teamId)
     .eq("status", "SCHEDULED")
     .eq("match_date", today)
     .not("match_end_time", "is", null)
-    .lte("match_end_time", nowTime);
+    .lte("match_end_time", nowTime)
+    .select("id");
+  if (Array.isArray(todayEnded.data)) completedIds.push(...todayEnded.data.map((m) => m.id));
+
+  // 3) 완료된 경기들의 참석자 시그니처 stale 처리 (신 스탯 반영, 백그라운드)
+  if (completedIds.length > 0) {
+    invalidateSignaturesForMatches(db, completedIds).catch(() => {});
+  }
 }

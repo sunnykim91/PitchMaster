@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { parseReceiptWithVision } from "@/lib/server/aiOcrParse";
 import { checkRateLimit } from "@/lib/server/aiUsageLog";
+import { getCachedOcrResult, saveCachedOcrResult, hashImage } from "@/lib/server/aiOcrCache";
 
 /**
  * POST /api/ocr/smart
@@ -64,6 +65,19 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // 캐시 조회 (이미지 해시 기준, 팀 경계 유지)
+    const imageHash = hashImage(buffer);
+    const cached = await getCachedOcrResult(imageHash, session.user.teamId ?? null);
+    if (cached) {
+      return NextResponse.json({
+        transactions: cached.transactions,
+        source: cached.source,
+        count: cached.transactions.length,
+        warnings: cached.warnings,
+        cached: true,
+      });
+    }
+
     const result = await parseReceiptWithVision(buffer, file.type, {
       userId: session.user.id,
       teamId: session.user.teamId ?? null,
@@ -73,11 +87,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: result.error ?? "AI 파싱 실패" }, { status: 502 });
     }
 
+    // 성공 시 캐시 저장 (fire-and-forget)
+    saveCachedOcrResult(imageHash, session.user.teamId ?? null, result).catch(() => {});
+
     return NextResponse.json({
       transactions: result.transactions,
       source: result.source,
       count: result.transactions.length,
       warnings: result.warnings,
+      cached: false,
     });
   } catch (err) {
     console.error("[/api/ocr/smart] route error:", err);

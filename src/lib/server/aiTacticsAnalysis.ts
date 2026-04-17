@@ -264,3 +264,90 @@ export async function generateAiTacticsAnalysis(
     return { text: ruleText, source: "rule" };
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+// Streaming 버전 (Phase B — 체감 latency 개선)
+// ─────────────────────────────────────────────────────────────
+
+export type TacticsStreamEvent =
+  | { type: "chunk"; text: string }
+  | { type: "replace"; text: string; source: "rule"; reason?: string }
+  | { type: "done"; source: "ai" | "rule"; model?: string };
+
+/**
+ * 스트리밍 버전. Claude Haiku 텍스트 델타를 그대로 yield → 클라이언트가 progressive 렌더.
+ * 최종 text가 저품질이면 "replace" 이벤트로 룰 기반 텍스트 교체 신호 전송.
+ *
+ * 재시도 없음 — 스트리밍 중간 재시도는 UX 혼란. 저품질이면 즉시 룰로 전환.
+ */
+export async function* generateAiTacticsAnalysisStream(
+  input: TacticsAnalysisInput
+): AsyncGenerator<TacticsStreamEvent, void, unknown> {
+  const ruleText = generateRuleBasedAnalysis(input);
+  const started = Date.now();
+  const logBase = {
+    feature: "tactics" as const,
+    userId: input.userId ?? null,
+    teamId: input.teamId ?? null,
+    entityId: input.matchId ?? null,
+  };
+
+  if (!client) {
+    yield { type: "replace", text: ruleText, source: "rule", reason: "no_api_key" };
+    yield { type: "done", source: "rule" };
+    await recordAiUsage({ ...logBase, source: "rule", errorReason: "no_api_key" });
+    return;
+  }
+
+  const userContent = JSON.stringify({
+    formationName: input.formationName,
+    quarterCount: input.quarterCount,
+    attendees: input.attendees.slice(0, 30),
+    placement: input.placement.slice(0, 15),
+    matchType: input.matchType,
+    opponent: input.opponent ?? null,
+    warnings: input.warnings ?? [],
+  });
+
+  let accumulated = "";
+
+  try {
+    const stream = client.messages.stream({
+      model: MODEL,
+      max_tokens: MAX_OUTPUT_TOKENS,
+      temperature: TEMPERATURE,
+      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+      messages: [{
+        role: "user",
+        content: `다음 편성 정보를 바탕으로 코치식 3단락 분석을 작성해 주세요. 본문만 출력.\n\n${userContent}`,
+      }],
+    });
+
+    for await (const event of stream) {
+      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+        const delta = event.delta.text;
+        accumulated += delta;
+        yield { type: "chunk", text: delta };
+      }
+    }
+
+    const final = await stream.finalMessage();
+    const tokens = extractTokenUsage(final);
+    const cleaned = sanitize(accumulated);
+
+    if (isLowQuality(cleaned)) {
+      yield { type: "replace", text: ruleText, source: "rule", reason: "low_quality" };
+      yield { type: "done", source: "rule", model: MODEL };
+      await recordAiUsage({ ...logBase, source: "rule", model: MODEL, ...tokens, latencyMs: Date.now() - started, errorReason: "low_quality" });
+      return;
+    }
+
+    yield { type: "done", source: "ai", model: MODEL };
+    await recordAiUsage({ ...logBase, source: "ai", model: MODEL, ...tokens, latencyMs: Date.now() - started });
+  } catch (err) {
+    console.error("[aiTacticsAnalysis stream] 호출 실패:", err);
+    yield { type: "replace", text: ruleText, source: "rule", reason: "api_error" };
+    yield { type: "done", source: "rule" };
+    await recordAiUsage({ ...logBase, source: "error", model: MODEL, latencyMs: Date.now() - started, errorReason: "api_error" });
+  }
+}

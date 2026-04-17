@@ -733,6 +733,8 @@ export default function AutoFormationBuilder({
     if (!results || aiLoading) return;
     setAiLoading(true);
     setAiError(null);
+    setAiAnalysis(""); // 스트리밍 시작 시 빈 문자열로 초기화 (로딩 플레이스홀더 대신 progressive 표시)
+    setAiSource(null);
     try {
       const firstQuarter = results[0];
       const placement = firstQuarter.assignments.map((a) => ({
@@ -752,27 +754,30 @@ export default function AutoFormationBuilder({
         opponent: matchContext?.opponent ?? null,
         warnings: [],
       };
-      const res = await fetch("/api/ai/tactics", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+
+      const { consumeSseStream } = await import("@/lib/sseStream");
+      await consumeSseStream("/api/ai/tactics", payload, {
+        onChunk: (text) => {
+          setAiAnalysis((prev) => (prev ?? "") + text);
+        },
+        onReplace: (text) => {
+          setAiAnalysis(text);
+        },
+        onDone: (source) => {
+          setAiSource(source);
+        },
+        onError: (msg) => {
+          setAiError(msg);
+        },
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        if (res.status === 429) {
-          setAiError(body.message ?? "일일 사용 한도에 도달했습니다");
-        } else if (body.error === "ai_not_available") {
-          setAiError("AI 분석은 관리자 계정 전용입니다");
-        } else {
-          setAiError("AI 분석 요청 실패");
-        }
-        return;
+    } catch (err) {
+      // consumeSseStream이 초기 응답에서 에러 던진 경우 (4xx/5xx)
+      if (err instanceof Error) {
+        setAiError(err.message);
+      } else {
+        setAiError("네트워크 오류가 발생했습니다");
       }
-      const data = await res.json();
-      setAiAnalysis(data.text);
-      setAiSource(data.source ?? null);
-    } catch {
-      setAiError("네트워크 오류가 발생했습니다");
+      setAiAnalysis(null); // 실패 시 표시 상태 초기화
     } finally {
       setAiLoading(false);
     }
@@ -1099,45 +1104,44 @@ export default function AutoFormationBuilder({
               {/* AI 코치 분석 (김선휘 Feature Flag) */}
               {enableAi && (
                 <div className="mt-4 border-t border-border/30 pt-4">
-                  {!aiAnalysis ? (
+                  {aiAnalysis === null && !aiLoading ? (
                     <Button
                       type="button"
                       variant="outline"
                       className="w-full gap-2 rounded-xl border-primary/40 text-primary hover:bg-primary/5"
                       onClick={handleAiAnalyze}
-                      disabled={aiLoading}
                     >
-                      {aiLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Sparkles className="h-4 w-4" />
-                      )}
-                      {aiLoading ? "분석 중..." : "AI 코치 분석 보기"}
+                      <Sparkles className="h-4 w-4" />
+                      AI 코치 분석 보기
                     </Button>
                   ) : (
                     <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4">
                       <div className="mb-2 flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">
-                            {aiSource === "ai" ? "AI" : "⚙"}
+                            {aiSource === "ai" ? "AI" : aiSource === "rule" ? "⚙" : "✨"}
                           </span>
                           <span className="text-sm font-bold text-foreground">
-                            {aiSource === "ai" ? "코치 분석" : "기본 분석"}
+                            {aiSource === "ai" ? "코치 분석" : aiSource === "rule" ? "기본 분석" : "분석 중..."}
                           </span>
                         </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 gap-1 px-2 text-xs"
-                          onClick={() => { setAiAnalysis(null); setAiSource(null); handleAiAnalyze(); }}
-                          disabled={aiLoading}
-                        >
-                          <Sparkles className="h-3 w-3" />
-                          다시
-                        </Button>
+                        {!aiLoading && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 gap-1 px-2 text-xs"
+                            onClick={() => { setAiAnalysis(null); setAiSource(null); handleAiAnalyze(); }}
+                          >
+                            <Sparkles className="h-3 w-3" />
+                            다시
+                          </Button>
+                        )}
                       </div>
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{aiAnalysis}</p>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+                        {aiAnalysis || ""}
+                        {aiLoading && <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-primary/60 align-middle" />}
+                      </p>
                       {aiSource === "rule" && (
                         <p className="mt-2 text-[11px] text-muted-foreground/70">
                           AI 분석이 실패해 자동 생성본을 보여드립니다. "다시" 버튼으로 재시도.
