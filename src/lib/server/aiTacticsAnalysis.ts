@@ -89,11 +89,27 @@ const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의
 JSON:
 - formationName: "4-3-3" 등
 - quarterCount: 쿼터 수 (2~4)
-- attendees: 참석자 배열 [{ name, preferredPosition, recentStats?: { goals, assists, mvp, matchCount } }]
-- placement: **1쿼터 기준** 슬롯-선수 매핑. 다른 쿼터는 이 편성을 기준으로 교체가 이뤄진다고 가정.
+- attendees: **참석자 풀** [{ name, preferredPosition, recentStats? }]
+  → 누가 왔는지 전체 목록. **선호 포지션(preferredPosition)은 개인 이력일 뿐 이번 편성의 포지션이 아님.**
+- placement: **1쿼터 실제 배치** [{ slot, playerName }]
+  → 이번 포메이션에서 누가 어느 슬롯을 맡는지. **포메이션 구도는 이걸 기준으로**.
+- placementBreakdown: { GK, DEF, MID, FWD } — placement의 카테고리별 인원수 (사전 계산됨)
 - matchType: REGULAR | INTERNAL | EVENT
 - opponent: 상대팀 이름 (있으면)
 - warnings: 룰 엔진이 감지한 편성 경고 (예: "수비수 부족", "키 포지션 미배치")
+
+## 🔴 데이터 해석 규칙 (절대 엄수)
+
+1. **"N명의 센터백/미드/공격수" 같은 구조 묘사는 반드시 \`placementBreakdown\` 기준**.
+   \`attendees.preferredPosition\`에서 개수를 세지 말 것. 예:
+   - placementBreakdown이 \`{DEF:3, MID:4, FWD:1}\`이면 "뒷선 3명, 중원 4명, 최전방 1명"
+   - attendees에 CB 선호가 7명이어도 **"센터백 7명" 같은 표현 절대 금지**.
+
+2. \`preferredPosition\`은 **개인적 맥락 한정** 언급:
+   - "공격 선호 선수(X)가 이번엔 수비로 배치됨" 같은 예외 상황만
+   - 일반적인 포메이션 구도 묘사엔 쓰지 말 것
+
+3. 특정 선수 이름 언급 시 반드시 \`placement\`에 있는 이름만 사용 (벤치에 있는 참석자 이름 쓰지 말 것).
 
 ## ⚠️ warnings 활용
 
@@ -151,6 +167,32 @@ const client = process.env.ANTHROPIC_API_KEY
   ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   : null;
 
+/**
+ * placement 슬롯 라벨 → 포지션 카테고리 (DEF/MID/FWD/GK).
+ * AI가 포메이션 구도를 입으로 만들지 않도록 사전 계산해서 프롬프트에 제공.
+ */
+function categorizeSlot(slot: string): "GK" | "DEF" | "MID" | "FWD" {
+  const s = slot.toUpperCase().replace(/[0-9]/g, "");
+  if (s.includes("GK")) return "GK";
+  // 수비: CB/LB/RB/WB/FIXO(풋살 최후방)
+  if (s.includes("CB") || s === "LB" || s === "RB" || s.includes("WB") || s.includes("FIXO")) return "DEF";
+  // 공격: ST/LW/RW/CF/LF/RF/PIVO(풋살 타겟맨)
+  if (s === "ST" || s === "LW" || s === "RW" || s === "CF" || s === "LF" || s === "RF" || s.includes("PIVO")) return "FWD";
+  // 기본: 미드 (CDM/CAM/CM/LM/RM/ALA 등)
+  return "MID";
+}
+
+/** 1쿼터 배치의 카테고리별 인원수 집계 */
+export function computePlacementBreakdown(placement: TacticsAnalysisInput["placement"]): {
+  GK: number; DEF: number; MID: number; FWD: number;
+} {
+  const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+  for (const p of placement) {
+    counts[categorizeSlot(p.slot)]++;
+  }
+  return counts;
+}
+
 /** 룰 기반 fallback — 매우 단순 */
 function generateRuleBasedAnalysis(input: TacticsAnalysisInput): string {
   const attendeeCount = input.attendees.length;
@@ -204,6 +246,7 @@ export async function generateAiTacticsAnalysis(
     quarterCount: input.quarterCount,
     attendees: input.attendees.slice(0, 30),
     placement: input.placement.slice(0, 15),
+    placementBreakdown: computePlacementBreakdown(input.placement),
     matchType: input.matchType,
     opponent: input.opponent ?? null,
     warnings: input.warnings ?? [],
@@ -304,6 +347,7 @@ export async function* generateAiTacticsAnalysisStream(
     quarterCount: input.quarterCount,
     attendees: input.attendees.slice(0, 30),
     placement: input.placement.slice(0, 15),
+    placementBreakdown: computePlacementBreakdown(input.placement),
     matchType: input.matchType,
     opponent: input.opponent ?? null,
     warnings: input.warnings ?? [],
