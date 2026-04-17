@@ -51,10 +51,16 @@ const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의
 7. 한 쿼터에 같은 선수 중복 배치 금지.
 8. 응답 첫 글자 = \`[\`, 마지막 글자 = \`]\`.
 
-## 🔴 포메이션 변화 (절대 엄수)
+## 🔴 포메이션 모드 (입력 singleFormation 플래그로 분기)
 
-**"쿼터별 변경"이라는 요청의 핵심은 다양성.** 4쿼터 모두 동일 포메이션은 **실패**.
+### 모드 A — singleFormation=true (고정 포메이션 모드)
+사용자가 이미 포메이션을 선택한 상태. **모든 쿼터 동일 formation(defaultFormation과 일치) 사용 필수**.
+- 쿼터별 다양화 시도 금지 — 배치(선수 매칭)만 쿼터별로 다르게
+- 선수 체력·로테이션 관점에서 같은 포메이션 안에서 포지션을 조정
+- note는 "초반 공격 집중" 같이 배치/의도 설명
 
+### 모드 B — singleFormation=false 또는 미지정 (자유 모드)
+**"쿼터별 변경"이 핵심.** 4쿼터 모두 동일 포메이션은 **실패**.
 - \`quarterCount >= 4\`면 **최소 2가지 서로 다른 포메이션** 사용 필수
 - \`quarterCount == 2\`면 동일 허용 (체력 분배 이유 있을 때)
 - 구체 패턴 예시:
@@ -188,14 +194,19 @@ function buildFormationCatalog(sportType: "SOCCER" | "FUTSAL" | undefined, field
   }));
 }
 
-/** placement가 formation catalog의 slots와 정확히 일치하는지 + 쿼터 가용성 검증 */
+/** placement가 formation catalog의 slots와 정확히 일치하는지 + 쿼터 가용성 + singleFormation 일관성 검증 */
 function validatePlan(
   plan: QuarterPlan,
   catalog: ReturnType<typeof buildFormationCatalog>,
   availableByQuarter?: Record<number, string[]> | null,
+  singleFormation?: { expected: string } | null,
 ): string | null {
   const fmt = catalog.find((c) => c.name === plan.formation);
   if (!fmt) return `unknown formation "${plan.formation}"`;
+  // singleFormation 모드면 모든 쿼터가 지정 formation이어야 함
+  if (singleFormation && plan.formation !== singleFormation.expected) {
+    return `quarter ${plan.quarter}: expected "${singleFormation.expected}" (singleFormation), got "${plan.formation}"`;
+  }
   const expected = new Set(fmt.slots);
   const got = new Set(plan.placement.map((p) => p.slot));
   if (expected.size !== plan.placement.length) {
@@ -245,16 +256,20 @@ export async function generateAiFullPlan(input: TacticsAnalysisInput): Promise<F
     opponent: input.opponent ?? null,
     defaultFormation: input.formationName,
     availableByQuarter: input.availableByQuarter ?? null,
+    singleFormation: input.singleFormation ?? false,
   });
   const catalogBlock = `## formationCatalog (이 안에서만 formation + slots 선택)\n\n${JSON.stringify(catalog, null, 2)}`;
 
   const historyBlock = await fetchHistoryBlock(input);
 
   const hasAvailability = input.availableByQuarter && Object.keys(input.availableByQuarter).length > 0;
+  const isSingle = input.singleFormation === true;
   const userMessage = [
     `다음은 formation catalog·팀 통계·이번 경기 정보입니다. quarterCount만큼의 JSON 배열로 쿼터별 포메이션과 배치를 생성하세요.`,
     `📌 반드시 formationCatalog의 slots 라벨을 그대로 사용 (임의 이름 생성 금지).`,
-    `📌 4쿼터 중 최소 2가지 다른 포메이션 사용.`,
+    isSingle
+      ? `📌 singleFormation=true: 모든 쿼터를 defaultFormation(${input.formationName})으로 통일. 쿼터별 formation 변화 금지. 배치만 쿼터별로 달리하세요.`
+      : `📌 4쿼터 중 최소 2가지 다른 포메이션 사용.`,
     hasAvailability ? `📌 availableByQuarter에 명시된 쿼터별 명단 외의 선수는 해당 쿼터에 절대 배치 금지.` : "",
     `JSON 배열만 반환.`,
     ``,
@@ -294,10 +309,11 @@ export async function generateAiFullPlan(input: TacticsAnalysisInput): Promise<F
       return { plans: ruleBasedFallback(input), source: "rule", error: `expected ${input.quarterCount} quarters, got ${plans.length}` };
     }
 
-    // 각 쿼터 검증: formation이 catalog에 존재 + slots가 catalog와 정확히 일치 + 쿼터 가용성
+    // 각 쿼터 검증: formation이 catalog에 존재 + slots가 catalog와 정확히 일치 + 쿼터 가용성 + singleFormation
     const warnings: string[] = [];
+    const singleFormationConstraint = isSingle ? { expected: input.formationName } : null;
     for (const plan of plans) {
-      const err = validatePlan(plan, catalog, input.availableByQuarter);
+      const err = validatePlan(plan, catalog, input.availableByQuarter, singleFormationConstraint);
       if (err) {
         console.warn(`[aiFullPlan] 검증 실패: ${err}`);
         warnings.push(err);
@@ -308,8 +324,9 @@ export async function generateAiFullPlan(input: TacticsAnalysisInput): Promise<F
       return { plans: ruleBasedFallback(input), source: "rule", error: `validation failed: ${warnings.join("; ")}` };
     }
 
-    // quarterCount >= 4인데 1가지 formation만 쓴 경우 경고 (실패 아님, 기록만)
-    if (input.quarterCount >= 4) {
+    // quarterCount >= 4인데 1가지 formation만 쓴 경우 경고 (실패 아님, 기록만).
+    // singleFormation 모드일 땐 당연히 동일이므로 스킵.
+    if (!isSingle && input.quarterCount >= 4) {
       const unique = new Set(plans.map((p) => p.formation));
       if (unique.size < 2) {
         console.warn("[aiFullPlan] 4쿼터 모두 동일 포메이션 — 권장 위반");

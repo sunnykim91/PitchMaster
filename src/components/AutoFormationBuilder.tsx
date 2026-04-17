@@ -569,8 +569,14 @@ export default function AutoFormationBuilder({
   );
   const [results, setResults] = useState<QuarterResult[] | null>(null);
   const [saving, setSaving] = useState(false);
-  // Phase C — AI 풀 플랜 (쿼터별 다른 포메이션 추천)
-  const [aiPlanMode, setAiPlanMode] = useState(false);
+  /**
+   * 편성 방식:
+   * - rule: 규칙 기반 (주어진 포메이션 + scheduleQuarters)
+   * - ai-fixed: AI 추천 — 팀 포메이션 고정 (singleFormation=true, 배치만 AI)
+   * - ai-free: AI 추천 — 쿼터별 포메이션 자유 (singleFormation=false)
+   */
+  type PlanMode = "rule" | "ai-fixed" | "ai-free";
+  const [planMode, setPlanMode] = useState<PlanMode>("rule");
   const [aiPlans, setAiPlans] = useState<Array<{ quarter: number; formation: string; placement: Array<{ slot: string; playerName: string }>; note?: string }> | null>(null);
   const [openPlanQuarters, setOpenPlanQuarters] = useState<Set<number>>(new Set());
   const [aiPlanLoading, setAiPlanLoading] = useState(false);
@@ -729,11 +735,12 @@ export default function AutoFormationBuilder({
     setResults(res);
   }
 
-  async function saveToTacticsBoard() {
-    if (!results) return;
+  async function saveToTacticsBoard(forceResults?: QuarterResult[]) {
+    const effective = forceResults ?? results;
+    if (!effective) return;
     setSaving(true);
 
-    const squads: GeneratedSquad[] = results.map((qr) => {
+    const squads: GeneratedSquad[] = effective.map((qr) => {
       // 쿼터별 다른 포메이션 지원 (AI 풀 플랜 적용 시) — formationId가 있으면 그걸 사용
       const qFormation = qr.formationId
         ? (formationTemplates.find((f) => f.id === qr.formationId) ?? formation)
@@ -776,14 +783,14 @@ export default function AutoFormationBuilder({
     onGenerated?.(squads);
   }
 
-  async function handleAiPlanGenerate() {
+  async function handleAiPlanGenerate(singleFormation: boolean) {
     if (aiPlanLoading) return;
     setAiPlanLoading(true);
     setAiPlanError(null);
     setAiPlans(null);
     setAiPlanSource(null);
     try {
-      // 자동 편성 결과가 없으면 먼저 생성해 쿼터별 가용 명단을 확보
+      // 규칙 기반으로 쿼터별 가용 명단을 먼저 확보 (AI에게 제약으로 전달)
       let currentResults = results;
       if (!currentResults) {
         currentResults = scheduleQuarters(assignments, quarterCount, formation);
@@ -802,13 +809,14 @@ export default function AutoFormationBuilder({
         formationName: formation.name,
         quarterCount,
         attendees,
-        placement: [], // 빈 — AI가 알아서
+        placement: [],
         matchType: matchContext?.matchType ?? "REGULAR",
         opponent: matchContext?.opponent ?? null,
         warnings: [],
-        availableByQuarter,  // 쿼터별 가용 선수 제약
-        sportType,           // formation catalog 필터링용
-        playerCount,         // 인원별 포메이션 필터
+        availableByQuarter,
+        singleFormation,     // 고정 포메이션 모드 여부
+        sportType,
+        playerCount,
       };
       const res = await fetch("/api/ai/full-plan", {
         method: "POST",
@@ -827,8 +835,14 @@ export default function AutoFormationBuilder({
       setAiPlanSource(data.source ?? null);
       if (data.error) setAiPlanError(data.error);
       if (Array.isArray(data.plans) && data.plans.length > 0) {
-        // 결과 나오면 BottomSheet 자동 오픈 (모바일 UX)
-        setAiPlanSheetOpen(true);
+        if (singleFormation) {
+          // AI 고정 모드: 쿼터별 포메이션 변화 없음 → 사용자 검증 단계 생략, 즉시 results 반영 + 전술판 저장
+          const applied = applyAiPlanToResults(data.plans);
+          if (applied) await saveToTacticsBoard(applied);
+        } else {
+          // AI 자유 모드: 쿼터별 포메이션이 달라 사용자 검증 필요 → BottomSheet 오픈
+          setAiPlanSheetOpen(true);
+        }
       }
     } catch {
       setAiPlanError("네트워크 오류");
@@ -841,14 +855,16 @@ export default function AutoFormationBuilder({
    * AI 풀 플랜을 results(전술판 소스)에 반영.
    * 각 쿼터의 formation/placement를 QuarterResult로 변환.
    * 전부 반영할 수 없는 플랜은 해당 쿼터만 스킵 (기존 결과 유지).
+   * @returns 병합된 QuarterResult[] (성공 시) 또는 null (전부 실패 시)
    */
-  function applyAiPlanToResults() {
-    if (!aiPlans || aiPlans.length === 0) return;
+  function applyAiPlanToResults(plans?: typeof aiPlans): QuarterResult[] | null {
+    const source = plans ?? aiPlans;
+    if (!source || source.length === 0) return null;
     const playerByName = new Map(attendingPlayers.map((p) => [p.name, p]));
     const newResults: QuarterResult[] = [];
     const skipped: number[] = [];
 
-    for (const plan of aiPlans) {
+    for (const plan of source) {
       const fmt = formationTemplates.find((f) => f.name === plan.formation);
       if (!fmt) { skipped.push(plan.quarter); continue; }
       const slotByLabel = new Map(fmt.slots.map((s) => [s.label, s]));
@@ -863,7 +879,7 @@ export default function AutoFormationBuilder({
           slotLabel: slot.label,
           playerId: player.id,
           playerName: player.name,
-          type: "full", // AI 풀 플랜은 각 쿼터 풀타임 가정
+          type: "full",
         });
       }
       if (!allOk) { skipped.push(plan.quarter); continue; }
@@ -872,7 +888,7 @@ export default function AutoFormationBuilder({
 
     if (newResults.length === 0) {
       setAiPlanError("AI 플랜을 전술판 형식으로 변환하지 못했습니다.");
-      return;
+      return null;
     }
     // 기존 results에서 스킵된 쿼터는 유지, 변환된 건 덮어씀
     const merged: QuarterResult[] = [];
@@ -886,11 +902,8 @@ export default function AutoFormationBuilder({
       }
     }
     setResults(merged);
-    if (skipped.length > 0) {
-      setAiPlanError(`${skipped.join(",")}쿼터는 변환 실패로 기존 편성 유지`);
-    } else {
-      setAiPlanError(null);
-    }
+    setAiPlanError(skipped.length > 0 ? `${skipped.join(",")}쿼터는 변환 실패로 기존 편성 유지` : null);
+    return merged;
   }
 
 
@@ -955,7 +968,68 @@ export default function AutoFormationBuilder({
       <>
 
       <CardContent className="space-y-4">
-        {/* ── 통계 3열 ── */}
+        {/* ── ① 편성 방식 ── */}
+        <div className="space-y-2">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">편성 방식</p>
+          <div className="space-y-1.5">
+            {([
+              { id: "rule" as const, label: "규칙 기반으로 빠르게", desc: "팀 포메이션 + 선호 포지션 매칭", icon: <Zap className="h-3.5 w-3.5" /> },
+              ...(enableAi ? [
+                { id: "ai-fixed" as const, label: "AI 추천 — 팀 포메이션 유지", desc: "팀 기본 포메이션 안에서 배치만 AI가 최적화", icon: <Sparkles className="h-3.5 w-3.5" /> },
+                { id: "ai-free" as const, label: "AI 추천 — 쿼터별 포메이션 자유", desc: "AI가 쿼터별로 포메이션까지 다르게 설계", icon: <Sparkles className="h-3.5 w-3.5" /> },
+              ] : []),
+            ]).map((opt) => {
+              const selected = planMode === opt.id;
+              return (
+                <label
+                  key={opt.id}
+                  className={cn(
+                    "flex cursor-pointer items-start gap-2 rounded-lg border p-2.5 transition-colors",
+                    selected ? "border-primary/50 bg-primary/5" : "border-border/40 hover:bg-secondary/30"
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="planMode"
+                    checked={selected}
+                    onChange={() => { setPlanMode(opt.id); setResults(null); setAiPlans(null); setAiPlanError(null); }}
+                    className="mt-0.5 h-4 w-4 accent-primary"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 text-sm font-semibold">
+                      <span className={cn(selected ? "text-primary" : "text-muted-foreground")}>{opt.icon}</span>
+                      <span>{opt.label}</span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{opt.desc}</p>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── ② 포메이션 + 자동 분배 ── */}
+        <div className="flex flex-wrap items-center gap-2">
+          {planMode === "ai-free" ? (
+            <div className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-xs text-primary">
+              <Sparkles className="h-3.5 w-3.5" />
+              포메이션은 AI가 결정
+            </div>
+          ) : (
+            <NativeSelect
+              value={formationId}
+              onChange={(e) => { setFormationId(e.target.value); setResults(null); }}
+              className="w-auto"
+            >
+              {filteredFormations.map((f) => (
+                <option key={f.id} value={f.id}>{f.name}</option>
+              ))}
+            </NativeSelect>
+          )}
+          <Button size="sm" variant="outline" className="rounded-lg" onClick={autoDistribute}>자동 분배</Button>
+        </div>
+
+        {/* ── ③ 통계 3열 ── */}
         <div className="grid grid-cols-3 gap-2">
           <div className="rounded-xl bg-secondary/30 p-3 text-center">
             <div className="text-2xl font-bold">{attendingPlayers.length}</div>
@@ -973,7 +1047,7 @@ export default function AutoFormationBuilder({
           </div>
         </div>
 
-        {/* ── 슬롯 프로그레스바 ── */}
+        {/* ── ④ 슬롯 프로그레스바 ── */}
         <div className="space-y-1.5">
           <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">슬롯 배분</span>
@@ -987,21 +1061,7 @@ export default function AutoFormationBuilder({
           </div>
         </div>
 
-        {/* ── Controls ── */}
-        <div className="flex flex-wrap items-center gap-2">
-          <NativeSelect
-            value={formationId}
-            onChange={(e) => { setFormationId(e.target.value); setResults(null); }}
-            className="w-auto"
-          >
-            {filteredFormations.map((f) => (
-              <option key={f.id} value={f.id}>{f.name}</option>
-            ))}
-          </NativeSelect>
-          <Button size="sm" variant="outline" className="rounded-lg" onClick={autoDistribute}>자동 분배</Button>
-        </div>
-
-        {/* ── Player list ── */}
+        {/* ── ⑤ Player list ── */}
         <div className="space-y-1">
           {sortedAssignments.map((player, idx) => (
             <div
@@ -1076,55 +1136,53 @@ export default function AutoFormationBuilder({
           )}
         </div>
 
-        {/* ── Generate button ── */}
-        <Button
-          className="w-full min-h-[48px] rounded-xl font-semibold"
-          onClick={generate}
-          disabled={!isBalanced || fieldPlayers.length === 0}
-        >
-          {results ? "다시 생성" : "자동 편성 실행"}
-        </Button>
+        {/* ── ⑥ 단일 CTA 버튼 (모드에 따라 동작/라벨 동적) ── */}
+        {(() => {
+          const busy = aiPlanLoading || saving;
+          const disabled = busy || !isBalanced || fieldPlayers.length === 0;
+          let label: string;
+          let icon = <Zap className="h-4 w-4" />;
+          if (planMode === "rule") {
+            label = results ? "다시 생성" : "자동 편성 실행";
+          } else if (planMode === "ai-fixed") {
+            label = aiPlanLoading ? "AI 배치 중..." : "AI에게 배치 받기 (전술판까지 자동 반영)";
+            icon = aiPlanLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />;
+          } else {
+            label = aiPlanLoading ? "AI 풀 플랜 생성 중..." : "AI 풀 플랜 받기 (쿼터별 포메이션 자유)";
+            icon = aiPlanLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />;
+          }
+          return (
+            <Button
+              className="w-full min-h-[48px] gap-2 rounded-xl font-semibold"
+              onClick={() => {
+                if (planMode === "rule") generate();
+                else handleAiPlanGenerate(planMode === "ai-fixed");
+              }}
+              disabled={disabled}
+            >
+              {icon}
+              {label}
+            </Button>
+          );
+        })()}
 
-        {/* Phase C — AI 풀 플랜 (김선휘 Feature Flag) */}
-        {enableAi && (
-          <div className="mt-3 space-y-2">
-            <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-              <input
-                type="checkbox"
-                checked={aiPlanMode}
-                onChange={(e) => setAiPlanMode(e.target.checked)}
-                className="h-4 w-4 rounded border-border"
-              />
-              <span>🤖 AI 최적 포메이션 (쿼터별 변경)</span>
-            </label>
-            {aiPlanMode && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full gap-2 rounded-xl border-primary/40 text-primary hover:bg-primary/5"
-                onClick={handleAiPlanGenerate}
-                disabled={aiPlanLoading || fieldPlayers.length === 0}
-              >
-                {aiPlanLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                {aiPlanLoading ? "AI 풀 플랜 생성 중..." : "AI에게 4쿼터 풀 플랜 받기"}
-              </Button>
-            )}
-            {aiPlanError && (
-              <p className="text-xs text-destructive">{aiPlanError}</p>
-            )}
-            {aiPlans && aiPlans.length > 0 && !aiPlanSheetOpen && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full gap-2 rounded-lg border-primary/30 text-primary"
-                onClick={() => setAiPlanSheetOpen(true)}
-              >
-                <Sparkles className="h-4 w-4" />
-                AI 풀 플랜 결과 다시 보기
-              </Button>
-            )}
-          </div>
+        {/* AI 에러 */}
+        {aiPlanError && (
+          <p className="text-center text-xs text-destructive">{aiPlanError}</p>
+        )}
+
+        {/* AI 자유 모드: 결과 Sheet 다시 보기 */}
+        {planMode === "ai-free" && aiPlans && aiPlans.length > 0 && !aiPlanSheetOpen && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-full gap-2 rounded-lg border-primary/30 text-primary"
+            onClick={() => setAiPlanSheetOpen(true)}
+          >
+            <Sparkles className="h-4 w-4" />
+            AI 풀 플랜 결과 다시 보기
+          </Button>
         )}
 
         {/* ── 결과 액션 (미리보기는 아래 전술판에서 쿼터 탭으로 확인) ── */}
@@ -1136,7 +1194,7 @@ export default function AutoFormationBuilder({
             <Button
               className="w-full min-h-[48px] rounded-xl font-semibold border-[hsl(var(--success))]/50 text-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/10"
               variant="outline"
-              onClick={saveToTacticsBoard}
+              onClick={() => saveToTacticsBoard()}
               disabled={saving}
             >
               {saving ? "저장 중..." : "→ 전술판에 적용"}
@@ -1205,18 +1263,19 @@ export default function AutoFormationBuilder({
             <Button
               type="button"
               className="w-full mt-3 min-h-[48px] gap-2 rounded-xl font-semibold"
-              onClick={() => {
+              onClick={async () => {
                 if (results && !confirm("현재 편성 결과를 AI 풀 플랜으로 덮어씁니다. 계속할까요?")) return;
-                applyAiPlanToResults();
+                const merged = applyAiPlanToResults();
+                if (merged) await saveToTacticsBoard(merged);
                 setAiPlanSheetOpen(false);
               }}
-              disabled={aiPlanLoading}
+              disabled={aiPlanLoading || saving}
             >
               <Zap className="h-4 w-4" />
-              이 플랜으로 편성 덮어쓰기
+              이 플랜으로 전술판 적용
             </Button>
             <p className="mt-1 text-center text-[10px] text-muted-foreground/70">
-              적용 후 카드의 &quot;→ 전술판에 적용&quot; 버튼으로 실제 전술판에 반영됩니다.
+              아래 전술판에 자동으로 반영됩니다.
             </p>
           </div>
         ) : (

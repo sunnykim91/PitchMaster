@@ -251,6 +251,8 @@ export type TacticsAnalysisInput = {
   warnings?: string[];
   /** Phase C(aiFullPlan) — 쿼터별 가용 선수 이름 명단. AI가 임의 쿼터에 없는 선수를 배치하지 않도록 강제. */
   availableByQuarter?: Record<number, string[]>;
+  /** Phase C — true면 모든 쿼터 동일 formation 고정 (사용자가 포메이션 미리 선택). 배치만 AI가 설계. */
+  singleFormation?: boolean;
   /** 관측성용 */
   userId?: string | null;
   teamId?: string | null;
