@@ -562,6 +562,7 @@ export default function AutoFormationBuilder({
   // Phase C — AI 풀 플랜 (쿼터별 다른 포메이션 추천)
   const [aiPlanMode, setAiPlanMode] = useState(false);
   const [aiPlans, setAiPlans] = useState<Array<{ quarter: number; formation: string; placement: Array<{ slot: string; playerName: string }>; note?: string }> | null>(null);
+  const [openPlanQuarters, setOpenPlanQuarters] = useState<Set<number>>(new Set());
   const [aiPlanLoading, setAiPlanLoading] = useState(false);
   const [aiPlanError, setAiPlanError] = useState<string | null>(null);
   const [aiPlanSource, setAiPlanSource] = useState<"ai" | "rule" | null>(null);
@@ -1063,26 +1064,39 @@ export default function AutoFormationBuilder({
                     {aiPlanSource === "ai" ? "AI 풀 플랜" : "기본 플랜 (AI 실패)"}
                   </span>
                 </div>
-                {aiPlans.map((p) => (
-                  <details key={p.quarter} className="group rounded-lg border border-border/40 bg-card/40 overflow-hidden">
-                    <summary className="flex items-center justify-between gap-2 px-2.5 py-2 cursor-pointer select-none list-none">
-                      <span className="text-sm font-bold text-foreground">
-                        {p.quarter}쿼터 · <span className="text-primary">{p.formation}</span>
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        {p.note && <span className="text-[11px] text-muted-foreground">{p.note}</span>}
-                        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform group-open:rotate-180" />
-                      </div>
-                    </summary>
-                    <div className="px-2.5 pb-2 pt-1 flex flex-wrap gap-1.5 text-[11px] text-foreground/80 border-t border-border/30">
-                      {p.placement.map((x, i) => (
-                        <span key={i} className="rounded bg-secondary px-1.5 py-0.5">
-                          {x.slot}: {x.playerName}
+                {aiPlans.map((p) => {
+                  const isOpen = openPlanQuarters.has(p.quarter);
+                  return (
+                    <div key={p.quarter} className="rounded-lg border border-border/40 bg-card/40 overflow-hidden">
+                      <button
+                        type="button"
+                        className="w-full flex items-center justify-between gap-2 px-2.5 py-2 text-left"
+                        onClick={() => setOpenPlanQuarters((prev) => {
+                          const next = new Set(prev);
+                          if (isOpen) next.delete(p.quarter); else next.add(p.quarter);
+                          return next;
+                        })}
+                      >
+                        <span className="text-sm font-bold text-foreground">
+                          {p.quarter}쿼터 · <span className="text-primary">{p.formation}</span>
                         </span>
-                      ))}
+                        <div className="flex items-center gap-1.5">
+                          {p.note && <span className="text-[11px] text-muted-foreground">{p.note}</span>}
+                          <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
+                        </div>
+                      </button>
+                      {isOpen && (
+                        <div className="px-2.5 pb-2 pt-1 flex flex-wrap gap-1.5 text-[11px] text-foreground/80 border-t border-border/30">
+                          {p.placement.map((x, i) => (
+                            <span key={i} className="rounded bg-secondary px-1.5 py-0.5">
+                              {x.slot}: {x.playerName}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </details>
-                ))}
+                  );
+                })}
                 <p className="mt-1 text-[10px] text-muted-foreground/70">
                   ⚠️ 베타 — 자동 적용 미지원. 각 쿼터를 탭해서 편성을 확인하고 수동으로 슬롯 배치하세요.
                 </p>
