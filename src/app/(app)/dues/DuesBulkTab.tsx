@@ -638,15 +638,7 @@ function DuesBulkTabInner({
           onChange={handleBulkImageChange}
         />
 
-        {/* 폴백: AI OCR (Claude Vision) — 기본 OCR 실패/부분 인식 시 */}
-        <button
-          type="button"
-          disabled={ocrLoading}
-          onClick={() => aiOcrFileInputRef.current?.click()}
-          className="w-full flex items-center justify-center gap-2 text-xs text-primary/80 hover:text-primary underline underline-offset-4 disabled:opacity-50"
-        >
-          ✨ 인식 잘 안 되면 AI OCR로 시도 (베타)
-        </button>
+        {/* AI OCR 폴백 파일 input — 자동 폴백 시 사용되지는 않지만 수동 호출용 유지 */}
         <input
           ref={aiOcrFileInputRef}
           type="file"
@@ -765,21 +757,32 @@ function DuesBulkTabInner({
                       </span>
                     </div>
 
-                    {/* Row 1: 날짜 (full width, 모바일에서 overflow 방지) */}
-                    <div className="space-y-1 min-w-0">
-                      <label className="text-[10px] text-muted-foreground uppercase tracking-wide">날짜</label>
-                      <Input
-                        type="date"
-                        value={row.date}
-                        onChange={(e) => {
-                          updateBulkRow(index, "date", e.target.value);
-                          setBulkErrors((p) => { const n = { ...p }; delete n[index]; return n; });
-                        }}
-                        className={cn(
-                          "h-10 w-full rounded-lg bg-secondary border-0 text-sm",
-                          errs.includes("date") && "ring-1 ring-destructive"
-                        )}
-                      />
+                    {/* Row 1: 날짜 + 시간 */}
+                    <div className="grid grid-cols-[3fr_2fr] gap-2 min-w-0">
+                      <div className="space-y-1 min-w-0">
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-wide">날짜</label>
+                        <Input
+                          type="date"
+                          value={row.date}
+                          onChange={(e) => {
+                            updateBulkRow(index, "date", e.target.value);
+                            setBulkErrors((p) => { const n = { ...p }; delete n[index]; return n; });
+                          }}
+                          className={cn(
+                            "h-10 w-full rounded-lg bg-secondary border-0 text-sm",
+                            errs.includes("date") && "ring-1 ring-destructive"
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-1 min-w-0">
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-wide">시간</label>
+                        <Input
+                          type="time"
+                          value={row.time}
+                          onChange={(e) => updateBulkRow(index, "time", e.target.value)}
+                          className="h-10 w-full rounded-lg bg-secondary border-0 text-sm"
+                        />
+                      </div>
                     </div>
 
                     {/* Row 2: 유형 + 금액 (2:3 비율, 둘 다 flexible) */}
