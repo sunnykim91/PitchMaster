@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "DEV_IMPERSONATE not enabled" }, { status: 404 });
   }
 
-  const { kakaoId } = await request.json();
+  const { kakaoId, teamId } = await request.json();
   if (!kakaoId) {
     return NextResponse.json({ error: "kakaoId is required" }, { status: 400 });
   }
@@ -34,16 +34,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `User with kakao_id ${kakaoId} not found` }, { status: 404 });
   }
 
-  // 팀 멤버십 조회 (ACTIVE 상태, 여러 팀이 있으면 첫 번째)
-  const { data: memberships } = await db
+  // 팀 멤버십 조회 (ACTIVE 상태).
+  // teamId 명시 시 그 팀으로 고정, 없으면 첫 번째 팀 사용.
+  let query = db
     .from("team_members")
     .select("team_id, role, teams(name, invite_code)")
     .eq("user_id", user.id)
-    .eq("status", "ACTIVE")
-    .limit(1);
+    .eq("status", "ACTIVE");
+  if (teamId) query = query.eq("team_id", teamId);
+
+  const { data: memberships } = await query.limit(1);
 
   if (!memberships || memberships.length === 0) {
-    return NextResponse.json({ error: `${user.name}의 활성 팀이 없습니다` }, { status: 404 });
+    return NextResponse.json({ error: `${user.name}의 활성 팀이 없습니다${teamId ? ` (teamId=${teamId})` : ""}` }, { status: 404 });
   }
 
   const membership = memberships[0];

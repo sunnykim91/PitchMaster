@@ -18,6 +18,7 @@ function DevLoginInner() {
   const [error, setError] = useState<string | null>(null);
 
   const kakaoId = searchParams.get("kakaoId");
+  const teamId = searchParams.get("teamId");
 
   useEffect(() => {
     // URL에 kakaoId가 있고 NODE_ENV가 production이 아니면 자동 로그인
@@ -39,7 +40,7 @@ function DevLoginInner() {
       const res = await fetch("/api/auth/dev-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kakaoId }),
+        body: JSON.stringify({ kakaoId, teamId }),
       });
 
       const data = await res.json();
