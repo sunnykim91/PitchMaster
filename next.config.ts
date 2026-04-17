@@ -10,6 +10,9 @@ const commitHash = (() => {
 })();
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: __dirname,
+  },
   env: {
     NEXT_PUBLIC_COMMIT_HASH: commitHash,
     NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),
