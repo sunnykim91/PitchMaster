@@ -460,6 +460,23 @@ function DuesBulkTabInner({
         setOcrStatus(`${parsed.length}건 모두 이미 등록된 내역입니다.`);
         showToast(`${parsed.length}건 모두 중복`, "info");
       } else {
+        // 기본 OCR(Clova) 인식 0건 → AI OCR 자동 폴백
+        setOcrLoading(true);
+        setOcrStatus("기본 OCR에서 인식 못함. AI OCR로 자동 재시도 중...");
+        try {
+          const aiResult = await runAiOcr(file);
+          setOcrLoading(false);
+          if (aiResult && aiResult.rows.length > 0) {
+            setBulkRows(aiResult.rows);
+            if (aiResult.latestBalance !== null) setPendingBalance(aiResult.latestBalance);
+            setOcrStatus(`AI OCR 폴백으로 ${aiResult.rows.length}건 인식. 확인 후 저장하세요.`);
+            showToast(`AI OCR로 ${aiResult.rows.length}건 인식`, "success");
+            return;
+          }
+        } catch (err) {
+          console.error("[Auto AI fallback] failed:", err);
+        }
+        setOcrLoading(false);
         setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
         showToast("거래 내역을 인식하지 못했습니다.", "error");
       }
