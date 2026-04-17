@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { recommendFormation, type PlayerInput } from "@/lib/formationAI";
 import type { Match, SimpleRosterPlayer, InternalTeamAssignment, Guest } from "./matchDetailTypes";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -422,52 +421,26 @@ function MatchTacticsTabInner({
         </div>
       )}
 
-      {/* 추천 포메이션 + "처음이신가요?" 안내는 자동 편성 카드 내부 힌트·설명으로 통합됨 */}
-
-      {canManage && (() => {
-        // 참석 5명 이상이면 룰 기반 포메이션 추천 (자동 편성 상단 힌트로 노출)
-        // 경기 설정의 playerCount(8인제/풋살 5인제 등)를 기준으로 삼아야
-        // 자동 편성 내부 포메이션 선택과 일치함
-        let recommendationHint: { formationName: string; formationId: string; reason: string } | undefined;
-        if (filteredAttending.length >= 5) {
-          const aiPlayers: PlayerInput[] = filteredAttending.map((p) => ({
-            id: p.id,
-            name: p.name,
-            preferredPositions: p.preferredPositions ?? [p.preferredPosition],
-          }));
-          // 경기 설정 인원수 > 없으면 종목별 기본값 (축구 11, 풋살 5)
-          const fieldCount = match.playerCount ?? (sportType === "FUTSAL" ? 5 : 11);
-          const maxPlayers = Math.min(filteredAttending.length, fieldCount);
-          const rec = recommendFormation(aiPlayers, maxPlayers, sportType);
-          if (rec) {
-            recommendationHint = {
-              formationName: rec.formation.name,
-              formationId: rec.formation.id,
-              reason: rec.reason,
-            };
-          }
-        }
-        return (
-          <AutoFormationBuilder
-            matchId={matchId}
-            quarterCount={match.quarterCount}
-            attendingPlayers={filteredAttending}
-            sportType={sportType}
-            playerCount={match.playerCount}
-            defaultFormationId={recommendationHint?.formationId ?? defaultFormationId}
-            side={isInternal ? activeSide : undefined}
-            onGenerated={(squads) => {
-              setGeneratedSquads(squads);
-              setTacticsKey((k) => k + 1);
-            }}
-            enableAi={enableAi}
-            matchContext={{
-              matchType: (match.matchType ?? "REGULAR"),
-              opponent: match.opponent ?? null,
-            }}
-          />
-        );
-      })()}
+      {canManage && (
+        <AutoFormationBuilder
+          matchId={matchId}
+          quarterCount={match.quarterCount}
+          attendingPlayers={filteredAttending}
+          sportType={sportType}
+          playerCount={match.playerCount}
+          defaultFormationId={defaultFormationId}
+          side={isInternal ? activeSide : undefined}
+          onGenerated={(squads) => {
+            setGeneratedSquads(squads);
+            setTacticsKey((k) => k + 1);
+          }}
+          enableAi={enableAi}
+          matchContext={{
+            matchType: (match.matchType ?? "REGULAR"),
+            opponent: match.opponent ?? null,
+          }}
+        />
+      )}
 
       <TacticsBoard
         key={`${tacticsKey}-${activeSide}`}
