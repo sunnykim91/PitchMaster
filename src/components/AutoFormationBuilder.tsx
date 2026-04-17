@@ -893,16 +893,18 @@ export default function AutoFormationBuilder({
       </button>
 
       {!isOpen && (
-        <div className="px-5 pb-3 space-y-1.5">
-          <p className="text-[11px] leading-snug text-muted-foreground">
+        <div className="px-5 pb-3 space-y-2">
+          <p className="text-xs text-muted-foreground">
             선호 포지션에 맞춰 쿼터별 자동 배치
-            {enableAi && (
-              <>
-                <br />
-                <span className="text-primary/80">✨ AI 코치가 팀 히스토리·상대 이력 기반 분석 + 쿼터별 포메이션 추천</span>
-              </>
-            )}
           </p>
+          {enableAi && (
+            <div className="flex items-start gap-2 rounded-lg border border-primary/25 bg-primary/5 px-3 py-2">
+              <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+              <p className="text-xs leading-relaxed text-foreground/90">
+                <span className="font-semibold text-primary">AI 코치</span>가 팀 히스토리·상대 이력 기반으로 편성 분석 + 쿼터별 포메이션 추천
+              </p>
+            </div>
+          )}
         </div>
       )}
 
