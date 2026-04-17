@@ -578,17 +578,17 @@ function DuesBulkTabInner({
     <div role="tabpanel" id="tabpanel-bulk" aria-labelledby="tab-bulk" className="space-y-4">
       <h2 className="text-sm font-medium text-foreground">내역 올리기</h2>
 
-      {/* ── OCR 섹션 — AI OCR이 기본, Clova OCR이 폴백 ── */}
+      {/* ── OCR 섹션 — Clova OCR이 기본, AI OCR이 폴백 (비용 최소화) ── */}
       <div className="space-y-3">
         <p className="text-xs font-medium text-muted-foreground">OCR (스크린샷)</p>
 
-        {/* 메인: AI OCR (Claude Vision) */}
+        {/* 메인: Clova OCR */}
         <Card
-          className="border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-card py-5 cursor-pointer hover:border-primary/50 transition-colors active:scale-[0.99]"
-          onClick={() => aiOcrFileInputRef.current?.click()}
+          className="border-dashed border-white/10 bg-card py-5 cursor-pointer hover:border-white/20 transition-colors active:scale-[0.99]"
+          onClick={() => ocrFileInputRef.current?.click()}
         >
           <CardContent className="flex flex-col items-center gap-3 px-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
               <Camera className="h-6 w-6 text-primary" />
             </div>
             <div className="text-center space-y-1">
@@ -596,16 +596,17 @@ function DuesBulkTabInner({
                 통장 거래내역 캡쳐를 올려주세요
               </p>
               <p className="text-xs text-muted-foreground">
-                AI가 은행 앱 스크린샷을 자동으로 인식합니다
+                은행 앱 스크린샷을 올리면 자동으로 인식합니다
               </p>
             </div>
             <Button
+              variant="outline"
               size="sm"
               className="active:scale-[0.97] transition-transform"
               disabled={ocrLoading}
               onClick={(e) => {
                 e.stopPropagation();
-                aiOcrFileInputRef.current?.click();
+                ocrFileInputRef.current?.click();
               }}
             >
               {ocrLoading ? "처리 중..." : "사진 선택"}
@@ -613,28 +614,28 @@ function DuesBulkTabInner({
           </CardContent>
         </Card>
         <input
-          ref={aiOcrFileInputRef}
-          type="file"
-          accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
-          className="hidden"
-          onChange={handleAiOcrImageChange}
-        />
-
-        {/* 폴백: Clova OCR (AI 실패/한도 초과 시) */}
-        <button
-          type="button"
-          disabled={ocrLoading}
-          onClick={() => ocrFileInputRef.current?.click()}
-          className="w-full flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground underline underline-offset-4 disabled:opacity-50"
-        >
-          인식 안 되면 기본 OCR로 시도
-        </button>
-        <input
           ref={ocrFileInputRef}
           type="file"
           accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
           className="hidden"
           onChange={handleBulkImageChange}
+        />
+
+        {/* 폴백: AI OCR (Claude Vision) — 기본 OCR 실패/부분 인식 시 */}
+        <button
+          type="button"
+          disabled={ocrLoading}
+          onClick={() => aiOcrFileInputRef.current?.click()}
+          className="w-full flex items-center justify-center gap-2 text-xs text-primary/80 hover:text-primary underline underline-offset-4 disabled:opacity-50"
+        >
+          ✨ 인식 잘 안 되면 AI OCR로 시도 (베타)
+        </button>
+        <input
+          ref={aiOcrFileInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
+          className="hidden"
+          onChange={handleAiOcrImageChange}
         />
       </div>
 
