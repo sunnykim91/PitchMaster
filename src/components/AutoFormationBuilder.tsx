@@ -17,6 +17,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
@@ -562,7 +568,6 @@ export default function AutoFormationBuilder({
     [],
   );
   const [results, setResults] = useState<QuarterResult[] | null>(null);
-  const [previewQuarter, setPreviewQuarter] = useState(1);
   const [saving, setSaving] = useState(false);
   // Phase C — AI 풀 플랜 (쿼터별 다른 포메이션 추천)
   const [aiPlanMode, setAiPlanMode] = useState(false);
@@ -571,6 +576,7 @@ export default function AutoFormationBuilder({
   const [aiPlanLoading, setAiPlanLoading] = useState(false);
   const [aiPlanError, setAiPlanError] = useState<string | null>(null);
   const [aiPlanSource, setAiPlanSource] = useState<"ai" | "rule" | null>(null);
+  const [aiPlanSheetOpen, setAiPlanSheetOpen] = useState(false);
 
   const formation = useMemo(
     () =>
@@ -820,6 +826,10 @@ export default function AutoFormationBuilder({
       setAiPlans(data.plans);
       setAiPlanSource(data.source ?? null);
       if (data.error) setAiPlanError(data.error);
+      if (Array.isArray(data.plans) && data.plans.length > 0) {
+        // 결과 나오면 BottomSheet 자동 오픈 (모바일 UX)
+        setAiPlanSheetOpen(true);
+      }
     } catch {
       setAiPlanError("네트워크 오류");
     } finally {
@@ -884,37 +894,6 @@ export default function AutoFormationBuilder({
   }
 
 
-  // Player × quarter map for result display
-  const playerQuarterMap = useMemo(() => {
-    if (!results) return null;
-    const map = new Map<
-      string,
-      Map<number, "full" | "first_half" | "second_half">
-    >();
-    for (const qr of results) {
-      for (const a of qr.assignments) {
-        if (!map.has(a.playerId))
-          map.set(a.playerId, new Map());
-        map.get(a.playerId)!.set(qr.quarter, a.type);
-      }
-    }
-    return map;
-  }, [results]);
-
-  // Player → assigned position label from results
-  const playerPositionLabel = useMemo(() => {
-    if (!results) return new Map<string, string>();
-    const map = new Map<string, string>();
-    for (const qr of results) {
-      for (const a of qr.assignments) {
-        if (!map.has(a.playerId)) {
-          map.set(a.playerId, a.slotLabel);
-        }
-      }
-    }
-    return map;
-  }, [results]);
-
   // Sort: GK → DF → MF → FW
   const sortedAssignments = useMemo(() => {
     const order: Record<PreferredPosition, number> = {
@@ -935,6 +914,7 @@ export default function AutoFormationBuilder({
 
   /* ── Collapsible card ── */
   return (
+    <>
     <Card className="rounded-xl border-border/30 overflow-hidden">
       <button
         type="button"
@@ -1132,176 +1112,118 @@ export default function AutoFormationBuilder({
             {aiPlanError && (
               <p className="text-xs text-destructive">{aiPlanError}</p>
             )}
-            {aiPlans && aiPlans.length > 0 && (
-              <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-3 space-y-1.5">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">
-                    {aiPlanSource === "ai" ? "AI" : "⚙"}
-                  </span>
-                  <span className="text-sm font-bold">
-                    {aiPlanSource === "ai" ? "AI 풀 플랜" : "기본 플랜 (AI 실패)"}
-                  </span>
-                </div>
-                {aiPlans.map((p) => {
-                  const isOpen = openPlanQuarters.has(p.quarter);
-                  return (
-                    <div key={p.quarter} className="rounded-lg border border-border/40 bg-card/40 overflow-hidden">
-                      <button
-                        type="button"
-                        className="w-full flex items-center justify-between gap-2 px-2.5 py-2 text-left"
-                        onClick={() => setOpenPlanQuarters((prev) => {
-                          const next = new Set(prev);
-                          if (isOpen) next.delete(p.quarter); else next.add(p.quarter);
-                          return next;
-                        })}
-                      >
-                        <span className="text-sm font-bold text-foreground">
-                          {p.quarter}쿼터 · <span className="text-primary">{p.formation}</span>
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          {p.note && <span className="text-[11px] text-muted-foreground">{p.note}</span>}
-                          <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
-                        </div>
-                      </button>
-                      {isOpen && (
-                        <div className="px-2.5 pb-2 pt-1 flex flex-wrap gap-1.5 text-[11px] text-foreground/80 border-t border-border/30">
-                          {p.placement.map((x, i) => (
-                            <span key={i} className="rounded bg-secondary px-1.5 py-0.5">
-                              {x.slot}: {x.playerName}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-                <Button
-                  type="button"
-                  size="sm"
-                  className="w-full mt-2 gap-2 rounded-lg"
-                  onClick={() => {
-                    if (results && !confirm("현재 편성 결과를 AI 풀 플랜으로 덮어씁니다. 계속할까요?")) return;
-                    applyAiPlanToResults();
-                  }}
-                  disabled={aiPlanLoading}
-                >
-                  <Zap className="h-4 w-4" />
-                  이 플랜으로 편성 덮어쓰기
-                </Button>
-                <p className="mt-1 text-[10px] text-muted-foreground/70">
-                  적용 후 아래 &quot;→ 전술판에 적용&quot; 버튼으로 실제 전술판에 반영됩니다.
-                </p>
-              </div>
+            {aiPlans && aiPlans.length > 0 && !aiPlanSheetOpen && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full gap-2 rounded-lg border-primary/30 text-primary"
+                onClick={() => setAiPlanSheetOpen(true)}
+              >
+                <Sparkles className="h-4 w-4" />
+                AI 풀 플랜 결과 다시 보기
+              </Button>
             )}
           </div>
         )}
 
-        {/* ── 쿼터별 미리보기 + 액션 버튼 ── */}
-        {results && playerQuarterMap && (() => {
-          const [previewQ, setPreviewQ] = [previewQuarter, setPreviewQuarter];
-          const qr = results.find((r) => r.quarter === previewQ) ?? results[0];
-          // 포지션별 그룹핑
-          const slotMap = new Map<string, SlotAssignment[]>();
-          if (qr) {
-            for (const a of qr.assignments) {
-              if (!slotMap.has(a.slotLabel)) slotMap.set(a.slotLabel, []);
-              slotMap.get(a.slotLabel)!.push(a);
-            }
-          }
-          const getSlotColor = (label: string) => {
-            if (label === "GK") return "bg-amber-500/20 text-amber-400 border-amber-500/30";
-            if (["CB","LCB","RCB","LB","RB"].includes(label)) return "bg-[hsl(var(--info))]/20 text-[hsl(var(--info))] border-[hsl(var(--info))]/30";
-            if (["CDM","LDM","RDM","CM","LCM","RCM","CAM","LAM","RAM"].includes(label)) return "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))] border-[hsl(var(--success))]/30";
-            return "bg-primary/20 text-primary border-primary/30";
-          };
-
-          return (
-            <div className="space-y-4 border-t border-border/30 pt-4">
-              {/* 쿼터별 미리보기 제목 */}
-              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">쿼터별 미리보기</div>
-
-              {/* 쿼터 탭 */}
-              <div className="flex gap-1 rounded-lg bg-secondary p-1">
-                {Array.from({ length: quarterCount }, (_, i) => i + 1).map((q) => (
-                  <button key={q} type="button" onClick={() => setPreviewQ(q)}
-                    className={cn("flex-1 rounded-md py-2 text-sm font-medium transition-all",
-                      previewQ === q ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                    )}>
-                    Q{q}
-                  </button>
-                ))}
-              </div>
-
-              {/* 포지션 그리드 — GK → 수비 → 미드 → 공격 순 */}
-              {qr && qr.assignments.length > 0 ? (() => {
-                const posOrder: Record<string, number> = { GK: 0, CB: 1, LCB: 1, RCB: 1, LB: 2, RB: 2, CDM: 3, LDM: 3, RDM: 3, CM: 4, LCM: 4, RCM: 4, CAM: 5, LAM: 5, RAM: 5, LW: 6, RW: 6, LWF: 6, RWF: 6, ST: 7, CF: 7 };
-                const sorted = [...qr.assignments].sort((a, b) => (posOrder[a.slotLabel] ?? 9) - (posOrder[b.slotLabel] ?? 9));
-                const getCategory = (label: string) => {
-                  if (label === "GK") return "gk";
-                  if ((posOrder[label] ?? 9) <= 2) return "def";
-                  if ((posOrder[label] ?? 9) <= 5) return "mid";
-                  return "atk";
-                };
-                // 카테고리별 그룹
-                const groups = [
-                  { key: "gk", label: "GK", color: "border-amber-500/20" },
-                  { key: "def", label: "수비", color: "border-[hsl(var(--info))]/20" },
-                  { key: "mid", label: "미드필드", color: "border-[hsl(var(--success))]/20" },
-                  { key: "atk", label: "공격", color: "border-primary/20" },
-                ];
-                return (
-                  <div className="space-y-3">
-                    {groups.map(({ key, label, color }) => {
-                      const items = sorted.filter((a) => getCategory(a.slotLabel) === key);
-                      if (items.length === 0) return null;
-                      return (
-                        <div key={key}>
-                          <p className="mb-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</p>
-                          <div className="grid grid-cols-4 gap-2">
-                            {items.map((a) => (
-                              <div key={`${a.slotId}-${a.playerId}`}
-                                className={cn("rounded-lg border p-2 text-center", getSlotColor(a.slotLabel))}>
-                                <Badge className={cn("mb-1 border-0 text-[10px]", getSlotColor(a.slotLabel))}>{a.slotLabel}</Badge>
-                                <div className="truncate text-xs font-medium text-foreground">
-                                  {a.playerName}
-                                  {a.type !== "full" && (
-                                    <span className="ml-0.5 text-[10px] text-muted-foreground">({a.type === "first_half" ? "전" : "후"})</span>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })() : (
-                <div className="py-4 text-center text-xs text-muted-foreground">배정된 선수가 없습니다</div>
-              )}
-
-              {/* 액션 버튼 */}
-              <div className="space-y-2">
-                <Button className="w-full min-h-[48px] rounded-xl font-semibold" onClick={generate}>
-                  다시 생성
-                </Button>
-                <Button className="w-full min-h-[44px] rounded-xl border-[hsl(var(--success))]/50 text-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/10" variant="outline"
-                  onClick={saveToTacticsBoard} disabled={saving}>
-                  {saving ? "저장 중..." : "→ 전술판에 적용"}
-                </Button>
-                <Button variant="ghost" className="w-full text-muted-foreground hover:text-foreground"
-                  onClick={() => { setResults(null); }}>
-                  ↻ 초기화
-                </Button>
-              </div>
-
-              {/* AI 코치 분석은 상위 페이지(MatchTacticsTab)에서 전술판 아래에 별도 렌더 */}
-            </div>
-          );
-        })()}
+        {/* ── 결과 액션 (미리보기는 아래 전술판에서 쿼터 탭으로 확인) ── */}
+        {results && (
+          <div className="space-y-2 border-t border-border/30 pt-3">
+            <p className="text-center text-[11px] text-muted-foreground">
+              편성 완료. 아래 전술판에서 쿼터별 배치를 확인·조정하세요.
+            </p>
+            <Button
+              className="w-full min-h-[48px] rounded-xl font-semibold border-[hsl(var(--success))]/50 text-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/10"
+              variant="outline"
+              onClick={saveToTacticsBoard}
+              disabled={saving}
+            >
+              {saving ? "저장 중..." : "→ 전술판에 적용"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-muted-foreground hover:text-foreground"
+              onClick={() => { setResults(null); }}
+            >
+              ↻ 초기화
+            </Button>
+          </div>
+        )}
       </CardContent>
       </>
       )}
     </Card>
+
+    {/* AI 풀 플랜 결과 BottomSheet (모바일 친화 UX) */}
+    <Sheet open={aiPlanSheetOpen} onOpenChange={setAiPlanSheetOpen}>
+      <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto p-4 pt-5 rounded-t-2xl border-t-2 border-primary/30">
+        <SheetHeader className="mb-3">
+          <SheetTitle className="flex items-center gap-2 text-base">
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">
+              {aiPlanSource === "ai" ? "AI" : "⚙"}
+            </span>
+            {aiPlanSource === "ai" ? "AI 풀 플랜" : "기본 플랜 (AI 실패)"}
+          </SheetTitle>
+        </SheetHeader>
+        {aiPlans && aiPlans.length > 0 ? (
+          <div className="space-y-2">
+            {aiPlans.map((p) => {
+              const isPlanOpen = openPlanQuarters.has(p.quarter);
+              return (
+                <div key={p.quarter} className="rounded-lg border border-border/40 bg-card/60 overflow-hidden">
+                  <button
+                    type="button"
+                    className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left"
+                    onClick={() => setOpenPlanQuarters((prev) => {
+                      const next = new Set(prev);
+                      if (isPlanOpen) next.delete(p.quarter); else next.add(p.quarter);
+                      return next;
+                    })}
+                  >
+                    <span className="text-sm font-bold text-foreground">
+                      {p.quarter}쿼터 · <span className="text-primary">{p.formation}</span>
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {p.note && <span className="text-[11px] text-muted-foreground">{p.note}</span>}
+                      <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", isPlanOpen && "rotate-180")} />
+                    </div>
+                  </button>
+                  {isPlanOpen && (
+                    <div className="px-3 pb-2.5 pt-1 flex flex-wrap gap-1.5 text-[11px] text-foreground/80 border-t border-border/30">
+                      {p.placement.map((x, i) => (
+                        <span key={i} className="rounded bg-secondary px-1.5 py-0.5">
+                          {x.slot}: {x.playerName}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            <Button
+              type="button"
+              className="w-full mt-3 min-h-[48px] gap-2 rounded-xl font-semibold"
+              onClick={() => {
+                if (results && !confirm("현재 편성 결과를 AI 풀 플랜으로 덮어씁니다. 계속할까요?")) return;
+                applyAiPlanToResults();
+                setAiPlanSheetOpen(false);
+              }}
+              disabled={aiPlanLoading}
+            >
+              <Zap className="h-4 w-4" />
+              이 플랜으로 편성 덮어쓰기
+            </Button>
+            <p className="mt-1 text-center text-[10px] text-muted-foreground/70">
+              적용 후 카드의 &quot;→ 전술판에 적용&quot; 버튼으로 실제 전술판에 반영됩니다.
+            </p>
+          </div>
+        ) : (
+          <p className="text-center text-sm text-muted-foreground py-8">플랜 결과가 없습니다.</p>
+        )}
+      </SheetContent>
+    </Sheet>
+    </>
   );
 }
