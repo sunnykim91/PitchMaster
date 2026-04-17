@@ -237,6 +237,7 @@ export default function MatchDetailClient({
           id, name,
           preferredPosition: pos as AttendingPlayer["preferredPosition"],
           preferredPositions: positions.length > 0 ? positions as AttendingPlayer["preferredPosition"][] : undefined,
+          isGuest: false,
         };
       });
     // 용병 추가
@@ -247,6 +248,7 @@ export default function MatchDetailClient({
         name: g.name,
         preferredPosition: (positions[0] || "CAM") as AttendingPlayer["preferredPosition"],
         preferredPositions: positions.length > 0 ? positions as AttendingPlayer["preferredPosition"][] : undefined,
+        isGuest: true,
       };
     });
     return [...members, ...guestPlayers];

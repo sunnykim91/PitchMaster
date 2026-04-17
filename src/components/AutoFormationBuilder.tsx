@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   getFormationsForSportAndCount,
+  formationTemplates,
   type FormationSlot,
   type FormationTemplate,
 } from "@/lib/formations";
@@ -28,6 +29,8 @@ export type AttendingPlayer = {
   name: string;
   preferredPosition: PreferredPosition; // 주 포지션 (하위 호환)
   preferredPositions?: PreferredPosition[]; // 복수 선호 포지션
+  /** 용병 여부 — AI 프롬프트에 전달해 실력 불확실성 반영 */
+  isGuest?: boolean;
 };
 
 type PlayerAssignment = AttendingPlayer & {
@@ -46,6 +49,8 @@ type SlotAssignment = {
 type QuarterResult = {
   quarter: number;
   assignments: SlotAssignment[];
+  /** 쿼터별 다른 포메이션 사용 시 (AI 풀 플랜 적용). 없으면 상위 formation 사용 */
+  formationId?: string;
 };
 
 export type GeneratedSquad = {
@@ -67,7 +72,7 @@ type Props = {
   /** 자동 편성 결과가 바뀔 때 AI 코치 분석에 필요한 컨텍스트를 상위에 제공 */
   onAnalysisContextReady?: (ctx: {
     placement: Array<{ slot: string; playerName: string }>;
-    attendees: Array<{ name: string; preferredPosition?: string | null }>;
+    attendees: Array<{ name: string; preferredPosition?: string | null; isGuest?: boolean }>;
     formationName: string;
     quarterCount: number;
   } | null) => void;
@@ -593,6 +598,7 @@ export default function AutoFormationBuilder({
     const attendees = attendingPlayers.map((p) => ({
       name: p.name,
       preferredPosition: p.preferredPosition,
+      isGuest: p.isGuest ?? false,
     }));
     onAnalysisContextReady({
       placement,
@@ -722,12 +728,16 @@ export default function AutoFormationBuilder({
     setSaving(true);
 
     const squads: GeneratedSquad[] = results.map((qr) => {
+      // 쿼터별 다른 포메이션 지원 (AI 풀 플랜 적용 시) — formationId가 있으면 그걸 사용
+      const qFormation = qr.formationId
+        ? (formationTemplates.find((f) => f.id === qr.formationId) ?? formation)
+        : formation;
       const positions: Record<
         string,
         { playerId: string; x: number; y: number; secondPlayerId?: string }
       > = {};
       for (const a of qr.assignments) {
-        const slot = formation.slots.find((s) => s.id === a.slotId);
+        const slot = qFormation.slots.find((s) => s.id === a.slotId);
         if (!slot) continue;
         if (a.type === "full" || a.type === "first_half") {
           positions[a.slotId] = {
@@ -742,7 +752,7 @@ export default function AutoFormationBuilder({
       }
       return {
         quarter_number: qr.quarter,
-        formation: formation.id,
+        formation: qFormation.id,
         positions,
       };
     });
@@ -767,9 +777,20 @@ export default function AutoFormationBuilder({
     setAiPlans(null);
     setAiPlanSource(null);
     try {
+      // 자동 편성 결과가 없으면 먼저 생성해 쿼터별 가용 명단을 확보
+      let currentResults = results;
+      if (!currentResults) {
+        currentResults = scheduleQuarters(assignments, quarterCount, formation);
+        setResults(currentResults);
+      }
+      const availableByQuarter: Record<number, string[]> = {};
+      for (const qr of currentResults) {
+        availableByQuarter[qr.quarter] = Array.from(new Set(qr.assignments.map((a) => a.playerName)));
+      }
       const attendees = attendingPlayers.map((p) => ({
         name: p.name,
         preferredPosition: p.preferredPosition,
+        isGuest: p.isGuest ?? false,
       }));
       const payload = {
         formationName: formation.name,
@@ -779,6 +800,7 @@ export default function AutoFormationBuilder({
         matchType: matchContext?.matchType ?? "REGULAR",
         opponent: matchContext?.opponent ?? null,
         warnings: [],
+        availableByQuarter,  // 쿼터별 가용 선수 제약
         sportType,           // formation catalog 필터링용
         playerCount,         // 인원별 포메이션 필터
       };
@@ -802,6 +824,62 @@ export default function AutoFormationBuilder({
       setAiPlanError("네트워크 오류");
     } finally {
       setAiPlanLoading(false);
+    }
+  }
+
+  /**
+   * AI 풀 플랜을 results(전술판 소스)에 반영.
+   * 각 쿼터의 formation/placement를 QuarterResult로 변환.
+   * 전부 반영할 수 없는 플랜은 해당 쿼터만 스킵 (기존 결과 유지).
+   */
+  function applyAiPlanToResults() {
+    if (!aiPlans || aiPlans.length === 0) return;
+    const playerByName = new Map(attendingPlayers.map((p) => [p.name, p]));
+    const newResults: QuarterResult[] = [];
+    const skipped: number[] = [];
+
+    for (const plan of aiPlans) {
+      const fmt = formationTemplates.find((f) => f.name === plan.formation);
+      if (!fmt) { skipped.push(plan.quarter); continue; }
+      const slotByLabel = new Map(fmt.slots.map((s) => [s.label, s]));
+      const assignments: SlotAssignment[] = [];
+      let allOk = true;
+      for (const p of plan.placement) {
+        const slot = slotByLabel.get(p.slot);
+        const player = playerByName.get(p.playerName);
+        if (!slot || !player) { allOk = false; break; }
+        assignments.push({
+          slotId: slot.id,
+          slotLabel: slot.label,
+          playerId: player.id,
+          playerName: player.name,
+          type: "full", // AI 풀 플랜은 각 쿼터 풀타임 가정
+        });
+      }
+      if (!allOk) { skipped.push(plan.quarter); continue; }
+      newResults.push({ quarter: plan.quarter, assignments, formationId: fmt.id });
+    }
+
+    if (newResults.length === 0) {
+      setAiPlanError("AI 플랜을 전술판 형식으로 변환하지 못했습니다.");
+      return;
+    }
+    // 기존 results에서 스킵된 쿼터는 유지, 변환된 건 덮어씀
+    const merged: QuarterResult[] = [];
+    for (let q = 1; q <= quarterCount; q++) {
+      const replaced = newResults.find((r) => r.quarter === q);
+      if (replaced) {
+        merged.push(replaced);
+      } else {
+        const prev = results?.find((r) => r.quarter === q);
+        if (prev) merged.push(prev);
+      }
+    }
+    setResults(merged);
+    if (skipped.length > 0) {
+      setAiPlanError(`${skipped.join(",")}쿼터는 변환 실패로 기존 편성 유지`);
+    } else {
+      setAiPlanError(null);
     }
   }
 
@@ -1097,8 +1175,21 @@ export default function AutoFormationBuilder({
                     </div>
                   );
                 })}
+                <Button
+                  type="button"
+                  size="sm"
+                  className="w-full mt-2 gap-2 rounded-lg"
+                  onClick={() => {
+                    if (results && !confirm("현재 편성 결과를 AI 풀 플랜으로 덮어씁니다. 계속할까요?")) return;
+                    applyAiPlanToResults();
+                  }}
+                  disabled={aiPlanLoading}
+                >
+                  <Zap className="h-4 w-4" />
+                  이 플랜으로 편성 덮어쓰기
+                </Button>
                 <p className="mt-1 text-[10px] text-muted-foreground/70">
-                  ⚠️ 베타 — 자동 적용 미지원. 각 쿼터를 탭해서 편성을 확인하고 수동으로 슬롯 배치하세요.
+                  적용 후 아래 &quot;→ 전술판에 적용&quot; 버튼으로 실제 전술판에 반영됩니다.
                 </p>
               </div>
             )}

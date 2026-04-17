@@ -66,7 +66,7 @@ function MatchTacticsTabInner({
   // Phase B — AI 코치 분석 컨텍스트 (AutoFormationBuilder에서 내려줌, 전술판 아래 카드에서 사용)
   const [aiCoachContext, setAiCoachContext] = useState<{
     placement: Array<{ slot: string; playerName: string }>;
-    attendees: Array<{ name: string; preferredPosition?: string | null }>;
+    attendees: Array<{ name: string; preferredPosition?: string | null; isGuest?: boolean }>;
     formationName: string;
     quarterCount: number;
   } | null>(null);

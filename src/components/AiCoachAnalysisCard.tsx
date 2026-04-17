@@ -12,7 +12,7 @@ export type AiCoachAnalysisCardProps = {
   /** 첫 쿼터 placement — 분석 요청 payload 용 */
   placement: Array<{ slot: string; playerName: string }>;
   /** 참석자 */
-  attendees: Array<{ name: string; preferredPosition?: string | null }>;
+  attendees: Array<{ name: string; preferredPosition?: string | null; isGuest?: boolean }>;
   /** 포메이션 이름 (예 "4-2-3-1") */
   formationName: string;
   quarterCount: number;
@@ -59,7 +59,11 @@ export function AiCoachAnalysisCard({
       const payload = {
         formationName,
         quarterCount,
-        attendees,
+        attendees: attendees.map((a) => ({
+          name: a.name,
+          preferredPosition: a.preferredPosition ?? null,
+          isGuest: a.isGuest ?? false,
+        })),
         placement,
         matchType,
         opponent: opponent ?? null,

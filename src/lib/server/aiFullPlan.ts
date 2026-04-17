@@ -70,8 +70,17 @@ const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의
    - 초반 공격적, 후반 수비적 (체력 고려)
    - 상대 압박 강하면 미드 두꺼운 쪽 (4-3-3 → 4-2-3-1)
    - 우리 팀 잘 쓰는 포메이션을 1~2쿼터에 배치 (히스토리 승률 참고)
-4. **상대팀 약점 공략**: opponentHistory가 있으면 과거 패턴 반영
+4. **상대팀 약점 공략**: opponentHistory가 있으면 과거 패턴 반영 (없으면 일반 원칙만)
 5. **GK 고정**: 골키퍼는 4쿼터 동일 인물 권장
+6. **용병 배치**: attendees[].isGuest=true인 선수는 실력 미지수. 핵심 포지션(GK·중앙 수비 중심축·주공격수)보다는 선호 포지션에 맞춰 안전하게 배치. note에도 "용병 ○○ 적응 확인" 정도로만 서술.
+
+## 🔴 쿼터별 가용 선수 (availableByQuarter) 엄수
+
+입력에 \`availableByQuarter\` 객체가 있으면 **각 쿼터는 그 명단의 선수만 사용**. 이건 **운영진이 이미 출전 로테이션을 정해둔 것**이라 **절대 위반 금지**.
+
+- 예: \`availableByQuarter[2] = ["김선휘","박철수","홍길동",...]\`이면 2쿼터 placement에는 이 이름들만 나올 수 있음
+- 명단에 없는 선수를 해당 쿼터 placement에 넣으면 **실패 처리**
+- \`availableByQuarter\`가 없거나 비어있으면 attendees 전체에서 자유 배치
 
 ## 팀 히스토리 활용
 
@@ -179,8 +188,12 @@ function buildFormationCatalog(sportType: "SOCCER" | "FUTSAL" | undefined, field
   }));
 }
 
-/** placement가 formation catalog의 slots와 정확히 일치하는지 검증 */
-function validatePlan(plan: QuarterPlan, catalog: ReturnType<typeof buildFormationCatalog>): string | null {
+/** placement가 formation catalog의 slots와 정확히 일치하는지 + 쿼터 가용성 검증 */
+function validatePlan(
+  plan: QuarterPlan,
+  catalog: ReturnType<typeof buildFormationCatalog>,
+  availableByQuarter?: Record<number, string[]> | null,
+): string | null {
   const fmt = catalog.find((c) => c.name === plan.formation);
   if (!fmt) return `unknown formation "${plan.formation}"`;
   const expected = new Set(fmt.slots);
@@ -190,6 +203,16 @@ function validatePlan(plan: QuarterPlan, catalog: ReturnType<typeof buildFormati
   }
   for (const s of got) {
     if (!expected.has(s)) return `quarter ${plan.quarter}: unknown slot "${s}" for ${plan.formation}`;
+  }
+  // availableByQuarter 제약 검증: 해당 쿼터 명단에 없는 선수 배치 금지
+  const allowed = availableByQuarter?.[plan.quarter];
+  if (allowed && allowed.length > 0) {
+    const allowedSet = new Set(allowed);
+    for (const p of plan.placement) {
+      if (!allowedSet.has(p.playerName)) {
+        return `quarter ${plan.quarter}: "${p.playerName}" not in availableByQuarter`;
+      }
+    }
   }
   return null;
 }
@@ -221,21 +244,24 @@ export async function generateAiFullPlan(input: TacticsAnalysisInput): Promise<F
     matchType: input.matchType,
     opponent: input.opponent ?? null,
     defaultFormation: input.formationName,
+    availableByQuarter: input.availableByQuarter ?? null,
   });
   const catalogBlock = `## formationCatalog (이 안에서만 formation + slots 선택)\n\n${JSON.stringify(catalog, null, 2)}`;
 
   const historyBlock = await fetchHistoryBlock(input);
 
+  const hasAvailability = input.availableByQuarter && Object.keys(input.availableByQuarter).length > 0;
   const userMessage = [
     `다음은 formation catalog·팀 통계·이번 경기 정보입니다. quarterCount만큼의 JSON 배열로 쿼터별 포메이션과 배치를 생성하세요.`,
     `📌 반드시 formationCatalog의 slots 라벨을 그대로 사용 (임의 이름 생성 금지).`,
     `📌 4쿼터 중 최소 2가지 다른 포메이션 사용.`,
+    hasAvailability ? `📌 availableByQuarter에 명시된 쿼터별 명단 외의 선수는 해당 쿼터에 절대 배치 금지.` : "",
     `JSON 배열만 반환.`,
     ``,
     catalogBlock,
     historyBlock ? `\n${historyBlock}` : "",
     `\n## 이번 경기 정보\n${userContent}`,
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 
   try {
     const response = await client.messages.create({
@@ -268,10 +294,10 @@ export async function generateAiFullPlan(input: TacticsAnalysisInput): Promise<F
       return { plans: ruleBasedFallback(input), source: "rule", error: `expected ${input.quarterCount} quarters, got ${plans.length}` };
     }
 
-    // 각 쿼터 검증: formation이 catalog에 존재 + slots가 catalog와 정확히 일치
+    // 각 쿼터 검증: formation이 catalog에 존재 + slots가 catalog와 정확히 일치 + 쿼터 가용성
     const warnings: string[] = [];
     for (const plan of plans) {
-      const err = validatePlan(plan, catalog);
+      const err = validatePlan(plan, catalog, input.availableByQuarter);
       if (err) {
         console.warn(`[aiFullPlan] 검증 실패: ${err}`);
         warnings.push(err);
