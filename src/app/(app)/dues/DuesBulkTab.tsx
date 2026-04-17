@@ -765,31 +765,33 @@ function DuesBulkTabInner({
                       </span>
                     </div>
 
-                    {/* Row 1: 날짜(넓게), 유형, 금액 */}
-                    <div className="grid grid-cols-[1fr_5rem_6rem] gap-2">
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-muted-foreground uppercase tracking-wide">날짜</label>
-                        <Input
-                          type="date"
-                          value={row.date}
-                          onChange={(e) => {
-                            updateBulkRow(index, "date", e.target.value);
-                            setBulkErrors((p) => { const n = { ...p }; delete n[index]; return n; });
-                          }}
-                          className={cn(
-                            "h-10 rounded-lg bg-secondary border-0 text-sm",
-                            errs.includes("date") && "ring-1 ring-destructive"
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-1">
+                    {/* Row 1: 날짜 (full width, 모바일에서 overflow 방지) */}
+                    <div className="space-y-1 min-w-0">
+                      <label className="text-[10px] text-muted-foreground uppercase tracking-wide">날짜</label>
+                      <Input
+                        type="date"
+                        value={row.date}
+                        onChange={(e) => {
+                          updateBulkRow(index, "date", e.target.value);
+                          setBulkErrors((p) => { const n = { ...p }; delete n[index]; return n; });
+                        }}
+                        className={cn(
+                          "h-10 w-full rounded-lg bg-secondary border-0 text-sm",
+                          errs.includes("date") && "ring-1 ring-destructive"
+                        )}
+                      />
+                    </div>
+
+                    {/* Row 2: 유형 + 금액 (2:3 비율, 둘 다 flexible) */}
+                    <div className="grid grid-cols-[2fr_3fr] gap-2 min-w-0">
+                      <div className="space-y-1 min-w-0">
                         <label className="text-[10px] text-muted-foreground uppercase tracking-wide">유형</label>
                         <Select
                           value={row.type}
                           onValueChange={(v) => updateBulkRow(index, "type", v as "INCOME" | "EXPENSE")}
                         >
                           <SelectTrigger className={cn(
-                            "h-10 rounded-lg bg-secondary border-0 text-sm",
+                            "h-10 w-full rounded-lg bg-secondary border-0 text-sm",
                             row.type === "INCOME" ? "text-[hsl(var(--success))]" : "text-destructive"
                           )}>
                             <SelectValue />
@@ -800,7 +802,7 @@ function DuesBulkTabInner({
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1 min-w-0">
                         <label className="text-[10px] text-muted-foreground uppercase tracking-wide">금액</label>
                         <div className="relative">
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs pointer-events-none">₩</span>
@@ -814,7 +816,7 @@ function DuesBulkTabInner({
                               setBulkErrors((p) => { const n = { ...p }; delete n[index]; return n; });
                             }}
                             className={cn(
-                              "h-10 rounded-lg bg-secondary border-0 text-sm pl-5 text-right",
+                              "h-10 w-full rounded-lg bg-secondary border-0 text-sm pl-5 text-right",
                               errs.includes("amount") && "ring-1 ring-destructive"
                             )}
                             placeholder="0"
