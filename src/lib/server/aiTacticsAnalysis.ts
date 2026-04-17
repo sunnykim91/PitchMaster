@@ -197,6 +197,9 @@ export type TacticsAnalysisInput = {
   userId?: string | null;
   teamId?: string | null;
   matchId?: string | null;
+  /** Phase C(aiFullPlan) — formation catalog 생성용 */
+  sportType?: "SOCCER" | "FUTSAL";
+  playerCount?: number;
 };
 
 export type TacticsAnalysisResult = {

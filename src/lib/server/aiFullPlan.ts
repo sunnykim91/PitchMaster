@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { recordAiUsage, extractTokenUsage } from "@/lib/server/aiUsageLog";
 import { fetchHistoryBlock } from "@/lib/server/aiTacticsAnalysis";
 import type { TacticsAnalysisInput } from "@/lib/server/aiTacticsAnalysis";
+import { formationTemplates } from "@/lib/formations";
 
 /**
  * Phase C — AI 풀 플랜 생성.
@@ -28,43 +29,55 @@ const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의
 3. 각 요소 스키마:
    \`\`\`
    {
-     "quarter": 1,                    // 쿼터 번호 (1부터 시작)
-     "formation": "4-3-3",            // 포메이션 이름
-     "placement": [                   // 슬롯-선수 매핑 (10~11명 또는 풋살 5~6명)
-       { "slot": "GK", "playerName": "홍길동" },
-       { "slot": "CB1", "playerName": "김철수" },
+     "quarter": 1,
+     "formation": "4-2-3-1",          // 아래 **formationCatalog의 name과 정확히 일치**
+     "placement": [                   // 아래 catalog.slots와 **정확히 같은 slot 라벨·개수**
+       { "slot": "GK",  "playerName": "홍길동" },
+       { "slot": "LB",  "playerName": "김철수" },
        ...
      ],
      "note": "공격적 시작"            // 1줄 코칭 메모 (15자 이내)
    }
    \`\`\`
 
-4. \`playerName\`은 입력 attendees의 이름과 **정확히 일치**.
-5. 한 쿼터에 같은 선수 중복 배치 금지.
-6. 응답 첫 글자 = \`[\`, 마지막 글자 = \`]\`.
+4. **slot 이름은 입력 formationCatalog에서 제공된 라벨만 사용.**
+   예: 4-2-3-1 catalog가 [GK, LB, LCB, RCB, RB, LDM, RDM, LAM, CAM, RAM, ST]라면
+   placement에 **정확히 이 11개 slot만** 나와야 함.
+   "CB1", "CB2", "CB3" 같은 임의 이름 **절대 금지**.
+
+5. 각 쿼터의 placement 배열 길이 = 해당 formation의 slots 수.
+
+6. \`playerName\`은 입력 attendees의 이름과 **정확히 일치**.
+7. 한 쿼터에 같은 선수 중복 배치 금지.
+8. 응답 첫 글자 = \`[\`, 마지막 글자 = \`]\`.
+
+## 🔴 포메이션 변화 (절대 엄수)
+
+**"쿼터별 변경"이라는 요청의 핵심은 다양성.** 4쿼터 모두 동일 포메이션은 **실패**.
+
+- \`quarterCount >= 4\`면 **최소 2가지 서로 다른 포메이션** 사용 필수
+- \`quarterCount == 2\`면 동일 허용 (체력 분배 이유 있을 때)
+- 구체 패턴 예시:
+  - 1Q: 4-3-3 (공격적 시작) / 2Q: 4-4-2 (미드 강화) / 3Q: 5-3-2 (수비) / 4Q: 4-3-3 (승부수)
+  - 1Q: 4-2-3-1 (기본) / 2Q: 3-4-3 (측면 가속) / 3Q: 4-4-2 (피로 대응) / 4Q: 4-2-3-1 (안정)
+- 한 가지 formation만 반복하려면 매우 분명한 근거 필요 (히스토리 승률 95%+ 등)
 
 ## 편성 원칙
 
-1. **선호 포지션 존중**: attendees[].preferredPosition 우선 활용. 다만 팀 밸런스를 위해 한두 명은 다른 포지션도 가능.
-2. **체력 분배**: 4쿼터 동안 모든 선수가 합리적으로 출전. 1~2쿼터 풀타임 후 3쿼터 휴식 같은 패턴.
-3. **포메이션 변화**: 쿼터마다 동일 or 다르게. 정답 없음. **상황에 맞게**.
+1. **선호 포지션 존중**: attendees[].preferredPosition 우선 활용
+2. **체력 분배**: 4쿼터 동안 모든 선수 합리적 출전. 1~2쿼터 풀타임 후 3쿼터 휴식 같은 패턴.
+3. **포메이션 변화 가이드**:
    - 초반 공격적, 후반 수비적 (체력 고려)
-   - 상대 압박 강하면 미드 보강 (4-4-2 → 4-3-3 같은 변화는 부적절, 미드 두꺼운 쪽)
-   - 우리 팀 잘 쓰는 포메이션 우선 (히스토리 승률 참고)
-4. **상대팀 약점 공략**: opponentHistory가 있으면 과거 패턴 반영.
-5. **GK 고정**: 골키퍼는 4쿼터 동일 인물 권장 (실력 차 큰 선수 한 명).
+   - 상대 압박 강하면 미드 두꺼운 쪽 (4-3-3 → 4-2-3-1)
+   - 우리 팀 잘 쓰는 포메이션을 1~2쿼터에 배치 (히스토리 승률 참고)
+4. **상대팀 약점 공략**: opponentHistory가 있으면 과거 패턴 반영
+5. **GK 고정**: 골키퍼는 4쿼터 동일 인물 권장
 
 ## 팀 히스토리 활용
 
-- 우리 팀 승률 높은 포메이션을 1~2 쿼터에 우선 배치
+- 우리 팀 승률 높은 포메이션을 1~2쿼터에 우선 배치
 - 핵심 선수(playerPositionStats top)는 주력 포지션 유지
-- 새 포메이션 시도는 1~2 쿼터로 제한 (3~4쿼터 검증된 것)
-
-## 풋살 vs 축구 구분
-
-- attendees 수가 5~6명 또는 placement.slot이 FIXO/ALA/PIVO 포함 → 풋살
-- 풋살 포메이션: 1-2-1, 2-2, 3-1 등 (5인 기준)
-- 축구 포메이션: 4-3-3, 4-4-2, 4-2-3-1, 5-3-2, 3-4-3 등
+- 새 포메이션 시도는 1~2쿼터로 제한, 3~4쿼터는 검증된 것
 
 ## 응답 형식
 
@@ -149,6 +162,38 @@ function ruleBasedFallback(input: TacticsAnalysisInput): QuarterPlan[] {
   }));
 }
 
+/**
+ * 종목·인원별 formation catalog를 프롬프트용 JSON 배열로 변환.
+ * AI가 이 slot 라벨만 사용하도록 명시.
+ */
+function buildFormationCatalog(sportType: "SOCCER" | "FUTSAL" | undefined, fieldCount: number | undefined) {
+  const normalizedSport: "SOCCER" | "FUTSAL" = sportType ?? "SOCCER";
+  const filtered = formationTemplates.filter((f) => {
+    if (f.sportType !== normalizedSport) return false;
+    if (fieldCount && f.fieldCount && f.fieldCount !== fieldCount) return false;
+    return true;
+  });
+  return filtered.map((f) => ({
+    name: f.name,
+    slots: f.slots.map((s) => s.label),
+  }));
+}
+
+/** placement가 formation catalog의 slots와 정확히 일치하는지 검증 */
+function validatePlan(plan: QuarterPlan, catalog: ReturnType<typeof buildFormationCatalog>): string | null {
+  const fmt = catalog.find((c) => c.name === plan.formation);
+  if (!fmt) return `unknown formation "${plan.formation}"`;
+  const expected = new Set(fmt.slots);
+  const got = new Set(plan.placement.map((p) => p.slot));
+  if (expected.size !== plan.placement.length) {
+    return `quarter ${plan.quarter}: expected ${expected.size} slots, got ${plan.placement.length}`;
+  }
+  for (const s of got) {
+    if (!expected.has(s)) return `quarter ${plan.quarter}: unknown slot "${s}" for ${plan.formation}`;
+  }
+  return null;
+}
+
 export async function generateAiFullPlan(input: TacticsAnalysisInput): Promise<FullPlanResult> {
   const started = Date.now();
   const logBase = {
@@ -163,19 +208,34 @@ export async function generateAiFullPlan(input: TacticsAnalysisInput): Promise<F
     return { plans: ruleBasedFallback(input), source: "rule", error: "API key not configured" };
   }
 
+  // formation catalog — AI가 사용 가능한 포메이션 + 정확한 slot 라벨 나열
+  const catalog = buildFormationCatalog(input.sportType, input.playerCount);
+  if (catalog.length === 0) {
+    await recordAiUsage({ ...logBase, source: "rule", errorReason: "no_catalog" });
+    return { plans: ruleBasedFallback(input), source: "rule", error: "no formation catalog for sport/count" };
+  }
+
   const userContent = JSON.stringify({
     quarterCount: input.quarterCount,
     attendees: input.attendees.slice(0, 30),
     matchType: input.matchType,
     opponent: input.opponent ?? null,
-    defaultFormation: input.formationName, // 참고용 (감독이 미리 선택한 기본 포메이션)
+    defaultFormation: input.formationName,
   });
+  const catalogBlock = `## formationCatalog (이 안에서만 formation + slots 선택)\n\n${JSON.stringify(catalog, null, 2)}`;
 
   const historyBlock = await fetchHistoryBlock(input);
 
-  const userMessage = historyBlock
-    ? `다음은 우리 팀 최근 통계와 이번 경기 정보입니다. quarterCount만큼의 JSON 배열로 쿼터별 포메이션과 배치를 생성하세요. JSON만 반환.\n\n${historyBlock}\n\n## 이번 경기 정보\n${userContent}`
-    : `다음 경기 정보로 quarterCount만큼의 JSON 배열로 쿼터별 포메이션과 배치를 생성하세요. JSON만 반환.\n\n${userContent}`;
+  const userMessage = [
+    `다음은 formation catalog·팀 통계·이번 경기 정보입니다. quarterCount만큼의 JSON 배열로 쿼터별 포메이션과 배치를 생성하세요.`,
+    `📌 반드시 formationCatalog의 slots 라벨을 그대로 사용 (임의 이름 생성 금지).`,
+    `📌 4쿼터 중 최소 2가지 다른 포메이션 사용.`,
+    `JSON 배열만 반환.`,
+    ``,
+    catalogBlock,
+    historyBlock ? `\n${historyBlock}` : "",
+    `\n## 이번 경기 정보\n${userContent}`,
+  ].join("\n");
 
   try {
     const response = await client.messages.create({
@@ -206,6 +266,30 @@ export async function generateAiFullPlan(input: TacticsAnalysisInput): Promise<F
       console.warn(`[aiFullPlan] 쿼터 수 불일치: 기대 ${input.quarterCount}, 실제 ${plans.length}`);
       await recordAiUsage({ ...logBase, source: "rule", model: MODEL, ...tokens, latencyMs: Date.now() - started, errorReason: `quarter_mismatch_${plans.length}` });
       return { plans: ruleBasedFallback(input), source: "rule", error: `expected ${input.quarterCount} quarters, got ${plans.length}` };
+    }
+
+    // 각 쿼터 검증: formation이 catalog에 존재 + slots가 catalog와 정확히 일치
+    const warnings: string[] = [];
+    for (const plan of plans) {
+      const err = validatePlan(plan, catalog);
+      if (err) {
+        console.warn(`[aiFullPlan] 검증 실패: ${err}`);
+        warnings.push(err);
+      }
+    }
+    if (warnings.length > 0) {
+      await recordAiUsage({ ...logBase, source: "rule", model: MODEL, ...tokens, latencyMs: Date.now() - started, errorReason: `validation_${warnings.length}` });
+      return { plans: ruleBasedFallback(input), source: "rule", error: `validation failed: ${warnings.join("; ")}` };
+    }
+
+    // quarterCount >= 4인데 1가지 formation만 쓴 경우 경고 (실패 아님, 기록만)
+    if (input.quarterCount >= 4) {
+      const unique = new Set(plans.map((p) => p.formation));
+      if (unique.size < 2) {
+        console.warn("[aiFullPlan] 4쿼터 모두 동일 포메이션 — 권장 위반");
+        await recordAiUsage({ ...logBase, source: "ai", model: MODEL, ...tokens, latencyMs: Date.now() - started, errorReason: "single_formation_used" });
+        return { plans, source: "ai", model: MODEL };
+      }
     }
 
     await recordAiUsage({ ...logBase, source: "ai", model: MODEL, ...tokens, latencyMs: Date.now() - started });

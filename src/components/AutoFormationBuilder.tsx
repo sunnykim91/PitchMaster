@@ -19,7 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
-import { Zap, Sparkles, Loader2 } from "lucide-react";
+import { Zap, Sparkles, Loader2, ChevronDown } from "lucide-react";
 
 /* ── Types ── */
 
@@ -64,6 +64,13 @@ type Props = {
   defaultFormationId?: string;
   side?: "A" | "B";
   onGenerated?: (squads: GeneratedSquad[]) => void;
+  /** 자동 편성 결과가 바뀔 때 AI 코치 분석에 필요한 컨텍스트를 상위에 제공 */
+  onAnalysisContextReady?: (ctx: {
+    placement: Array<{ slot: string; playerName: string }>;
+    attendees: Array<{ name: string; preferredPosition?: string | null }>;
+    formationName: string;
+    quarterCount: number;
+  } | null) => void;
   /** AI 코치 분석 버튼 표시 여부 (김선휘 Feature Flag) */
   enableAi?: boolean;
   /** 분석에 전달할 경기 맥락 */
@@ -529,6 +536,7 @@ export default function AutoFormationBuilder({
   defaultFormationId,
   side,
   onGenerated,
+  onAnalysisContextReady,
   enableAi = false,
   matchContext,
 }: Props) {
@@ -551,12 +559,6 @@ export default function AutoFormationBuilder({
   const [results, setResults] = useState<QuarterResult[] | null>(null);
   const [previewQuarter, setPreviewQuarter] = useState(1);
   const [saving, setSaving] = useState(false);
-  // AI 코치 분석 상태 (Phase 2 Feature Flag)
-  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
-  const [aiSource, setAiSource] = useState<"ai" | "rule" | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
-
   // Phase C — AI 풀 플랜 (쿼터별 다른 포메이션 추천)
   const [aiPlanMode, setAiPlanMode] = useState(false);
   const [aiPlans, setAiPlans] = useState<Array<{ quarter: number; formation: string; placement: Array<{ slot: string; playerName: string }>; note?: string }> | null>(null);
@@ -570,6 +572,34 @@ export default function AutoFormationBuilder({
       filteredFormations[0],
     [formationId, filteredFormations],
   );
+
+  // 자동 편성 결과 변할 때 AI 코치 분석 컨텍스트를 상위에 전달 (Phase B — 전술판 아래 AiCoachAnalysisCard용)
+  useEffect(() => {
+    if (!onAnalysisContextReady) return;
+    if (!results || !formation) {
+      onAnalysisContextReady(null);
+      return;
+    }
+    const firstQuarter = results[0];
+    if (!firstQuarter) {
+      onAnalysisContextReady(null);
+      return;
+    }
+    const placement = firstQuarter.assignments.map((a) => ({
+      slot: a.slotLabel,
+      playerName: a.playerName,
+    }));
+    const attendees = attendingPlayers.map((p) => ({
+      name: p.name,
+      preferredPosition: p.preferredPosition,
+    }));
+    onAnalysisContextReady({
+      placement,
+      attendees,
+      formationName: formation.name,
+      quarterCount,
+    });
+  }, [results, formation, attendingPlayers, quarterCount, onAnalysisContextReady]);
 
   // Sync assignments when attendingPlayers changes — auto-distribute on init
   useEffect(() => {
@@ -604,7 +634,7 @@ export default function AutoFormationBuilder({
         return { ...p, isGK: false, quarters: q };
       }),
     );
-    setResults(null); setAiAnalysis(null); setAiError(null);
+    setResults(null);
   }, [attendingPlayers, quarterCount, formationId]);
 
   const gks = useMemo(
@@ -651,14 +681,14 @@ export default function AutoFormationBuilder({
         return { ...a, quarters: dist.low };
       });
     });
-    setResults(null); setAiAnalysis(null); setAiError(null);
+    setResults(null);
   }
 
   function setPlayerQuarters(id: string, q: number) {
     setAssignments((prev) =>
       prev.map((a) => (a.id === id ? { ...a, quarters: q } : a)),
     );
-    setResults(null); setAiAnalysis(null); setAiError(null);
+    setResults(null);
   }
 
   function toggleGK(id: string) {
@@ -678,7 +708,7 @@ export default function AutoFormationBuilder({
         };
       }),
     );
-    setResults(null); setAiAnalysis(null); setAiError(null);
+    setResults(null);
   }
 
   function generate() {
@@ -748,6 +778,8 @@ export default function AutoFormationBuilder({
         matchType: matchContext?.matchType ?? "REGULAR",
         opponent: matchContext?.opponent ?? null,
         warnings: [],
+        sportType,           // formation catalog 필터링용
+        playerCount,         // 인원별 포메이션 필터
       };
       const res = await fetch("/api/ai/full-plan", {
         method: "POST",
@@ -772,59 +804,6 @@ export default function AutoFormationBuilder({
     }
   }
 
-  async function handleAiAnalyze() {
-    if (!results || aiLoading) return;
-    setAiLoading(true);
-    setAiError(null);
-    setAiAnalysis(""); // 스트리밍 시작 시 빈 문자열로 초기화 (로딩 플레이스홀더 대신 progressive 표시)
-    setAiSource(null);
-    try {
-      const firstQuarter = results[0];
-      const placement = firstQuarter.assignments.map((a) => ({
-        slot: a.slotLabel,
-        playerName: a.playerName,
-      }));
-      const attendees = attendingPlayers.map((p) => ({
-        name: p.name,
-        preferredPosition: p.preferredPosition,
-      }));
-      const payload = {
-        formationName: formation.name,
-        quarterCount,
-        attendees,
-        placement,
-        matchType: matchContext?.matchType ?? "REGULAR",
-        opponent: matchContext?.opponent ?? null,
-        warnings: [],
-      };
-
-      const { consumeSseStream } = await import("@/lib/sseStream");
-      await consumeSseStream("/api/ai/tactics", payload, {
-        onChunk: (text) => {
-          setAiAnalysis((prev) => (prev ?? "") + text);
-        },
-        onReplace: (text) => {
-          setAiAnalysis(text);
-        },
-        onDone: (source) => {
-          setAiSource(source);
-        },
-        onError: (msg) => {
-          setAiError(msg);
-        },
-      });
-    } catch (err) {
-      // consumeSseStream이 초기 응답에서 에러 던진 경우 (4xx/5xx)
-      if (err instanceof Error) {
-        setAiError(err.message);
-      } else {
-        setAiError("네트워크 오류가 발생했습니다");
-      }
-      setAiAnalysis(null); // 실패 시 표시 상태 초기화
-    } finally {
-      setAiLoading(false);
-    }
-  }
 
   // Player × quarter map for result display
   const playerQuarterMap = useMemo(() => {
@@ -1075,8 +1054,8 @@ export default function AutoFormationBuilder({
               <p className="text-xs text-destructive">{aiPlanError}</p>
             )}
             {aiPlans && aiPlans.length > 0 && (
-              <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-3 space-y-2">
-                <div className="flex items-center gap-2">
+              <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-3 space-y-1.5">
+                <div className="flex items-center gap-2 mb-1">
                   <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">
                     {aiPlanSource === "ai" ? "AI" : "⚙"}
                   </span>
@@ -1085,24 +1064,27 @@ export default function AutoFormationBuilder({
                   </span>
                 </div>
                 {aiPlans.map((p) => (
-                  <div key={p.quarter} className="rounded-lg border border-border/40 bg-card/40 p-2">
-                    <div className="flex items-center justify-between gap-2 mb-1">
+                  <details key={p.quarter} className="group rounded-lg border border-border/40 bg-card/40 overflow-hidden">
+                    <summary className="flex items-center justify-between gap-2 px-2.5 py-2 cursor-pointer select-none list-none">
                       <span className="text-sm font-bold text-foreground">
-                        {p.quarter}쿼터 · {p.formation}
+                        {p.quarter}쿼터 · <span className="text-primary">{p.formation}</span>
                       </span>
-                      {p.note && <span className="text-[11px] text-muted-foreground">{p.note}</span>}
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 text-[11px] text-foreground/80">
+                      <div className="flex items-center gap-1.5">
+                        {p.note && <span className="text-[11px] text-muted-foreground">{p.note}</span>}
+                        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform group-open:rotate-180" />
+                      </div>
+                    </summary>
+                    <div className="px-2.5 pb-2 pt-1 flex flex-wrap gap-1.5 text-[11px] text-foreground/80 border-t border-border/30">
                       {p.placement.map((x, i) => (
                         <span key={i} className="rounded bg-secondary px-1.5 py-0.5">
                           {x.slot}: {x.playerName}
                         </span>
                       ))}
                     </div>
-                  </div>
+                  </details>
                 ))}
                 <p className="mt-1 text-[10px] text-muted-foreground/70">
-                  ⚠️ 베타 — 자동 적용 미지원. 위 편성을 참고해서 수동으로 슬롯 배치하세요.
+                  ⚠️ 베타 — 자동 적용 미지원. 각 쿼터를 탭해서 편성을 확인하고 수동으로 슬롯 배치하세요.
                 </p>
               </div>
             )}
@@ -1203,64 +1185,12 @@ export default function AutoFormationBuilder({
                   {saving ? "저장 중..." : "→ 전술판에 적용"}
                 </Button>
                 <Button variant="ghost" className="w-full text-muted-foreground hover:text-foreground"
-                  onClick={() => { setResults(null); setAiAnalysis(null); setAiError(null); }}>
+                  onClick={() => { setResults(null); }}>
                   ↻ 초기화
                 </Button>
               </div>
 
-              {/* AI 코치 분석 (김선휘 Feature Flag) */}
-              {enableAi && (
-                <div className="mt-4 border-t border-border/30 pt-4">
-                  {aiAnalysis === null && !aiLoading ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full gap-2 rounded-xl border-primary/40 text-primary hover:bg-primary/5"
-                      onClick={handleAiAnalyze}
-                    >
-                      <Sparkles className="h-4 w-4" />
-                      AI 코치 분석 보기
-                    </Button>
-                  ) : (
-                    <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4">
-                      <div className="mb-2 flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">
-                            {aiSource === "ai" ? "AI" : aiSource === "rule" ? "⚙" : "✨"}
-                          </span>
-                          <span className="text-sm font-bold text-foreground">
-                            {aiSource === "ai" ? "코치 분석" : aiSource === "rule" ? "기본 분석" : "분석 중..."}
-                          </span>
-                        </div>
-                        {!aiLoading && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 gap-1 px-2 text-xs"
-                            onClick={() => { setAiAnalysis(null); setAiSource(null); handleAiAnalyze(); }}
-                          >
-                            <Sparkles className="h-3 w-3" />
-                            다시
-                          </Button>
-                        )}
-                      </div>
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
-                        {aiAnalysis || ""}
-                        {aiLoading && <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-primary/60 align-middle" />}
-                      </p>
-                      {aiSource === "rule" && (
-                        <p className="mt-2 text-[11px] text-muted-foreground/70">
-                          AI 분석이 실패해 자동 생성본을 보여드립니다. "다시" 버튼으로 재시도.
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  {aiError && (
-                    <p className="mt-2 text-xs text-destructive">{aiError}</p>
-                  )}
-                </div>
-              )}
+              {/* AI 코치 분석은 상위 페이지(MatchTacticsTab)에서 전술판 아래에 별도 렌더 */}
             </div>
           );
         })()}

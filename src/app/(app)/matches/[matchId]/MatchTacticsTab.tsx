@@ -27,6 +27,7 @@ const TacticsBoardSkeleton = () => (
 
 import TacticsBoard from "@/components/TacticsBoard";
 import AutoFormationBuilder from "@/components/AutoFormationBuilder";
+import { AiCoachAnalysisCard } from "@/components/AiCoachAnalysisCard";
 
 export interface MatchTacticsTabProps {
   matchId: string;
@@ -62,6 +63,13 @@ function MatchTacticsTabInner({
 }: MatchTacticsTabProps) {
   const [tacticsKey, setTacticsKey] = useState(0);
   const [generatedSquads, setGeneratedSquads] = useState<GeneratedSquad[]>([]);
+  // Phase B — AI 코치 분석 컨텍스트 (AutoFormationBuilder에서 내려줌, 전술판 아래 카드에서 사용)
+  const [aiCoachContext, setAiCoachContext] = useState<{
+    placement: Array<{ slot: string; playerName: string }>;
+    attendees: Array<{ name: string; preferredPosition?: string | null }>;
+    formationName: string;
+    quarterCount: number;
+  } | null>(null);
   const isInternal = match.matchType === "INTERNAL";
   const [activeSide, setActiveSide] = useState<"A" | "B">("A");
   const [savingTeams, setSavingTeams] = useState(false);
@@ -434,6 +442,7 @@ function MatchTacticsTabInner({
             setGeneratedSquads(squads);
             setTacticsKey((k) => k + 1);
           }}
+          onAnalysisContextReady={setAiCoachContext}
           enableAi={enableAi}
           matchContext={{
             matchType: (match.matchType ?? "REGULAR"),
@@ -461,7 +470,20 @@ function MatchTacticsTabInner({
         })) : undefined}
       />
 
-      {/* 용병 관리는 포메이션 위 상단에 배치 */}
+      {/* Phase B — AI 코치 분석: 전술판 시각화 "아래" 배치 (시각화 → 해설 순서) */}
+      {canManage && aiCoachContext && (
+        <AiCoachAnalysisCard
+          hasResults={true}
+          placement={aiCoachContext.placement}
+          attendees={aiCoachContext.attendees}
+          formationName={aiCoachContext.formationName}
+          quarterCount={aiCoachContext.quarterCount}
+          matchType={(match.matchType ?? "REGULAR") as "REGULAR" | "INTERNAL" | "EVENT"}
+          opponent={match.opponent ?? null}
+          matchId={matchId}
+          enableAi={enableAi}
+        />
+      )}
     </div>
   );
 }
