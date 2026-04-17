@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { parseReceiptWithVision } from "@/lib/server/aiOcrParse";
+import { checkRateLimit } from "@/lib/server/aiUsageLog";
 
 /**
  * POST /api/ocr/smart
@@ -26,6 +27,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "ai_not_available" }, { status: 403 });
   }
 
+  // 레이트리밋 체크
+  const rate = await checkRateLimit("ocr", session.user.id, session.user.teamId ?? null);
+  if (!rate.allowed) {
+    return NextResponse.json({
+      error: "rate_limited",
+      reason: rate.reason,
+      count: rate.userCount ?? rate.teamCount,
+      cap: rate.cap,
+      message: rate.reason === "user_cap"
+        ? `OCR은 하루 ${rate.cap}회까지만 사용 가능합니다.`
+        : `팀 OCR 일일 한도 ${rate.cap}회에 도달했습니다.`,
+    }, { status: 429 });
+  }
+
   try {
     const formData = await request.formData();
     const file = formData.get("image") as File | null;
@@ -49,7 +64,10 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const result = await parseReceiptWithVision(buffer, file.type);
+    const result = await parseReceiptWithVision(buffer, file.type, {
+      userId: session.user.id,
+      teamId: session.user.teamId ?? null,
+    });
 
     if (result.source === "error") {
       return NextResponse.json({ error: result.error ?? "AI 파싱 실패" }, { status: 502 });
@@ -59,6 +77,7 @@ export async function POST(request: NextRequest) {
       transactions: result.transactions,
       source: result.source,
       count: result.transactions.length,
+      warnings: result.warnings,
     });
   } catch (err) {
     console.error("[/api/ocr/smart] route error:", err);

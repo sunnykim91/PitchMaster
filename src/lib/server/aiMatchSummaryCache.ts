@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { generateAiMatchSummary, type MatchSummaryInput } from "@/lib/server/aiMatchSummary";
+import { checkRateLimit } from "@/lib/server/aiUsageLog";
 
 /**
  * 경기 후기 캐시 — 시그니처 카피와 유사한 구조.
@@ -17,23 +18,37 @@ export type MatchSummaryCacheParams = {
   cachedGeneratedAt?: string | null;
   enableGenerate: boolean;
   input: MatchSummaryInput;
+  /** 관측성용 */
+  userId?: string | null;
+  teamId?: string | null;
+  /** true면 기존 ai_summary가 있어도 강제 재생성 (재생성 버튼용) */
+  forceRegenerate?: boolean;
 };
 
 export async function getOrGenerateMatchSummary(params: MatchSummaryCacheParams): Promise<string | null> {
-  const { matchId, cachedSummary, cachedGeneratedAt, enableGenerate, input } = params;
+  const { matchId, cachedSummary, cachedGeneratedAt, enableGenerate, input, userId, teamId, forceRegenerate } = params;
 
-  // 1. 캐시 hit → 재사용
-  if (cachedSummary) return cachedSummary;
+  // 1. 캐시 hit → 재사용 (강제 재생성 아닐 때)
+  if (cachedSummary && !forceRegenerate) return cachedSummary;
 
-  // 1-b. 한 번이라도 생성된 기록이 있으면 재생성 금지 (텍스트가 비었어도 토큰 낭비 방지)
-  //      경기 후기는 경기당 1회 영구 생성 원칙 — 모든 팀이 동일 정책
-  if (cachedGeneratedAt) return null;
+  // 1-b. 한 번이라도 생성된 기록이 있으면 재생성 금지 (forceRegenerate 예외)
+  if (cachedGeneratedAt && !forceRegenerate) return null;
 
   // 2. 생성 권한 없음 + 캐시 없음 → null (UI에서 안 보이게)
   if (!enableGenerate) return null;
 
-  // 3. 생성 권한 있음 → LLM 호출 + DB 저장
-  const result = await generateAiMatchSummary(input);
+  // 2-b. 레이트리밋
+  if (userId) {
+    const rate = await checkRateLimit("match_summary", userId, teamId ?? null);
+    if (!rate.allowed) {
+      console.warn(`[aiMatchSummaryCache] rate limit 초과 (${rate.reason})`);
+      return null;
+    }
+  }
+
+  // 3. 생성 권한 있음 → LLM 호출 + DB 저장 (관측성 ID 주입)
+  const inputWithContext: MatchSummaryInput = { ...input, userId: userId ?? null, teamId: teamId ?? null, matchId };
+  const result = await generateAiMatchSummary(inputWithContext);
   if (result.source === "ai") {
     const db = getSupabaseAdmin();
     if (!db) {

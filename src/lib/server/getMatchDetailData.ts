@@ -3,7 +3,7 @@ import { getWeatherData } from "@/lib/server/getWeather";
 import { getOrGenerateMatchSummary } from "@/lib/server/aiMatchSummaryCache";
 import type { MatchSummaryInput } from "@/lib/server/aiMatchSummary";
 
-export async function getMatchDetailData(matchId: string, teamId: string, enableAi: boolean = false) {
+export async function getMatchDetailData(matchId: string, teamId: string, enableAi: boolean = false, userId: string | null = null) {
   const db = getSupabaseAdmin();
   if (!db) return null;
 
@@ -93,6 +93,8 @@ export async function getMatchDetailData(matchId: string, teamId: string, enable
       cachedGeneratedAt: match.ai_summary_generated_at ?? null,
       enableGenerate: enableAi,
       input: summaryInput,
+      userId,
+      teamId,
     });
   }
 

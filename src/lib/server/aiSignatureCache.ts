@@ -1,6 +1,7 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { generateAiSignature, type AiSignatureInput } from "@/lib/server/aiSignature";
 import { generateSignature as generateRuleBasedSignature } from "@/lib/playerCardUtils";
+import { checkRateLimit } from "@/lib/server/aiUsageLog";
 
 /**
  * 시그니처 캐시 전략:
@@ -25,6 +26,9 @@ export type CacheParams = {
   enableGenerate: boolean;
   /** 시그니처 생성 입력 (fallback 및 신규 생성용) */
   input: AiSignatureInput;
+  /** 관측성용 — 호출한 유저/팀 */
+  userId?: string | null;
+  teamId?: string | null;
 };
 
 function isFresh(generatedAt: string | null): boolean {
@@ -34,7 +38,9 @@ function isFresh(generatedAt: string | null): boolean {
 }
 
 export async function getOrGenerateSignature(params: CacheParams): Promise<string> {
-  const { teamMemberId, cachedSignature, cachedGeneratedAt, enableGenerate, input } = params;
+  const { teamMemberId, cachedSignature, cachedGeneratedAt, enableGenerate, input, userId, teamId } = params;
+  // 관측성 IDs 주입
+  const inputWithContext: AiSignatureInput = { ...input, userId: userId ?? null, teamId: teamId ?? null, teamMemberId };
 
   // 1. 캐시 hit + 신선 → 재사용
   if (cachedSignature && isFresh(cachedGeneratedAt)) {
@@ -48,8 +54,18 @@ export async function getOrGenerateSignature(params: CacheParams): Promise<strin
     return generateRuleBasedSignature(input);
   }
 
+  // 2-b. 레이트리밋 체크 — 일일 캡 초과 시 stale 캐시 or 룰 기반
+  if (userId) {
+    const rate = await checkRateLimit("signature", userId, teamId ?? null);
+    if (!rate.allowed) {
+      console.warn(`[aiSignatureCache] rate limit 초과 (${rate.reason}) — stale 캐시 or 룰 기반 사용`);
+      if (cachedSignature) return cachedSignature;
+      return generateRuleBasedSignature(input);
+    }
+  }
+
   // 3. 생성 권한 있음 → LLM 호출 + DB 저장
-  const result = await generateAiSignature(input);
+  const result = await generateAiSignature(inputWithContext);
 
   // fallback이어도 DB에 저장? 아니, 룰 기반 결과는 다음 호출 때 재시도 기회 주기 위해 저장 안 함
   if (result.source === "ai") {

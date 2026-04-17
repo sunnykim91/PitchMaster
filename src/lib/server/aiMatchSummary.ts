@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { recordAiUsage, extractTokenUsage } from "@/lib/server/aiUsageLog";
 
 /**
  * Claude Haiku로 경기 후기 생성. 카톡 단톡 공유용.
@@ -92,12 +93,32 @@ JSON으로 경기 정보가 제공됩니다:
 - score: { us: number, opp: number } (EVENT는 null)
 - result: "W" | "D" | "L" | null (EVENT/점수 없음은 null)
 - opponent: 상대팀 이름 (INTERNAL이면 null)
-- goals: 득점자 배열 (이름 + quarter + isOwnGoal)
+- goals: 득점자 배열 [{ scorerName, quarter, isOwnGoal }]
 - assists: 어시스트 이름 배열
 - mom: MOM 수상자 이름 (없으면 null)
 - topScorer: 이 경기 최다 득점자 이름 (있으면)
 - attendanceCount: 참석 인원
-- location, weather, date (참고용)
+- location, weather (참고용)
+- date: ISO 포맷 "YYYY-MM-DD" → 본문엔 "N월 N일" 한국식으로 변환해서 쓸 것
+
+## 🔴 자책골 처리 (중요)
+
+\`goals\` 배열의 각 요소에 \`isOwnGoal\` 필드가 있습니다. **true면 자책골** — 상대 팀의 득점입니다.
+
+- **자책골은 득점자 칭찬 금지**. "홍길동이 골" 표현 절대 X
+- 언급하려면 "자책골로 실점이 있었다" 같은 담담한 서술. 이름 노출 금지 권장.
+- 자책골은 아군 공격 통계에서 제외하고 생각할 것.
+- 우리 득점 수 = goals 중 isOwnGoal=false 갯수.
+
+## 🔴 INTERNAL(자체전) 스코어 해석
+
+INTERNAL 경기에서 \`score.us\`와 \`score.opp\`는 각각 **A팀 vs B팀** 점수입니다 (우리 팀 vs 상대가 아님).
+"우리 팀이 이겼다" 톤 쓰지 말고, **A팀과 B팀이 맞붙었다**는 구도로 서술.
+\`opponent\`는 null. "자체전", "팀 내 미니 경기" 같은 표현 사용.
+
+## 🔴 날짜 포맷
+
+\`date\`는 "2026-04-17" 형식. 본문에선 "4월 17일"처럼 한국식으로 풀어 쓸 것. ISO 포맷 그대로 쓰기 금지.
 
 ## 응답 형식
 
@@ -118,6 +139,10 @@ export type MatchSummaryInput = {
   location: string | null;
   weather: string | null;
   date: string;
+  /** 관측성용 */
+  userId?: string | null;
+  teamId?: string | null;
+  matchId?: string | null;
 };
 
 export type MatchSummaryResult = {
@@ -171,60 +196,87 @@ function isLowQuality(text: string): boolean {
 
 export async function generateAiMatchSummary(input: MatchSummaryInput): Promise<MatchSummaryResult> {
   const ruleSummary = generateRuleBasedSummary(input);
+  const started = Date.now();
+  const logBase = {
+    feature: "match_summary" as const,
+    userId: input.userId ?? null,
+    teamId: input.teamId ?? null,
+    entityId: input.matchId ?? null,
+  };
 
   if (!client) {
+    await recordAiUsage({ ...logBase, source: "rule", errorReason: "no_api_key" });
     return { summary: ruleSummary, source: "rule" };
   }
 
-  try {
-    const userContent = JSON.stringify({
-      matchType: input.matchType,
-      score: input.score,
-      result: input.result,
-      opponent: input.opponent,
-      goals: input.goals.slice(0, 20), // 너무 많으면 잘라냄
-      assists: input.assists.slice(0, 20),
-      mom: input.mom,
-      topScorerName: input.topScorerName,
-      attendanceCount: input.attendanceCount,
-      location: input.location,
-      weather: input.weather,
-      date: input.date,
-    });
+  const userContent = JSON.stringify({
+    matchType: input.matchType,
+    score: input.score,
+    result: input.result,
+    opponent: input.opponent,
+    goals: input.goals.slice(0, 20),
+    assists: input.assists.slice(0, 20),
+    mom: input.mom,
+    topScorerName: input.topScorerName,
+    attendanceCount: input.attendanceCount,
+    location: input.location,
+    weather: input.weather,
+    date: input.date,
+  });
 
-    const response = await client.messages.create({
+  const callOnce = async (temperature: number, feedbackNote?: string) => {
+    const userMsg = feedbackNote
+      ? `이전 응답이 ${feedbackNote} 때문에 실패했습니다. 시스템 지침을 엄격히 지켜 다시 작성.\n\n${userContent}`
+      : `다음 경기 정보를 바탕으로 카톡 단톡에 올릴 경기 후기를 작성해 주세요. 본문 텍스트만 출력.\n\n${userContent}`;
+    return client.messages.create({
       model: MODEL,
       max_tokens: MAX_OUTPUT_TOKENS,
-      temperature: TEMPERATURE,
-      system: [
-        {
-          type: "text",
-          text: SYSTEM_PROMPT,
-          cache_control: { type: "ephemeral" },
-        },
-      ],
-      messages: [
-        {
-          role: "user",
-          content: `다음 경기 정보를 바탕으로 카톡 단톡에 올릴 경기 후기를 작성해 주세요. 본문 텍스트만 출력.\n\n${userContent}`,
-        },
-      ],
+      temperature,
+      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+      messages: [{ role: "user", content: userMsg }],
     });
+  };
 
+  try {
+    const response = await callOnce(TEMPERATURE);
     const textBlock = response.content.find((b) => b.type === "text");
+    const tokens = extractTokenUsage(response);
+
     if (!textBlock || textBlock.type !== "text") {
+      await recordAiUsage({ ...logBase, source: "rule", model: MODEL, ...tokens, latencyMs: Date.now() - started, errorReason: "no_text_block" });
       return { summary: ruleSummary, source: "rule" };
     }
 
     const cleaned = sanitize(textBlock.text);
-    if (isLowQuality(cleaned)) {
-      console.warn(`[aiMatchSummary] 저품질 응답 → fallback. raw="${textBlock.text.slice(0, 100)}"`);
-      return { summary: ruleSummary, source: "rule" };
+    if (!isLowQuality(cleaned)) {
+      await recordAiUsage({ ...logBase, source: "ai", model: MODEL, ...tokens, latencyMs: Date.now() - started });
+      return { summary: cleaned, source: "ai", model: MODEL };
     }
 
-    return { summary: cleaned, source: "ai", model: MODEL };
+    // 재시도 1회 (temperature 낮추고 실패 이유 피드백)
+    const failReason = cleaned.length < 50 ? "너무 짧음" : cleaned.length > 600 ? "너무 긺" : "메타 표현 또는 마크다운 포함";
+    const retry = await callOnce(0.4, failReason);
+    const retryBlock = retry.content.find((b) => b.type === "text");
+    const retryTokens = extractTokenUsage(retry);
+    const retryCleaned = retryBlock?.type === "text" ? sanitize(retryBlock.text) : "";
+
+    if (retryCleaned && !isLowQuality(retryCleaned)) {
+      await recordAiUsage({
+        ...logBase, source: "ai", model: MODEL,
+        inputTokens: (tokens.inputTokens ?? 0) + (retryTokens.inputTokens ?? 0),
+        outputTokens: (tokens.outputTokens ?? 0) + (retryTokens.outputTokens ?? 0),
+        cacheReadTokens: (tokens.cacheReadTokens ?? 0) + (retryTokens.cacheReadTokens ?? 0),
+        cacheCreationTokens: (tokens.cacheCreationTokens ?? 0) + (retryTokens.cacheCreationTokens ?? 0),
+        latencyMs: Date.now() - started, retryCount: 1,
+      });
+      return { summary: retryCleaned, source: "ai", model: MODEL };
+    }
+
+    await recordAiUsage({ ...logBase, source: "rule", model: MODEL, latencyMs: Date.now() - started, retryCount: 1, errorReason: "low_quality" });
+    return { summary: ruleSummary, source: "rule" };
   } catch (err) {
     console.error("[aiMatchSummary] Claude API 호출 실패, 룰 기반으로 fallback:", err);
+    await recordAiUsage({ ...logBase, source: "error", model: MODEL, latencyMs: Date.now() - started, errorReason: "api_error" });
     return { summary: ruleSummary, source: "rule" };
   }
 }

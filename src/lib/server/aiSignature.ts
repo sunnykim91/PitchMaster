@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { SignatureInput } from "@/lib/playerCardUtils";
 import { generateSignature as generateRuleBasedSignature } from "@/lib/playerCardUtils";
+import { recordAiUsage, extractTokenUsage } from "@/lib/server/aiUsageLog";
 
 /**
  * Claude Haiku로 선수 시그니처 카피 생성.
@@ -115,6 +116,17 @@ const SYSTEM_PROMPT = `당신은 스포츠 다큐멘터리 내레이터이자 EA
 - **DEF**: 차단·읽기·뒷공간·기다림·1초
 - **GK**: 손·라인·거리·외로움·최후
 
+## 팀 1위 플래그 활용
+
+입력에 \`isTopScorer / isTopAssist / isTopMvp\` 불리언이 있습니다.
+해당 항목이 true면 **팀 내 1위** 의미 — 카피에 자연스럽게 녹이세요.
+
+- isTopScorer=true → "12골, 팀에서 가장 많이 넣는다", "득점 1위"
+- isTopAssist=true → "8어시, 팀 공격은 여기서 시작된다"
+- isTopMvp=true → "5회 MOM, 팀이 가장 인정한 선수"
+
+여러 개가 true면 가장 임팩트 있는 것 1개만 반영. 억지로 다 넣지 말 것.
+
 ## 경기 수 적을 때
 
 3경기 미만이면 "시작" 톤:
@@ -149,6 +161,10 @@ const SYSTEM_PROMPT = `당신은 스포츠 다큐멘터리 내레이터이자 EA
 export type AiSignatureInput = SignatureInput & {
   /** 추가 스탯 — 프롬프트 생성 품질 향상용 */
   playerName?: string;
+  /** 관측성용 — 누가/어느 팀/어느 멤버에 대한 호출인지 */
+  userId?: string | null;
+  teamId?: string | null;
+  teamMemberId?: string | null;
 };
 
 export type AiSignatureResult = {
@@ -206,65 +222,121 @@ function isLowQuality(text: string): boolean {
 
 export async function generateAiSignature(input: AiSignatureInput): Promise<AiSignatureResult> {
   const ruleSig = generateRuleBasedSignature(input);
+  const started = Date.now();
+  const logBase = {
+    feature: "signature" as const,
+    userId: input.userId ?? null,
+    teamId: input.teamId ?? null,
+    entityId: input.teamMemberId ?? null,
+  };
 
   if (!client) {
+    await recordAiUsage({ ...logBase, source: "rule", errorReason: "no_api_key" });
     return { signature: ruleSig, source: "rule" };
   }
 
-  try {
-    const userContent = JSON.stringify({
-      positionCategory: input.cat,
-      matchCount: input.matchCount,
-      goals: input.goals,
-      assists: input.assists,
-      mvp: input.mvp,
-      cleanSheets: input.cleanSheets,
-      attendanceRate: Math.round(input.attendanceRate * 100) / 100,
-      winRate: Math.round(input.winRate * 100) / 100,
-      isTopScorer: input.isTopScorer,
-      isTopAssist: input.isTopAssist,
-      isTopMvp: input.isTopMvp,
-      signatureHint: ruleSig,
-    });
+  const userContent = JSON.stringify({
+    positionCategory: input.cat,
+    matchCount: input.matchCount,
+    goals: input.goals,
+    assists: input.assists,
+    mvp: input.mvp,
+    cleanSheets: input.cleanSheets,
+    attendanceRate: Math.round(input.attendanceRate * 100) / 100,
+    winRate: Math.round(input.winRate * 100) / 100,
+    isTopScorer: input.isTopScorer,
+    isTopAssist: input.isTopAssist,
+    isTopMvp: input.isTopMvp,
+    signatureHint: ruleSig,
+  });
 
-    const response = await client.messages.create({
+  const callOnce = async (temperature: number, feedbackNote?: string) => {
+    const userMsg = feedbackNote
+      ? `이전 응답이 ${feedbackNote} 때문에 실패했습니다. 시스템 지침을 엄격히 지켜 다시 작성해 주세요.\n\n응답 형식: 한 줄 카피 본문만.\n\n${userContent}`
+      : `다음 선수의 시즌 스탯입니다. 시스템 지침의 5가지 유형 중 하나를 골라 23자 이내 한 줄만 만들어 주세요.\n\n응답 형식: 한 줄 카피 본문만. 다른 글자 절대 금지.\n\n${userContent}`;
+
+    return client.messages.create({
       model: MODEL,
       max_tokens: MAX_OUTPUT_TOKENS,
-      temperature: TEMPERATURE,
+      temperature,
       system: [
-        {
-          type: "text",
-          text: SYSTEM_PROMPT,
-          cache_control: { type: "ephemeral" }, // prompt caching 적용
-        },
+        { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
       ],
-      messages: [
-        {
-          role: "user",
-          content: `다음 선수의 시즌 스탯입니다. 시스템 지침의 5가지 유형 중 하나를 골라 23자 이내 한 줄만 만들어 주세요.
-
-응답 형식: 한 줄 카피 본문만. 다른 글자 절대 금지.
-
-${userContent}`,
-        },
-      ],
+      messages: [{ role: "user", content: userMsg }],
     });
+  };
 
+  try {
+    const response = await callOnce(TEMPERATURE);
     const textBlock = response.content.find((b) => b.type === "text");
+    const tokens = extractTokenUsage(response);
+
     if (!textBlock || textBlock.type !== "text") {
+      await recordAiUsage({
+        ...logBase, source: "rule", model: MODEL,
+        ...tokens, latencyMs: Date.now() - started,
+        errorReason: "no_text_block",
+      });
       return { signature: ruleSig, source: "rule" };
     }
 
     const cleaned = sanitize(textBlock.text);
-    if (isLowQuality(cleaned)) {
-      // 품질 기준 미달 — 룰 기반 fallback (안전)
-      console.warn(`[aiSignature] 저품질 응답 → fallback. raw="${textBlock.text}", cleaned="${cleaned}"`);
-      return { signature: ruleSig, source: "rule" };
+    if (!isLowQuality(cleaned)) {
+      await recordAiUsage({
+        ...logBase, source: "ai", model: MODEL,
+        ...tokens, latencyMs: Date.now() - started,
+      });
+      return { signature: cleaned, source: "ai", model: MODEL };
     }
 
-    return { signature: cleaned, source: "ai", model: MODEL };
+    // 저품질 → 1회 재시도 (temperature 낮추고 피드백 제공)
+    console.warn(`[aiSignature] 저품질 1차 응답, 재시도. raw="${textBlock.text.slice(0, 60)}"`);
+    const failureReason = detectFailureReason(cleaned);
+    const retry = await callOnce(0.3, failureReason);
+    const retryBlock = retry.content.find((b) => b.type === "text");
+    const retryTokens = extractTokenUsage(retry);
+    const retryCleaned = retryBlock?.type === "text" ? sanitize(retryBlock.text) : "";
+
+    if (retryCleaned && !isLowQuality(retryCleaned)) {
+      await recordAiUsage({
+        ...logBase, source: "ai", model: MODEL,
+        inputTokens: (tokens.inputTokens ?? 0) + (retryTokens.inputTokens ?? 0),
+        outputTokens: (tokens.outputTokens ?? 0) + (retryTokens.outputTokens ?? 0),
+        cacheReadTokens: (tokens.cacheReadTokens ?? 0) + (retryTokens.cacheReadTokens ?? 0),
+        cacheCreationTokens: (tokens.cacheCreationTokens ?? 0) + (retryTokens.cacheCreationTokens ?? 0),
+        latencyMs: Date.now() - started,
+        retryCount: 1,
+      });
+      return { signature: retryCleaned, source: "ai", model: MODEL };
+    }
+
+    await recordAiUsage({
+      ...logBase, source: "rule", model: MODEL,
+      inputTokens: (tokens.inputTokens ?? 0) + (retryTokens.inputTokens ?? 0),
+      outputTokens: (tokens.outputTokens ?? 0) + (retryTokens.outputTokens ?? 0),
+      latencyMs: Date.now() - started, retryCount: 1,
+      errorReason: "low_quality",
+    });
+    return { signature: ruleSig, source: "rule" };
   } catch (err) {
     console.error("[aiSignature] Claude API 호출 실패, 룰 기반으로 fallback:", err);
+    await recordAiUsage({
+      ...logBase, source: "error", model: MODEL,
+      latencyMs: Date.now() - started,
+      errorReason: "api_error",
+    });
     return { signature: ruleSig, source: "rule" };
   }
+}
+
+/** 저품질 응답의 구체 원인 판별 — 재시도 시 피드백으로 사용 */
+function detectFailureReason(text: string): string {
+  if (!text || text.length < 4) return "너무 짧음";
+  if (text.length > 40) return "너무 긺 (23자 이내)";
+  if (META_PATTERNS.some((p) => text.includes(p))) return "메타 표현 포함";
+  if (FORBIDDEN_WORDS.some((w) => text.includes(w))) return "금지어 포함";
+  if (/\bMO(?!M)\b/.test(text)) return "MOM 약어 손상";
+  if (/\bMV(?!P)\b/.test(text)) return "MVP 약어 손상";
+  if (!/\d/.test(text)) return "구체적 숫자 없음";
+  return "형식 위반";
 }

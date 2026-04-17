@@ -2,7 +2,7 @@
 
 import { memo, useRef, useState } from "react";
 import Image from "next/image";
-import { Camera, X as XIcon, ImageIcon, MessageCircle, Copy, Download } from "lucide-react";
+import { Camera, X as XIcon, ImageIcon, MessageCircle, Copy, Download, RefreshCw } from "lucide-react";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { apiMutate } from "@/lib/useApi";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,8 @@ export interface MatchDiaryTabProps {
   refetchDiary: () => Promise<unknown>;
   /** AI 경기 후기 (COMPLETED 경기 + 캐시 있을 때만) */
   aiSummary?: string | null;
+  /** AI 재생성 가능 여부 (김선휘 Feature Flag) */
+  canRegenerateAi?: boolean;
 }
 
 function MatchDiaryTabInner({
@@ -44,8 +46,30 @@ function MatchDiaryTabInner({
   voteCounts,
   refetchDiary,
   aiSummary,
+  canRegenerateAi,
 }: MatchDiaryTabProps) {
   const [shareMessage, setShareMessage] = useState<string | null>(null);
+  const [currentAiSummary, setCurrentAiSummary] = useState<string | null>(aiSummary ?? null);
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenerateError, setRegenerateError] = useState<string | null>(null);
+
+  async function handleRegenerateAi() {
+    setRegenerating(true);
+    setRegenerateError(null);
+    try {
+      const res = await fetch(`/api/ai/match-summary/${matchId}`, { method: "POST" });
+      const data = await res.json();
+      if (res.ok && data.summary) {
+        setCurrentAiSummary(data.summary);
+      } else {
+        setRegenerateError(data.message ?? data.error ?? "재생성 실패");
+      }
+    } catch (err) {
+      setRegenerateError(err instanceof Error ? err.message : "네트워크 오류");
+    } finally {
+      setRegenerating(false);
+    }
+  }
   const [isDiaryEditing, setIsDiaryEditing] = useState(false);
   const diaryFormRef = useRef<HTMLFormElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -271,7 +295,7 @@ function MatchDiaryTabInner({
       </Card>
 
       {/* ══ AI가 정리한 경기 (수동 작성 일지와 구분 위해 스코어·사진 아래에 배치) ══ */}
-      {aiSummary && (
+      {currentAiSummary && (
         <Card className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-bold">
@@ -280,7 +304,7 @@ function MatchDiaryTabInner({
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{aiSummary}</p>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{currentAiSummary}</p>
             <div className="mt-3 flex gap-2">
               <Button
                 type="button"
@@ -288,8 +312,9 @@ function MatchDiaryTabInner({
                 variant="outline"
                 className="gap-1.5 text-xs"
                 onClick={async () => {
+                  if (!currentAiSummary) return;
                   try {
-                    await navigator.clipboard.writeText(aiSummary);
+                    await navigator.clipboard.writeText(currentAiSummary);
                     setShareMessage("후기가 복사되었습니다");
                     setTimeout(() => setShareMessage(null), 2000);
                   } catch {
@@ -305,17 +330,18 @@ function MatchDiaryTabInner({
                 size="sm"
                 className="gap-1.5 text-xs bg-[hsl(var(--kakao))] text-[hsl(var(--kakao-foreground))] hover:bg-[hsl(var(--kakao))]/90"
                 onClick={async () => {
+                  if (!currentAiSummary) return;
                   const url = typeof window !== "undefined" ? window.location.href : "";
                   const shareData = {
                     title: `⚽ ${match.date} 경기 후기`,
-                    text: aiSummary,
+                    text: currentAiSummary,
                     url,
                   };
                   try {
                     if (typeof navigator !== "undefined" && navigator.share) {
                       await navigator.share(shareData);
                     } else {
-                      await navigator.clipboard.writeText(`${aiSummary}\n\n${url}`);
+                      await navigator.clipboard.writeText(`${currentAiSummary}\n\n${url}`);
                       setShareMessage("후기+링크가 복사되었습니다. 카톡에 붙여넣기 하세요");
                       setTimeout(() => setShareMessage(null), 2500);
                     }
@@ -327,7 +353,23 @@ function MatchDiaryTabInner({
                 <MessageCircle className="h-3.5 w-3.5" />
                 카톡 공유
               </Button>
+              {canRegenerateAi && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 text-xs"
+                  onClick={handleRegenerateAi}
+                  disabled={regenerating}
+                >
+                  <RefreshCw className={cn("h-3.5 w-3.5", regenerating && "animate-spin")} />
+                  {regenerating ? "재생성 중..." : "재생성"}
+                </Button>
+              )}
             </div>
+            {regenerateError && (
+              <p className="mt-2 text-xs text-destructive">{regenerateError}</p>
+            )}
             <p className="mt-2 text-[11px] text-muted-foreground/70">경기 데이터를 기반으로 AI가 작성했어요. 한 번만 생성되고 팀원 전체가 같은 후기를 봅니다.</p>
             {shareMessage && (
               <p className="mt-2 text-xs text-muted-foreground">{shareMessage}</p>

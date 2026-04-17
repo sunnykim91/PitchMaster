@@ -710,6 +710,7 @@ export default function MatchDetailClient({
             voteCounts={voteCounts}
             refetchDiary={refetchDiary}
             aiSummary={initialData?.aiSummary ?? null}
+            canRegenerateAi={enableAi}
           />
         </div>
       )}

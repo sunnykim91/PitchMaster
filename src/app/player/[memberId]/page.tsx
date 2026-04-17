@@ -37,7 +37,7 @@ type MemberRow = {
   teams: { name: string; sport_type: string; uniform_primary: string | null; logo_url: string | null } | null;
 };
 
-async function getPlayerData(memberId: string, teamId?: string, enableAi: boolean = false): Promise<PlayerProfile | null> {
+async function getPlayerData(memberId: string, teamId?: string, enableAi: boolean = false, callerUserId: string | null = null, callerTeamId: string | null = null): Promise<PlayerProfile | null> {
   const db = getSupabaseAdmin();
   if (!db) return null;
 
@@ -231,6 +231,8 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
     cachedGeneratedAt: m.ai_signature_generated_at,
     enableGenerate: enableAi,
     input: { ...signatureInput, playerName: name },
+    userId: callerUserId,
+    teamId: callerTeamId,
   });
 
   // === OVR + PlayerCardProps 산출 ===
@@ -358,7 +360,7 @@ export default async function PlayerProfilePageRoute({ params, searchParams }: P
   const session = await auth().catch(() => null);
   const enableAi = session?.user?.name === "김선휘";
 
-  const data = await getPlayerData(memberId, team, enableAi);
+  const data = await getPlayerData(memberId, team, enableAi, session?.user?.id ?? null, session?.user?.teamId ?? null);
   if (!data) return notFound();
 
   if (!data.stats) {

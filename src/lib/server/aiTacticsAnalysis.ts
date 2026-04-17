@@ -1,10 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { recordAiUsage, extractTokenUsage } from "@/lib/server/aiUsageLog";
 
 /**
  * Claude Haiku로 AI 전술 분석 생성.
- * 룰 기반 편성 결과 + 참석자 스탯 → "왜 이렇게 편성했는지" 코치식 1단락 설명.
+ * 룰 기반 편성 결과 + 참석자 스탯 → "왜 이렇게 편성했는지" 코치식 3단락 설명.
  *
- * 호출당 약 2~3원 (입력 ~1,500 + 출력 ~250).
+ * 호출당 약 2~3원 (입력 ~1,500 + 출력 ~250). 저품질 시 1회 재시도.
  */
 
 const MODEL = "claude-haiku-4-5";
@@ -87,12 +88,28 @@ const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의
 
 JSON:
 - formationName: "4-3-3" 등
-- quarterCount: 쿼터 수
+- quarterCount: 쿼터 수 (2~4)
 - attendees: 참석자 배열 [{ name, preferredPosition, recentStats?: { goals, assists, mvp, matchCount } }]
-- placement: 1쿼터 기준 슬롯-선수 매핑
+- placement: **1쿼터 기준** 슬롯-선수 매핑. 다른 쿼터는 이 편성을 기준으로 교체가 이뤄진다고 가정.
 - matchType: REGULAR | INTERNAL | EVENT
 - opponent: 상대팀 이름 (있으면)
-- warnings: 룰 엔진 경고 배열
+- warnings: 룰 엔진이 감지한 편성 경고 (예: "수비수 부족", "키 포지션 미배치")
+
+## ⚠️ warnings 활용
+
+\`warnings\` 배열이 비어있지 않으면, 3단락 "주의점"에서 **자연스럽게 녹여** 설명해야 합니다.
+무시하면 안 되지만, 경고 문구를 그대로 인용하지 말고 맥락으로 풀 것:
+
+- warnings: ["수비수 부족"] → "수비 라인이 얇아 3쿼터 이후 체력 부담이 크다. 풀백 백업을 미드에서 보강해야"
+- warnings: ["키 포지션 미배치: GK"] → "골키퍼 자리가 비어있어 필드 플레이어 중 1명을 전환 배치 고려"
+
+경고 없으면 주의점 단락은 쿼터 체력 분배·교체 우선순위 중심으로.
+
+## 🔵 placement 해석
+
+\`placement\`는 1쿼터 기준입니다. 쿼터가 여러 개(2~4)일 때:
+- "1쿼터에 이렇게 시작하고, 후속 쿼터에서 체력 상태에 따라 교체" 같은 톤으로 서술
+- 모든 쿼터 배치를 다 설명하려 하지 말 것 — 2단락은 **전반적 흐름**, 3단락은 **교체 운영**
 
 ## 응답 형식
 
@@ -118,6 +135,10 @@ export type TacticsAnalysisInput = {
   matchType: "REGULAR" | "INTERNAL" | "EVENT";
   opponent?: string | null;
   warnings?: string[];
+  /** 관측성용 */
+  userId?: string | null;
+  teamId?: string | null;
+  matchId?: string | null;
 };
 
 export type TacticsAnalysisResult = {
@@ -165,55 +186,81 @@ export async function generateAiTacticsAnalysis(
   input: TacticsAnalysisInput
 ): Promise<TacticsAnalysisResult> {
   const ruleText = generateRuleBasedAnalysis(input);
+  const started = Date.now();
+  const logBase = {
+    feature: "tactics" as const,
+    userId: input.userId ?? null,
+    teamId: input.teamId ?? null,
+    entityId: input.matchId ?? null,
+  };
 
   if (!client) {
+    await recordAiUsage({ ...logBase, source: "rule", errorReason: "no_api_key" });
     return { text: ruleText, source: "rule" };
   }
 
-  try {
-    const userContent = JSON.stringify({
-      formationName: input.formationName,
-      quarterCount: input.quarterCount,
-      attendees: input.attendees.slice(0, 30), // 과다 방지
-      placement: input.placement.slice(0, 15),
-      matchType: input.matchType,
-      opponent: input.opponent ?? null,
-      warnings: input.warnings ?? [],
-    });
+  const userContent = JSON.stringify({
+    formationName: input.formationName,
+    quarterCount: input.quarterCount,
+    attendees: input.attendees.slice(0, 30),
+    placement: input.placement.slice(0, 15),
+    matchType: input.matchType,
+    opponent: input.opponent ?? null,
+    warnings: input.warnings ?? [],
+  });
 
-    const response = await client.messages.create({
+  const callOnce = async (temperature: number, feedbackNote?: string) => {
+    const userMsg = feedbackNote
+      ? `이전 응답이 ${feedbackNote} 때문에 실패했습니다. 시스템 지침 엄수 후 재작성.\n\n${userContent}`
+      : `다음 편성 정보를 바탕으로 코치식 3단락 분석을 작성해 주세요. 본문만 출력.\n\n${userContent}`;
+    return client.messages.create({
       model: MODEL,
       max_tokens: MAX_OUTPUT_TOKENS,
-      temperature: TEMPERATURE,
-      system: [
-        {
-          type: "text",
-          text: SYSTEM_PROMPT,
-          cache_control: { type: "ephemeral" },
-        },
-      ],
-      messages: [
-        {
-          role: "user",
-          content: `다음 편성 정보를 바탕으로 코치식 분석 1~2단락을 작성해 주세요. 본문만 출력.\n\n${userContent}`,
-        },
-      ],
+      temperature,
+      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+      messages: [{ role: "user", content: userMsg }],
     });
+  };
 
+  try {
+    const response = await callOnce(TEMPERATURE);
     const textBlock = response.content.find((b) => b.type === "text");
+    const tokens = extractTokenUsage(response);
+
     if (!textBlock || textBlock.type !== "text") {
+      await recordAiUsage({ ...logBase, source: "rule", model: MODEL, ...tokens, latencyMs: Date.now() - started, errorReason: "no_text_block" });
       return { text: ruleText, source: "rule" };
     }
 
     const cleaned = sanitize(textBlock.text);
-    if (isLowQuality(cleaned)) {
-      console.warn(`[aiTacticsAnalysis] 저품질 응답 → fallback. raw="${textBlock.text.slice(0, 100)}"`);
-      return { text: ruleText, source: "rule" };
+    if (!isLowQuality(cleaned)) {
+      await recordAiUsage({ ...logBase, source: "ai", model: MODEL, ...tokens, latencyMs: Date.now() - started });
+      return { text: cleaned, source: "ai", model: MODEL };
     }
 
-    return { text: cleaned, source: "ai", model: MODEL };
+    const failReason = cleaned.length < 100 ? "너무 짧음 (3단락 필요)" : cleaned.length > 900 ? "너무 긺" : "메타 표현 또는 마크다운 포함";
+    const retry = await callOnce(0.5, failReason);
+    const retryBlock = retry.content.find((b) => b.type === "text");
+    const retryTokens = extractTokenUsage(retry);
+    const retryCleaned = retryBlock?.type === "text" ? sanitize(retryBlock.text) : "";
+
+    if (retryCleaned && !isLowQuality(retryCleaned)) {
+      await recordAiUsage({
+        ...logBase, source: "ai", model: MODEL,
+        inputTokens: (tokens.inputTokens ?? 0) + (retryTokens.inputTokens ?? 0),
+        outputTokens: (tokens.outputTokens ?? 0) + (retryTokens.outputTokens ?? 0),
+        cacheReadTokens: (tokens.cacheReadTokens ?? 0) + (retryTokens.cacheReadTokens ?? 0),
+        cacheCreationTokens: (tokens.cacheCreationTokens ?? 0) + (retryTokens.cacheCreationTokens ?? 0),
+        latencyMs: Date.now() - started, retryCount: 1,
+      });
+      return { text: retryCleaned, source: "ai", model: MODEL };
+    }
+
+    await recordAiUsage({ ...logBase, source: "rule", model: MODEL, latencyMs: Date.now() - started, retryCount: 1, errorReason: "low_quality" });
+    return { text: ruleText, source: "rule" };
   } catch (err) {
     console.error("[aiTacticsAnalysis] Claude API 호출 실패, 룰 기반으로 fallback:", err);
+    await recordAiUsage({ ...logBase, source: "error", model: MODEL, latencyMs: Date.now() - started, errorReason: "api_error" });
     return { text: ruleText, source: "rule" };
   }
 }

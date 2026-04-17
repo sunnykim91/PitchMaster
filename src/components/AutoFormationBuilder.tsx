@@ -560,6 +560,7 @@ export default function AutoFormationBuilder({
   const [saving, setSaving] = useState(false);
   // AI 코치 분석 상태 (Phase 2 Feature Flag)
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [aiSource, setAiSource] = useState<"ai" | "rule" | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
@@ -758,11 +759,18 @@ export default function AutoFormationBuilder({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        setAiError(body.error === "ai_not_available" ? "AI 분석은 관리자 계정 전용입니다" : "AI 분석 요청 실패");
+        if (res.status === 429) {
+          setAiError(body.message ?? "일일 사용 한도에 도달했습니다");
+        } else if (body.error === "ai_not_available") {
+          setAiError("AI 분석은 관리자 계정 전용입니다");
+        } else {
+          setAiError("AI 분석 요청 실패");
+        }
         return;
       }
       const data = await res.json();
       setAiAnalysis(data.text);
+      setAiSource(data.source ?? null);
     } catch {
       setAiError("네트워크 오류가 발생했습니다");
     } finally {
@@ -1108,11 +1116,33 @@ export default function AutoFormationBuilder({
                     </Button>
                   ) : (
                     <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4">
-                      <div className="mb-2 flex items-center gap-2">
-                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">AI</span>
-                        <span className="text-sm font-bold text-foreground">코치 분석</span>
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">
+                            {aiSource === "ai" ? "AI" : "⚙"}
+                          </span>
+                          <span className="text-sm font-bold text-foreground">
+                            {aiSource === "ai" ? "코치 분석" : "기본 분석"}
+                          </span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 gap-1 px-2 text-xs"
+                          onClick={() => { setAiAnalysis(null); setAiSource(null); handleAiAnalyze(); }}
+                          disabled={aiLoading}
+                        >
+                          <Sparkles className="h-3 w-3" />
+                          다시
+                        </Button>
                       </div>
                       <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{aiAnalysis}</p>
+                      {aiSource === "rule" && (
+                        <p className="mt-2 text-[11px] text-muted-foreground/70">
+                          AI 분석이 실패해 자동 생성본을 보여드립니다. "다시" 버튼으로 재시도.
+                        </p>
+                      )}
                     </div>
                   )}
                   {aiError && (
