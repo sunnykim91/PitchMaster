@@ -26,7 +26,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
-import { Zap, Sparkles, Loader2, ChevronDown } from "lucide-react";
+import { Zap, Sparkles, Loader2, ChevronDown, Target, Palette } from "lucide-react";
 
 /* ── Types ── */
 
@@ -975,8 +975,8 @@ export default function AutoFormationBuilder({
             {([
               { id: "rule" as const, label: "규칙 기반으로 빠르게", desc: "팀 포메이션 + 선호 포지션 매칭", icon: <Zap className="h-3.5 w-3.5" /> },
               ...(enableAi ? [
-                { id: "ai-fixed" as const, label: "AI 추천 — 팀 포메이션 유지", desc: "팀 기본 포메이션 안에서 배치만 AI가 최적화", icon: <Sparkles className="h-3.5 w-3.5" /> },
-                { id: "ai-free" as const, label: "AI 추천 — 쿼터별 포메이션 자유", desc: "AI가 쿼터별로 포메이션까지 다르게 설계", icon: <Sparkles className="h-3.5 w-3.5" /> },
+                { id: "ai-fixed" as const, label: "AI 추천 — 팀 포메이션 유지", desc: "팀 기본 포메이션 안에서 배치만 AI가 최적화", icon: <Target className="h-3.5 w-3.5" /> },
+                { id: "ai-free" as const, label: "AI 추천 — 쿼터별 포메이션 자유", desc: "AI가 쿼터별로 포메이션까지 다르게 설계", icon: <Palette className="h-3.5 w-3.5" /> },
               ] : []),
             ]).map((opt) => {
               const selected = planMode === opt.id;

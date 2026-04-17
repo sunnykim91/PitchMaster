@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useRef, useState } from "react";
 import type { AttendingPlayer, GeneratedSquad } from "@/components/AutoFormationBuilder";
 import { apiMutate } from "@/lib/useApi";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,15 @@ function MatchTacticsTabInner({
 }: MatchTacticsTabProps) {
   const [tacticsKey, setTacticsKey] = useState(0);
   const [generatedSquads, setGeneratedSquads] = useState<GeneratedSquad[]>([]);
+  const tacticsRef = useRef<HTMLDivElement | null>(null);
+  const [tacticsHighlight, setTacticsHighlight] = useState(false);
+
+  // 자동 편성 결과 전술판 반영 시 호출 — 스크롤 + 순간 하이라이트로 흐름 연결 시각화
+  function scrollToTacticsBoard() {
+    tacticsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setTacticsHighlight(true);
+    window.setTimeout(() => setTacticsHighlight(false), 1800);
+  }
   // Phase B — AI 코치 분석 컨텍스트 (AutoFormationBuilder에서 내려줌, 전술판 아래 카드에서 사용)
   const [aiCoachContext, setAiCoachContext] = useState<{
     placement: Array<{ slot: string; playerName: string }>;
@@ -441,6 +450,7 @@ function MatchTacticsTabInner({
           onGenerated={(squads) => {
             setGeneratedSquads(squads);
             setTacticsKey((k) => k + 1);
+            scrollToTacticsBoard();
           }}
           onAnalysisContextReady={setAiCoachContext}
           enableAi={enableAi}
@@ -451,24 +461,32 @@ function MatchTacticsTabInner({
         />
       )}
 
-      <TacticsBoard
-        key={`${tacticsKey}-${activeSide}`}
-        matchId={matchId}
-        roster={filteredRoster}
-        quarterCount={match.quarterCount}
-        sportType={sportType}
-        playerCount={match.playerCount}
-        defaultFormationId={defaultFormationId}
-        readOnly={!canManage}
-        side={isInternal ? activeSide : undefined}
-        initialSquads={generatedSquads.length > 0 ? generatedSquads.map((sq) => ({
-          id: `gen-${sq.quarter_number}`,
-          match_id: matchId,
-          quarter_number: sq.quarter_number,
-          formation: sq.formation,
-          positions: sq.positions,
-        })) : undefined}
-      />
+      <div
+        ref={tacticsRef}
+        className={cn(
+          "scroll-mt-20 rounded-xl transition-all duration-500",
+          tacticsHighlight && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+        )}
+      >
+        <TacticsBoard
+          key={`${tacticsKey}-${activeSide}`}
+          matchId={matchId}
+          roster={filteredRoster}
+          quarterCount={match.quarterCount}
+          sportType={sportType}
+          playerCount={match.playerCount}
+          defaultFormationId={defaultFormationId}
+          readOnly={!canManage}
+          side={isInternal ? activeSide : undefined}
+          initialSquads={generatedSquads.length > 0 ? generatedSquads.map((sq) => ({
+            id: `gen-${sq.quarter_number}`,
+            match_id: matchId,
+            quarter_number: sq.quarter_number,
+            formation: sq.formation,
+            positions: sq.positions,
+          })) : undefined}
+        />
+      </div>
 
       {/* Phase B — AI 코치 분석: 전술판 시각화 "아래" 배치 (시각화 → 해설 순서) */}
       {canManage && aiCoachContext && (
