@@ -115,6 +115,13 @@ PRESIDENT (회장) > STAFF (운영진) > MEMBER (일반 회원)
 2. **회원 벌크 CSV 등록** — 현재 한 명씩만 등록 가능
 3. **guide.html → Next.js 마이그레이션** — `public/guide.html` 방치 중
 
+## 골 기록 설계 (2026-04-18 기준)
+
+- `match_goals.quarter_number` — **nullable** (migration 00032). `null` = 쿼터 모름
+- `+ 득점` / `+ 실점` 버튼: 원클릭 즉시 등록 (기본값: 득점자 UNKNOWN, 쿼터 null, 골유형 NORMAL)
+- 상세 수정은 골 카드 수정 버튼 → 아코디언 폼에서 처리
+- API: `quarter=0` → `null` 변환 저장, 유효범위 0~10 (`goals/route.ts`)
+
 ---
 
 ## 알려진 코드 품질 이슈

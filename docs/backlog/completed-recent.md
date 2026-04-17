@@ -1,14 +1,35 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~21차)
-summary: 2026-04-11~14 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성
-sections: [21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-04-14
+title: 개선 백로그 — 최근 완료 (16~23차)
+summary: 2026-04-11~18 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선
+sections: [23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-04-18
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~21차)
+# 최근 완료 (16~23차)
 
-22차 이후(2026-04-17 세션: AI Phase A/B 도입, OCR 품질 개선, 센터백 버그 픽스 등)는 커밋 로그 참조 — 별도 문서화 예정.
+## 23차 (2026-04-18) — 골 기록 UX 개선 · 쿼터 모름 지원
+
+**버그 픽스: LINEOUT FC 실점 기록 실패**
+- 원인: `+ 실점` 버튼이 `quarter=0`을 전송했으나 API가 `< 1`로 차단
+- 근본 수정: `quarter_number NOT NULL` → nullable (migration 00032)
+
+**쿼터 모름 지원**
+- [x] `supabase/migrations/00032_nullable_quarter_number.sql` — quarter_number nullable, 기존 0값 NULL 정리
+- [x] `goals/route.ts` — POST/PUT: quarter=0 → null 저장, 유효범위 0~10
+- [x] `matchDetailTypes.ts` — `GoalRow.quarter_number`, `GoalEvent.quarter` → `number | null`
+- [x] `MatchRecordTab.tsx` — 쿼터 선택 `-` 버튼 라벨 `모름`으로 변경, null 안전 비교 처리
+
+**득점 즉시 등록 (UX 개선)**
+- [x] `+ 득점` 버튼: 상세 폼 열기 → 기본값(득점자 모름/쿼터 모름/일반) 즉시 등록으로 변경
+- [x] `+ 실점`과 동일한 원클릭 등록 흐름 통일
+- [x] 상세 수정은 골 카드의 수정 버튼(아코디언 폼)으로 분리
+
+**문서 업데이트**
+- [x] `public/guide.html` — 골 기록 섹션 신규 UX 반영
+- [x] `docs/backlog/completed-recent.md` 업데이트
+
+22차(2026-04-17 세션: AI Phase A/B 도입, OCR 품질 개선, 센터백 버그 픽스 등)는 커밋 로그 참조 — 별도 문서화 예정.
 
 ## 21차 (2026-04-14 심야) — AI 기능 Phase 0 + Phase 1 도입
 
