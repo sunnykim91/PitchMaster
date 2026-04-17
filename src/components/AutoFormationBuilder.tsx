@@ -683,26 +683,6 @@ export default function AutoFormationBuilder({
     [quarterCount],
   );
 
-  function autoDistribute() {
-    const dist = calculateFairDistribution(
-      fieldPlayers.length,
-      quarterCount,
-      slotsPerQ,
-    );
-    setAssignments((prev) => {
-      let highCount = 0;
-      return prev.map((a) => {
-        if (a.isGK) return a;
-        if (highCount < dist.highCount) {
-          highCount++;
-          return { ...a, quarters: dist.high };
-        }
-        return { ...a, quarters: dist.low };
-      });
-    });
-    setResults(null);
-  }
-
   function setPlayerQuarters(id: string, q: number) {
     setAssignments((prev) =>
       prev.map((a) => (a.id === id ? { ...a, quarters: q } : a)),
@@ -730,9 +710,11 @@ export default function AutoFormationBuilder({
     setResults(null);
   }
 
-  function generate() {
+  async function generate() {
     const res = scheduleQuarters(assignments, quarterCount, formation);
     setResults(res);
+    // 규칙 기반 모드도 1클릭 흐름: 생성 직후 전술판까지 자동 반영
+    await saveToTacticsBoard(res);
   }
 
   async function saveToTacticsBoard(forceResults?: QuarterResult[]) {
@@ -1008,7 +990,7 @@ export default function AutoFormationBuilder({
           </div>
         </div>
 
-        {/* ── ② 포메이션 + 자동 분배 ── */}
+        {/* ── ② 포메이션 선택 ── */}
         <div className="flex flex-wrap items-center gap-2">
           {planMode === "ai-free" ? (
             <div className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-xs text-primary">
@@ -1026,7 +1008,6 @@ export default function AutoFormationBuilder({
               ))}
             </NativeSelect>
           )}
-          <Button size="sm" variant="outline" className="rounded-lg" onClick={autoDistribute}>자동 분배</Button>
         </div>
 
         {/* ── ③ 통계 3열 ── */}
@@ -1185,20 +1166,12 @@ export default function AutoFormationBuilder({
           </Button>
         )}
 
-        {/* ── 결과 액션 (미리보기는 아래 전술판에서 쿼터 탭으로 확인) ── */}
+        {/* ── 결과 액션 ── */}
         {results && (
           <div className="space-y-2 border-t border-border/30 pt-3">
-            <p className="text-center text-[11px] text-muted-foreground">
-              편성 완료. 아래 전술판에서 쿼터별 배치를 확인·조정하세요.
+            <p className="text-center text-[11px] text-[hsl(var(--success))]">
+              ✓ 편성 완료 — 아래 전술판에 반영됐습니다
             </p>
-            <Button
-              className="w-full min-h-[48px] rounded-xl font-semibold border-[hsl(var(--success))]/50 text-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/10"
-              variant="outline"
-              onClick={() => saveToTacticsBoard()}
-              disabled={saving}
-            >
-              {saving ? "저장 중..." : "→ 전술판에 적용"}
-            </Button>
             <Button
               variant="ghost"
               size="sm"

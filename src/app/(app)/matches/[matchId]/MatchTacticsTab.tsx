@@ -1,6 +1,8 @@
 "use client";
 
 import { memo, useRef, useState } from "react";
+import { useLocalStorage } from "@/lib/useLocalStorage";
+import { NativeSelect } from "@/components/ui/native-select";
 import type { AttendingPlayer, GeneratedSquad } from "@/components/AutoFormationBuilder";
 import { apiMutate } from "@/lib/useApi";
 import { Button } from "@/components/ui/button";
@@ -11,7 +13,7 @@ import type { Match, SimpleRosterPlayer, InternalTeamAssignment, Guest } from ".
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { X, ChevronDown, Sparkles, Users, Plus, Pencil, Lightbulb } from "lucide-react";
+import { X, ChevronDown, Users, Plus, Pencil } from "lucide-react";
 import { formatPhone } from "@/lib/utils";
 import type { SportType } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -85,6 +87,17 @@ function MatchTacticsTabInner({
   const [showTeamSplit, setShowTeamSplit] = useState(false);
   const [showGuestForm, setShowGuestForm] = useState(false);
   const [editingGuestId, setEditingGuestId] = useState<string | null>(null);
+  const [guestCardOpen, setGuestCardOpen] = useState(false);
+
+  // 전술탭 카드 순서 프리셋 (사용자별 저장)
+  type CardId = "guest" | "auto" | "board" | "analysis";
+  const CARD_PRESETS: Record<string, { label: string; order: CardId[] }> = {
+    default: { label: "기본 (용병 → 편성 → 전술판 → AI 분석)", order: ["guest", "auto", "board", "analysis"] },
+    boardFirst: { label: "전술판 먼저 (전술판 → 편성 → AI → 용병)", order: ["board", "auto", "analysis", "guest"] },
+    compact: { label: "편성 먼저 (편성 → 전술판 → AI → 용병)", order: ["auto", "board", "analysis", "guest"] },
+  };
+  const [cardPreset, setCardPreset] = useLocalStorage<string>("tacticsCardPreset", "default");
+  const activePreset = CARD_PRESETS[cardPreset] ?? CARD_PRESETS.default;
   const { showToast } = useToast();
 
   // 자체전: 팀별 roster 필터링
@@ -95,11 +108,14 @@ function MatchTacticsTabInner({
     ? attendingPlayers.filter((p) => internalTeams.some((t) => t.playerId === p.id && t.side === activeSide))
     : attendingPlayers;
 
+  const orderIndex = (id: CardId) => activePreset.order.indexOf(id);
+
   return (
-    <div className="grid gap-5 min-w-0 overflow-x-hidden">
-      {/* ── 추천 포메이션 (룰 기반 제안) ── */}
-      {/* 자체전: 팀 편성 + A/B 토글 통합 */}
-      {isInternal && (() => {
+    <div className="flex flex-col gap-5 min-w-0 overflow-x-hidden">
+      {/* 자체전 팀 편성(최상단 고정) */}
+      {isInternal && (
+        <div style={{ order: -10 }} className="flex flex-col gap-5">
+        {(() => {
         const teamMap: Record<string, "A" | "B"> = {};
         for (const t of internalTeams ?? []) teamMap[t.playerId] = t.side;
         const teamACount = Object.values(teamMap).filter((s) => s === "A").length;
@@ -244,16 +260,63 @@ function MatchTacticsTabInner({
             )}
           </>
         );
-      })()}
+        })()}
+        </div>
+      )}
 
-      {/* ── 용병 관리 ── */}
+      {/* ── 카드 순서 프리셋 (canManage일 때만 표시) ── */}
       {canManage && (
-        <div className="rounded-xl border border-border/30 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4">
+        <div className="flex items-center justify-end gap-2 text-xs">
+          <span className="text-muted-foreground">표시 순서</span>
+          <NativeSelect
+            value={cardPreset}
+            onChange={(e) => setCardPreset(e.target.value)}
+            className="h-8 text-xs"
+          >
+            {Object.entries(CARD_PRESETS).map(([key, val]) => (
+              <option key={key} value={key}>{val.label}</option>
+            ))}
+          </NativeSelect>
+        </div>
+      )}
+
+      {/* ── 용병 관리 (아코디언) ── */}
+      {canManage && (
+        <div style={{ order: orderIndex("guest") }} className="rounded-xl border border-border/30 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setGuestCardOpen(!guestCardOpen)}
+            className="flex w-full items-center justify-between px-5 py-4 hover:bg-secondary/30 transition-colors"
+          >
             <span className="flex items-center gap-2 text-base font-bold">
+              <Users className="h-4 w-4 text-primary" />
               용병
               <Badge variant="secondary" className="text-xs">{(guests ?? []).length}명</Badge>
             </span>
+            <ChevronDown className={cn("h-5 w-5 text-muted-foreground transition-transform duration-200", guestCardOpen && "rotate-180")} />
+          </button>
+
+          {!guestCardOpen && (
+            <div className="px-5 pb-3 space-y-2">
+              <p className="text-xs text-muted-foreground">
+                {(guests ?? []).length === 0
+                  ? "등록된 용병이 없습니다."
+                  : (guests ?? []).map((g) => g.name).slice(0, 4).join(", ") + ((guests ?? []).length > 4 ? " 외" : "")}
+              </p>
+              <Button
+                size="sm"
+                className="w-full gap-2 rounded-lg"
+                onClick={(e) => { e.stopPropagation(); setGuestCardOpen(true); }}
+              >
+                <Plus className="h-4 w-4" />
+                용병 {(guests ?? []).length === 0 ? "등록" : "관리"}
+              </Button>
+            </div>
+          )}
+
+          {guestCardOpen && (
+          <>
+          <div className="flex items-center justify-end px-5 pb-3">
             <Button
               type="button"
               size="sm"
@@ -435,34 +498,39 @@ function MatchTacticsTabInner({
               </ul>
             )}
           </div>
+          </>
+          )}
         </div>
       )}
 
       {canManage && (
-        <AutoFormationBuilder
-          matchId={matchId}
-          quarterCount={match.quarterCount}
-          attendingPlayers={filteredAttending}
-          sportType={sportType}
-          playerCount={match.playerCount}
-          defaultFormationId={defaultFormationId}
-          side={isInternal ? activeSide : undefined}
-          onGenerated={(squads) => {
-            setGeneratedSquads(squads);
-            setTacticsKey((k) => k + 1);
-            scrollToTacticsBoard();
-          }}
-          onAnalysisContextReady={setAiCoachContext}
-          enableAi={enableAi}
-          matchContext={{
-            matchType: (match.matchType ?? "REGULAR"),
-            opponent: match.opponent ?? null,
-          }}
-        />
+        <div style={{ order: orderIndex("auto") }}>
+          <AutoFormationBuilder
+            matchId={matchId}
+            quarterCount={match.quarterCount}
+            attendingPlayers={filteredAttending}
+            sportType={sportType}
+            playerCount={match.playerCount}
+            defaultFormationId={defaultFormationId}
+            side={isInternal ? activeSide : undefined}
+            onGenerated={(squads) => {
+              setGeneratedSquads(squads);
+              setTacticsKey((k) => k + 1);
+              scrollToTacticsBoard();
+            }}
+            onAnalysisContextReady={setAiCoachContext}
+            enableAi={enableAi}
+            matchContext={{
+              matchType: (match.matchType ?? "REGULAR"),
+              opponent: match.opponent ?? null,
+            }}
+          />
+        </div>
       )}
 
       <div
         ref={tacticsRef}
+        style={{ order: orderIndex("board") }}
         className={cn(
           "scroll-mt-20 rounded-xl transition-all duration-500",
           tacticsHighlight && "ring-2 ring-primary ring-offset-2 ring-offset-background"
@@ -488,19 +556,21 @@ function MatchTacticsTabInner({
         />
       </div>
 
-      {/* Phase B — AI 코치 분석: 전술판 시각화 "아래" 배치 (시각화 → 해설 순서) */}
+      {/* AI 코치 분석 */}
       {canManage && aiCoachContext && (
-        <AiCoachAnalysisCard
-          hasResults={true}
-          placement={aiCoachContext.placement}
-          attendees={aiCoachContext.attendees}
-          formationName={aiCoachContext.formationName}
-          quarterCount={aiCoachContext.quarterCount}
-          matchType={(match.matchType ?? "REGULAR") as "REGULAR" | "INTERNAL" | "EVENT"}
-          opponent={match.opponent ?? null}
-          matchId={matchId}
-          enableAi={enableAi}
-        />
+        <div style={{ order: orderIndex("analysis") }}>
+          <AiCoachAnalysisCard
+            hasResults={true}
+            placement={aiCoachContext.placement}
+            attendees={aiCoachContext.attendees}
+            formationName={aiCoachContext.formationName}
+            quarterCount={aiCoachContext.quarterCount}
+            matchType={(match.matchType ?? "REGULAR") as "REGULAR" | "INTERNAL" | "EVENT"}
+            opponent={match.opponent ?? null}
+            matchId={matchId}
+            enableAi={enableAi}
+          />
+        </div>
       )}
     </div>
   );
