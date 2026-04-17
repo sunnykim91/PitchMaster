@@ -19,7 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
-import { Zap, Sparkles, Loader2, Lightbulb } from "lucide-react";
+import { Zap, Sparkles, Loader2 } from "lucide-react";
 
 /* ── Types ── */
 
@@ -70,12 +70,6 @@ type Props = {
   matchContext?: {
     matchType: "REGULAR" | "INTERNAL" | "EVENT";
     opponent: string | null;
-  };
-  /** 참석 인원 기반 포메이션 추천 힌트 (카드 상단 배너) */
-  recommendationHint?: {
-    formationName: string;
-    formationId: string;
-    reason: string;
   };
 };
 
@@ -537,7 +531,6 @@ export default function AutoFormationBuilder({
   onGenerated,
   enableAi = false,
   matchContext,
-  recommendationHint,
 }: Props) {
   // 경기 인원 수에 맞는 포메이션만 필터 (미지정 시 축구 11, 풋살 5 기본)
   const effectiveFieldCount = playerCount ?? (sportType === "FUTSAL" ? 5 : 11);
@@ -901,19 +894,14 @@ export default function AutoFormationBuilder({
 
       {!isOpen && (
         <div className="px-5 pb-3 space-y-1.5">
-          {recommendationHint && (
-            <div className="flex items-start gap-1.5 rounded-lg border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/8 px-2.5 py-1.5">
-              <Lightbulb className="mt-0.5 h-3 w-3 shrink-0 text-[hsl(var(--warning))]" />
-              <div className="min-w-0 flex-1 text-[11px] leading-snug">
-                <p className="font-bold text-foreground">
-                  {attendingPlayers.length}명 → {recommendationHint.formationName} 추천
-                </p>
-                <p className="text-muted-foreground">{recommendationHint.reason}</p>
-              </div>
-            </div>
-          )}
-          <p className="text-[11px] text-muted-foreground">
-            쿼터별 자동 배치{enableAi ? " · 편성 후 AI 코치 분석" : ""}
+          <p className="text-[11px] leading-snug text-muted-foreground">
+            선호 포지션에 맞춰 쿼터별 자동 배치
+            {enableAi && (
+              <>
+                <br />
+                <span className="text-primary/80">✨ AI 코치가 팀 히스토리·상대 이력 기반 분석 + 쿼터별 포메이션 추천</span>
+              </>
+            )}
           </p>
         </div>
       )}

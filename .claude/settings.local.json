@@ -8,7 +8,21 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(git remote:*)"
+      "Bash(git remote:*)",
+      "WebFetch(domain:pasqualepillitteri.it)",
+      "WebFetch(domain:www.mejba.me)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(powershell.exe -NoProfile -Command \"Get-Process -Id 12856 -ErrorAction SilentlyContinue | Select-Object Id, ProcessName, Path | Format-List\")",
+      "Bash(taskkill //F //PID 12856)",
+      "Bash(node -e ' *)",
+      "Bash(where supabase *)",
+      "Bash(powershell.exe -NoProfile -Command \"Get-Process -Id 15200 -ErrorAction SilentlyContinue | Select-Object Id, ProcessName, CommandLine | Format-List\")",
+      "Bash(curl -s http://localhost:3000/dues)",
+      "Bash(curl -sL -o /tmp/dues.html -b \"pm_session=test\" http://localhost:3000/dues)",
+      "Bash(curl -sL \"http://localhost:3000/_next/static/chunks/src_app_\\(app\\)_dues_page_tsx_cd7ca35a._.js\")",
+      "Bash(curl -sL \"http://localhost:3000/_next/static/chunks/src_d67b8d34._.js\" -o /tmp/chunk.js)",
+      "Bash(curl -sIL \"http://localhost:3000/_next/static/chunks/src_d67b8d34._.js\")",
+      "Bash(grep -v \":0$\")"
     ]
   }
 }

@@ -465,7 +465,6 @@ function MatchTacticsTabInner({
               matchType: (match.matchType ?? "REGULAR"),
               opponent: match.opponent ?? null,
             }}
-            recommendationHint={recommendationHint}
           />
         );
       })()}
