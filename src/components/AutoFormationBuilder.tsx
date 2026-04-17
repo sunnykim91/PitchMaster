@@ -895,16 +895,21 @@ export default function AutoFormationBuilder({
       {!isOpen && (
         <div className="px-5 pb-3 space-y-2">
           <p className="text-xs text-muted-foreground">
-            선호 포지션에 맞춰 쿼터별 자동 배치
+            참석자 선호 포지션 기반으로 쿼터별 편성
           </p>
           {enableAi && (
-            <p className="flex items-start gap-2 text-xs leading-snug text-muted-foreground">
-              <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
-              <span>
-                <span className="font-semibold text-primary">AI 코치</span> · 팀 히스토리 기반 편성 분석 + 쿼터별 포메이션 추천
-              </span>
+            <p className="text-xs leading-snug text-muted-foreground">
+              <span className="font-semibold text-primary">AI 코치</span>의 팀 맞춤 추천까지
             </p>
           )}
+          <Button
+            size="sm"
+            className="w-full gap-2 rounded-lg"
+            onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
+          >
+            <Zap className="h-4 w-4" />
+            편성 시작
+          </Button>
         </div>
       )}
 
