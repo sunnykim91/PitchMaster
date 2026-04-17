@@ -136,6 +136,11 @@ function DuesRecordsTabInner({
     const recordedTime = String(formData.get("editTime") || "");
     const userId = autoMatchMember(description);
 
+    if (!amount || amount <= 0) {
+      showToast("금액은 0보다 커야 합니다.", "error");
+      return;
+    }
+
     const { error } = await apiMutate("/api/dues", "PUT", {
       id: editingRecord.id,
       type,
@@ -352,7 +357,7 @@ function DuesRecordsTabInner({
                         <Input
                           name="amount"
                           type="number"
-                          min={0}
+                          min={1}
                           required
                           placeholder="30,000"
                           className={cn(
@@ -471,7 +476,7 @@ function DuesRecordsTabInner({
                       </div>
                       <div className="space-y-1">
                         <Label className="text-[11px] text-muted-foreground">금액</Label>
-                        <Input name="editAmount" type="number" defaultValue={record.amount} min={0} required placeholder="금액" className="h-10 rounded-lg bg-secondary border-0" />
+                        <Input name="editAmount" type="number" defaultValue={record.amount} min={1} required placeholder="금액" className="h-10 rounded-lg bg-secondary border-0" />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">

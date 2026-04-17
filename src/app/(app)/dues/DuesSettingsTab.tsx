@@ -71,6 +71,12 @@ function DuesSettingsTabInner({
     const monthlyAmount = Number(formData.get("monthlyAmount"));
     const description = String(formData.get("description") || "");
 
+    if (!memberType) { showToast("회원 유형을 입력해주세요.", "error"); return; }
+    if (!Number.isFinite(monthlyAmount) || monthlyAmount <= 0) {
+      showToast("월 회비는 0보다 큰 숫자여야 합니다.", "error");
+      return;
+    }
+
     setSavingSetting(true);
     try {
       const { error } = await apiMutate("/api/dues-settings", "POST", {

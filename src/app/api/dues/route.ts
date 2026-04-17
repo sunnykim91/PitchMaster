@@ -154,6 +154,11 @@ export async function PUT(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  // amount가 전달된 경우 양수 검증
+  if (amount !== undefined && (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0)) {
+    return apiError("금액은 0보다 큰 숫자여야 합니다");
+  }
+
   const updates: Record<string, unknown> = {};
   if (type) updates.type = type;
   if (amount !== undefined) updates.amount = amount;

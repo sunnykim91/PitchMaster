@@ -32,6 +32,12 @@ export async function POST(request: NextRequest) {
   if (roleCheck) return roleCheck;
 
   const body = await request.json();
+  if (!body.memberType) return apiError("memberType required");
+  const monthlyAmount = Number(body.monthlyAmount);
+  if (!Number.isFinite(monthlyAmount) || monthlyAmount <= 0) {
+    return apiError("월 회비는 0보다 큰 숫자여야 합니다");
+  }
+
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
@@ -40,7 +46,7 @@ export async function POST(request: NextRequest) {
     .insert({
       team_id: ctx.teamId,
       member_type: body.memberType,
-      monthly_amount: body.monthlyAmount,
+      monthly_amount: monthlyAmount,
       description: body.description || null,
     })
     .select()
@@ -63,9 +69,16 @@ export async function PUT(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  if (body.monthlyAmount !== undefined) {
+    const updAmount = Number(body.monthlyAmount);
+    if (!Number.isFinite(updAmount) || updAmount <= 0) {
+      return apiError("월 회비는 0보다 큰 숫자여야 합니다");
+    }
+  }
+
   const updates: Record<string, unknown> = {};
   if (body.memberType !== undefined) updates.member_type = body.memberType;
-  if (body.monthlyAmount !== undefined) updates.monthly_amount = body.monthlyAmount;
+  if (body.monthlyAmount !== undefined) updates.monthly_amount = Number(body.monthlyAmount);
   if (body.description !== undefined) updates.description = body.description || null;
 
   const { data, error } = await db
