@@ -2,6 +2,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import ClientLayout from "@/app/(app)/ClientLayout";
 
+// 인증 필요 페이지 — 정적 프리렌더링 비활성화
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({
   children,
 }: {

@@ -9,15 +9,15 @@ export default function GlobalError({
 }) {
   return (
     <html lang="ko">
-      <body className="flex min-h-screen items-center justify-center bg-background text-foreground">
-        <div className="text-center">
-          <h2 className="text-xl font-bold">오류가 발생했습니다</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+      <body style={{ display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center", background: "#0f1117", color: "#f0f0f0", fontFamily: "sans-serif", margin: 0 }}>
+        <div style={{ textAlign: "center" }}>
+          <h2 style={{ fontSize: "1.25rem", fontWeight: "bold" }}>오류가 발생했습니다</h2>
+          <p style={{ marginTop: "0.5rem", fontSize: "0.875rem", color: "#9ca3af" }}>
             문제가 지속되면 관리자에게 문의해주세요.
           </p>
           <button
             onClick={reset}
-            className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-semibold hover:bg-primary/90"
+            style={{ marginTop: "1rem", borderRadius: "0.5rem", background: "#e8613a", padding: "0.5rem 1rem", fontSize: "0.875rem", fontWeight: "600", color: "#fff", border: "none", cursor: "pointer" }}
           >
             다시 시도
           </button>

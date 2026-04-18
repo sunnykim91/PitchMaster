@@ -16,6 +16,9 @@ const bebasNeue = Bebas_Neue({
   preload: false,
 });
 
+// Next.js 16 Turbopack: workUnitAsyncStorage worker 컨텍스트 에러 방지
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "PitchMaster — 조기축구 · 풋살 팀 관리 플랫폼",
   description: "실시간 참석투표, AI 라인업, 통장 캡쳐 회비 자동정리, 기록 분석, 카카오톡 공유까지. 조기축구 · 풋살 팀 운영을 한 곳에서.",

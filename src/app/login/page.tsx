@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { unstable_cache } from "next/cache";
 import { isKakaoConfigured } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { Button } from "@/components/ui/button";
@@ -16,8 +17,27 @@ import FooterSection from "./sections/FooterSection";
 
 const DEMO_TEAM_ID = "192127c0-e2be-46b4-b340-7583730467da";
 
-// 소셜프루프 수치만 변동 — 1시간 ISR
-export const revalidate = 3600;
+// 소셜프루프 수치 — 1시간 캐싱 (DB 쿼리만 캐싱, searchParams는 동적 유지)
+const getSocialProof = unstable_cache(
+  async () => {
+    let teamCount = 50;
+    let memberCount = 375;
+    try {
+      const db = getSupabaseAdmin();
+      if (db) {
+        const [teamsRes, membersRes] = await Promise.all([
+          db.from("teams").select("id", { count: "exact", head: true }).neq("id", DEMO_TEAM_ID),
+          db.from("team_members").select("id", { count: "exact", head: true }).neq("team_id", DEMO_TEAM_ID).in("status", ["ACTIVE", "DORMANT"]),
+        ]);
+        if (teamsRes.count != null && teamsRes.count > 0) teamCount = teamsRes.count;
+        if (membersRes.count != null && membersRes.count > 0) memberCount = membersRes.count;
+      }
+    } catch { /* fallback */ }
+    return { teamCount, memberCount };
+  },
+  ["social-proof"],
+  { revalidate: 3600 }
+);
 
 export default async function LoginPage({
   searchParams,
@@ -30,22 +50,7 @@ export default async function LoginPage({
     ? `/api/auth/kakao?inviteCode=${encodeURIComponent(inviteCode)}`
     : "/api/auth/kakao";
 
-  // 실시간 소셜프루프
-  let teamCount = 50;
-  let memberCount = 375;
-  try {
-    const db = getSupabaseAdmin();
-    if (db) {
-      const [teamsRes, membersRes] = await Promise.all([
-        db.from("teams").select("id", { count: "exact", head: true }).neq("id", DEMO_TEAM_ID),
-        db.from("team_members").select("id", { count: "exact", head: true }).neq("team_id", DEMO_TEAM_ID).in("status", ["ACTIVE", "DORMANT"]),
-      ]);
-      if (teamsRes.count != null && teamsRes.count > 0) teamCount = teamsRes.count;
-      if (membersRes.count != null && membersRes.count > 0) memberCount = membersRes.count;
-    }
-  } catch {
-    // fallback
-  }
+  const { teamCount, memberCount } = await getSocialProof();
 
   const kakaoIcon = (
     <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
