@@ -35,6 +35,8 @@ export interface MatchDiaryTabProps {
   aiSummary?: string | null;
   /** AI 재생성 가능 여부 (김선휘 Feature Flag) */
   canRegenerateAi?: boolean;
+  /** AI 후기 재생성 횟수 (0 = 재생성 가능, 1 = 소진) */
+  aiSummaryRegenerateCount?: number;
 }
 
 function MatchDiaryTabInner({
@@ -48,11 +50,13 @@ function MatchDiaryTabInner({
   refetchDiary,
   aiSummary,
   canRegenerateAi,
+  aiSummaryRegenerateCount = 0,
 }: MatchDiaryTabProps) {
   const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [currentAiSummary, setCurrentAiSummary] = useState<string | null>(aiSummary ?? null);
   const [regenerating, setRegenerating] = useState(false);
   const [regenerateError, setRegenerateError] = useState<string | null>(null);
+  const [regenerateUsed, setRegenerateUsed] = useState(aiSummaryRegenerateCount >= 1);
 
   async function handleRegenerateAi() {
     setRegenerating(true);
@@ -60,7 +64,7 @@ function MatchDiaryTabInner({
     setCurrentAiSummary(""); // 스트리밍 시작 — 빈 문자열로 초기화해 progressive 렌더
     try {
       const { consumeSseStream } = await import("@/lib/sseStream");
-      await consumeSseStream(`/api/ai/match-summary/${matchId}`, {}, {
+      await consumeSseStream(`/api/ai/match-summary/${matchId}`, { regenerate: true }, {
         onChunk: (text) => {
           setCurrentAiSummary((prev) => (prev ?? "") + text);
         },
@@ -69,6 +73,9 @@ function MatchDiaryTabInner({
         },
         onError: (msg) => {
           setRegenerateError(msg);
+        },
+        onDone: () => {
+          setRegenerateUsed(true); // 재생성 완료 → 잔여 0
         },
       });
     } catch (err) {
@@ -374,7 +381,7 @@ function MatchDiaryTabInner({
                 <MessageCircle className="h-3.5 w-3.5" />
                 카톡 공유
               </Button>
-              {canRegenerateAi && (
+              {canRegenerateAi && !regenerateUsed && (
                 <Button
                   type="button"
                   size="sm"
@@ -391,7 +398,14 @@ function MatchDiaryTabInner({
             {regenerateError && (
               <p className="mt-2 text-xs text-destructive">{regenerateError}</p>
             )}
-            <p className="mt-2 text-[11px] text-muted-foreground/70">경기 데이터를 기반으로 AI가 작성했어요. 한 번만 생성되고 팀원 전체가 같은 후기를 봅니다.</p>
+            <p className="mt-2 text-[11px] text-muted-foreground/70">
+              경기 데이터를 기반으로 AI가 작성했어요. 팀원 전체가 같은 후기를 봅니다.
+              {canRegenerateAi && (
+                <span className={cn("ml-1", regenerateUsed ? "text-muted-foreground/50" : "text-primary/70")}>
+                  {regenerateUsed ? "· 재생성 소진" : "· 재생성 1회 가능"}
+                </span>
+              )}
+            </p>
             {shareMessage && (
               <p className="mt-2 text-xs text-muted-foreground">{shareMessage}</p>
             )}

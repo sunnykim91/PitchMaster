@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -54,6 +54,22 @@ export function AiCoachAnalysisCard({
   const [source, setSource] = useState<"ai" | "rule" | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [monthlyCount, setMonthlyCount] = useState<number | null>(null);
+  const [monthlyCap, setMonthlyCap] = useState<number | null>(null);
+  const [matchUsed, setMatchUsed] = useState(false);
+
+  // 월 사용량 및 이 경기 사용 여부 조회
+  useEffect(() => {
+    if (!enableAi || !matchId) return;
+    fetch(`/api/ai/usage?feature=tactics&matchId=${matchId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        setMonthlyCount(d.monthlyCount ?? null);
+        setMonthlyCap(d.monthlyCap ?? null);
+        setMatchUsed(d.matchUsed ?? false);
+      })
+      .catch(() => {});
+  }, [enableAi, matchId]);
 
   async function handleAnalyze() {
     if (!allSlotsFilled || loading) return;
@@ -106,11 +122,48 @@ export function AiCoachAnalysisCard({
 
   if (!enableAi) return null;
 
+  const isMonthlyExhausted = monthlyCap != null && monthlyCount != null && monthlyCount >= monthlyCap;
+
   return (
     <Card className="rounded-xl border-border/30 overflow-hidden">
       <CardContent className="p-4">
+        {/* 월 사용량 배지 */}
+        {monthlyCap != null && monthlyCount != null && (
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">AI 코치 분석</span>
+            <span className={cn(
+              "text-xs font-medium",
+              isMonthlyExhausted ? "text-destructive" : "text-muted-foreground"
+            )}>
+              이번 달 {monthlyCount} / {monthlyCap}회
+            </span>
+          </div>
+        )}
         {analysis === null && !loading ? (
-          allSlotsFilled ? (
+          matchUsed ? (
+            <div className="flex flex-col items-center gap-2 py-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Sparkles className="h-4 w-4 text-primary/60" />
+                <span>이 경기 AI 분석 완료</span>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 px-2 text-xs text-primary"
+                onClick={() => { setMatchUsed(false); }}
+              >
+                다시 보기
+              </Button>
+            </div>
+          ) : isMonthlyExhausted ? (
+            <div className="flex flex-col items-center gap-2 py-2">
+              <p className="text-xs text-destructive text-center">
+                이번 달 팀 한도({monthlyCap}회)를 모두 사용했습니다.
+              </p>
+              <p className="text-xs text-muted-foreground text-center">다음 달 1일에 초기화됩니다.</p>
+            </div>
+          ) : allSlotsFilled ? (
             <Button
               type="button"
               variant="outline"

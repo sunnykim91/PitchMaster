@@ -727,6 +727,7 @@ export default function MatchDetailClient({
             refetchDiary={refetchDiary}
             aiSummary={initialData?.aiSummary ?? null}
             canRegenerateAi={effectiveEnableAi}
+            aiSummaryRegenerateCount={initialData?.aiSummaryRegenerateCount ?? 0}
           />
         </div>
       )}

@@ -112,5 +112,6 @@ export async function getMatchDetailData(matchId: string, teamId: string, enable
     comments: { comments: commentsRes.data ?? [] },
     weather,
     aiSummary,
+    aiSummaryRegenerateCount: (match as Record<string, unknown>)?.ai_summary_regenerate_count as number ?? 0,
   };
 }

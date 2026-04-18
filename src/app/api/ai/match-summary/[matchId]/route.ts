@@ -35,13 +35,12 @@ export async function POST(
     }
   }
 
-  const rate = await checkRateLimit("match_summary", session.user.id, session.user.teamId ?? null);
-  if (!rate.allowed) {
-    return NextResponse.json({
-      error: "rate_limited",
-      message: `경기 후기 생성은 하루 ${rate.cap}회까지 가능합니다.`,
-    }, { status: 429 });
-  }
+  // 재생성 여부 파악
+  let isRegenerate = false;
+  try {
+    const body = await req.json().catch(() => ({}));
+    isRegenerate = body?.regenerate === true;
+  } catch { /* empty body */ }
 
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: "db_unavailable" }, { status: 503 });
@@ -55,6 +54,17 @@ export async function POST(
 
   if (!match) {
     return NextResponse.json({ error: "match_not_found" }, { status: 404 });
+  }
+
+  // 재생성 1회 제한 체크
+  if (isRegenerate) {
+    const regenerateCount = (match as Record<string, unknown>).ai_summary_regenerate_count as number ?? 0;
+    if (regenerateCount >= 1) {
+      return NextResponse.json({
+        error: "regenerate_limit",
+        message: "경기 후기 재생성은 1회만 가능합니다.",
+      }, { status: 429 });
+    }
   }
 
   // MatchSummaryInput 조립
@@ -145,14 +155,17 @@ export async function POST(
         // 스트림 완료 후 DB 저장 (AI 성공 시에만 — rule fallback은 저장 안 함, 재시도 여지 보존)
         if (finalSource === "ai" && accumulated) {
           const summary = finalText ?? accumulated;
-          await db
-            .from("matches")
-            .update({
-              ai_summary: summary,
-              ai_summary_generated_at: new Date().toISOString(),
-              ai_summary_model: finalModel ?? null,
-            })
-            .eq("id", matchId);
+          const updatePayload: Record<string, unknown> = {
+            ai_summary: summary,
+            ai_summary_generated_at: new Date().toISOString(),
+            ai_summary_model: finalModel ?? null,
+          };
+          // 재생성이면 regenerate_count 증가
+          if (isRegenerate) {
+            const currentCount = (match as Record<string, unknown>).ai_summary_regenerate_count as number ?? 0;
+            updatePayload.ai_summary_regenerate_count = currentCount + 1;
+          }
+          await db.from("matches").update(updatePayload).eq("id", matchId);
         }
 
         controller.close();

@@ -36,19 +36,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const rate = await checkRateLimit("tactics", session.user.id, session.user.teamId ?? null);
-  if (!rate.allowed) {
-    return NextResponse.json({
-      error: "rate_limited",
-      reason: rate.reason,
-      count: rate.userCount ?? rate.teamCount,
-      cap: rate.cap,
-      message: rate.reason === "user_cap"
-        ? `하루 ${rate.cap}회까지만 사용 가능합니다.`
-        : `팀 전체 하루 ${rate.cap}회 한도에 도달했습니다.`,
-    }, { status: 429 });
-  }
-
   let body: TacticsAnalysisInput;
   try {
     body = await req.json();
@@ -60,10 +47,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
   }
 
+  // 경기당 1회 + 팀당 월 10회 체크
+  const matchId = body.matchId ?? null;
+  const rate = await checkRateLimit("tactics", session.user.id, session.user.teamId ?? null, matchId);
+  if (!rate.allowed) {
+    return NextResponse.json({
+      error: "rate_limited",
+      reason: rate.reason,
+      monthlyCount: rate.monthlyCount,
+      monthlyCap: rate.monthlyCap,
+      message: rate.message,
+    }, { status: 429 });
+  }
+
   const inputWithContext: TacticsAnalysisInput = {
     ...body,
     userId: session.user.id,
     teamId: session.user.teamId ?? null,
+    matchId: matchId,
   };
 
   const encoder = new TextEncoder();

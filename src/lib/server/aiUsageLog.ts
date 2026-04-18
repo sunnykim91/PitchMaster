@@ -1,10 +1,15 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 /**
- * AI 사용량 관측성 + 레이트리밋.
+ * AI 사용량 관측성 + 레이트리밋 v2.
+ *
+ * 한도 정책 (마이그레이션 00033):
+ *   - 전술 분석 / 라인업: 경기당 1회 + 팀당 월 10회
+ *   - 경기 후기: 자동생성 1회(ai_summary_generated_at) + 재생성 1회(ai_summary_regenerate_count)
+ *   - OCR: 제한 없음 (이미지 해시 캐시로 중복 방지)
+ *   - 선수 카드: 기존 유지
  *
  * 테이블 없어도 graceful하게 동작 — 로그 실패가 AI 기능을 막지 않음.
- * 마이그레이션 00029 참조.
  */
 
 export type AiFeature = "signature" | "match_summary" | "tactics" | "ocr";
@@ -16,6 +21,7 @@ export type UsageLogEntry = {
   model?: string | null;
   userId?: string | null;
   teamId?: string | null;
+  matchId?: string | null;
   inputTokens?: number | null;
   outputTokens?: number | null;
   cacheReadTokens?: number | null;
@@ -24,6 +30,19 @@ export type UsageLogEntry = {
   errorReason?: string | null;
   retryCount?: number;
   entityId?: string | null;
+};
+
+/** 팀당 월 한도 — tactics는 full-plan과 공유 */
+export const MONTHLY_TEAM_CAPS: Partial<Record<AiFeature, number>> = {
+  tactics: 10,
+};
+
+export type RateLimitStatus = {
+  allowed: boolean;
+  reason?: "match_used" | "monthly_team_cap";
+  monthlyCount?: number;
+  monthlyCap?: number;
+  message?: string;
 };
 
 /** 기록 — 실패해도 조용히 (AI 기능 영향 없음) */
@@ -38,6 +57,7 @@ export async function recordAiUsage(entry: UsageLogEntry): Promise<void> {
       model: entry.model ?? null,
       user_id: entry.userId ?? null,
       team_id: entry.teamId ?? null,
+      match_id: entry.matchId ?? null,
       input_tokens: entry.inputTokens ?? null,
       output_tokens: entry.outputTokens ?? null,
       cache_read_tokens: entry.cacheReadTokens ?? null,
@@ -55,87 +75,108 @@ export async function recordAiUsage(entry: UsageLogEntry): Promise<void> {
   }
 }
 
-/** 기능별 일일 캡 (메모리 로드맵 기준) */
-export const DAILY_CAPS: Record<AiFeature, { user: number; team: number }> = {
-  signature: { user: 50, team: 300 },       // 선수 카드 — 캐시 대상이라 여유 있게
-  match_summary: { user: 30, team: 200 },   // 경기 후기 — 경기 1회당 1번만 필요
-  tactics: { user: 40, team: 200 },         // 코치 분석 — 편성 조정 반복 예상
-  ocr: { user: 20, team: 100 },             // OCR — 비용 가장 큼 (건당 3~5원)
-};
-
-export type RateLimitStatus = {
-  allowed: boolean;
-  reason?: "user_cap" | "team_cap";
-  userCount?: number;
-  teamCount?: number;
-  cap?: number;
-};
-
-/** 최근 24시간 사용량 조회 → 캡 초과 여부 판정 */
+/**
+ * 전술 분석 / 라인업 레이트리밋 체크.
+ *
+ * 1) 이 경기에서 이미 AI 호출 → 차단
+ * 2) 팀 이번 달 10회 초과 → 차단
+ */
 export async function checkRateLimit(
   feature: AiFeature,
   userId: string,
-  teamId: string | null
+  teamId: string | null,
+  matchId?: string | null,
 ): Promise<RateLimitStatus> {
   const db = getSupabaseAdmin();
-  if (!db) return { allowed: true }; // DB 없으면 통과 (데모/로컬)
-
-  const caps = DAILY_CAPS[feature];
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  if (!db) return { allowed: true };
 
   try {
-    // 사용자 카운트
-    const { count: userCount, error: userErr } = await db
-      .from("ai_usage_log")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .eq("feature", feature)
-      .eq("source", "ai") // rule fallback은 카운트 안 함 (비용 0)
-      .gte("created_at", since);
+    // ① 경기당 1회 체크 (matchId 있을 때만)
+    if (matchId && teamId) {
+      const { count: matchCount, error: matchErr } = await db
+        .from("ai_usage_log")
+        .select("id", { count: "exact", head: true })
+        .eq("match_id", matchId)
+        .eq("feature", feature)
+        .eq("team_id", teamId)
+        .eq("source", "ai");
 
-    if (userErr) {
-      // 테이블 없거나 DB 에러 → 통과 (관측성 손실 용인)
-      return { allowed: true };
+      if (!matchErr && (matchCount ?? 0) > 0) {
+        return {
+          allowed: false,
+          reason: "match_used",
+          message: "이 경기에서 이미 AI 분석을 생성했습니다.",
+        };
+      }
     }
 
-    if ((userCount ?? 0) >= caps.user) {
-      return {
-        allowed: false,
-        reason: "user_cap",
-        userCount: userCount ?? 0,
-        cap: caps.user,
-      };
-    }
+    // ② 팀 월 한도 체크
+    const monthlyCap = MONTHLY_TEAM_CAPS[feature];
+    if (monthlyCap != null && teamId) {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-    // 팀 카운트 (teamId 있을 때만)
-    if (teamId) {
-      const { count: teamCount } = await db
+      const { count: monthlyCount, error: monthlyErr } = await db
         .from("ai_usage_log")
         .select("id", { count: "exact", head: true })
         .eq("team_id", teamId)
         .eq("feature", feature)
         .eq("source", "ai")
-        .gte("created_at", since);
+        .gte("created_at", monthStart);
 
-      if ((teamCount ?? 0) >= caps.team) {
+      if (!monthlyErr && (monthlyCount ?? 0) >= monthlyCap) {
         return {
           allowed: false,
-          reason: "team_cap",
-          teamCount: teamCount ?? 0,
-          cap: caps.team,
+          reason: "monthly_team_cap",
+          monthlyCount: monthlyCount ?? 0,
+          monthlyCap,
+          message: `이번 달 팀 한도(${monthlyCap}회)를 모두 사용했습니다. 다음 달 1일에 초기화됩니다.`,
         };
       }
 
       return {
         allowed: true,
-        userCount: userCount ?? 0,
-        teamCount: teamCount ?? 0,
+        monthlyCount: monthlyCount ?? 0,
+        monthlyCap,
       };
     }
 
-    return { allowed: true, userCount: userCount ?? 0 };
+    return { allowed: true };
   } catch {
     return { allowed: true }; // 관측성 실패 ≠ 기능 차단
+  }
+}
+
+/**
+ * 팀의 이번 달 AI 사용 현황 조회 (UI 표시용).
+ * 에러 시 null 반환 — UI는 표시 생략.
+ */
+export async function getMonthlyTeamUsage(
+  feature: AiFeature,
+  teamId: string,
+): Promise<{ count: number; cap: number } | null> {
+  const monthlyCap = MONTHLY_TEAM_CAPS[feature];
+  if (monthlyCap == null) return null;
+
+  const db = getSupabaseAdmin();
+  if (!db) return null;
+
+  try {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+    const { count, error } = await db
+      .from("ai_usage_log")
+      .select("id", { count: "exact", head: true })
+      .eq("team_id", teamId)
+      .eq("feature", feature)
+      .eq("source", "ai")
+      .gte("created_at", monthStart);
+
+    if (error) return null;
+    return { count: count ?? 0, cap: monthlyCap };
+  } catch {
+    return null;
   }
 }
 
