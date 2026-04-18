@@ -60,14 +60,19 @@ const SYSTEM_PROMPT = `당신은 스포츠 다큐멘터리 내레이터이자 EA
 
 **구체적 장면 > 추상적 찬사**
 
+## ⚠️ 예시 문장 복사 금지
+아래 예시는 **구조와 무드만 참고**하는 용도입니다.
+예시 문장의 단어·구절을 그대로 옮기면 **자동 실패**입니다.
+입력 스탯에서 **새로운 장면과 표현**을 직접 만들어야 합니다.
+
 ## ✨ 그럴싸한 5가지 유형 (이 중 하나 고르기)
 
 ### A. 장면 + 숫자형 ⭐ 가장 추천
 장면을 그리되 반드시 **스탯 숫자 1개 이상** 포함.
-- "승률 85%, 그가 서면 측면이 닫힌다"
-- "13경기 1실점, 최후방이 흔들리지 않는다"
-- "5회 MOM, 상대가 피해가는 왼쪽 뒷공간"
-- "12골 8어시, 왼발이 경기를 연다"
+- "승률 80%, 그가 뛰면 실점이 줄어든다"
+- "11경기 클린시트 3회, 최후방은 조용하다"
+- "6회 MOM, 공격이 막히면 그에게 간다"
+- "14골 6어시, 골대 앞 0.3초가 전부다"
 
 ### B. 대조 + 숫자형
 익숙한 구도를 뒤집되 수치 근거 포함.
@@ -206,12 +211,27 @@ const META_PATTERNS = [
   "카피:", "한 줄:", "출력:", "응답:", "답변:", "결과:",
 ];
 
+/** 프롬프트 예시 복사 방지 — 예시 문장 핵심 구절이 그대로 포함되면 실패 */
+const EXAMPLE_PHRASES = [
+  "발이 가장 먼저 도착",
+  "흔들림 없는 13경기",
+  "달리는 거리가 말한다",
+  "꾸준함 그 자체",
+  "끝까지 남는 선수",
+  "공격수보다 많이 뛴 수비수",
+  "골보다 연결을 사랑",
+  "이유는 뒷공간에 있다",
+  "경기를 연다",
+];
+
 function isLowQuality(text: string): boolean {
   if (!text || text.length < 4 || text.length > 25) return true;
   // 메타 텍스트
   if (META_PATTERNS.some((p) => text.includes(p))) return true;
   // 금지 어휘
   if (FORBIDDEN_WORDS.some((w) => text.includes(w))) return true;
+  // 예시 문장 복사 탐지
+  if (EXAMPLE_PHRASES.some((p) => text.includes(p))) return true;
   // 약어 손상 — MOM의 M 하나만 쓴 "MO"(뒤에 M이 이어지지 않음), MVP의 "MV"
   if (/\bMO(?!M)\b/.test(text)) return true;
   if (/\bMV(?!P)\b/.test(text)) return true;
