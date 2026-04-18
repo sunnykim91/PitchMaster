@@ -98,13 +98,19 @@ const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의
 ### 2단락 — 경기 시나리오 (핵심)
 - **공격할 때**: 어떤 경로로 득점 기회를 만들 것인지
 - **수비할 때**: 어떤 라인에서 압박 시작하고 뒷공간 어떻게 관리할지
-- 핵심 선수 1~2명의 역할 구체화 (최근 스탯 반영)
-- 예: "좌측면에서 홍길동이 오버래핑 시 중앙 김철수가 하프 스페이스로 침투",
-      "상대 빠른 공격수가 있다면 뒷공간을 닫기 위해 미드블록 유지"
+- 핵심 선수 1~2명의 역할 구체화 — **반드시 커리어 스탯(골·어시·MOM) 반영**
+  - 히스토리에 "홍길동: 12경기 8골 3어시" 있으면 → "홍길동의 결정력을 최전방 득점 경로로 활용"
+  - 히스토리에 "우리팀이 1,2쿼터에 득점 집중, 3,4쿼터 실점 많음"이 있으면 → 초반 압박 → 후반 수비 전환 전략 언급
+  - 상대팀 이력이 있으면 이전 맞대결 결과 반드시 언급
+- 예: "홍길동의 최전방 돌파가 이번 경기 주 득점 경로. 지난 12경기 8골로 가장 믿을 수 있는 카드."
 
-### 3단락 — 주의점·운영
-- 쿼터별 체력 분배, 교체 우선순위, 수비 약점
-- 후반 피로 시 포지션 재정비
+### 3단락 — 주의점·운영 (체력·교체)
+- **쿼터 패턴 분석** — quarterStats 제공 시 실점이 집중된 쿼터 구체적으로 언급
+  - 예: "우리팀은 3쿼터 이후 실점이 집중되는 경향 (히스토리 기준 3쿼터 실점 평균 1.4). 3쿼터 이후 수비 라인을 내리고 역습 중심으로 전환 고려"
+- **선수 부하(playerWorkload)** — quarterCount와 동일한 quarters 값 선수는 반드시 언급
+  - 예: "홍길동이 4쿼터 모두 배치되어 있어 체력 부담이 크다. 3쿼터 이후 교체 or 미드로 내리는 방안 고려"
+  - 부하가 큰 선수(전 쿼터 출전)가 MOM 경험 많다면 → "주축 자원이라 교체가 쉽지 않지만 체력 배분이 관건"
+- 후반 피로 시 포지션 재정비, 교체 우선순위
 - 예: "후반에는 측면 체력이 빠르게 떨어지니 2쿼터 이후 윙어 교체 고려"
 
 ## ✅ 좋은 예시
@@ -145,6 +151,8 @@ JSON:
 - placementBreakdown: { GK, DEF, MID, FWD } — placement의 카테고리별 인원수 (사전 계산됨)
 - quarterPlacements: **쿼터별 실제 배치** [{ quarter, assignments: [{slot, playerName}] }] (제공 시)
   → 각 쿼터의 선수 배치. 쿼터 간 로테이션·교체 파악에 활용. placement(1쿼터)와 같은 형식.
+- playerWorkload: **이번 경기 선수별 쿼터 부하** [{ playerName, quarters }] (제공 시)
+  → 선수가 몇 쿼터를 소화하는지. quarterCount와 동일하면 전 쿼터 출전 = 체력 부담 대상.
 - matchType: REGULAR | INTERNAL | EVENT
 - opponent: 상대팀 이름 (있으면)
 - warnings: 룰 엔진이 감지한 편성 경고 (예: "수비수 부족", "키 포지션 미배치")
@@ -256,6 +264,8 @@ export type TacticsAnalysisInput = {
     quarter: number;
     assignments: Array<{ slot: string; playerName: string }>;
   }>;
+  /** 이번 경기 선수별 쿼터 부하 (몇 쿼터 뛰는지) — AI 체력 분석용 */
+  playerWorkload?: Array<{ playerName: string; quarters: number }>;
   matchType: "REGULAR" | "INTERNAL" | "EVENT";
   opponent?: string | null;
   warnings?: string[];
@@ -367,6 +377,9 @@ export async function generateAiTacticsAnalysis(
           quarter: qp.quarter,
           assignments: qp.assignments.slice(0, 15),
         })) }
+      : {}),
+    ...(input.playerWorkload && input.playerWorkload.length > 0
+      ? { playerWorkload: input.playerWorkload }
       : {}),
     matchType: input.matchType,
     opponent: input.opponent ?? null,
@@ -481,6 +494,9 @@ export async function* generateAiTacticsAnalysisStream(
           assignments: qp.assignments.slice(0, 15),
         })) }
       : {}),
+    ...(input.playerWorkload && input.playerWorkload.length > 0
+      ? { playerWorkload: input.playerWorkload }
+      : {}),
     matchType: input.matchType,
     opponent: input.opponent ?? null,
     warnings: input.warnings ?? [],
@@ -551,8 +567,20 @@ function buildHistoryBlock(stats: TeamStats, opponent: string | null | undefined
     }
   }
 
+  if (stats.playerCareerStats.length > 0) {
+    lines.push("\n### 선수별 커리어 (Top 20, 출전 수 기준)");
+    for (const p of stats.playerCareerStats.slice(0, 20)) {
+      const parts: string[] = [`${p.totalMatches}경기`];
+      if (p.totalGoals > 0) parts.push(`${p.totalGoals}골`);
+      if (p.totalAssists > 0) parts.push(`${p.totalAssists}어시`);
+      if (p.mvpCount > 0) parts.push(`MOM ${p.mvpCount}회`);
+      if (p.mostPlayedPosition) parts.push(`주포지션:${p.mostPlayedPosition}`);
+      lines.push(`- ${p.playerName}: ${parts.join(", ")}`);
+    }
+  }
+
   if (stats.playerPositionStats.length > 0) {
-    lines.push("\n### 핵심 선수 포지션 활약 (Top 10)");
+    lines.push("\n### 포지션별 활약 (Top 10)");
     for (const p of stats.playerPositionStats.slice(0, 10)) {
       const extras: string[] = [];
       if (p.goals > 0) extras.push(`${p.goals}골`);

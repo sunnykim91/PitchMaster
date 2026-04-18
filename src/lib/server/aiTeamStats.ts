@@ -47,9 +47,20 @@ export type QuarterStat = {
   matches: number;     // 해당 쿼터 데이터가 있는 경기 수
 };
 
+/** 선수별 커리어 요약 — AI 코치 선수 부하·실력 판단용 */
+export type PlayerCareerStat = {
+  playerName: string;
+  totalMatches: number;      // 총 출전 경기 수
+  totalGoals: number;        // 누적 득점
+  totalAssists: number;      // 누적 어시스트
+  mvpCount: number;          // MVP/MOM 수상 횟수
+  mostPlayedPosition: string; // 가장 많이 뛴 포지션 슬롯
+};
+
 export type TeamStats = {
   formationStats: FormationStat[];     // 출전 수 desc
   playerPositionStats: PlayerPositionStat[];  // matches desc, top 30
+  playerCareerStats: PlayerCareerStat[];      // totalMatches desc, top 20
   opponentHistory: OpponentHistoryItem[];     // played desc, top 10
   quarterStats: QuarterStat[];         // 쿼터별 득실 (quarter asc)
   totalCompletedMatches: number;
@@ -59,6 +70,7 @@ export type TeamStats = {
 const EMPTY: TeamStats = {
   formationStats: [],
   playerPositionStats: [],
+  playerCareerStats: [],
   opponentHistory: [],
   quarterStats: [],
   totalCompletedMatches: 0,
@@ -134,6 +146,12 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
   const { data: goals } = await db
     .from("match_goals")
     .select("match_id, scorer_id, assist_id, is_own_goal, quarter_number")
+    .in("match_id", matchIds);
+
+  // MVP 투표 데이터 (선수별 MOM 수상 횟수) — candidate_id는 users.id
+  const { data: mvpVotes } = await db
+    .from("match_mvp_votes")
+    .select("match_id, candidate_id")
     .in("match_id", matchIds);
 
   // 경기별 스코어 + 결과
@@ -298,9 +316,51 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
   }
   quarterStats.sort((a, b) => a.quarter - b.quarter);
 
+  // 선수별 커리어 통계 — 포지션 통계에서 재활용 (중복 집계 방지: 경기별 1회만 카운트)
+  const memberMatchSet = new Map<string, Set<string>>(); // memberId → 출전 경기 Set
+  for (const sq of squads ?? []) {
+    const positions = (sq.positions as Record<string, string> | null) ?? {};
+    for (const memberId of Object.values(positions)) {
+      if (!memberId || typeof memberId !== "string") continue;
+      if (!memberMatchSet.has(memberId)) memberMatchSet.set(memberId, new Set());
+      memberMatchSet.get(memberId)!.add(sq.match_id);
+    }
+  }
+  // MVP 수상 횟수 집계
+  const memberMvpCount = new Map<string, number>();
+  for (const v of mvpVotes ?? []) {
+    const mid = v.candidate_member_id;
+    if (mid) memberMvpCount.set(mid, (memberMvpCount.get(mid) ?? 0) + 1);
+  }
+  // 선수별 최다 출전 포지션
+  const memberBestPosition = new Map<string, string>();
+  for (const [memberId, posMap] of memberPosCount.entries()) {
+    let bestPos = "";
+    let bestCnt = 0;
+    for (const [pos, cnt] of posMap.entries()) {
+      if (cnt > bestCnt) { bestCnt = cnt; bestPos = pos; }
+    }
+    if (bestPos) memberBestPosition.set(memberId, bestPos);
+  }
+  const playerCareerStats: PlayerCareerStat[] = [];
+  for (const [memberId, matchSet] of memberMatchSet.entries()) {
+    const playerName = nameMap.get(memberId) ?? "선수";
+    if (playerName === "선수") continue; // 이름 없는 경우 제외
+    playerCareerStats.push({
+      playerName,
+      totalMatches: matchSet.size,
+      totalGoals: memberGoals.get(memberId) ?? 0,
+      totalAssists: memberAssists.get(memberId) ?? 0,
+      mvpCount: memberMvpCount.get(memberId) ?? 0,
+      mostPlayedPosition: memberBestPosition.get(memberId) ?? "",
+    });
+  }
+  playerCareerStats.sort((a, b) => b.totalMatches - a.totalMatches);
+
   return {
     formationStats,
     playerPositionStats: playerPositionStats.slice(0, 30),
+    playerCareerStats: playerCareerStats.slice(0, 20),
     opponentHistory,
     quarterStats,
     totalCompletedMatches: matches.length,

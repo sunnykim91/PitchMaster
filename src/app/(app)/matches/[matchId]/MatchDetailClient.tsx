@@ -154,6 +154,8 @@ export default function MatchDetailClient({
   } = useApi<{ team: { sport_type?: SportType; player_count?: number; uniform_primary?: string; uniform_secondary?: string; uniform_pattern?: string; uniforms?: { home?: { primary: string; secondary: string; pattern: string }; away?: { primary: string; secondary: string; pattern: string }; third?: { primary: string; secondary: string; pattern: string } | null } | null; default_formation_id?: string; stats_recording_staff_only?: boolean } }>("/api/teams", initialData?.team ?? { team: {} }, { skip: !!initialData?.team });
 
   const sportType: SportType = teamData.team?.sport_type ?? "SOCCER";
+  // AI 기능은 축구(SOCCER)만 오픈. 풋살 팀은 Feature Flag와 무관하게 비활성.
+  const effectiveEnableAi = enableAi && sportType === "SOCCER";
   const uniforms = teamData.team?.uniforms;
   const uniformPrimary = uniforms?.home?.primary ?? teamData.team?.uniform_primary ?? "hsl(var(--primary))";
   const uniformSecondary = uniforms?.home?.secondary ?? teamData.team?.uniform_secondary ?? "hsl(var(--muted-foreground))";
@@ -565,7 +567,7 @@ export default function MatchDetailClient({
             guests={guests}
             refetchGuests={refetchGuests}
             handleRemoveGuest={handleRemoveGuest}
-            enableAi={enableAi}
+            enableAi={effectiveEnableAi}
           />
         </div>
       )}
@@ -712,7 +714,7 @@ export default function MatchDetailClient({
             voteCounts={voteCounts}
             refetchDiary={refetchDiary}
             aiSummary={initialData?.aiSummary ?? null}
-            canRegenerateAi={enableAi}
+            canRegenerateAi={effectiveEnableAi}
           />
         </div>
       )}

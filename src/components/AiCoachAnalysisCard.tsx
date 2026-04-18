@@ -62,6 +62,17 @@ export function AiCoachAnalysisCard({
     setAnalysis("");
     setSource(null);
     try {
+      // 선수별 쿼터 부하 계산 (quarterPlacements에서 선수 등장 횟수 집계)
+      const workloadMap = new Map<string, number>();
+      for (const qp of quarterPlacements ?? []) {
+        for (const a of qp.assignments) {
+          workloadMap.set(a.playerName, (workloadMap.get(a.playerName) ?? 0) + 1);
+        }
+      }
+      const playerWorkload = [...workloadMap.entries()]
+        .map(([playerName, quarters]) => ({ playerName, quarters }))
+        .sort((a, b) => b.quarters - a.quarters);
+
       const payload = {
         formationName,
         quarterCount,
@@ -72,6 +83,7 @@ export function AiCoachAnalysisCard({
         })),
         placement,
         ...(quarterPlacements && quarterPlacements.length > 0 ? { quarterPlacements } : {}),
+        ...(playerWorkload.length > 0 ? { playerWorkload } : {}),
         matchType,
         opponent: opponent ?? null,
         warnings: [],
