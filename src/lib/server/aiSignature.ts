@@ -4,14 +4,14 @@ import { generateSignature as generateRuleBasedSignature } from "@/lib/playerCar
 import { recordAiUsage, extractTokenUsage } from "@/lib/server/aiUsageLog";
 
 /**
- * Claude Haiku로 선수 시그니처 카피 생성.
+ * Claude Sonnet으로 선수 시그니처 카피 생성.
  * 실패 시 룰 기반 generateSignature로 fallback.
  *
- * 시스템 프롬프트는 2,500+ 토큰으로 캐시 히트율 극대화.
- * 캐시 적용 후 호출당 약 1원 (입력 400 토큰 + 출력 50 토큰).
+ * 시그니처는 7일 TTL 캐시로 재사용 — Sonnet 비용 부담 최소.
+ * 팀 전체 새 시그니처 생성해도 호출 횟수가 극히 적음.
  */
 
-const MODEL = "claude-haiku-4-5";
+const MODEL = "claude-sonnet-4-5";
 const MAX_OUTPUT_TOKENS = 120;
 const TEMPERATURE = 0.9; // 창의성 확보하되 환각 억제
 
