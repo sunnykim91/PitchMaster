@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Camera, X as XIcon, ImageIcon, MessageCircle, Copy, Download, RefreshCw } from "lucide-react";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { apiMutate } from "@/lib/useApi";
+import { useToast } from "@/lib/ToastContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -77,6 +78,7 @@ function MatchDiaryTabInner({
       setRegenerating(false);
     }
   }
+  const { showToast } = useToast();
   const [isDiaryEditing, setIsDiaryEditing] = useState(false);
   const diaryFormRef = useRef<HTMLFormElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -90,19 +92,28 @@ function MatchDiaryTabInner({
     if (!files || files.length === 0) return;
     setUploadingPhoto(true);
     const newPhotos = [...photos];
-    for (const file of Array.from(files)) {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: fd, credentials: "include" });
-      const json = await res.json();
-      if (json.url) newPhotos.push(json.url);
+    try {
+      for (const file of Array.from(files)) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/upload", { method: "POST", body: fd, credentials: "include" });
+        const json = await res.json();
+        if (!res.ok) {
+          showToast(json.error ?? "사진 업로드에 실패했습니다.", "error");
+          continue;
+        }
+        if (json.url) newPhotos.push(json.url);
+      }
+      setPhotos(newPhotos);
+      // 바로 DB에 저장 (기존 일지 데이터 보존)
+      await apiMutate("/api/diary", "POST", { matchId, weather: diary.weather, condition: diary.condition, memo: diary.memo, photos: newPhotos });
+      await refetchDiary();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "사진 업로드 중 오류가 발생했습니다.", "error");
+    } finally {
+      setUploadingPhoto(false);
+      if (photoInputRef.current) photoInputRef.current.value = "";
     }
-    setPhotos(newPhotos);
-    // 바로 DB에 저장 (기존 일지 데이터 보존)
-    await apiMutate("/api/diary", "POST", { matchId, weather: diary.weather, condition: diary.condition, memo: diary.memo, photos: newPhotos });
-    await refetchDiary();
-    setUploadingPhoto(false);
-    if (photoInputRef.current) photoInputRef.current.value = "";
   }
 
   async function handleRemovePhoto(url: string) {
