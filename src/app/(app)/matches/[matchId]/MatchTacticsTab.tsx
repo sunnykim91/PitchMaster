@@ -558,16 +558,16 @@ function MatchTacticsTabInner({
         />
       </div>
 
-      {/* AI 코치 분석 */}
-      {canManage && aiCoachContext && (
+      {/* AI 코치 분석 — 항상 렌더, 전술판 채움 여부로 버튼 활성화 제어 */}
+      {canManage && (
         <div style={{ order: orderIndex("analysis") }}>
           <AiCoachAnalysisCard
-            allSlotsFilled={aiCoachContext.allSlotsFilled}
-            placement={aiCoachContext.placement}
-            quarterPlacements={aiCoachContext.quarterPlacements}
-            attendees={aiCoachContext.attendees}
-            formationName={aiCoachContext.formationName}
-            quarterCount={aiCoachContext.quarterCount}
+            allSlotsFilled={aiCoachContext?.allSlotsFilled ?? false}
+            placement={aiCoachContext?.placement ?? []}
+            quarterPlacements={aiCoachContext?.quarterPlacements}
+            attendees={aiCoachContext?.attendees ?? []}
+            formationName={aiCoachContext?.formationName ?? ""}
+            quarterCount={aiCoachContext?.quarterCount ?? match.quarterCount}
             matchType={(match.matchType ?? "REGULAR") as "REGULAR" | "INTERNAL" | "EVENT"}
             opponent={match.opponent ?? null}
             matchId={matchId}
