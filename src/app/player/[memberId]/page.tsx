@@ -220,10 +220,30 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
 
   // 시그니처 — DB 캐시(7일 TTL) 우선. 캐시 miss/stale + 김선휘(enableAi)면 Claude 호출 + DB 저장.
   // 비-김선휘 사용자는 기존 DB 캐시만 사용 (새 호출은 안 함).
+
+  /** 랭킹 라벨("🏆 팀 1위" 등)에서 숫자 순위만 추출 — 4위 이하는 null */
+  function extractRankNum(label: string | undefined): number | null {
+    if (!label) return null;
+    if (label.includes("1위")) return 1;
+    if (label.includes("2위")) return 2;
+    if (label.includes("3위")) return 3;
+    return null;
+  }
+
   const signatureInput = {
     cat, goals: totalGoals, assists: totalAssists, mvp: totalMvp,
     cleanSheets, matchCount: attended, attendanceRate, winRate,
     isTopScorer, isTopAssist, isTopMvp,
+    // 팀 비교 데이터 — AI가 "팀 14명 중 득점 1위" 같은 맥락 있는 카피를 만들 수 있도록
+    teamScorerRank: extractRankNum(goalsRank),
+    teamAssistRank: extractRankNum(assistsRank),
+    teamMvpRank: extractRankNum(mvpRank),
+    teamMemberCount: memberAggs.length,
+    teamTotalMatches: matchIds.length,
+    goalsPerGame: attended > 0 ? Math.round((totalGoals / attended) * 100) / 100 : null,
+    mvpRate: attended > 0 ? Math.round((totalMvp / attended) * 100) / 100 : null,
+    goalStreak: goalStreak >= 3 ? goalStreak : null,
+    attendanceStreak: attendanceStreak >= 5 ? attendanceStreak : null,
   };
   const signature = await getOrGenerateSignature({
     teamMemberId: m.id,

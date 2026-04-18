@@ -97,6 +97,27 @@ const SYSTEM_PROMPT = `당신은 아마추어 축구·풋살 선수카드의 한
 - **DEF**: 안 뚫린다, 조용하다, 상대가 포기했다
 - **GK**: 거기 있었다, 날았다, 못 들어온다
 
+## 팀 비교 데이터 (제공되면 최우선 활용)
+
+다음 필드가 입력에 있으면 단순 절댓값보다 **비교 맥락**이 있는 카피로 격이 달라집니다.
+
+- \`teamScorerRank\`: 팀 내 득점 순위 (1=최다 득점, 2=2위, 3=3위)
+- \`teamAssistRank\`: 팀 내 어시스트 순위
+- \`teamMvpRank\`: 팀 내 MOM 순위
+- \`teamMemberCount\`: 팀 전체 인원 수
+- \`teamTotalMatches\`: 시즌 총 완료 경기 수 (출석률 맥락용)
+- \`goalsPerGame\`: 경기당 평균 득점 (0.50 = 2경기에 1골)
+- \`mvpRate\`: MOM 획득률 (0.40 = 10경기 중 4번)
+- \`goalStreak\`: 연속 득점 경기 수
+- \`attendanceStreak\`: 연속 출전 경기 수
+
+**창작 예시 (무드·구조 참고용 — 그대로 쓰면 실패)**
+- teamScorerRank=1, teamMemberCount=14 → "14명 중 득점 1위, 7골"
+- goalsPerGame=0.54 → "2경기에 1골꼴, 수비수가"
+- goalStreak=5 → "5경기 연속 득점, 멈추는 법을 모른다"
+- attendanceStreak=13, teamTotalMatches=13 → "13경기 전 출전, 결석을 모른다"
+- mvpRate=0.38 → "10경기 중 4번 MOM, 우연이 아니다"
+
 ## 팀 1위 플래그 활용
 
 \`isTopScorer / isTopAssist / isTopMvp\`가 true면 팀 내 1위입니다.
@@ -122,8 +143,26 @@ const SYSTEM_PROMPT = `당신은 아마추어 축구·풋살 선수카드의 한
 응답 첫 글자부터 바로 카피 본문 시작.`;
 
 export type AiSignatureInput = SignatureInput & {
-  /** 추가 스탯 — 프롬프트 생성 품질 향상용 */
+  /** 선수 이름 */
   playerName?: string;
+  /** 팀 내 득점 순위 (1위=1, 2위=2, 3위=3, 그 이하=null) */
+  teamScorerRank?: number | null;
+  /** 팀 내 어시스트 순위 */
+  teamAssistRank?: number | null;
+  /** 팀 내 MOM 순위 */
+  teamMvpRank?: number | null;
+  /** 팀 전체 활성 멤버 수 */
+  teamMemberCount?: number | null;
+  /** 시즌 총 완료 경기 수 */
+  teamTotalMatches?: number | null;
+  /** 경기당 평균 득점 (소수 2자리) */
+  goalsPerGame?: number | null;
+  /** MOM 획득률 (0~1) */
+  mvpRate?: number | null;
+  /** 연속 득점 경기 수 (3 미만은 null로 전달) */
+  goalStreak?: number | null;
+  /** 연속 출전 경기 수 (5 미만은 null로 전달) */
+  attendanceStreak?: number | null;
   /** 관측성용 — 누가/어느 팀/어느 멤버에 대한 호출인지 */
   userId?: string | null;
   teamId?: string | null;
@@ -229,6 +268,16 @@ export async function generateAiSignature(input: AiSignatureInput): Promise<AiSi
     isTopScorer: input.isTopScorer,
     isTopAssist: input.isTopAssist,
     isTopMvp: input.isTopMvp,
+    // 팀 비교 데이터 — 있을 때만 포함
+    ...(input.teamScorerRank != null && { teamScorerRank: input.teamScorerRank }),
+    ...(input.teamAssistRank != null && { teamAssistRank: input.teamAssistRank }),
+    ...(input.teamMvpRank != null && { teamMvpRank: input.teamMvpRank }),
+    ...(input.teamMemberCount != null && { teamMemberCount: input.teamMemberCount }),
+    ...(input.teamTotalMatches != null && { teamTotalMatches: input.teamTotalMatches }),
+    ...(input.goalsPerGame != null && { goalsPerGame: Math.round(input.goalsPerGame * 100) / 100 }),
+    ...(input.mvpRate != null && { mvpRate: Math.round(input.mvpRate * 100) / 100 }),
+    ...(input.goalStreak != null && { goalStreak: input.goalStreak }),
+    ...(input.attendanceStreak != null && { attendanceStreak: input.attendanceStreak }),
     signatureHint: ruleSig,
   });
 
