@@ -2,11 +2,11 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Bebas_Neue } from "next/font/google";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
-
-// Next.js 16 Turbopack: workUnitAsyncStorage 버그 방지 — 정적 생성 비활성화
-export const dynamic = "force-dynamic";
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
+
+// Next.js 16: 내부 페이지(/_global-error, /_not-found) 정적 생성 시 workUnitAsyncStorage 오류 방지
+export const dynamic = "force-dynamic";
 
 const GA_ID = "G-XWRB861513";
 
@@ -18,9 +18,6 @@ const bebasNeue = Bebas_Neue({
   variable: "--font-display-bebas",
   preload: false,
 });
-
-// Next.js 16 Turbopack: workUnitAsyncStorage worker 컨텍스트 에러 방지
-export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "PitchMaster — 조기축구 · 풋살 팀 관리 플랫폼",
