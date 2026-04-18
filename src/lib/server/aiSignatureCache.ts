@@ -38,58 +38,9 @@ function isFresh(generatedAt: string | null): boolean {
 }
 
 export async function getOrGenerateSignature(params: CacheParams): Promise<string> {
-  const { teamMemberId, cachedSignature, cachedGeneratedAt, enableGenerate, input, userId, teamId } = params;
-  // 관측성 IDs 주입
-  const inputWithContext: AiSignatureInput = { ...input, userId: userId ?? null, teamId: teamId ?? null, teamMemberId };
-
-  // 1. 캐시 hit + 신선 → 재사용
-  if (cachedSignature && isFresh(cachedGeneratedAt)) {
-    return cachedSignature;
-  }
-
-  // 2. 생성 권한 없음 → 룰 기반 (저장 안 함)
-  if (!enableGenerate) {
-    // 캐시는 있지만 stale인 경우: 룰 기반보다 stale이 나을 수도 있으므로 우선 사용
-    if (cachedSignature) return cachedSignature;
-    return generateRuleBasedSignature(input);
-  }
-
-  // 2-b. 레이트리밋 체크 — 일일 캡 초과 시 stale 캐시 or 룰 기반
-  if (userId) {
-    const rate = await checkRateLimit("signature", userId, teamId ?? null);
-    if (!rate.allowed) {
-      console.warn(`[aiSignatureCache] rate limit 초과 (${rate.reason}) — stale 캐시 or 룰 기반 사용`);
-      if (cachedSignature) return cachedSignature;
-      return generateRuleBasedSignature(input);
-    }
-  }
-
-  // 3. 생성 권한 있음 → LLM 호출 + DB 저장
-  const result = await generateAiSignature(inputWithContext);
-
-  // fallback이어도 DB에 저장? 아니, 룰 기반 결과는 다음 호출 때 재시도 기회 주기 위해 저장 안 함
-  if (result.source === "ai") {
-    const db = getSupabaseAdmin();
-    if (!db) {
-      console.warn("[aiSignatureCache] getSupabaseAdmin null — 저장 스킵");
-    } else {
-      const { error } = await db
-        .from("team_members")
-        .update({
-          ai_signature: result.signature,
-          ai_signature_generated_at: new Date().toISOString(),
-          ai_signature_model: result.model ?? null,
-        })
-        .eq("id", teamMemberId);
-      if (error) {
-        console.error("[aiSignatureCache] DB update 실패 — memberId=", teamMemberId, "err=", error.message);
-      } else {
-        console.log("[aiSignatureCache] DB 저장 성공 — memberId=", teamMemberId);
-      }
-    }
-  } else {
-    console.warn("[aiSignatureCache] AI 결과가 'rule' fallback — 저장 스킵. memberId=", teamMemberId);
-  }
-
-  return result.signature;
+  const { input } = params;
+  // AI 생성 경로 완전 비활성화 — 룰 기반(패턴 풀 + 결정론적 선택)이 품질·비용·속도 모두 우위.
+  // 이전 AI 캐시는 의도적으로 무시: 사용자별로 새로운 룰 기반 카피를 노출.
+  // 레거시 경로 보존: 필요 시 environment flag로 부활 가능.
+  return generateRuleBasedSignature(input);
 }

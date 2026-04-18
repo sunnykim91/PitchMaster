@@ -50,9 +50,28 @@ export type SignatureInput = {
   isTopScorer?: boolean;
   isTopAssist?: boolean;
   isTopMvp?: boolean;
+  /** 같은 선수는 항상 같은 시그니처가 나오도록 하는 시드 (이름·ID 등) */
+  playerKey?: string;
 };
 
-// 한 줄 캐치프레이즈 자동 생성
+/**
+ * 문자열 → 32bit 해시 (DJB2). 선수 이름 기반 결정론적 패턴 선택용.
+ * 같은 이름은 항상 같은 인덱스 → 선수마다 고유하되 일관된 시그니처.
+ */
+function hashString(s: string): number {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
+function pick<T>(templates: T[], seed: string): T {
+  if (templates.length === 0) throw new Error("empty templates");
+  return templates[hashString(seed) % templates.length];
+}
+
+// 한 줄 캐치프레이즈 자동 생성 (룰 기반 + 패턴 풀에서 결정론적 선택)
 export function generateSignature(input: SignatureInput): string {
   const {
     cat,
@@ -66,33 +85,149 @@ export function generateSignature(input: SignatureInput): string {
     isTopScorer,
     isTopAssist,
     isTopMvp,
+    playerKey = "",
   } = input;
 
-  if (matchCount === 0) return "곧 첫 경기를 기다리는 선수";
+  const winPct = Math.round(winRate * 100);
+  const attPct = Math.round(attendanceRate * 100);
+  const ap = goals + assists;
+  // seed: 선수 + 스탯 조합 — 같은 선수여도 기록이 바뀌면 새 시그니처
+  const seed = `${playerKey}|${goals}|${assists}|${mvp}|${cleanSheets}`;
 
-  // GK / DEF — 수비형 시그니처 우선
+  if (matchCount === 0) {
+    return pick(["곧 첫 경기를 기다리는 선수", "아직 출전 전, 곧 시작"], seed);
+  }
+  if (matchCount <= 2) {
+    return pick([
+      `${matchCount}경기, 이제 시작이다`,
+      `${matchCount}경기, 다음이 기다린다`,
+      `스타트를 끊은 ${matchCount}경기`,
+    ], seed);
+  }
+
+  // ── GK / DEF ──────────────────────────────────────────────
   if (cat === "GK" || cat === "DEF") {
-    if (cleanSheets >= 5) return `${cleanSheets}경기 무실점 — 팀의 최후방`;
-    if (isTopMvp && mvp > 0) return `${mvp}회 MOM — 수비의 핵심`;
-    if (winRate >= 0.7)
-      return `승률 ${Math.round(winRate * 100)}%, 그가 뛰면 팀은 이긴다`;
-    return `${matchCount}경기 출장 · 클린시트 ${cleanSheets}회`;
+    // 수비수인데 득점왕 — 특수 케이스 (희귀함이 매력)
+    if (isTopScorer && goals >= 3) {
+      return pick([
+        `수비수가 ${goals}골, 시즌 특별상`,
+        `${goals}골 기록한 수비수`,
+        `${cat === "GK" ? "골키퍼" : "수비수"}가 팀 득점 1위`,
+        `수비 + ${goals}골, 보기 드문 조합`,
+        `${goals}골의 수비수, 기록이 증명한다`,
+      ], seed);
+    }
+    // 클린시트 많음
+    if (cleanSheets >= 5) {
+      return pick([
+        `${cleanSheets}경기 무실점 — 팀의 최후방`,
+        `무실점 ${cleanSheets}경기, 조용한 시즌`,
+        `클린시트 ${cleanSheets}회 기록`,
+        `${cleanSheets}번 막아낸 시즌`,
+        `무실점 ${cleanSheets}회, 뚫리지 않았다`,
+      ], seed);
+    }
+    // 수비 MOM 1위
+    if (isTopMvp && mvp > 0) {
+      return pick([
+        `${mvp}회 MOM — 수비의 주연`,
+        `수비수가 MOM ${mvp}회`,
+        `MOM ${mvp}회, 뒤에서 만든 승리`,
+        `${mvp}번 MOM, 팀원이 알아봤다`,
+      ], seed);
+    }
+    // 높은 승률
+    if (winRate >= 0.7) {
+      return pick([
+        `승률 ${winPct}%, 그가 뛰면 팀이 이긴다`,
+        `승률 ${winPct}% — 후방의 확신`,
+        `이 선수 출전 시 승률 ${winPct}%`,
+      ], seed);
+    }
+    // 높은 출석률 (수비수 꾸준함)
+    if (attendanceRate >= 0.9) {
+      return pick([
+        `${attPct}% 출석, 매 경기 그 자리에`,
+        `출석률 ${attPct}% — 빠지지 않는 후방`,
+        `${matchCount}경기 중 ${matchCount}번 뛴 시즌`,
+      ], seed);
+    }
+    // 일반
+    return pick([
+      `${matchCount}경기 출장 · 클린시트 ${cleanSheets}회`,
+      `후방에서 ${matchCount}경기 뛴 시즌`,
+      `${matchCount}경기 · 무실점 ${cleanSheets}회`,
+    ], seed);
   }
 
-  // FW / MID / DEFAULT
+  // ── FW / MID / DEFAULT ────────────────────────────────────
+  // 득점왕
   if (isTopScorer && goals > 0) {
-    if (assists > 0) return `${goals}골 ${assists}어시 — 팀 득점왕`;
-    return `${goals}골 — 팀 득점왕`;
+    if (assists > 0) {
+      return pick([
+        `${goals}골 ${assists}어시 — 팀 득점왕`,
+        `득점왕 ${goals}골 · 어시 ${assists}`,
+        `${goals}골 ${assists}어시, 공격 완성`,
+        `공격P ${ap}, 팀 득점 1위`,
+      ], seed);
+    }
+    return pick([
+      `${goals}골 — 팀 득점왕`,
+      `득점왕 ${goals}골`,
+      `${goals}골, 팀 최다`,
+      `${goals}골 기록한 시즌 · 1위`,
+    ], seed);
   }
-  if (isTopAssist && assists > 0) return `${assists}어시 — 팀 도움왕`;
-  if (isTopMvp && mvp > 0) return `${mvp}회 MOM — 시즌의 주인공`;
-  if (goals + assists >= 10)
-    return `${goals}골 ${assists}어시 — 공격 포인트 ${goals + assists}`;
-  if (attendanceRate >= 0.9)
-    return `출석률 ${Math.round(attendanceRate * 100)}% — 팀의 기둥`;
-  if (winRate >= 0.7)
-    return `승률 ${Math.round(winRate * 100)}%, 그가 뛰면 팀은 이긴다`;
-  return `${matchCount}경기 출장 · ${goals}골 ${assists}어시`;
+  // 도움왕
+  if (isTopAssist && assists > 0) {
+    return pick([
+      `${assists}어시 — 팀 도움왕`,
+      `도움왕 ${assists}어시`,
+      `${assists}번 도운 시즌`,
+      `어시 ${assists}개, 팀 최다`,
+    ], seed);
+  }
+  // MOM 1위
+  if (isTopMvp && mvp > 0) {
+    return pick([
+      `${mvp}회 MOM — 시즌의 주인공`,
+      `MOM ${mvp}회, 팀원 투표가 몰렸다`,
+      `${mvp}회 MOM 기록한 시즌`,
+      `시즌 MOM ${mvp}회 · 팀 1위`,
+    ], seed);
+  }
+  // 공격 포인트 많음
+  if (ap >= 10) {
+    return pick([
+      `${goals}골 ${assists}어시 — 공격P ${ap}`,
+      `공격 포인트 ${ap}, 공격에 가담한 시즌`,
+      `${ap} 공격P 기록`,
+      `${goals}골 ${assists}어시, 꾸준한 기여`,
+    ], seed);
+  }
+  // 높은 출석률
+  if (attendanceRate >= 0.9) {
+    return pick([
+      `출석률 ${attPct}% — 빠지지 않은 시즌`,
+      `${attPct}% 출석, 매 경기 뛰었다`,
+      `${matchCount}경기 중 ${matchCount}번 출장`,
+      `출석률 ${attPct}%, 팀 상위권`,
+    ], seed);
+  }
+  // 높은 승률
+  if (winRate >= 0.7) {
+    return pick([
+      `승률 ${winPct}%, 그가 뛰면 팀이 이긴다`,
+      `승률 ${winPct}% — 승리의 이유`,
+      `승률 ${winPct}% 기록한 시즌`,
+    ], seed);
+  }
+  // 일반
+  return pick([
+    `${matchCount}경기 · ${goals}골 ${assists}어시`,
+    `${matchCount}경기 뛴 시즌`,
+    `${matchCount}경기 출장 기록`,
+  ], seed);
 }
 
 // 팀 내 랭킹 라벨 — 동일 스탯 모음에서 value 의 위치를 산출

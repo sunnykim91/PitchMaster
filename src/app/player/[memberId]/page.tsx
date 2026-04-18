@@ -234,7 +234,8 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
     cat, goals: totalGoals, assists: totalAssists, mvp: totalMvp,
     cleanSheets, matchCount: attended, attendanceRate, winRate,
     isTopScorer, isTopAssist, isTopMvp,
-    // 팀 비교 데이터 — AI가 "팀 14명 중 득점 1위" 같은 맥락 있는 카피를 만들 수 있도록
+    playerKey: name,
+    // 팀 비교 데이터 — 레거시 AI 입력 필드. 룰 기반에서는 사용 안 함.
     teamScorerRank: extractRankNum(goalsRank),
     teamAssistRank: extractRankNum(assistsRank),
     teamMvpRank: extractRankNum(mvpRank),

@@ -408,6 +408,7 @@ export async function GET(request: NextRequest) {
       isTopScorer,
       isTopAssist,
       isTopMvp,
+      playerKey: playerName,
     });
   }
 

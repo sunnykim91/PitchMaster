@@ -64,10 +64,12 @@ describe("generateSignature", () => {
   };
 
   it("출전 0경기면 placeholder 반환", () => {
-    expect(generateSignature(base)).toContain("첫 경기");
+    // 0경기 풀: "첫 경기" 또는 "출전 전" 패턴
+    const sig = generateSignature(base);
+    expect(sig).toMatch(/첫 경기|출전 전/);
   });
 
-  it("FW 득점왕 + 어시 → 골/어시 카피", () => {
+  it("FW 득점왕 → 골 수치 + 득점왕 관련 표현", () => {
     const sig = generateSignature({
       ...base,
       goals: 15,
@@ -75,19 +77,20 @@ describe("generateSignature", () => {
       matchCount: 18,
       isTopScorer: true,
     });
-    expect(sig).toContain("15골");
-    expect(sig).toContain("8어시");
-    expect(sig).toContain("팀 득점왕");
+    // 패턴 풀 다양성: 15 숫자는 반드시 포함, 득점왕/공격P 중 하나
+    expect(sig).toContain("15");
+    expect(sig).toMatch(/득점왕|공격P|공격 포인트|팀 최다|1위/);
   });
 
-  it("DEF 클린시트 5+ → 무실점 카피", () => {
+  it("DEF 클린시트 5+ → 무실점/클린시트 관련 카피", () => {
     const sig = generateSignature({
       ...base,
       cat: "DEF",
       cleanSheets: 7,
       matchCount: 18,
     });
-    expect(sig).toContain("7경기 무실점");
+    expect(sig).toContain("7");
+    expect(sig).toMatch(/무실점|클린시트|막아낸|뚫리지/);
   });
 
   it("승률 70%+ → 승률 카피", () => {
