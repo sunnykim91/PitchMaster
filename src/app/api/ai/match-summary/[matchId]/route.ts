@@ -67,53 +67,81 @@ export async function POST(
     }
   }
 
-  // MatchSummaryInput 조립
+  // MatchSummaryInput 조립 (실제 DB 스키마 기준)
   const [goalsRes, mvpRes, attendanceRes] = await Promise.all([
-    db.from("match_goals").select("*").eq("match_id", matchId),
-    db.from("match_mvp_votes").select("*").eq("match_id", matchId),
-    db.from("match_attendance").select("user_id, member_id, actually_attended").eq("match_id", matchId),
+    db.from("match_goals").select("scorer_id, assist_id, quarter_number, is_own_goal").eq("match_id", matchId),
+    db.from("match_mvp_votes").select("candidate_id").eq("match_id", matchId),
+    db
+      .from("match_attendance")
+      .select("user_id, member_id, actually_attended, attendance_status")
+      .eq("match_id", matchId),
   ]);
 
+  // team_members.id, users.id 양쪽으로 이름 조회 (goals/mvp의 scorer_id는 둘 중 하나)
   const members = await db
     .from("team_members")
     .select("id, user_id, pre_name, users(name)")
     .eq("team_id", session.user.teamId!);
 
   const nameMap = new Map<string, string>();
-  const userNameMap = new Map<string, string>();
   for (const m of members.data ?? []) {
     const u = Array.isArray(m.users) ? m.users[0] : m.users;
     const name = u?.name ?? m.pre_name ?? "선수";
     nameMap.set(m.id, name);
-    if (m.user_id) userNameMap.set(m.user_id, name);
+    if (m.user_id) nameMap.set(m.user_id, name);
   }
 
-  const goals = (goalsRes.data ?? []).map((g) => ({
-    scorerName: nameMap.get(g.scorer_id ?? "") ?? userNameMap.get(g.scorer_user_id ?? "") ?? "선수",
-    quarter: g.quarter ?? null,
-    isOwnGoal: g.is_own_goal ?? false,
-  }));
+  const resolveName = (id: string | null | undefined): string => {
+    if (!id) return "선수";
+    return nameMap.get(id) ?? "선수";
+  };
 
-  const assists = (goalsRes.data ?? [])
-    .map((g) => nameMap.get(g.assist_id ?? "") ?? userNameMap.get(g.assist_user_id ?? "") ?? "")
-    .filter((n): n is string => !!n);
-
-  const mvpCounts = new Map<string, number>();
-  for (const v of mvpRes.data ?? []) {
-    const key = v.candidate_member_id ?? v.candidate_user_id ?? "";
-    if (key) mvpCounts.set(key, (mvpCounts.get(key) ?? 0) + 1);
+  // score는 match_goals 집계로 (matches 테이블에 점수 컬럼 없음)
+  const goalRows = goalsRes.data ?? [];
+  let usScore = 0, oppScore = 0;
+  for (const g of goalRows) {
+    if (g.scorer_id === "OPPONENT" || g.is_own_goal) oppScore++;
+    else usScore++;
   }
-  const topMvp = [...mvpCounts.entries()].sort((a, b) => b[1] - a[1])[0];
-  const mom = topMvp ? nameMap.get(topMvp[0]) ?? userNameMap.get(topMvp[0]) ?? null : null;
-
-  const attendanceCount = (attendanceRes.data ?? []).filter((a) => a.actually_attended).length;
-
-  const score = match.our_score != null && match.opponent_score != null
-    ? { us: match.our_score, opp: match.opponent_score }
-    : null;
+  // 득점 기록 자체가 없으면 score null (환각 방지)
+  const score = goalRows.length > 0 ? { us: usScore, opp: oppScore } : null;
   const result: "W" | "D" | "L" | null = score
     ? score.us > score.opp ? "W" : score.us < score.opp ? "L" : "D"
     : null;
+
+  const goals = goalRows
+    .filter((g) => !g.is_own_goal && g.scorer_id !== "OPPONENT")
+    .map((g) => ({
+      scorerName: resolveName(g.scorer_id),
+      quarter: g.quarter_number ?? null,
+      isOwnGoal: false,
+    }));
+
+  const assists = goalRows
+    .map((g) => (g.assist_id ? resolveName(g.assist_id) : ""))
+    .filter((n): n is string => !!n && n !== "선수");
+
+  const mvpCounts = new Map<string, number>();
+  for (const v of mvpRes.data ?? []) {
+    if (v.candidate_id) mvpCounts.set(v.candidate_id, (mvpCounts.get(v.candidate_id) ?? 0) + 1);
+  }
+  const topMvp = [...mvpCounts.entries()].sort((a, b) => b[1] - a[1])[0];
+  const mom = topMvp ? resolveName(topMvp[0]) : null;
+
+  // 참석: attendance_status PRESENT/LATE 우선, 없으면 actually_attended=true 폴백
+  const attendanceCount = (attendanceRes.data ?? []).filter((a) => {
+    const s = a.attendance_status;
+    if (s === "PRESENT" || s === "LATE") return true;
+    if (s === "ABSENT") return false;
+    return a.actually_attended === true;
+  }).length;
+
+  // 득점자 중 최다 득점자 (topScorer)
+  const scorerCounts = new Map<string, number>();
+  for (const g of goals) {
+    scorerCounts.set(g.scorerName, (scorerCounts.get(g.scorerName) ?? 0) + 1);
+  }
+  const topScorerName = [...scorerCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 
   const input: MatchSummaryInput = {
     matchType: match.match_type,
@@ -123,15 +151,24 @@ export async function POST(
     goals,
     assists,
     mom,
-    topScorerName: goals[0]?.scorerName ?? null,
+    topScorerName,
     attendanceCount,
     location: match.location ?? null,
     weather: null,
-    date: match.date ?? "",
+    date: match.match_date ?? "",
     userId: session.user.id,
     teamId: session.user.teamId!,
     matchId,
   };
+
+  // 기록이 너무 빈약한 경기는 AI 호출 스킵 (환각 방지)
+  // score도 없고 MOM도 없고 참석도 0이면 후기 생성 거부
+  if (!score && !mom && attendanceCount === 0) {
+    return NextResponse.json({
+      error: "insufficient_data",
+      message: "경기 기록(득점·MOM·참석)이 충분하지 않아 후기를 생성할 수 없습니다. 먼저 경기 기록을 입력해주세요.",
+    }, { status: 400 });
+  }
 
   // 스트리밍 + 완료 시 DB 저장
   const encoder = new TextEncoder();
