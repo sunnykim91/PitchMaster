@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
 import { ChevronLeft, Check } from "lucide-react";
 import { useConfirm } from "@/lib/ConfirmContext";
+import { useToast } from "@/lib/ToastContext";
 import Link from "next/link";
 import type { SportType } from "@/lib/types";
 
@@ -280,6 +281,8 @@ export default function MatchDetailClient({
   // 팀 설정에서 stats_recording_staff_only 가 켜져 있으면 STAFF 이상만 기록 가능
   const canRecord = statsRecordingStaffOnly ? isStaffOrAbove(role) : true;
   const confirm = useConfirm();
+  const { showToast } = useToast();
+  const [loadingAllPresent, setLoadingAllPresent] = useState(false);
 
   // 휴면 데이터 — DORMANT 멤버를 exemptions 맵으로 변환
   // EVENT(팀일정)는 휴면회원도 투표 가능 → exemptions 비워 둠
@@ -585,6 +588,7 @@ export default function MatchDetailClient({
                     size="sm"
                     variant="ghost"
                     className="h-8 px-3 text-sm font-medium text-primary"
+                    disabled={loadingAllPresent}
                     onClick={async () => {
                       const ok = await confirm({
                         title: "전원 참석 처리",
@@ -593,13 +597,21 @@ export default function MatchDetailClient({
                         cancelLabel: "취소",
                       });
                       if (ok) {
-                        await Promise.all(
-                          attendingMembers.map((player) => handleAttendance(player, "PRESENT"))
-                        );
+                        setLoadingAllPresent(true);
+                        try {
+                          await Promise.all(
+                            attendingMembers.map((player) => handleAttendance(player, "PRESENT"))
+                          );
+                          showToast("전원 참석 처리가 완료되었습니다.");
+                        } catch {
+                          showToast("일부 처리에 실패했습니다.", "error");
+                        } finally {
+                          setLoadingAllPresent(false);
+                        }
                       }
                     }}
                   >
-                    전원 참석 처리
+                    {loadingAllPresent ? "처리 중..." : "전원 참석 처리"}
                   </Button>
                 )}
               </CardHeader>

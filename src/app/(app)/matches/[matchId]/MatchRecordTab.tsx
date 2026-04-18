@@ -212,6 +212,7 @@ function MatchRecordTabInner({
         side,
       });
       if (err) { showToast("기록 추가에 실패했습니다.", "error"); return; }
+      showToast("기록이 추가되었습니다.");
     }
     formRef.current?.reset();
     setShowDetailForm(false);

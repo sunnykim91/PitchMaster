@@ -109,9 +109,10 @@ function MatchVoteTabInner({
     setLoadingProxy(key);
     try {
       await handleProxyVote(memberId, vote);
-    } catch {
+    } catch (err) {
       setShakeProxy(key);
       setTimeout(() => setShakeProxy(null), 500);
+      showToast(err instanceof Error ? err.message : "대리 투표에 실패했습니다.", "error");
     } finally {
       setLoadingProxy(null);
     }
