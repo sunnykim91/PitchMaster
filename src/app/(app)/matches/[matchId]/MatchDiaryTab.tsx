@@ -280,7 +280,7 @@ function MatchDiaryTabInner({
                 {canManage && (
                   <button
                     type="button"
-                    onClick={(e) => { e.stopPropagation(); handleRemovePhoto(url); }}
+                    onClick={(e) => { e.stopPropagation(); if (window.confirm("이 사진을 삭제하시겠습니까?")) handleRemovePhoto(url); }}
                     className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-background/90 text-destructive shadow-sm"
                     aria-label="사진 삭제"
                   >
