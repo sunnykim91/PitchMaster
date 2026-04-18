@@ -280,8 +280,8 @@ function MatchDiaryTabInner({
                 {canManage && (
                   <button
                     type="button"
-                    onClick={() => handleRemovePhoto(url)}
-                    className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-background/90 text-foreground opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+                    onClick={(e) => { e.stopPropagation(); handleRemovePhoto(url); }}
+                    className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 focus:opacity-100"
                     aria-label="사진 삭제"
                   >
                     <XIcon className="h-3.5 w-3.5" />
