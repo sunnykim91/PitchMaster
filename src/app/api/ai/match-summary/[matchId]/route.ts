@@ -68,32 +68,46 @@ export async function POST(
   }
 
   // MatchSummaryInput 조립 (실제 DB 스키마 기준)
-  const [goalsRes, mvpRes, attendanceRes] = await Promise.all([
+  const [goalsRes, mvpRes, attendanceRes, guestsRes] = await Promise.all([
     db.from("match_goals").select("scorer_id, assist_id, quarter_number, is_own_goal").eq("match_id", matchId),
     db.from("match_mvp_votes").select("candidate_id").eq("match_id", matchId),
     db
       .from("match_attendance")
       .select("user_id, member_id, actually_attended, attendance_status")
       .eq("match_id", matchId),
+    // 용병 — scorer_id / assist_id가 match_guests.id를 가리키는 경우
+    db.from("match_guests").select("id, name").eq("match_id", matchId),
   ]);
 
-  // team_members.id, users.id 양쪽으로 이름 조회 (goals/mvp의 scorer_id는 둘 중 하나)
+  // scorer_id / assist_id / candidate_id는 users.id, team_members.id, match_guests.id 중 하나
   const members = await db
     .from("team_members")
     .select("id, user_id, pre_name, users(name)")
     .eq("team_id", session.user.teamId!);
 
   const nameMap = new Map<string, string>();
+  // team_members.id + users.id 양쪽 등록
   for (const m of members.data ?? []) {
     const u = Array.isArray(m.users) ? m.users[0] : m.users;
     const name = u?.name ?? m.pre_name ?? "선수";
     nameMap.set(m.id, name);
     if (m.user_id) nameMap.set(m.user_id, name);
   }
+  // 용병 id도 등록
+  for (const g of guestsRes.data ?? []) {
+    if (g.id && g.name) nameMap.set(g.id, g.name);
+  }
 
-  const resolveName = (id: string | null | undefined): string => {
-    if (!id) return "선수";
-    return nameMap.get(id) ?? "선수";
+  // 특수 상수 처리
+  const SPECIAL: Record<string, string | null> = {
+    UNKNOWN: null,   // "모름" — 득점자 언급 생략
+    OPPONENT: null,  // 상대팀 득점 — 우리 서술에서 제외
+  };
+
+  const resolveName = (id: string | null | undefined): string | null => {
+    if (!id) return null;
+    if (id in SPECIAL) return SPECIAL[id];
+    return nameMap.get(id) ?? null;
   };
 
   // score는 match_goals 집계로 (matches 테이블에 점수 컬럼 없음)
@@ -109,17 +123,22 @@ export async function POST(
     ? score.us > score.opp ? "W" : score.us < score.opp ? "L" : "D"
     : null;
 
+  // 우리 득점만 추출 — 득점자 이름이 있는 것만 (UNKNOWN/OPPONENT 제외)
   const goals = goalRows
     .filter((g) => !g.is_own_goal && g.scorer_id !== "OPPONENT")
-    .map((g) => ({
-      scorerName: resolveName(g.scorer_id),
-      quarter: g.quarter_number ?? null,
-      isOwnGoal: false,
-    }));
+    .map((g) => {
+      const scorerName = resolveName(g.scorer_id);
+      return scorerName ? {
+        scorerName,
+        quarter: g.quarter_number ?? null,
+        isOwnGoal: false,
+      } : null;
+    })
+    .filter((g): g is { scorerName: string; quarter: number | null; isOwnGoal: boolean } => g !== null);
 
   const assists = goalRows
-    .map((g) => (g.assist_id ? resolveName(g.assist_id) : ""))
-    .filter((n): n is string => !!n && n !== "선수");
+    .map((g) => resolveName(g.assist_id))
+    .filter((n): n is string => !!n);
 
   const mvpCounts = new Map<string, number>();
   for (const v of mvpRes.data ?? []) {
@@ -161,12 +180,13 @@ export async function POST(
     matchId,
   };
 
-  // 기록이 너무 빈약한 경기는 AI 호출 스킵 (환각 방지)
-  // score도 없고 MOM도 없고 참석도 0이면 후기 생성 거부
-  if (!score && !mom && attendanceCount === 0) {
+  // 기록 전무한 경기는 AI 호출 차단 (환각 원천 방지)
+  // 득점/MOM/참석 중 하나라도 있으면 허용. 이벤트(EVENT) 경기는 참석만 있어도 OK.
+  const hasAnyRecord = !!score || !!mom || attendanceCount > 0;
+  if (!hasAnyRecord && match.match_type !== "EVENT") {
     return NextResponse.json({
       error: "insufficient_data",
-      message: "경기 기록(득점·MOM·참석)이 충분하지 않아 후기를 생성할 수 없습니다. 먼저 경기 기록을 입력해주세요.",
+      message: "경기 기록(득점·MOM·참석)이 하나도 없어 후기를 생성할 수 없습니다. 먼저 경기 기록을 입력해주세요.",
     }, { status: 400 });
   }
 
