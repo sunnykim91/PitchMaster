@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { generateAiFullPlan } from "@/lib/server/aiFullPlan";
 import { checkRateLimit } from "@/lib/server/aiUsageLog";
 import type { TacticsAnalysisInput } from "@/lib/server/aiTacticsAnalysis";
@@ -21,6 +22,17 @@ export async function POST(req: NextRequest) {
   }
   if (session.user.name !== "김선휘") {
     return NextResponse.json({ error: "ai_not_available" }, { status: 403 });
+  }
+
+  // 풋살 팀 AI 차단 (API 레벨)
+  if (session.user.teamId) {
+    const db = getSupabaseAdmin();
+    if (db) {
+      const { data: team } = await db.from("teams").select("sport_type").eq("id", session.user.teamId).single();
+      if (team?.sport_type === "FUTSAL") {
+        return NextResponse.json({ error: "ai_not_available_for_futsal" }, { status: 403 });
+      }
+    }
   }
 
   const rate = await checkRateLimit("tactics", session.user.id, session.user.teamId ?? null);
