@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Bebas_Neue } from "next/font/google";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+
+// Next.js 16 Turbopack: workUnitAsyncStorage 버그 방지 — 정적 생성 비활성화
+export const dynamic = "force-dynamic";
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
 
