@@ -40,9 +40,37 @@ const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의
 - 스탯 나열 대신 **장면** 중심으로
 - "홍길동이 전반에 선제골을 넣으며 경기 분위기를 끌어올렸다" 같은 서술
 
-### 3단락 (선택): 한 마디 마무리
-- "다음 경기가 기대된다", "오늘 고생했다" 같은 마무리
-- 없어도 됨. 길이 조절 용도.
+### 🔴 3단락 (기본 생략)
+**기본은 2단락으로 끝.** 아래 조건 중 하나일 때만 3단락 추가:
+- 큰 점수차 (5점 이상) 대승 또는 대패
+- 역전승 (후반 또는 연장 뒤집기)
+- 무득점 경기 / 양팀 대량득점
+- 특별한 MOM 활약 (이름 이미 2단락에 있으면 중복 금지)
+
+**일반 경기는 억지 3단락 금지.** "다음 경기도 기대" 식 빈 마무리는 안 쓰는 게 더 자연스러움.
+
+## 🔴 반복 어휘 금지 (같은 팀이 여러 경기 보면 질림)
+
+### 공격 관련 반복 표현 — 같은 글에 2개 이상, 같은 달 후기에 반복되면 안 됨
+- "공격을 주도"
+- "공격력을 과시"
+- "공격 전개를 이끌"
+- "공격이 살아있었"
+- "공격이 어울렸"
+- "공격 가담을 아끼지 않"
+
+### 마무리 클리셰 — 매번 같은 톤 금지
+- "이런 기세 유지하면서 다음 경기도"
+- "이 자신감을 유지했으면"
+- "앞으로도 이 경기력 이어"
+- "다음 경기도 이 기세를 이어"
+
+### 장면 서술 대체 어휘 (위 반복 대신 쓸 것)
+- "선제골", "동점골", "추격골", "쐐기골", "결승골"
+- "전반 ~분", "후반 시작", "막판 ~분"
+- "역습 한 방", "세트피스", "코너킥", "중거리"
+- "압박", "빠른 전환", "수비 뒷공간", "측면 돌파"
+- "템포", "리듬", "흐름을 가져왔"
 
 ## ✅ 좋은 예시
 
@@ -85,6 +113,17 @@ B팀도 후반 꾸준한 전진으로 마지막까지 압박했습니다.
 - **패배**: 긍정적 포인트 최소 1개 언급. 키퍼 선방·수비 분투·후반 기세
 - **자체전 (INTERNAL)**: 팀 A/B 나눠서 양쪽 조명. "우리 팀 승리" 톤 아님
 - **이벤트 (EVENT)**: 경기 결과 없는 모임은 분위기 중심
+
+## 🟢 입력 데이터 활용 장려 (보너스 포인트)
+
+다음 정보가 있으면 **적극 활용**해야 글이 풍성해집니다:
+
+- **goals[].quarter**: "전반 ~분", "후반 ~분", "1쿼터", "막판" — 득점 타이밍으로 드라마 만들기
+- **weather**: "비 오는 중에도", "쌀쌀한 날씨에", "날씨 좋았던 ~" 같은 자연스러운 녹임
+- **location**: 경기장 이름이 특색 있으면 1번 언급 (매번 말고)
+- **attendanceCount**: 10명 미만이면 "인원 부족한 와중에도", 참석 많으면 "많이 모인"
+
+단, **억지로 다 넣지 말 것**. 자연스럽게 1~2가지만.
 
 ## 입력 데이터 이해
 
@@ -177,6 +216,20 @@ const META_PATTERNS = [
   "작성했", "요약:", "응답:",
 ];
 
+/** 반복 클리셰 — 같은 글에 2개 이상이거나, 전형적 마무리 문구 */
+const CLICHE_PHRASES = [
+  "공격을 주도",
+  "공격력을 과시",
+  "공격 전개를 이끌",
+  "공격이 살아있",
+  "공격이 어울렸",
+  "공격 가담을 아끼지",
+  "이런 기세 유지",
+  "이 자신감을 유지",
+  "앞으로도 이 경기력",
+  "다음 경기도 이 기세",
+];
+
 function sanitize(raw: string): string {
   return raw
     .trim()
@@ -191,6 +244,9 @@ function isLowQuality(text: string): boolean {
   // 모델이 헤더(## ...)나 리스트(- ...)를 쓰면 형식 위반
   if (/^#+\s/m.test(text)) return true;
   if (/^\s*[-*]\s/m.test(text)) return true;
+  // 클리셰 2개 이상 포함 — 반복 패턴
+  const clicheHits = CLICHE_PHRASES.filter((p) => text.includes(p)).length;
+  if (clicheHits >= 2) return true;
   return false;
 }
 
@@ -254,7 +310,14 @@ export async function generateAiMatchSummary(input: MatchSummaryInput): Promise<
     }
 
     // 재시도 1회 (temperature 낮추고 실패 이유 피드백)
-    const failReason = cleaned.length < 50 ? "너무 짧음" : cleaned.length > 600 ? "너무 긺" : "메타 표현 또는 마크다운 포함";
+    const clicheHits = CLICHE_PHRASES.filter((p) => cleaned.includes(p));
+    const failReason = cleaned.length < 50
+      ? "너무 짧음"
+      : cleaned.length > 600
+        ? "너무 긺"
+        : clicheHits.length >= 2
+          ? `반복 클리셰 포함 (${clicheHits.slice(0, 2).join(", ")}) — 장면 중심 서술로 교체할 것`
+          : "메타 표현 또는 마크다운 포함";
     const retry = await callOnce(0.4, failReason);
     const retryBlock = retry.content.find((b) => b.type === "text");
     const retryTokens = extractTokenUsage(retry);
