@@ -1,12 +1,74 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~24차)
-summary: 2026-04-11~18 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화
-sections: [24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-04-18
+title: 개선 백로그 — 최근 완료 (16~25차)
+summary: 2026-04-11~19 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정
+sections: [25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-04-19
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~24차)
+# 최근 완료 (16~25차)
+
+## 25차 (2026-04-19) — 축구 인원 확장 · AI 시그니처 룰 전환 · 경기 후기 환각 수정
+
+**축구 8:8 / 9:9 / 10:10 경기 지원 (5 Phase 전부 완료)**
+- [x] `supabase/migrations/00027_team_default_player_count.sql` — `teams.default_player_count INT DEFAULT 11`
+  - DB 수동 적용 완료 (풋살팀 22개 6으로, 축구팀 62개 11 유지)
+- [x] `formations.ts` — 기존 축구 11인제 10종에 `fieldCount: 11` 명시 + 신규 9종 추가
+  - 8인제: 3-3-1, 2-3-2, 3-2-2 / 9인제: 3-3-2, 3-4-1, 4-3-1 / 10인제: 3-3-3, 4-3-2, 3-4-2
+  - `getFormationsForSportAndCount` 축구·풋살 공용 일반화
+- [x] API: `teams` PUT 에 `defaultPlayerCount` 수용, `matches` POST 팀 기본값 상속
+- [x] UI: `TeamSettings` 기본 참가 인원 Select, `MatchesClient` Input → Select 위젯
+- [x] `TacticsBoard` / `AutoFormationBuilder` — `playerCount` prop 추가, fieldCount 기반 포메이션 필터
+- [x] 레거시 경기(player_count=7 등) 폴백 — 매칭 포메이션 없으면 해당 스포츠 전체 반환
+- [x] `MatchInfoTab` 편집 폼에도 참가 인원 Select 추가 — 경기 등록 후 변경 가능
+- [x] `SettingsClient` `defaultTeam` fallback 에 sportType/defaultPlayerCount 매핑 버그 수정
+  - 저장한 8:8이 재방문 시 11:11로 돌아가던 문제 해결 (3개 레이어 모두 누락됐음)
+
+**AI 시그니처 → 룰 기반 패턴 풀 전환**
+- [x] `playerCardUtils.ts generateSignature` — 9분기 → 약 50개 템플릿 풀
+  - `playerKey` (이름 기반 시드) 로 결정론적 선택 — 같은 선수 같은 시즌 = 같은 문구
+  - 카테고리별 풀: 수비수 득점왕 특수, 클린시트 많음, MOM 1위, 득점왕, 도움왕 등 13개 분기
+- [x] `aiSignatureCache.getOrGenerateSignature` — AI 경로 완전 비활성화, 항상 룰 기반 반환
+  - Anthropic SDK 호출 0건, 비용 0, 지연 0ms
+- [x] 기존 DB 캐시(`team_members.ai_signature`) 수동 NULL 초기화 — 새 패턴 풀로 즉시 갱신
+- **이유**: Sonnet 도 한국어 위트·자랑 톤은 안정적이지 않음. "수비수가 7골, 포지션은 맞게 적었다"
+  같은 어색한 한국어 다발. 룰 기반이 품질·비용·지연 모두 우위.
+
+**경기 후기(AI Match Summary) 환각 원인 수정**
+- [x] 환각 실례: 4/13 FCMZ vs 올챙이FC 실제 6-2 승리인데 AI가 "8-0 대승" 조작
+- [x] 근본 원인: `api/ai/match-summary/[matchId]/route.ts` 의 DB 필드명 전부 틀림
+  - `match.our_score/opponent_score` (없음 → 실제는 match_goals 집계)
+  - `g.scorer_user_id/assist_user_id` (없음 → 실제 scorer_id/assist_id)
+  - `g.quarter` (없음 → quarter_number)
+  - `v.candidate_member_id/candidate_user_id` (없음 → candidate_id)
+  - `match.date` (없음 → match_date)
+- [x] route.ts 전면 리팩토링 — 실제 스키마 기준으로 재작성
+  - score 를 match_goals 집계로 계산 (is_own_goal/OPPONENT → opp, 나머지 → us)
+  - nameMap 에 **users.id + team_members.id + match_guests.id (용병)** 세 소스 모두 등록
+  - UNKNOWN / OPPONENT 는 SPECIAL 상수로 null 반환 → goals 배열에서 필터아웃
+- [x] 기록 전무한 경기는 AI 호출 차단 — `score && !mom && attendance===0` 이면 400 insufficient_data
+- [x] 프롬프트 환각 금지 섹션 추가:
+  - score=null 시 스코어 조작 금지
+  - goals=[] 시 득점자 이름 추측 금지
+  - mom=null 시 MOM 지어내기 금지
+  - `goals 배열 길이 != score.us` 가능 (UNKNOWN 골) 설명
+- [x] 기존 환각 캐시 5건 NULL 초기화 + regenerate_count 0 리셋
+
+**경기 후기 프롬프트 튜닝**
+- [x] 반복 어휘 금지 리스트 — "공격을 주도/공격력 과시/공격 전개 이끌/공격이 살아있/공격이 어울렸/공격 가담을 아끼지"
+- [x] 마무리 클리셰 금지 — "이런 기세 유지/이 자신감을 유지/앞으로도 이 경기력"
+- [x] 3단락 남발 차단 — 기본 2단락, 3단락은 대승/역전/대량득점/무득점 조건일 때만
+- [x] 입력 데이터 활용 장려 — goals[].quarter/weather/location/attendanceCount
+- [x] `isLowQuality` 에 CLICHE_PHRASES 2개 이상 포함 시 재시도 트리거
+
+**관련 커밋**
+- `c81748e`, `7fbac58`, `8799f29` — 축구 인원 확장 Phase 전체
+- `446edd2` — 경기 수정 UI 참가 인원 Select
+- `0d1de64` — 레거시 경기 포메이션 폴백
+- `fe92497` — AI 시그니처 → 룰 기반 전환
+- `4fbd14f` — 경기 후기 반복·클리셰 억제 프롬프트
+- `c922b0d` — 경기 후기 DB 스키마 불일치 수정 (환각 1차)
+- `07107ca` — 용병/UNKNOWN/OPPONENT 처리 (환각 2차 정정)
 
 ## 24차 (2026-04-18) — AI 코치 분석 고도화 · 축구 전용 제한
 
