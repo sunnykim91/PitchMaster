@@ -34,11 +34,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       error: "rate_limited",
       reason: rate.reason,
-      count: rate.userCount ?? rate.teamCount,
-      cap: rate.cap,
-      message: rate.reason === "user_cap"
-        ? `OCR은 하루 ${rate.cap}회까지만 사용 가능합니다.`
-        : `팀 OCR 일일 한도 ${rate.cap}회에 도달했습니다.`,
+      message: rate.message ?? "OCR 한도를 초과했습니다.",
     }, { status: 429 });
   }
 
