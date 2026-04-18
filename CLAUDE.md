@@ -124,6 +124,67 @@ PRESIDENT (회장) > STAFF (운영진) > MEMBER (일반 회원)
 
 ---
 
+## AI 기능 설계 (2026-04-18 기준)
+
+### Feature Flag
+```typescript
+// page.tsx (서버 컴포넌트)
+const enableAi = session.user.name === "김선휘";
+
+// MatchDetailClient.tsx (클라이언트)
+const effectiveEnableAi = enableAi && sportType === "SOCCER";
+// → 풋살팀에는 AI 기능 전체 비노출
+```
+
+### AI 기능 목록 (5개)
+| 기능 | 위치 | 공개 범위 | 모델 |
+|------|------|-----------|------|
+| 선수 시그니처 | /player/[id] | 캐시 전체 공개, 생성은 김선휘만 | Haiku 4.5 |
+| 경기 후기 | 경기 일지 탭 | 캐시 전체 공개, 재생성은 김선휘만 | Haiku 4.5 |
+| AI 코치 분석 | 전술 탭 | 김선휘 + 축구 팀 전용 | Haiku 4.5 |
+| AI Full Plan | 자동편성 빌더 | 김선휘 + 축구 팀 전용 | Haiku 4.5 |
+| OCR 거래 파싱 | 회비 일괄등록 | 전체 공개 | Haiku 4.5 Vision |
+
+### AI 코치 분석 데이터 파이프라인
+
+```
+AutoFormationBuilder
+  └─ onAnalysisContextReady({
+       placement,          // 1쿼터 슬롯-선수 배치
+       quarterPlacements,  // 전 쿼터 배치 (로테이션 분석)
+       allSlotsFilled,     // 전술판 채움 여부 (false면 버튼 비활성)
+       attendees,          // 참석자 (isGuest=true면 용병)
+       formationName,
+       quarterCount,
+     })
+  → AiCoachAnalysisCard
+       playerWorkload 계산 (quarterPlacements에서 선수별 쿼터 배치 수)
+  → POST /api/ai/tactics
+       payload: { placement, quarterPlacements, playerWorkload, attendees, ... }
+  → generateAiTacticsAnalysisStream()
+       historyBlock = getOrComputeTeamStats(teamId) → buildHistoryBlock()
+         - 포메이션별 전적
+         - 선수별 커리어 (totalMatches, totalGoals, totalAssists, mvpCount, mostPlayedPosition)
+         - 포지션별 활약 Top 10
+         - 쿼터별 득실 (누적 + 경기당 평균)
+         - 상대팀 이력
+```
+
+### TeamStats 캐시 (`ai_team_stats_cache`, TTL 24h)
+- `playerCareerStats`: 선수별 커리어 — 출전수/골/어시/MVP 수상횟수/주포지션
+- `quarterStats`: 쿼터별 누적 득실 + 경기당 평균
+- MVP 집계: `match_mvp_votes.candidate_id`(users.id) → users.id→team_members.id 브릿지 → 경기별 최다득표 winner 방식
+
+### 시스템 프롬프트 핵심 규칙 (aiTacticsAnalysis.ts)
+- 선수 역할은 placement의 slot 기준으로만 서술 (preferredPosition 혼동 금지)
+- 용병(`isGuest=true`)에 단정적 표현 금지
+- 상대팀 이력 없으면 hallucination 금지, "첫 대결"로 명시
+- `playerWorkload`에서 전 쿼터 출전 선수 → 3단락 체력 부담 언급 필수
+- 쿼터별 득실 패턴(3쿼터 실점 집중 등) → 해당 쿼터 주의점으로 반영
+- 선수 커리어(골/어시/MVP) → 2단락 핵심 선수 서술에 반영
+
+---
+
 ## 알려진 코드 품질 이슈
 
 - **OCR 에러 이중 표시**: `setOcrStatus()` + `showToast()` 동시 발생

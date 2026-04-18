@@ -235,14 +235,16 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
   // 멤버 이름 매핑
   const memberIds = [...memberPosCount.keys()];
   const nameMap = new Map<string, string>();
+  const memberIdByUserId = new Map<string, string>(); // users.id → team_members.id (MVP 브릿지)
   if (memberIds.length > 0) {
     const { data: members } = await db
       .from("team_members")
-      .select("id, pre_name, users(name)")
+      .select("id, pre_name, users(id, name)")
       .in("id", memberIds);
     for (const mb of members ?? []) {
       const u = Array.isArray(mb.users) ? mb.users[0] : mb.users;
       nameMap.set(mb.id, u?.name ?? mb.pre_name ?? "선수");
+      if (u?.id) memberIdByUserId.set(u.id, mb.id);
     }
   }
 
@@ -326,11 +328,23 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
       memberMatchSet.get(memberId)!.add(sq.match_id);
     }
   }
-  // MVP 수상 횟수 집계
-  const memberMvpCount = new Map<string, number>();
+  // MVP 수상 횟수 집계 — 경기별 최다 득표자를 MOM으로 선정 (candidate_id = users.id)
+  const matchVoteCount = new Map<string, Map<string, number>>(); // matchId → userId → votes
   for (const v of mvpVotes ?? []) {
-    const mid = v.candidate_member_id;
-    if (mid) memberMvpCount.set(mid, (memberMvpCount.get(mid) ?? 0) + 1);
+    const uid = (v as { candidate_id?: string }).candidate_id;
+    if (!uid) continue;
+    if (!matchVoteCount.has(v.match_id)) matchVoteCount.set(v.match_id, new Map());
+    const cm = matchVoteCount.get(v.match_id)!;
+    cm.set(uid, (cm.get(uid) ?? 0) + 1);
+  }
+  const memberMvpCount = new Map<string, number>();
+  for (const [, cmap] of matchVoteCount.entries()) {
+    if (cmap.size === 0) continue;
+    const winner = [...cmap.entries()].sort((a, b) => b[1] - a[1])[0];
+    if (winner) {
+      const memberId = memberIdByUserId.get(winner[0]);
+      if (memberId) memberMvpCount.set(memberId, (memberMvpCount.get(memberId) ?? 0) + 1);
+    }
   }
   // 선수별 최다 출전 포지션
   const memberBestPosition = new Map<string, string>();

@@ -1,12 +1,38 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~23차)
-summary: 2026-04-11~18 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선
-sections: [23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+title: 개선 백로그 — 최근 완료 (16~24차)
+summary: 2026-04-11~18 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화
+sections: [24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
 last_updated: 2026-04-18
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~23차)
+# 최근 완료 (16~24차)
+
+## 24차 (2026-04-18) — AI 코치 분석 고도화 · 축구 전용 제한
+
+**축구 전용 AI 제한**
+- [x] `MatchDetailClient.tsx` — `effectiveEnableAi = enableAi && sportType === "SOCCER"` 조건 추가
+- AI 관련 기능(코치 분석, Full Plan, 경기 후기 재생성) 풋살팀에 완전 비노출
+
+**AI 코치 분석 데이터 강화**
+- [x] `aiTeamStats.ts` — `PlayerCareerStat` 타입 추가 (totalMatches, totalGoals, totalAssists, mvpCount, mostPlayedPosition)
+- [x] `aiTeamStats.ts` — MVP 집계 로직: `match_mvp_votes.candidate_id`(users.id) → users.id→team_members.id 브릿지 매핑 → 경기별 최다 득표 winner 방식
+- [x] `aiTeamStats.ts` — `memberMatchSet`으로 선수별 총 출전 경기 수 정확 집계
+- [x] `aiTacticsAnalysis.ts` — 히스토리 블록에 선수별 커리어 섹션 추가
+- [x] `aiTacticsAnalysis.ts` — 시스템 프롬프트에 playerWorkload 해석 규칙 추가 (전 쿼터 출전 선수 체력 언급 필수)
+- [x] `aiTacticsAnalysis.ts` — 시스템 프롬프트에 쿼터별 득실 패턴 → 경기 운영 반영 가이드 추가
+
+**선수별 쿼터 부하(playerWorkload) 분석**
+- [x] `AiCoachAnalysisCard.tsx` — quarterPlacements에서 선수별 등장 횟수 집계 → `[{playerName, quarters}]` 배열로 API 전달
+- [x] `TacticsAnalysisInput` — `playerWorkload?: Array<{playerName, quarters}>` 필드 추가
+- [x] `userContent` — playerWorkload 포함 (스트리밍/논스트리밍 양쪽)
+
+**AI 코치 카드 UX 수정**
+- [x] `MatchTacticsTab.tsx` — 카드 항상 렌더링, `aiCoachContext` 없을 때 버튼 비활성
+- [x] `AiCoachAnalysisCard.tsx` — `hasResults` → `allSlotsFilled` 교체, 미채움 시 회색 버튼 + 안내문구
+
+**문서화**
+- [x] `CLAUDE.md` — AI 기능 설계 섹션 추가 (데이터 파이프라인, Feature Flag, TeamStats 구조)
 
 ## 23차 (2026-04-18) — 골 기록 UX 개선 · 쿼터 모름 지원
 
