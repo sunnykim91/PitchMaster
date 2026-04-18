@@ -40,10 +40,18 @@ export type OpponentHistoryItem = {
   recentScores: Array<{ date: string; us: number; opp: number; result: "W" | "D" | "L" }>;
 };
 
+export type QuarterStat = {
+  quarter: number;     // 1,2,3,4...
+  goalsFor: number;    // 해당 쿼터 누적 득점
+  goalsAgainst: number; // 해당 쿼터 누적 실점
+  matches: number;     // 해당 쿼터 데이터가 있는 경기 수
+};
+
 export type TeamStats = {
   formationStats: FormationStat[];     // 출전 수 desc
   playerPositionStats: PlayerPositionStat[];  // matches desc, top 30
   opponentHistory: OpponentHistoryItem[];     // played desc, top 10
+  quarterStats: QuarterStat[];         // 쿼터별 득실 (quarter asc)
   totalCompletedMatches: number;
   computedAt: string;
 };
@@ -52,6 +60,7 @@ const EMPTY: TeamStats = {
   formationStats: [],
   playerPositionStats: [],
   opponentHistory: [],
+  quarterStats: [],
   totalCompletedMatches: 0,
   computedAt: new Date(0).toISOString(),
 };
@@ -121,10 +130,10 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
 
   const matchIds = matches.map((m) => m.id);
 
-  // 골 데이터 (스코어 계산용)
+  // 골 데이터 (스코어 + 쿼터별 계산용)
   const { data: goals } = await db
     .from("match_goals")
-    .select("match_id, scorer_id, assist_id, is_own_goal")
+    .select("match_id, scorer_id, assist_id, is_own_goal, quarter_number")
     .in("match_id", matchIds);
 
   // 경기별 스코어 + 결과
@@ -259,10 +268,41 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
   }
   const opponentHistory = [...oppMap.values()].sort((a, b) => b.played - a.played).slice(0, 10);
 
+  // 쿼터별 득실 집계 (quarter_number null/0 제외)
+  const quarterGoalsFor = new Map<number, number>();
+  const quarterGoalsAgainst = new Map<number, number>();
+  const quarterMatchSet = new Map<number, Set<string>>();
+  for (const g of goals ?? []) {
+    const q = (g as { quarter_number?: number | null }).quarter_number;
+    if (q == null || q === 0) continue;
+    if (!quarterMatchSet.has(q)) {
+      quarterMatchSet.set(q, new Set());
+      quarterGoalsFor.set(q, 0);
+      quarterGoalsAgainst.set(q, 0);
+    }
+    quarterMatchSet.get(q)!.add(g.match_id);
+    if (g.scorer_id === "OPPONENT" || g.is_own_goal) {
+      quarterGoalsAgainst.set(q, (quarterGoalsAgainst.get(q) ?? 0) + 1);
+    } else {
+      quarterGoalsFor.set(q, (quarterGoalsFor.get(q) ?? 0) + 1);
+    }
+  }
+  const quarterStats: QuarterStat[] = [];
+  for (const [quarter, matchSet] of quarterMatchSet.entries()) {
+    quarterStats.push({
+      quarter,
+      goalsFor: quarterGoalsFor.get(quarter) ?? 0,
+      goalsAgainst: quarterGoalsAgainst.get(quarter) ?? 0,
+      matches: matchSet.size,
+    });
+  }
+  quarterStats.sort((a, b) => a.quarter - b.quarter);
+
   return {
     formationStats,
     playerPositionStats: playerPositionStats.slice(0, 30),
     opponentHistory,
+    quarterStats,
     totalCompletedMatches: matches.length,
     computedAt: new Date().toISOString(),
   };

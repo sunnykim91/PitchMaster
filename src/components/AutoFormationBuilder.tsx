@@ -78,9 +78,11 @@ type Props = {
   /** 자동 편성 결과가 바뀔 때 AI 코치 분석에 필요한 컨텍스트를 상위에 제공 */
   onAnalysisContextReady?: (ctx: {
     placement: Array<{ slot: string; playerName: string }>;
+    quarterPlacements: Array<{ quarter: number; assignments: Array<{ slot: string; playerName: string }> }>;
     attendees: Array<{ name: string; preferredPosition?: string | null; isGuest?: boolean }>;
     formationName: string;
     quarterCount: number;
+    allSlotsFilled: boolean;
   } | null) => void;
   /** AI 코치 분석 버튼 표시 여부 (김선휘 Feature Flag) */
   enableAi?: boolean;
@@ -592,6 +594,7 @@ export default function AutoFormationBuilder({
   );
 
   // 자동 편성 결과 변할 때 AI 코치 분석 컨텍스트를 상위에 전달 (Phase B — 전술판 아래 AiCoachAnalysisCard용)
+  // ⚠️ isBalanced는 이 훅보다 아래(686번)에 선언되므로 내부에서 직접 계산
   useEffect(() => {
     if (!onAnalysisContextReady) return;
     if (!results || !formation) {
@@ -607,16 +610,34 @@ export default function AutoFormationBuilder({
       slot: a.slotLabel,
       playerName: a.playerName,
     }));
+    // 전체 쿼터 배치 (AI 코치가 교체 패턴 분석용)
+    const quarterPlacements = results.map((qr) => ({
+      quarter: qr.quarter,
+      assignments: qr.assignments.map((a) => ({
+        slot: a.slotLabel,
+        playerName: a.playerName,
+      })),
+    }));
     const attendees = attendingPlayers.map((p) => ({
       name: p.name,
       preferredPosition: p.preferredPosition,
       isGuest: p.isGuest ?? false,
     }));
+    // 전술판이 모두 채워졌는지: 슬롯 수 × 쿼터 수 === 배정된 슬롯 수 합계 (results에서 직접 계산)
+    const slotsPerQtr = formation.slots.length - 1; // GK 슬롯 제외
+    const totalNeededCtx = slotsPerQtr * quarterCount;
+    const totalAssignedCtx = results.reduce(
+      (sum, qr) => sum + qr.assignments.filter((a) => !a.slotLabel.toUpperCase().includes("GK")).length,
+      0,
+    );
+    const allSlotsFilled = Math.abs(totalAssignedCtx - totalNeededCtx) < 0.01;
     onAnalysisContextReady({
       placement,
+      quarterPlacements,
       attendees,
       formationName: formation.name,
       quarterCount,
+      allSlotsFilled,
     });
   }, [results, formation, attendingPlayers, quarterCount, onAnalysisContextReady]);
 

@@ -7,10 +7,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export type AiCoachAnalysisCardProps = {
-  /** 생성 편성 — results가 있을 때만 분석 가능 */
-  hasResults: boolean;
+  /** 전술판이 모두 채워졌는지 — false면 버튼 비활성 */
+  allSlotsFilled: boolean;
   /** 첫 쿼터 placement — 분석 요청 payload 용 */
   placement: Array<{ slot: string; playerName: string }>;
+  /** 쿼터별 전체 배치 */
+  quarterPlacements?: Array<{
+    quarter: number;
+    assignments: Array<{ slot: string; playerName: string }>;
+  }>;
   /** 참석자 */
   attendees: Array<{ name: string; preferredPosition?: string | null; isGuest?: boolean }>;
   /** 포메이션 이름 (예 "4-2-3-1") */
@@ -34,8 +39,9 @@ export type AiCoachAnalysisCardProps = {
  *   - error: 에러 메시지
  */
 export function AiCoachAnalysisCard({
-  hasResults,
+  allSlotsFilled,
   placement,
+  quarterPlacements,
   attendees,
   formationName,
   quarterCount,
@@ -50,7 +56,7 @@ export function AiCoachAnalysisCard({
   const [error, setError] = useState<string | null>(null);
 
   async function handleAnalyze() {
-    if (!hasResults || loading) return;
+    if (!allSlotsFilled || loading) return;
     setLoading(true);
     setError(null);
     setAnalysis("");
@@ -65,6 +71,7 @@ export function AiCoachAnalysisCard({
           isGuest: a.isGuest ?? false,
         })),
         placement,
+        ...(quarterPlacements && quarterPlacements.length > 0 ? { quarterPlacements } : {}),
         matchType,
         opponent: opponent ?? null,
         warnings: [],
@@ -86,21 +93,37 @@ export function AiCoachAnalysisCard({
   }
 
   if (!enableAi) return null;
-  if (!hasResults) return null;
 
   return (
     <Card className="rounded-xl border-border/30 overflow-hidden">
       <CardContent className="p-4">
         {analysis === null && !loading ? (
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full gap-2 rounded-xl border-primary/40 text-primary hover:bg-primary/5"
-            onClick={handleAnalyze}
-          >
-            <Sparkles className="h-4 w-4" />
-            AI 코치 분석 보기
-          </Button>
+          allSlotsFilled ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full gap-2 rounded-xl border-primary/40 text-primary hover:bg-primary/5"
+              onClick={handleAnalyze}
+            >
+              <Sparkles className="h-4 w-4" />
+              AI 코치 분석 보기
+            </Button>
+          ) : (
+            <div className="flex flex-col items-center gap-2 py-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full gap-2 rounded-xl border-border/30 text-muted-foreground cursor-not-allowed opacity-50"
+                disabled
+              >
+                <Sparkles className="h-4 w-4" />
+                AI 코치 분석 보기
+              </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                전술판을 모두 채우면 AI 분석이 활성화됩니다
+              </p>
+            </div>
+          )
         ) : (
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">

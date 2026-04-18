@@ -143,6 +143,8 @@ JSON:
 - placement: **1쿼터 실제 배치** [{ slot, playerName }]
   → 이번 포메이션에서 누가 어느 슬롯을 맡는지. **포메이션 구도는 이걸 기준으로**.
 - placementBreakdown: { GK, DEF, MID, FWD } — placement의 카테고리별 인원수 (사전 계산됨)
+- quarterPlacements: **쿼터별 실제 배치** [{ quarter, assignments: [{slot, playerName}] }] (제공 시)
+  → 각 쿼터의 선수 배치. 쿼터 간 로테이션·교체 파악에 활용. placement(1쿼터)와 같은 형식.
 - matchType: REGULAR | INTERNAL | EVENT
 - opponent: 상대팀 이름 (있으면)
 - warnings: 룰 엔진이 감지한 편성 경고 (예: "수비수 부족", "키 포지션 미배치")
@@ -217,11 +219,14 @@ attendees 중 \`isGuest=true\`인 선수는 **이번 경기 처음 합류하는 
 
 경고 없으면 주의점 단락은 쿼터 체력 분배·교체 우선순위 중심으로.
 
-## 🔵 placement 해석
+## 🔵 placement / quarterPlacements 해석
 
-\`placement\`는 1쿼터 기준입니다. 쿼터가 여러 개(2~4)일 때:
-- "1쿼터에 이렇게 시작하고, 후속 쿼터에서 체력 상태에 따라 교체" 같은 톤으로 서술
-- 모든 쿼터 배치를 다 설명하려 하지 말 것 — 2단락은 **전반적 흐름**, 3단락은 **교체 운영**
+\`placement\`는 1쿼터 기준입니다. \`quarterPlacements\`가 제공되면 쿼터별 실제 배치 내역입니다.
+- 쿼터가 여러 개(2~4)일 때: "1쿼터에 이렇게 시작하고, 후속 쿼터에서 체력 상태에 따라 교체" 같은 톤으로 서술
+- 모든 쿼터 배치를 하나하나 나열하지 말 것 — 2단락은 **전반적 흐름**, 3단락은 **교체 운영**
+- quarterPlacements에서 쿼터 간 달라지는 선수가 있으면 **로테이션 패턴**으로 자연스럽게 언급 가능
+  (예: "3쿼터부터 홍길동이 측면으로 이동하는 계획이라 체력 분배가 핵심")
+- 모든 쿼터 배치가 동일하면 쿼터 언급보다 **운영 일관성** 관점으로 서술
 
 ## 응답 형식
 
@@ -246,6 +251,11 @@ export type TacticsAnalysisInput = {
   attendees: AttendeeForAnalysis[];
   /** 1쿼터 기준 슬롯-선수 매핑 */
   placement: Array<{ slot: string; playerName: string }>;
+  /** 전체 쿼터별 배치 (AI 코치가 쿼터 간 로테이션 파악 가능) */
+  quarterPlacements?: Array<{
+    quarter: number;
+    assignments: Array<{ slot: string; playerName: string }>;
+  }>;
   matchType: "REGULAR" | "INTERNAL" | "EVENT";
   opponent?: string | null;
   warnings?: string[];
@@ -352,6 +362,12 @@ export async function generateAiTacticsAnalysis(
     attendees: input.attendees.slice(0, 30),
     placement: input.placement.slice(0, 15),
     placementBreakdown: computePlacementBreakdown(input.placement),
+    ...(input.quarterPlacements && input.quarterPlacements.length > 0
+      ? { quarterPlacements: input.quarterPlacements.map((qp) => ({
+          quarter: qp.quarter,
+          assignments: qp.assignments.slice(0, 15),
+        })) }
+      : {}),
     matchType: input.matchType,
     opponent: input.opponent ?? null,
     warnings: input.warnings ?? [],
@@ -459,6 +475,12 @@ export async function* generateAiTacticsAnalysisStream(
     attendees: input.attendees.slice(0, 30),
     placement: input.placement.slice(0, 15),
     placementBreakdown: computePlacementBreakdown(input.placement),
+    ...(input.quarterPlacements && input.quarterPlacements.length > 0
+      ? { quarterPlacements: input.quarterPlacements.map((qp) => ({
+          quarter: qp.quarter,
+          assignments: qp.assignments.slice(0, 15),
+        })) }
+      : {}),
     matchType: input.matchType,
     opponent: input.opponent ?? null,
     warnings: input.warnings ?? [],
@@ -537,6 +559,15 @@ function buildHistoryBlock(stats: TeamStats, opponent: string | null | undefined
       if (p.assists > 0) extras.push(`${p.assists}어시`);
       const extra = extras.length > 0 ? ` (${extras.join(", ")})` : "";
       lines.push(`- ${p.playerName} ${p.position}: ${p.matches}경기${extra}`);
+    }
+  }
+
+  if (stats.quarterStats.length > 0) {
+    lines.push("\n### 쿼터별 득실 (누적)");
+    for (const q of stats.quarterStats) {
+      const avgFor = q.matches > 0 ? (q.goalsFor / q.matches).toFixed(1) : "0.0";
+      const avgAgainst = q.matches > 0 ? (q.goalsAgainst / q.matches).toFixed(1) : "0.0";
+      lines.push(`- ${q.quarter}쿼터: 득 ${q.goalsFor}(평균 ${avgFor}) / 실 ${q.goalsAgainst}(평균 ${avgAgainst}) — ${q.matches}경기`);
     }
   }
 

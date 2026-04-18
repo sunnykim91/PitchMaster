@@ -77,9 +77,11 @@ function MatchTacticsTabInner({
   // Phase B — AI 코치 분석 컨텍스트 (AutoFormationBuilder에서 내려줌, 전술판 아래 카드에서 사용)
   const [aiCoachContext, setAiCoachContext] = useState<{
     placement: Array<{ slot: string; playerName: string }>;
+    quarterPlacements: Array<{ quarter: number; assignments: Array<{ slot: string; playerName: string }> }>;
     attendees: Array<{ name: string; preferredPosition?: string | null; isGuest?: boolean }>;
     formationName: string;
     quarterCount: number;
+    allSlotsFilled: boolean;
   } | null>(null);
   const isInternal = match.matchType === "INTERNAL";
   const [activeSide, setActiveSide] = useState<"A" | "B">("A");
@@ -560,8 +562,9 @@ function MatchTacticsTabInner({
       {canManage && aiCoachContext && (
         <div style={{ order: orderIndex("analysis") }}>
           <AiCoachAnalysisCard
-            hasResults={true}
+            allSlotsFilled={aiCoachContext.allSlotsFilled}
             placement={aiCoachContext.placement}
+            quarterPlacements={aiCoachContext.quarterPlacements}
             attendees={aiCoachContext.attendees}
             formationName={aiCoachContext.formationName}
             quarterCount={aiCoachContext.quarterCount}
