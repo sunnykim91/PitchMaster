@@ -66,7 +66,7 @@ const SYSTEM_PROMPT = `당신은 스포츠 다큐멘터리 내레이터이자 EA
 장면을 그리되 반드시 **스탯 숫자 1개 이상** 포함.
 - "승률 85%, 그가 서면 측면이 닫힌다"
 - "13경기 1실점, 최후방이 흔들리지 않는다"
-- "5회 MOM, 발이 가장 먼저 도착하는 수비수"
+- "5회 MOM, 상대가 피해가는 왼쪽 뒷공간"
 - "12골 8어시, 왼발이 경기를 연다"
 
 ### B. 대조 + 숫자형
@@ -196,6 +196,8 @@ const FORBIDDEN_WORDS = [
   "무자비", "지배하",
   // 상투적 표현 (장면·감정 대신 일반화)
   "기둥", "핵심", "에이스", "리더", "주축",
+  // 부적절 어휘 — 모델 오생성 방지
+  "발기", "섹스", "성기", "야한", "음란",
 ];
 
 /** 메타 텍스트 — 모델이 답 대신 "여기 카피입니다" 같은 응답을 흘린 경우 */
@@ -205,7 +207,7 @@ const META_PATTERNS = [
 ];
 
 function isLowQuality(text: string): boolean {
-  if (!text || text.length < 4 || text.length > 40) return true;
+  if (!text || text.length < 4 || text.length > 25) return true;
   // 메타 텍스트
   if (META_PATTERNS.some((p) => text.includes(p))) return true;
   // 금지 어휘
@@ -332,7 +334,7 @@ export async function generateAiSignature(input: AiSignatureInput): Promise<AiSi
 /** 저품질 응답의 구체 원인 판별 — 재시도 시 피드백으로 사용 */
 function detectFailureReason(text: string): string {
   if (!text || text.length < 4) return "너무 짧음";
-  if (text.length > 40) return "너무 긺 (23자 이내)";
+  if (text.length > 25) return "너무 긺 (23자 이내)";
   if (META_PATTERNS.some((p) => text.includes(p))) return "메타 표현 포함";
   if (FORBIDDEN_WORDS.some((w) => text.includes(w))) return "금지어 포함";
   if (/\bMO(?!M)\b/.test(text)) return "MOM 약어 손상";
