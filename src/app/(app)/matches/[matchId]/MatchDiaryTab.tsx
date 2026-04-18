@@ -281,7 +281,7 @@ function MatchDiaryTabInner({
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); handleRemovePhoto(url); }}
-                    className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-background/90 text-destructive shadow-sm transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 focus:opacity-100"
+                    className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-background/90 text-destructive shadow-sm"
                     aria-label="사진 삭제"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
