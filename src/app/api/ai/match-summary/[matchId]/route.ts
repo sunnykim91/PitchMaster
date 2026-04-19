@@ -176,6 +176,7 @@ export async function POST(
     mom,
     topScorerName,
     attendanceCount,
+    playerCount: match.player_count ?? 11,
     location: match.location ?? null,
     weather: null,
     date: match.match_date ?? "",

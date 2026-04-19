@@ -118,6 +118,7 @@ export async function getMatchDetailData(matchId: string, teamId: string, enable
       mom: nameByIdOrMemberId(momId),
       topScorerName,
       attendanceCount,
+      playerCount: match.player_count ?? 11, // 없으면 축구 기본 11
       location: match.location ?? null,
       weather: match.weather ?? null,
       date: match.date ?? "",
