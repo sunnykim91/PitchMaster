@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { AiBadge } from "@/components/AiBadge";
 import { cn } from "@/lib/utils";
 
 export type AiCoachAnalysisCardProps = {
@@ -135,7 +136,7 @@ export function AiCoachAnalysisCard({
         {/* 월 사용량 배지 */}
         {monthlyCap != null && monthlyCount != null && (
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">AI 코치 분석</span>
+            <AiBadge variant="ai" label="AI 코치 분석" size="sm" />
             <span className={cn(
               "text-xs font-medium",
               isMonthlyExhausted ? "text-destructive" : "text-muted-foreground"
@@ -147,10 +148,7 @@ export function AiCoachAnalysisCard({
         {analysis === null && !loading ? (
           matchUsed ? (
             <div className="flex flex-col items-center gap-2 py-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Sparkles className="h-4 w-4 text-primary/60" />
-                <span>이 경기 AI 분석 완료</span>
-              </div>
+              <AiBadge variant="ai" label="이 경기 AI 분석 완료" size="sm" />
               <Button
                 type="button"
                 variant="ghost"
@@ -197,14 +195,10 @@ export function AiCoachAnalysisCard({
         ) : (
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">
-                  {source === "ai" ? "AI" : source === "rule" ? "⚙" : "✨"}
-                </span>
-                <span className="text-sm font-bold text-foreground">
-                  {source === "ai" ? "코치 분석" : source === "rule" ? "기본 분석" : "분석 중..."}
-                </span>
-              </div>
+              <AiBadge
+                variant={source === "ai" ? "ai" : source === "rule" ? "rule" : "loading"}
+                label={source === "ai" ? "코치 분석" : source === "rule" ? "기본 분석" : "분석 중..."}
+              />
               {!loading && (
                 <Button
                   type="button"
