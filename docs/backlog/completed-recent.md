@@ -1,12 +1,75 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~25차)
-summary: 2026-04-11~19 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정
-sections: [25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+title: 개선 백로그 — 최근 완료 (16~26차)
+summary: 2026-04-11~19 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비
+sections: [26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
 last_updated: 2026-04-19
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~25차)
+# 최근 완료 (16~26차)
+
+## 26차 (2026-04-19) — 경기 역할 가이드 + 전술 탭 레이아웃 재정비
+
+**포지션 역할 지식 베이스 구축** (`src/lib/positionRoles/`)
+- [x] 24 포지션 base 데이터 (`base/defenders.ts` · `midfielders.ts` · `forwards.ts`) — 포메이션 무관 공통 원칙
+  - 수비 8: GK · LB · RB · LCB · RCB · CB · LWB · RWB
+  - 미드 11: LM · RM · LCM · RCM · CM · CDM · LDM · RDM · LAM · RAM · CAM
+  - 공격 5: LW · RW · LS · RS · ST
+- [x] 축구 11인제 **10 포메이션** override 작성 (`overrides/*.ts`)
+  - 4-4-2 · 4-3-3 · 4-2-3-1 · 3-5-2 · 3-4-3 · 4-1-4-1 · 4-5-1 · 5-3-2 · 3-4-2-1 · 4-3-2-1
+  - 각 포메이션마다 모든 슬롯의 `whyItMatters` + `linkage` + 필요 시 extraAttack/Defense 오버라이드
+- [x] base + override 병합 (`getPositionRole(formationId, roleCode)`) → `MergedPositionRole` 반환
+- [x] 톤/내용 원칙: 감독→아마추어 친근 말투, 전문 용어 풀어쓰기, 지시마다 이유 포함, m 단위 대신 실감 표현
+
+**MatchRoleGuide UI 컴포넌트** (`src/components/MatchRoleGuide.tsx`)
+- [x] `/api/squads` fetch → 본인(또는 운영진이 선택한 선수)의 쿼터별 배치 뽑기
+- [x] `groupAssignments()` — 같은 (formationId, role) 이면 비연속 쿼터도 한 카드
+- [x] `formatQuarterRangeLabel()` — "2쿼터" / "1-2쿼터" / "2·4쿼터" / "1-2·4쿼터"
+- [x] 권한별 뷰:
+  - MEMBER: 본인만. 불참 시 "이 경기엔 불참하셨습니다", 전술판 미작성이면 섹션 숨김
+  - PRESIDENT/STAFF: 드롭다운(용병 제외) + 전술판 미작성 시 포메이션 폴백
+- [x] 아코디언 카드 + 왜 중요한가 + 공격/수비/커뮤니케이션/체력/조심할 실수/연계
+- [x] 디자인: 흰 테두리 전면 제거, `bg-secondary/30` 기반 용병 카드 톤 통일, 경고 카드는 좌측 accent bar
+
+**match-squads-saved 동기화 이벤트**
+- [x] `TacticsBoard.saveToApi` / `AutoFormationBuilder` 저장 후 `window.dispatchEvent(new CustomEvent('match-squads-saved', { detail: { matchId } }))` 발행
+- [x] `MatchRoleGuide` / `MatchTacticsTab`가 구독해 refetch — 포메이션 변경·배치 이동·쿼터별 다른 포메이션 모두 실시간 반영
+
+**전술 탭 레이아웃 재정비** (`MatchTacticsTab.tsx`)
+- [x] 카드 순서 프리셋 드롭다운(3옵션) 제거 → 고정 `order` 기반
+  ```
+  -10  INTERNAL 팀 편성
+  -5   용병 관리 (편성 미완료)
+  10   자동 편성 빌더
+  20   전술판
+  30   역할 가이드 (회원 우선순위)
+  40   AI 코치 분석
+  95   용병 관리 (편성 완료)
+  ```
+- [x] 용병 카드 동적 위치 — `isFormationComplete` computed memo 기반
+- [x] `useLocalStorage` / `NativeSelect` import 제거
+
+**편성 완료 판단 엄격화**
+- [x] 이전 `hasAnySquad` state는 "저장 이벤트 = 편성됨" 오판 (포메이션만 변경·심판만 지정에도 true)
+- [x] 새 기준: **매 쿼터마다** formation template 정규 슬롯이 전부 채워진 squad 존재
+- [x] 심판/촬영(`__prefix`)은 template.slots에 없어 자연 제외
+- [x] 자체전 A·B 중 하나라도 쿼터 완성되면 인정
+- [x] `match.quarterCount` 0/undefined 방어 (`?? 1`은 0 못 잡음)
+
+**AI 코치 분석 DB fallback**
+- [x] `dbSquads` state 추가 — AutoFormationBuilder context 없어도 수동 편집/DB 복원 케이스에서 AI 분석 버튼 활성화
+- [x] `dbAiCoachContext` memo로 DB squads → quarterPlacements 재구성
+
+**관련 커밋**
+- `8a59a4f` — 역할 가이드 시스템 (base 24 + override 1 + UI) 초기 커밋
+- `a2a61f6` — 11인제 9 포메이션 오버라이드 일괄 추가 + sample 제거
+- `9e3d8dc` — match-squads-saved 이벤트 동기화
+- `6f8faa6` — 비연속 쿼터 같은 포지션 합침 ("2·4쿼터")
+- `04c83bf` — 역할 가이드 UI 톤 정리 (흰 테두리 제거)
+- `1056dba` — 카드 순서 프리셋 제거 + 고정 order
+- `942c2cb` — 용병 카드 위치 단순화
+- `352f4ad` — 편성 완료 엄격화 (formation template slots 기준)
+- `24d2b31` — quarterCount 0/undefined 방어
 
 ## 25차 (2026-04-19) — 축구 인원 확장 · AI 시그니처 룰 전환 · 경기 후기 환각 수정
 
