@@ -145,7 +145,9 @@ function MatchTacticsTabInner({
    */
   const isFormationComplete = useMemo(() => {
     if (dbSquads.length === 0) return false;
-    const qc = match.quarterCount ?? 1;
+    const qc = match.quarterCount;
+    // quarterCount가 없거나 0·음수면 편성 개념 자체가 성립 안 함 → 미완료
+    if (!qc || qc < 1) return false;
     for (let q = 1; q <= qc; q++) {
       const candidates = dbSquads.filter((s) => s.quarter_number === q);
       if (candidates.length === 0) return false;
