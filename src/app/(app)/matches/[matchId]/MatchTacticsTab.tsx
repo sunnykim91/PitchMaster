@@ -1,6 +1,7 @@
 "use client";
 
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { formationTemplates } from "@/lib/formations";
 import type { AttendingPlayer, GeneratedSquad } from "@/components/AutoFormationBuilder";
 import { apiMutate } from "@/lib/useApi";
 import { Button } from "@/components/ui/button";
@@ -102,8 +103,15 @@ function MatchTacticsTabInner({
   /**
    * 편성이 한 번이라도 저장됐는지 — 용병 카드 위치(상단/하단) 판단용.
    * 초기엔 /api/squads 로 확인하고, 저장 이벤트가 들어오면 true로 고정.
+   * dbSquads는 AI 코치 분석 fallback 컨텍스트 구성용 (수동 편집·DB 복원 케이스).
    */
   const [hasAnySquad, setHasAnySquad] = useState(false);
+  const [dbSquads, setDbSquads] = useState<Array<{
+    quarter_number: number;
+    formation: string;
+    positions: Record<string, { playerId: string; x: number; y: number; secondPlayerId?: string }>;
+  }>>([]);
+  const [squadsRefetchToken, setSquadsRefetchToken] = useState(0);
   useEffect(() => {
     let cancelled = false;
     fetch(`/api/squads?matchId=${encodeURIComponent(matchId)}`)
@@ -111,25 +119,84 @@ function MatchTacticsTabInner({
       .then((d) => {
         if (cancelled) return;
         const arr = Array.isArray(d?.squads) ? d.squads : [];
-        // positions가 하나라도 채워진 스쿼드가 있으면 "편성됨"으로 간주
         const filled = arr.some((s: { positions?: Record<string, unknown> }) =>
           s.positions && Object.values(s.positions).some((v) => v)
         );
         if (filled) setHasAnySquad(true);
+        setDbSquads(arr);
       })
-      .catch(() => { /* 실패해도 기본값(false) 유지 */ });
+      .catch(() => { /* 실패해도 기본값 유지 */ });
     return () => { cancelled = true; };
-  }, [matchId]);
+  }, [matchId, squadsRefetchToken]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<{ matchId?: string }>).detail;
-      if (!detail || detail.matchId === matchId) setHasAnySquad(true);
+      if (!detail || detail.matchId === matchId) {
+        setHasAnySquad(true);
+        setSquadsRefetchToken((n) => n + 1);
+      }
     };
     window.addEventListener("match-squads-saved", handler);
     return () => window.removeEventListener("match-squads-saved", handler);
   }, [matchId]);
+
+  // AI 코치 분석 DB fallback: AutoFormationBuilder가 계산해 준 context가 없을 때
+  // (수동 편집·DB 저장된 편성 복원) 전술판에 실제 배치된 스쿼드로 context를 만든다.
+  const dbAiCoachContext = useMemo(() => {
+    if (dbSquads.length === 0) return null;
+
+    // playerId → name 매핑 (참석 선수 + 용병)
+    const nameMap = new Map<string, string>();
+    for (const p of attendingPlayers) nameMap.set(p.id, p.name);
+    for (const g of guests ?? []) nameMap.set(g.id, g.name);
+
+    const sortedSquads = [...dbSquads].sort((a, b) => a.quarter_number - b.quarter_number);
+
+    const quarterPlacements: Array<{ quarter: number; assignments: Array<{ slot: string; playerName: string }> }> = [];
+    let totalAssignedFieldSlots = 0;
+
+    for (const sq of sortedSquads) {
+      const tpl = formationTemplates.find((f) => f.id === sq.formation);
+      if (!tpl) continue;
+      const assignments: Array<{ slot: string; playerName: string }> = [];
+      for (const slot of tpl.slots) {
+        const posEntry = sq.positions?.[slot.id];
+        if (!posEntry?.playerId) continue;
+        const playerName = nameMap.get(posEntry.playerId);
+        if (!playerName) continue;
+        assignments.push({ slot: slot.label, playerName });
+        if (!slot.label.toUpperCase().includes("GK")) totalAssignedFieldSlots++;
+      }
+      if (assignments.length > 0) {
+        quarterPlacements.push({ quarter: sq.quarter_number, assignments });
+      }
+    }
+
+    if (quarterPlacements.length === 0) return null;
+
+    // allSlotsFilled: 쿼터 × 필드슬롯 수 = 실제 배정된 필드 슬롯 수
+    const firstTpl = formationTemplates.find((f) => f.id === sortedSquads[0].formation);
+    const fieldSlotsPerQtr = firstTpl ? firstTpl.slots.length - 1 : 0;
+    const expectedTotal = fieldSlotsPerQtr * match.quarterCount;
+    const allSlotsFilled = expectedTotal > 0 && totalAssignedFieldSlots >= expectedTotal;
+
+    return {
+      placement: quarterPlacements[0].assignments,
+      quarterPlacements,
+      attendees: [
+        ...attendingPlayers.map((p) => ({ name: p.name, preferredPosition: p.preferredPosition, isGuest: p.isGuest ?? false })),
+        ...(guests ?? []).map((g) => ({ name: g.name, preferredPosition: null, isGuest: true })),
+      ],
+      formationName: firstTpl?.name ?? "",
+      quarterCount: match.quarterCount,
+      allSlotsFilled,
+    };
+  }, [dbSquads, attendingPlayers, guests, match.quarterCount]);
+
+  // 실제 AI 코치 카드에 전달할 최종 context: AutoFormationBuilder 우선, 없으면 DB fallback
+  const effectiveAiCoachContext = aiCoachContext ?? dbAiCoachContext;
 
   /* ── 카드 고정 순서 (숫자 작을수록 위) ──
    *   -10 INTERNAL 팀 편성 (자체전만)
@@ -584,12 +651,12 @@ function MatchTacticsTabInner({
       {canManage && (
         <div style={{ order: 40 }}>
           <AiCoachAnalysisCard
-            allSlotsFilled={aiCoachContext?.allSlotsFilled ?? false}
-            placement={aiCoachContext?.placement ?? []}
-            quarterPlacements={aiCoachContext?.quarterPlacements}
-            attendees={aiCoachContext?.attendees ?? []}
-            formationName={aiCoachContext?.formationName ?? ""}
-            quarterCount={aiCoachContext?.quarterCount ?? match.quarterCount}
+            allSlotsFilled={effectiveAiCoachContext?.allSlotsFilled ?? false}
+            placement={effectiveAiCoachContext?.placement ?? []}
+            quarterPlacements={effectiveAiCoachContext?.quarterPlacements}
+            attendees={effectiveAiCoachContext?.attendees ?? []}
+            formationName={effectiveAiCoachContext?.formationName ?? ""}
+            quarterCount={effectiveAiCoachContext?.quarterCount ?? match.quarterCount}
             matchType={(match.matchType ?? "REGULAR") as "REGULAR" | "INTERNAL" | "EVENT"}
             opponent={match.opponent ?? null}
             matchId={matchId}
