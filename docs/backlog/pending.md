@@ -59,6 +59,27 @@ related: [completed-recent.md, reviews.md]
 
 ## HIGH
 
+### W3 — 마케팅 유입 폭증 대비 (26차 진단 기반, 2026-04-19)
+
+W1(보안)·W2(운영 안전망) 완료 후 순차 착수.
+
+- [ ] **경기 상세 SSR AI 블로킹 해소**
+  - 현재: `src/lib/server/getMatchDetailData.ts:82-109`에서 `getOrComputeTeamStats()` await
+  - 신규팀·캐시 미스 시 LCP +2~3초
+  - 조치: AI 팀스탯 계산을 경기 후기 API route로 이동 (SSR 언블록)
+- [ ] **탭별 중복 fetch 통합**
+  - 현재: `MatchTacticsTab`의 `/api/squads`, `MatchInfoTab`의 `/api/weather` 등 탭마다 독립 fetch
+  - 경기 상세 상위에서 공통 데이터 fetch 후 props 주입
+- [ ] **ClientLayout 60초 폴링 visibilityState 게이트**
+  - 현재: `/api/notifications` 항상 폴링 (탭 비활성이어도)
+  - 조치: `document.visibilityState === 'visible'` 일 때만 폴링
+- [ ] **신규가입자 팀 선택 경로 CTA 개선**
+  - 현재: 초대 없이 자체 가입 시 "팀 만들기" 버튼 눈에 안 띔
+  - 조치: `/team` 페이지에 "이미 팀이 있으신가요?" vs "새로 팀 만들기" 2-column 명확 분기
+- [ ] **탭 내부 로딩 상태 통일**
+  - 현재: 탭 전환 시 데이터 로드 중 아무 표시 없음
+  - 조치: 각 탭 Skeleton 또는 최소 스피너 패턴 표준화
+
 ### 19차 보류(출시 후 첫 패치용)
 - [ ] **옵티미스틱 업데이트 롤백 패턴 도입** — MatchRecordTab/DuesRecordsTab 외 다른 곳에도 실패 시 rollback 적용 (현재는 pessimistic이라 당장 치명적이지 않음)
 - [ ] **MVP 후보자 팀 소속 검증** — POST /api/mvp에서 candidateId가 team_members에 속하는지 추가 검증 (UI에서 이미 필터링되지만 방어 심화)
