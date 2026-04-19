@@ -248,8 +248,14 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
         ],
       };
     });
+    // 역할 가이드 등 외부 구독자에게 저장 완료 알림
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("match-squads-saved", { detail: { matchId } })
+      );
+    }
     setSaving(false);
-  }, [matchId, setSquadsApiData]);
+  }, [matchId, side, setSquadsApiData]);
 
   /** Pending save에 쿼터 번호도 함께 저장 */
   const pendingQuarterRef = useRef(activeQuarter);

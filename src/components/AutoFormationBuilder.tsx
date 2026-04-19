@@ -781,6 +781,12 @@ export default function AutoFormationBuilder({
         side: side ?? null,
       });
     }
+    // 역할 가이드 등 외부 구독자에게 저장 완료 알림
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("match-squads-saved", { detail: { matchId } })
+      );
+    }
 
     setSaving(false);
     onGenerated?.(squads);

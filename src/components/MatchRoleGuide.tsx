@@ -74,10 +74,11 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
 
   const [squads, setSquads] = useState<MatchSquadRow[] | null>(null);
   const [error, setError] = useState(false);
+  /** 전술판 저장 이벤트에 반응해 재fetch 유도 */
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    setSquads(null);
     setError(false);
     fetch(`/api/squads?matchId=${encodeURIComponent(matchId)}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error("fetch_failed"))))
@@ -93,6 +94,19 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
     return () => {
       cancelled = true;
     };
+  }, [matchId, reloadToken]);
+
+  // 전술판에서 포메이션·배치가 저장될 때마다 역할 가이드도 갱신
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ matchId?: string }>).detail;
+      if (!detail || detail.matchId === matchId) {
+        setReloadToken((v) => v + 1);
+      }
+    };
+    window.addEventListener("match-squads-saved", handler);
+    return () => window.removeEventListener("match-squads-saved", handler);
   }, [matchId]);
 
   // 드롭다운 대상 — 용병 제외
