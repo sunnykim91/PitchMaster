@@ -10,7 +10,7 @@ import { getOrComputeTeamStats, findOpponentHistory, type TeamStats } from "@/li
  */
 
 const MODEL = "claude-haiku-4-5";
-const MAX_OUTPUT_TOKENS = 1200; // 한글 3단락 500자 + 여유 (전문 코치 톤)
+const MAX_OUTPUT_TOKENS = 1800; // 한글 3단락 500~700자 + 안전 여유 (토큰 상한으로 잘림 방지)
 const TEMPERATURE = 0.75; // 전문성 위해 약간 낮춤
 
 const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의 **전술 코치**입니다.
@@ -436,7 +436,8 @@ function sanitize(raw: string): string {
 }
 
 function isLowQuality(text: string): boolean {
-  if (!text || text.length < 100 || text.length > 900) return true; // 3단락 기대 범위
+  // 길이 상한은 안전장치 수준으로만 — 사용자가 스트림으로 이미 본 내용을 길다는 이유로 덮어쓰지 않음
+  if (!text || text.length < 100 || text.length > 2500) return true;
   if (META_PATTERNS.some((p) => text.includes(p))) return true;
   if (/^#+\s/m.test(text)) return true; // 마크다운 헤더
   if (/^\s*[-*]\s/m.test(text)) return true; // 리스트
@@ -528,7 +529,7 @@ export async function generateAiTacticsAnalysis(
       return { text: cleaned, source: "ai", model: MODEL };
     }
 
-    const failReason = cleaned.length < 100 ? "너무 짧음 (3단락 필요)" : cleaned.length > 900 ? "너무 긺" : "메타 표현 또는 마크다운 포함";
+    const failReason = cleaned.length < 100 ? "너무 짧음 (3단락 필요)" : cleaned.length > 2500 ? "너무 긺" : "메타 표현 또는 마크다운 포함";
     const retry = await callOnce(0.5, failReason);
     const retryBlock = retry.content.find((b) => b.type === "text");
     const retryTokens = extractTokenUsage(retry);
