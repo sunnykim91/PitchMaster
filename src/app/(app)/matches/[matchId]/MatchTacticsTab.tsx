@@ -1,8 +1,6 @@
 "use client";
 
-import { memo, useRef, useState } from "react";
-import { useLocalStorage } from "@/lib/useLocalStorage";
-import { NativeSelect } from "@/components/ui/native-select";
+import { memo, useEffect, useRef, useState } from "react";
 import type { AttendingPlayer, GeneratedSquad } from "@/components/AutoFormationBuilder";
 import { apiMutate } from "@/lib/useApi";
 import { Button } from "@/components/ui/button";
@@ -99,16 +97,50 @@ function MatchTacticsTabInner({
   const [editingGuestId, setEditingGuestId] = useState<string | null>(null);
   const [guestCardOpen, setGuestCardOpen] = useState(false);
 
-  // 전술탭 카드 순서 프리셋 (사용자별 저장)
-  type CardId = "guest" | "auto" | "board" | "analysis";
-  const CARD_PRESETS: Record<string, { label: string; order: CardId[] }> = {
-    default: { label: "기본 (용병 → 편성 → 전술판 → AI 분석)", order: ["guest", "auto", "board", "analysis"] },
-    boardFirst: { label: "전술판 먼저 (전술판 → 편성 → AI → 용병)", order: ["board", "auto", "analysis", "guest"] },
-    compact: { label: "편성 먼저 (편성 → 전술판 → AI → 용병)", order: ["auto", "board", "analysis", "guest"] },
-  };
-  const [cardPreset, setCardPreset] = useLocalStorage<string>("tacticsCardPreset", "default");
-  const activePreset = CARD_PRESETS[cardPreset] ?? CARD_PRESETS.default;
   const { showToast } = useToast();
+
+  /**
+   * 편성이 한 번이라도 저장됐는지 — 용병 카드 위치(상단/하단) 판단용.
+   * 초기엔 /api/squads 로 확인하고, 저장 이벤트가 들어오면 true로 고정.
+   */
+  const [hasAnySquad, setHasAnySquad] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/squads?matchId=${encodeURIComponent(matchId)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled) return;
+        const arr = Array.isArray(d?.squads) ? d.squads : [];
+        // positions가 하나라도 채워진 스쿼드가 있으면 "편성됨"으로 간주
+        const filled = arr.some((s: { positions?: Record<string, unknown> }) =>
+          s.positions && Object.values(s.positions).some((v) => v)
+        );
+        if (filled) setHasAnySquad(true);
+      })
+      .catch(() => { /* 실패해도 기본값(false) 유지 */ });
+    return () => { cancelled = true; };
+  }, [matchId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ matchId?: string }>).detail;
+      if (!detail || detail.matchId === matchId) setHasAnySquad(true);
+    };
+    window.addEventListener("match-squads-saved", handler);
+    return () => window.removeEventListener("match-squads-saved", handler);
+  }, [matchId]);
+
+  /* ── 카드 고정 순서 (숫자 작을수록 위) ──
+   *   -10 INTERNAL 팀 편성 (자체전만)
+   *   -5  용병 관리 (용병 ≥1 && 편성 전)
+   *   10  자동 편성 빌더
+   *   20  전술판
+   *   30  역할 가이드 (전술판 바로 아래)
+   *   40  AI 코치 분석
+   *   95  용병 관리 (용병 0 또는 편성 후)
+   */
+  const guestOrder = (guests?.length ?? 0) > 0 && !hasAnySquad ? -5 : 95;
 
   // 자체전: 팀별 roster 필터링
   const filteredRoster = isInternal && internalTeams
@@ -117,8 +149,6 @@ function MatchTacticsTabInner({
   const filteredAttending = isInternal && internalTeams
     ? attendingPlayers.filter((p) => internalTeams.some((t) => t.playerId === p.id && t.side === activeSide))
     : attendingPlayers;
-
-  const orderIndex = (id: CardId) => activePreset.order.indexOf(id);
 
   return (
     <div className="flex flex-col gap-5 min-w-0 overflow-x-hidden">
@@ -274,25 +304,9 @@ function MatchTacticsTabInner({
         </div>
       )}
 
-      {/* ── 카드 순서 프리셋 (canManage일 때만 표시) ── */}
+      {/* ── 용병 관리 (아코디언) — 용병 있고 편성 전이면 상단, 아니면 하단 ── */}
       {canManage && (
-        <div className="flex items-center justify-end gap-2 text-xs">
-          <span className="text-muted-foreground">표시 순서</span>
-          <NativeSelect
-            value={cardPreset}
-            onChange={(e) => setCardPreset(e.target.value)}
-            className="h-8 text-xs"
-          >
-            {Object.entries(CARD_PRESETS).map(([key, val]) => (
-              <option key={key} value={key}>{val.label}</option>
-            ))}
-          </NativeSelect>
-        </div>
-      )}
-
-      {/* ── 용병 관리 (아코디언) ── */}
-      {canManage && (
-        <div style={{ order: orderIndex("guest") }} className="rounded-xl border border-border/30 overflow-hidden">
+        <div style={{ order: guestOrder }} className="rounded-xl border border-border/30 overflow-hidden">
           <button
             type="button"
             onClick={() => setGuestCardOpen(!guestCardOpen)}
@@ -514,7 +528,7 @@ function MatchTacticsTabInner({
       )}
 
       {canManage && (
-        <div style={{ order: orderIndex("auto") }}>
+        <div style={{ order: 10 }}>
           <AutoFormationBuilder
             matchId={matchId}
             quarterCount={match.quarterCount}
@@ -540,7 +554,7 @@ function MatchTacticsTabInner({
 
       <div
         ref={tacticsRef}
-        style={{ order: orderIndex("board") }}
+        style={{ order: 20 }}
         className={cn(
           "scroll-mt-20 rounded-xl transition-all duration-500",
           tacticsHighlight && "ring-2 ring-primary ring-offset-2 ring-offset-background"
@@ -568,7 +582,7 @@ function MatchTacticsTabInner({
 
       {/* AI 코치 분석 — 항상 렌더, 전술판 채움 여부로 버튼 활성화 제어 */}
       {canManage && (
-        <div style={{ order: orderIndex("analysis") }}>
+        <div style={{ order: 40 }}>
           <AiCoachAnalysisCard
             allSlotsFilled={aiCoachContext?.allSlotsFilled ?? false}
             placement={aiCoachContext?.placement ?? []}
@@ -584,8 +598,8 @@ function MatchTacticsTabInner({
         </div>
       )}
 
-      {/* 역할 가이드 — 항상 전술 영역 최하단 */}
-      <div style={{ order: 100 }}>
+      {/* 역할 가이드 — 전술판 바로 아래 (회원 우선순위 고려) */}
+      <div style={{ order: 30 }}>
         <MatchRoleGuide
           matchId={matchId}
           canManage={canManage}
