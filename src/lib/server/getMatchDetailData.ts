@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getWeatherData } from "@/lib/server/getWeather";
 import { getOrGenerateMatchSummary } from "@/lib/server/aiMatchSummaryCache";
 import type { MatchSummaryInput } from "@/lib/server/aiMatchSummary";
+import { getOrComputeTeamStats, findOpponentHistory } from "@/lib/server/aiTeamStats";
 
 export async function getMatchDetailData(matchId: string, teamId: string, enableAi: boolean = false, userId: string | null = null) {
   const db = getSupabaseAdmin();
@@ -73,6 +74,40 @@ export async function getMatchDetailData(matchId: string, teamId: string, enable
       (a) => a.attendance_status === "PRESENT" || a.attendance_status === "LATE"
     ).length;
 
+    // 추가 컨텍스트 (상대전적·시즌 스탯) — 캐시 miss + 생성 권한 있을 때만 조회
+    let opponentHistory: MatchSummaryInput["opponentHistory"] = null;
+    let scorerSeasonGoals: MatchSummaryInput["scorerSeasonGoals"] = undefined;
+    let momSeasonCount: MatchSummaryInput["momSeasonCount"] = null;
+    const hasCachedSummary = Boolean(match.ai_summary) || Boolean(match.ai_summary_generated_at);
+    if (!hasCachedSummary && enableAi) {
+      try {
+        const teamStats = await getOrComputeTeamStats(teamId);
+        if (match.opponent_name) {
+          const oppEntry = findOpponentHistory(teamStats, match.opponent_name);
+          if (oppEntry && oppEntry.played > 0) {
+            const last = oppEntry.recentScores[0];
+            opponentHistory = {
+              played: oppEntry.played,
+              won: oppEntry.won,
+              drawn: oppEntry.drawn,
+              lost: oppEntry.lost,
+              lastScore: last ? { us: last.us, opp: last.opp, date: last.date } : undefined,
+            };
+          }
+        }
+        const careerByName = new Map(teamStats.playerCareerStats.map((p) => [p.playerName, p]));
+        scorerSeasonGoals = {};
+        for (const g of goalsForInput) {
+          const stat = careerByName.get(g.scorerName);
+          if (stat) scorerSeasonGoals[g.scorerName] = stat.totalGoals;
+        }
+        const momName = nameByIdOrMemberId(momId);
+        if (momName) momSeasonCount = careerByName.get(momName)?.mvpCount ?? null;
+      } catch (err) {
+        console.warn("[getMatchDetailData] aiTeamStats 조회 실패 (무시):", err);
+      }
+    }
+
     const summaryInput: MatchSummaryInput = {
       matchType: (match.match_type as "REGULAR" | "INTERNAL" | "EVENT") ?? "REGULAR",
       score: match.match_type === "EVENT" ? null : { us: our, opp },
@@ -86,6 +121,9 @@ export async function getMatchDetailData(matchId: string, teamId: string, enable
       location: match.location ?? null,
       weather: match.weather ?? null,
       date: match.date ?? "",
+      opponentHistory,
+      scorerSeasonGoals,
+      momSeasonCount,
     };
 
     aiSummary = await getOrGenerateMatchSummary({
