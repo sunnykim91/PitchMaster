@@ -145,43 +145,62 @@ const effectiveEnableAi = enableAi && sportType === "SOCCER";
 | AI Full Plan | 자동편성 빌더 | 김선휘 + 축구 팀 전용 | Haiku 4.5 |
 | OCR 거래 파싱 | 회비 일괄등록 | 전체 공개 | Haiku 4.5 Vision |
 
-### AI 코치 분석 데이터 파이프라인
+### AI 코치 분석 데이터 파이프라인 (2026-04-19 갱신)
 
 ```
-AutoFormationBuilder
-  └─ onAnalysisContextReady({
-       placement,          // 1쿼터 슬롯-선수 배치
-       quarterPlacements,  // 전 쿼터 배치 (로테이션 분석)
-       allSlotsFilled,     // 전술판 채움 여부 (false면 버튼 비활성)
-       attendees,          // 참석자 (isGuest=true면 용병)
-       formationName,
-       quarterCount,
-     })
+MatchTacticsTab
+  ├─ AutoFormationBuilder → onAnalysisContextReady(ctx)   (자동 편성 경로)
+  └─ /api/squads + attendingPlayers + formationTemplates
+       → dbAiCoachContext                                 (DB fallback — 수동 편집·기존 기록)
+     effectiveAiCoachContext = autoCtx ?? dbCtx
   → AiCoachAnalysisCard
-       playerWorkload 계산 (quarterPlacements에서 선수별 쿼터 배치 수)
+       - match-squads-saved 이벤트 구독 → refetch로 실시간 갱신
   → POST /api/ai/tactics
-       payload: { placement, quarterPlacements, playerWorkload, attendees, ... }
+       payload에 사전 계산 5종 자동 포함 (aiTacticsAnalysis.ts 헬퍼):
+         - playerRotation      선수별 [{quarter, slot}]
+         - positionChangers    쿼터 간 포지션 바뀐 선수 (서술 의무)
+         - slotSharing         같은 slot을 여러 명이 쿼터 나눠 맡는 경우만
+         - quarterBreakdown    쿼터별 {GK,DEF,MID,FWD} 인원
+         - benchPlayers        미배치 참석자
   → generateAiTacticsAnalysisStream()
        historyBlock = getOrComputeTeamStats(teamId) → buildHistoryBlock()
          - 포메이션별 전적
-         - 선수별 커리어 (totalMatches, totalGoals, totalAssists, mvpCount, mostPlayedPosition)
+         - 선수별 커리어 Top 20
          - 포지션별 활약 Top 10
          - 쿼터별 득실 (누적 + 경기당 평균)
+         - 최근 3경기 요약 (폼 상태)
          - 상대팀 이력
 ```
 
 ### TeamStats 캐시 (`ai_team_stats_cache`, TTL 24h)
-- `playerCareerStats`: 선수별 커리어 — 출전수/골/어시/MVP 수상횟수/주포지션
+- `playerCareerStats`: 출전수/골/어시/MVP/주포지션
 - `quarterStats`: 쿼터별 누적 득실 + 경기당 평균
-- MVP 집계: `match_mvp_votes.candidate_id`(users.id) → users.id→team_members.id 브릿지 → 경기별 최다득표 winner 방식
+- `recentMatchSummaries`: 최근 3경기 (상대/스코어/결과/포메이션/최다득점자)
+- MVP 집계: `match_mvp_votes.candidate_id`(users.id) → team_members.id 브릿지 → 경기별 최다득표 winner
+
+### 사용량 로그 (`ai_usage_log`)
+- 컬럼: feature / user_id / team_id / **match_id** / entity_id / source / model / tokens / latency / error_reason
+- `source`: `"ai"` | `"rule"` | `"error"`. **`"ai"`만 `checkRateLimit` 집계** → 실패·룰 폴백은 한도 차감 안 됨
+- 캡: 경기당 1회 (match_id 기준) + 팀 월 10회 (tactics)
+- logBase에 `matchId` 세팅은 aiTactics·aiMatchSummary·aiFullPlan 3곳 공통
 
 ### 시스템 프롬프트 핵심 규칙 (aiTacticsAnalysis.ts)
-- 선수 역할은 placement의 slot 기준으로만 서술 (preferredPosition 혼동 금지)
+- 선수 역할은 **playerRotation 전체**의 slot 기준 (1쿼터 placement만으로 고정 서술 금지)
+- `positionChangers`에 있는 선수는 쿼터 간 변화 **반드시** 서술 (예: "1쿼터 DM → 2쿼터 ST")
+- `slotSharing`의 같은 slot을 여럿이 나눠 맡으면 **전원 언급**
 - 용병(`isGuest=true`)에 단정적 표현 금지
-- 상대팀 이력 없으면 hallucination 금지, "첫 대결"로 명시
+- 상대팀 이력 블록 없으면 hallucination 금지, "첫 대결"로 명시
 - `playerWorkload`에서 전 쿼터 출전 선수 → 3단락 체력 부담 언급 필수
 - 쿼터별 득실 패턴(3쿼터 실점 집중 등) → 해당 쿼터 주의점으로 반영
-- 선수 커리어(골/어시/MVP) → 2단락 핵심 선수 서술에 반영
+
+### AI UI 공통 컴포넌트 (2026-04-19 신규)
+- `src/components/AiBadge.tsx` — variant: `ai`/`rule`/`loading`/`error`, size: `sm`/`md`
+- 박스 안에 variant별 아이콘(Sparkles/Cog/Loader2/AlertCircle) + 축약 라벨("AI"/"룰"/"생성중"/"실패")
+- 1차 적용: AiCoachAnalysisCard. 순차 적용 대기: 경기 후기·AI Full Plan·선수 시그니처·OCR
+
+### 미해결 성능 이슈 (2026-04-19)
+- `src/lib/server/getMatchDetailData.ts:82-109` — 경기 상세 SSR에서 `enableAi=true` + 후기 캐시 없는 경기마다 `getOrComputeTeamStats()` await 블로킹
+- 후기 생성 API route로 이동 필요 (SSR 언블록). 사용자 승인 대기
 
 ---
 
