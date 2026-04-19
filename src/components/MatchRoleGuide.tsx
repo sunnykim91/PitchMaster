@@ -12,7 +12,7 @@
  */
 
 import { memo, useEffect, useMemo, useState } from "react";
-import { ChevronDown, UserRound } from "lucide-react";
+import { ChevronDown, UserRound, AlertTriangle, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,7 +23,7 @@ import {
   type AssignmentGroup,
   type MatchSquadRow,
 } from "@/lib/positionRoles/playerAssignments";
-import type { MergedPositionRole } from "@/lib/positionRoles/types";
+import type { CautionItem, LinkageItem, MergedPositionRole } from "@/lib/positionRoles/types";
 import type { SportType } from "@/lib/types";
 
 type RosterEntry = { id: string; name: string };
@@ -75,7 +75,6 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
 
   const [squads, setSquads] = useState<MatchSquadRow[] | null>(null);
   const [error, setError] = useState(false);
-  /** 전술판 저장 이벤트에 반응해 재fetch 유도 */
   const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
@@ -116,7 +115,6 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
     return attendingPlayers.filter((p) => !guestIds.has(p.id));
   }, [attendingPlayers, guests]);
 
-  // 기본 선택: 본인 (member id 우선, 없으면 user id)
   const defaultSelectedId = currentMemberId ?? currentUserId;
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>(defaultSelectedId);
 
@@ -132,22 +130,18 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
     );
   }
 
-  // 로딩
   if (squads === null) {
     return (
       <SectionFrame>
-        <Skeleton className="h-28 w-full rounded-xl" />
+        <Skeleton className="h-24 w-full rounded-xl" />
       </SectionFrame>
     );
   }
 
-  // 전술판 비었는지
   const squadsEmpty = squads.length === 0;
 
-  // 일반 회원 + 전술판 없음 → 섹션 숨김
   if (!canManage && squadsEmpty) return null;
 
-  // 운영진 + 전술판 없음 → 포메이션 기반 폴백
   if (canManage && squadsEmpty) {
     return (
       <SectionFrame>
@@ -156,7 +150,6 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
     );
   }
 
-  // 선택된 선수 ID → 조회 대상 (본인일 경우 user·member 둘 다 체크)
   const targetIds: string[] = [selectedPlayerId];
   if (selectedPlayerId === currentMemberId && currentUserId) {
     targetIds.push(currentUserId);
@@ -171,11 +164,11 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
     <SectionFrame>
       {canManage && memberRoster.length > 0 && (
         <div className="mb-3 flex items-center gap-2">
-          <UserRound className="h-4 w-4 text-muted-foreground" />
+          <UserRound className="h-4 w-4 shrink-0 text-muted-foreground" />
           <NativeSelect
             value={selectedPlayerId}
             onChange={(e) => setSelectedPlayerId(e.target.value)}
-            className="flex-1"
+            className="h-9 flex-1 text-sm"
             aria-label="선수 선택"
           >
             <StaffSelectOptions
@@ -214,16 +207,17 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
   );
 });
 
-/* ────────────────────────────── 내부 컴포넌트 ────────────────────────────── */
+/* ────────────────────────────── 섹션 프레임 ────────────────────────────── */
 
 function SectionFrame({ children }: { children: React.ReactNode }) {
   return (
-    <section className="mt-6 rounded-2xl border bg-card/60 p-4">
-      <div className="mb-3 flex items-center justify-between">
+    <section className="mt-6 rounded-xl border border-border/30 bg-card/40 p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <Sparkles className="h-4 w-4 text-primary" />
         <div>
-          <h3 className="text-base font-semibold">역할 가이드</h3>
-          <p className="text-xs text-muted-foreground">
-            쿼터별 내 포지션의 역할과 주의점을 확인해보세요.
+          <h3 className="text-base font-bold leading-tight">역할 가이드</h3>
+          <p className="text-[11px] text-muted-foreground">
+            쿼터별 내 포지션의 역할과 주의점을 확인하세요.
           </p>
         </div>
       </div>
@@ -234,7 +228,7 @@ function SectionFrame({ children }: { children: React.ReactNode }) {
 
 function EmptyMessage({ title, hint }: { title: string; hint?: string }) {
   return (
-    <div className="rounded-xl border border-dashed p-6 text-center">
+    <div className="rounded-xl border border-dashed border-border/30 bg-background/30 p-6 text-center">
       <p className="text-sm font-medium">{title}</p>
       {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </div>
@@ -254,7 +248,6 @@ function StaffSelectOptions({
   currentUserId: string;
   memberRoster: RosterEntry[];
 }) {
-  // 본인을 상단에 고정, 나머지는 이름순
   const selfEntry = memberRoster.find(
     (p) => p.id === currentMemberId || p.id === currentUserId
   );
@@ -268,7 +261,6 @@ function StaffSelectOptions({
       {selfEntry ? (
         <option value={selfEntry.id}>{selfEntry.name} (나)</option>
       ) : (
-        // 본인이 참석 로스터에 없으면(예: 참석 안 했는데 운영진) 임시 옵션
         isSelfMember && (
           <option value={defaultId} disabled>
             (본인 불참)
@@ -294,45 +286,75 @@ function findSelectedName(
   return roster.find((p) => p.id === selectedId)?.name ?? null;
 }
 
-/* ────────────────────────────── 역할 카드 ────────────────────────────── */
+/* ────────────────────────────── 역할 카드 (쿼터 기반) ────────────────────────────── */
 
 function RoleCard({ group }: { group: AssignmentGroup }) {
   const [open, setOpen] = useState(false);
   const { mergedRole } = group;
   const quarterLabel = formatQuarterRangeLabel(group.quarters);
 
-  // 오버라이드 없는 경우 (11인제 외 포메이션) — 거의 발생 안 하지만 방어
   if (!mergedRole) {
     return (
-      <div className="rounded-xl border bg-background p-3 text-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <QuarterBadge label={quarterLabel} />
-            <span className="font-medium">{group.role}</span>
-          </div>
+      <div className="rounded-xl bg-secondary/30 p-3 text-sm">
+        <div className="flex items-center gap-2">
+          <QuarterBadge label={quarterLabel} />
+          <span className="font-medium">{group.role}</span>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          이 포메이션의 역할 가이드는 아직 준비 중입니다.
+          이 포메이션의 역할 가이드는 준비 중입니다.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-background">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-2 p-3 text-left transition-colors hover:bg-muted/40"
-        aria-expanded={open}
-      >
-        <div className="flex flex-1 items-center gap-2 min-w-0">
+    <AccordionCard
+      open={open}
+      onToggle={() => setOpen((v) => !v)}
+      header={
+        <div className="flex flex-1 items-center gap-2.5 min-w-0">
           <QuarterBadge label={quarterLabel} />
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">{mergedRole.title}</p>
-            <p className="truncate text-xs text-muted-foreground">{mergedRole.summary}</p>
+            <p className="truncate text-[11px] text-muted-foreground">
+              {mergedRole.summary}
+            </p>
           </div>
         </div>
+      }
+    >
+      <RoleDetail role={mergedRole} />
+    </AccordionCard>
+  );
+}
+
+/* ────────────────────────────── 공통 아코디언 쉘 ────────────────────────────── */
+
+function AccordionCard({
+  open,
+  onToggle,
+  header,
+  children,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  header: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        "overflow-hidden rounded-xl bg-secondary/30 transition-colors",
+        open && "bg-secondary/40"
+      )}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between gap-2 p-3.5 text-left hover:bg-secondary/50 transition-colors"
+        aria-expanded={open}
+      >
+        {header}
         <ChevronDown
           className={cn(
             "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
@@ -340,62 +362,36 @@ function RoleCard({ group }: { group: AssignmentGroup }) {
           )}
         />
       </button>
-
       {open && (
-        <div className="space-y-4 border-t p-4 text-sm leading-relaxed">
-          <Block label="왜 이 자리가 중요한가">
-            <MarkdownLite text={mergedRole.whyItMatters} />
-          </Block>
-          <BulletBlock label="공격 시" items={mergedRole.attack} />
-          <BulletBlock label="수비 시" items={mergedRole.defense} />
-          <BulletBlock label="커뮤니케이션" items={mergedRole.communication} />
-          <BulletBlock label="체력 관리" items={mergedRole.stamina} />
-          {mergedRole.caution.length > 0 && (
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[hsl(var(--warning))]">
-                조심할 실수
-              </p>
-              <ul className="space-y-2">
-                {mergedRole.caution.map((c, i) => (
-                  <li
-                    key={i}
-                    className="rounded-lg border border-[hsl(var(--warning)/0.3)] bg-[hsl(var(--warning)/0.06)] p-3"
-                  >
-                    <p className="text-sm font-medium">{c.title}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      <MarkdownLite text={c.detail} />
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {mergedRole.linkage.length > 0 && (
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                동료와의 연계
-              </p>
-              <ul className="space-y-2">
-                {mergedRole.linkage.map((l, i) => (
-                  <li key={i} className="rounded-lg bg-muted/40 p-3">
-                    <p className="text-sm font-medium">{l.position}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      <MarkdownLite text={l.note} />
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+        <div className="border-t border-border/20 bg-background/40 p-4">
+          {children}
         </div>
       )}
     </div>
   );
 }
 
+/* ────────────────────────────── 역할 상세 콘텐츠 ────────────────────────────── */
+
+function RoleDetail({ role }: { role: MergedPositionRole }) {
+  return (
+    <div className="space-y-5 text-sm leading-relaxed">
+      <Block label="왜 이 자리가 중요한가">
+        <MarkdownLite text={role.whyItMatters} />
+      </Block>
+      <BulletBlock label="공격 시" items={role.attack} />
+      <BulletBlock label="수비 시" items={role.defense} />
+      <BulletBlock label="커뮤니케이션" items={role.communication} />
+      <BulletBlock label="체력 관리" items={role.stamina} />
+      <CautionList items={role.caution} />
+      <LinkageList items={role.linkage} />
+    </div>
+  );
+}
+
 function QuarterBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex shrink-0 items-center rounded-md bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
+    <span className="inline-flex shrink-0 items-center rounded-md bg-primary/15 px-2 py-0.5 text-[11px] font-bold text-primary">
       {label}
     </span>
   );
@@ -404,10 +400,8 @@ function QuarterBadge({ label }: { label: string }) {
 function Block({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <div className="text-sm text-foreground/90">{children}</div>
+      <p className="mb-1.5 text-[11px] font-semibold text-foreground/60">{label}</p>
+      <div className="text-[13.5px] text-foreground/90">{children}</div>
     </div>
   );
 }
@@ -416,13 +410,11 @@ function BulletBlock({ label, items }: { label: string; items: string[] }) {
   if (items.length === 0) return null;
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <ul className="space-y-1.5 text-sm text-foreground/90">
+      <p className="mb-1.5 text-[11px] font-semibold text-foreground/60">{label}</p>
+      <ul className="space-y-1.5 text-[13.5px] text-foreground/90">
         {items.map((t, i) => (
           <li key={i} className="flex gap-2">
-            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
+            <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary" />
             <span className="flex-1">
               <MarkdownLite text={t} />
             </span>
@@ -433,9 +425,54 @@ function BulletBlock({ label, items }: { label: string; items: string[] }) {
   );
 }
 
+function CautionList({ items }: { items: CautionItem[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div>
+      <p className="mb-1.5 flex items-center gap-1 text-[11px] font-semibold text-[hsl(var(--warning))]">
+        <AlertTriangle className="h-3 w-3" />
+        조심할 실수
+      </p>
+      <ul className="space-y-1.5">
+        {items.map((c, i) => (
+          <li
+            key={i}
+            className="rounded-lg border-l-2 border-[hsl(var(--warning))] bg-[hsl(var(--warning)/0.06)] p-3 pl-3"
+          >
+            <p className="text-[13px] font-medium">{c.title}</p>
+            <p className="mt-1 text-[12px] text-foreground/70">
+              <MarkdownLite text={c.detail} />
+            </p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function LinkageList({ items }: { items: LinkageItem[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div>
+      <p className="mb-1.5 text-[11px] font-semibold text-foreground/60">
+        동료와의 연계
+      </p>
+      <ul className="space-y-1.5">
+        {items.map((l, i) => (
+          <li key={i} className="rounded-lg bg-secondary/40 p-3">
+            <p className="text-[13px] font-medium">{l.position}</p>
+            <p className="mt-0.5 text-[12px] text-foreground/70">
+              <MarkdownLite text={l.note} />
+            </p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 /**
  * 초경량 인라인 강조 파서 — `**...**` 를 <strong> 으로만 변환.
- * 역할 텍스트에 이미 수기로 넣어둔 **bold** 를 시각적으로 살리기 위함.
  */
 function MarkdownLite({ text }: { text: string }) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -474,7 +511,7 @@ function FormationOnlyFallback({ formationId }: { formationId?: string }) {
 
   return (
     <div className="space-y-2">
-      <p className="mb-2 rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
+      <p className="mb-2 rounded-lg bg-primary/10 p-3 text-xs text-foreground/80">
         전술판이 비어있어 <strong className="text-foreground">{formationId}</strong> 포메이션 기준
         전체 포지션 가이드를 보여드려요. 쿼터별 정확한 역할은 전술판을 먼저 짠 뒤 확인하세요.
       </p>
@@ -495,79 +532,24 @@ function FormationSlotCard({
   const [open, setOpen] = useState(false);
   if (!role) {
     return (
-      <div className="rounded-xl border p-3 text-sm">
+      <div className="rounded-xl bg-secondary/30 p-3 text-sm">
         <span className="font-medium">{slotCode}</span>
         <span className="ml-2 text-xs text-muted-foreground">가이드 준비 중</span>
       </div>
     );
   }
   return (
-    <div className="overflow-hidden rounded-xl border bg-background">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-2 p-3 text-left transition-colors hover:bg-muted/40"
-        aria-expanded={open}
-      >
+    <AccordionCard
+      open={open}
+      onToggle={() => setOpen((v) => !v)}
+      header={
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">{role.title}</p>
-          <p className="truncate text-xs text-muted-foreground">{role.summary}</p>
+          <p className="truncate text-[11px] text-muted-foreground">{role.summary}</p>
         </div>
-        <ChevronDown
-          className={cn(
-            "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
-            open && "rotate-180"
-          )}
-        />
-      </button>
-      {open && (
-        <div className="space-y-4 border-t p-4 text-sm leading-relaxed">
-          <Block label="왜 이 자리가 중요한가">
-            <MarkdownLite text={role.whyItMatters} />
-          </Block>
-          <BulletBlock label="공격 시" items={role.attack} />
-          <BulletBlock label="수비 시" items={role.defense} />
-          <BulletBlock label="커뮤니케이션" items={role.communication} />
-          <BulletBlock label="체력 관리" items={role.stamina} />
-          {role.caution.length > 0 && (
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[hsl(var(--warning))]">
-                조심할 실수
-              </p>
-              <ul className="space-y-2">
-                {role.caution.map((c, i) => (
-                  <li
-                    key={i}
-                    className="rounded-lg border border-[hsl(var(--warning)/0.3)] bg-[hsl(var(--warning)/0.06)] p-3"
-                  >
-                    <p className="text-sm font-medium">{c.title}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      <MarkdownLite text={c.detail} />
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {role.linkage.length > 0 && (
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                동료와의 연계
-              </p>
-              <ul className="space-y-2">
-                {role.linkage.map((l, i) => (
-                  <li key={i} className="rounded-lg bg-muted/40 p-3">
-                    <p className="text-sm font-medium">{l.position}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      <MarkdownLite text={l.note} />
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+      }
+    >
+      <RoleDetail role={role} />
+    </AccordionCard>
   );
 }
