@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { generateAiMatchSummaryStream, type MatchSummaryInput } from "@/lib/server/aiMatchSummary";
-import { checkRateLimit } from "@/lib/server/aiUsageLog";
+import type { MatchSummaryInput } from "@/lib/server/aiMatchSummary";
+import { generateMatchSummaryFromTemplate } from "@/lib/server/matchSummaryTemplate";
 
 /**
  * POST /api/ai/match-summary/[matchId]
- * AI 경기 후기 재생성 (SSE 스트리밍).
+ * 경기 후기 재생성 — 템플릿 기반 (AI 제거됨, 25차).
  *
- * 기존 캐시 무시하고 Claude Haiku 스트리밍. 완료 시 matches 테이블에 저장.
- * Response: text/event-stream (타입은 MatchSummaryStreamEvent)
+ * 이전엔 Claude Haiku SSE 스트리밍이었으나:
+ * - LLM이 득점자·골 수·시점을 왜곡하는 환각 지속
+ * - DB 스키마 수정 후에도 "전반 유민 선제골" 같은 드라마 조작 발생
+ * → 결정론적 템플릿으로 전환 (팩트 100%, 비용 0, 지연 0ms)
+ *
+ * Response: { summary: string, source: "template" }
  */
 export async function POST(
   req: NextRequest,
@@ -190,41 +194,30 @@ export async function POST(
     }, { status: 400 });
   }
 
-  // 스트리밍 + 완료 시 DB 저장
+  // 템플릿 기반 즉시 생성 (AI 호출 없음)
+  const summary = generateMatchSummaryFromTemplate(input);
+
+  const updatePayload: Record<string, unknown> = {
+    ai_summary: summary,
+    ai_summary_generated_at: new Date().toISOString(),
+    ai_summary_model: "template",
+  };
+  if (isRegenerate) {
+    const currentCount = (match as Record<string, unknown>).ai_summary_regenerate_count as number ?? 0;
+    updatePayload.ai_summary_regenerate_count = currentCount + 1;
+  }
+  const { error: dbErr } = await db.from("matches").update(updatePayload).eq("id", matchId);
+  if (dbErr) {
+    console.error("[match-summary] DB 저장 실패:", dbErr.message);
+  }
+
+  // 기존 클라이언트(SSE consumeSseStream) 호환 — SSE 이벤트 스트림으로 응답
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
-    async start(controller) {
-      let accumulated = "";
-      let finalText: string | null = null;
-      let finalSource: "ai" | "rule" = "ai";
-      let finalModel: string | undefined;
-
+    start(controller) {
       try {
-        for await (const event of generateAiMatchSummaryStream(input)) {
-          const line = `data: ${JSON.stringify(event)}\n\n`;
-          controller.enqueue(encoder.encode(line));
-
-          if (event.type === "chunk") accumulated += event.text;
-          else if (event.type === "replace") { finalText = event.text; finalSource = event.source; }
-          else if (event.type === "done") { finalSource = event.source; finalModel = event.model; }
-        }
-
-        // 스트림 완료 후 DB 저장 (AI 성공 시에만 — rule fallback은 저장 안 함, 재시도 여지 보존)
-        if (finalSource === "ai" && accumulated) {
-          const summary = finalText ?? accumulated;
-          const updatePayload: Record<string, unknown> = {
-            ai_summary: summary,
-            ai_summary_generated_at: new Date().toISOString(),
-            ai_summary_model: finalModel ?? null,
-          };
-          // 재생성이면 regenerate_count 증가
-          if (isRegenerate) {
-            const currentCount = (match as Record<string, unknown>).ai_summary_regenerate_count as number ?? 0;
-            updatePayload.ai_summary_regenerate_count = currentCount + 1;
-          }
-          await db.from("matches").update(updatePayload).eq("id", matchId);
-        }
-
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "replace", text: summary, source: "template" })}\n\n`));
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done", source: "template" })}\n\n`));
         controller.close();
       } catch (err) {
         console.error("[/api/ai/match-summary stream] error:", err);
