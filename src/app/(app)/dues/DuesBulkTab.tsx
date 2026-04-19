@@ -114,7 +114,6 @@ function DuesBulkTabInner({
   const [bulkProgress, setBulkProgress] = useState("");
   const bulkSectionRef = useRef<HTMLDivElement>(null);
   const ocrFileInputRef = useRef<HTMLInputElement>(null);
-  const aiOcrFileInputRef = useRef<HTMLInputElement>(null);
   const excelFileInputRef = useRef<HTMLInputElement>(null);
 
   /**
@@ -303,39 +302,6 @@ function DuesBulkTabInner({
 
     return { rows, latestBalance };
   }
-
-  const handleAiOcrImageChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const imageUrl = URL.createObjectURL(file);
-    setBulkImage(imageUrl);
-    setOcrLoading(true);
-    setOcrStatus("AI OCR로 분석 중... (정확도 더 높음, 응답 ~3~5초)");
-    setPartialRows([]);
-    try {
-      const result = await runAiOcr(file);
-      setOcrLoading(false);
-      if (aiOcrFileInputRef.current) aiOcrFileInputRef.current.value = "";
-      if (!result) {
-        setOcrStatus("AI OCR 처리 실패. 일반 OCR을 사용해주세요.");
-        return;
-      }
-      const { rows: parsed, latestBalance } = result;
-      console.log("[AI OCR] parsed rows:", parsed.length);
-      if (parsed.length === 0) {
-        setOcrStatus("AI가 거래 내역을 찾지 못했습니다. 다른 이미지로 시도해주세요.");
-        return;
-      }
-      setOcrStatus(`AI OCR로 ${parsed.length}건 인식됨. 아래 표에서 확인 후 저장하세요.`);
-      setBulkRows((prev) => [...prev, ...parsed]);
-      if (latestBalance !== null) setPendingBalance(latestBalance);
-    } catch (err) {
-      console.error("[AI OCR] error:", err);
-      setOcrLoading(false);
-      if (aiOcrFileInputRef.current) aiOcrFileInputRef.current.value = "";
-      setOcrStatus("AI OCR 중 오류가 발생했습니다.");
-    }
-  }, [showToast]);
 
   const handleBulkImageChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -638,14 +604,6 @@ function DuesBulkTabInner({
           onChange={handleBulkImageChange}
         />
 
-        {/* AI OCR 폴백 파일 input — 자동 폴백 시 사용되지는 않지만 수동 호출용 유지 */}
-        <input
-          ref={aiOcrFileInputRef}
-          type="file"
-          accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
-          className="hidden"
-          onChange={handleAiOcrImageChange}
-        />
       </div>
 
       {/* OCR 로딩 오버레이 */}
