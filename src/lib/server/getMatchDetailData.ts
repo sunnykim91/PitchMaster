@@ -31,7 +31,8 @@ export async function getMatchDetailData(matchId: string, teamId: string, enable
 
   // AI 경기 후기 — COMPLETED 경기만, 캐시 있으면 재사용, 김선휘면 새 생성
   let aiSummary: string | null = null;
-  if (match && match.status === "COMPLETED") {
+  // AI 경기 후기는 REGULAR(상대전)만 생성. 자체전(INTERNAL)·팀일정(EVENT)은 제외.
+  if (match && match.status === "COMPLETED" && (match.match_type ?? "REGULAR") === "REGULAR") {
     const goalsData = goalsRes.data ?? [];
     const members = membersRes.data ?? [];
     // scorer_id / assist_id → 이름 매핑
