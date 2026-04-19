@@ -33,11 +33,10 @@ export type QuarterAssignment = {
   role: string;
 };
 
-/** 연속된 같은 포지션을 묶은 표시 단위 */
+/** 같은 (formationId, role) 조합의 출전 쿼터를 하나로 묶은 표시 단위 */
 export type AssignmentGroup = {
-  /** inclusive. 단일 쿼터면 start === end */
-  quarterStart: number;
-  quarterEnd: number;
+  /** 이 포지션을 맡은 쿼터 번호들 (오름차순). 단일 / 연속 / 비연속 모두 가능 */
+  quarters: number[];
   formationId: string;
   role: string;
   /** base+override 병합 결과 — 11인제 외 포메이션이면 null */
@@ -90,39 +89,65 @@ export function extractPlayerAssignments(
 }
 
 /**
- * 쿼터 순회하며 연속된 같은 (formationId, role)을 [start, end] 구간으로 묶음.
- * 중간에 불참(없는 쿼터)이 있으면 구간이 끊어짐.
+ * 같은 (formationId, role) 조합의 쿼터를 하나의 그룹으로 묶음.
+ * 연속·비연속 관계없이 합치므로 2·4쿼터에 같은 포지션이면 한 카드로 표시됨.
+ * 포메이션이 다르면(예: 2Q 4-4-2 RCB / 4Q 4-3-3 RCB) whyItMatters·linkage가 달라서
+ * 별도 그룹으로 유지.
  */
 export function groupAssignments(
   assignments: QuarterAssignment[]
 ): AssignmentGroup[] {
   if (assignments.length === 0) return [];
 
-  const groups: AssignmentGroup[] = [];
-  let current: AssignmentGroup | null = null;
+  const keyOf = (a: QuarterAssignment) => `${a.formationId}::${a.role}`;
+  const groupMap = new Map<string, AssignmentGroup>();
 
   for (const a of assignments) {
-    const same =
-      current !== null &&
-      current.formationId === a.formationId &&
-      current.role === a.role &&
-      current.quarterEnd + 1 === a.quarter;
-
-    if (same && current) {
-      current.quarterEnd = a.quarter;
-    } else {
-      if (current) groups.push(current);
-      current = {
-        quarterStart: a.quarter,
-        quarterEnd: a.quarter,
+    const key = keyOf(a);
+    let g = groupMap.get(key);
+    if (!g) {
+      g = {
+        quarters: [],
         formationId: a.formationId,
         role: a.role,
         mergedRole: getPositionRole(a.formationId, a.role),
       };
+      groupMap.set(key, g);
+    }
+    if (!g.quarters.includes(a.quarter)) g.quarters.push(a.quarter);
+  }
+
+  const groups = Array.from(groupMap.values());
+  for (const g of groups) g.quarters.sort((a, b) => a - b);
+  // 첫 출전 쿼터 기준 정렬 — 경기 흐름상 자연스러운 순서
+  groups.sort((a, b) => a.quarters[0] - b.quarters[0]);
+  return groups;
+}
+
+/**
+ * 쿼터 번호 배열을 사람이 읽기 쉬운 한국어 라벨로 변환.
+ * 연속 구간은 `-`로, 비연속 구간은 `·`로 구분.
+ * - [1,2]     → "1-2쿼터"
+ * - [2,4]     → "2·4쿼터"
+ * - [1,2,4]   → "1-2·4쿼터"
+ * - [3]       → "3쿼터"
+ */
+export function formatQuarterRangeLabel(quarters: number[]): string {
+  if (quarters.length === 0) return "";
+  const parts: string[] = [];
+  let start = quarters[0];
+  let end = quarters[0];
+  for (let i = 1; i < quarters.length; i++) {
+    if (quarters[i] === end + 1) {
+      end = quarters[i];
+    } else {
+      parts.push(start === end ? `${start}` : `${start}-${end}`);
+      start = quarters[i];
+      end = quarters[i];
     }
   }
-  if (current) groups.push(current);
-  return groups;
+  parts.push(start === end ? `${start}` : `${start}-${end}`);
+  return `${parts.join("·")}쿼터`;
 }
 
 /** 전체 파이프라인 단축 호출 */

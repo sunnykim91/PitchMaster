@@ -18,6 +18,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   buildAssignmentGroups,
+  formatQuarterRangeLabel,
   getAllRolesForFormation,
   type AssignmentGroup,
   type MatchSquadRow,
@@ -202,7 +203,10 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
       ) : (
         <div className="flex flex-col gap-2">
           {groups.map((g, i) => (
-            <RoleCard key={`${g.quarterStart}-${g.quarterEnd}-${g.role}-${i}`} group={g} />
+            <RoleCard
+              key={`${g.formationId}-${g.role}-${g.quarters.join(",")}-${i}`}
+              group={g}
+            />
           ))}
         </div>
       )}
@@ -294,11 +298,8 @@ function findSelectedName(
 
 function RoleCard({ group }: { group: AssignmentGroup }) {
   const [open, setOpen] = useState(false);
-  const { quarterStart, quarterEnd, mergedRole } = group;
-  const quarterLabel =
-    quarterStart === quarterEnd
-      ? `${quarterStart}쿼터`
-      : `${quarterStart}-${quarterEnd}쿼터`;
+  const { mergedRole } = group;
+  const quarterLabel = formatQuarterRangeLabel(group.quarters);
 
   // 오버라이드 없는 경우 (11인제 외 포메이션) — 거의 발생 안 하지만 방어
   if (!mergedRole) {
