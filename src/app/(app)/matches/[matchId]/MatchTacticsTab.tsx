@@ -133,14 +133,14 @@ function MatchTacticsTabInner({
 
   /* ── 카드 고정 순서 (숫자 작을수록 위) ──
    *   -10 INTERNAL 팀 편성 (자체전만)
-   *   -5  용병 관리 (용병 ≥1 && 편성 전)
+   *   -5  용병 관리 (편성 전 — 용병 추가·확인 용이하게 상단)
    *   10  자동 편성 빌더
    *   20  전술판
    *   30  역할 가이드 (전술판 바로 아래)
    *   40  AI 코치 분석
-   *   95  용병 관리 (용병 0 또는 편성 후)
+   *   95  용병 관리 (편성 후 — 준비 끝났으니 하단)
    */
-  const guestOrder = (guests?.length ?? 0) > 0 && !hasAnySquad ? -5 : 95;
+  const guestOrder = hasAnySquad ? 95 : -5;
 
   // 자체전: 팀별 roster 필터링
   const filteredRoster = isInternal && internalTeams
