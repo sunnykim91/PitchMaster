@@ -1193,8 +1193,8 @@ export default function AutoFormationBuilder({
           </Button>
         )}
 
-        {/* ── 결과 액션 ── */}
-        {results && (
+        {/* ── 결과 액션 ── AI 배치 중에는 표시 숨김 (로딩 중인데 "완료" 뜨면 혼란) */}
+        {results && !aiPlanLoading && (
           <div className="space-y-2 border-t border-border/30 pt-3">
             <p className="text-center text-[11px] text-[hsl(var(--success))]">
               ✓ 편성 완료 — 아래 전술판에 반영됐습니다
@@ -1207,6 +1207,16 @@ export default function AutoFormationBuilder({
             >
               ↻ 초기화
             </Button>
+          </div>
+        )}
+
+        {/* AI 배치 진행 중 안내 — "편성 완료"와 혼동되지 않게 명확한 로딩 상태 표시 */}
+        {aiPlanLoading && (
+          <div className="space-y-2 border-t border-border/30 pt-3">
+            <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-primary">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              AI가 선수 배치 중입니다 (잠시만요)
+            </p>
           </div>
         )}
       </CardContent>
