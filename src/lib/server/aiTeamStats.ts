@@ -47,6 +47,18 @@ export type QuarterStat = {
   matches: number;     // 해당 쿼터 데이터가 있는 경기 수
 };
 
+/** 최근 경기 요약 — AI 코치 경기 시나리오 톤 조정용 */
+export type RecentMatchSummary = {
+  date: string;              // YYYY-MM-DD
+  opponent: string | null;
+  us: number;
+  opp: number;
+  result: "W" | "D" | "L";
+  formation: string | null;  // 1쿼터 formation
+  topScorer: string | null;  // 가장 많이 득점한 우리팀 선수
+  topScorerGoals: number;
+};
+
 /** 선수별 커리어 요약 — AI 코치 선수 부하·실력 판단용 */
 export type PlayerCareerStat = {
   playerName: string;
@@ -63,6 +75,7 @@ export type TeamStats = {
   playerCareerStats: PlayerCareerStat[];      // totalMatches desc, top 20
   opponentHistory: OpponentHistoryItem[];     // played desc, top 10
   quarterStats: QuarterStat[];         // 쿼터별 득실 (quarter asc)
+  recentMatchSummaries: RecentMatchSummary[]; // 최근 3경기 (최신 desc)
   totalCompletedMatches: number;
   computedAt: string;
 };
@@ -73,6 +86,7 @@ const EMPTY: TeamStats = {
   playerCareerStats: [],
   opponentHistory: [],
   quarterStats: [],
+  recentMatchSummaries: [],
   totalCompletedMatches: 0,
   computedAt: new Date(0).toISOString(),
 };
@@ -371,12 +385,44 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
   }
   playerCareerStats.sort((a, b) => b.totalMatches - a.totalMatches);
 
+  // 최근 3경기 요약 — matches는 match_date desc 정렬 이미 완료
+  const recentMatchSummaries: RecentMatchSummary[] = [];
+  for (const m of matches.slice(0, 3)) {
+    const score = matchScores.get(m.id) ?? { our: 0, opp: 0 };
+    const result = getResult(m.id);
+    // 이 경기 최다 득점자 (우리팀)
+    const scorerCount = new Map<string, number>();
+    for (const g of goals ?? []) {
+      if (g.match_id !== m.id) continue;
+      if (!g.scorer_id || g.scorer_id === "OPPONENT" || g.scorer_id === "UNKNOWN" || g.is_own_goal) continue;
+      scorerCount.set(g.scorer_id, (scorerCount.get(g.scorer_id) ?? 0) + 1);
+    }
+    let topScorer: string | null = null;
+    let topScorerGoals = 0;
+    if (scorerCount.size > 0) {
+      const [topId, cnt] = [...scorerCount.entries()].sort((a, b) => b[1] - a[1])[0];
+      topScorer = nameMap.get(topId) ?? null;
+      topScorerGoals = cnt;
+    }
+    recentMatchSummaries.push({
+      date: m.match_date ?? "",
+      opponent: m.opponent_name ?? null,
+      us: score.our,
+      opp: score.opp,
+      result,
+      formation: matchToFormation.get(m.id) ?? null,
+      topScorer,
+      topScorerGoals,
+    });
+  }
+
   return {
     formationStats,
     playerPositionStats: playerPositionStats.slice(0, 30),
     playerCareerStats: playerCareerStats.slice(0, 20),
     opponentHistory,
     quarterStats,
+    recentMatchSummaries,
     totalCompletedMatches: matches.length,
     computedAt: new Date().toISOString(),
   };

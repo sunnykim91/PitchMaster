@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,10 +58,10 @@ export function AiCoachAnalysisCard({
   const [monthlyCap, setMonthlyCap] = useState<number | null>(null);
   const [matchUsed, setMatchUsed] = useState(false);
 
-  // 월 사용량 및 이 경기 사용 여부 조회
-  useEffect(() => {
+  // 월 사용량 및 이 경기 사용 여부 조회 (mount + 생성 완료 후 재조회)
+  const refetchUsage = useCallback(() => {
     if (!enableAi || !matchId) return;
-    fetch(`/api/ai/usage?feature=tactics&matchId=${matchId}`)
+    fetch(`/api/ai/usage?feature=tactics&matchId=${matchId}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => {
         setMonthlyCount(d.monthlyCount ?? null);
@@ -70,6 +70,10 @@ export function AiCoachAnalysisCard({
       })
       .catch(() => {});
   }, [enableAi, matchId]);
+
+  useEffect(() => {
+    refetchUsage();
+  }, [refetchUsage]);
 
   async function handleAnalyze() {
     if (!allSlotsFilled || loading) return;
@@ -117,6 +121,7 @@ export function AiCoachAnalysisCard({
       setAnalysis(null);
     } finally {
       setLoading(false);
+      refetchUsage();
     }
   }
 

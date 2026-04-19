@@ -406,6 +406,7 @@ export async function generateAiMatchSummary(input: MatchSummaryInput): Promise<
     feature: "match_summary" as const,
     userId: input.userId ?? null,
     teamId: input.teamId ?? null,
+    matchId: input.matchId ?? null,
     entityId: input.matchId ?? null,
   };
 
@@ -511,6 +512,7 @@ export async function* generateAiMatchSummaryStream(
     feature: "match_summary" as const,
     userId: input.userId ?? null,
     teamId: input.teamId ?? null,
+    matchId: input.matchId ?? null,
     entityId: input.matchId ?? null,
   };
 

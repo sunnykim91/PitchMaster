@@ -102,7 +102,9 @@ const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의
   - 히스토리에 "홍길동: 12경기 8골 3어시" 있으면 → "홍길동의 결정력을 최전방 득점 경로로 활용"
   - 히스토리에 "우리팀이 1,2쿼터에 득점 집중, 3,4쿼터 실점 많음"이 있으면 → 초반 압박 → 후반 수비 전환 전략 언급
   - 상대팀 이력이 있으면 이전 맞대결 결과 반드시 언급
-- 예: "홍길동의 최전방 돌파가 이번 경기 주 득점 경로. 지난 12경기 8골로 가장 믿을 수 있는 카드."
+  - **최근 3경기 요약**이 있으면 폼 상태 반영 (예: "최근 3경기 연승 중이라 기세 유지가 관건")
+- **1쿼터 치중 금지**: 2단락 서술이 1쿼터 상황에만 쏠리면 안 됨. 쿼터 간 변화(positionChangers, slotSharing)가 있으면 **반드시 그 흐름을 녹여** 서술.
+- 예: "홍길동의 최전방 돌파가 이번 경기 주 득점 경로. 지난 12경기 8골로 가장 믿을 수 있는 카드. 2쿼터부터는 이준혁이 최전방으로 교대해 체력을 분산."
 
 ### 3단락 — 주의점·운영 (체력·교체)
 - **쿼터 패턴 분석** — quarterStats 제공 시 실점이 집중된 쿼터 구체적으로 언급
@@ -151,6 +153,16 @@ JSON:
 - placementBreakdown: { GK, DEF, MID, FWD } — placement의 카테고리별 인원수 (사전 계산됨)
 - quarterPlacements: **쿼터별 실제 배치** [{ quarter, assignments: [{slot, playerName}] }] (제공 시)
   → 각 쿼터의 선수 배치. 쿼터 간 로테이션·교체 파악에 활용. placement(1쿼터)와 같은 형식.
+- quarterBreakdown: **쿼터별 카테고리 인원수** { [quarter]: {GK,DEF,MID,FWD} } (제공 시)
+  → 쿼터마다 포메이션 숫자가 달라질 수 있음. 변화 있으면 서술에 반영.
+- playerRotation: **선수별 쿼터 로테이션** [{ playerName, slots:[{quarter,slot}] }] (제공 시)
+  → 선수 이름 언급 시 이 구조로 "그 선수가 어느 쿼터에 어느 slot인지" 확인. 1쿼터 slot만 보고 단정 금지.
+- positionChangers: **쿼터 간 포지션이 바뀐 선수** [{ playerName, history:[{quarter,slot}] }] (제공 시)
+  → 여기 있는 선수는 **반드시 서술에 포함** + 변화 명시 (예: "김정윤이 1쿼터 수비형 미드, 2쿼터 최전방으로 이동").
+- slotSharing: **여러 선수가 쿼터별로 나눠 맡은 slot** { [slot]: [{quarter, playerName}] } (제공 시)
+  → 해당 slot 서술 시 **한 명만 언급 금지**. "쿼터별로 A, B가 번갈아 원톱을 맡음" 같이 전부 언급.
+- benchPlayers: **미출전(벤치) 참석자** [playerName] (제공 시)
+  → 주력에서 빠지는 자원. 3단락 교체 대상 자원 언급 시 활용 가능.
 - playerWorkload: **이번 경기 선수별 쿼터 부하** [{ playerName, quarters }] (제공 시)
   → 선수가 몇 쿼터를 소화하는지. quarterCount와 동일하면 전 쿼터 출전 = 체력 부담 대상.
 - matchType: REGULAR | INTERNAL | EVENT
@@ -167,22 +179,31 @@ JSON:
   → 본문 금지: "뒷선 5명", "센터백 3명" (실제 DEF는 4명이면)
 - 모호하면 placementBreakdown 값을 **있는 그대로 반복**해서 쓰라. 해석하지 말고.
 
-### 규칙 2 — 선수 역할은 placement의 **slot 그대로**
+### 규칙 2 — 선수 역할은 실제 slot **그대로**, 쿼터별 변화 반영
 
-placement는 \`[{slot, playerName}]\` 배열. 각 선수를 언급할 때 **해당 slot의 역할만** 말함.
-- slot이 "LCB" → "좌측 센터백" / "수비" (미드 아님)
-- slot이 "ST" → "최전방 공격수" / "원톱" (미드 아님)
-- slot이 "LAM"/"CAM"/"RAM" → "공격형 미드" (수비 아님)
-- slot이 "LB"/"RB" → "풀백" (미드 아님)
-- slot이 "LW"/"RW" → "윙어" (미드 아님)
-- slot이 "LDM"/"RDM"/"CDM" → "수비형 미드" (원톱 아님)
-- slot이 "LM"/"RM" → "측면 미드" (센터백 아님)
+선수를 언급할 때 **그 선수가 실제 맡은 slot의 역할만** 말함. slot 라벨 → 한국어 매핑:
+- "LCB"/"RCB"/"CB" → "센터백" / "수비" (미드 아님)
+- "ST"/"CF" → "최전방 공격수" / "원톱" (미드 아님)
+- "LAM"/"CAM"/"RAM" → "공격형 미드" (수비 아님)
+- "LB"/"RB" → "풀백" (미드 아님)
+- "LW"/"RW" → "윙어" (미드 아님)
+- "LDM"/"RDM"/"CDM" → "수비형 미드" (원톱 아님)
+- "LM"/"RM" → "측면 미드" (센터백 아님)
+
+**쿼터별 규칙 (절대 엄수)**:
+- \`playerRotation\`이 제공되면 선수 역할은 **1쿼터 slot만으로 고정 서술 금지**.
+  → 그 선수의 전체 쿼터 slot을 보고 서술해야 함.
+- \`positionChangers\`에 있는 선수는 **반드시 변화 언급** (예: "김정윤: 1쿼터 수비형 미드, 2쿼터 최전방").
+- \`slotSharing\`에 있는 slot은 해당 slot을 맡은 **모든 선수를 언급**. 예:
+  - slotSharing["ST"]: [{q1, 김희범}, {q2, 김정윤}] → "원톱은 쿼터별로 김희범과 김정윤이 나눠 맡음" ✅
+  - 위 상황에서 "김희범 원톱" 단독 서술 ❌ (김정윤 누락)
 
 **예시 위반 (절대 금지)**:
-- 김선휘가 placement에서 "LCB"인데 "측면 미드 김선휘" ❌
+- playerRotation에 "김정윤: [{q1, CDM}, {q2, ST}]"인데 "수비형 미드 김정윤" 고정 서술 ❌
+- slotSharing["ST"]에 두 명 있는데 1쿼터 선수만 원톱으로 언급 ❌
 - 고지훈이 placement에서 "ST"인데 "측면 미드 고지훈" ❌
 
-선수 이름 언급 시 반드시 그 선수의 **실제 slot 역할**만 써라.
+선수 이름 언급 시 반드시 그 선수의 **실제 slot 역할**만, **쿼터별 변화 포함**해서 써라.
 
 ### 규칙 3 — preferredPosition은 개인 맥락 한정
 
@@ -230,11 +251,17 @@ attendees 중 \`isGuest=true\`인 선수는 **이번 경기 처음 합류하는 
 ## 🔵 placement / quarterPlacements 해석
 
 \`placement\`는 1쿼터 기준입니다. \`quarterPlacements\`가 제공되면 쿼터별 실제 배치 내역입니다.
-- 쿼터가 여러 개(2~4)일 때: "1쿼터에 이렇게 시작하고, 후속 쿼터에서 체력 상태에 따라 교체" 같은 톤으로 서술
-- 모든 쿼터 배치를 하나하나 나열하지 말 것 — 2단락은 **전반적 흐름**, 3단락은 **교체 운영**
-- quarterPlacements에서 쿼터 간 달라지는 선수가 있으면 **로테이션 패턴**으로 자연스럽게 언급 가능
-  (예: "3쿼터부터 홍길동이 측면으로 이동하는 계획이라 체력 분배가 핵심")
+- 쿼터가 여러 개(2~4)일 때: 2단락은 **전반적 흐름**, 3단락은 **교체·로테이션 운영**
+- 모든 쿼터 배치를 하나하나 나열하지 말 것 — 핵심 변화 위주
+- **positionChangers가 제공되면**: 그 선수들의 포지션 이동은 **반드시 서술에 포함**.
+  - 예: positionChangers에 "김정윤: [{q1, CDM}, {q2, ST}]" → "김정윤은 1쿼터 중원 조율, 2쿼터부터 최전방으로 올라감" ✅
+  - 이동 선수를 1쿼터 포지션만으로 고정 언급 ❌
+- **slotSharing이 제공되면**: 해당 slot을 맡은 모든 선수를 전부 언급.
+  - 예: slotSharing["ST"] 두 명 있음 → "원톱은 쿼터별로 A와 B가 나눠 맡음" ✅
+- **quarterBreakdown이 쿼터마다 다르면**: 포메이션 숫자 변화를 언급.
+  - 예: 1쿼터 4-3-3, 2쿼터 4-2-3-1 구조 변화 → 그 변화 의미를 2단락에 녹일 것
 - 모든 쿼터 배치가 동일하면 쿼터 언급보다 **운영 일관성** 관점으로 서술
+- 2단락 "공격할 때" 서술에서 핵심 선수를 고를 땐 **1쿼터 최전방**만이 아니라 **전 쿼터 최전방을 맡는 모든 선수**를 반영할 것
 
 ## 응답 형식
 
@@ -318,6 +345,73 @@ export function computePlacementBreakdown(placement: TacticsAnalysisInput["place
   return counts;
 }
 
+type QuarterPlacements = NonNullable<TacticsAnalysisInput["quarterPlacements"]>;
+
+/** 쿼터별 DEF/MID/FWD 카테고리 인원수 — 쿼터마다 포메이션 숫자가 달라지는 걸 AI가 파악할 수 있게 */
+export function computeQuarterBreakdown(qps: QuarterPlacements): Record<number, { GK: number; DEF: number; MID: number; FWD: number }> {
+  const result: Record<number, { GK: number; DEF: number; MID: number; FWD: number }> = {};
+  for (const qp of qps) {
+    const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+    for (const a of qp.assignments) counts[categorizeSlot(a.slot)]++;
+    result[qp.quarter] = counts;
+  }
+  return result;
+}
+
+/** 선수별 쿼터 로테이션 — 선수 이름 → [{quarter, slot}] */
+export function computePlayerRotation(qps: QuarterPlacements): Array<{ playerName: string; slots: Array<{ quarter: number; slot: string }> }> {
+  const map = new Map<string, Array<{ quarter: number; slot: string }>>();
+  for (const qp of qps) {
+    for (const a of qp.assignments) {
+      if (!map.has(a.playerName)) map.set(a.playerName, []);
+      map.get(a.playerName)!.push({ quarter: qp.quarter, slot: a.slot });
+    }
+  }
+  return [...map.entries()].map(([playerName, slots]) => ({
+    playerName,
+    slots: slots.sort((a, b) => a.quarter - b.quarter),
+  }));
+}
+
+/** 포지션 공유자 — 동일 slot을 쿼터별로 다른 선수가 맡은 경우만 반환 */
+export function computeSlotSharing(qps: QuarterPlacements): Record<string, Array<{ quarter: number; playerName: string }>> {
+  const map = new Map<string, Array<{ quarter: number; playerName: string }>>();
+  for (const qp of qps) {
+    for (const a of qp.assignments) {
+      if (!map.has(a.slot)) map.set(a.slot, []);
+      map.get(a.slot)!.push({ quarter: qp.quarter, playerName: a.playerName });
+    }
+  }
+  const result: Record<string, Array<{ quarter: number; playerName: string }>> = {};
+  for (const [slot, entries] of map.entries()) {
+    const uniquePlayers = new Set(entries.map((e) => e.playerName));
+    if (uniquePlayers.size >= 2) {
+      result[slot] = entries.sort((a, b) => a.quarter - b.quarter);
+    }
+  }
+  return result;
+}
+
+/** 쿼터 간 포지션이 바뀐 선수만 — 3단락 서술 의무 대상 */
+export function computePositionChangers(rotation: ReturnType<typeof computePlayerRotation>): Array<{ playerName: string; history: Array<{ quarter: number; slot: string }> }> {
+  return rotation
+    .filter((r) => {
+      const uniqueSlots = new Set(r.slots.map((s) => s.slot));
+      return uniqueSlots.size >= 2;
+    })
+    .map((r) => ({ playerName: r.playerName, history: r.slots }));
+}
+
+/** 미출전(벤치) 선수 — attendees 중 어느 쿼터에도 배치되지 않은 이름 */
+export function computeBenchPlayers(
+  attendees: AttendeeForAnalysis[],
+  qps: QuarterPlacements
+): string[] {
+  const placed = new Set<string>();
+  for (const qp of qps) for (const a of qp.assignments) placed.add(a.playerName);
+  return attendees.map((a) => a.name).filter((n) => !placed.has(n));
+}
+
 /** 룰 기반 fallback — 매우 단순 */
 function generateRuleBasedAnalysis(input: TacticsAnalysisInput): string {
   const attendeeCount = input.attendees.length;
@@ -358,6 +452,7 @@ export async function generateAiTacticsAnalysis(
     feature: "tactics" as const,
     userId: input.userId ?? null,
     teamId: input.teamId ?? null,
+    matchId: input.matchId ?? null,
     entityId: input.matchId ?? null,
   };
 
@@ -366,18 +461,30 @@ export async function generateAiTacticsAnalysis(
     return { text: ruleText, source: "rule" };
   }
 
+  const qps = input.quarterPlacements && input.quarterPlacements.length > 0 ? input.quarterPlacements : null;
+  const rotation = qps ? computePlayerRotation(qps) : null;
+  const positionChangers = rotation ? computePositionChangers(rotation) : null;
+  const slotSharing = qps ? computeSlotSharing(qps) : null;
+  const quarterBreakdown = qps ? computeQuarterBreakdown(qps) : null;
+  const benchPlayers = qps ? computeBenchPlayers(input.attendees, qps) : [];
+
   const userContent = JSON.stringify({
     formationName: input.formationName,
     quarterCount: input.quarterCount,
     attendees: input.attendees.slice(0, 30),
     placement: input.placement.slice(0, 15),
     placementBreakdown: computePlacementBreakdown(input.placement),
-    ...(input.quarterPlacements && input.quarterPlacements.length > 0
-      ? { quarterPlacements: input.quarterPlacements.map((qp) => ({
+    ...(qps
+      ? { quarterPlacements: qps.map((qp) => ({
           quarter: qp.quarter,
           assignments: qp.assignments.slice(0, 15),
         })) }
       : {}),
+    ...(quarterBreakdown ? { quarterBreakdown } : {}),
+    ...(rotation && rotation.length > 0 ? { playerRotation: rotation } : {}),
+    ...(positionChangers && positionChangers.length > 0 ? { positionChangers } : {}),
+    ...(slotSharing && Object.keys(slotSharing).length > 0 ? { slotSharing } : {}),
+    ...(benchPlayers.length > 0 ? { benchPlayers } : {}),
     ...(input.playerWorkload && input.playerWorkload.length > 0
       ? { playerWorkload: input.playerWorkload }
       : {}),
@@ -472,6 +579,7 @@ export async function* generateAiTacticsAnalysisStream(
     feature: "tactics" as const,
     userId: input.userId ?? null,
     teamId: input.teamId ?? null,
+    matchId: input.matchId ?? null,
     entityId: input.matchId ?? null,
   };
 
@@ -482,18 +590,30 @@ export async function* generateAiTacticsAnalysisStream(
     return;
   }
 
+  const qps = input.quarterPlacements && input.quarterPlacements.length > 0 ? input.quarterPlacements : null;
+  const rotation = qps ? computePlayerRotation(qps) : null;
+  const positionChangers = rotation ? computePositionChangers(rotation) : null;
+  const slotSharing = qps ? computeSlotSharing(qps) : null;
+  const quarterBreakdown = qps ? computeQuarterBreakdown(qps) : null;
+  const benchPlayers = qps ? computeBenchPlayers(input.attendees, qps) : [];
+
   const userContent = JSON.stringify({
     formationName: input.formationName,
     quarterCount: input.quarterCount,
     attendees: input.attendees.slice(0, 30),
     placement: input.placement.slice(0, 15),
     placementBreakdown: computePlacementBreakdown(input.placement),
-    ...(input.quarterPlacements && input.quarterPlacements.length > 0
-      ? { quarterPlacements: input.quarterPlacements.map((qp) => ({
+    ...(qps
+      ? { quarterPlacements: qps.map((qp) => ({
           quarter: qp.quarter,
           assignments: qp.assignments.slice(0, 15),
         })) }
       : {}),
+    ...(quarterBreakdown ? { quarterBreakdown } : {}),
+    ...(rotation && rotation.length > 0 ? { playerRotation: rotation } : {}),
+    ...(positionChangers && positionChangers.length > 0 ? { positionChangers } : {}),
+    ...(slotSharing && Object.keys(slotSharing).length > 0 ? { slotSharing } : {}),
+    ...(benchPlayers.length > 0 ? { benchPlayers } : {}),
     ...(input.playerWorkload && input.playerWorkload.length > 0
       ? { playerWorkload: input.playerWorkload }
       : {}),
@@ -542,9 +662,24 @@ export async function* generateAiTacticsAnalysisStream(
     await recordAiUsage({ ...logBase, source: "ai", model: MODEL, ...tokens, latencyMs: Date.now() - started });
   } catch (err) {
     console.error("[aiTacticsAnalysis stream] 호출 실패:", err);
-    yield { type: "replace", text: ruleText, source: "rule", reason: "api_error" };
+    // 에러 세부 분류 — 사용자/운영자가 원인 파악 가능하게
+    const errName = err instanceof Error ? err.name : "unknown";
+    const errMsg = err instanceof Error ? err.message.slice(0, 200) : String(err).slice(0, 200);
+    const errorReason = errName === "AbortError" ? "aborted"
+      : errMsg.includes("rate_limit") || errMsg.includes("429") ? "upstream_rate_limit"
+      : errMsg.includes("overloaded") ? "upstream_overloaded"
+      : errMsg.includes("timeout") || errMsg.includes("ETIMEDOUT") ? "timeout"
+      : "api_error";
+    yield { type: "replace", text: ruleText, source: "rule", reason: errorReason };
     yield { type: "done", source: "rule" };
-    await recordAiUsage({ ...logBase, source: "error", model: MODEL, latencyMs: Date.now() - started, errorReason: "api_error" });
+    // source: "error" 로 로그 — checkRateLimit은 source='ai'만 집계하니 차감 안 됨 ✅
+    await recordAiUsage({
+      ...logBase,
+      source: "error",
+      model: MODEL,
+      latencyMs: Date.now() - started,
+      errorReason: `${errorReason}: ${errMsg}`,
+    });
   }
 }
 
@@ -596,6 +731,18 @@ function buildHistoryBlock(stats: TeamStats, opponent: string | null | undefined
       const avgFor = q.matches > 0 ? (q.goalsFor / q.matches).toFixed(1) : "0.0";
       const avgAgainst = q.matches > 0 ? (q.goalsAgainst / q.matches).toFixed(1) : "0.0";
       lines.push(`- ${q.quarter}쿼터: 득 ${q.goalsFor}(평균 ${avgFor}) / 실 ${q.goalsAgainst}(평균 ${avgAgainst}) — ${q.matches}경기`);
+    }
+  }
+
+  if (stats.recentMatchSummaries.length > 0) {
+    lines.push("\n### 최근 3경기 요약 (우리팀 최근 폼)");
+    for (const r of stats.recentMatchSummaries) {
+      const oppName = r.opponent ?? "미상";
+      const formation = r.formation ? ` / ${r.formation}` : "";
+      const scorer = r.topScorer && r.topScorerGoals > 0
+        ? ` — 최다득점: ${r.topScorer} ${r.topScorerGoals}골`
+        : "";
+      lines.push(`- ${r.date} vs ${oppName}: ${r.us}-${r.opp} (${r.result})${formation}${scorer}`);
     }
   }
 

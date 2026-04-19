@@ -234,6 +234,7 @@ export async function generateAiFullPlan(input: TacticsAnalysisInput): Promise<F
     feature: "tactics" as const,
     userId: input.userId ?? null,
     teamId: input.teamId ?? null,
+    matchId: input.matchId ?? null,
     entityId: input.matchId ? `${input.matchId}:full-plan` : "full-plan",
   };
 
