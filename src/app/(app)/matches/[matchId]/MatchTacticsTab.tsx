@@ -101,11 +101,9 @@ function MatchTacticsTabInner({
   const { showToast } = useToast();
 
   /**
-   * 편성이 한 번이라도 저장됐는지 — 용병 카드 위치(상단/하단) 판단용.
-   * 초기엔 /api/squads 로 확인하고, 저장 이벤트가 들어오면 true로 고정.
-   * dbSquads는 AI 코치 분석 fallback 컨텍스트 구성용 (수동 편집·DB 복원 케이스).
+   * DB에 저장된 쿼터별 스쿼드 — AI 코치 분석 fallback + 편성 완료 판단 소스.
+   * 저장 이벤트가 들어오면 refetch.
    */
-  const [hasAnySquad, setHasAnySquad] = useState(false);
   const [dbSquads, setDbSquads] = useState<Array<{
     quarter_number: number;
     formation: string;
@@ -119,10 +117,6 @@ function MatchTacticsTabInner({
       .then((d) => {
         if (cancelled) return;
         const arr = Array.isArray(d?.squads) ? d.squads : [];
-        const filled = arr.some((s: { positions?: Record<string, unknown> }) =>
-          s.positions && Object.values(s.positions).some((v) => v)
-        );
-        if (filled) setHasAnySquad(true);
         setDbSquads(arr);
       })
       .catch(() => { /* 실패해도 기본값 유지 */ });
@@ -134,13 +128,36 @@ function MatchTacticsTabInner({
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<{ matchId?: string }>).detail;
       if (!detail || detail.matchId === matchId) {
-        setHasAnySquad(true);
         setSquadsRefetchToken((n) => n + 1);
       }
     };
     window.addEventListener("match-squads-saved", handler);
     return () => window.removeEventListener("match-squads-saved", handler);
   }, [matchId]);
+
+  /**
+   * 편성 완료 판단 — 용병 카드 위치(상단/하단) 전환의 유일한 기준.
+   *
+   * 규칙: "매 쿼터마다 정규 슬롯이 전부 채워진 스쿼드가 하나라도 있음".
+   * - 심판/촬영 같은 메타 슬롯(__ prefix)은 formation template slots에 없어 자연 제외
+   * - 자체전(INTERNAL)은 A·B 각각 행이 있는데, 둘 중 하나라도 완전하면 해당 쿼터 완료 인정
+   * - 하나 쿼터라도 부분/빈 상태면 편성 미완료 → 용병 카드 상단 유지
+   */
+  const isFormationComplete = useMemo(() => {
+    if (dbSquads.length === 0) return false;
+    const qc = match.quarterCount ?? 1;
+    for (let q = 1; q <= qc; q++) {
+      const candidates = dbSquads.filter((s) => s.quarter_number === q);
+      if (candidates.length === 0) return false;
+      const hasComplete = candidates.some((sq) => {
+        const tpl = formationTemplates.find((f) => f.id === sq.formation);
+        if (!tpl) return false;
+        return tpl.slots.every((slot) => !!sq.positions?.[slot.id]?.playerId);
+      });
+      if (!hasComplete) return false;
+    }
+    return true;
+  }, [dbSquads, match.quarterCount]);
 
   // AI 코치 분석 DB fallback: AutoFormationBuilder가 계산해 준 context가 없을 때
   // (수동 편집·DB 저장된 편성 복원) 전술판에 실제 배치된 스쿼드로 context를 만든다.
@@ -200,14 +217,17 @@ function MatchTacticsTabInner({
 
   /* ── 카드 고정 순서 (숫자 작을수록 위) ──
    *   -10 INTERNAL 팀 편성 (자체전만)
-   *   -5  용병 관리 (편성 전 — 용병 추가·확인 용이하게 상단)
+   *   -5  용병 관리 (편성 미완료 — 용병 추가·확인 용이하게 상단)
    *   10  자동 편성 빌더
    *   20  전술판
    *   30  역할 가이드 (전술판 바로 아래)
    *   40  AI 코치 분석
-   *   95  용병 관리 (편성 후 — 준비 끝났으니 하단)
+   *   95  용병 관리 (편성 완료 — 준비 끝났으니 하단)
+   *
+   * "편성 완료" = 매 쿼터마다 정규 슬롯 전부 채워진 스쿼드가 존재.
+   * 부분 배치·포메이션만 변경·심판만 지정 같은 케이스는 편성 완료로 치지 않음.
    */
-  const guestOrder = hasAnySquad ? 95 : -5;
+  const guestOrder = isFormationComplete ? 95 : -5;
 
   // 자체전: 팀별 roster 필터링
   const filteredRoster = isInternal && internalTeams
