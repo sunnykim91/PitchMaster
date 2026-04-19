@@ -194,6 +194,20 @@ export default function MatchDetailClient({
     [attendanceData.attendance],
   );
 
+  /* ── 현재 사용자의 team_members.id 매핑 (역할 가이드용) ── */
+  const currentMemberId = useMemo(() => {
+    const self = membersData.members.find((m) => m.users?.id === userId);
+    return self?.id;
+  }, [membersData.members, userId]);
+
+  /* ── 본인 참석 여부 — attendance는 user_id/member_id 둘 다 키로 들어감 ── */
+  const currentMemberAttended = useMemo(() => {
+    const byUser = attendance[userId];
+    const byMember = currentMemberId ? attendance[currentMemberId] : undefined;
+    const status = byUser ?? byMember;
+    return status === "PRESENT" || status === "LATE";
+  }, [attendance, userId, currentMemberId]);
+
   const guests = useMemo(
     () => guestsData.guests.map(mapGuest),
     [guestsData.guests],
@@ -571,6 +585,9 @@ export default function MatchDetailClient({
             refetchGuests={refetchGuests}
             handleRemoveGuest={handleRemoveGuest}
             enableAi={effectiveEnableAi}
+            currentUserId={userId}
+            currentMemberId={currentMemberId}
+            currentMemberAttended={currentMemberAttended}
           />
         </div>
       )}

@@ -30,6 +30,7 @@ const TacticsBoardSkeleton = () => (
 import TacticsBoard from "@/components/TacticsBoard";
 import AutoFormationBuilder from "@/components/AutoFormationBuilder";
 import { AiCoachAnalysisCard } from "@/components/AiCoachAnalysisCard";
+import { MatchRoleGuide } from "@/components/MatchRoleGuide";
 
 export interface MatchTacticsTabProps {
   matchId: string;
@@ -46,6 +47,10 @@ export interface MatchTacticsTabProps {
   handleRemoveGuest?: (guestId: string) => Promise<void>;
   /** AI 코치 분석 활성화 여부 (김선휘 Feature Flag) */
   enableAi?: boolean;
+  /** 역할 가이드용 — 현재 로그인 사용자 정보 */
+  currentUserId: string;
+  currentMemberId?: string;
+  currentMemberAttended: boolean;
 }
 
 function MatchTacticsTabInner({
@@ -62,6 +67,9 @@ function MatchTacticsTabInner({
   refetchGuests,
   handleRemoveGuest,
   enableAi = false,
+  currentUserId,
+  currentMemberId,
+  currentMemberAttended,
 }: MatchTacticsTabProps) {
   const [tacticsKey, setTacticsKey] = useState(0);
   const [generatedSquads, setGeneratedSquads] = useState<GeneratedSquad[]>([]);
@@ -575,6 +583,22 @@ function MatchTacticsTabInner({
           />
         </div>
       )}
+
+      {/* 역할 가이드 — 항상 전술 영역 최하단 */}
+      <div style={{ order: 100 }}>
+        <MatchRoleGuide
+          matchId={matchId}
+          canManage={canManage}
+          currentUserId={currentUserId}
+          currentMemberId={currentMemberId}
+          currentMemberAttended={currentMemberAttended}
+          attendingPlayers={attendingPlayers}
+          guests={guests ?? []}
+          defaultFormationId={defaultFormationId}
+          sportType={sportType}
+          playerCount={match.playerCount}
+        />
+      </div>
     </div>
   );
 }
