@@ -77,6 +77,15 @@ type Props = {
   side?: "A" | "B";
   /** 이미 전술판에 편성이 저장된 상태인지 — 덮어쓰기 확인 다이얼로그 표시 기준 */
   hasExistingFormation?: boolean;
+  /**
+   * DB 에 저장된 쿼터별 편성 원본 — 새로고침·재진입 후 빌더 UI 복원용.
+   * MatchTacticsTab 이 /api/squads 에서 fetch 해둔 dbSquads 를 그대로 전달.
+   */
+  initialSquads?: Array<{
+    quarter_number: number;
+    formation: string;
+    positions: Record<string, { playerId: string; x: number; y: number; secondPlayerId?: string } | null>;
+  }>;
   onGenerated?: (squads: GeneratedSquad[]) => void;
   /** 자동 편성 결과가 바뀔 때 AI 코치 분석에 필요한 컨텍스트를 상위에 제공 */
   onAnalysisContextReady?: (ctx: {
@@ -554,6 +563,7 @@ export default function AutoFormationBuilder({
   defaultFormationId,
   side,
   hasExistingFormation = false,
+  initialSquads,
   onGenerated,
   onAnalysisContextReady,
   enableAi = false,
@@ -578,6 +588,59 @@ export default function AutoFormationBuilder({
   );
   const [results, setResults] = useState<QuarterResult[] | null>(null);
   const [saving, setSaving] = useState(false);
+  /** 초기 복원 한 번만 실행 — 사용자가 새 편성 생성 후 prop 변경돼도 덮어쓰지 않기 위함 */
+  const [initialRestored, setInitialRestored] = useState(false);
+
+  // DB 에 저장된 편성이 있으면 빌더 results state 로 복원 (mount 1회).
+  // 사용자가 생성 버튼 누르면 덮어쓰기 confirm 이 별도로 걸리므로 충돌 없음.
+  useEffect(() => {
+    if (initialRestored) return;
+    if (!initialSquads || initialSquads.length === 0) return;
+    const nameMap = new Map<string, string>();
+    for (const p of attendingPlayers) nameMap.set(p.id, p.name);
+
+    const converted: QuarterResult[] = [];
+    const sorted = [...initialSquads].sort((a, b) => a.quarter_number - b.quarter_number);
+    for (const sq of sorted) {
+      const tpl = formationTemplates.find((f) => f.id === sq.formation);
+      if (!tpl) continue;
+      const assignments: SlotAssignment[] = [];
+      for (const [slotId, pos] of Object.entries(sq.positions ?? {})) {
+        if (!pos || slotId.startsWith("__")) continue;
+        const slot = tpl.slots.find((s) => s.id === slotId);
+        if (!slot) continue;
+        const playerName = nameMap.get(pos.playerId);
+        if (!playerName) continue;
+        assignments.push({
+          slotId: slot.id,
+          slotLabel: slot.label,
+          playerId: pos.playerId,
+          playerName,
+          type: pos.secondPlayerId ? "first_half" : "full",
+        });
+        if (pos.secondPlayerId) {
+          const secondName = nameMap.get(pos.secondPlayerId);
+          if (secondName) {
+            assignments.push({
+              slotId: slot.id,
+              slotLabel: slot.label,
+              playerId: pos.secondPlayerId,
+              playerName: secondName,
+              type: "second_half",
+            });
+          }
+        }
+      }
+      if (assignments.length > 0) {
+        converted.push({ quarter: sq.quarter_number, assignments, formationId: sq.formation });
+      }
+    }
+
+    if (converted.length > 0) {
+      setResults(converted);
+    }
+    setInitialRestored(true);
+  }, [initialSquads, attendingPlayers, initialRestored]);
   /**
    * 편성 방식:
    * - rule: 규칙 기반 (주어진 포메이션 + scheduleQuarters)

@@ -649,6 +649,7 @@ function MatchTacticsTabInner({
             defaultFormationId={defaultFormationId}
             side={isInternal ? activeSide : undefined}
             hasExistingFormation={hasAnyExistingSlot}
+            initialSquads={dbSquads}
             onGenerated={(squads) => {
               setGeneratedSquads(squads);
               setTacticsKey((k) => k + 1);
