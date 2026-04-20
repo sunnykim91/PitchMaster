@@ -85,6 +85,7 @@ function MatchTacticsTabInner({
   const [aiCoachContext, setAiCoachContext] = useState<{
     placement: Array<{ slot: string; playerName: string }>;
     quarterPlacements: Array<{ quarter: number; assignments: Array<{ slot: string; playerName: string }> }>;
+    quarterFormations: Array<{ quarter: number; formation: string }>;
     attendees: Array<{ name: string; preferredPosition?: string | null; isGuest?: boolean }>;
     formationName: string;
     quarterCount: number;
@@ -174,6 +175,7 @@ function MatchTacticsTabInner({
     const sortedSquads = [...dbSquads].sort((a, b) => a.quarter_number - b.quarter_number);
 
     const quarterPlacements: Array<{ quarter: number; assignments: Array<{ slot: string; playerName: string }> }> = [];
+    const quarterFormations: Array<{ quarter: number; formation: string }> = [];
     let totalAssignedFieldSlots = 0;
 
     for (const sq of sortedSquads) {
@@ -190,6 +192,7 @@ function MatchTacticsTabInner({
       }
       if (assignments.length > 0) {
         quarterPlacements.push({ quarter: sq.quarter_number, assignments });
+        quarterFormations.push({ quarter: sq.quarter_number, formation: tpl.name });
       }
     }
 
@@ -204,6 +207,7 @@ function MatchTacticsTabInner({
     return {
       placement: quarterPlacements[0].assignments,
       quarterPlacements,
+      quarterFormations,
       attendees: [
         ...attendingPlayers.map((p) => ({ name: p.name, preferredPosition: p.preferredPosition, isGuest: p.isGuest ?? false })),
         ...(guests ?? []).map((g) => ({ name: g.name, preferredPosition: null, isGuest: true })),
@@ -676,6 +680,7 @@ function MatchTacticsTabInner({
             allSlotsFilled={effectiveAiCoachContext?.allSlotsFilled ?? false}
             placement={effectiveAiCoachContext?.placement ?? []}
             quarterPlacements={effectiveAiCoachContext?.quarterPlacements}
+            quarterFormations={effectiveAiCoachContext?.quarterFormations}
             attendees={effectiveAiCoachContext?.attendees ?? []}
             formationName={effectiveAiCoachContext?.formationName ?? ""}
             quarterCount={effectiveAiCoachContext?.quarterCount ?? match.quarterCount}

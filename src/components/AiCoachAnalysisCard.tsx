@@ -17,6 +17,8 @@ export type AiCoachAnalysisCardProps = {
     quarter: number;
     assignments: Array<{ slot: string; playerName: string }>;
   }>;
+  /** 쿼터별 포메이션 이름 — AI 가 가짜 포메이션 창작 방지 */
+  quarterFormations?: Array<{ quarter: number; formation: string }>;
   /** 참석자 */
   attendees: Array<{ name: string; preferredPosition?: string | null; isGuest?: boolean }>;
   /** 포메이션 이름 (예 "4-2-3-1") */
@@ -43,6 +45,7 @@ export function AiCoachAnalysisCard({
   allSlotsFilled,
   placement,
   quarterPlacements,
+  quarterFormations,
   attendees,
   formationName,
   quarterCount,
@@ -104,6 +107,7 @@ export function AiCoachAnalysisCard({
         })),
         placement,
         ...(quarterPlacements && quarterPlacements.length > 0 ? { quarterPlacements } : {}),
+        ...(quarterFormations && quarterFormations.length > 0 ? { quarterFormations } : {}),
         ...(playerWorkload.length > 0 ? { playerWorkload } : {}),
         matchType,
         opponent: opponent ?? null,

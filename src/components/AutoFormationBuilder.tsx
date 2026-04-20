@@ -79,6 +79,8 @@ type Props = {
   onAnalysisContextReady?: (ctx: {
     placement: Array<{ slot: string; playerName: string }>;
     quarterPlacements: Array<{ quarter: number; assignments: Array<{ slot: string; playerName: string }> }>;
+    /** 쿼터별 포메이션 이름 — AI 가 가짜 포메이션 창작 방지용 */
+    quarterFormations: Array<{ quarter: number; formation: string }>;
     attendees: Array<{ name: string; preferredPosition?: string | null; isGuest?: boolean }>;
     formationName: string;
     quarterCount: number;
@@ -618,6 +620,12 @@ export default function AutoFormationBuilder({
         playerName: a.playerName,
       })),
     }));
+    // 쿼터별 포메이션 이름 — AI 풀 플랜 쓰면 쿼터마다 다른 formationId, 아니면 전체 동일
+    const quarterFormations = results.map((qr) => {
+      const fid = qr.formationId ?? formation.id;
+      const tpl = formationTemplates.find((f) => f.id === fid);
+      return { quarter: qr.quarter, formation: tpl?.name ?? fid };
+    });
     const attendees = attendingPlayers.map((p) => ({
       name: p.name,
       preferredPosition: p.preferredPosition,
@@ -634,6 +642,7 @@ export default function AutoFormationBuilder({
     onAnalysisContextReady({
       placement,
       quarterPlacements,
+      quarterFormations,
       attendees,
       formationName: formation.name,
       quarterCount,
@@ -1253,10 +1262,7 @@ export default function AutoFormationBuilder({
                     <span className="text-sm font-bold text-foreground">
                       {p.quarter}쿼터 · <span className="text-primary">{p.formation}</span>
                     </span>
-                    <div className="flex items-center gap-1.5">
-                      {p.note && <span className="text-[11px] text-muted-foreground">{p.note}</span>}
-                      <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", isPlanOpen && "rotate-180")} />
-                    </div>
+                    <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", isPlanOpen && "rotate-180")} />
                   </button>
                   {isPlanOpen && (
                     <div className="px-3 pb-2.5 pt-1 flex flex-wrap gap-1.5 text-[11px] text-foreground/80 border-t border-border/30">

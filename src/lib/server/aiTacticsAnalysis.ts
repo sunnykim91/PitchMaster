@@ -143,7 +143,9 @@ const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의
 ## 입력 형식
 
 JSON:
-- formationName: "4-3-3" 등
+- formationName: "4-3-3" 등 — **1쿼터(또는 기본) 포메이션만**. 쿼터별로 바뀌면 quarterFormations 참조
+- quarterFormations: **쿼터별 포메이션 이름** [{ quarter, formation }] (제공 시)
+  → 쿼터마다 다른 포메이션을 쓰면 여기 명시됨. 예: [{quarter:1, formation:"4-2-3-1"}, {quarter:2, formation:"4-3-3"}, ...]
 - quarterCount: 쿼터 수 (2~4)
 - attendees: **참석자 풀** [{ name, preferredPosition, isGuest?, recentStats? }]
   → 누가 왔는지 전체 목록. **선호 포지션(preferredPosition)은 개인 이력일 뿐 이번 편성의 포지션이 아님.**
@@ -170,6 +172,25 @@ JSON:
 - warnings: 룰 엔진이 감지한 편성 경고 (예: "수비수 부족", "키 포지션 미배치")
 
 ## 🔴 데이터 해석 규칙 (절대 엄수 · 위반 시 답변 전면 재작성)
+
+### 규칙 0 — 포메이션 이름 **엄수** (임의 변형 금지)
+
+포메이션 이름을 언급할 때는 **반드시 입력의 값을 그대로** 사용:
+- 단일 포메이션 경기: \`formationName\` 값 그대로 (예: "4-2-3-1", "4-3-3")
+- 쿼터별 다른 포메이션: \`quarterFormations[n].formation\` 값 그대로
+
+**절대 금지**:
+- 존재하지 않는 포메이션 창작: "4-6-0", "4-3-3-0", "1-1-1", "4-5-0" 등
+- 입력에 없는 포메이션 번호 조합을 임의로 생성
+- placement 숫자를 보고 "수비-미드-공격" 자체 집계로 포메이션 이름 추론 (예: DEF:4, MID:6, FWD:0을 "4-6-0"으로 표현) — 이건 "뒷선 4명, 중원 6명, 최전방 0명" 식으로 placementBreakdown 표현으로 써라.
+
+**가능한 표현 방식**:
+- ✅ "1쿼터는 4-2-3-1, 2쿼터엔 4-3-3으로 전환" (quarterFormations 기반)
+- ✅ "3쿼터의 4-4-2는 미드가 두터워지는 구조" (입력값 그대로 + 해석)
+- ❌ "3쿼터는 최전방을 비우고 4-6-0으로 전환" (4-6-0 창작)
+- ❌ "4쿼터에 1-1-1 포메이션으로 돌아와" (1-1-1은 풋살 3인제. 축구 11인제에 존재 안 함)
+
+quarterFormations 가 없고 여러 쿼터에 placement 구조가 확연히 다르면 "포메이션 변화가 있습니다" 정도로만 언급하고 구체 이름은 추측 금지.
 
 ### 규칙 1 — 숫자는 placementBreakdown **엄수**
 
@@ -291,6 +312,8 @@ export type TacticsAnalysisInput = {
     quarter: number;
     assignments: Array<{ slot: string; playerName: string }>;
   }>;
+  /** 쿼터별 포메이션 이름 — AI 가 "4-6-0", "1-1-1" 같은 가짜 포메이션 창작 방지 */
+  quarterFormations?: Array<{ quarter: number; formation: string }>;
   /** 이번 경기 선수별 쿼터 부하 (몇 쿼터 뛰는지) — AI 체력 분석용 */
   playerWorkload?: Array<{ playerName: string; quarters: number }>;
   matchType: "REGULAR" | "INTERNAL" | "EVENT";
@@ -475,6 +498,9 @@ export async function generateAiTacticsAnalysis(
     attendees: input.attendees.slice(0, 30),
     placement: input.placement.slice(0, 15),
     placementBreakdown: computePlacementBreakdown(input.placement),
+    ...(input.quarterFormations && input.quarterFormations.length > 0
+      ? { quarterFormations: input.quarterFormations }
+      : {}),
     ...(qps
       ? { quarterPlacements: qps.map((qp) => ({
           quarter: qp.quarter,
@@ -604,6 +630,9 @@ export async function* generateAiTacticsAnalysisStream(
     attendees: input.attendees.slice(0, 30),
     placement: input.placement.slice(0, 15),
     placementBreakdown: computePlacementBreakdown(input.placement),
+    ...(input.quarterFormations && input.quarterFormations.length > 0
+      ? { quarterFormations: input.quarterFormations }
+      : {}),
     ...(qps
       ? { quarterPlacements: qps.map((qp) => ({
           quarter: qp.quarter,

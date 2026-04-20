@@ -35,8 +35,7 @@ const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의
        { "slot": "GK",  "playerName": "홍길동" },
        { "slot": "LB",  "playerName": "김철수" },
        ...
-     ],
-     "note": "공격적 시작"            // 1줄 코칭 메모 (15자 이내)
+     ]
    }
    \`\`\`
 
@@ -57,15 +56,14 @@ const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의
 사용자가 이미 포메이션을 선택한 상태. **모든 쿼터 동일 formation(defaultFormation과 일치) 사용 필수**.
 - 쿼터별 다양화 시도 금지 — 배치(선수 매칭)만 쿼터별로 다르게
 - 선수 체력·로테이션 관점에서 같은 포메이션 안에서 포지션을 조정
-- note는 "초반 공격 집중" 같이 배치/의도 설명
 
 ### 모드 B — singleFormation=false 또는 미지정 (자유 모드)
 **"쿼터별 변경"이 핵심.** 4쿼터 모두 동일 포메이션은 **실패**.
 - \`quarterCount >= 4\`면 **최소 2가지 서로 다른 포메이션** 사용 필수
 - \`quarterCount == 2\`면 동일 허용 (체력 분배 이유 있을 때)
-- 구체 패턴 예시:
-  - 1Q: 4-3-3 (공격적 시작) / 2Q: 4-4-2 (미드 강화) / 3Q: 5-3-2 (수비) / 4Q: 4-3-3 (승부수)
-  - 1Q: 4-2-3-1 (기본) / 2Q: 3-4-3 (측면 가속) / 3Q: 4-4-2 (피로 대응) / 4Q: 4-2-3-1 (안정)
+- 구체 패턴 예시 (formation 조합만 참고):
+  - 1Q: 4-3-3 / 2Q: 4-4-2 / 3Q: 5-3-2 / 4Q: 4-3-3
+  - 1Q: 4-2-3-1 / 2Q: 3-4-3 / 3Q: 4-4-2 / 4Q: 4-2-3-1
 - 한 가지 formation만 반복하려면 매우 분명한 근거 필요 (히스토리 승률 95%+ 등)
 
 ## 편성 원칙
@@ -78,7 +76,7 @@ const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의
    - 우리 팀 잘 쓰는 포메이션을 1~2쿼터에 배치 (히스토리 승률 참고)
 4. **상대팀 약점 공략**: opponentHistory가 있으면 과거 패턴 반영 (없으면 일반 원칙만)
 5. **GK 고정**: 골키퍼는 4쿼터 동일 인물 권장
-6. **용병 배치**: attendees[].isGuest=true인 선수는 실력 미지수. 핵심 포지션(GK·중앙 수비 중심축·주공격수)보다는 선호 포지션에 맞춰 안전하게 배치. note에도 "용병 ○○ 적응 확인" 정도로만 서술.
+6. **용병 배치**: attendees[].isGuest=true인 선수는 실력 미지수. 핵심 포지션(GK·중앙 수비 중심축·주공격수)보다는 선호 포지션에 맞춰 안전하게 배치.
 
 ## 🔴 쿼터별 가용 선수 (availableByQuarter) 엄수
 
@@ -107,7 +105,6 @@ export type QuarterPlan = {
   quarter: number;
   formation: string;
   placement: Array<{ slot: string; playerName: string }>;
-  note?: string;
 };
 
 export type FullPlanResult = {
@@ -149,7 +146,6 @@ function normalizePlan(raw: unknown): QuarterPlan | null {
   const r = raw as Record<string, unknown>;
   const quarter = typeof r.quarter === "number" ? r.quarter : null;
   const formation = typeof r.formation === "string" ? r.formation : null;
-  const note = typeof r.note === "string" ? r.note : undefined;
   if (quarter === null || !formation || !Array.isArray(r.placement)) return null;
 
   const placement = (r.placement as unknown[])
@@ -164,7 +160,7 @@ function normalizePlan(raw: unknown): QuarterPlan | null {
     .filter((x): x is { slot: string; playerName: string } => x !== null);
 
   if (placement.length === 0) return null;
-  return { quarter, formation, placement, note };
+  return { quarter, formation, placement };
 }
 
 /** 룰 기반 fallback — 단순 1쿼터 placement 반복 */
