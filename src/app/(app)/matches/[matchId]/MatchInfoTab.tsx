@@ -157,10 +157,11 @@ function MatchInfoTabInner({
   const uniformSecondary = _uniformSecondary ?? "hsl(var(--muted-foreground))";
   const uniformPattern = _uniformPattern ?? "SOLID";
 
-  const homeJerseyStyle = useMemo(
-    () => ({ ...getUniformBg(uniformPrimary, uniformSecondary, uniformPattern), clipPath: JERSEY_CLIP }),
-    [uniformPrimary, uniformSecondary, uniformPattern],
-  );
+  const homeJerseyStyle = useMemo(() => {
+    const home = uniformsProp?.home;
+    if (home) return { ...getUniformBg(home.primary, home.secondary, home.pattern), clipPath: JERSEY_CLIP };
+    return { ...getUniformBg(uniformPrimary, uniformSecondary, uniformPattern), clipPath: JERSEY_CLIP };
+  }, [uniformPrimary, uniformSecondary, uniformPattern, uniformsProp]);
   const awayJerseyStyle = useMemo(() => {
     const away = uniformsProp?.away;
     if (away) return { ...getUniformBg(away.primary, away.secondary, away.pattern), clipPath: JERSEY_CLIP };
@@ -315,7 +316,7 @@ function MatchInfoTabInner({
               <div className="flex items-center justify-center gap-6">
                 {/* 홈 */}
                 <div className="relative flex flex-1 flex-col items-center gap-3">
-                  <div className="h-14 w-14 rounded-sm shadow-lg" style={{ ...getUniformBg(uniformPrimary, uniformSecondary, uniformPattern), clipPath: JERSEY_CLIP }} />
+                  <div className="h-14 w-14 rounded-sm shadow-lg" style={homeJerseyStyle} />
                   {match.status === "COMPLETED" && scoreData.result === "승" && (
                     <Badge className="absolute -right-1 -top-1 bg-[hsl(var(--success))] px-1.5 py-0.5 text-[10px] font-bold text-white">WIN</Badge>
                   )}
