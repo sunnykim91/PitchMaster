@@ -554,7 +554,7 @@ function scheduleQuarters(
       assignSlotReq(finalRemSlots[i], finalRemReqs[i]);
     }
 
-    results.push({ quarter: q, assignments });
+    results.push({ quarter: q, assignments, formationId: formation.id });
   }
 
   return results;
@@ -880,7 +880,9 @@ export default function AutoFormationBuilder({
     });
 
     // 생성된 스쿼드를 API에 저장 (나갔다 들어와도 유지)
+    // positions가 비어있는 쿼터는 전술판을 초기화할 수 있으므로 건너뜀
     for (const sq of squads) {
+      if (Object.keys(sq.positions).length === 0) continue;
       await apiMutate("/api/squads", "POST", {
         matchId, quarterNumber: sq.quarter_number,
         formation: sq.formation, positions: sq.positions,

@@ -351,40 +351,48 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     return map;
   }, [placements]);
 
-  /** 전체 쿼터에서 각 선수의 출전 쿼터 번호 목록 (저장된 데이터 + 현재 편집 중인 쿼터) */
+  /** 전체 쿼터에서 각 선수의 출전 쿼터별 타입 ("full" | "first" | "second") */
   const playerQuarterMap = useMemo(() => {
-    const map = new Map<string, Set<number>>();
+    type PlayType = "full" | "first" | "second";
+    const map = new Map<string, Map<number, PlayType>>();
 
-    const addPlayer = (pid: string, q: number) => {
+    const addPlayer = (pid: string, q: number, type: PlayType) => {
       if (!pid || pid === "__referee" || pid === "__camera") return;
-      if (!map.has(pid)) map.set(pid, new Set());
-      map.get(pid)!.add(q);
+      if (!map.has(pid)) map.set(pid, new Map());
+      // 이미 등록된 쿼터면 덮어쓰지 않음
+      if (!map.get(pid)!.has(q)) map.get(pid)!.set(q, type);
+    };
+
+    const processPositions = (
+      positions: Record<string, Placement | null>,
+      q: number
+    ) => {
+      for (const [key, placement] of Object.entries(positions)) {
+        if (!placement || key.startsWith("__")) continue;
+        const p = placement as Placement;
+        if (p.playerId && p.secondPlayerId) {
+          // 반쿼터: playerId = 전반, secondPlayerId = 후반(교체)
+          addPlayer(p.playerId, q, "first");
+          addPlayer(p.secondPlayerId, q, "second");
+        } else if (p.playerId) {
+          addPlayer(p.playerId, q, "full");
+        }
+      }
     };
 
     // 1. 저장된 스쿼드 데이터
     for (const squad of squadsData.squads) {
       if (!squad.positions) continue;
-      for (const [key, placement] of Object.entries(squad.positions)) {
-        if (!placement || key.startsWith("__")) continue;
-        const p = placement as Placement;
-        if (p.playerId) addPlayer(p.playerId, squad.quarter_number);
-        if (p.secondPlayerId) addPlayer(p.secondPlayerId, squad.quarter_number);
-      }
+      processPositions(
+        squad.positions as Record<string, Placement | null>,
+        squad.quarter_number
+      );
     }
 
     // 2. 현재 편집 중인 쿼터 (아직 저장 안 됐을 수 있음)
-    for (const [key, placement] of Object.entries(placements)) {
-      if (!placement || key.startsWith("__")) continue;
-      if (placement.playerId) addPlayer(placement.playerId, activeQuarter);
-      if (placement.secondPlayerId) addPlayer(placement.secondPlayerId, activeQuarter);
-    }
+    processPositions(placements, activeQuarter);
 
-    // Set → 정렬된 배열로 변환
-    const result = new Map<string, number[]>();
-    for (const [pid, qs] of map) {
-      result.set(pid, [...qs].sort((a, b) => a - b));
-    }
-    return result;
+    return map;
   }, [squadsData.squads, placements, activeQuarter]);
 
   const sortedRoster = useMemo(() => {
@@ -1189,8 +1197,9 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                           const isAssigned = Boolean(assignedSlot);
                           const isCurrentSlotPlayer = activeSlotId ? placements[activeSlotId]?.playerId === player.id : false;
                           const isDisabled = !activeSlotId || isAssigned || (slotMode === "assign_second" && isCurrentSlotPlayer);
-                          const playedQuarters = playerQuarterMap.get(player.id) ?? [];
-                          const qCount = playedQuarters.length;
+                          const playerQMap = playerQuarterMap.get(player.id);
+                          const qCount = playerQMap ? playerQMap.size : 0;
+                          const playedQNums = playerQMap ? [...playerQMap.keys()].sort((a, b) => a - b) : [];
                           const matched = !isDisabled && activeSlotRole
                             ? isPositionMatched(player, activeSlotRole)
                             : false;
@@ -1232,7 +1241,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                                 )}
                                 {assignedSlot
                                   ? formation.slots.find((slot) => slot.id === assignedSlot)?.label ?? "배치됨"
-                                  : qCount > 0 ? playedQuarters.map(q => `${q}Q`).join(" ") : "미출전"}
+                                  : qCount > 0 ? playedQNums.map(q => `${q}Q`).join(" ") : "미출전"}
                               </span>
                             </Button>
                           );
@@ -1530,7 +1539,19 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
           <BarChart3 className="h-4 w-4" />
           쿼터별 출전 현황
         </SheetTitle>
-        <div className="mt-4 overflow-x-auto">
+        {/* 범례 */}
+        <div className="mt-3 flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-4 w-4 rounded-full bg-primary/20 text-center text-[9px] font-bold leading-4 text-primary">●</span>풀타임
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary/15 text-[7px] font-bold text-primary/80">전</span>전반 출전
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border-2 border-primary/40 text-[7px] font-bold text-primary/60">교</span>교체 출전
+          </span>
+        </div>
+        <div className="mt-3 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border/30">
@@ -1543,28 +1564,47 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             </thead>
             <tbody>
               {roster.map((player) => {
-                const playedQuarters = playerQuarterMap.get(player.id) ?? [];
-                const qSet = new Set(playedQuarters);
+                const qTypeMap = playerQuarterMap.get(player.id) ?? new Map<number, "full" | "first" | "second">();
+                // 합계: full=1쿼터, first/second=0.5쿼터
+                const totalQ = Array.from(qTypeMap.values()).reduce(
+                  (s, t) => s + (t === "full" ? 1 : 0.5), 0
+                );
                 return (
                   <tr key={player.id} className="border-b border-border/10">
                     <td className="py-2 pr-3 text-sm font-medium whitespace-nowrap">{player.name}</td>
-                    {quarters.map((q) => (
-                      <td key={q} className="px-2 py-2 text-center">
-                        {qSet.has(q) ? (
-                          <span className={cn(
-                            "inline-block h-5 w-5 rounded-full text-[10px] font-bold leading-5 text-center",
-                            q === activeQuarter
-                              ? "bg-primary text-white"
-                              : "bg-primary/20 text-primary"
-                          )}>●</span>
-                        ) : (
-                          <span className="inline-block h-5 w-5 text-center text-muted-foreground/30">—</span>
-                        )}
-                      </td>
-                    ))}
+                    {quarters.map((q) => {
+                      const qt = qTypeMap.get(q);
+                      return (
+                        <td key={q} className="px-2 py-2 text-center">
+                          {qt === "full" ? (
+                            /* 풀타임 출전 */
+                            <span className={cn(
+                              "inline-block h-5 w-5 rounded-full text-[10px] font-bold leading-5 text-center",
+                              q === activeQuarter ? "bg-primary text-white" : "bg-primary/20 text-primary"
+                            )}>●</span>
+                          ) : qt === "first" ? (
+                            /* 전반 출전 후 교체 아웃 */
+                            <span className={cn(
+                              "inline-flex h-5 w-5 items-center justify-center rounded-full text-[8px] font-bold",
+                              q === activeQuarter ? "bg-primary/70 text-white" : "bg-primary/15 text-primary/80"
+                            )} title="전반 출전">전</span>
+                          ) : qt === "second" ? (
+                            /* 후반 교체 인 */
+                            <span className={cn(
+                              "inline-flex h-5 w-5 items-center justify-center rounded-full border-2 text-[8px] font-bold",
+                              q === activeQuarter
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-primary/40 bg-transparent text-primary/60"
+                            )} title="교체 출전">교</span>
+                          ) : (
+                            <span className="inline-block h-5 w-5 text-center text-muted-foreground/30">—</span>
+                          )}
+                        </td>
+                      );
+                    })}
                     <td className="pl-3 py-2 text-center">
                       <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                        {playedQuarters.length}/{quarters.length}
+                        {totalQ % 1 === 0 ? totalQ : totalQ.toFixed(1)}/{quarters.length}
                       </Badge>
                     </td>
                   </tr>
