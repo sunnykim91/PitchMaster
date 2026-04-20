@@ -12,12 +12,16 @@ jobs:
     # 실수로 secret 없는 환경에서 돌지 않게 타임아웃 짧게
     timeout-minutes: 15
     steps:
-      - name: Install PostgreSQL 16 client
+      - name: Install PostgreSQL 17 client
         run: |
+          # PGDG APT repo — Ubuntu 기본 패키지는 16까지라 PGDG 추가 필요.
+          # Supabase 가 PostgreSQL 17 기반이라 pg_dump 도 17 로 맞춰야
+          # "aborting because of server version mismatch" 회피.
           sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
           sudo apt-get update
-          sudo apt-get install -y postgresql-client-16
+          sudo apt-get install -y postgresql-client-17
+          pg_dump --version
 
       - name: Run pg_dump
         env:
