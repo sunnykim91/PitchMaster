@@ -59,6 +59,20 @@ related: [completed-recent.md, reviews.md]
 
 ## HIGH
 
+### RLS 근본 방어 + Supabase 커스텀 JWT (별도 스프린트, 2~3일)
+
+- [ ] **RLS Policy 전면 작성 + 카카오 세션 → Supabase JWT 발급 시스템**
+  - 현재 상태: 모든 테이블 RLS enabled 이나 Policy 0개. `anon key` 가 클라이언트에 노출되어 이론상 curl 로 전체 DB 스크래핑 가능
+  - Realtime 실시간 동기화(match_attendance·match_goals·match_mvp_votes) 가 anon key 로 구독되고 있어 단순 비활성화 불가
+  - 26차 진단 시 W2#6 로 논의됐으나 작업량(2~3일) 초과로 별도 스프린트로 분리
+  - 설계 방향:
+    1. 카카오 로그인 성공 시 Supabase 커스텀 JWT 발급 (SUPABASE_JWT_SECRET 으로 서명)
+    2. 클라이언트에서 Supabase client 초기화 시 이 JWT 를 헤더로
+    3. RLS Policy: `auth.uid()` 기반 본인 팀 데이터만 SELECT 허용
+    4. Realtime 구독도 이 JWT 로 인증 → 필터 조작해도 본인 팀 아니면 구독 실패
+  - 중간 완화안(사용 안 함): write 차단 Policy 만 추가(10분) — "읽기는 뚫림" 상태 남아 실효 약함
+  - 트리거: 마케팅 이후 사용자 증가 + 잠재 공격 표면 커지면 즉시 착수
+
 ### API Rate Limiting (보류 — 사고 시 3일 내 도입 가능)
 
 - [ ] **일반 API 레이트리밋 도입**
