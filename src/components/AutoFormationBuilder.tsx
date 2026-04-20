@@ -591,6 +591,18 @@ export default function AutoFormationBuilder({
   const [isOpen, setIsOpen] = useState(false);
   const defaultId = (defaultFormationId && filteredFormations.some(f => f.id === defaultFormationId)) ? defaultFormationId : (filteredFormations[0]?.id ?? "");
   const [formationId, setFormationId] = useState(defaultId);
+  // defaultFormationId가 /api/teams 비동기 응답으로 뒤늦게 채워지는 경우를 대비해 1회 동기화.
+  // 사용자가 수동으로 바꾼 후엔 prop이 바뀌어도 덮어쓰지 않음.
+  const defaultSyncedRef = useRef(false);
+  useEffect(() => {
+    if (defaultSyncedRef.current) return;
+    if (!defaultFormationId) return;
+    if (!filteredFormations.some(f => f.id === defaultFormationId)) return;
+    if (formationId === defaultFormationId) { defaultSyncedRef.current = true; return; }
+    setFormationId(defaultFormationId);
+    defaultSyncedRef.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultFormationId, filteredFormations]);
   const [assignments, setAssignments] = useState<PlayerAssignment[]>(
     [],
   );
