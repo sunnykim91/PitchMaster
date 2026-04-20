@@ -69,8 +69,8 @@ type BoardState = {
   placements: Record<string, Placement | null>;
 };
 
-type UniformSet = { primary: string; secondary: string; pattern: string };
-type TeamSettings = {
+export type UniformSet = { primary: string; secondary: string; pattern: string };
+export type TeamSettings = {
   uniformPrimary: string;
   uniformSecondary: string;
   uniformPattern?: "SOLID" | "STRIPES_VERTICAL" | "STRIPES_HORIZONTAL" | "STRIPES_DIAGONAL";
@@ -1014,15 +1014,15 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                         )}
                         title={(firstMatched || secondMatched) ? "선호 포지션과 일치" : undefined}
                       >
-                        <span className="flex items-center gap-0.5 text-[10px] font-bold text-white sm:text-xs">
+                        <span className="flex items-center gap-0.5 whitespace-nowrap text-[10px] font-bold text-white sm:text-xs">
                           <span className="rounded bg-sky-500/40 px-0.5">전</span>
                           {firstMatched && <span className="hidden sm:inline rounded bg-white/25 px-0.5 text-[9px]">적합</span>}
-                          {(player?.name ?? "선수").slice(0, 3)}
+                          <span className="whitespace-nowrap">{(player?.name ?? "선수").slice(0, 3)}</span>
                         </span>
-                        <span className="flex items-center gap-0.5 text-[10px] font-bold text-white sm:text-xs">
+                        <span className="flex items-center gap-0.5 whitespace-nowrap text-[10px] font-bold text-white sm:text-xs">
                           <span className="rounded bg-violet-500/40 px-0.5">후</span>
                           {secondMatched && <span className="hidden sm:inline rounded bg-white/25 px-0.5 text-[9px]">적합</span>}
-                          {secondPlayer.name.slice(0, 3)}
+                          <span className="whitespace-nowrap">{secondPlayer.name.slice(0, 3)}</span>
                         </span>
                       </span>
                     ) : (
