@@ -21,7 +21,10 @@ jobs:
           wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
           sudo apt-get update
           sudo apt-get install -y postgresql-client-17
-          pg_dump --version
+          # Ubuntu pg_wrapper 가 기본적으로 낮은 버전(16)을 호출하므로
+          # 17 절대 경로를 PATH 앞에 추가해 다음 스텝에서 pg_dump 가 17로 잡히게.
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+          /usr/lib/postgresql/17/bin/pg_dump --version
 
       - name: Run pg_dump
         env:
@@ -40,7 +43,10 @@ jobs:
           # --no-owner --no-acl: 복원 시 소유자·권한 충돌 방지
           # --clean --if-exists: 덮어쓰기 복원 가능 (DROP ... IF EXISTS 포함)
           # schema=public 만: auth·storage 시스템 스키마는 Supabase 관리
-          pg_dump "$DATABASE_URL" \
+          # 절대 경로로 17 호출 (pg_wrapper 의 기본 버전 선택 회피)
+          PG_DUMP=/usr/lib/postgresql/17/bin/pg_dump
+          "$PG_DUMP" --version
+          "$PG_DUMP" "$DATABASE_URL" \
             --schema=public \
             --no-owner \
             --no-acl \
