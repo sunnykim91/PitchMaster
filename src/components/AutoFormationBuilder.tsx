@@ -1371,8 +1371,13 @@ export default function AutoFormationBuilder({
               type="button"
               className="w-full mt-3 min-h-[48px] gap-2 rounded-xl font-semibold"
               onClick={async () => {
-                // 기존 편성(DB 또는 이번 세션 results) 있으면 덮어쓰기 확인
-                if (hasExistingFormation || results) {
+                const needConfirm = hasExistingFormation || results !== null;
+                // Radix Sheet(modal) 가 외부 포털의 버튼을 inert 처리하므로
+                // Sheet 를 먼저 닫은 후에 confirm 다이얼로그를 띄워야 클릭이 먹힘.
+                setAiPlanSheetOpen(false);
+                if (needConfirm) {
+                  // Sheet 닫기 렌더 사이클 대기 (Radix inert 해제)
+                  await new Promise((r) => setTimeout(r, 80));
                   const ok = await confirm({
                     title: "기존 편성을 덮어쓸까요?",
                     description: "현재 편성을 AI 풀 플랜 결과로 교체합니다. 되돌릴 수 없어요.",
@@ -1384,7 +1389,6 @@ export default function AutoFormationBuilder({
                 }
                 const merged = applyAiPlanToResults();
                 if (merged) await saveToTacticsBoard(merged);
-                setAiPlanSheetOpen(false);
               }}
               disabled={aiPlanLoading || saving}
             >
