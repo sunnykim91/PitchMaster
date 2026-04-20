@@ -185,6 +185,7 @@ MatchTacticsTab
 - logBase에 `matchId` 세팅은 aiTactics·aiMatchSummary·aiFullPlan 3곳 공통
 
 ### 시스템 프롬프트 핵심 규칙 (aiTacticsAnalysis.ts)
+- **포메이션 이름 hallucination 금지** — `formationName`/`quarterFormations` 값 그대로만 사용. placement 숫자 집계로 "4-6-0" 같은 창작 금지 (규칙 0)
 - 선수 역할은 **playerRotation 전체**의 slot 기준 (1쿼터 placement만으로 고정 서술 금지)
 - `positionChangers`에 있는 선수는 쿼터 간 변화 **반드시** 서술 (예: "1쿼터 DM → 2쿼터 ST")
 - `slotSharing`의 같은 slot을 여럿이 나눠 맡으면 **전원 언급**
