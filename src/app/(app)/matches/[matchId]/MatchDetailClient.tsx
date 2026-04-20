@@ -592,6 +592,12 @@ export default function MatchDetailClient({
             currentUserId={userId}
             currentMemberId={currentMemberId}
             currentMemberAttended={currentMemberAttended}
+            teamSettings={{
+              uniformPrimary,
+              uniformSecondary,
+              uniformPattern: uniformPattern as "SOLID" | "STRIPES_VERTICAL" | "STRIPES_HORIZONTAL" | "STRIPES_DIAGONAL",
+              uniforms: uniforms ?? null,
+            }}
           />
         </div>
       )}

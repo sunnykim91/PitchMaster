@@ -26,7 +26,7 @@ const TacticsBoardSkeleton = () => (
   </div>
 );
 
-import TacticsBoard from "@/components/TacticsBoard";
+import TacticsBoard, { type TeamSettings } from "@/components/TacticsBoard";
 import AutoFormationBuilder from "@/components/AutoFormationBuilder";
 import { AiCoachAnalysisCard } from "@/components/AiCoachAnalysisCard";
 import { MatchRoleGuide } from "@/components/MatchRoleGuide";
@@ -50,6 +50,11 @@ export interface MatchTacticsTabProps {
   currentUserId: string;
   currentMemberId?: string;
   currentMemberAttended: boolean;
+  /**
+   * 팀 유니폼 설정 — MatchDetailClient 가 /api/teams 로 이미 로드한 값을 그대로.
+   * 전달 안 하면 TacticsBoard 가 자체 fetch + 초기엔 파란색 fallback(#2563eb) flash 발생.
+   */
+  teamSettings?: TeamSettings;
 }
 
 function MatchTacticsTabInner({
@@ -69,6 +74,7 @@ function MatchTacticsTabInner({
   currentUserId,
   currentMemberId,
   currentMemberAttended,
+  teamSettings,
 }: MatchTacticsTabProps) {
   const [tacticsKey, setTacticsKey] = useState(0);
   const [generatedSquads, setGeneratedSquads] = useState<GeneratedSquad[]>([]);
@@ -685,6 +691,7 @@ function MatchTacticsTabInner({
           defaultFormationId={defaultFormationId}
           readOnly={!canManage}
           side={isInternal ? activeSide : undefined}
+          teamSettings={teamSettings}
           initialSquads={generatedSquads.length > 0 ? generatedSquads.map((sq) => ({
             id: `gen-${sq.quarter_number}`,
             match_id: matchId,
