@@ -32,6 +32,7 @@ export default async function SettingsPage() {
         joinMode: "MANUAL",
         defaultFormationId: "",
         statsRecordingStaffOnly: false,
+        mvpVoteStaffOnly: false,
       }}
       userRole={session.user.teamRole}
       initialData={initialData}

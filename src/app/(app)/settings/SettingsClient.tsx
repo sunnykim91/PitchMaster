@@ -56,6 +56,7 @@ type TeamApiResponse = {
     sport_type?: string;
     default_formation_id?: string;
     stats_recording_staff_only?: boolean;
+    mvp_vote_staff_only?: boolean;
     default_player_count?: number;
   };
 };
@@ -85,6 +86,7 @@ function mapTeamResponse(res: TeamApiResponse, fallback: TeamSettingsData): Team
     joinMode: t.join_mode ?? fallback.joinMode,
     defaultFormationId: t.default_formation_id ?? fallback.defaultFormationId,
     statsRecordingStaffOnly: t.stats_recording_staff_only ?? fallback.statsRecordingStaffOnly,
+    mvpVoteStaffOnly: t.mvp_vote_staff_only ?? fallback.mvpVoteStaffOnly,
     sportType: (t.sport_type === "FUTSAL" ? "FUTSAL" : "SOCCER"),
     defaultPlayerCount: t.default_player_count ?? fallback.defaultPlayerCount,
   };
@@ -164,6 +166,8 @@ export default function SettingsClient({
         defaultFormationId: (t.default_formation_id as string) ?? sessionTeam.defaultFormationId,
         statsRecordingStaffOnly:
           (t.stats_recording_staff_only as boolean) ?? sessionTeam.statsRecordingStaffOnly,
+        mvpVoteStaffOnly:
+          (t.mvp_vote_staff_only as boolean) ?? sessionTeam.mvpVoteStaffOnly,
         sportType: ((t.sport_type as string) === "FUTSAL" ? "FUTSAL" : "SOCCER") as "SOCCER" | "FUTSAL",
         defaultPlayerCount: (t.default_player_count as number) ?? sessionTeam.defaultPlayerCount,
       };
@@ -207,6 +211,7 @@ export default function SettingsClient({
       join_mode: defaultTeam.joinMode,
       default_formation_id: defaultTeam.defaultFormationId,
       stats_recording_staff_only: defaultTeam.statsRecordingStaffOnly,
+      mvp_vote_staff_only: defaultTeam.mvpVoteStaffOnly,
     },
   }, { skip: hasInitialData });
 

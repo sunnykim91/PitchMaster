@@ -18,7 +18,7 @@ export async function GET() {
 
   const { data: team, error } = await db
     .from("teams")
-    .select("id, name, logo_url, invite_code, invite_expires_at, join_mode, sport_type, uniform_primary, uniform_secondary, uniform_pattern, uniforms, is_searchable, default_formation_id, stats_recording_staff_only, default_player_count")
+    .select("id, name, logo_url, invite_code, invite_expires_at, join_mode, sport_type, uniform_primary, uniform_secondary, uniform_pattern, uniforms, is_searchable, default_formation_id, stats_recording_staff_only, mvp_vote_staff_only, default_player_count")
     .eq("id", ctx.teamId)
     .single();
 
@@ -68,6 +68,8 @@ export async function PUT(request: NextRequest) {
   if (body.defaultFormationId !== undefined) updates.default_formation_id = body.defaultFormationId;
   if (body.statsRecordingStaffOnly !== undefined)
     updates.stats_recording_staff_only = body.statsRecordingStaffOnly;
+  if (body.mvpVoteStaffOnly !== undefined)
+    updates.mvp_vote_staff_only = body.mvpVoteStaffOnly;
   if (body.defaultPlayerCount !== undefined) {
     const n = Number(body.defaultPlayerCount);
     if (!Number.isInteger(n) || n < 3 || n > 11) {

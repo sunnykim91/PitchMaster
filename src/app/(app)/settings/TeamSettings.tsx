@@ -33,6 +33,7 @@ export type TeamSettingsData = {
   joinMode: "AUTO" | "MANUAL";
   defaultFormationId: string;
   statsRecordingStaffOnly: boolean;
+  mvpVoteStaffOnly: boolean;
   sportType?: "SOCCER" | "FUTSAL";
   defaultPlayerCount?: number;
 };
@@ -121,6 +122,30 @@ function TeamSettingsComponent({
       await refetchTeam();
     }
     setTimeout(() => setMessage(null), 2000);
+  }
+
+  // ── MVP 투표 권한 토글 (운영진 이상만) ──
+  const [mvpVoteLoading, setMvpVoteLoading] = useState(false);
+
+  async function handleToggleMvpVoteStaffOnly() {
+    if (!canEditTeam) return;
+    setMvpVoteLoading(true);
+    const newVal = !team.mvpVoteStaffOnly;
+    const { error } = await apiMutate("/api/teams", "PUT", { mvpVoteStaffOnly: newVal });
+    setMvpVoteLoading(false);
+    if (error) {
+      setMessage(toKoreanError(String(error)));
+    } else {
+      setTeam({ ...team, mvpVoteStaffOnly: newVal });
+      setMessage(
+        newVal
+          ? "이제 운영진만 MVP 투표를 할 수 있습니다."
+          : "모든 참석 회원이 MVP 투표를 할 수 있습니다."
+      );
+      teamSyncedRef.current = false;
+      await refetchTeam();
+    }
+    setTimeout(() => setMessage(null), 2500);
   }
 
   // ── 경기 기록 권한 토글 (운영진 이상만) ──
@@ -351,6 +376,42 @@ function TeamSettingsComponent({
                       pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg
                       ring-0 transition-transform duration-200 ease-in-out
                       ${team.joinMode === "MANUAL" ? "translate-x-5" : "translate-x-0.5"}
+                    `}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* MVP 투표 권한 (운영진 이상만) */}
+            <div className="rounded-xl border border-border p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <p className="text-sm font-semibold">MVP 투표는 운영진만</p>
+                  <p className="text-xs text-muted-foreground">
+                    {team.mvpVoteStaffOnly
+                      ? "운영진이 MVP를 직접 지정합니다. 평회원은 투표 결과를 볼 수만 있습니다."
+                      : "참석한 모든 회원이 MVP 투표에 참여할 수 있습니다."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={team.mvpVoteStaffOnly}
+                  disabled={!canEditTeam || mvpVoteLoading}
+                  onClick={handleToggleMvpVoteStaffOnly}
+                  className={`
+                    relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full
+                    transition-colors duration-200 ease-in-out
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
+                    disabled:cursor-not-allowed disabled:opacity-50
+                    ${team.mvpVoteStaffOnly ? "bg-primary" : "bg-muted"}
+                  `}
+                >
+                  <span
+                    className={`
+                      pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg
+                      ring-0 transition-transform duration-200 ease-in-out
+                      ${team.mvpVoteStaffOnly ? "translate-x-5" : "translate-x-0.5"}
                     `}
                   />
                 </button>

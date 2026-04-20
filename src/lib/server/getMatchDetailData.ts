@@ -17,7 +17,7 @@ export async function getMatchDetailData(matchId: string, teamId: string, enable
     db.from("match_internal_teams").select("player_id, side").eq("match_id", matchId),
     db.from("match_diaries").select("*").eq("match_id", matchId).maybeSingle(),
     db.from("team_members").select("id, role, user_id, status, pre_name, coach_positions, jersey_number, team_role, dormant_type, dormant_until, dormant_reason, users(id, name, preferred_positions)").eq("team_id", teamId).in("status", ["ACTIVE", "DORMANT"]),
-    db.from("teams").select("sport_type, uniform_primary, uniform_secondary, uniform_pattern, uniforms, default_formation_id, stats_recording_staff_only").eq("id", teamId).single(),
+    db.from("teams").select("sport_type, uniform_primary, uniform_secondary, uniform_pattern, uniforms, default_formation_id, stats_recording_staff_only, mvp_vote_staff_only").eq("id", teamId).single(),
     db.from("match_attendance").select("id, match_id, user_id, member_id, vote, voted_at, users(id, name, preferred_positions), member:team_members(id, pre_name, user_id, coach_positions, users(id, name, preferred_positions))").eq("match_id", matchId),
     db.from("match_comments").select("id, user_id, content, created_at, users(name)").eq("match_id", matchId).order("created_at", { ascending: true }),
   ]);

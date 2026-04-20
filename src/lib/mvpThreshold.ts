@@ -30,12 +30,17 @@ export function isValidMvpVoteTurnout(
  *
  * @param votes candidate_id 배열 (중복 있음 — 한 후보에 여러 표)
  * @param attendedCount 해당 경기 실제 참석 인원
+ * @param staffDecisionCandidateId 운영진이 직접 지정한 후보 ID (있으면 즉시 확정)
  * @returns 당선자 candidate_id 또는 null
  */
 export function resolveValidMvp(
   votes: string[],
-  attendedCount: number
+  attendedCount: number,
+  staffDecisionCandidateId?: string | null
 ): string | null {
+  // 운영진 직접 지정이 있으면 투표율 무관하게 즉시 확정
+  if (staffDecisionCandidateId) return staffDecisionCandidateId;
+
   if (!votes.length) return null;
   // 투표자 수 = 실제 표 개수 (voter_id 유니크 제약이 DB에 있어 voter 수 = 표 수)
   if (!isValidMvpVoteTurnout(votes.length, attendedCount)) return null;

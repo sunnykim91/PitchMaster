@@ -152,7 +152,7 @@ export default function MatchDetailClient({
 
   const {
     data: teamData,
-  } = useApi<{ team: { sport_type?: SportType; player_count?: number; uniform_primary?: string; uniform_secondary?: string; uniform_pattern?: string; uniforms?: { home?: { primary: string; secondary: string; pattern: string }; away?: { primary: string; secondary: string; pattern: string }; third?: { primary: string; secondary: string; pattern: string } | null } | null; default_formation_id?: string; stats_recording_staff_only?: boolean } }>("/api/teams", initialData?.team ?? { team: {} }, { skip: !!initialData?.team });
+  } = useApi<{ team: { sport_type?: SportType; player_count?: number; uniform_primary?: string; uniform_secondary?: string; uniform_pattern?: string; uniforms?: { home?: { primary: string; secondary: string; pattern: string }; away?: { primary: string; secondary: string; pattern: string }; third?: { primary: string; secondary: string; pattern: string } | null } | null; default_formation_id?: string; stats_recording_staff_only?: boolean; mvp_vote_staff_only?: boolean } }>("/api/teams", initialData?.team ?? { team: {} }, { skip: !!initialData?.team });
 
   const sportType: SportType = teamData.team?.sport_type ?? "SOCCER";
   // AI 기능은 축구(SOCCER)만 오픈. 풋살 팀은 Feature Flag와 무관하게 비활성.
@@ -163,6 +163,7 @@ export default function MatchDetailClient({
   const uniformPattern = uniforms?.home?.pattern ?? teamData.team?.uniform_pattern ?? "SOLID";
   const defaultFormationId = teamData.team?.default_formation_id ?? "";
   const statsRecordingStaffOnly = teamData.team?.stats_recording_staff_only ?? false;
+  const mvpVoteStaffOnly = teamData.team?.mvp_vote_staff_only ?? false;
 
   const {
     data: voteData,
@@ -294,6 +295,9 @@ export default function MatchDetailClient({
   const canManage = isStaffOrAbove(role);
   // 팀 설정에서 stats_recording_staff_only 가 켜져 있으면 STAFF 이상만 기록 가능
   const canRecord = statsRecordingStaffOnly ? isStaffOrAbove(role) : true;
+  // MVP 투표 권한: mvp_vote_staff_only 켜져 있으면 STAFF 이상만 가능
+  const canVoteMvp = mvpVoteStaffOnly ? isStaffOrAbove(role) : true;
+  const isStaffVoter = isStaffOrAbove(role); // 운영진 투표 = 즉시 확정
   const confirm = useConfirm();
   const { showToast } = useToast();
   const [loadingAllPresent, setLoadingAllPresent] = useState(false);
@@ -721,6 +725,9 @@ export default function MatchDetailClient({
             votes={votes}
             guests={guests}
             canRecord={canRecord}
+            canVoteMvp={canVoteMvp}
+            isStaffVoter={isStaffVoter}
+            attendeeCount={attendingMembers.length}
             attendingMembers={attendingMembers}
             fullRoster={fullRoster}
             refetchGoals={refetchGoals}

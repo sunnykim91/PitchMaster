@@ -51,6 +51,12 @@ export interface MatchRecordTabProps {
   votes: VoteState;
   guests: Guest[];
   canRecord: boolean;
+  /** MVP 투표 가능 여부 (mvp_vote_staff_only 설정 반영) */
+  canVoteMvp: boolean;
+  /** 현재 사용자가 운영진 이상인지 (직접 지정 여부) */
+  isStaffVoter: boolean;
+  /** 참석자 수 (투표율 계산용) */
+  attendeeCount: number;
   attendingMembers: RosterPlayer[];
   fullRoster: SimpleRosterPlayer[];
   /** 골 데이터 refetch */
@@ -69,6 +75,9 @@ function MatchRecordTabInner({
   votes,
   guests,
   canRecord,
+  canVoteMvp,
+  isStaffVoter,
+  attendeeCount,
   attendingMembers,
   fullRoster,
   refetchGoals,
@@ -607,7 +616,39 @@ function MatchRecordTabInner({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="mb-3 text-xs text-muted-foreground">참석자만 1인 1표</p>
+              {/* 투표율 / 모드 안내 */}
+              {(() => {
+                const totalVotes = Object.keys(voteCounts).reduce((sum, id) => sum + (voteCounts[id] ?? 0), 0);
+                const pct = attendeeCount > 0 ? Math.round((totalVotes / attendeeCount) * 100) : null;
+                const threshold70 = attendeeCount > 0 ? Math.ceil(attendeeCount * 0.7) : null;
+                const reached = pct !== null && pct >= 70;
+                if (!canVoteMvp) {
+                  // 일반 팀원 — 운영진 전용 모드
+                  return (
+                    <p className="mb-3 text-xs text-muted-foreground">운영진이 MVP를 직접 선정합니다</p>
+                  );
+                }
+                if (isStaffVoter) {
+                  // 운영진 — 직접 지정 모드
+                  return (
+                    <p className="mb-3 text-xs text-[hsl(var(--warning))]">
+                      운영진 선택 시 즉시 MVP 확정됩니다
+                    </p>
+                  );
+                }
+                // 일반 투표 모드 — 투표율 표시
+                return (
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">참석자만 1인 1표</p>
+                    {pct !== null && (
+                      <span className={cn("text-xs font-medium", reached ? "text-[hsl(var(--win))]" : "text-muted-foreground")}>
+                        {totalVotes}/{attendeeCount}명 투표 · {pct}%
+                        {threshold70 !== null && !reached && ` (${threshold70}명 이상 필요)`}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* 현재 1위 */}
               {(() => {
@@ -622,39 +663,63 @@ function MatchRecordTabInner({
                       <Trophy className="h-5 w-5 text-[hsl(var(--warning))]" />
                     </div>
                     <div>
-                      <div className="text-sm font-semibold text-[hsl(var(--warning))]">현재 1위</div>
+                      <div className="text-sm font-semibold text-[hsl(var(--warning))]">
+                        {isStaffVoter ? "운영진 지정" : "현재 1위"}
+                      </div>
                       <div className="font-bold">{topPlayer.name} ({topPlayer.count}표)</div>
                     </div>
                   </div>
                 ) : null;
               })()}
 
-              <div className="grid grid-cols-3 gap-2">
-                {attendingMembers.map((player) => {
-                  const isVoted = votes[userId] === player.id;
-                  const count = voteCounts[player.id] ?? 0;
-                  return (
-                    <button
-                      key={player.id}
-                      type="button"
-                      disabled={!!mvpVotingId}
-                      onClick={() => runMvpVote(player.id, () => handleVote(player.id))}
-                      className={cn(
-                        "relative rounded-xl p-3 text-sm font-medium transition-all",
-                        isVoted ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-                        mvpVotingId === player.id && "opacity-70"
-                      )}
-                    >
-                      {player.name}
-                      {count > 0 && (
-                        <Badge className="absolute -right-1.5 -top-1.5 bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] text-[10px] px-1.5 min-w-[20px] h-[20px]">
-                          {count}
-                        </Badge>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+              {canVoteMvp ? (
+                <div className="grid grid-cols-3 gap-2">
+                  {attendingMembers.map((player) => {
+                    const isVoted = votes[userId] === player.id;
+                    const count = voteCounts[player.id] ?? 0;
+                    return (
+                      <button
+                        key={player.id}
+                        type="button"
+                        disabled={!!mvpVotingId}
+                        onClick={() => runMvpVote(player.id, () => handleVote(player.id))}
+                        className={cn(
+                          "relative rounded-xl p-3 text-sm font-medium transition-all",
+                          isVoted ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+                          mvpVotingId === player.id && "opacity-70"
+                        )}
+                      >
+                        {player.name}
+                        {count > 0 && (
+                          <Badge className="absolute -right-1.5 -top-1.5 bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] text-[10px] px-1.5 min-w-[20px] h-[20px]">
+                            {count}
+                          </Badge>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                // 일반 팀원 — 읽기 전용 결과 표시
+                <div className="grid grid-cols-3 gap-2">
+                  {attendingMembers.map((player) => {
+                    const count = voteCounts[player.id] ?? 0;
+                    return (
+                      <div
+                        key={player.id}
+                        className="relative rounded-xl bg-secondary p-3 text-center text-sm font-medium text-secondary-foreground opacity-60"
+                      >
+                        {player.name}
+                        {count > 0 && (
+                          <Badge className="absolute -right-1.5 -top-1.5 bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] text-[10px] px-1.5 min-w-[20px] h-[20px]">
+                            {count}
+                          </Badge>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
 

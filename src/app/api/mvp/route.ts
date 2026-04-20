@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { hasMinRole } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -51,17 +52,37 @@ export async function POST(request: NextRequest) {
     .single();
   if (!matchCheck) return apiError("Match not found", 404);
 
-  // Verify voter attended the match
-  const { data: attendance } = await db
-    .from("match_attendance")
-    .select("vote")
-    .eq("match_id", matchId)
-    .eq("user_id", ctx.userId)
+  // 팀 MVP 투표 설정 조회 (운영진 전용 여부)
+  const { data: teamSettings } = await db
+    .from("teams")
+    .select("mvp_vote_staff_only")
+    .eq("id", ctx.teamId)
     .single();
 
-  if (!attendance || attendance.vote !== "ATTEND") {
-    return apiError("해당 경기 참석자만 MVP 투표가 가능합니다", 403);
+  const isStaff = hasMinRole(ctx.teamRole, "STAFF");
+  const mvpVoteStaffOnly = teamSettings?.mvp_vote_staff_only ?? false;
+
+  // 운영진 전용 설정이 켜져 있으면 STAFF 이상만 가능
+  if (mvpVoteStaffOnly && !isStaff) {
+    return apiError("MVP 투표는 운영진 이상만 가능합니다", 403);
   }
+
+  // 운영진이 아닌 경우: 참석 여부 검증
+  if (!isStaff) {
+    const { data: attendance } = await db
+      .from("match_attendance")
+      .select("vote")
+      .eq("match_id", matchId)
+      .eq("user_id", ctx.userId)
+      .single();
+
+    if (!attendance || attendance.vote !== "ATTEND") {
+      return apiError("해당 경기 참석자만 MVP 투표가 가능합니다", 403);
+    }
+  }
+
+  // 운영진 투표는 is_staff_decision = true → 즉시 MVP 확정
+  const isStaffDecision = isStaff;
 
   const { data, error } = await db
     .from("match_mvp_votes")
@@ -70,6 +91,7 @@ export async function POST(request: NextRequest) {
         match_id: matchId,
         voter_id: ctx.userId,
         candidate_id: candidateId,
+        is_staff_decision: isStaffDecision,
       },
       { onConflict: "match_id,voter_id" }
     )
