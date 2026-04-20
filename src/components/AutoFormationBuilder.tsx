@@ -738,14 +738,17 @@ export default function AutoFormationBuilder({
       preferredPosition: p.preferredPosition,
       isGuest: p.isGuest ?? false,
     }));
-    // 전술판이 모두 채워졌는지: 슬롯 수 × 쿼터 수 === 배정된 슬롯 수 합계 (results에서 직접 계산)
+    // 전술판이 모두 채워졌는지: 각 쿼터의 unique slotId 수가 (슬롯수 - GK) 이상인지로 판정.
+    // 반쿼터 교체(first_half + second_half)는 같은 slotId로 들어오므로 Set으로 중복 제거해야 과대 계산 방지.
     const slotsPerQtr = formation.slots.length - 1; // GK 슬롯 제외
-    const totalNeededCtx = slotsPerQtr * quarterCount;
-    const totalAssignedCtx = results.reduce(
-      (sum, qr) => sum + qr.assignments.filter((a) => !a.slotLabel.toUpperCase().includes("GK")).length,
-      0,
-    );
-    const allSlotsFilled = Math.abs(totalAssignedCtx - totalNeededCtx) < 0.01;
+    const allSlotsFilled = results.length >= quarterCount && results.every((qr) => {
+      const uniqueFieldSlots = new Set(
+        qr.assignments
+          .filter((a) => !a.slotLabel.toUpperCase().includes("GK"))
+          .map((a) => a.slotId),
+      );
+      return uniqueFieldSlots.size >= slotsPerQtr;
+    });
     onAnalysisContextReady({
       placement,
       quarterPlacements,
@@ -1001,7 +1004,13 @@ export default function AutoFormationBuilder({
       const data = await res.json();
       setAiPlans(data.plans);
       setAiPlanSource(data.source ?? null);
-      if (data.error) setAiPlanError(data.error);
+      // 서버에서 이미 rule fallback 적용된 상태 — validation 원문은 노출 안 하고 친절한 문구로 대체
+      if (data.error) {
+        const friendly = data.source === "rule"
+          ? "AI 최적 편성에 실패해 기본 편성을 적용했습니다"
+          : data.error;
+        setAiPlanError(friendly);
+      }
       if (Array.isArray(data.plans) && data.plans.length > 0) {
         if (singleFormation) {
           // AI 고정 모드: 쿼터별 포메이션 변화 없음 → 사용자 검증 단계 생략
@@ -1363,23 +1372,6 @@ export default function AutoFormationBuilder({
             <Sparkles className="h-4 w-4" />
             AI 풀 플랜 결과 다시 보기
           </Button>
-        )}
-
-        {/* ── 결과 액션 ── AI 배치 중에는 표시 숨김 (로딩 중인데 "완료" 뜨면 혼란) */}
-        {results && !aiPlanLoading && (
-          <div className="space-y-2 border-t border-border/30 pt-3">
-            <p className="text-center text-[11px] text-[hsl(var(--success))]">
-              ✓ 편성 완료 — 아래 전술판에 반영됐습니다
-            </p>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full text-muted-foreground hover:text-foreground"
-              onClick={() => { setResults(null); }}
-            >
-              ↻ 초기화
-            </Button>
-          </div>
         )}
 
         {/* AI 배치 진행 중 안내 — "편성 완료"와 혼동되지 않게 명확한 로딩 상태 표시 */}
