@@ -26,6 +26,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
+import { useConfirm } from "@/lib/ConfirmContext";
 import { Zap, Sparkles, Loader2, ChevronDown, Target, Palette } from "lucide-react";
 
 /* ── Types ── */
@@ -74,6 +75,8 @@ type Props = {
   playerCount?: number;
   defaultFormationId?: string;
   side?: "A" | "B";
+  /** 이미 전술판에 편성이 저장된 상태인지 — 덮어쓰기 확인 다이얼로그 표시 기준 */
+  hasExistingFormation?: boolean;
   onGenerated?: (squads: GeneratedSquad[]) => void;
   /** 자동 편성 결과가 바뀔 때 AI 코치 분석에 필요한 컨텍스트를 상위에 제공 */
   onAnalysisContextReady?: (ctx: {
@@ -550,11 +553,13 @@ export default function AutoFormationBuilder({
   playerCount,
   defaultFormationId,
   side,
+  hasExistingFormation = false,
   onGenerated,
   onAnalysisContextReady,
   enableAi = false,
   matchContext,
 }: Props) {
+  const confirm = useConfirm();
   // 경기 인원 수에 맞는 포메이션만 필터 (미지정 시 축구 11, 풋살 5 기본)
   const effectiveFieldCount = playerCount ?? (sportType === "FUTSAL" ? 5 : 11);
   const filteredFormations = useMemo(
@@ -741,6 +746,17 @@ export default function AutoFormationBuilder({
   }
 
   async function generate() {
+    // 이미 전술판에 편성이 있으면 덮어쓰기 확인
+    if (hasExistingFormation) {
+      const ok = await confirm({
+        title: "기존 편성을 덮어쓸까요?",
+        description: "전술판에 이미 편성된 내용이 있습니다. 규칙 기반 자동 편성 결과로 교체하면 되돌릴 수 없어요.",
+        confirmLabel: "덮어쓰기",
+        cancelLabel: "취소",
+        variant: "destructive",
+      });
+      if (!ok) return;
+    }
     const res = scheduleQuarters(assignments, quarterCount, formation);
     setResults(res);
     // 규칙 기반 모드도 1클릭 흐름: 생성 직후 전술판까지 자동 반영
@@ -855,10 +871,22 @@ export default function AutoFormationBuilder({
       if (Array.isArray(data.plans) && data.plans.length > 0) {
         if (singleFormation) {
           // AI 고정 모드: 쿼터별 포메이션 변화 없음 → 사용자 검증 단계 생략, 즉시 results 반영 + 전술판 저장
+          // 기존 편성 있으면 덮어쓰기 확인
+          if (hasExistingFormation) {
+            const ok = await confirm({
+              title: "기존 편성을 덮어쓸까요?",
+              description: "전술판에 이미 편성된 내용이 있습니다. AI 추천 편성으로 교체하면 되돌릴 수 없어요.",
+              confirmLabel: "덮어쓰기",
+              cancelLabel: "취소",
+              variant: "destructive",
+            });
+            if (!ok) return;
+          }
           const applied = applyAiPlanToResults(data.plans);
           if (applied) await saveToTacticsBoard(applied);
         } else {
           // AI 자유 모드: 쿼터별 포메이션이 달라 사용자 검증 필요 → BottomSheet 오픈
+          // 덮어쓰기 confirm 은 Sheet 내 "이 플랜으로 적용" 버튼에서 처리됨 (line 1295)
           setAiPlanSheetOpen(true);
         }
       }
@@ -1280,7 +1308,17 @@ export default function AutoFormationBuilder({
               type="button"
               className="w-full mt-3 min-h-[48px] gap-2 rounded-xl font-semibold"
               onClick={async () => {
-                if (results && !confirm("현재 편성 결과를 AI 풀 플랜으로 덮어씁니다. 계속할까요?")) return;
+                // 기존 편성(DB 또는 이번 세션 results) 있으면 덮어쓰기 확인
+                if (hasExistingFormation || results) {
+                  const ok = await confirm({
+                    title: "기존 편성을 덮어쓸까요?",
+                    description: "현재 편성을 AI 풀 플랜 결과로 교체합니다. 되돌릴 수 없어요.",
+                    confirmLabel: "적용",
+                    cancelLabel: "취소",
+                    variant: "destructive",
+                  });
+                  if (!ok) return;
+                }
                 const merged = applyAiPlanToResults();
                 if (merged) await saveToTacticsBoard(merged);
                 setAiPlanSheetOpen(false);

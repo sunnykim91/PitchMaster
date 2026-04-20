@@ -144,6 +144,24 @@ function MatchTacticsTabInner({
    * - 자체전(INTERNAL)은 A·B 각각 행이 있는데, 둘 중 하나라도 완전하면 해당 쿼터 완료 인정
    * - 하나 쿼터라도 부분/빈 상태면 편성 미완료 → 용병 카드 상단 유지
    */
+  /**
+   * 덮어쓰기 confirm 기준 — 편성이 "하나라도" 저장된 상태인지.
+   * isFormationComplete 와 다름: 완전히 채워지지 않아도 일부 슬롯만 배치돼 있어도 true.
+   */
+  const hasAnyExistingSlot = useMemo(() => {
+    if (dbSquads.length === 0) return false;
+    for (const sq of dbSquads) {
+      if (!sq.positions) continue;
+      for (const [slotId, pos] of Object.entries(sq.positions)) {
+        if (slotId.startsWith("__")) continue; // 심판/촬영 제외
+        if (pos && typeof pos === "object" && "playerId" in pos && (pos as { playerId?: string }).playerId) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }, [dbSquads]);
+
   const isFormationComplete = useMemo(() => {
     if (dbSquads.length === 0) return false;
     const qc = match.quarterCount;
@@ -630,6 +648,7 @@ function MatchTacticsTabInner({
             playerCount={match.playerCount}
             defaultFormationId={defaultFormationId}
             side={isInternal ? activeSide : undefined}
+            hasExistingFormation={hasAnyExistingSlot}
             onGenerated={(squads) => {
               setGeneratedSquads(squads);
               setTacticsKey((k) => k + 1);
