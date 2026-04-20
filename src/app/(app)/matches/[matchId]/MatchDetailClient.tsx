@@ -150,16 +150,25 @@ export default function MatchDetailClient({
     data: membersData,
   } = useApi<{ members: MemberRow[] }>("/api/members", initialData?.members ?? { members: [] }, { skip: !!initialData?.members });
 
+  // team 데이터는 SSR initialData 가 비어있는 케이스가 있어 skip 강제 해제 — client 에서 실제 값 덮어쓰기 보장.
+  // (일정 목록은 서버에서 teamUniform prop 직접 전달해 정상이지만 여기는 useApi 경유)
   const {
     data: teamData,
-  } = useApi<{ team: { sport_type?: SportType; player_count?: number; uniform_primary?: string; uniform_secondary?: string; uniform_pattern?: string; uniforms?: { home?: { primary: string; secondary: string; pattern: string }; away?: { primary: string; secondary: string; pattern: string }; third?: { primary: string; secondary: string; pattern: string } | null } | null; default_formation_id?: string; stats_recording_staff_only?: boolean; mvp_vote_staff_only?: boolean } }>("/api/teams", initialData?.team ?? { team: {} }, { skip: !!initialData?.team });
+  } = useApi<{ team: { sport_type?: SportType; player_count?: number; uniform_primary?: string; uniform_secondary?: string; uniform_pattern?: string; uniforms?: { home?: { primary: string; secondary: string; pattern: string }; away?: { primary: string; secondary: string; pattern: string }; third?: { primary: string; secondary: string; pattern: string } | null } | null; default_formation_id?: string; stats_recording_staff_only?: boolean; mvp_vote_staff_only?: boolean } }>(
+    "/api/teams",
+    initialData?.team ?? { team: {} },
+    // SSR initialData 의 team.sport_type 이 실제로 채워진 경우만 skip — 빈 객체({})면 client fetch
+    { skip: !!initialData?.team?.team?.sport_type },
+  );
 
   const sportType: SportType = teamData.team?.sport_type ?? "SOCCER";
   // AI 기능은 축구(SOCCER)만 오픈. 풋살 팀은 Feature Flag와 무관하게 비활성.
   const effectiveEnableAi = enableAi && sportType === "SOCCER";
   const uniforms = teamData.team?.uniforms;
-  const uniformPrimary = uniforms?.home?.primary ?? teamData.team?.uniform_primary ?? "hsl(var(--primary))";
-  const uniformSecondary = uniforms?.home?.secondary ?? teamData.team?.uniform_secondary ?? "hsl(var(--muted-foreground))";
+  // fallback 색을 중립 회색으로 — 기존 hsl(var(--primary))=coral(주황), hsl(var(--muted-foreground))=회색
+  // 은 팀 유니폼과 쉽게 혼동됨 (사용자가 주황+회색 본 원인).
+  const uniformPrimary = uniforms?.home?.primary ?? teamData.team?.uniform_primary ?? "#9ca3af";
+  const uniformSecondary = uniforms?.home?.secondary ?? teamData.team?.uniform_secondary ?? "#6b7280";
   const uniformPattern = uniforms?.home?.pattern ?? teamData.team?.uniform_pattern ?? "SOLID";
   const defaultFormationId = teamData.team?.default_formation_id ?? "";
   const statsRecordingStaffOnly = teamData.team?.stats_recording_staff_only ?? false;
