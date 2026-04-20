@@ -897,7 +897,11 @@ export default function AutoFormationBuilder({
     }
 
     setSaving(false);
-    onGenerated?.(squads);
+    // positions가 비어있는 쿼터는 TacticsBoard에 전달하지 않음.
+    // 빈 positions를 initialSquads로 넘기면 TacticsBoard가 해당 쿼터를 빈 화면으로 표시함.
+    const validSquads = squads.filter((sq) => Object.keys(sq.positions).length > 0);
+    // 전 쿼터 정상 저장 → 직접 전달. 일부 누락 → 빈 배열 전달(TacticsBoard가 DB refetch).
+    onGenerated?.(validSquads.length === squads.length ? validSquads : []);
   }
 
   async function handleAiPlanGenerate(singleFormation: boolean) {
@@ -924,8 +928,11 @@ export default function AutoFormationBuilder({
       // AI-free 모드는 쿼터별 로테이션까지 AI 가 자유롭게 설계하도록 미전달
       let currentResults = results;
       if (singleFormation && !currentResults) {
+        // scheduleQuarters로 초기 로테이션만 계산 — AI 응답 전에 setResults 호출하지 않음.
+        // 조기 setResults는 컴포넌트 re-render를 유발해 applyAiPlanToResults 클로저가
+        // stale results(=null)를 참조하는 버그를 일으킴.
+        // setResults는 AI 성공 후 applyAiPlanToResults 내부에서 한 번만 호출함.
         currentResults = scheduleQuarters(assignments, quarterCount, formation);
-        setResults(currentResults);
       }
       const availableByQuarter: Record<number, string[]> = {};
       if (singleFormation && currentResults) {
@@ -1025,6 +1032,9 @@ export default function AutoFormationBuilder({
         });
       }
       if (!allOk) { skipped.push(plan.quarter); continue; }
+      // AI가 placement: [] 반환 시 allOk=true이지만 배치 없음 → 빈 positions → 전술판 초기화 버그
+      // assignments가 비어있으면 fallback(currentResults)으로 처리
+      if (assignments.length === 0) { skipped.push(plan.quarter); continue; }
       newResults.push({ quarter: plan.quarter, assignments, formationId: fmt.id });
     }
 
