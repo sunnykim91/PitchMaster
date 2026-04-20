@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getFormationsForSportAndCount,
   formationTemplates,
@@ -671,6 +671,12 @@ export default function AutoFormationBuilder({
   const [aiPlanError, setAiPlanError] = useState<string | null>(null);
   const [aiPlanSource, setAiPlanSource] = useState<"ai" | "rule" | null>(null);
   const [aiPlanSheetOpen, setAiPlanSheetOpen] = useState(false);
+  /**
+   * AI-free 모드: sheet 적용 시점에 results 클로저가 null일 수 있어
+   * AI가 일부 쿼터를 누락하면 fallback 불가 → 해당 쿼터 드롭 → 전술판 빈 화면.
+   * AI fetch 전에 계산한 기본 스케줄을 ref에 보존해 sheet apply 시 fallback으로 사용.
+   */
+  const aiFreeFallbackRef = useRef<QuarterResult[] | null>(null);
 
   const formation = useMemo(
     () =>
@@ -934,6 +940,10 @@ export default function AutoFormationBuilder({
         // setResults는 AI 성공 후 applyAiPlanToResults 내부에서 한 번만 호출함.
         currentResults = scheduleQuarters(assignments, quarterCount, formation);
       }
+      // AI-free 모드: sheet apply 시점에 results 클로저가 null일 수 있으므로
+      // 기본 스케줄을 미리 ref에 보존 → applyAiPlanToResults fallback으로 사용
+      aiFreeFallbackRef.current = currentResults ?? scheduleQuarters(assignments, quarterCount, formation);
+
       const availableByQuarter: Record<number, string[]> = {};
       if (singleFormation && currentResults) {
         for (const qr of currentResults) {
@@ -1419,7 +1429,9 @@ export default function AutoFormationBuilder({
                 // 덮어쓰기 confirm 은 handleAiPlanGenerate 초입에서 이미 받음.
                 // 여기선 결과 검토 후 단순 적용.
                 setAiPlanSheetOpen(false);
-                const merged = applyAiPlanToResults();
+                // aiFreeFallbackRef: AI fetch 전에 저장한 기본 스케줄.
+                // AI가 일부 쿼터 누락 시 해당 쿼터를 rule-based로 채워서 전술판 빈 화면 방지.
+                const merged = applyAiPlanToResults(undefined, aiFreeFallbackRef.current);
                 if (merged) {
                   setLastGenerationMode("ai-free");
                   await saveToTacticsBoard(merged);
