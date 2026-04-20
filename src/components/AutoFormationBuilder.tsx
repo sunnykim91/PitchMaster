@@ -972,7 +972,8 @@ export default function AutoFormationBuilder({
         if (singleFormation) {
           // AI 고정 모드: 쿼터별 포메이션 변화 없음 → 사용자 검증 단계 생략
           // (덮어쓰기 confirm 은 함수 초입에서 이미 받음)
-          const applied = applyAiPlanToResults(data.plans);
+          // currentResults를 fallback으로 명시 전달 — 모드 전환 시 results 클로저가 null일 수 있음
+          const applied = applyAiPlanToResults(data.plans, currentResults);
           if (applied) {
             setLastGenerationMode("ai-fixed");
             await saveToTacticsBoard(applied);
@@ -995,7 +996,10 @@ export default function AutoFormationBuilder({
    * 전부 반영할 수 없는 플랜은 해당 쿼터만 스킵 (기존 결과 유지).
    * @returns 병합된 QuarterResult[] (성공 시) 또는 null (전부 실패 시)
    */
-  function applyAiPlanToResults(plans?: typeof aiPlans): QuarterResult[] | null {
+  function applyAiPlanToResults(
+    plans?: typeof aiPlans,
+    fallbackResults?: QuarterResult[] | null
+  ): QuarterResult[] | null {
     const source = plans ?? aiPlans;
     if (!source || source.length === 0) return null;
     const playerByName = new Map(attendingPlayers.map((p) => [p.name, p]));
@@ -1028,14 +1032,16 @@ export default function AutoFormationBuilder({
       setAiPlanError("AI 플랜을 전술판 형식으로 변환하지 못했습니다.");
       return null;
     }
-    // 기존 results에서 스킵된 쿼터는 유지, 변환된 건 덮어씀
+    // 스킵된 쿼터: fallbackResults(명시 전달) → results 클로저 순으로 폴백
+    // 모드 전환 시 results 클로저가 null일 수 있으므로 명시적 fallback 우선 사용
+    const fallback = fallbackResults ?? results;
     const merged: QuarterResult[] = [];
     for (let q = 1; q <= quarterCount; q++) {
       const replaced = newResults.find((r) => r.quarter === q);
       if (replaced) {
         merged.push(replaced);
       } else {
-        const prev = results?.find((r) => r.quarter === q);
+        const prev = fallback?.find((r) => r.quarter === q);
         if (prev) merged.push(prev);
       }
     }
