@@ -90,6 +90,7 @@ function MatchTacticsTabInner({
     formationName: string;
     quarterCount: number;
     allSlotsFilled: boolean;
+    generationMode: "rule" | "ai-fixed" | "ai-free" | "manual";
   } | null>(null);
   const isInternal = match.matchType === "INTERNAL";
   const [activeSide, setActiveSide] = useState<"A" | "B">("A");
@@ -233,6 +234,7 @@ function MatchTacticsTabInner({
       formationName: firstTpl?.name ?? "",
       quarterCount: match.quarterCount,
       allSlotsFilled,
+      generationMode: "manual" as const,
     };
   }, [dbSquads, attendingPlayers, guests, match.quarterCount]);
 
@@ -701,6 +703,7 @@ function MatchTacticsTabInner({
             placement={effectiveAiCoachContext?.placement ?? []}
             quarterPlacements={effectiveAiCoachContext?.quarterPlacements}
             quarterFormations={effectiveAiCoachContext?.quarterFormations}
+            generationMode={effectiveAiCoachContext?.generationMode}
             attendees={effectiveAiCoachContext?.attendees ?? []}
             formationName={effectiveAiCoachContext?.formationName ?? ""}
             quarterCount={effectiveAiCoachContext?.quarterCount ?? match.quarterCount}

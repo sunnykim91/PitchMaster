@@ -19,6 +19,8 @@ export type AiCoachAnalysisCardProps = {
   }>;
   /** 쿼터별 포메이션 이름 — AI 가 가짜 포메이션 창작 방지 */
   quarterFormations?: Array<{ quarter: number; formation: string }>;
+  /** 편성 생성 방식 — AI 코치 어투 분기 */
+  generationMode?: "rule" | "ai-fixed" | "ai-free" | "manual";
   /** 참석자 */
   attendees: Array<{ name: string; preferredPosition?: string | null; isGuest?: boolean }>;
   /** 포메이션 이름 (예 "4-2-3-1") */
@@ -46,6 +48,7 @@ export function AiCoachAnalysisCard({
   placement,
   quarterPlacements,
   quarterFormations,
+  generationMode,
   attendees,
   formationName,
   quarterCount,
@@ -125,6 +128,7 @@ export function AiCoachAnalysisCard({
         placement,
         ...(quarterPlacements && quarterPlacements.length > 0 ? { quarterPlacements } : {}),
         ...(quarterFormations && quarterFormations.length > 0 ? { quarterFormations } : {}),
+        ...(generationMode ? { generationMode } : {}),
         ...(playerWorkload.length > 0 ? { playerWorkload } : {}),
         matchType,
         opponent: opponent ?? null,

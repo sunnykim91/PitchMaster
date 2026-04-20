@@ -97,6 +97,14 @@ type Props = {
     formationName: string;
     quarterCount: number;
     allSlotsFilled: boolean;
+    /**
+     * 편성을 어떤 방식으로 생성했는지 — AI 코치 어투 분기용.
+     * - "rule": 팀 기본 포메이션 + 규칙 기반 배치 (AI가 포메이션 고른 것 아님)
+     * - "ai-fixed": 팀 포메이션 고정, 배치만 AI 최적화
+     * - "ai-free": AI 가 쿼터별로 포메이션을 직접 설계 (풀 플랜)
+     * - "manual": DB 복원·수동 편집 케이스 (이번 세션에서 생성 버튼 안 누름)
+     */
+    generationMode: "rule" | "ai-fixed" | "ai-free" | "manual";
   } | null) => void;
   /** AI 코치 분석 버튼 표시 여부 (김선휘 Feature Flag) */
   enableAi?: boolean;
@@ -590,6 +598,14 @@ export default function AutoFormationBuilder({
   const [saving, setSaving] = useState(false);
   /** 초기 복원 한 번만 실행 — 사용자가 새 편성 생성 후 prop 변경돼도 덮어쓰지 않기 위함 */
   const [initialRestored, setInitialRestored] = useState(false);
+  /**
+   * 마지막 편성이 어떻게 생성됐는지 — AI 코치 어투 분기용.
+   * - 초기엔 "manual" (복원되지 않은 상태는 null → manual 기본값)
+   * - generate() → "rule"
+   * - handleAiPlanGenerate(true) 성공 → "ai-fixed"
+   * - handleAiPlanGenerate(false) 적용 → "ai-free"
+   */
+  const [lastGenerationMode, setLastGenerationMode] = useState<"rule" | "ai-fixed" | "ai-free" | "manual">("manual");
 
   // DB 에 저장된 편성이 있으면 빌더 results state 로 복원 (mount 1회).
   // 사용자가 생성 버튼 누르면 덮어쓰기 confirm 이 별도로 걸리므로 충돌 없음.
@@ -715,8 +731,9 @@ export default function AutoFormationBuilder({
       formationName: formation.name,
       quarterCount,
       allSlotsFilled,
+      generationMode: lastGenerationMode,
     });
-  }, [results, formation, attendingPlayers, quarterCount, onAnalysisContextReady]);
+  }, [results, formation, attendingPlayers, quarterCount, onAnalysisContextReady, lastGenerationMode]);
 
   // Sync assignments when attendingPlayers changes — auto-distribute on init
   useEffect(() => {
@@ -822,6 +839,7 @@ export default function AutoFormationBuilder({
     }
     const res = scheduleQuarters(assignments, quarterCount, formation);
     setResults(res);
+    setLastGenerationMode("rule");
     // 규칙 기반 모드도 1클릭 흐름: 생성 직후 전술판까지 자동 반영
     await saveToTacticsBoard(res);
   }
@@ -882,20 +900,36 @@ export default function AutoFormationBuilder({
 
   async function handleAiPlanGenerate(singleFormation: boolean) {
     if (aiPlanLoading) return;
+    // AI 호출 전 덮어쓰기 확인 — 토큰·시간 낭비 방지
+    if (hasExistingFormation || results !== null) {
+      const ok = await confirm({
+        title: "기존 편성을 덮어쓸까요?",
+        description: singleFormation
+          ? "현재 편성을 AI 추천 편성(팀 포메이션 유지)으로 교체합니다. AI 호출이 진행돼요."
+          : "현재 편성을 AI 쿼터별 플랜으로 교체합니다. AI 호출이 진행되고, 결과 검토 후 적용할 수 있어요.",
+        confirmLabel: "계속",
+        cancelLabel: "취소",
+        variant: "destructive",
+      });
+      if (!ok) return;
+    }
     setAiPlanLoading(true);
     setAiPlanError(null);
     setAiPlans(null);
     setAiPlanSource(null);
     try {
-      // 규칙 기반으로 쿼터별 가용 명단을 먼저 확보 (AI에게 제약으로 전달)
+      // 쿼터별 가용 명단 — AI-fixed 모드에만 제약으로 전달 (로테이션 고정)
+      // AI-free 모드는 쿼터별 로테이션까지 AI 가 자유롭게 설계하도록 미전달
       let currentResults = results;
-      if (!currentResults) {
+      if (singleFormation && !currentResults) {
         currentResults = scheduleQuarters(assignments, quarterCount, formation);
         setResults(currentResults);
       }
       const availableByQuarter: Record<number, string[]> = {};
-      for (const qr of currentResults) {
-        availableByQuarter[qr.quarter] = Array.from(new Set(qr.assignments.map((a) => a.playerName)));
+      if (singleFormation && currentResults) {
+        for (const qr of currentResults) {
+          availableByQuarter[qr.quarter] = Array.from(new Set(qr.assignments.map((a) => a.playerName)));
+        }
       }
       const attendees = attendingPlayers.map((p) => ({
         name: p.name,
@@ -910,7 +944,8 @@ export default function AutoFormationBuilder({
         matchType: matchContext?.matchType ?? "REGULAR",
         opponent: matchContext?.opponent ?? null,
         warnings: [],
-        availableByQuarter,
+        // AI-free 는 로테이션도 자유롭게 — availableByQuarter 미전달
+        ...(singleFormation ? { availableByQuarter } : {}),
         singleFormation,     // 고정 포메이션 모드 여부
         sportType,
         playerCount,
@@ -933,23 +968,15 @@ export default function AutoFormationBuilder({
       if (data.error) setAiPlanError(data.error);
       if (Array.isArray(data.plans) && data.plans.length > 0) {
         if (singleFormation) {
-          // AI 고정 모드: 쿼터별 포메이션 변화 없음 → 사용자 검증 단계 생략, 즉시 results 반영 + 전술판 저장
-          // 기존 편성 있으면 덮어쓰기 확인
-          if (hasExistingFormation) {
-            const ok = await confirm({
-              title: "기존 편성을 덮어쓸까요?",
-              description: "전술판에 이미 편성된 내용이 있습니다. AI 추천 편성으로 교체하면 되돌릴 수 없어요.",
-              confirmLabel: "덮어쓰기",
-              cancelLabel: "취소",
-              variant: "destructive",
-            });
-            if (!ok) return;
-          }
+          // AI 고정 모드: 쿼터별 포메이션 변화 없음 → 사용자 검증 단계 생략
+          // (덮어쓰기 confirm 은 함수 초입에서 이미 받음)
           const applied = applyAiPlanToResults(data.plans);
-          if (applied) await saveToTacticsBoard(applied);
+          if (applied) {
+            setLastGenerationMode("ai-fixed");
+            await saveToTacticsBoard(applied);
+          }
         } else {
           // AI 자유 모드: 쿼터별 포메이션이 달라 사용자 검증 필요 → BottomSheet 오픈
-          // 덮어쓰기 confirm 은 Sheet 내 "이 플랜으로 적용" 버튼에서 처리됨 (line 1295)
           setAiPlanSheetOpen(true);
         }
       }
@@ -1371,24 +1398,14 @@ export default function AutoFormationBuilder({
               type="button"
               className="w-full mt-3 min-h-[48px] gap-2 rounded-xl font-semibold"
               onClick={async () => {
-                const needConfirm = hasExistingFormation || results !== null;
-                // Radix Sheet(modal) 가 외부 포털의 버튼을 inert 처리하므로
-                // Sheet 를 먼저 닫은 후에 confirm 다이얼로그를 띄워야 클릭이 먹힘.
+                // 덮어쓰기 confirm 은 handleAiPlanGenerate 초입에서 이미 받음.
+                // 여기선 결과 검토 후 단순 적용.
                 setAiPlanSheetOpen(false);
-                if (needConfirm) {
-                  // Sheet 닫기 렌더 사이클 대기 (Radix inert 해제)
-                  await new Promise((r) => setTimeout(r, 80));
-                  const ok = await confirm({
-                    title: "기존 편성을 덮어쓸까요?",
-                    description: "현재 편성을 AI 풀 플랜 결과로 교체합니다. 되돌릴 수 없어요.",
-                    confirmLabel: "적용",
-                    cancelLabel: "취소",
-                    variant: "destructive",
-                  });
-                  if (!ok) return;
-                }
                 const merged = applyAiPlanToResults();
-                if (merged) await saveToTacticsBoard(merged);
+                if (merged) {
+                  setLastGenerationMode("ai-free");
+                  await saveToTacticsBoard(merged);
+                }
               }}
               disabled={aiPlanLoading || saving}
             >

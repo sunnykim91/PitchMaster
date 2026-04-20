@@ -175,6 +175,12 @@ JSON:
 - formationName: "4-3-3" 등 — **1쿼터(또는 기본) 포메이션만**. 쿼터별로 바뀌면 quarterFormations 참조
 - quarterFormations: **쿼터별 포메이션 이름** [{ quarter, formation }] (제공 시)
   → 쿼터마다 다른 포메이션을 쓰면 여기 명시됨. 예: [{quarter:1, formation:"4-2-3-1"}, {quarter:2, formation:"4-3-3"}, ...]
+- generationMode: **편성이 만들어진 방식** (제공 시)
+  → "rule"  = 팀 기본 포메이션 + 규칙 기반 배치. **AI 가 포메이션을 고른 것이 아님**
+  → "ai-fixed" = 팀 포메이션 고정, 배치만 AI 가 최적화
+  → "ai-free"  = AI 가 쿼터별로 포메이션 자체를 설계
+  → "manual"   = 수동 편집 / 이전 편성 복원
+  (규칙 0 에 서술 어투 분기 있음)
 - quarterCount: 쿼터 수 (2~4)
 - attendees: **참석자 풀** [{ name, preferredPosition, isGuest?, recentStats? }]
   → 누가 왔는지 전체 목록. **선호 포지션(preferredPosition)은 개인 이력일 뿐 이번 편성의 포지션이 아님.**
@@ -220,6 +226,30 @@ JSON:
 - ❌ "4쿼터에 1-1-1 포메이션으로 돌아와" (1-1-1은 풋살 3인제. 축구 11인제에 존재 안 함)
 
 quarterFormations 가 없고 여러 쿼터에 placement 구조가 확연히 다르면 "포메이션 변화가 있습니다" 정도로만 언급하고 구체 이름은 추측 금지.
+
+### 규칙 0.5 — 편성 방식(generationMode)별 어투 분기
+
+**AI 가 포메이션을 고른 것처럼 서술하는 것은 "ai-free" 일 때만 허용**. 나머지 모드에선 과장 금지.
+
+- **generationMode = "rule"**: 팀 기본 포메이션에 규칙 기반으로 배치. 도입부 예시:
+  - ✅ "팀 기본 포메이션 {formationName} 에 참석 {N}명을 규칙 기반으로 배치한 편성입니다."
+  - ✅ "{formationName} 구도에 선수 선호 포지션을 반영한 배치예요."
+  - ❌ "공격 성향 선수가 충분해서 {formationName} 로 편성했습니다" (AI 가 고른 것처럼 읽힘)
+  - ❌ "AI 가 {formationName} 을 선택했습니다" (AI 관여 없음)
+
+- **generationMode = "ai-fixed"**: 팀 포메이션 고정, 배치만 AI 가 최적화. 도입부 예시:
+  - ✅ "{formationName} 팀 포메이션 안에서 선수 배치를 AI 가 최적화했습니다."
+  - ✅ "{formationName} 구도를 유지하며 선호 포지션·체력을 고려한 AI 배치예요."
+  - ❌ "AI 가 {formationName} 을 선택" (포메이션은 사용자가 이미 골라놓은 상태)
+
+- **generationMode = "ai-free"**: AI 가 쿼터별 포메이션을 직접 설계. 도입부 가능:
+  - ✅ "AI 가 쿼터별로 포메이션을 달리 짠 풀 플랜입니다. 1쿼터 …, 2쿼터 …"
+  - ✅ "쿼터별 포메이션 변화를 통해 체력 분산과 상대 대응을 노린 편성이에요."
+  - 이 모드에선 "AI 가 골랐다" 톤 허용.
+
+- **generationMode = "manual" (또는 필드 없음)**: 편성 경위 언급하지 말고 **편성 자체만 해석**.
+  - ✅ "{formationName} 편성의 구도는 뒷선 N명, 중원 N명…"
+  - ❌ "AI 가 …" / "규칙 기반으로 …" 경위 추측 금지
 
 ### 규칙 1 — 숫자는 placementBreakdown **엄수**
 
@@ -343,6 +373,14 @@ export type TacticsAnalysisInput = {
   }>;
   /** 쿼터별 포메이션 이름 — AI 가 "4-6-0", "1-1-1" 같은 가짜 포메이션 창작 방지 */
   quarterFormations?: Array<{ quarter: number; formation: string }>;
+  /**
+   * 편성이 어떻게 만들어졌는지 — 서술 어투 분기에 사용.
+   * - "rule":      팀 기본 포메이션 + 규칙 기반 배치 (AI 가 포메이션 선택한 게 아님)
+   * - "ai-fixed":  팀 포메이션 고정, 배치만 AI 가 최적화
+   * - "ai-free":   AI 가 쿼터별로 포메이션 자체를 설계
+   * - "manual":    수동 편집·복원 (과정 불명)
+   */
+  generationMode?: "rule" | "ai-fixed" | "ai-free" | "manual";
   /** 이번 경기 선수별 쿼터 부하 (몇 쿼터 뛰는지) — AI 체력 분석용 */
   playerWorkload?: Array<{ playerName: string; quarters: number }>;
   matchType: "REGULAR" | "INTERNAL" | "EVENT";
@@ -530,6 +568,7 @@ export async function generateAiTacticsAnalysis(
     ...(input.quarterFormations && input.quarterFormations.length > 0
       ? { quarterFormations: input.quarterFormations }
       : {}),
+    ...(input.generationMode ? { generationMode: input.generationMode } : {}),
     ...(qps
       ? { quarterPlacements: qps.map((qp) => ({
           quarter: qp.quarter,
@@ -662,6 +701,7 @@ export async function* generateAiTacticsAnalysisStream(
     ...(input.quarterFormations && input.quarterFormations.length > 0
       ? { quarterFormations: input.quarterFormations }
       : {}),
+    ...(input.generationMode ? { generationMode: input.generationMode } : {}),
     ...(qps
       ? { quarterPlacements: qps.map((qp) => ({
           quarter: qp.quarter,
