@@ -185,7 +185,20 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     placements: Object.fromEntries(defaultFormation.slots.map((slot) => [slot.id, null])),
   }), [defaultFormation]);
 
-  const [boardState, setBoardState] = useState<BoardState>(defaultBoardState);
+  // initialSquads가 있으면 Q1 데이터로 즉시 초기화 → 재마운트 시 빈 화면 flash 방지
+  const [boardState, setBoardState] = useState<BoardState>(() => {
+    const row = squadsData.squads.find((s) => s.quarter_number === (quarters[0] ?? 1));
+    if (row) {
+      const fmt = formationTemplates.find((f) => f.id === row.formation) ?? defaultFormation;
+      return {
+        formationId: fmt.id,
+        placements: Object.fromEntries(
+          fmt.slots.map((slot) => [slot.id, (row.positions as Record<string, Placement | null>)?.[slot.id] ?? null])
+        ),
+      };
+    }
+    return defaultBoardState;
+  });
   const [hydrated, setHydrated] = useState(false);
   const [saving, setSaving] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
