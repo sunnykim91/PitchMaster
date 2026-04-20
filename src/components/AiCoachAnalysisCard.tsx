@@ -82,22 +82,27 @@ export function AiCoachAnalysisCard({
     refetchUsage();
   }, [refetchUsage]);
 
-  // 저장된 분석이 있으면 mount 시 자동 로드 (새로고침·재진입 후에도 유지)
-  useEffect(() => {
+  // 저장된 분석 fetch (mount 자동 로드 + "다시 보기" 버튼 공용)
+  const fetchSavedAnalysis = useCallback(() => {
     if (!matchId) return;
-    let cancelled = false;
+    setLoading(true);
     fetch(`/api/ai/tactics?matchId=${encodeURIComponent(matchId)}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        if (cancelled || !d) return;
+        if (!d) return;
         if (d.analysis) {
           setAnalysis(d.analysis);
           setSource(d.model === "rule" ? "rule" : "ai");
         }
       })
-      .catch(() => { /* 조용히 무시 — 신규 분석 경로는 정상 동작 */ });
-    return () => { cancelled = true; };
+      .catch(() => { /* 조용히 무시 — 신규 분석 경로는 정상 동작 */ })
+      .finally(() => setLoading(false));
   }, [matchId]);
+
+  // 저장된 분석이 있으면 mount 시 자동 로드 (새로고침·재진입 후에도 유지)
+  useEffect(() => {
+    fetchSavedAnalysis();
+  }, [fetchSavedAnalysis]);
 
   async function handleAnalyze() {
     if (!allSlotsFilled || loading) return;
@@ -179,7 +184,7 @@ export function AiCoachAnalysisCard({
                 variant="ghost"
                 size="sm"
                 className="h-7 gap-1 px-2 text-xs text-primary"
-                onClick={() => { setMatchUsed(false); }}
+                onClick={() => { fetchSavedAnalysis(); }}
               >
                 다시 보기
               </Button>
