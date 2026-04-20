@@ -59,6 +59,18 @@ related: [completed-recent.md, reviews.md]
 
 ## HIGH
 
+### API Rate Limiting (보류 — 사고 시 3일 내 도입 가능)
+
+- [ ] **일반 API 레이트리밋 도입**
+  - 현재: AI 라우트만 `checkRateLimit` 적용. `/api/auth/*` `/api/posts` `/api/comments` `/api/dues` 등 무방어
+  - 리스크: brute force 로그인, 스팸 스크립트, Vercel CPU 한도 소진(Pro 100h) 통한 과금
+  - 26차 진단 시 W1에서 "당장 CRITICAL은 아님"으로 판단해 보류 (82팀 규모, 악의적 자동화 공격 경험 없음)
+  - 도입 시 권장 구성: **Upstash Redis 무료 티어** + `@upstash/ratelimit` `slidingWindow`
+    - `/api/auth/*` : 5분 10회 (brute force 방어)
+    - 그 외 `/api/*` : 1분 60회
+    - `/api/cron/*` : Bearer 인증 있으므로 제외
+  - 트리거: 마케팅 이후 봇 트래픽 관측되면 즉시 도입. 3일이면 완료 가능.
+
 ### W3 — 마케팅 유입 폭증 대비 (26차 진단 기반, 2026-04-19)
 
 W1(보안)·W2(운영 안전망) 완료 후 순차 착수.
