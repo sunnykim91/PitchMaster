@@ -204,8 +204,8 @@ function MatchTacticsTabInner({
       for (const slot of tpl.slots) {
         const posEntry = sq.positions?.[slot.id];
         if (!posEntry?.playerId) continue;
-        const playerName = nameMap.get(posEntry.playerId);
-        if (!playerName) continue;
+        // nameMap에 없어도 카운트는 포함 — DB 배치 기준으로 판단 (앱 재진입 후 버튼 활성 유지)
+        const playerName = nameMap.get(posEntry.playerId) ?? `선수(${posEntry.playerId.slice(0, 6)})`;
         assignments.push({ slot: slot.label, playerName });
         if (!slot.label.toUpperCase().includes("GK")) totalAssignedFieldSlots++;
       }

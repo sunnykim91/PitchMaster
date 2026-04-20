@@ -609,6 +609,11 @@ export default function AutoFormationBuilder({
 
   // DB 에 저장된 편성이 있으면 빌더 results state 로 복원 (mount 1회).
   // 사용자가 생성 버튼 누르면 덮어쓰기 confirm 이 별도로 걸리므로 충돌 없음.
+  //
+  // 중요: attendingPlayers 가 아직 로드되지 않은 상태(빈 배열)에서 실행하면
+  // nameMap 이 비어 매핑 실패 → converted 빈 배열 → restored=true 로 잠겨버림.
+  // 그래서 nameMap 매칭 실패해도 placeholder 이름으로 복원해 allSlotsFilled 판정이
+  // playerId 존재 여부만으로 결정되도록 한다.
   useEffect(() => {
     if (initialRestored) return;
     if (!initialSquads || initialSquads.length === 0) return;
@@ -625,8 +630,8 @@ export default function AutoFormationBuilder({
         if (!pos || slotId.startsWith("__")) continue;
         const slot = tpl.slots.find((s) => s.id === slotId);
         if (!slot) continue;
-        const playerName = nameMap.get(pos.playerId);
-        if (!playerName) continue;
+        // 이름 매핑 실패해도 복원 — AI 코치 allSlotsFilled 판정은 playerId 기준
+        const playerName = nameMap.get(pos.playerId) ?? `선수(${pos.playerId.slice(0, 6)})`;
         assignments.push({
           slotId: slot.id,
           slotLabel: slot.label,
@@ -635,16 +640,14 @@ export default function AutoFormationBuilder({
           type: pos.secondPlayerId ? "first_half" : "full",
         });
         if (pos.secondPlayerId) {
-          const secondName = nameMap.get(pos.secondPlayerId);
-          if (secondName) {
-            assignments.push({
-              slotId: slot.id,
-              slotLabel: slot.label,
-              playerId: pos.secondPlayerId,
-              playerName: secondName,
-              type: "second_half",
-            });
-          }
+          const secondName = nameMap.get(pos.secondPlayerId) ?? `선수(${pos.secondPlayerId.slice(0, 6)})`;
+          assignments.push({
+            slotId: slot.id,
+            slotLabel: slot.label,
+            playerId: pos.secondPlayerId,
+            playerName: secondName,
+            type: "second_half",
+          });
         }
       }
       if (assignments.length > 0) {
@@ -652,6 +655,8 @@ export default function AutoFormationBuilder({
       }
     }
 
+    // converted.length === 0 인 경우는 initialSquads 에 실제 배치 데이터가 없는 케이스
+    // (포메이션만 저장된 빈 전술판). 이 때도 restored=true 로 잠가서 재시도 안 함.
     if (converted.length > 0) {
       setResults(converted);
     }
