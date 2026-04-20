@@ -1,6 +1,35 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { recordAiUsage, extractTokenUsage } from "@/lib/server/aiUsageLog";
 import { getOrComputeTeamStats, findOpponentHistory, type TeamStats } from "@/lib/server/aiTeamStats";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
+
+/**
+ * AI 코치 분석 결과 영속화 — matches 테이블 업데이트.
+ * 스트림 완료 후(AI 성공 + 저품질 폴백 + 에러 폴백) 모두 저장해
+ * 이후 GET /api/ai/tactics?matchId=X 로 재조회 가능.
+ * 저장 실패해도 사용자에겐 영향 없음 (로그만).
+ */
+async function persistCoachAnalysis(
+  matchId: string | null | undefined,
+  text: string,
+  model: string,
+): Promise<void> {
+  if (!matchId || !text) return;
+  try {
+    const db = getSupabaseAdmin();
+    if (!db) return;
+    await db
+      .from("matches")
+      .update({
+        ai_coach_analysis: text,
+        ai_coach_generated_at: new Date().toISOString(),
+        ai_coach_model: model,
+      })
+      .eq("id", matchId);
+  } catch (err) {
+    console.error("[aiTacticsAnalysis] coach analysis 저장 실패:", err);
+  }
+}
 
 /**
  * Claude Haiku로 AI 전술 분석 생성.
@@ -685,11 +714,13 @@ export async function* generateAiTacticsAnalysisStream(
       yield { type: "replace", text: ruleText, source: "rule", reason: "low_quality" };
       yield { type: "done", source: "rule", model: MODEL };
       await recordAiUsage({ ...logBase, source: "rule", model: MODEL, ...tokens, latencyMs: Date.now() - started, errorReason: "low_quality" });
+      await persistCoachAnalysis(input.matchId, ruleText, "rule");
       return;
     }
 
     yield { type: "done", source: "ai", model: MODEL };
     await recordAiUsage({ ...logBase, source: "ai", model: MODEL, ...tokens, latencyMs: Date.now() - started });
+    await persistCoachAnalysis(input.matchId, cleaned, MODEL);
   } catch (err) {
     console.error("[aiTacticsAnalysis stream] 호출 실패:", err);
     // 에러 세부 분류 — 사용자/운영자가 원인 파악 가능하게
@@ -710,6 +741,8 @@ export async function* generateAiTacticsAnalysisStream(
       latencyMs: Date.now() - started,
       errorReason: `${errorReason}: ${errMsg}`,
     });
+    // 에러 폴백도 rule text 로 저장해 재조회 가능하게 (사용자는 어쨌든 본 텍스트이므로)
+    await persistCoachAnalysis(input.matchId, ruleText, "rule");
   }
 }
 

@@ -5,6 +5,48 @@ import { generateAiTacticsAnalysisStream, type TacticsAnalysisInput } from "@/li
 import { checkRateLimit } from "@/lib/server/aiUsageLog";
 
 /**
+ * GET /api/ai/tactics?matchId=...
+ * 저장된 AI 코치 분석 조회. 스트리밍 없이 JSON 반환.
+ * 이미 생성된 분석을 "다시 보기" 할 때 사용 (rate limit 영향 없음).
+ *
+ * Response:
+ *   { analysis: string | null, generatedAt: string | null, model: string | null }
+ *   - 분석 없으면 analysis === null
+ */
+export async function GET(req: NextRequest) {
+  const session = await auth().catch(() => null);
+  if (!session?.user) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const matchId = req.nextUrl.searchParams.get("matchId");
+  if (!matchId) {
+    return NextResponse.json({ error: "missing_matchId" }, { status: 400 });
+  }
+
+  const db = getSupabaseAdmin();
+  if (!db) return NextResponse.json({ error: "db_unavailable" }, { status: 503 });
+
+  // 본인 팀 경기인지 검증 (타 팀 분석 조회 차단)
+  const { data: match } = await db
+    .from("matches")
+    .select("ai_coach_analysis, ai_coach_generated_at, ai_coach_model")
+    .eq("id", matchId)
+    .eq("team_id", session.user.teamId!)
+    .single();
+
+  if (!match) {
+    return NextResponse.json({ error: "match_not_found" }, { status: 404 });
+  }
+
+  return NextResponse.json({
+    analysis: (match as { ai_coach_analysis?: string | null }).ai_coach_analysis ?? null,
+    generatedAt: (match as { ai_coach_generated_at?: string | null }).ai_coach_generated_at ?? null,
+    model: (match as { ai_coach_model?: string | null }).ai_coach_model ?? null,
+  });
+}
+
+/**
  * POST /api/ai/tactics
  * 김선휘 Feature Flag 전용. SSE로 코치식 3단락 분석 스트리밍.
  *

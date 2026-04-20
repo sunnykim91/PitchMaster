@@ -79,6 +79,23 @@ export function AiCoachAnalysisCard({
     refetchUsage();
   }, [refetchUsage]);
 
+  // 저장된 분석이 있으면 mount 시 자동 로드 (새로고침·재진입 후에도 유지)
+  useEffect(() => {
+    if (!matchId) return;
+    let cancelled = false;
+    fetch(`/api/ai/tactics?matchId=${encodeURIComponent(matchId)}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled || !d) return;
+        if (d.analysis) {
+          setAnalysis(d.analysis);
+          setSource(d.model === "rule" ? "rule" : "ai");
+        }
+      })
+      .catch(() => { /* 조용히 무시 — 신규 분석 경로는 정상 동작 */ });
+    return () => { cancelled = true; };
+  }, [matchId]);
+
   async function handleAnalyze() {
     if (!allSlotsFilled || loading) return;
     setLoading(true);
