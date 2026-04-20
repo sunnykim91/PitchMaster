@@ -48,8 +48,8 @@ export async function GET(request: NextRequest) {
 
   // Fetch vote counts per option
   const pollIds = polls.map((p) => (p as { id: string }).id);
-  let voteCounts: Record<string, number> = {};
-  let userVotes: Record<string, string> = {}; // pollId -> optionId
+  const voteCounts: Record<string, number> = {};
+  const userVotes: Record<string, string> = {}; // pollId -> optionId
   if (pollIds.length > 0) {
     const { data: voteData } = await db
       .from("post_poll_votes")

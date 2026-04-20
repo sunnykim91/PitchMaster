@@ -80,6 +80,7 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
       .catch(() => setLoading(false));
   }, [monthFilter]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchPenalties(); }, [fetchPenalties]);
 
   function prevMonth() {

@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import MatchesClient from "@/app/(app)/matches/MatchesClient";
+import MatchesClient, { type UniformSetInfo } from "@/app/(app)/matches/MatchesClient";
 import { getMatchesData } from "@/lib/server/getMatchesData";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type { SportType } from "@/lib/types";
@@ -42,7 +42,7 @@ export default async function MatchesPage() {
       userRole={session.user.teamRole}
       initialMatches={initialMatches}
       sportType={teamInfo.sportType}
-      teamUniform={{ primary: teamInfo.uniformPrimary, secondary: teamInfo.uniformSecondary, pattern: teamInfo.uniformPattern, uniforms: teamInfo.uniforms as any }}
+      teamUniform={{ primary: teamInfo.uniformPrimary, secondary: teamInfo.uniformSecondary, pattern: teamInfo.uniformPattern, uniforms: teamInfo.uniforms as { home?: UniformSetInfo; away?: UniformSetInfo; third?: UniformSetInfo | null } | null }}
       inviteCode={session.user.inviteCode ?? ""}
       teamName={session.user.teamName ?? ""}
       registeredMemberCount={registeredMemberCount}

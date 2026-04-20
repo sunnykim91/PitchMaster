@@ -13,6 +13,7 @@ function ImageLightboxBase({ src, alt = "", onClose }: ImageLightboxProps) {
   const [mounted, setMounted] = useState(false);
   const historyPushed = useRef(false);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {

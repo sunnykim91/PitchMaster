@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
   // member_id → users 이름 매핑 (FK 힌트 문제 우회)
   const memberIds = [...new Set((records ?? []).map((r: { member_id: string }) => r.member_id))];
-  let userMap = new Map<string, string>();
+  const userMap = new Map<string, string>();
   if (memberIds.length > 0) {
     const { data: users } = await db.from("users").select("id, name").in("id", memberIds);
     for (const u of users ?? []) userMap.set(u.id, u.name);

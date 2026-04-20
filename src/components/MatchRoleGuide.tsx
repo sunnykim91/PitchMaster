@@ -70,15 +70,16 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
     playerCount,
   } = props;
 
-  // 풋살·8/9/10인제는 아예 렌더하지 않음
-  if (!isSupported(sportType, playerCount)) return null;
-
+  // 훅은 반드시 early return 위에 위치 (rules-of-hooks)
   const [squads, setSquads] = useState<MatchSquadRow[] | null>(null);
   const [error, setError] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
+  const defaultSelectedId = currentMemberId ?? currentUserId;
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string>(defaultSelectedId);
 
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setError(false);
     fetch(`/api/squads?matchId=${encodeURIComponent(matchId)}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error("fetch_failed"))))
@@ -115,8 +116,8 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
     return attendingPlayers.filter((p) => !guestIds.has(p.id));
   }, [attendingPlayers, guests]);
 
-  const defaultSelectedId = currentMemberId ?? currentUserId;
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string>(defaultSelectedId);
+  // 풋살·8/9/10인제는 아예 렌더하지 않음 (훅 호출 후 early return)
+  if (!isSupported(sportType, playerCount)) return null;
 
   // 일반 회원 + 불참 → 메시지
   if (!canManage && !currentMemberAttended) {

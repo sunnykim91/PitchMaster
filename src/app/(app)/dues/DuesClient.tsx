@@ -230,7 +230,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
   });
 
   // 납부 상태 API
-  const { data: paymentStatusRaw, loading: loadingPaymentStatus, refetch: refetchPaymentStatus } = useApi<any[]>(
+  const { data: paymentStatusRaw, loading: loadingPaymentStatus, refetch: refetchPaymentStatus } = useApi<Array<{ member_id: string; status: string; paid_amount: number; note?: string }>>(
     `/api/dues/payment-status?month=${monthFilter}`,
     [],
   );

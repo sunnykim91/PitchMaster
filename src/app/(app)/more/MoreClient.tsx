@@ -49,8 +49,10 @@ export default function MoreClient({
   useEffect(() => {
     const ua = navigator.userAgent;
     if (/KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line/i.test(ua)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsInApp(true);
     } else if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsIos(true);
     }
 

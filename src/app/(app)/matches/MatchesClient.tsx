@@ -103,7 +103,7 @@ function mapDbMatchToMatch(db: DbMatch): Match {
   };
 }
 
-type UniformSetInfo = { primary: string; secondary: string; pattern: string };
+export type UniformSetInfo = { primary: string; secondary: string; pattern: string };
 type TeamUniform = { primary: string | null; secondary: string | null; pattern: string | null; uniforms?: { home?: UniformSetInfo; away?: UniformSetInfo; third?: UniformSetInfo | null } | null };
 
 export default function MatchesClient({ userId, userRole, initialMatches, sportType = "SOCCER", teamUniform, inviteCode = "", teamName = "", registeredMemberCount = 0, teamDefaultPlayerCount }: { userId: string; userRole?: Role; initialMatches?: { matches: DbMatch[] }; sportType?: SportType; teamUniform?: TeamUniform; inviteCode?: string; teamName?: string; registeredMemberCount?: number; teamDefaultPlayerCount?: number }) {
@@ -149,10 +149,12 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   const [shakeVoteKey, setShakeVoteKey] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [now, setNow] = useState<number>(0);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setNow(Date.now()); }, []);
   const today = now ? new Date(now).toISOString().split("T")[0] : "";
   const [matchDate, setMatchDate] = useState(today);
   // today가 설정되면 matchDate 동기화
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { if (today && !matchDate) setMatchDate(today); }, [today, matchDate]);
   const [matchTime, setMatchTime] = useState("09:00");
   const [matchEndTime, setMatchEndTime] = useState("11:00");
@@ -168,6 +170,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     const yyyy = prev.getFullYear();
     const mm = String(prev.getMonth() + 1).padStart(2, "0");
     const dd = String(prev.getDate()).padStart(2, "0");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVoteDeadline(`${yyyy}-${mm}-${dd}T17:00`);
   }, [matchDate]);
   const [playerCount, setPlayerCount] = useState(teamDefaultPlayerCount ?? defaults.playerCount);

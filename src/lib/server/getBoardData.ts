@@ -25,7 +25,7 @@ export async function getBoardData(teamId: string, userId?: string) {
   }));
 
   // Fetch polls
-  let pollByPostId: Record<string, Record<string, unknown>> = {};
+  const pollByPostId: Record<string, Record<string, unknown>> = {};
   if (postIds.length > 0) {
     const { data: pollData } = await db
       .from("post_polls")
@@ -34,8 +34,8 @@ export async function getBoardData(teamId: string, userId?: string) {
 
     const pollIds = (pollData ?? []).map((p) => (p as { id: string }).id);
 
-    let voteCounts: Record<string, number> = {};
-    let userVotes: Record<string, string> = {}; // pollId → optionId
+    const voteCounts: Record<string, number> = {};
+    const userVotes: Record<string, string> = {}; // pollId → optionId
     if (pollIds.length > 0) {
       const { data: voteData } = await db
         .from("post_poll_votes")

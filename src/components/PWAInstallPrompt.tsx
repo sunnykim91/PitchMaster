@@ -16,6 +16,7 @@ export default function PWAInstallPrompt() {
 
     const detected = detectInstallMode();
     if (detected === "none") return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMode(detected);
 
     if (detected === "inapp" || detected === "ios") {

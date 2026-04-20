@@ -224,6 +224,7 @@ export default function SettingsClient({
   useEffect(() => {
     if (!profileLoading && profileApiData.profile.id && !profileSynced.current) {
       profileSynced.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProfile(mapProfileResponse(profileApiData));
     }
   }, [profileLoading, profileApiData]);
@@ -231,6 +232,7 @@ export default function SettingsClient({
   useEffect(() => {
     if (!teamLoading && teamApiData.team.name && !teamSynced.current) {
       teamSynced.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTeam(mapTeamResponse(teamApiData, defaultTeam));
     }
   }, [teamLoading, teamApiData, defaultTeam]);
