@@ -676,11 +676,10 @@ export default function AutoFormationBuilder({
   }, [initialSquads, attendingPlayers, initialRestored]);
   /**
    * 편성 방식:
-   * - rule: 규칙 기반 (주어진 포메이션 + scheduleQuarters)
-   * - ai-fixed: AI 추천 — 팀 포메이션 고정 (singleFormation=true, 배치만 AI)
-   * - ai-free: AI 추천 — 쿼터별 포메이션 자유 (singleFormation=false)
+   * - rule: 규칙 기반 (주어진 포메이션 + scheduleQuarters, 감독지정→선호포지션 순)
+   * - ai-free: AI 추천 — 우리 기록·참석자 기반으로 포메이션과 배치 전부 AI 설계
    */
-  type PlanMode = "rule" | "ai-fixed" | "ai-free";
+  type PlanMode = "rule" | "ai-free";
   const [planMode, setPlanMode] = useState<PlanMode>("rule");
   const [aiPlans, setAiPlans] = useState<Array<{ quarter: number; formation: string; placement: Array<{ slot: string; playerName: string }>; note?: string }> | null>(null);
   const [openPlanQuarters, setOpenPlanQuarters] = useState<Set<number>>(new Set());
@@ -1163,10 +1162,9 @@ export default function AutoFormationBuilder({
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">편성 방식</p>
           <div className="space-y-1.5">
             {([
-              { id: "rule" as const, label: "규칙 기반으로 빠르게", desc: "팀 포메이션 + 선호 포지션 매칭", icon: <Zap className="h-3.5 w-3.5" /> },
+              { id: "rule" as const, label: "규칙 기반으로 빠르게", desc: "팀 포메이션 + 감독지정/선호 포지션 매칭", icon: <Zap className="h-3.5 w-3.5" /> },
               ...(enableAi ? [
-                { id: "ai-fixed" as const, label: "AI 추천 — 팀 포메이션 유지", desc: "팀 기본 포메이션 안에서 배치만 AI가 최적화", icon: <Target className="h-3.5 w-3.5" /> },
-                { id: "ai-free" as const, label: "AI 추천 — 쿼터별 포메이션 자유", desc: "AI가 쿼터별로 포메이션까지 다르게 설계", icon: <Palette className="h-3.5 w-3.5" /> },
+                { id: "ai-free" as const, label: "AI 추천 — 쿼터별 포메이션 자유", desc: "우리 기록·참석자·상대 이력 기반으로 포메이션까지 AI가 설계", icon: <Palette className="h-3.5 w-3.5" /> },
               ] : []),
             ]).map((opt) => {
               const selected = planMode === opt.id;
@@ -1333,9 +1331,6 @@ export default function AutoFormationBuilder({
           let icon = <Zap className="h-4 w-4" />;
           if (planMode === "rule") {
             label = results ? "다시 생성" : "자동 편성 실행";
-          } else if (planMode === "ai-fixed") {
-            label = aiPlanLoading ? "AI 배치 중..." : "AI에게 배치 받기 (전술판까지 자동 반영)";
-            icon = aiPlanLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />;
           } else {
             label = aiPlanLoading ? "AI 풀 플랜 생성 중..." : "AI 풀 플랜 받기 (쿼터별 포메이션 자유)";
             icon = aiPlanLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />;
@@ -1345,7 +1340,7 @@ export default function AutoFormationBuilder({
               className="w-full min-h-[48px] gap-2 rounded-xl font-semibold"
               onClick={() => {
                 if (planMode === "rule") generate();
-                else handleAiPlanGenerate(planMode === "ai-fixed");
+                else handleAiPlanGenerate(false);
               }}
               disabled={disabled}
             >
