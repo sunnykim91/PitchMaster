@@ -125,18 +125,11 @@ export function AiCoachAnalysisCard({
     refetchUsage();
   }, [overrideVersion, overrideAnalysis, refetchUsage]);
 
-  // 수동 편성 저장 등 coaching 을 직접 전달 못 받는 경로는 기존처럼 fetch 로 재조회
-  useEffect(() => {
-    if (!matchId) return;
-    const handler = (e: Event) => {
-      const ce = e as CustomEvent<{ matchId?: string }>;
-      if (ce.detail?.matchId && ce.detail.matchId !== matchId) return;
-      fetchSavedAnalysis();
-      refetchUsage();
-    };
-    window.addEventListener("match-squads-saved", handler);
-    return () => window.removeEventListener("match-squads-saved", handler);
-  }, [matchId, fetchSavedAnalysis, refetchUsage]);
+  // ⚠️ match-squads-saved 이벤트 리스너는 의도적으로 제거됨.
+  // AI 풀 플랜 직후 saveToTacticsBoard 가 이 이벤트를 발행 → fetchSavedAnalysis 가
+  // DB 읽어 override 방금 적용된 새 coaching 을 **옛 값으로 덮어쓰는 경합**이 있었음.
+  // 수동 편성은 coaching 을 생성하지 않으므로 재조회 자체 불필요.
+  // AI 풀 플랜 경로는 overrideAnalysis prop 으로 동기 반영됨.
 
   async function handleAnalyze() {
     if (!allSlotsFilled || loading) return;
