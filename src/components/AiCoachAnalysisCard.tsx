@@ -224,10 +224,6 @@ export function AiCoachAnalysisCard({
           )
         ) : (
           <div className="space-y-2">
-            <AiBadge
-              variant={source === "ai" ? "ai" : source === "rule" ? "rule" : "loading"}
-              label={source === "ai" ? "코치 분석" : source === "rule" ? "기본 분석" : "분석 중..."}
-            />
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
               {analysis || ""}
               {loading && <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-primary/60 align-middle" />}
