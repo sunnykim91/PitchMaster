@@ -17,17 +17,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/lib/ConfirmContext";
-import { Zap, Sparkles, Loader2, ChevronDown, Target, Palette } from "lucide-react";
+import { Zap, Sparkles, Loader2, Palette } from "lucide-react";
 
 /* ── Types ── */
 
@@ -682,15 +676,13 @@ export default function AutoFormationBuilder({
   type PlanMode = "rule" | "ai-free";
   const [planMode, setPlanMode] = useState<PlanMode>("rule");
   const [aiPlans, setAiPlans] = useState<Array<{ quarter: number; formation: string; placement: Array<{ slot: string; playerName: string }>; note?: string }> | null>(null);
-  const [openPlanQuarters, setOpenPlanQuarters] = useState<Set<number>>(new Set());
   const [aiPlanLoading, setAiPlanLoading] = useState(false);
   const [aiPlanError, setAiPlanError] = useState<string | null>(null);
   const [aiPlanSource, setAiPlanSource] = useState<"ai" | "rule" | null>(null);
-  const [aiPlanSheetOpen, setAiPlanSheetOpen] = useState(false);
   /**
-   * AI-free 모드: sheet 적용 시점에 results 클로저가 null일 수 있어
+   * AI-free 모드: applyAiPlanToResults에서 results 클로저가 null일 수 있어
    * AI가 일부 쿼터를 누락하면 fallback 불가 → 해당 쿼터 드롭 → 전술판 빈 화면.
-   * AI fetch 전에 계산한 기본 스케줄을 ref에 보존해 sheet apply 시 fallback으로 사용.
+   * AI fetch 전에 계산한 기본 스케줄을 ref에 보존해 즉시 적용 시 fallback으로 사용.
    */
   const aiFreeFallbackRef = useRef<QuarterResult[] | null>(null);
 
@@ -1011,18 +1003,11 @@ export default function AutoFormationBuilder({
         setAiPlanError(friendly);
       }
       if (Array.isArray(data.plans) && data.plans.length > 0) {
-        if (singleFormation) {
-          // AI 고정 모드: 쿼터별 포메이션 변화 없음 → 사용자 검증 단계 생략
-          // (덮어쓰기 confirm 은 함수 초입에서 이미 받음)
-          // currentResults를 fallback으로 명시 전달 — 모드 전환 시 results 클로저가 null일 수 있음
-          const applied = applyAiPlanToResults(data.plans, currentResults);
-          if (applied) {
-            setLastGenerationMode("ai-fixed");
-            await saveToTacticsBoard(applied);
-          }
-        } else {
-          // AI 자유 모드: 쿼터별 포메이션이 달라 사용자 검증 필요 → BottomSheet 오픈
-          setAiPlanSheetOpen(true);
+        // 덮어쓰기 confirm 은 함수 초입에서 이미 받음 → 응답 받으면 BottomSheet 없이 즉시 전술판 반영
+        const applied = applyAiPlanToResults(data.plans, currentResults);
+        if (applied) {
+          setLastGenerationMode(singleFormation ? "ai-fixed" : "ai-free");
+          await saveToTacticsBoard(applied);
         }
       }
     } catch {
@@ -1355,20 +1340,6 @@ export default function AutoFormationBuilder({
           <p className="text-center text-xs text-destructive">{aiPlanError}</p>
         )}
 
-        {/* AI 자유 모드: 결과 Sheet 다시 보기 */}
-        {planMode === "ai-free" && aiPlans && aiPlans.length > 0 && !aiPlanSheetOpen && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="w-full gap-2 rounded-lg border-primary/30 text-primary"
-            onClick={() => setAiPlanSheetOpen(true)}
-          >
-            <Sparkles className="h-4 w-4" />
-            AI 풀 플랜 결과 다시 보기
-          </Button>
-        )}
-
         {/* AI 배치 진행 중 안내 — "편성 완료"와 혼동되지 않게 명확한 로딩 상태 표시 */}
         {aiPlanLoading && (
           <div className="space-y-2 border-t border-border/30 pt-3">
@@ -1383,78 +1354,6 @@ export default function AutoFormationBuilder({
       )}
     </Card>
 
-    {/* AI 풀 플랜 결과 BottomSheet (모바일 친화 UX) */}
-    <Sheet open={aiPlanSheetOpen} onOpenChange={setAiPlanSheetOpen}>
-      <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto p-4 pt-5 rounded-t-2xl border-t-2 border-primary/30">
-        <SheetHeader className="mb-3">
-          <SheetTitle className="flex items-center gap-2 text-base">
-            <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">
-              {aiPlanSource === "ai" ? "AI" : "⚙"}
-            </span>
-            {aiPlanSource === "ai" ? "AI 풀 플랜" : "기본 플랜 (AI 실패)"}
-          </SheetTitle>
-        </SheetHeader>
-        {aiPlans && aiPlans.length > 0 ? (
-          <div className="space-y-2">
-            {aiPlans.map((p) => {
-              const isPlanOpen = openPlanQuarters.has(p.quarter);
-              return (
-                <div key={p.quarter} className="rounded-lg border border-border/40 bg-card/60 overflow-hidden">
-                  <button
-                    type="button"
-                    className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left"
-                    onClick={() => setOpenPlanQuarters((prev) => {
-                      const next = new Set(prev);
-                      if (isPlanOpen) next.delete(p.quarter); else next.add(p.quarter);
-                      return next;
-                    })}
-                  >
-                    <span className="text-sm font-bold text-foreground">
-                      {p.quarter}쿼터 · <span className="text-primary">{p.formation}</span>
-                    </span>
-                    <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", isPlanOpen && "rotate-180")} />
-                  </button>
-                  {isPlanOpen && (
-                    <div className="px-3 pb-2.5 pt-1 flex flex-wrap gap-1.5 text-[11px] text-foreground/80 border-t border-border/30">
-                      {p.placement.map((x, i) => (
-                        <span key={i} className="rounded bg-secondary px-1.5 py-0.5">
-                          {x.slot}: {x.playerName}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            <Button
-              type="button"
-              className="w-full mt-3 min-h-[48px] gap-2 rounded-xl font-semibold"
-              onClick={async () => {
-                // 덮어쓰기 confirm 은 handleAiPlanGenerate 초입에서 이미 받음.
-                // 여기선 결과 검토 후 단순 적용.
-                setAiPlanSheetOpen(false);
-                // aiFreeFallbackRef: AI fetch 전에 저장한 기본 스케줄.
-                // AI가 일부 쿼터 누락 시 해당 쿼터를 rule-based로 채워서 전술판 빈 화면 방지.
-                const merged = applyAiPlanToResults(undefined, aiFreeFallbackRef.current);
-                if (merged) {
-                  setLastGenerationMode("ai-free");
-                  await saveToTacticsBoard(merged);
-                }
-              }}
-              disabled={aiPlanLoading || saving}
-            >
-              <Zap className="h-4 w-4" />
-              이 플랜으로 전술판 적용
-            </Button>
-            <p className="mt-1 text-center text-[10px] text-muted-foreground/70">
-              아래 전술판에 자동으로 반영됩니다.
-            </p>
-          </div>
-        ) : (
-          <p className="text-center text-sm text-muted-foreground py-8">플랜 결과가 없습니다.</p>
-        )}
-      </SheetContent>
-    </Sheet>
     </>
   );
 }
