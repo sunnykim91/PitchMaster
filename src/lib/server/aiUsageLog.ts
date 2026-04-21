@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
  * AI 사용량 관측성 + 레이트리밋 v2.
  *
  * 한도 정책 (마이그레이션 00033):
- *   - 전술 분석 / 라인업: 경기당 1회 + 팀당 월 10회
+ *   - tactics-plan: 경기당 3회 + 팀당 월 20회 / tactics-coach: 경기당 4회 + 팀당 월 30회
  *   - 경기 후기: 자동생성 1회(ai_summary_generated_at) + 재생성 1회(ai_summary_regenerate_count)
  *   - OCR: 제한 없음 (이미지 해시 캐시로 중복 방지)
  *   - 선수 카드: 기존 유지
@@ -14,8 +14,8 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 /**
  * AI feature 종류.
- * - tactics-plan : AI 풀 플랜 (편성 + 코칭 통합, 경기당 2회·팀 월 10회)
- * - tactics-coach: 빠른 편성 후 독립 코치 분석 (경기당 1회 재생성 불가·팀 월 10회)
+ * - tactics-plan : AI 풀 플랜 (편성 + 코칭 통합, 경기당 3회·팀 월 20회)
+ * - tactics-coach: 수동/빠른자동 후 독립 코치 분석 (경기당 4회·팀 월 30회)
  * - tactics      : (legacy) 이전 기록과 호환 — 신규 집계 대상 아님
  */
 export type AiFeature = "signature" | "match_summary" | "tactics" | "tactics-plan" | "tactics-coach" | "ocr";
@@ -40,16 +40,14 @@ export type UsageLogEntry = {
 
 /** 팀당 월 한도 — feature별 독립 */
 export const MONTHLY_TEAM_CAPS: Partial<Record<AiFeature, number>> = {
-  "tactics-plan": 10,
-  "tactics-coach": 10,
+  "tactics-plan": 20,   // 8경기 × 3회 기준
+  "tactics-coach": 30,  // 8경기 × 4회 기준
 };
 
 /** 경기당 허용 횟수 (동일 match_id에서 source='ai'로 기록된 건수 기준) */
 export const MATCH_CAPS: Partial<Record<AiFeature, number>> = {
-  "tactics-plan": 2, // 최초 생성 1회 + 재생성 1회
-  // 편성이 여러 번 바뀔 수 있음 (빠른 편성 → AI 편성 교대 등).
-  // 편성 변경 후 새 분석 수요를 수용하면서 월 10회 한도로 악용 방지.
-  "tactics-coach": 3,
+  "tactics-plan": 3,    // AI 편성 1회 + 포메이션 변경 재시도 2회
+  "tactics-coach": 4,   // 초기 코치 1회 + 부분 수정 후 재코칭 3회
 };
 
 export type RateLimitStatus = {

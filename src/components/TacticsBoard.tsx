@@ -409,17 +409,23 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   }, [squadsData.squads, placements, activeQuarter]);
 
   const sortedRoster = useMemo(() => {
-    const unassigned: Player[] = [];
+    const activeSlotRole = activeSlotId
+      ? formation.slots.find((s) => s.id === activeSlotId)?.role ?? null
+      : null;
+    const matched: Player[] = [];
+    const unmatched: Player[] = [];
     const assigned: Player[] = [];
     roster.forEach((player) => {
       if (assignedPlayers.has(player.id)) {
         assigned.push(player);
+      } else if (activeSlotRole && isPositionMatched(player, activeSlotRole)) {
+        matched.push(player);
       } else {
-        unassigned.push(player);
+        unmatched.push(player);
       }
     });
-    return [...unassigned, ...assigned];
-  }, [assignedPlayers, roster]);
+    return [...matched, ...unmatched, ...assigned];
+  }, [assignedPlayers, roster, activeSlotId, formation.slots]);
 
   // 현재 쿼터 쉬는 인원
   const restingPlayers = useMemo(() => {
