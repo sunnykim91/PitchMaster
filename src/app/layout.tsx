@@ -26,6 +26,9 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://pitch-master.app"),
   verification: {
     google: "google0cfbdfe7b13f49fc",
+    other: {
+      "naver-site-verification": "78534dae19992e874725d2ae546c0c4e1ca835e6",
+    },
   },
   keywords: [
     "피치마스터", "PitchMaster", "pitch master",

@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { unstable_cache } from "next/cache";
 import { isKakaoConfigured } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "https://pitch-master.app/login",
+  },
+};
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { Button } from "@/components/ui/button";
 import DemoButton from "./DemoButton";

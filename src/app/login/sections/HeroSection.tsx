@@ -86,7 +86,7 @@ export default function HeroSection({
             <p className={`mx-auto mb-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg lg:mx-0 ${mounted ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "200ms" }}>
               참석 투표 · 회비 OCR · AI 전술 편성 · 자동 경기 후기
               <br className="hidden sm:block" />
-              조기축구 운영, 이제 한 곳에서 한 번에.
+              조기축구 · 풋살 팀 관리, 이제 한 곳에서 한 번에.
             </p>
 
             {/* CTA */}
