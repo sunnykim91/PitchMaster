@@ -87,6 +87,12 @@ function MatchTacticsTabInner({
     setTacticsHighlight(true);
     window.setTimeout(() => setTacticsHighlight(false), 1800);
   }
+  // AI 풀 플랜 응답의 coaching 본문 — AiCoachAnalysisCard 에 즉시 주입 (레이스 없는 prop 경로)
+  const [aiCoachingOverride, setAiCoachingOverride] = useState<{
+    analysis: string;
+    source: "ai" | "rule";
+    version: number;
+  } | null>(null);
   // Phase B — AI 코치 분석 컨텍스트 (AutoFormationBuilder에서 내려줌, 전술판 아래 카드에서 사용)
   const [aiCoachContext, setAiCoachContext] = useState<{
     placement: Array<{ slot: string; playerName: string }>;
@@ -664,6 +670,13 @@ function MatchTacticsTabInner({
               scrollToTacticsBoard();
             }}
             onAnalysisContextReady={setAiCoachContext}
+            onAiCoachingReady={({ analysis, source }) => {
+              setAiCoachingOverride((prev) => ({
+                analysis,
+                source,
+                version: (prev?.version ?? 0) + 1,
+              }));
+            }}
             enableAi={enableAi}
             matchContext={{
               matchType: (match.matchType ?? "REGULAR"),
@@ -718,6 +731,7 @@ function MatchTacticsTabInner({
             opponent={match.opponent ?? null}
             matchId={matchId}
             enableAi={enableAi}
+            overrideAnalysis={aiCoachingOverride}
           />
         </div>
       )}

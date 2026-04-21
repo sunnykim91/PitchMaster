@@ -32,6 +32,11 @@ export type AiCoachAnalysisCardProps = {
   matchId?: string | null;
   /** 김선휘 Feature Flag — false면 렌더 안 함 */
   enableAi: boolean;
+  /**
+   * AI 풀 플랜 응답에서 받은 coaching 을 상위에서 직접 주입 — 이벤트/네트워크 경로 우회.
+   * `version` 은 같은 내용 재생성 시에도 재반영되도록 단조증가 카운터.
+   */
+  overrideAnalysis?: { analysis: string; source: "ai" | "rule"; version: number } | null;
 };
 
 /**
@@ -56,6 +61,7 @@ export function AiCoachAnalysisCard({
   opponent,
   matchId,
   enableAi,
+  overrideAnalysis,
 }: AiCoachAnalysisCardProps) {
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [source, setSource] = useState<"ai" | "rule" | null>(null);
@@ -108,23 +114,16 @@ export function AiCoachAnalysisCard({
     fetchSavedAnalysis();
   }, [fetchSavedAnalysis]);
 
-  // AI 풀 플랜이 새 coaching 을 이벤트로 직접 전달 — fetch 경유 없이 즉시 반영
+  // AI 풀 플랜 응답을 상위에서 prop 으로 직접 주입 — version 바뀔 때마다 반영
+  const overrideVersion = overrideAnalysis?.version ?? 0;
   useEffect(() => {
-    if (!matchId) return;
-    const directHandler = (e: Event) => {
-      const ce = e as CustomEvent<{ matchId?: string; analysis?: string; source?: "ai" | "rule" }>;
-      if (!ce.detail || ce.detail.matchId !== matchId) return;
-      if (typeof ce.detail.analysis === "string" && ce.detail.analysis.length > 0) {
-        setAnalysis(ce.detail.analysis);
-        setSource(ce.detail.source ?? "ai");
-        setError(null);
-        setLoading(false);
-        refetchUsage();
-      }
-    };
-    window.addEventListener("ai-coach-updated", directHandler);
-    return () => window.removeEventListener("ai-coach-updated", directHandler);
-  }, [matchId, refetchUsage]);
+    if (!overrideAnalysis || !overrideAnalysis.analysis) return;
+    setAnalysis(overrideAnalysis.analysis);
+    setSource(overrideAnalysis.source);
+    setError(null);
+    setLoading(false);
+    refetchUsage();
+  }, [overrideVersion, overrideAnalysis, refetchUsage]);
 
   // 수동 편성 저장 등 coaching 을 직접 전달 못 받는 경로는 기존처럼 fetch 로 재조회
   useEffect(() => {

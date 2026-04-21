@@ -81,6 +81,8 @@ type Props = {
     positions: Record<string, { playerId: string; x: number; y: number; secondPlayerId?: string } | null>;
   }>;
   onGenerated?: (squads: GeneratedSquad[]) => void;
+  /** AI 풀 플랜 응답의 coaching 본문을 상위에 전달 — AiCoachAnalysisCard 즉시 갱신용 */
+  onAiCoachingReady?: (payload: { analysis: string; source: "ai" | "rule" }) => void;
   /** 자동 편성 결과가 바뀔 때 AI 코치 분석에 필요한 컨텍스트를 상위에 제공 */
   onAnalysisContextReady?: (ctx: {
     placement: Array<{ slot: string; playerName: string }>;
@@ -567,6 +569,7 @@ export default function AutoFormationBuilder({
   hasExistingFormation = false,
   initialSquads,
   onGenerated,
+  onAiCoachingReady,
   onAnalysisContextReady,
   enableAi = false,
   matchContext,
@@ -1002,17 +1005,9 @@ export default function AutoFormationBuilder({
           : data.error;
         setAiPlanError(friendly);
       }
-      // AI 코치 분석 카드에 coaching 직접 전달 (네트워크/DB 레이스 우회)
-      if (matchId && typeof data.coaching === "string" && data.coaching.length > 0 && typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("ai-coach-updated", {
-            detail: {
-              matchId,
-              analysis: data.coaching,
-              source: data.source ?? "ai",
-            },
-          })
-        );
+      // AI 코치 분석 카드에 coaching 즉시 전달 (React 콜백 경로 — 이벤트·네트워크·DB 레이스 모두 우회)
+      if (typeof data.coaching === "string" && data.coaching.length > 0) {
+        onAiCoachingReady?.({ analysis: data.coaching, source: data.source ?? "ai" });
       }
       if (Array.isArray(data.plans) && data.plans.length > 0) {
         // 덮어쓰기 confirm 은 함수 초입에서 이미 받음 → 응답 받으면 BottomSheet 없이 즉시 전술판 반영
