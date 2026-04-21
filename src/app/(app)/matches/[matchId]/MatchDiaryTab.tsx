@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Camera, X as XIcon, Trash2, ImageIcon, MessageCircle, Copy, Download, RefreshCw } from "lucide-react";
 import { ImageLightbox } from "@/components/ImageLightbox";
@@ -57,6 +57,33 @@ function MatchDiaryTabInner({
   const [regenerating, setRegenerating] = useState(false);
   const [regenerateError, setRegenerateError] = useState<string | null>(null);
   const [regenerateUsed, setRegenerateUsed] = useState(aiSummaryRegenerateCount >= 1);
+
+  /**
+   * 첫 생성 자동 트리거 — SSR 에서 제거된 후기 생성을 클라이언트에서 대체.
+   * 조건: canRegenerateAi (김선휘) + COMPLETED + REGULAR + 캐시 없음.
+   * StrictMode 중복 실행 방지용 ref 사용.
+   */
+  const autoGenTriedRef = useRef(false);
+  useEffect(() => {
+    if (autoGenTriedRef.current) return;
+    if (currentAiSummary) return;
+    if (!canRegenerateAi) return;
+    if (match.status !== "COMPLETED") return;
+    if ((match.matchType ?? "REGULAR") !== "REGULAR") return;
+    autoGenTriedRef.current = true;
+    (async () => {
+      try {
+        const { consumeSseStream } = await import("@/lib/sseStream");
+        await consumeSseStream(`/api/ai/match-summary/${matchId}`, { regenerate: false }, {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          onChunk: (text) => setCurrentAiSummary((prev) => (prev ?? "") + text),
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          onReplace: (text) => setCurrentAiSummary(text),
+          onError: () => { /* 조용히 실패 — 재생성 버튼으로 재시도 가능 */ },
+        });
+      } catch { /* 네트워크 오류 무시 */ }
+    })();
+  }, [canRegenerateAi, currentAiSummary, match.status, match.matchType, matchId]);
 
   async function handleRegenerateAi() {
     setRegenerating(true);

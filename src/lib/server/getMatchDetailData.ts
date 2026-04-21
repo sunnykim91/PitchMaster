@@ -1,10 +1,15 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getWeatherData } from "@/lib/server/getWeather";
-import { getOrGenerateMatchSummary } from "@/lib/server/aiMatchSummaryCache";
-import type { MatchSummaryInput } from "@/lib/server/aiMatchSummary";
-import { getOrComputeTeamStats, findOpponentHistory } from "@/lib/server/aiTeamStats";
 
-export async function getMatchDetailData(matchId: string, teamId: string, enableAi: boolean = false, userId: string | null = null) {
+/**
+ * SSR 블로킹 제거 (2026-04-20):
+ * 이전엔 enableAi + 후기 캐시 miss 시 getOrComputeTeamStats() + generateAiMatchSummary()를
+ * SSR에서 await 해서 경기 상세 페이지 진입이 수초씩 블로킹됐다.
+ * 이제는 캐시된 match.ai_summary 만 반환하고, 첫 생성은 클라이언트 MatchDiaryTab 이
+ * mount 시 /api/ai/match-summary/[matchId] 를 자동 호출해 비동기로 처리한다.
+ * 후기는 이미 결정론적 템플릿 (25차) 으로 전환돼 호출 지연도 ~0ms 수준.
+ */
+export async function getMatchDetailData(matchId: string, teamId: string, _enableAi: boolean = false, _userId: string | null = null) {
   const db = getSupabaseAdmin();
   if (!db) return null;
 
@@ -32,113 +37,10 @@ export async function getMatchDetailData(matchId: string, teamId: string, enable
     weather = await getWeatherData(match.date, match.location ?? "");
   }
 
-  // AI 경기 후기 — COMPLETED 경기만, 캐시 있으면 재사용, 김선휘면 새 생성
-  let aiSummary: string | null = null;
-  // AI 경기 후기는 REGULAR(상대전)만 생성. 자체전(INTERNAL)·팀일정(EVENT)은 제외.
-  if (match && match.status === "COMPLETED" && (match.match_type ?? "REGULAR") === "REGULAR") {
-    const goalsData = goalsRes.data ?? [];
-    const members = membersRes.data ?? [];
-    // scorer_id / assist_id → 이름 매핑
-    const nameByIdOrMemberId = (id: string | null): string | null => {
-      if (!id) return null;
-      if (id === "OPPONENT") return null;
-      const m = members.find((mm) => mm.user_id === id || mm.id === id);
-      if (!m) return null;
-      // @ts-expect-error — supabase join 타입 이슈
-      return m.users?.name ?? m.pre_name ?? null;
-    };
-    const our = goalsData.filter((g) => g.scorer_id !== "OPPONENT" && !g.is_own_goal).length;
-    const opp = goalsData.filter((g) => g.scorer_id === "OPPONENT" || g.is_own_goal).length;
-    const resultKey: "W" | "D" | "L" = our > opp ? "W" : our < opp ? "L" : "D";
-
-    // MVP 집계 (가장 많은 득표)
-    const mvpCounts: Record<string, number> = {};
-    (mvpRes.data ?? []).forEach((v) => {
-      if (v.candidate_id) mvpCounts[v.candidate_id] = (mvpCounts[v.candidate_id] ?? 0) + 1;
-    });
-    const momId = Object.entries(mvpCounts).sort(([, a], [, b]) => b - a)[0]?.[0] ?? null;
-
-    const goalsForInput = goalsData
-      .filter((g) => g.scorer_id !== "OPPONENT" && !g.is_own_goal)
-      .map((g) => ({
-        scorerName: nameByIdOrMemberId(g.scorer_id) ?? "동료",
-        quarter: g.quarter ?? null,
-        isOwnGoal: false,
-      }));
-    const assistsForInput = goalsData
-      .map((g) => nameByIdOrMemberId(g.assist_id))
-      .filter((n): n is string => !!n);
-    const topScorerMap: Record<string, number> = {};
-    goalsForInput.forEach((g) => { topScorerMap[g.scorerName] = (topScorerMap[g.scorerName] ?? 0) + 1; });
-    const topScorerName = Object.entries(topScorerMap).sort(([, a], [, b]) => b - a)[0]?.[0] ?? null;
-
-    const attendanceCount = (attendanceCheckRes.data ?? []).filter(
-      (a) => a.attendance_status === "PRESENT" || a.attendance_status === "LATE"
-    ).length;
-
-    // 추가 컨텍스트 (상대전적·시즌 스탯) — 캐시 miss + 생성 권한 있을 때만 조회
-    let opponentHistory: MatchSummaryInput["opponentHistory"] = null;
-    let scorerSeasonGoals: MatchSummaryInput["scorerSeasonGoals"] = undefined;
-    let momSeasonCount: MatchSummaryInput["momSeasonCount"] = null;
-    const hasCachedSummary = Boolean(match.ai_summary) || Boolean(match.ai_summary_generated_at);
-    if (!hasCachedSummary && enableAi) {
-      try {
-        const teamStats = await getOrComputeTeamStats(teamId);
-        if (match.opponent_name) {
-          const oppEntry = findOpponentHistory(teamStats, match.opponent_name);
-          if (oppEntry && oppEntry.played > 0) {
-            const last = oppEntry.recentScores[0];
-            opponentHistory = {
-              played: oppEntry.played,
-              won: oppEntry.won,
-              drawn: oppEntry.drawn,
-              lost: oppEntry.lost,
-              lastScore: last ? { us: last.us, opp: last.opp, date: last.date } : undefined,
-            };
-          }
-        }
-        const careerByName = new Map(teamStats.playerCareerStats.map((p) => [p.playerName, p]));
-        scorerSeasonGoals = {};
-        for (const g of goalsForInput) {
-          const stat = careerByName.get(g.scorerName);
-          if (stat) scorerSeasonGoals[g.scorerName] = stat.totalGoals;
-        }
-        const momName = nameByIdOrMemberId(momId);
-        if (momName) momSeasonCount = careerByName.get(momName)?.mvpCount ?? null;
-      } catch (err) {
-        console.warn("[getMatchDetailData] aiTeamStats 조회 실패 (무시):", err);
-      }
-    }
-
-    const summaryInput: MatchSummaryInput = {
-      matchType: (match.match_type as "REGULAR" | "INTERNAL" | "EVENT") ?? "REGULAR",
-      score: match.match_type === "EVENT" ? null : { us: our, opp },
-      result: match.match_type === "EVENT" ? null : resultKey,
-      opponent: match.opponent_name ?? null,
-      goals: goalsForInput,
-      assists: assistsForInput,
-      mom: nameByIdOrMemberId(momId),
-      topScorerName,
-      attendanceCount,
-      playerCount: match.player_count ?? 11, // 없으면 축구 기본 11
-      location: match.location ?? null,
-      weather: match.weather ?? null,
-      date: match.date ?? "",
-      opponentHistory,
-      scorerSeasonGoals,
-      momSeasonCount,
-    };
-
-    aiSummary = await getOrGenerateMatchSummary({
-      matchId: match.id,
-      cachedSummary: match.ai_summary ?? null,
-      cachedGeneratedAt: match.ai_summary_generated_at ?? null,
-      enableGenerate: enableAi,
-      input: summaryInput,
-      userId,
-      teamId,
-    });
-  }
+  // AI 경기 후기 — 캐시된 값만 SSR에서 반환. 첫 생성은 클라이언트 MatchDiaryTab 에서 트리거.
+  // (이전 버전은 enableAi + 캐시 miss 경기마다 getOrComputeTeamStats + generateAiMatchSummary 를
+  //  await 해서 수초 블로킹. 후기는 이미 템플릿화돼 호출 지연 ~0ms 이므로 클라 비동기로 충분.)
+  const aiSummary: string | null = (match?.ai_summary as string | null) ?? null;
 
   return {
     matches: matchRes.data ? { matches: [matchRes.data] } : { matches: [] },
