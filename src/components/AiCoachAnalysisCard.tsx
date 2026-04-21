@@ -64,6 +64,8 @@ export function AiCoachAnalysisCard({
   const [monthlyCount, setMonthlyCount] = useState<number | null>(null);
   const [monthlyCap, setMonthlyCap] = useState<number | null>(null);
   const [matchUsed, setMatchUsed] = useState(false);
+  const [matchUsedCount, setMatchUsedCount] = useState(0);
+  const [matchCap, setMatchCap] = useState<number | null>(null);
 
   // 월 사용량 및 이 경기 사용 여부 조회 (mount + 생성 완료 후 재조회)
   const refetchUsage = useCallback(() => {
@@ -74,6 +76,8 @@ export function AiCoachAnalysisCard({
         setMonthlyCount(d.monthlyCount ?? null);
         setMonthlyCap(d.monthlyCap ?? null);
         setMatchUsed(d.matchUsed ?? false);
+        setMatchUsedCount(d.matchUsedCount ?? 0);
+        setMatchCap(d.matchCap ?? null);
       })
       .catch(() => {});
   }, [enableAi, matchId]);
@@ -178,16 +182,34 @@ export function AiCoachAnalysisCard({
         {analysis === null && !loading ? (
           matchUsed ? (
             <div className="flex flex-col items-center gap-2 py-2">
-              <AiBadge variant="ai" label="이 경기 AI 분석 완료" size="sm" />
-              <Button
-                type="button"
-                variant="ghost"
+              <AiBadge
+                variant="ai"
+                label={matchCap != null ? `이 경기 ${matchUsedCount}/${matchCap}회 사용` : "이 경기 AI 분석 완료"}
                 size="sm"
-                className="h-7 gap-1 px-2 text-xs text-primary"
-                onClick={() => { fetchSavedAnalysis(); }}
-              >
-                다시 보기
-              </Button>
+              />
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-xs text-primary"
+                  onClick={() => { fetchSavedAnalysis(); }}
+                >
+                  다시 보기
+                </Button>
+                {matchCap != null && matchUsedCount < matchCap && !isMonthlyExhausted && allSlotsFilled && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1 px-2 text-xs border-primary/40 text-primary"
+                    onClick={handleAnalyze}
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    새로 생성
+                  </Button>
+                )}
+              </div>
             </div>
           ) : isMonthlyExhausted ? (
             <div className="flex flex-col items-center gap-2 py-2">

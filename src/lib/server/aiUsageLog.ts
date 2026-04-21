@@ -47,7 +47,9 @@ export const MONTHLY_TEAM_CAPS: Partial<Record<AiFeature, number>> = {
 /** 경기당 허용 횟수 (동일 match_id에서 source='ai'로 기록된 건수 기준) */
 export const MATCH_CAPS: Partial<Record<AiFeature, number>> = {
   "tactics-plan": 2, // 최초 생성 1회 + 재생성 1회
-  "tactics-coach": 1, // 재생성 불가
+  // 편성이 여러 번 바뀔 수 있음 (빠른 편성 → AI 편성 교대 등).
+  // 편성 변경 후 새 분석 수요를 수용하면서 월 10회 한도로 악용 방지.
+  "tactics-coach": 3,
 };
 
 export type RateLimitStatus = {
