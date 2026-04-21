@@ -78,6 +78,10 @@ export default function HeroSection({
               <span className="block">총무님, 아직도</span>
               <span className="block text-primary">카톡으로 운영하세요?</span>
             </h1>
+            {/* SEO — 시각적으로 숨기지만 크롤러·스크린리더에는 노출되는 보조 h2 */}
+            <h2 className="sr-only">
+              피치마스터 PitchMaster — 조기축구 · 풋살 팀 관리 웹앱. 참석 투표, 회비 관리, AI 라인업 자동 배치, 전술판, 경기 기록, MVP 투표를 한 곳에서.
+            </h2>
 
             <p className={`mx-auto mb-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg lg:mx-0 ${mounted ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "200ms" }}>
               참석 투표 · 회비 OCR · AI 전술 편성 · 자동 경기 후기

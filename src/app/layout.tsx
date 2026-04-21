@@ -27,7 +27,15 @@ export const metadata: Metadata = {
   verification: {
     google: "google0cfbdfe7b13f49fc",
   },
-  keywords: ["조기축구", "팀 관리", "참석 투표", "회비 관리", "전술판", "축구 기록", "MVP", "조기축구 앱"],
+  keywords: [
+    "피치마스터", "PitchMaster", "pitch master",
+    "조기축구", "조기축구 앱", "조기축구 팀관리", "조기축구 총무",
+    "축구팀 관리", "축구팀 매니저", "축구 회비",
+    "풋살 팀관리", "풋살 매니저", "풋살 회비",
+    "참석 투표", "회비 관리", "회비 OCR", "통장 캡처",
+    "전술판", "AI 라인업", "AI 전술", "축구 기록", "MVP 투표",
+    "조기축구회 운영", "팀관리 웹앱", "무료 팀 관리",
+  ],
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
