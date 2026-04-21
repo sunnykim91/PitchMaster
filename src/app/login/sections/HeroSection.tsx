@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
-import { Vote, CreditCard, LayoutGrid, ArrowDown, Smartphone, Dribbble } from "lucide-react";
+import { Vote, CreditCard, LayoutGrid, ArrowDown, Smartphone, Dribbble, Sparkles, Monitor } from "lucide-react";
 import AppScreenSlider from "../AppScreenSlider";
 
 /* PhoneMockup removed — using AppScreenSlider with real screenshots instead */
@@ -56,9 +56,17 @@ export default function HeroSection({
 
             {/* Extra badges */}
             <div className={`mb-6 flex flex-wrap items-center justify-center gap-2 lg:justify-start ${mounted ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "150ms" }}>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                <Sparkles className="h-3.5 w-3.5" />
+                AI 감독 조수
+              </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/40 px-3 py-1 text-xs text-muted-foreground">
                 <Smartphone className="h-3.5 w-3.5 text-primary" />
                 앱 설치 없이 카카오톡으로 바로
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/40 px-3 py-1 text-xs text-muted-foreground">
+                <Monitor className="h-3.5 w-3.5 text-[hsl(var(--info))]" />
+                PC·모바일 모두 지원
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/40 px-3 py-1 text-xs text-muted-foreground">
                 <Dribbble className="h-3.5 w-3.5 text-[hsl(var(--accent))]" />
@@ -72,9 +80,9 @@ export default function HeroSection({
             </h1>
 
             <p className={`mx-auto mb-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg lg:mx-0 ${mounted ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "200ms" }}>
-              참석 투표 · 회비 관리 · 자동 포지션 배치
+              참석 투표 · 회비 OCR · AI 전술 편성 · 자동 경기 후기
               <br className="hidden sm:block" />
-              골치 아픈 팀 관리, 이제 한 곳에서 한 번에.
+              조기축구 운영, 이제 한 곳에서 한 번에.
             </p>
 
             {/* CTA */}

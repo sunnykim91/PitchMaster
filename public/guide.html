@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PitchMaster 시작 가이드</title>
-<meta name="description" content="풋살/축구 팀 운영 가이드 — 가입, 경기 운영, 회비 관리, 라인업까지 한눈에">
+<meta name="description" content="풋살/축구 팀 운영 가이드 — 가입·경기 운영·회비 OCR·AI 전술 편성·자동 경기 후기까지 한눈에">
 <style>
   :root { --primary: #e8613a; --bg: #0e0f11; --card: #161819; --border: #2a2c2e; --text: #f0f0f0; --muted: #888; --success: #4ade80; --nav-h: 52px; }
   * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
@@ -138,7 +138,7 @@
     <div class="toc-grid">
       <a href="#start" class="toc-item"><span class="toc-icon">👤</span><span class="toc-label">가입 & 초대</span></a>
       <a href="#match-flow" class="toc-item"><span class="toc-icon">⚽</span><span class="toc-label">경기 운영</span></a>
-      <a href="#vote" class="toc-item"><span class="toc-icon">🗳️</span><span class="toc-label">투표 · 회비 · 라인업</span></a>
+      <a href="#vote" class="toc-item"><span class="toc-icon">🗳️</span><span class="toc-label">투표 · 회비 · AI 전술</span></a>
       <a href="#more" class="toc-item"><span class="toc-icon">📋</span><span class="toc-label">기타 기능</span></a>
       <a href="#pwa" class="toc-item"><span class="toc-icon">📱</span><span class="toc-label">홈 화면 추가</span></a>
       <a href="#faq" class="toc-item"><span class="toc-icon">❓</span><span class="toc-label">자주 묻는 질문</span></a>
@@ -336,7 +336,7 @@
     <h3>📤 업로드 탭 <span class="badge badge-staff">운영진</span></h3>
     <div class="card">
       <div class="card-desc">
-        · <strong>스크린샷 OCR</strong>: 통장 거래내역 캡쳐를 올리면 자동 인식 (이름 · 금액 · 날짜 · 시간 · 메모)<br>
+        · <strong>AI OCR</strong>: 통장 거래내역 캡쳐를 올리면 AI가 자동 인식 (이름 · 금액 · 날짜 · 시간 · 메모). 인식률이 낮은 캡쳐는 Claude Vision으로 자동 폴백.<br>
         · <strong>엑셀 업로드</strong>: 은행 앱에서 다운로드한 파일을 그대로 올리면 됩니다<br>
         · 중복 내역 자동 감지 및 제외<br>
         · 인식 결과를 편집한 후 일괄 저장<br>
@@ -450,13 +450,13 @@
   </section>
 
   <section id="lineup">
-    <h2><span class="num">6</span>스마트 라인업 (전술판)</h2>
-    <p>참석 확정된 선수를 자동으로 포지션에 배치합니다.</p>
+    <h2><span class="num">6</span>AI 전술 편성 (전술판)</h2>
+    <p>두 가지 편성 모드로 전술판을 채웁니다. 공정한 쿼터 분배는 기본.</p>
 
     <div class="step-flow">
       <span class="step">참석 확정</span>
       <span class="arrow">→</span>
-      <span class="step">자동 배치</span>
+      <span class="step">편성 방식 선택</span>
       <span class="arrow">→</span>
       <span class="step">수정</span>
       <span class="arrow">→</span>
@@ -465,21 +465,20 @@
 
     <div class="card">
       <div class="card-desc">
+        <strong>편성 방식 2가지:</strong><br><br>
+        ① <strong>규칙 기반으로 빠르게</strong> — 팀 기본 포메이션에 감독지정/선호 포지션 우선으로 즉시 배치. 비용 0·지연 0.<br>
+        ② <strong>AI 풀 플랜</strong> — 우리 팀 승률 높은 포메이션·참석자 실력·상대 이력을 종합해 <strong>쿼터별 다른 포메이션</strong>까지 AI가 설계. 편성이 끝나면 <strong>감독 작전 브리핑</strong>(공격 루트·수비 원칙·고비 쿼터)이 함께 생성됩니다.<br><br>
         <strong>사용법:</strong><br>
         1. 경기 상세 → <strong>전술 탭</strong> 선택<br>
-        2. <strong>[자동 편성]</strong> 버튼 클릭 → 선호 포지션 기반 자동 배치<br>
+        2. <strong>[자동 편성 실행]</strong> 또는 <strong>[AI 풀 플랜 받기]</strong> 버튼 클릭<br>
         3. 쿼터별 탭(1Q, 2Q, 3Q, 4Q)으로 전환하며 확인<br>
         4. 선수를 <strong>드래그</strong>하여 위치 수정 가능<br>
-        5. 쿼터별 <strong>출전 횟수가 균등</strong>하게 분배됨<br>
-        6. 우측 상단 <strong>공유 아이콘</strong>으로 전술판 이미지 저장/카톡 공유<br><br>
-        <strong>자동 편성 옵션:</strong><br>
-        · 포메이션 선택 (4-4-2, 4-3-3, 3-5-2 등)<br>
-        · GK 지정: 선수 이름 옆 🥅 버튼<br>
-        · 쿼터별 출전 횟수 +/- 조절 가능<br>
-        · 심판/카메라 등 역할 배정
+        5. 우측 상단 <strong>공유 아이콘</strong>으로 전술판 이미지 저장/카톡 공유<br><br>
+        <strong>쿼터 분배 원칙:</strong> 감독지정 포지션 우선 → 없으면 선호 포지션. 모두 참석자 간 공정 분배. GK는 1명이면 풀 출전, 여럿이면 로테이션.<br><br>
+        <strong>AI 이용 한도:</strong> AI 풀 플랜은 경기당 2회(최초+재생성) + 팀당 월 10회. 빠른 편성 뒤 독립 호출하는 AI 코치는 경기당 3회.
       </div>
     </div>
-    <div class="tip">자체전의 경우 A팀/B팀 탭이 분리되어 각 팀의 포메이션을 따로 관리할 수 있습니다.</div>
+    <div class="tip">전술판은 <strong>PC 브라우저</strong>에서도 똑같이 동작합니다. 경기 전날 밤엔 큰 화면으로 차분히, 현장에선 폰으로 즉시 수정하세요.</div>
   </section>
 
   <section id="record">
@@ -512,15 +511,16 @@
       </div>
     </div>
 
-    <h3>📓 경기 일지</h3>
+    <h3>📓 경기 일지 &amp; 자동 경기 후기</h3>
     <div class="card">
       <div class="card-desc">
         <strong>경로:</strong> 경기 상세 → <strong>일지 탭</strong><br><br>
-        1. <strong>날씨</strong>: 맑음/흐림/비/눈/바람 선택<br>
-        2. <strong>컨디션</strong>: 1~5단계 (나쁨→좋음)<br>
-        3. <strong>메모</strong>: 경기 후기, 특이사항 자유 입력<br>
-        4. <strong>사진</strong>: 경기 사진 업로드 (3열 그리드, 확대 보기)<br>
-        5. <strong>공유</strong>: 결과 카드를 카카오톡으로 공유 또는 클립보드 복사
+        1. <strong>자동 경기 후기</strong>: 경기가 COMPLETED 상태면 득점·MVP·참석 데이터로 <strong>한 문장 후기</strong>가 자동 생성돼 공유 카드 상단에 표시됩니다. 재생성은 경기당 1회.<br>
+        2. <strong>날씨</strong>: 맑음/흐림/비/눈/바람 선택<br>
+        3. <strong>컨디션</strong>: 1~5단계 (나쁨→좋음)<br>
+        4. <strong>메모</strong>: 경기 후기, 특이사항 자유 입력<br>
+        5. <strong>사진</strong>: 경기 사진 업로드 (3열 그리드, 확대 보기)<br>
+        6. <strong>공유</strong>: 결과 카드를 카카오톡으로 공유 또는 클립보드 복사
       </div>
     </div>
 

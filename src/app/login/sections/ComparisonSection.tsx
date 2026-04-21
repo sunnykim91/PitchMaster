@@ -5,10 +5,13 @@ import { Check, Minus } from "lucide-react";
 
 const rows = [
   { feature: "참석 투표", pm: "실시간 자동 집계", kakao: "수동 집계", band: "투표 기능" },
-  { feature: "회비 관리", pm: "캡쳐 자동 입력", kakao: "엑셀 / 메모", band: null },
+  { feature: "AI 전술 편성", pm: "우리 팀 기록·참석자·상대 이력으로 AI가 자동 설계", kakao: null, band: null },
+  { feature: "AI 감독 코칭", pm: "편성 근거·공격 루트·고비 쿼터 자동 브리핑", kakao: null, band: null },
+  { feature: "AI 회비 OCR", pm: "통장 캡쳐·카뱅 엑셀 자동 매칭", kakao: "엑셀 / 메모", band: null },
+  { feature: "자동 경기 후기", pm: "경기 끝나면 즉시 한 문장 완성", kakao: null, band: null },
+  { feature: "PC·모바일 모두", pm: "브라우저만 있으면 어디서나", kakao: "앱 전용", band: "앱 전용" },
   { feature: "회비 자동 벌금 부과", pm: "지각·불참 자동 차감", kakao: null, band: null },
   { feature: "풋살 전용 지원 (3~8인제)", pm: "포지션·전술판 별도", kakao: null, band: null },
-  { feature: "선수 배치", pm: "자동 배치 + 전술판", kakao: null, band: null },
   { feature: "경기 기록", pm: "골/어시/MVP 자동", kakao: null, band: null },
   { feature: "데이터 분석", pm: "레이더 차트 + 랭킹", kakao: null, band: null },
   { feature: "선수 카드 & 시즌 어워드", pm: "FIFA 스타일 + 7종 자동 시상", kakao: null, band: null },

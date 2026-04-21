@@ -59,8 +59,8 @@ function PaymentVisual() {
         <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(var(--info))]/10 px-2 py-0.5 text-[10px] font-semibold text-[hsl(var(--info))]">
           <Check className="h-2.5 w-2.5" /> 카카오뱅크 엑셀 업로드
         </span>
-        <span className="inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-          Naver Clova OCR
+        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+          AI · OCR 자동 인식
         </span>
       </div>
     </div>
@@ -194,12 +194,12 @@ const features = [
   },
   {
     icon: CreditCard, label: "회비 정산", tagline: "엑셀·캡쳐면 끝",
-    desc: "카카오뱅크 엑셀 일괄 업로드 + Naver Clova OCR로 입금자·금액 자동 매칭",
+    desc: "카카오뱅크 엑셀 일괄 업로드 + AI OCR로 입금자·금액 자동 매칭",
     color: "info", visual: "payment",
   },
   {
-    icon: LayoutGrid, label: "스마트 라인업", tagline: "버튼 한 번이면 끝",
-    desc: "선호 포지션과 실력 데이터 기반으로 쿼터별 라인업을 자동 생성",
+    icon: LayoutGrid, label: "AI 전술 편성", tagline: "감독 조수가 알아서",
+    desc: "우리 팀 기록·참석자·상대 이력 기반으로 AI가 쿼터별 포메이션과 배치 자동 설계",
     color: "accent", visual: "lineup",
   },
 ];

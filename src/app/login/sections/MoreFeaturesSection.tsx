@@ -1,11 +1,16 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown, Target, BarChart3, Trophy, Swords, Hash, List, Users, Bell, BellRing, MessageSquare, Dribbble, FileText, ShieldCheck, Settings2, CalendarDays, ImageIcon, CloudSun, Moon, Share2, Crosshair, Image as ImageLucide, Wallet, Grid3x3, CheckCircle2, Smartphone, Sparkles, Award } from "lucide-react";
+import { ChevronDown, Target, BarChart3, Trophy, Swords, Hash, List, Users, Bell, BellRing, MessageSquare, Dribbble, FileText, ShieldCheck, Settings2, CalendarDays, ImageIcon, CloudSun, Moon, Share2, Crosshair, Image as ImageLucide, Wallet, Grid3x3, CheckCircle2, Smartphone, Sparkles, Award, Brain, Camera, PenTool, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const primaryFeatures = [
+  { icon: Brain, title: "AI 전술 편성", desc: "우리 팀 기록·참석자·상대 이력으로 쿼터별 포메이션+배치 자동 설계" },
+  { icon: Sparkles, title: "AI 감독 코칭", desc: "편성 근거·공격 루트·고비 쿼터까지 감독 톤으로 작전 브리핑 자동 생성" },
+  { icon: Camera, title: "AI 회비 OCR", desc: "통장 스크린샷·카뱅 엑셀 한 장이면 입금자·금액 자동 매칭" },
+  { icon: PenTool, title: "자동 경기 후기", desc: "득점·MVP·참석 데이터로 경기 끝난 직후 한 문장 후기 즉시 완성" },
   { icon: Sparkles, title: "FIFA 스타일 선수 카드", desc: "OVR·등급·시그니처 — 카톡 공유로 자랑하는 재미" },
+  { icon: Monitor, title: "PC·모바일 모두", desc: "경기 전날 밤엔 PC, 현장엔 폰 — 브라우저만 있으면 OS·기기 무관" },
   { icon: Award, title: "시즌 어워드", desc: "MOM·득점왕·도움왕·철벽·개근 등 7종 자동 시상" },
   { icon: Grid3x3, title: "쿼터별 출전 매트릭스", desc: "쿼터별 출전 현황 한눈에 + 감독 지정 포지션 우선 적용" },
   { icon: Wallet, title: "자동 벌금 부과", desc: "지각·불참 자동 차감으로 총무가 일일이 안 챙겨도 OK" },

@@ -14,8 +14,9 @@ export default async function MatchDetailPage({
     return null;
   }
 
-  // AI Feature Flag: 김선휘만 AI 생성 트리거 (경기 후기·AI 코치 분석 공통)
-  const enableAi = session.user.name === "김선휘";
+  // AI 기능 — 전체 공개. 풋살 팀은 클라이언트 레벨에서 sportType === "SOCCER" 조건으로 제외됨.
+  // rate limit: AI 풀 플랜 경기당 2회 + 팀 월 10회 / AI 코치 경기당 3회 + 팀 월 10회
+  const enableAi = true;
   const initialData = await getMatchDetailData(matchId, session.user.teamId!, enableAi, session.user.id);
 
   // 서버에서 "미래 경기" 여부 판단 → 클라이언트 hydration 일치 + LCP 개선

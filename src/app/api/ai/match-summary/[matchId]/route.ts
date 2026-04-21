@@ -24,10 +24,6 @@ export async function POST(
   if (!session?.user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  if (session.user.name !== "김선휘") {
-    return NextResponse.json({ error: "ai_not_available" }, { status: 403 });
-  }
-
   // 풋살 팀 AI 차단 (API 레벨)
   if (session.user.teamId) {
     const dbCheck = getSupabaseAdmin();

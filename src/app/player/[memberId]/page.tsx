@@ -376,10 +376,10 @@ export default async function PlayerProfilePageRoute({ params, searchParams }: P
   const { memberId } = await params;
   const { team } = await searchParams;
 
-  // Phase 0 Feature Flag: 김선휘 계정으로 로그인된 경우에만 AI 시그니처 활성화.
+  // 시그니처 — 룰 기반 패턴 풀(fe92497) 로 전환돼 LLM 호출 없음. 전체 공개.
   // auth() 호출로 페이지가 dynamic rendering 됨 (ISR revalidate 무력화되지만 의도한 바).
   const session = await auth().catch(() => null);
-  const enableAi = session?.user?.name === "김선휘";
+  const enableAi = true;
 
   const data = await getPlayerData(memberId, team, enableAi, session?.user?.id ?? null, session?.user?.teamId ?? null);
   if (!data) return notFound();
