@@ -108,6 +108,19 @@ export function AiCoachAnalysisCard({
     fetchSavedAnalysis();
   }, [fetchSavedAnalysis]);
 
+  // AI 풀 플랜이나 수동 편성이 저장되면 새 analysis 가 DB 에 저장되므로 재조회
+  useEffect(() => {
+    if (!matchId) return;
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<{ matchId?: string }>;
+      if (ce.detail?.matchId && ce.detail.matchId !== matchId) return;
+      fetchSavedAnalysis();
+      refetchUsage();
+    };
+    window.addEventListener("match-squads-saved", handler);
+    return () => window.removeEventListener("match-squads-saved", handler);
+  }, [matchId, fetchSavedAnalysis, refetchUsage]);
+
   async function handleAnalyze() {
     if (!allSlotsFilled || loading) return;
     setLoading(true);
