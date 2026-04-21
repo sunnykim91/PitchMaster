@@ -9,7 +9,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
  * 이후 GET /api/ai/tactics?matchId=X 로 재조회 가능.
  * 저장 실패해도 사용자에겐 영향 없음 (로그만).
  */
-async function persistCoachAnalysis(
+export async function persistCoachAnalysis(
   matchId: string | null | undefined,
   text: string,
   model: string,
@@ -497,7 +497,7 @@ export function computeBenchPlayers(
 }
 
 /** 룰 기반 fallback — 매우 단순 */
-function generateRuleBasedAnalysis(input: TacticsAnalysisInput): string {
+export function generateRuleBasedAnalysis(input: TacticsAnalysisInput): string {
   const attendeeCount = input.attendees.length;
   const opponentText = input.opponent ? `${input.opponent}전 ` : "";
   const warningText = input.warnings && input.warnings.length > 0
@@ -534,7 +534,7 @@ export async function generateAiTacticsAnalysis(
   const ruleText = generateRuleBasedAnalysis(input);
   const started = Date.now();
   const logBase = {
-    feature: "tactics" as const,
+    feature: "tactics-coach" as const,
     userId: input.userId ?? null,
     teamId: input.teamId ?? null,
     matchId: input.matchId ?? null,
@@ -665,7 +665,7 @@ export async function* generateAiTacticsAnalysisStream(
   const ruleText = generateRuleBasedAnalysis(input);
   const started = Date.now();
   const logBase = {
-    feature: "tactics" as const,
+    feature: "tactics-coach" as const,
     userId: input.userId ?? null,
     teamId: input.teamId ?? null,
     matchId: input.matchId ?? null,

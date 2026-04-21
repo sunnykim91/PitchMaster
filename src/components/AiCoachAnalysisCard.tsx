@@ -68,7 +68,7 @@ export function AiCoachAnalysisCard({
   // 월 사용량 및 이 경기 사용 여부 조회 (mount + 생성 완료 후 재조회)
   const refetchUsage = useCallback(() => {
     if (!enableAi || !matchId) return;
-    fetch(`/api/ai/usage?feature=tactics&matchId=${matchId}`, { cache: "no-store" })
+    fetch(`/api/ai/usage?feature=tactics-coach&matchId=${matchId}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => {
         setMonthlyCount(d.monthlyCount ?? null);
@@ -224,31 +224,17 @@ export function AiCoachAnalysisCard({
           )
         ) : (
           <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <AiBadge
-                variant={source === "ai" ? "ai" : source === "rule" ? "rule" : "loading"}
-                label={source === "ai" ? "코치 분석" : source === "rule" ? "기본 분석" : "분석 중..."}
-              />
-              {!loading && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 gap-1 px-2 text-xs"
-                  onClick={() => { setAnalysis(null); setSource(null); handleAnalyze(); }}
-                >
-                  <Sparkles className="h-3 w-3" />
-                  다시
-                </Button>
-              )}
-            </div>
+            <AiBadge
+              variant={source === "ai" ? "ai" : source === "rule" ? "rule" : "loading"}
+              label={source === "ai" ? "코치 분석" : source === "rule" ? "기본 분석" : "분석 중..."}
+            />
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
               {analysis || ""}
               {loading && <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-primary/60 align-middle" />}
             </p>
             {source === "rule" && (
               <p className="mt-2 text-[11px] text-muted-foreground/70">
-                AI 분석이 실패해 자동 생성본을 보여드립니다. &quot;다시&quot; 버튼으로 재시도.
+                AI 분석이 실패해 자동 생성본을 보여드립니다. 이 경기는 재생성할 수 없습니다.
               </p>
             )}
           </div>

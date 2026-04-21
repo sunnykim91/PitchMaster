@@ -1,6 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { recordAiUsage, extractTokenUsage } from "@/lib/server/aiUsageLog";
-import { fetchHistoryBlock } from "@/lib/server/aiTacticsAnalysis";
+import {
+  fetchHistoryBlock,
+  persistCoachAnalysis,
+  generateRuleBasedAnalysis,
+} from "@/lib/server/aiTacticsAnalysis";
 import type { TacticsAnalysisInput } from "@/lib/server/aiTacticsAnalysis";
 import { formationTemplates } from "@/lib/formations";
 
@@ -16,7 +20,7 @@ import { formationTemplates } from "@/lib/formations";
 
 const MODEL = "claude-haiku-4-5";
 const MAX_OUTPUT_TOKENS = 4000;
-const TEMPERATURE = 0.4; // 구조화 출력이라 낮게 — 일관성 우선
+const TEMPERATURE = 0.5; // 편성(정확성) + 코칭(자연스러움) 타협값
 
 const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의 **전술 배치 담당**입니다.
 
@@ -32,31 +36,31 @@ const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의
 
 ## 출력 규칙 (절대 엄수)
 
-1. **순수 JSON 배열만** 반환. 마크다운 코드 블록·설명 절대 금지.
-2. 배열 길이 = quarterCount (입력값과 동일).
-3. 각 요소 스키마:
+1. **순수 JSON 객체만** 반환. 마크다운 코드 블록·설명 절대 금지.
+2. 응답 첫 글자 = \`{\`, 마지막 글자 = \`}\`.
+3. 최상위 스키마:
+   \`\`\`
+   {
+     "plans": [ ... quarterCount 개 ... ],
+     "coaching": "감독 브리핑 텍스트 (아래 [코칭 섹션] 규격)"
+   }
+   \`\`\`
+4. \`plans\` 각 요소:
    \`\`\`
    {
      "quarter": 1,
-     "formation": "4-2-3-1",          // 아래 **formationCatalog의 name과 정확히 일치**
-     "placement": [                   // 아래 catalog.slots와 **정확히 같은 slot 라벨·개수**
-       { "slot": "GK",  "playerName": "홍길동" },
-       { "slot": "LB",  "playerName": "김철수" },
+     "formation": "4-2-3-1",
+     "placement": [
+       { "slot": "GK", "playerName": "홍길동" },
        ...
      ]
    }
    \`\`\`
-
-4. **slot 이름은 입력 formationCatalog에서 제공된 라벨만 사용.**
-   예: 4-2-3-1 catalog가 [GK, LB, LCB, RCB, RB, LDM, RDM, LAM, CAM, RAM, ST]라면
-   placement에 **정확히 이 11개 slot만** 나와야 함.
-   "CB1", "CB2", "CB3" 같은 임의 이름 **절대 금지**.
-
-5. 각 쿼터의 placement 배열 길이 = 해당 formation의 slots 수.
-
-6. \`playerName\`은 입력 attendees의 이름과 **정확히 일치**.
-7. 한 쿼터에 같은 선수 중복 배치 금지.
-8. 응답 첫 글자 = \`[\`, 마지막 글자 = \`]\`.
+5. **slot 이름은 formationCatalog에서 제공된 라벨만 사용.** "CB1"/"CB2" 같은 임의 이름 금지.
+6. 각 쿼터 placement 길이 = 해당 formation slots 수.
+7. \`playerName\`은 attendees 이름과 **정확히 일치**.
+8. 한 쿼터에 같은 선수 중복 배치 금지.
+9. \`coaching\`은 한국어 순수 텍스트. 마크다운 헤더·리스트 금지. JSON 문자열 이스케이프 규칙 준수 (줄바꿈은 \\n).
 
 ## 🔴 포메이션 모드 (입력 singleFormation 플래그로 분기)
 
@@ -109,10 +113,42 @@ const SYSTEM_PROMPT = `당신은 한국 아마추어 축구·풋살 동호회의
 - 핵심 선수(playerPositionStats top)는 주력 포지션 유지
 - 새 포메이션 시도는 1~2쿼터로 제한, 3~4쿼터는 검증된 것
 
-## 응답 형식
+## 🔴 코칭 섹션 (coaching 필드) — 감독 작전 브리핑
 
-오직 JSON 배열만. 첫 글자가 \`[\`이고 마지막 글자가 \`]\`여야 함.
-\`\`\`json 블록 감싸지 말 것.`;
+\`plans\` 생성 직후 동일 JSON 객체에 \`coaching\` 문자열을 함께 작성한다. **당신이 방금 짠 편성을 근거로** 감독이 팀에 전달하는 작전 브리핑이다. 해설자가 아니라 지시자 관점.
+
+### 말투 (가장 중요)
+- **지시형·권유형** 문장: "~로 가자", "~을 노리자", "~이 관건이다"
+- 수동 해설체 금지: "~에 배치됩니다/교대됩니다/이동합니다" ❌
+- 선수별 쿼터 경로 나열 금지 ("A는 1쿼터 LM, 2쿼터 LW…" ❌)
+- "1쿼터엔 ~, 2쿼터엔 ~" 스케줄 보고 금지 → "초반엔 ~, 고비 쿼터엔 ~" 흐름 언어
+- 포메이션 이름은 필요할 때만 최소 언급. plans에 이미 있으니 반복 불필요
+
+### 구조 (한국어 3단락, 전체 350~550자)
+
+**1단락 (80~130자) — 게임플랜 한 줄 + 근거**
+- "이 경기는 X로 간다" 톤
+- 근거는 우리 폼·상대 성향·가용 자원 중 1~2개만
+
+**2단락 (170~260자) — 공격·수비 핵심 지시**
+- 누구를 중심으로 어디를 뚫을지. 커리어 스탯(골·어시·MOM)은 지명 근거로만
+- 어느 라인에서 끊고 뒷공간 어떻게 관리할지
+- 상대팀 이력 있으면 지난 맞대결 교훈을 지시로
+- 최근 3경기 흐름 반영 ("연승 중이라 기세 유지")
+
+**3단락 (100~160자) — 경기 중 체크포인트**
+- 고비 쿼터 지목 (우리 팀 실점 패턴 근거)
+- 체력 부담 선수 실명 + 교체·역할 조정 지시
+- 벤치 자원(benchPlayers) 있으면 교체 카드로 언급
+
+### 금지 패턴
+- "AI가 쿼터별로 포메이션을 달리 짠 풀 플랜입니다" (중립 관찰자 톤 ❌ — 당신이 감독이다)
+- "이 편성은 완벽합니다!", "무적의 라인업" (과장 ❌)
+- "분석해드리면", "다음과 같이" (메타 표현 ❌)
+
+## 응답 형식 최종 확인
+
+오직 JSON 객체. 첫 글자 \`{\`, 마지막 글자 \`}\`. 코드블록으로 감싸지 말 것. \`plans\`와 \`coaching\` 두 필드 필수.`;
 
 const client = process.env.ANTHROPIC_API_KEY
   ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -126,33 +162,35 @@ export type QuarterPlan = {
 
 export type FullPlanResult = {
   plans: QuarterPlan[];
+  /** 감독 브리핑 텍스트 (통합 호출 — AI 성공 시 AI 생성본, rule fallback 시 룰 기반 간단 텍스트) */
+  coaching: string;
   source: "ai" | "rule";
   model?: string;
   error?: string;
 };
 
-/** JSON 배열 추출 (코드블록·설명 섞여도 안전) */
-function extractJsonArray(raw: string): unknown[] | null {
+/** JSON 객체 추출 ({ plans, coaching } 형식) — 코드블록·설명 섞여도 안전 */
+function extractJsonObject(raw: string): Record<string, unknown> | null {
   const trimmed = raw.trim();
-  if (trimmed.startsWith("[")) {
+  if (trimmed.startsWith("{")) {
     try {
       const p = JSON.parse(trimmed);
-      return Array.isArray(p) ? p : null;
+      return p && typeof p === "object" && !Array.isArray(p) ? (p as Record<string, unknown>) : null;
     } catch {/* continue */ }
   }
   const blockMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
   if (blockMatch) {
     try {
       const p = JSON.parse(blockMatch[1].trim());
-      return Array.isArray(p) ? p : null;
+      return p && typeof p === "object" && !Array.isArray(p) ? (p as Record<string, unknown>) : null;
     } catch {/* continue */ }
   }
-  const first = trimmed.indexOf("[");
-  const last = trimmed.lastIndexOf("]");
+  const first = trimmed.indexOf("{");
+  const last = trimmed.lastIndexOf("}");
   if (first >= 0 && last > first) {
     try {
       const p = JSON.parse(trimmed.slice(first, last + 1));
-      return Array.isArray(p) ? p : null;
+      return p && typeof p === "object" && !Array.isArray(p) ? (p as Record<string, unknown>) : null;
     } catch { /* fall through */ }
   }
   return null;
@@ -244,23 +282,26 @@ function validatePlan(
 export async function generateAiFullPlan(input: TacticsAnalysisInput): Promise<FullPlanResult> {
   const started = Date.now();
   const logBase = {
-    feature: "tactics" as const,
+    feature: "tactics-plan" as const,
     userId: input.userId ?? null,
     teamId: input.teamId ?? null,
     matchId: input.matchId ?? null,
     entityId: input.matchId ? `${input.matchId}:full-plan` : "full-plan",
   };
 
+  // 룰 fallback 코칭 텍스트 (편성만 rule로 가도 코칭 필드는 채워서 반환)
+  const ruleCoaching = generateRuleBasedAnalysis(input);
+
   if (!client) {
     await recordAiUsage({ ...logBase, source: "rule", errorReason: "no_api_key" });
-    return { plans: ruleBasedFallback(input), source: "rule", error: "API key not configured" };
+    return { plans: ruleBasedFallback(input), coaching: ruleCoaching, source: "rule", error: "API key not configured" };
   }
 
   // formation catalog — AI가 사용 가능한 포메이션 + 정확한 slot 라벨 나열
   const catalog = buildFormationCatalog(input.sportType, input.playerCount);
   if (catalog.length === 0) {
     await recordAiUsage({ ...logBase, source: "rule", errorReason: "no_catalog" });
-    return { plans: ruleBasedFallback(input), source: "rule", error: "no formation catalog for sport/count" };
+    return { plans: ruleBasedFallback(input), coaching: ruleCoaching, source: "rule", error: "no formation catalog for sport/count" };
   }
 
   const userContent = JSON.stringify({
@@ -306,24 +347,26 @@ export async function generateAiFullPlan(input: TacticsAnalysisInput): Promise<F
 
     if (!textBlock || textBlock.type !== "text") {
       await recordAiUsage({ ...logBase, source: "rule", model: MODEL, ...tokens, latencyMs: Date.now() - started, errorReason: "no_text_block" });
-      return { plans: ruleBasedFallback(input), source: "rule", error: "no text block" };
+      return { plans: ruleBasedFallback(input), coaching: ruleCoaching, source: "rule", error: "no text block" };
     }
 
-    const arr = extractJsonArray(textBlock.text);
-    if (!arr || arr.length === 0) {
-      console.warn("[aiFullPlan] JSON 파싱 실패. raw=", textBlock.text.slice(0, 200));
+    const obj = extractJsonObject(textBlock.text);
+    if (!obj || !Array.isArray(obj.plans)) {
+      console.warn("[aiFullPlan] JSON 파싱 실패. raw=", textBlock.text.slice(0, 300));
       await recordAiUsage({ ...logBase, source: "rule", model: MODEL, ...tokens, latencyMs: Date.now() - started, errorReason: "invalid_json" });
-      return { plans: ruleBasedFallback(input), source: "rule", error: "invalid JSON" };
+      return { plans: ruleBasedFallback(input), coaching: ruleCoaching, source: "rule", error: "invalid JSON" };
     }
 
-    const plans = arr.map(normalizePlan).filter((p): p is QuarterPlan => p !== null);
+    const plans = (obj.plans as unknown[]).map(normalizePlan).filter((p): p is QuarterPlan => p !== null);
+    const rawCoaching = typeof obj.coaching === "string" ? obj.coaching.trim() : "";
+
     if (plans.length !== input.quarterCount) {
       console.warn(`[aiFullPlan] 쿼터 수 불일치: 기대 ${input.quarterCount}, 실제 ${plans.length}`);
       await recordAiUsage({ ...logBase, source: "rule", model: MODEL, ...tokens, latencyMs: Date.now() - started, errorReason: `quarter_mismatch_${plans.length}` });
-      return { plans: ruleBasedFallback(input), source: "rule", error: `expected ${input.quarterCount} quarters, got ${plans.length}` };
+      return { plans: ruleBasedFallback(input), coaching: ruleCoaching, source: "rule", error: `expected ${input.quarterCount} quarters, got ${plans.length}` };
     }
 
-    // 각 쿼터 검증: formation이 catalog에 존재 + slots가 catalog와 정확히 일치 + 쿼터 가용성 + singleFormation
+    // 각 쿼터 검증
     const warnings: string[] = [];
     const singleFormationConstraint = isSingle ? { expected: input.formationName } : null;
     for (const plan of plans) {
@@ -335,25 +378,32 @@ export async function generateAiFullPlan(input: TacticsAnalysisInput): Promise<F
     }
     if (warnings.length > 0) {
       await recordAiUsage({ ...logBase, source: "rule", model: MODEL, ...tokens, latencyMs: Date.now() - started, errorReason: `validation_${warnings.length}` });
-      return { plans: ruleBasedFallback(input), source: "rule", error: `validation failed: ${warnings.join("; ")}` };
+      return { plans: ruleBasedFallback(input), coaching: ruleCoaching, source: "rule", error: `validation failed: ${warnings.join("; ")}` };
     }
 
-    // quarterCount >= 4인데 1가지 formation만 쓴 경우 경고 (실패 아님, 기록만).
-    // singleFormation 모드일 땐 당연히 동일이므로 스킵.
+    // coaching 품질 — 너무 짧거나 비면 룰 텍스트로 대체 (plans는 AI 성공)
+    const coaching = rawCoaching.length >= 100 && rawCoaching.length <= 2500 ? rawCoaching : ruleCoaching;
+
+    // matches.ai_coach_analysis 에 저장 — AiCoachAnalysisCard가 mount 시 자동 로드
+    if (input.matchId && coaching) {
+      await persistCoachAnalysis(input.matchId, coaching, coaching === rawCoaching ? MODEL : "rule");
+    }
+
+    // quarterCount >= 4인데 1가지 formation만 쓴 경우 경고 기록만
     if (!isSingle && input.quarterCount >= 4) {
       const unique = new Set(plans.map((p) => p.formation));
       if (unique.size < 2) {
         console.warn("[aiFullPlan] 4쿼터 모두 동일 포메이션 — 권장 위반");
         await recordAiUsage({ ...logBase, source: "ai", model: MODEL, ...tokens, latencyMs: Date.now() - started, errorReason: "single_formation_used" });
-        return { plans, source: "ai", model: MODEL };
+        return { plans, coaching, source: "ai", model: MODEL };
       }
     }
 
     await recordAiUsage({ ...logBase, source: "ai", model: MODEL, ...tokens, latencyMs: Date.now() - started });
-    return { plans, source: "ai", model: MODEL };
+    return { plans, coaching, source: "ai", model: MODEL };
   } catch (err) {
     console.error("[aiFullPlan] API 호출 실패:", err);
     await recordAiUsage({ ...logBase, source: "error", model: MODEL, latencyMs: Date.now() - started, errorReason: "api_error" });
-    return { plans: ruleBasedFallback(input), source: "rule", error: String(err) };
+    return { plans: ruleBasedFallback(input), coaching: ruleCoaching, source: "rule", error: String(err) };
   }
 }

@@ -89,9 +89,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
   }
 
-  // 경기당 1회 + 팀당 월 10회 체크
+  // 경기당 1회(재생성 불가) + 팀당 월 10회 체크
   const matchId = body.matchId ?? null;
-  const rate = await checkRateLimit("tactics", session.user.id, session.user.teamId ?? null, matchId);
+  const rate = await checkRateLimit("tactics-coach", session.user.id, session.user.teamId ?? null, matchId);
   if (!rate.allowed) {
     return NextResponse.json({
       error: "rate_limited",

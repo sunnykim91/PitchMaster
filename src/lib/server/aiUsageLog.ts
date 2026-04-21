@@ -12,7 +12,13 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
  * 테이블 없어도 graceful하게 동작 — 로그 실패가 AI 기능을 막지 않음.
  */
 
-export type AiFeature = "signature" | "match_summary" | "tactics" | "ocr";
+/**
+ * AI feature 종류.
+ * - tactics-plan : AI 풀 플랜 (편성 + 코칭 통합, 경기당 2회·팀 월 10회)
+ * - tactics-coach: 빠른 편성 후 독립 코치 분석 (경기당 1회 재생성 불가·팀 월 10회)
+ * - tactics      : (legacy) 이전 기록과 호환 — 신규 집계 대상 아님
+ */
+export type AiFeature = "signature" | "match_summary" | "tactics" | "tactics-plan" | "tactics-coach" | "ocr";
 export type AiSource = "ai" | "rule" | "error";
 
 export type UsageLogEntry = {
@@ -32,9 +38,16 @@ export type UsageLogEntry = {
   entityId?: string | null;
 };
 
-/** 팀당 월 한도 — tactics는 full-plan과 공유 */
+/** 팀당 월 한도 — feature별 독립 */
 export const MONTHLY_TEAM_CAPS: Partial<Record<AiFeature, number>> = {
-  tactics: 10,
+  "tactics-plan": 10,
+  "tactics-coach": 10,
+};
+
+/** 경기당 허용 횟수 (동일 match_id에서 source='ai'로 기록된 건수 기준) */
+export const MATCH_CAPS: Partial<Record<AiFeature, number>> = {
+  "tactics-plan": 2, // 최초 생성 1회 + 재생성 1회
+  "tactics-coach": 1, // 재생성 불가
 };
 
 export type RateLimitStatus = {
@@ -91,8 +104,9 @@ export async function checkRateLimit(
   if (!db) return { allowed: true };
 
   try {
-    // ① 경기당 1회 체크 (matchId 있을 때만)
+    // ① 경기당 허용 횟수 체크 (matchId 있을 때만)
     if (matchId && teamId) {
+      const matchCap = MATCH_CAPS[feature] ?? 1;
       const { count: matchCount, error: matchErr } = await db
         .from("ai_usage_log")
         .select("id", { count: "exact", head: true })
@@ -101,11 +115,13 @@ export async function checkRateLimit(
         .eq("team_id", teamId)
         .eq("source", "ai");
 
-      if (!matchErr && (matchCount ?? 0) > 0) {
+      if (!matchErr && (matchCount ?? 0) >= matchCap) {
         return {
           allowed: false,
           reason: "match_used",
-          message: "이 경기에서 이미 AI 분석을 생성했습니다.",
+          message: matchCap === 1
+            ? "이 경기에서 이미 AI 분석을 생성했습니다."
+            : `이 경기에서 AI 분석을 ${matchCap}회 모두 사용했습니다.`,
         };
       }
     }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { getMonthlyTeamUsage, type AiFeature } from "@/lib/server/aiUsageLog";
+import { getMonthlyTeamUsage, MATCH_CAPS, type AiFeature } from "@/lib/server/aiUsageLog";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 /**
@@ -29,8 +29,9 @@ export async function GET(req: NextRequest) {
   // 팀 월 사용량
   const monthly = teamId ? await getMonthlyTeamUsage(feature, teamId) : null;
 
-  // 이 경기에서 이미 사용했는지
-  let matchUsed = false;
+  // 이 경기에서 사용한 횟수 / 허용 횟수
+  let matchUsedCount = 0;
+  const matchCap = MATCH_CAPS[feature] ?? 1;
   if (matchId && teamId) {
     const db = getSupabaseAdmin();
     if (db) {
@@ -41,9 +42,12 @@ export async function GET(req: NextRequest) {
         .eq("feature", feature)
         .eq("team_id", teamId)
         .eq("source", "ai");
-      matchUsed = (count ?? 0) > 0;
+      matchUsedCount = count ?? 0;
     }
   }
+  // backward compat
+  const matchUsed = matchUsedCount > 0;
+  const matchCanRegenerate = matchUsedCount < matchCap;
 
   // 경기 후기 재생성 횟수
   let regenerateCount: number | null = null;
@@ -64,6 +68,9 @@ export async function GET(req: NextRequest) {
     monthlyCount: monthly?.count ?? null,
     monthlyCap: monthly?.cap ?? null,
     matchUsed,
+    matchUsedCount,
+    matchCap,
+    matchCanRegenerate,
     regenerateCount,
   });
 }
