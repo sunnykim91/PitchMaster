@@ -108,7 +108,25 @@ export function AiCoachAnalysisCard({
     fetchSavedAnalysis();
   }, [fetchSavedAnalysis]);
 
-  // AI 풀 플랜이나 수동 편성이 저장되면 새 analysis 가 DB 에 저장되므로 재조회
+  // AI 풀 플랜이 새 coaching 을 이벤트로 직접 전달 — fetch 경유 없이 즉시 반영
+  useEffect(() => {
+    if (!matchId) return;
+    const directHandler = (e: Event) => {
+      const ce = e as CustomEvent<{ matchId?: string; analysis?: string; source?: "ai" | "rule" }>;
+      if (!ce.detail || ce.detail.matchId !== matchId) return;
+      if (typeof ce.detail.analysis === "string" && ce.detail.analysis.length > 0) {
+        setAnalysis(ce.detail.analysis);
+        setSource(ce.detail.source ?? "ai");
+        setError(null);
+        setLoading(false);
+        refetchUsage();
+      }
+    };
+    window.addEventListener("ai-coach-updated", directHandler);
+    return () => window.removeEventListener("ai-coach-updated", directHandler);
+  }, [matchId, refetchUsage]);
+
+  // 수동 편성 저장 등 coaching 을 직접 전달 못 받는 경로는 기존처럼 fetch 로 재조회
   useEffect(() => {
     if (!matchId) return;
     const handler = (e: Event) => {

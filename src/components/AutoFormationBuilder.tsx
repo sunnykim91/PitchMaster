@@ -1002,6 +1002,18 @@ export default function AutoFormationBuilder({
           : data.error;
         setAiPlanError(friendly);
       }
+      // AI 코치 분석 카드에 coaching 직접 전달 (네트워크/DB 레이스 우회)
+      if (matchId && typeof data.coaching === "string" && data.coaching.length > 0 && typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("ai-coach-updated", {
+            detail: {
+              matchId,
+              analysis: data.coaching,
+              source: data.source ?? "ai",
+            },
+          })
+        );
+      }
       if (Array.isArray(data.plans) && data.plans.length > 0) {
         // 덮어쓰기 confirm 은 함수 초입에서 이미 받음 → 응답 받으면 BottomSheet 없이 즉시 전술판 반영
         const applied = applyAiPlanToResults(data.plans, currentResults);
