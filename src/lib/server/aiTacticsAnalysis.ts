@@ -897,12 +897,40 @@ function buildHistoryBlock(stats: TeamStats, opponent: string | null | undefined
   if (stats.playerCareerStats.length > 0) {
     lines.push("\n### 선수별 커리어 (Top 20, 출전 수 기준)");
     for (const p of stats.playerCareerStats.slice(0, 20)) {
-      const parts: string[] = [`${p.totalMatches}경기`];
-      if (p.totalGoals > 0) parts.push(`${p.totalGoals}골`);
-      if (p.totalAssists > 0) parts.push(`${p.totalAssists}어시`);
-      if (p.mvpCount > 0) parts.push(`MOM ${p.mvpCount}회`);
-      if (p.mostPlayedPosition) parts.push(`주포지션:${p.mostPlayedPosition}`);
-      lines.push(`- ${p.playerName}: ${parts.join(", ")}`);
+      // 포지션 표기: 주포지션 + 겸직 포지션
+      const posParts = p.mostPlayedPosition ? [p.mostPlayedPosition] : [];
+      if (p.otherPositions.length > 0) posParts.push(...p.otherPositions);
+      const posLabel = posParts.length > 0 ? ` [${posParts.join("/")}]` : "";
+
+      // 공격 기여
+      const offParts: string[] = [];
+      if (p.totalGoals > 0) offParts.push(`${p.totalGoals}골`);
+      if (p.totalAssists > 0) offParts.push(`${p.totalAssists}어시`);
+      if (p.mvpCount > 0) offParts.push(`MOM ${p.mvpCount}회`);
+
+      // 수비 지표 (GK/수비수 구분 없이 모두 표기 — AI가 포지션 보고 판단)
+      const defParts: string[] = [];
+      defParts.push(`실점${p.goalsAgainstPerMatch}/경기`);
+      if (p.cleanSheets > 0) defParts.push(`클린${p.cleanSheets}회`);
+
+      // 승률
+      const winLabel = `승률${p.winRate}%`;
+
+      // 최근 폼 (커리어 평균과 다를 때만 표기)
+      const careerGoalAvg = p.totalMatches > 0 ? p.totalGoals / p.totalMatches : 0;
+      const recentGoalAvg = p.recentForm.matches > 0 ? p.recentForm.goals / p.recentForm.matches : 0;
+      const formParts: string[] = [];
+      if (p.recentForm.matches >= 2) {
+        if (p.recentForm.goals > 0 || p.recentForm.assists > 0 || recentGoalAvg > careerGoalAvg * 1.5) {
+          const rf: string[] = [];
+          if (p.recentForm.goals > 0) rf.push(`${p.recentForm.goals}골`);
+          if (p.recentForm.assists > 0) rf.push(`${p.recentForm.assists}어시`);
+          formParts.push(`최근${p.recentForm.matches}경기 ${rf.length > 0 ? rf.join("") : "무기여"}`);
+        }
+      }
+
+      const allParts = [...offParts, ...defParts, winLabel, ...formParts];
+      lines.push(`- ${p.playerName}${posLabel}: ${p.totalMatches}경기 | ${allParts.join(" | ")}`);
     }
   }
 

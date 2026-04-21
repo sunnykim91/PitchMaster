@@ -62,11 +62,20 @@ export type RecentMatchSummary = {
 /** 선수별 커리어 요약 — AI 코치 선수 부하·실력 판단용 */
 export type PlayerCareerStat = {
   playerName: string;
-  totalMatches: number;      // 총 출전 경기 수
-  totalGoals: number;        // 누적 득점
-  totalAssists: number;      // 누적 어시스트
-  mvpCount: number;          // MVP/MOM 수상 횟수
-  mostPlayedPosition: string; // 가장 많이 뛴 포지션 슬롯
+  totalMatches: number;           // 총 출전 경기 수
+  totalGoals: number;             // 누적 득점
+  totalAssists: number;           // 누적 어시스트
+  mvpCount: number;               // MVP/MOM 수상 횟수
+  mostPlayedPosition: string;     // 가장 많이 뛴 포지션 슬롯
+  otherPositions: string[];       // 2경기 이상 소화한 추가 포지션 (유연성)
+  winRate: number;                // 출전 경기 승률 0–100 (임팩트 지표)
+  goalsAgainstPerMatch: number;   // 출전 시 팀 경기당 실점 (수비 지표)
+  cleanSheets: number;            // 출전 경기 중 무실점 경기 수
+  recentForm: {                   // 최근 3경기 (출전 기준)
+    matches: number;
+    goals: number;
+    assists: number;
+  };
 };
 
 export type TeamStats = {
@@ -234,15 +243,23 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
     }
   }
 
-  // 선수별 골/어시
+  // 선수별 골/어시 (총계 + 경기별 — 최근 폼 계산용)
   const memberGoals = new Map<string, number>();
   const memberAssists = new Map<string, number>();
+  const matchMemberGoals = new Map<string, Map<string, number>>(); // matchId → memberId → goals
+  const matchMemberAssists = new Map<string, Map<string, number>>();
   for (const g of goals ?? []) {
     if (g.scorer_id && g.scorer_id !== "OPPONENT" && !g.is_own_goal) {
       memberGoals.set(g.scorer_id, (memberGoals.get(g.scorer_id) ?? 0) + 1);
+      if (!matchMemberGoals.has(g.match_id)) matchMemberGoals.set(g.match_id, new Map());
+      const mm = matchMemberGoals.get(g.match_id)!;
+      mm.set(g.scorer_id, (mm.get(g.scorer_id) ?? 0) + 1);
     }
     if (g.assist_id) {
       memberAssists.set(g.assist_id, (memberAssists.get(g.assist_id) ?? 0) + 1);
+      if (!matchMemberAssists.has(g.match_id)) matchMemberAssists.set(g.match_id, new Map());
+      const mm = matchMemberAssists.get(g.match_id)!;
+      mm.set(g.assist_id, (mm.get(g.assist_id) ?? 0) + 1);
     }
   }
 
@@ -373,14 +390,61 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
   const playerCareerStats: PlayerCareerStat[] = [];
   for (const [memberId, matchSet] of memberMatchSet.entries()) {
     const playerName = nameMap.get(memberId) ?? "선수";
-    if (playerName === "선수") continue; // 이름 없는 경우 제외
+    if (playerName === "선수") continue;
+
+    const bestPos = memberBestPosition.get(memberId) ?? "";
+
+    // 추가 포지션 유연성: mostPlayedPosition 외 2경기 이상 소화한 포지션
+    const posMap = memberPosCount.get(memberId);
+    const otherPositions: string[] = [];
+    if (posMap) {
+      for (const [pos, cnt] of posMap.entries()) {
+        if (pos !== bestPos && cnt >= 2) otherPositions.push(pos);
+      }
+    }
+
+    // 승률 — 출전 경기 중 팀이 이긴 비율
+    let wins = 0;
+    for (const mid of matchSet) {
+      if (getResult(mid) === "W") wins++;
+    }
+    const winRate = matchSet.size > 0 ? Math.round((wins / matchSet.size) * 100) : 0;
+
+    // 수비 지표 — 출전 시 팀 실점
+    let totalGoalsAgainst = 0;
+    let cleanSheets = 0;
+    for (const mid of matchSet) {
+      const opp = matchScores.get(mid)?.opp ?? 0;
+      totalGoalsAgainst += opp;
+      if (opp === 0) cleanSheets++;
+    }
+    const goalsAgainstPerMatch =
+      matchSet.size > 0
+        ? Math.round((totalGoalsAgainst / matchSet.size) * 10) / 10
+        : 0;
+
+    // 최근 3경기 폼 (출전 경기 기준, matches는 date desc)
+    let recentGoals = 0, recentAssists = 0, recentMatchCount = 0;
+    for (const m of matches) {
+      if (recentMatchCount >= 3) break;
+      if (!matchSet.has(m.id)) continue;
+      recentGoals += matchMemberGoals.get(m.id)?.get(memberId) ?? 0;
+      recentAssists += matchMemberAssists.get(m.id)?.get(memberId) ?? 0;
+      recentMatchCount++;
+    }
+
     playerCareerStats.push({
       playerName,
       totalMatches: matchSet.size,
       totalGoals: memberGoals.get(memberId) ?? 0,
       totalAssists: memberAssists.get(memberId) ?? 0,
       mvpCount: memberMvpCount.get(memberId) ?? 0,
-      mostPlayedPosition: memberBestPosition.get(memberId) ?? "",
+      mostPlayedPosition: bestPos,
+      otherPositions,
+      winRate,
+      goalsAgainstPerMatch,
+      cleanSheets,
+      recentForm: { matches: recentMatchCount, goals: recentGoals, assists: recentAssists },
     });
   }
   playerCareerStats.sort((a, b) => b.totalMatches - a.totalMatches);
