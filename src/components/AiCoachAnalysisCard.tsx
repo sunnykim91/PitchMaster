@@ -7,6 +7,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AiBadge } from "@/components/AiBadge";
 import { cn } from "@/lib/utils";
 
+/**
+ * AI 코치 분석 텍스트 단락 정규화.
+ * 모델이 종종 쿼터 라벨("1쿼터", "2쿼터...") 사이에 줄바꿈을 빠뜨려 한 덩어리로 반환.
+ * 렌더 전 쿼터 라벨 앞에 빈 줄 두 개를 강제 삽입해 단락 분리 보장.
+ *
+ * 대상 패턴: "1쿼터"/"2쿼터"/"3쿼터"/"4쿼터"/"5쿼터" + 선택적 조사("는", "가", "부터", "에는", "도" 등)
+ * 이미 앞에 빈 줄이 있으면 no-op.
+ */
+function normalizeCoachingParagraphs(text: string): string {
+  // 쿼터 라벨 앞에 \n\n 삽입 (중복 방지: 앞에 공백/줄바꿈 전부 제거 후 \n\n 삽입)
+  let out = text.replace(/\s*\n*\s*([1-9]쿼터)/g, "\n\n$1");
+  // "정상훈 골키퍼는 풀 경기" 같은 마무리 구문 앞에도 분리 시도 — 보수적으로 "골키퍼는 풀" 패턴만
+  out = out.replace(/([^.\n])\s+(마지막\s*\d+분\s*놓치지\s*마)/g, "$1\n\n$2");
+  // 선행 빈 줄 제거
+  return out.replace(/^\n+/, "").trim();
+}
+
 export type AiCoachAnalysisCardProps = {
   /** 전술판이 모두 채워졌는지 — false면 버튼 비활성 */
   allSlotsFilled: boolean;
@@ -270,7 +287,7 @@ export function AiCoachAnalysisCard({
         ) : (
           <div className="space-y-2">
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
-              {analysis || ""}
+              {analysis ? normalizeCoachingParagraphs(analysis) : ""}
               {loading && <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-primary/60 align-middle" />}
             </p>
             {source === "rule" && (
