@@ -7,25 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AiBadge } from "@/components/AiBadge";
 import { cn } from "@/lib/utils";
 
-/**
- * AI 코치 분석 텍스트 단락 정규화.
- * 모델이 쿼터 단락 사이에 줄바꿈을 빠뜨리는 경우에 대비해 쿼터 라벨 앞에 빈 줄 삽입.
- *
- * 🔴 주의 — "단락 시작"으로 쓰이는 쿼터 라벨만 분리 대상.
- * 본문 내 "초반 3쿼터 평균 득점"·"1쿼터 1.4골"·"3쿼터 부하" 같은 서술형 언급은 건드리지 않음.
- *
- * 조건: 쿼터 라벨 바로 뒤에 조사(는/가/도)·마침표·구두점·"부터"·"에는"·"으로" 등이 오는 경우만 단락 시작으로 간주.
- */
-function normalizeCoachingParagraphs(text: string): string {
-  // 쿼터 라벨이 "단락 시작" 신호를 가진 경우만 분리
-  // lookahead: . / 한글 조사 / 특정 조사 어절
-  const out = text.replace(
-    /\s*\n*\s*([1-9]쿼터(?=[.,!?]|는|가|도|부터|에는|에서|으로))/g,
-    "\n\n$1",
-  );
-  return out.replace(/^\n+/, "").trim();
-}
-
 export type AiCoachAnalysisCardProps = {
   /** 전술판이 모두 채워졌는지 — false면 버튼 비활성 */
   allSlotsFilled: boolean;
@@ -289,7 +270,7 @@ export function AiCoachAnalysisCard({
         ) : (
           <div className="space-y-2">
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
-              {analysis ? normalizeCoachingParagraphs(analysis) : ""}
+              {analysis || ""}
               {loading && <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-primary/60 align-middle" />}
             </p>
             {source === "rule" && (
