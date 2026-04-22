@@ -16,7 +16,7 @@ export default function PrivacyPage() {
 
       <h1 className="mt-6 font-heading text-3xl font-bold">개인정보처리방침</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        시행일: 2026년 3월 18일
+        시행일: 2026년 4월 22일 (AI 기능 관련 처리 내용 반영)
       </p>
 
       <div className="mt-10 space-y-10 text-sm leading-relaxed text-foreground/80">
@@ -107,7 +107,7 @@ export default function PrivacyPage() {
               </thead>
               <tbody className="divide-y divide-border/20 text-muted-foreground">
                 <tr>
-                  <td className="py-2">Supabase (미국)</td>
+                  <td className="py-2">Supabase (미국, 서울 리전 사용)</td>
                   <td className="py-2">데이터베이스 호스팅 및 인증</td>
                 </tr>
                 <tr>
@@ -120,11 +120,68 @@ export default function PrivacyPage() {
                 </tr>
                 <tr>
                   <td className="py-2">Naver Cloud (한국)</td>
-                  <td className="py-2">OCR (이미지 텍스트 인식)</td>
+                  <td className="py-2">OCR (이미지 텍스트 인식 — 백업)</td>
+                </tr>
+                <tr>
+                  <td className="py-2">Anthropic (미국)</td>
+                  <td className="py-2">
+                    AI 분석 생성 — Claude API (통장 이미지 파싱, 경기 후기,
+                    전술 코치 분석, 편성 설계, 선수 시그니처)
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-bold text-foreground">
+            5-1. AI 기능에 처리되는 데이터 (Claude API)
+          </h2>
+          <p className="mt-3 text-muted-foreground">
+            서비스는 Anthropic의 Claude API를 사용해 아래 AI 기능을 제공합니다.
+            각 기능 실행 시에만 해당 데이터가 Anthropic 서버로 전송되며, 평소엔
+            전송되지 않습니다.
+          </p>
+          <div className="mt-3 space-y-3">
+            <div>
+              <p className="font-medium text-foreground">
+                ① 통장 캡처 자동 파싱 (OCR Vision)
+              </p>
+              <p className="ml-3 text-muted-foreground">
+                업로드한 통장 거래 내역 이미지 원본이 전송됩니다. 동일 이미지는
+                해시값으로만 캐시되며 원본 이미지는 영구 저장되지 않습니다.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-foreground">② AI 자동 편성 · 코치 분석</p>
+              <p className="ml-3 text-muted-foreground">
+                참석자 이름(또는 별명)·선호 포지션·경기 편성 정보·팀 과거
+                경기 통계(포메이션별 승률·선수 기록·쿼터별 득실)·상대팀
+                과거 맞대결 기록이 전송됩니다. 연락처·카카오 ID 등
+                식별 정보는 포함되지 않습니다.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-foreground">③ 경기 후기 자동 생성</p>
+              <p className="ml-3 text-muted-foreground">
+                경기 스코어·득점자·어시스트·MVP·참석 인원·날씨·상대팀·
+                과거 맞대결 정보가 전송됩니다.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-foreground">④ 선수 시그니처 카드</p>
+              <p className="ml-3 text-muted-foreground">
+                선수 이름(또는 별명)·포지션·누적 기록(경기수·골·어시·MVP·
+                출석률·승률)이 전송됩니다.
+              </p>
+            </div>
+          </div>
+          <p className="mt-4 text-muted-foreground">
+            Anthropic은 Enterprise Zero-Retention 정책에 따라 API 호출 데이터를
+            모델 학습에 사용하지 않으며, 원본 입력은 콜 즉시 휘발됩니다. 생성된
+            결과는 서비스 내 데이터베이스에 캐시로 저장됩니다.
+          </p>
         </section>
 
         <section>

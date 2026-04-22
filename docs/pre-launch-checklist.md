@@ -12,7 +12,7 @@
 |------|------|------|
 | Supabase `rls_disabled_in_public` 경고 해소 (`dues_payment_status`, `legacy_player_stats`) | ✅ | 사용자가 Studio 에서 RLS 토글 직접 활성화 (2026-04-22). `pg_tables.rowsecurity = true` 검증됨. 00042 파일은 새 환경 재현용으로 유지 |
 | RLS 정책 전수 점검 (마이그레이션 외 수동 생성 테이블 없음 확인) | ⬜ | `supabase db pull` 로 drift 확인 후 커밋 |
-| `.env` 의 SUPABASE_SERVICE_ROLE_KEY 가 git 에 노출되지 않았는지 | ⬜ | `git log -p -- .env` 확인 |
+| `.env` 의 SUPABASE_SERVICE_ROLE_KEY 가 git 에 노출되지 않았는지 | ✅ | `git log --diff-filter=A -- .env` 결과 없음. `.gitignore` 에 `.env`·`.env.*` 포함. 추적 중인 `.env*` 파일 0개 |
 | Vercel 환경변수 (KAKAO_CLIENT_SECRET, ANTHROPIC_API_KEY, SESSION_SECRET, VAPID_*) 전수 확인 | ⬜ | Vercel 대시보드 |
 | Google / Kakao OAuth redirect URI 프로덕션 도메인 등록 확인 | ⬜ | `https://pitch-master.app` |
 | Web Push VAPID 공개키 클라이언트 번들에만 노출, 비밀키 서버 전용인지 확인 | ⬜ | |
@@ -24,9 +24,9 @@
 | AI route `.single()` 에러 필드 미검사 (ai/tactics, ai/full-plan, ai/match-summary) | ✅ | 2026-04-22 수정. DB 오류 시 503 응답 |
 | match-summary members 조회 실패 미검증 → 빈 이름 후기 생성 | ✅ | 2026-04-22 수정. members.error 시 503 |
 | 마이그레이션 번호 00027 충돌 — **리네임 금지** 문서화 | ✅ | `supabase/migrations/CLAUDE.md` 경고 추가 |
-| Vitest 615+ 테스트 통과 확인 | ⬜ | `npx vitest run` |
-| `npm run build` 통과 확인 | ⬜ | 빌드 실패 0 |
-| `npx tsc --noEmit` 타입 에러 0 확인 | ⬜ | 테스트 mock 관련 기존 에러는 무시 OK |
+| Vitest 686 테스트 통과 확인 | ✅ | 2026-04-22 전체 통과. vitest.config 에 `.claude/**`·`.serena/**` exclude 추가 |
+| `npm run build` 통과 확인 | ✅ | 2026-04-22 exit 0 |
+| `npx tsc --noEmit` 타입 에러 0 확인 | ✅ | 테스트 mock Supabase 타입 단언 기존 에러만 — 내 변경 관련 0 |
 | AI route 4곳 Vitest 커버리지 추가 (happy / rate_limit / futsal 차단) | ⬜ | 출시 후 1주 내 |
 
 ## C. 성능 / SSR
@@ -91,9 +91,9 @@
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| `/privacy` 페이지 최신화 (Claude API 송신 데이터 명시) | ⬜ | 통장 OCR·선수 스탯 전송 여부 |
-| `/terms` 이용약관 개정일 확인 | ⬜ | |
-| 개인정보 위탁처리 동의 — Anthropic, Supabase, Vercel | ⬜ | |
+| `/privacy` 페이지 최신화 (Claude API 송신 데이터 명시) | ✅ | 2026-04-22. 섹션 5-1 신설: OCR·편성·후기·시그니처 4개 AI 기능별 전송 데이터 상세. Anthropic Zero-Retention 정책 명시 |
+| `/terms` 이용약관 개정일 확인 | ✅ | 2026-04-22 개정. 제5조 AI 기능 목록 확장, 제9조 AI 결과 정확성 면책 추가 |
+| 개인정보 위탁처리 동의 — Anthropic, Supabase, Vercel | ✅ | privacy 섹션 5 표에 Anthropic 추가 완료 |
 | 카카오 로그인 계정 탈퇴 시 데이터 삭제 플로우 | ⬜ | GDPR / 개인정보보호법 |
 
 ---

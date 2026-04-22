@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "happy-dom",
-    exclude: ["e2e/**", "node_modules/**"],
+    exclude: ["e2e/**", "node_modules/**", ".claude/**", ".serena/**"],
     globals: true,
     setupFiles: ["./src/__tests__/setup.ts"],
     coverage: {

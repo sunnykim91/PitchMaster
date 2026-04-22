@@ -16,7 +16,7 @@ export default function TermsPage() {
 
       <h1 className="mt-6 font-heading text-3xl font-bold">이용약관</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        시행일: 2026년 3월 18일
+        시행일: 2026년 4월 22일 (AI 기능 확장 반영)
       </p>
 
       <div className="mt-10 space-y-10 text-sm leading-relaxed text-foreground/80">
@@ -97,12 +97,26 @@ export default function TermsPage() {
             <li>경기 일정 관리 및 참석 투표</li>
             <li>팀원 관리 (초대, 역할 설정)</li>
             <li>경기 기록 관리 (골, 어시스트, MVP, 출석률)</li>
-            <li>회비 관리 (수동 입력 및 이미지 인식)</li>
-            <li>선수 배치 (전술판, AI 자동 배치)</li>
+            <li>
+              회비 관리 (수동 입력 및 통장 이미지 AI 자동 파싱 — Claude API
+              Vision)
+            </li>
+            <li>
+              선수 배치 (전술판, 규칙 기반 자동 배치, AI 기반 쿼터별 편성
+              최적화)
+            </li>
+            <li>AI 감독 코치 분석 — 편성 기반 전술 브리핑 자동 생성</li>
+            <li>AI 경기 후기 — 경기 기록 기반 공유용 후기 자동 생성</li>
+            <li>AI 선수 시그니처 — 시즌 기록 기반 한 줄 소개 자동 생성</li>
+            <li>쿼터별 포지션 역할 가이드 (결정론적)</li>
             <li>커뮤니티 게시판</li>
             <li>팀 회칙 관리</li>
             <li>기타 서비스가 추가로 개발하여 제공하는 기능</li>
           </ul>
+          <p className="mt-3 text-muted-foreground">
+            AI 기능은 Anthropic의 Claude API를 활용하며, 처리되는 데이터 항목과
+            처리 방식은 개인정보처리방침 제5-1조에 명시되어 있습니다.
+          </p>
         </section>
 
         <section>
@@ -160,6 +174,12 @@ export default function TermsPage() {
             <li>
               이미지 인식(OCR) 결과의 정확성을 보장하지 않으며, 이용자가 반드시
               확인 후 사용해야 합니다.
+            </li>
+            <li>
+              AI 기능(전술 코치 분석, 경기 후기, 편성, 선수 시그니처 등)이
+              생성하는 텍스트·추천·배치는 참고용이며 사실 정확성·최적성을
+              보장하지 않습니다. 중요한 판단은 이용자가 직접 검토 후 적용해야
+              합니다.
             </li>
             <li>서비스는 이용자 간 분쟁에 대해 개입하지 않습니다.</li>
           </ul>
@@ -224,7 +244,8 @@ export default function TermsPage() {
 
         <section className="border-t border-border/30 pt-6">
           <p className="text-muted-foreground">
-            <strong>부칙:</strong> 본 약관은 2026년 3월 18일부터 시행합니다.
+            <strong>부칙:</strong> 본 약관은 2026년 3월 18일 최초 시행, 2026년
+            4월 22일 AI 기능 확장에 따른 개정 적용.
           </p>
         </section>
       </div>
