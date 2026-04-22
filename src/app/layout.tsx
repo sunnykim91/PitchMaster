@@ -116,10 +116,13 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "FAQPage",
               "mainEntity": [
-                { "@type": "Question", "name": "정말 무료인가요?", "acceptedAnswer": { "@type": "Answer", "text": "네, 현재는 무료입니다. 추후 운영에 따라서 변동이 있을 수 있습니다." } },
-                { "@type": "Question", "name": "우리 팀 데이터는 안전한가요?", "acceptedAnswer": { "@type": "Answer", "text": "한국 서울 리전에 암호화 저장됩니다." } },
-                { "@type": "Question", "name": "인원 제한이 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "없습니다. 몇 명이든 사용 가능합니다." } },
-                { "@type": "Question", "name": "풋살도 되나요?", "acceptedAnswer": { "@type": "Answer", "text": "네, 축구와 풋살 모두 지원합니다. 3~8인제 포메이션까지 지원합니다." } },
+                { "@type": "Question", "name": "정말 무료인가요?", "acceptedAnswer": { "@type": "Answer", "text": "네, 현재는 무료입니다. 인원 제한도 없습니다. 추후 운영에 따라 변동이 있을 수 있습니다." } },
+                { "@type": "Question", "name": "우리 팀 데이터는 안전한가요?", "acceptedAnswer": { "@type": "Answer", "text": "한국 서울 리전에 암호화 저장됩니다. 카카오 로그인만 사용하며, 별도 비밀번호를 보관하지 않습니다." } },
+                { "@type": "Question", "name": "축구와 풋살 둘 다 되나요?", "acceptedAnswer": { "@type": "Answer", "text": "네, 팀 생성 시 종목을 선택하면 포지션·전술판·코트 비율이 자동으로 맞춰집니다. 풋살은 3인제부터 8인제까지 완전 지원합니다." } },
+                { "@type": "Question", "name": "조기축구 총무를 처음 맡았는데 어디서부터 시작하나요?", "acceptedAnswer": { "@type": "Answer", "text": "팀 생성 → 초대 링크로 팀원 등록 → 첫 경기 일정 등록, 세 단계면 됩니다. 회비는 통장 캡처 한 장으로 자동 정리되고, 참석 투표는 카카오톡 공유 한 번으로 끝납니다." } },
+                { "@type": "Question", "name": "통장 캡처로 회비 정리가 어떻게 되나요?", "acceptedAnswer": { "@type": "Answer", "text": "카카오뱅크·토스 등 거래 내역 화면을 캡처해 올리면 AI가 날짜·이름·금액을 자동 추출해 표로 만들어줍니다. 총무는 납부자 매칭만 확인하면 됩니다." } },
+                { "@type": "Question", "name": "PC에서도 쓸 수 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "네, PWA 기반이라 PC·태블릿·폰 어디서나 바로 사용합니다. 앱 설치 없이 브라우저로 접속 가능합니다." } },
+                { "@type": "Question", "name": "AI 라인업 자동 편성은 어떻게 작동하나요?", "acceptedAnswer": { "@type": "Answer", "text": "참석자와 포메이션만 있으면 AI가 쿼터별 배치와 감독 작전 브리핑까지 같이 생성합니다. 팀 과거 이력·선수별 스탯·상대팀 맞대결 기록을 모두 반영합니다." } },
               ]
             })
           }}

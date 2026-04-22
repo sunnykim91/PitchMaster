@@ -30,6 +30,13 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.kakaocdn.net" },
     ],
   },
+  async rewrites() {
+    return [
+      // /guide 로 접근 시 public/guide.html 서빙 (확장자 없는 깔끔한 URL)
+      // 향후 Next.js 페이지로 완전 마이그레이션 시 제거 (계획: docs/pre-launch-checklist.md)
+      { source: "/guide", destination: "/guide.html" },
+    ];
+  },
   async headers() {
     return [
       {

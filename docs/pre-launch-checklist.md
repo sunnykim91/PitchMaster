@@ -15,7 +15,7 @@
 | `.env` 의 SUPABASE_SERVICE_ROLE_KEY 가 git 에 노출되지 않았는지 | ✅ | `git log --diff-filter=A -- .env` 결과 없음. `.gitignore` 에 `.env`·`.env.*` 포함. 추적 중인 `.env*` 파일 0개 |
 | Vercel 환경변수 (KAKAO_CLIENT_SECRET, ANTHROPIC_API_KEY, SESSION_SECRET, VAPID_*) 전수 확인 | ⬜ | Vercel 대시보드 |
 | Google / Kakao OAuth redirect URI 프로덕션 도메인 등록 확인 | ⬜ | `https://pitch-master.app` |
-| Web Push VAPID 공개키 클라이언트 번들에만 노출, 비밀키 서버 전용인지 확인 | ⬜ | |
+| Web Push VAPID 공개키 클라이언트 번들에만 노출, 비밀키 서버 전용인지 확인 | ✅ | 2026-04-22 검증. NEXT_PUBLIC_VAPID_PUBLIC_KEY(클라)·VAPID_PRIVATE_KEY(서버) prefix 분리 정상 |
 
 ## B. 코드 품질 (Critical 버그)
 
@@ -35,8 +35,8 @@
 |------|------|------|
 | `getMatchDetailData` SSR 블로킹 해소 — AI 후기 첫 생성 클라이언트로 이전 | ✅ | 이미 개선됨 (Explore 확인) |
 | 대시보드 SSR 페이지 로드 속도 측정 (Vercel Analytics) | ⬜ | p75 < 2s 목표 |
-| AI TeamStats 캐시 24h TTL 정상 동작 확인 | ⬜ | 동일 팀 2회 호출 시 cache hit 로그 |
-| 회비 OCR 이미지 해시 캐시 동작 확인 | ⬜ | 같은 이미지 재업로드 시 AI 호출 0회 |
+| AI TeamStats 캐시 24h TTL 정상 동작 확인 | ✅ | 2026-04-22 코드 검증. TTL_MS=24h, updated_at 기준 lazy 갱신 + invalidateTeamStats 경기 완료 시 강제 무효화 |
+| 회비 OCR 이미지 해시 캐시 동작 확인 | ✅ | 2026-04-22 코드 검증. SHA256 상위 16자 해시, `ai_ocr_cache` 테이블 24h TTL, smart route 캐시 우선 조회 |
 
 ## D. 결제 / 수익
 
@@ -50,10 +50,10 @@
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| Google Search Console 등록 + sitemap 제출 | ⬜ | `docs/seo-checklist.md` 참고 |
-| 네이버 서치어드바이저 등록 + 인증 태그 확인 | ✅ | layout.tsx 에 메타 태그 존재 |
+| Google Search Console 등록 + sitemap 제출 | ✅ | 2026-04-22 도메인 속성 등록 · sitemap 성공 · 발견된 페이지 4 |
+| 네이버 서치어드바이저 등록 + 인증 태그 확인 | ✅ | 2026-04-22 루트·www 두 도메인 모두 등록 · sitemap 제출 완료 |
 | 랜딩 페이지 본문 키워드 밀도 (조기축구·피치마스터) | ✅ | FaqSection·HeroSection 보강됨 |
-| Open Graph 이미지 1200×630 실제 존재 확인 | ⬜ | 카톡 공유 미리보기 |
+| Open Graph 이미지 1200×630 실제 존재 확인 | ✅ | `src/app/opengraph-image.tsx` — next/og ImageResponse 동적 생성. 팀 수 하드코딩 "80+ 팀" 으로 일반화 |
 | 구조화 데이터 (SoftwareApplication + FAQPage) 유효성 | ✅ | layout.tsx 에 JSON-LD |
 
 ## F. 콘텐츠 / 커뮤니티
@@ -61,10 +61,10 @@
 | 항목 | 상태 | 비고 |
 |------|------|------|
 | velog 1·2편 실제 게시 | ⬜ | 초안 완성 — `docs/blog-post-*-draft.md` |
-| velog 3편 작성 ("0명 → 180명 성장기") | ⬜ | |
+| velog 3편 작성 ("0명 → 180명 성장기") | ✅ | `docs/blog-post-3-draft.md` 초안 완성. 게시는 사용자 수동 |
 | 네이버 조기축구 카페 글 1곳 게시 | ⬜ | 초안 `docs/marketing-cafe-post.md` |
-| 사용자 가이드 페이지 정비 (guide.html → Next.js) | ⬜ | 현재 `public/guide.html` 방치 |
-| FAQ 7~8개 확장 | 🟡 | FaqSection 부분 보강. 조기축구 관리·총무 키워드는 추가됨 |
+| 사용자 가이드 페이지 정비 (guide.html → Next.js) | 🟡 | 2026-04-22 `/guide` rewrites 로 깔끔 URL 연결 + sitemap 등록. 완전 Next.js 컴포넌트 마이그레이션은 후순위 (883줄 HTML) |
+| FAQ 7~8개 확장 | ✅ | 2026-04-22 9개 → 14개 확장. 통장 OCR·AI 라인업·PC 지원·휴면/부상 면제·MVP 투표 등 추가. JSON-LD FAQPage 도 동기화 |
 
 ## G. 앱 스토어
 
@@ -81,7 +81,7 @@
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| AI 사용량 월별 집계 (ai_usage_log) 모니터링 쿼리 | ⬜ | 비정상 사용 감지용 |
+| AI 사용량 월별 집계 (ai_usage_log) 모니터링 쿼리 | ✅ | `docs/ai-usage-queries.sql` — 7개 쿼리 (월별·팀별·일일 추이·실패율·비정상 다발·비용 추산·rate limit) |
 | 에러 로깅 — Vercel 로그 대시보드 실시간 확인 | ⬜ | |
 | CS 유입 채널 (카카오톡 채널 등) 단일화 | 🟡 | 메모리 `cs-outreach-log.md` 참고 |
 | 데이터 백업 루틴 (Supabase daily backup 확인) | ⬜ | `docs/supabase-backup.md` 참고 |
@@ -94,7 +94,7 @@
 | `/privacy` 페이지 최신화 (Claude API 송신 데이터 명시) | ✅ | 2026-04-22. 섹션 5-1 신설: OCR·편성·후기·시그니처 4개 AI 기능별 전송 데이터 상세. Anthropic Zero-Retention 정책 명시 |
 | `/terms` 이용약관 개정일 확인 | ✅ | 2026-04-22 개정. 제5조 AI 기능 목록 확장, 제9조 AI 결과 정확성 면책 추가 |
 | 개인정보 위탁처리 동의 — Anthropic, Supabase, Vercel | ✅ | privacy 섹션 5 표에 Anthropic 추가 완료 |
-| 카카오 로그인 계정 탈퇴 시 데이터 삭제 플로우 | ⬜ | GDPR / 개인정보보호법 |
+| 카카오 로그인 계정 탈퇴 시 데이터 삭제 플로우 | 🔴 | **2026-04-22 Explore 확인: 탈퇴 API/UI 미구현**. privacy 7조 "즉시 파기" 약속과 모순. 출시 전 반드시 구현 — `docs/withdraw-flow-plan.md` 계획 |
 
 ---
 
