@@ -17,6 +17,7 @@ import { useToast } from "@/lib/ToastContext";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/lib/formatters";
 import type { Role } from "@/lib/types";
+import { firstOf, type JoinedRow } from "@/lib/supabaseJoins";
 
 type PenaltyRecord = {
   id: string;
@@ -27,9 +28,9 @@ type PenaltyRecord = {
   date: string;
   status: string; // UNPAID, PAID, WAIVED
   note: string | null;
-  users: { name: string } | null;
-  rule: { name: string; trigger_type: string } | null;
-  match: { match_date: string; opponent_name: string | null } | null;
+  users: JoinedRow<{ name: string }>;
+  rule: JoinedRow<{ name: string; trigger_type: string }>;
+  match: JoinedRow<{ match_date: string; opponent_name: string | null }>;
 };
 
 export type DuesPenaltyTabProps = {
@@ -169,11 +170,14 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
   };
 
   function renderRow(p: PenaltyRecord) {
-    const userName = Array.isArray(p.users) ? (p.users as unknown as { name: string }[])[0]?.name : p.users?.name;
-    const ruleName = Array.isArray(p.rule) ? (p.rule as unknown as { name: string; trigger_type: string }[])[0]?.name : p.rule?.name;
-    const triggerType = Array.isArray(p.rule) ? (p.rule as unknown as { trigger_type: string }[])[0]?.trigger_type : p.rule?.trigger_type;
-    const matchDate = Array.isArray(p.match) ? (p.match as unknown as { match_date: string }[])[0]?.match_date : p.match?.match_date;
-    const opponent = Array.isArray(p.match) ? (p.match as unknown as { opponent_name: string | null }[])[0]?.opponent_name : p.match?.opponent_name;
+    const user = firstOf(p.users);
+    const rule = firstOf(p.rule);
+    const match = firstOf(p.match);
+    const userName = user?.name;
+    const ruleName = rule?.name;
+    const triggerType = rule?.trigger_type;
+    const matchDate = match?.match_date;
+    const opponent = match?.opponent_name;
 
     return (
       <Card key={p.id} className="border-white/[0.04] bg-card py-2">

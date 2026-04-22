@@ -18,6 +18,7 @@ import { getOrGenerateSignature } from "@/lib/server/aiSignatureCache";
 import { PlayerProfilePage, PlayerProfileEmpty } from "@/components/pitchmaster/PlayerProfilePage";
 import type { PlayerProfile, PlayerStats } from "@/components/pitchmaster/PlayerProfilePage";
 import type { PlayerCardProps, StatWithContext } from "@/components/pitchmaster/PlayerCard";
+import { firstOf, type JoinedRow } from "@/lib/supabaseJoins";
 
 type Props = {
   params: Promise<{ memberId: string }>;
@@ -33,8 +34,8 @@ type MemberRow = {
   team_id: string;
   ai_signature: string | null;
   ai_signature_generated_at: string | null;
-  users: { name: string; preferred_positions: string[]; profile_image_url: string | null } | null;
-  teams: { name: string; sport_type: string; uniform_primary: string | null; logo_url: string | null } | null;
+  users: JoinedRow<{ name: string; preferred_positions: string[]; profile_image_url: string | null }>;
+  teams: JoinedRow<{ name: string; sport_type: string; uniform_primary: string | null; logo_url: string | null }>;
 };
 
 async function getPlayerData(memberId: string, teamId?: string, enableAi: boolean = false, callerUserId: string | null = null, callerTeamId: string | null = null): Promise<PlayerProfile | null> {
@@ -49,12 +50,12 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
     .or(`user_id.eq.${memberId},id.eq.${memberId}`)
     .in("status", ["ACTIVE", "DORMANT"]);
   if (teamId) query = query.eq("team_id", teamId);
-  const { data: member } = await query.limit(1).single();
+  const { data: member } = await query.limit(1).single<MemberRow>();
 
   if (!member) return null;
-  const m = member as unknown as MemberRow;
-  const user = m.users;
-  const team = m.teams;
+  const m = member;
+  const user = firstOf(m.users);
+  const team = firstOf(m.teams);
   const name = user?.name ?? m.pre_name ?? "";
   const teamName = team?.name ?? "";
   const teamPrimaryColor = team?.uniform_primary ?? "#e8613a";

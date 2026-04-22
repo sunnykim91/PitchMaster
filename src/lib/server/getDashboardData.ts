@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { autoCompleteTeamMatches, getKstToday } from "@/lib/server/autoCompleteMatches";
+import { firstOf, type JoinedRow } from "@/lib/supabaseJoins";
 
 export type TeamRecord = {
   wins: number;
@@ -436,27 +437,23 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
 
   // ── 오늘 생일인 팀원 조회 (KST 기준) ──
   const todayMD = today.slice(5); // "MM-DD"
+  type BirthdayUser = { name: string; birth_date: string | null; profile_image_url: string | null };
+  type BirthdayJoinRow = { users: JoinedRow<BirthdayUser> };
   const { data: birthdayRows } = await db
     .from("team_members")
     .select("users(name, birth_date, profile_image_url)")
     .eq("team_id", teamId)
-    .eq("status", "ACTIVE");
+    .eq("status", "ACTIVE")
+    .returns<BirthdayJoinRow[]>();
 
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  const birthdayMembers: BirthdayMember[] = ((birthdayRows ?? []) as any[])
-    .filter((row: any) => {
-      const u = Array.isArray(row.users) ? row.users[0] : row.users;
-      const bd = u?.birth_date;
-      return bd && bd.slice(5) === todayMD;
-    })
-    .map((row: any) => {
-      const u = Array.isArray(row.users) ? row.users[0] : row.users;
-      return {
-        name: u.name,
-        birthDate: u.birth_date,
-        profileImageUrl: u.profile_image_url ?? null,
-      };
-    });
+  const birthdayMembers: BirthdayMember[] = (birthdayRows ?? [])
+    .map((row) => firstOf(row.users))
+    .filter((u): u is BirthdayUser => !!u && !!u.birth_date && u.birth_date.slice(5) === todayMD)
+    .map((u) => ({
+      name: u.name,
+      birthDate: u.birth_date!,
+      profileImageUrl: u.profile_image_url ?? null,
+    }));
 
   // ── 팀 전체 경기 수 (0건이면 한 번도 경기 등록 안 한 팀) ──
   const { count: totalMatchesCount } = await db
