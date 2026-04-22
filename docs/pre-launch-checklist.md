@@ -94,7 +94,7 @@
 | `/privacy` 페이지 최신화 (Claude API 송신 데이터 명시) | ✅ | 2026-04-22. 섹션 5-1 신설: OCR·편성·후기·시그니처 4개 AI 기능별 전송 데이터 상세. Anthropic Zero-Retention 정책 명시 |
 | `/terms` 이용약관 개정일 확인 | ✅ | 2026-04-22 개정. 제5조 AI 기능 목록 확장, 제9조 AI 결과 정확성 면책 추가 |
 | 개인정보 위탁처리 동의 — Anthropic, Supabase, Vercel | ✅ | privacy 섹션 5 표에 Anthropic 추가 완료 |
-| 카카오 로그인 계정 탈퇴 시 데이터 삭제 플로우 | 🔴 | **2026-04-22 Explore 확인: 탈퇴 API/UI 미구현**. privacy 7조 "즉시 파기" 약속과 모순. 출시 전 반드시 구현 — `docs/withdraw-flow-plan.md` 계획 |
+| 카카오 로그인 계정 탈퇴 시 데이터 삭제 플로우 | ✅ | **2026-04-22 구현 완료**. 00043 마이그레이션(users.deleted_at + team_members.status CHECK 정정) · POST /api/account/withdraw (개인정보 즉시 익명화 + soft delete) · PersonalSettings 2단계 확인 UI · auth.ts deleted_at 필터 · cron 매일 03:00 UTC 14일 경과 hard delete · privacy 개정 |
 
 ---
 

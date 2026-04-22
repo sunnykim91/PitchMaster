@@ -16,7 +16,7 @@ export default function PrivacyPage() {
 
       <h1 className="mt-6 font-heading text-3xl font-bold">개인정보처리방침</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        시행일: 2026년 4월 22일 (AI 기능 관련 처리 내용 반영)
+        시행일: 2026년 4월 22일 (AI 기능 · 탈퇴 플로우 반영)
       </p>
 
       <div className="mt-10 space-y-10 text-sm leading-relaxed text-foreground/80">
@@ -66,9 +66,17 @@ export default function PrivacyPage() {
             3. 개인정보의 보유 및 이용 기간
           </h2>
           <ul className="mt-3 ml-5 list-disc space-y-1 text-muted-foreground">
-            <li>회원 탈퇴 시 즉시 파기합니다.</li>
             <li>
-              단, 관련 법령에 따라 일정 기간 보존이 필요한 경우 해당 기간 동안
+              <strong>탈퇴 즉시 개인 식별 정보 파기</strong>: 이름·연락처·생년월일·
+              프로필 사진·선호 포지션·주발 정보는 탈퇴 요청 즉시 익명 처리됩니다.
+            </li>
+            <li>
+              <strong>팀 운영 데이터 14일 보존</strong>: 이용자가 작성한 경기 기록·
+              출석·게시글·댓글 등은 팀 자산으로 14일간 유지된 후 완전 삭제됩니다.
+              이는 팀 기록의 일관성을 위한 최소 기간입니다.
+            </li>
+            <li>
+              관련 법령에 따라 일정 기간 보존이 필요한 경우 해당 기간 동안
               보관합니다.
             </li>
             <li>1년 이상 서비스 미이용 시 별도 통지 후 파기합니다.</li>
@@ -208,6 +216,8 @@ export default function PrivacyPage() {
           </ul>
           <p className="mt-3">
             요청은 서비스 내 설정 페이지 또는 아래 연락처로 가능합니다.
+            <br />
+            <strong>회원 탈퇴 경로</strong>: 설정 → 개인 설정 → 계정 탈퇴 (2단계 확인)
           </p>
         </section>
 

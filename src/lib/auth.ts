@@ -154,11 +154,14 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
   const db = getSupabaseAdmin();
   if (!db) throw new Error("Supabase is not configured");
 
-  // Check existing user
+  // Check existing user (탈퇴자 제외)
+  // 🔴 deleted_at IS NOT NULL 이면 탈퇴 상태 — 로그인 흐름에서 완전 차단.
+  // 동일 카카오 ID 로 재가입 시도 시, 14일 경과 후 cron 이 row 를 물리 삭제하므로 그 후엔 신규 계정으로 생성됨.
   const { data: existing } = await db
     .from("users")
     .select("*")
     .eq("kakao_id", kakaoProfile.id)
+    .is("deleted_at", null)
     .single();
 
   if (existing) {

@@ -3,11 +3,12 @@
 import { memo, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import Image from "next/image";
-import { Bell, Sun, Moon, Monitor, Camera, Link2 } from "lucide-react";
+import { Bell, Sun, Moon, Monitor, Camera, Link2, AlertTriangle } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { subscribeToPush } from "@/lib/pushSubscription";
 import { apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
+import { useConfirm } from "@/lib/ConfirmContext";
 import type { PreferredPosition, PreferredFoot } from "@/lib/types";
 import { POSITION_GROUPS, PREF_POSITION_SHORT, FUTSAL_POSITION_GROUPS, FUTSAL_POSITION_SHORT } from "@/lib/types";
 import type { SportType } from "@/lib/types";
@@ -58,6 +59,50 @@ function PersonalSettingsComponent({
   const [myMemberId, setMyMemberId] = useState<string | null>(null);
   const [jerseyNumber, setJerseyNumber] = useState<string>("");
   const [jerseySaving, setJerseySaving] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const confirm = useConfirm();
+
+  async function handleWithdraw() {
+    // 2단계 확인 — 실수로 탈퇴하지 않도록
+    const firstOk = await confirm({
+      title: "정말 탈퇴하시겠어요?",
+      description:
+        "개인 식별 정보(이름·연락처·생일·프로필 사진)는 탈퇴 즉시 익명 처리됩니다. 팀 경기 기록은 팀 자산으로 14일간 유지된 후 완전 삭제됩니다.",
+      confirmLabel: "다음",
+      cancelLabel: "취소",
+    });
+    if (!firstOk) return;
+
+    const secondOk = await confirm({
+      title: "마지막 확인",
+      description:
+        "이 작업은 되돌릴 수 없습니다. 탈퇴 즉시 로그아웃되며, 카카오로 재로그인해도 이전 데이터는 복구되지 않습니다.",
+      confirmLabel: "탈퇴",
+      cancelLabel: "취소",
+      variant: "destructive",
+    });
+    if (!secondOk) return;
+
+    setWithdrawing(true);
+    try {
+      const res = await fetch("/api/account/withdraw", { method: "POST" });
+      if (res.ok || res.status === 204) {
+        showToast("탈퇴가 완료되었습니다", "success");
+        // 세션 쿠키는 서버에서 이미 clear. 로그인 페이지로 이동
+        window.location.href = "/login";
+      } else {
+        const body = await res.json().catch(() => ({}));
+        showToast(
+          body.error === "db_unavailable" ? "일시적인 오류입니다. 잠시 후 다시 시도해주세요" : "탈퇴 처리에 실패했습니다",
+          "error",
+        );
+      }
+    } catch {
+      showToast("네트워크 오류로 탈퇴에 실패했습니다", "error");
+    } finally {
+      setWithdrawing(false);
+    }
+  }
 
   // 알림 설정 로드 — DB에 설정이 없으면 OFF (구독 전)
   useEffect(() => {
@@ -418,6 +463,30 @@ function PersonalSettingsComponent({
           {pushLoading && (
             <p className="mt-2 text-xs text-muted-foreground animate-pulse">알림 권한을 확인하고 있습니다...</p>
           )}
+        </div>
+
+        {/* 계정 관리 (탈퇴) — 카드 맨 하단 위험 영역 */}
+        <div className="mt-6 border-t border-destructive/20 pt-5">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-destructive/80" />
+            <div className="flex-1 space-y-2">
+              <h4 className="text-sm font-semibold text-foreground">계정 탈퇴</h4>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                탈퇴 시 개인 식별 정보는 즉시 익명 처리되고, 팀 경기 기록은 팀 자산으로 14일간 유지된 후 완전 삭제됩니다.
+                이 작업은 되돌릴 수 없습니다.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-1 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={handleWithdraw}
+                disabled={withdrawing}
+              >
+                {withdrawing ? "탈퇴 처리 중..." : "계정 탈퇴"}
+              </Button>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
