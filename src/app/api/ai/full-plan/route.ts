@@ -20,6 +20,10 @@ export async function POST(req: NextRequest) {
   if (!session?.user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  // 🔴 Feature flag — 김선휘 베타 전용. API 레벨 차단 (UI 우회 방지)
+  if (session.user.name !== "김선휘") {
+    return NextResponse.json({ error: "ai_not_available" }, { status: 403 });
+  }
   // 풋살 팀 AI 차단 (API 레벨)
   if (session.user.teamId) {
     const db = getSupabaseAdmin();
