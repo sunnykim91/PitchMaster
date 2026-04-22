@@ -22,61 +22,16 @@ import { DuesBulkTab } from "./DuesBulkTab";
 import { DuesSettingsTab } from "./DuesSettingsTab";
 import { DuesPenaltyTab } from "./DuesPenaltyTab";
 
-/* ── API response types (snake_case from server) ── */
+/* ── API / 초기 데이터 타입은 initialData.types.ts 공유 파일에서 import ── */
 
-type ApiDuesRecord = {
-  id: string;
-  team_id: string;
-  user_id: string | null;
-  type: "INCOME" | "EXPENSE";
-  amount: number;
-  description: string;
-  screenshot_url: string | null;
-  recorded_by: string;
-  recorded_at: string;
-  users: { name: string } | null;
-  recorder: { name: string } | null;
-};
-
-type ApiDuesSetting = {
-  id: string;
-  team_id: string;
-  member_type: string;
-  monthly_amount: number;
-  description: string | null;
-  created_at: string;
-};
-
-type ApiPenaltyRule = {
-  id: string;
-  team_id: string;
-  name: string;
-  amount: number;
-  trigger_type: string;
-  is_active: boolean;
-};
-
-type ApiPenaltyRecord = {
-  id: string;
-  team_id: string;
-  rule_id: string;
-  member_id: string;
-  amount: number;
-  date: string;
-  status: string;
-  is_paid: boolean;
-  note: string | null;
-  rule: { name: string };
-  member: { name: string };
-};
-
-type ApiMemberRow = {
-  id: string;
-  user_id: string | null;
-  role: string;
-  pre_name: string | null;
-  users: { id: string; name: string } | null;
-};
+import type {
+  ApiDuesRecord,
+  ApiDuesSetting,
+  ApiPenaltyRule,
+  ApiPenaltyRecord,
+  ApiMemberRow,
+  DuesInitialData,
+} from "./initialData.types";
 
 type ApiMember = {
   id: string;
@@ -102,16 +57,6 @@ type DuesSetting = {
   memberType: string;
   monthlyAmount: number;
   description: string;
-};
-
-type DuesInitialData = {
-  records: ApiDuesRecord[];
-  balance: number | null;
-  balanceUpdatedAt: string | null;
-  settings: ApiDuesSetting[];
-  penaltyRules: ApiPenaltyRule[];
-  penaltyRecords: ApiPenaltyRecord[];
-  members?: ApiMemberRow[];
 };
 
 const validDuesTabs = ["records", "status", "penalty", "bulk", "settings"] as const;

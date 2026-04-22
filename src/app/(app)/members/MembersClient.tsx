@@ -45,30 +45,7 @@ type Member = {
   profileImageUrl: string | null;
 };
 
-type ApiMemberRow = {
-  id: string;
-  user_id: string | null;
-  role: Role;
-  status: string;
-  joined_at: string;
-  pre_name: string | null;
-  pre_phone: string | null;
-  coach_positions?: string[] | null;
-  jersey_number?: number | null;
-  team_role?: string | null;
-  dormant_type?: string | null;
-  dormant_until?: string | null;
-  dormant_reason?: string | null;
-  users: {
-    id: string;
-    name: string;
-    preferred_positions: string[];
-    preferred_foot: "RIGHT" | "LEFT" | "BOTH" | null;
-    phone: string | null;
-    birth_date: string | null;
-    profile_image_url: string | null;
-  } | null;
-};
+import type { ApiMemberRow, MembersInitialData } from "./initialData.types";
 
 function mapApiMembers(rows: ApiMemberRow[]): Member[] {
   return rows.map((row) => ({
@@ -108,9 +85,9 @@ export default function MembersClient({
 }: {
   userRole?: Role;
   userId: string;
-  initialData?: { members: ApiMemberRow[]; isStaff: boolean };
+  initialData?: MembersInitialData;
 }) {
-  const { data: membersData, loading, error, refetch } = useApi<{ members: ApiMemberRow[]; isStaff: boolean }>(
+  const { data: membersData, loading, error, refetch } = useApi<MembersInitialData>(
     "/api/members",
     initialData ?? { members: [], isStaff: false },
     { skip: !!initialData },

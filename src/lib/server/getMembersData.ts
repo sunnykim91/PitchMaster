@@ -1,8 +1,12 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { hasMinRole } from "@/lib/permissions";
 import type { Role } from "@/lib/types";
+import type { ApiMemberRow, MembersInitialData } from "@/app/(app)/members/initialData.types";
 
-export async function getMembersData(teamId: string, teamRole?: Role) {
+export async function getMembersData(
+  teamId: string,
+  teamRole?: Role,
+): Promise<MembersInitialData> {
   const db = getSupabaseAdmin();
   if (!db) return { members: [], isStaff: false };
 
@@ -15,7 +19,8 @@ export async function getMembersData(teamId: string, teamRole?: Role) {
     .from("team_members")
     .select(select)
     .eq("team_id", teamId)
-    .in("status", ["ACTIVE", "DORMANT"]);
+    .in("status", ["ACTIVE", "DORMANT"])
+    .returns<ApiMemberRow[]>();
 
   return { members: data ?? [], isStaff };
 }
