@@ -10,7 +10,7 @@
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| Supabase `rls_disabled_in_public` 경고 해소 (`dues_payment_status`, `legacy_player_stats`) | 🟡 | 00042 마이그레이션 파일 작성 완료. **Supabase Studio 에서 수동 실행 필요** |
+| Supabase `rls_disabled_in_public` 경고 해소 (`dues_payment_status`, `legacy_player_stats`) | ✅ | 사용자가 Studio 에서 RLS 토글 직접 활성화 (2026-04-22). `pg_tables.rowsecurity = true` 검증됨. 00042 파일은 새 환경 재현용으로 유지 |
 | RLS 정책 전수 점검 (마이그레이션 외 수동 생성 테이블 없음 확인) | ⬜ | `supabase db pull` 로 drift 확인 후 커밋 |
 | `.env` 의 SUPABASE_SERVICE_ROLE_KEY 가 git 에 노출되지 않았는지 | ⬜ | `git log -p -- .env` 확인 |
 | Vercel 환경변수 (KAKAO_CLIENT_SECRET, ANTHROPIC_API_KEY, SESSION_SECRET, VAPID_*) 전수 확인 | ⬜ | Vercel 대시보드 |
