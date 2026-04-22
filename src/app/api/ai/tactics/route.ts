@@ -64,11 +64,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   // 풋살 팀 AI 차단 (API 레벨)
+  // 🔴 team 조회 실패 시 열어주지 말고 차단 — DB 오류를 "풋살 아님" 으로 오인하면 정책 우회됨
   if (session.user.teamId) {
     const db = getSupabaseAdmin();
     if (db) {
-      const { data: team } = await db.from("teams").select("sport_type").eq("id", session.user.teamId).single();
-      if (team?.sport_type === "FUTSAL") {
+      const { data: team, error: teamErr } = await db
+        .from("teams")
+        .select("sport_type")
+        .eq("id", session.user.teamId)
+        .single();
+      if (teamErr || !team) {
+        return NextResponse.json({ error: "team_lookup_failed" }, { status: 503 });
+      }
+      if (team.sport_type === "FUTSAL") {
         return NextResponse.json({ error: "ai_not_available_for_futsal" }, { status: 403 });
       }
     }

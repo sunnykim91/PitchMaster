@@ -28,8 +28,15 @@ export async function POST(
   if (session.user.teamId) {
     const dbCheck = getSupabaseAdmin();
     if (dbCheck) {
-      const { data: team } = await dbCheck.from("teams").select("sport_type").eq("id", session.user.teamId).single();
-      if (team?.sport_type === "FUTSAL") {
+      const { data: team, error: teamErr } = await dbCheck
+        .from("teams")
+        .select("sport_type")
+        .eq("id", session.user.teamId)
+        .single();
+      if (teamErr || !team) {
+        return NextResponse.json({ error: "team_lookup_failed" }, { status: 503 });
+      }
+      if (team.sport_type === "FUTSAL") {
         return NextResponse.json({ error: "ai_not_available_for_futsal" }, { status: 403 });
       }
     }
@@ -84,6 +91,12 @@ export async function POST(
     .from("team_members")
     .select("id, user_id, pre_name, users(name)")
     .eq("team_id", session.user.teamId!);
+
+  // members 조회 실패 시 이름 매핑 불가 → 의미 없는 후기("모름" 반복) 생성 방지. 에러 내고 중단.
+  if (members.error) {
+    console.error("[/api/ai/match-summary] members 조회 실패:", members.error);
+    return NextResponse.json({ error: "members_lookup_failed" }, { status: 503 });
+  }
 
   const nameMap = new Map<string, string>();
   // team_members.id + users.id 양쪽 등록

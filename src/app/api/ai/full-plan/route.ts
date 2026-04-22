@@ -24,8 +24,15 @@ export async function POST(req: NextRequest) {
   if (session.user.teamId) {
     const db = getSupabaseAdmin();
     if (db) {
-      const { data: team } = await db.from("teams").select("sport_type").eq("id", session.user.teamId).single();
-      if (team?.sport_type === "FUTSAL") {
+      const { data: team, error: teamErr } = await db
+        .from("teams")
+        .select("sport_type")
+        .eq("id", session.user.teamId)
+        .single();
+      if (teamErr || !team) {
+        return NextResponse.json({ error: "team_lookup_failed" }, { status: 503 });
+      }
+      if (team.sport_type === "FUTSAL") {
         return NextResponse.json({ error: "ai_not_available_for_futsal" }, { status: 403 });
       }
     }
