@@ -27,7 +27,11 @@ export const metadata: Metadata = {
   verification: {
     google: "google0cfbdfe7b13f49fc",
     other: {
-      "naver-site-verification": "78534dae19992e874725d2ae546c0c4e1ca835e6",
+      // www.pitch-master.app (기존) + pitch-master.app (루트, sitemap 제출용)
+      "naver-site-verification": [
+        "78534dae19992e874725d2ae546c0c4e1ca835e6",
+        "0cb429e0cb2d276976702e8e77ed36baa2744748",
+      ],
     },
   },
   keywords: [
