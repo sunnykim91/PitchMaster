@@ -124,6 +124,28 @@ PRESIDENT (회장) > STAFF (운영진) > MEMBER (일반 회원)
 
 ---
 
+## MVP 집계 정책 (2026-04-23 기준)
+
+**확정 조건** (둘 중 하나):
+1. 운영진(STAFF+) 1명 이상이 해당 경기에 투표 → 즉시 확정 (투표율 무관)
+2. 일반 팀원 투표가 실제 참석자(`attendance_status=PRESENT|LATE`) 70% 이상 → 최다득표자 확정
+
+**구현 헬퍼** (`src/lib/mvpThreshold.ts`):
+- `resolveValidMvp(votes, attendedCount, staffDecision)` — 정책 판정
+- `pickStaffDecision(rows, staffVoterIds)` — `is_staff_decision=true` OR 현재 STAFF+ voter 투표를 확정 후보로 리턴. 2026-04-20(커밋 `2d457b8`) 이전에 저장된 staff 투표가 `false`로 남아있는 백필 누락을 동적 치유.
+
+**집계 경로 9곳** — 하나 수정 시 전부 같이 건드려야 일관성 유지:
+- SSR: `src/lib/server/getRecordsData.ts`, `src/lib/server/getDashboardData.ts`
+- API: `src/app/api/records/route.ts`, `src/app/api/records/detail/route.ts` (`type=mvp`), `src/app/api/season-awards/route.ts`, `src/app/api/player-card/route.ts`, `src/app/api/share-card/route.ts`
+- AI 캐시: `src/lib/server/aiTeamStats.ts` (24h TTL)
+- 실시간 UI: `MatchRecordTab.tsx`의 "현재 1위" 표시는 확정 정책과 별개 (건드리지 말 것)
+
+**설정 토글**: 팀 설정 `mvp_vote_staff_only` — 일반 팀원 투표를 막는 게이트. 운영진이 투표할 땐 **자동으로 `is_staff_decision=true`** 저장되므로, 토글 OFF 상태에서도 운영진 투표는 즉시 확정됨.
+
+**UI 안내**: MVP 투표 카드에 threshold 미달 시 "참석자 70% 이상이 투표해야 공식 MVP로 확정됩니다. 미달 시 운영진이 직접 지정할 수 있어요." 문구 자동 노출.
+
+---
+
 ## AI 기능 설계 (2026-04-18 기준)
 
 ### Feature Flag

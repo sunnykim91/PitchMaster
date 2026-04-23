@@ -1,12 +1,86 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~26차)
-summary: 2026-04-11~19 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비
-sections: [26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-04-19
+title: 개선 백로그 — 최근 완료 (16~28차)
+summary: 2026-04-11~23 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유
+sections: [28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-04-23
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~26차)
+# 최근 완료 (16~28차)
+
+## 28차 (2026-04-23) — 실사용자 CS 5건 대응 + 연관 버그 선제 수정 + MVP 집계 9곳 통일
+
+**CS 직접 대응** (커밋 0991db0)
+- [x] MVP 카운트 winner 기반으로 교체 — 투표받은 사람 전부 집계되던 버그 수정. 경기별 1명(운영진 지정 또는 70% 통과 최다득표자)만 카운트
+- [x] MVP 투표 취소 기능 — `DELETE /api/mvp?matchId=...` + `MatchRecordTab` "투표 취소" 버튼 (이미 투표한 경우만)
+- [x] 등번호 0~999 허용 — UI 2곳(`MembersClient`, `PersonalSettings`) + API 검증 + 도움말 문구
+- [x] 철벽수비·승리요정 산정 기준 설명 — `SeasonAwardsPage.tsx`에 보조 설명 한 줄
+- [x] 자체전 `stats_included=false` 필터 누락 — `getRecordsData`, `player/[memberId]/page.tsx`, `player-card/route.ts`. 박길한 4승1무10패→4승2무10패 원인 해소
+- [x] 경기 삭제 권한 `PRESIDENT` → `STAFF` 완화 — `permissions.ts` + 테스트 + 문서 동기화
+
+**포괄 체크 선제 수정** (커밋 0991db0 동반)
+- [x] `getDashboardData` 팀 전적 `stats_included` 필터 방어적 추가
+- [x] `aiTeamStats` 캐시도 `stats_included` 필터 추가
+- [x] `share-card` MVP 표기 투표율 검증 추가 (1표만 있어도 MVP로 찍히던 버그 해소)
+- [x] `records` API의 team_members 필터 `ACTIVE` → `ACTIVE+DORMANT`로 SSR과 통일
+
+**70% threshold 정책 재확인** (커밋 0538d8c)
+- [x] 중간에 threshold 제거 방향으로 수정했다가 사용자 정정 받고 복구
+- [x] 참석자 기준을 `vote=ATTEND` → `attendance_status=PRESENT|LATE`로 통일 (API 기준과 일치)
+- [x] `MatchRecordTab` MVP 카드에 threshold 미달 시 안내 문구 추가: "참석자 70% 이상이 투표해야 공식 MVP로 확정됩니다. 미달 시 운영진이 직접 지정할 수 있어요."
+
+**is_staff_decision 백필 누락 치유** (커밋 0e581f7)
+- [x] 근본 원인: 2026-04-20 커밋 `2d457b8`에서 컬럼 도입됐는데 과거 운영진 투표가 모두 `false`로 남아 집계 누락
+- [x] `mvpThreshold.ts`에 `pickStaffDecision(rows, staffVoterIds)` 헬퍼 추가 — 현재 STAFF+ voter의 투표를 동적으로 확정 취급
+- [x] MVP 집계 8곳에 적용: getRecordsData / records API / records/detail / season-awards / player page / player-card / share-card / getDashboardData 최근경기
+- [x] `records/detail type=mvp`를 winner 기반으로 교체 — 숫자(1)와 상세(3) 불일치 해소
+- [x] DB 시뮬레이션: 박길한 MVP 1→3 정상화 확인
+
+**aiTeamStats MVP 엄격화** (커밋 fdda1bb)
+- [x] AI 팀 통계 캐시도 동일 정책으로 통일 (단순 최다득표자 → pickStaffDecision + resolveValidMvp)
+- [x] 기존 캐시는 24h TTL로 자동 만료 후 새 로직 적용 (제니스 FC는 캐시 없음 → 즉시 반영)
+
+**세션 통계**
+- 커밋 4개(`0991db0`, `0538d8c`, `0e581f7`, `fdda1bb`), 28개 파일 변경, 475+ lines insertions
+- 테스트 729개 유지, 빌드 성공
+- 박태수 계정(제니스 FC STAFF·CAPTAIN) 실제 데이터로 검증
+
+**삽질 기록**
+- 사용자가 "3경기 MVP인데 1로 나온다" 보고 → 내가 threshold 제거로 바로 코드 수정 + 커밋 → 사용자 "threshold는 유지"로 정정 → 다음 커밋으로 되돌림. **정책성 변경 전 사용자 확인 먼저** 원칙 강화 (`feedback_policy_confirm_first.md`)
+- 포괄 체크 에이전트가 "경기 삭제 버튼 없음"이라고 오보고 → 실제로는 `MatchInfoTab`에 있었음. **에이전트 부재 보고는 재검증 필수** (`feedback_verify_before_ask.md` 확장)
+- `is_staff_decision` 백필 누락 — 코드만 보고는 안 잡힘. DB created_at 타임라인과 마이그레이션 날짜 비교로 발견. `feedback_migration_backfill.md` 신규 추가
+
+## 27차 (2026-04-23) — Supabase Advisor 전건 해소 + v1.0.1 TWA 빌드 + Play Console 재신청 준비
+
+**Supabase Advisor 경고 4건 해소** (커밋 83c86a5)
+- [x] `00038_fix_snapshot_function_search_path.sql` — `snapshot_dues_member_name()` 함수 search_path 고정 (Security: Function Search Path Mutable)
+- [x] `00039_optimize_push_subscriptions_rls.sql` — RLS `auth.uid()` → `(SELECT auth.uid())` 서브쿼리 패턴 (Performance: Auth RLS Initialization Plan)
+- [x] `00040_remove_uploads_bucket_listing.sql` — uploads 버킷 broad SELECT 정책 제거. `getPublicUrl()` 사용으로 기능 영향 0 (Security: Public Bucket Allows Listing)
+- [x] `00041_dedupe_push_subscriptions_policies.sql` — 00039에서 생긴 FOR SELECT + FOR ALL 중복 정책 제거 (Performance: Multiple Permissive Policies). 내 실수 복구.
+- 프로덕션 DB 반영 완료
+
+**앱 내 피드백 보내기** (커밋 3b0b6cc)
+- [x] `src/app/(app)/settings/PersonalSettings.tsx` 피드백 섹션 추가
+- [x] `mailto:tjsgnl2002@gmail.com` + 제목 `[PitchMaster 피드백]` + 디버그 정보 자동 첨부 (APP_VERSION, userAgent, profile.name, 날짜)
+- [x] `MessageSquare` 아이콘, 알림 섹션과 계정 탈퇴 사이 배치
+- [x] `docs/play-console-v1.0.1-release.md` 작성 (TWA 빌드 절차, 테스터 재참여 카톡 공지문, 14일 스케줄)
+
+**TWA v1.0.1 빌드 성공** (git 추적 밖)
+- [x] versionCode=5, versionName=1.0.1 AAB 생성 (`C:\dev\pitchmaster-twa\app-release-bundle.aab`)
+- [x] 빌드 환경 전체 `C:\dev\` ASCII 경로로 이전 (한글 경로 AAPT2 크래시 해결)
+  - JDK: `C:\dev\bw\jdk\jdk-17.0.11+9`
+  - Android SDK: `C:\dev\bw\android_sdk`
+  - 프로젝트: `C:\dev\pitchmaster-twa\`
+
+**홍보 자료 — 12컷 영상 스토리보드 리뷰**
+- [x] Claude Design(claude.ai/design)으로 생성한 12컷 스토리보드 서비스 정책 정합성 검증
+- [x] 오류 4건 지적 (AI 공개 범위, 풋살팀 타깃, OCR 프라이버시, "3초 시작" 과장)
+- [x] 수정 프롬프트 작성 및 재렌더링 디렉션
+
+**삽질 기록**
+- PowerShell `Set-Content` CP949 인코딩 → twa-manifest.json 한글 깨짐 → Write 툴로 복구
+- AAPT2 한글 경로 크래시 → `android.overridePathCheck=true` 무효 → 전체 ASCII 경로 이전으로 해결
+- `Copy-Item -Recurse` 재시도 시 중첩 폴더 생성 함정
 
 ## 26차 (2026-04-19) — 경기 역할 가이드 + 전술 탭 레이아웃 재정비
 
