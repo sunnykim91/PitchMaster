@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { resolveValidMvp } from "@/lib/mvpThreshold";
 
 type SeasonRow = { id: string; is_active: boolean; start_date: string; end_date: string; [key: string]: unknown };
 type MemberRow = {
@@ -28,7 +29,13 @@ export async function getRecordsData(teamId: string) {
   if (!activeSeasonId) return { seasons: seasonList, activeSeasonId: null, records: [] };
 
   // 시즌 날짜 범위로 경기 필터 (season_id FK 의존 안 함)
-  let matchQuery = db.from("matches").select("id, match_date").eq("team_id", teamId).eq("status", "COMPLETED");
+  // 자체전 중 "전적 반영 안 함"(stats_included=false)은 스탯/전적에서 제외 — /api/records와 일관성 유지
+  let matchQuery = db
+    .from("matches")
+    .select("id, match_date")
+    .eq("team_id", teamId)
+    .eq("status", "COMPLETED")
+    .neq("stats_included", false);
   if (activeSeason?.start_date && activeSeason?.end_date) {
     matchQuery = matchQuery.gte("match_date", activeSeason.start_date).lte("match_date", activeSeason.end_date);
   }
@@ -98,21 +105,39 @@ export async function getRecordsData(teamId: string) {
   const [goalsRes, assistsRes, mvpRes, attendanceRes] = await Promise.all([
     db.from("match_goals").select("scorer_id").in("match_id", matchIds).eq("is_own_goal", false),
     db.from("match_goals").select("assist_id").in("match_id", matchIds).not("assist_id", "is", null),
-    db.from("match_mvp_votes").select("candidate_id").in("match_id", matchIds),
-    db.from("match_attendance").select("user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
+    db.from("match_mvp_votes").select("match_id, candidate_id, is_staff_decision").in("match_id", matchIds),
+    db.from("match_attendance").select("match_id, user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
   ]);
 
   const goalMap = new Map<string, number>();
   for (const row of goalsRes.data ?? []) { if (row.scorer_id) goalMap.set(row.scorer_id, (goalMap.get(row.scorer_id) ?? 0) + 1); }
   const assistMap = new Map<string, number>();
   for (const row of assistsRes.data ?? []) { if (row.assist_id) assistMap.set(row.assist_id, (assistMap.get(row.assist_id) ?? 0) + 1); }
-  const mvpMap = new Map<string, number>();
-  for (const row of mvpRes.data ?? []) { if (row.candidate_id) mvpMap.set(row.candidate_id, (mvpMap.get(row.candidate_id) ?? 0) + 1); }
+
+  // 경기별 MVP winner 집계 — 단순 표 수가 아니라 "확정된 MVP"만 카운트.
+  // - 운영진 직접 지정(is_staff_decision=true) → 즉시 확정
+  // - 그 외에는 참석자 70% 이상 투표율 통과 + 최다득표자
   const attendByUser = new Map<string, number>();
   const attendByMember = new Map<string, number>();
+  const attendedPerMatch = new Map<string, number>();
   for (const row of attendanceRes.data ?? []) {
     if (row.user_id) attendByUser.set(row.user_id, (attendByUser.get(row.user_id) ?? 0) + 1);
     if (row.member_id) attendByMember.set(row.member_id, (attendByMember.get(row.member_id) ?? 0) + 1);
+    attendedPerMatch.set(row.match_id, (attendedPerMatch.get(row.match_id) ?? 0) + 1);
+  }
+
+  const votesByMatch = new Map<string, { votes: string[]; staffDecision: string | null }>();
+  for (const row of mvpRes.data ?? []) {
+    if (!row.candidate_id) continue;
+    const agg = votesByMatch.get(row.match_id) ?? { votes: [], staffDecision: null };
+    agg.votes.push(row.candidate_id);
+    if (row.is_staff_decision) agg.staffDecision = row.candidate_id;
+    votesByMatch.set(row.match_id, agg);
+  }
+  const mvpMap = new Map<string, number>();
+  for (const [mid, agg] of votesByMatch) {
+    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, agg.staffDecision);
+    if (winner) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
   }
 
   const records = typedMembers.map((m) => {

@@ -28,7 +28,7 @@ export const PERMISSIONS = {
   // Match management
   MATCH_CREATE: "STAFF" as Role,
   MATCH_EDIT: "STAFF" as Role,
-  MATCH_DELETE: "PRESIDENT" as Role,
+  MATCH_DELETE: "STAFF" as Role,
 
   // Squad management
   SQUAD_EDIT: "STAFF" as Role,

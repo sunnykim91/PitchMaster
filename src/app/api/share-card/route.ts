@@ -60,23 +60,35 @@ export async function GET(request: NextRequest) {
       scorers = users?.map((u: { name: string }) => u.name) ?? [];
     }
 
-    // Get MVP
+    // Get MVP — 투표율 70% 통과 + 최다득표자만 확정 MVP로 표기.
+    // 운영진 직접 지정은 투표율 무관 즉시 확정.
     const { data: mvpVotes } = await db
       .from("match_mvp_votes")
-      .select("candidate_id")
+      .select("candidate_id, is_staff_decision")
       .eq("match_id", matchId);
 
     if (mvpVotes && mvpVotes.length > 0) {
-      const counts: Record<string, number> = {};
-      mvpVotes.forEach((v: { candidate_id: string }) => {
-        counts[v.candidate_id] = (counts[v.candidate_id] ?? 0) + 1;
-      });
-      const topId = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
-      if (topId) {
+      const { data: attendanceRows } = await db
+        .from("match_attendance")
+        .select("id")
+        .eq("match_id", matchId)
+        .in("attendance_status", ["PRESENT", "LATE"]);
+      const attendedCount = attendanceRows?.length ?? 0;
+
+      const staffPick = (mvpVotes as Array<{ candidate_id: string; is_staff_decision: boolean }>).find(
+        (v) => v.is_staff_decision
+      )?.candidate_id ?? null;
+      const votes = (mvpVotes as Array<{ candidate_id: string }>)
+        .map((v) => v.candidate_id)
+        .filter(Boolean);
+
+      const { resolveValidMvp } = await import("@/lib/mvpThreshold");
+      const winner = resolveValidMvp(votes, attendedCount, staffPick);
+      if (winner) {
         const { data: mvpUser } = await db
           .from("users")
           .select("name")
-          .eq("id", topId)
+          .eq("id", winner)
           .single();
         if (mvpUser) mvpName = mvpUser.name;
       }

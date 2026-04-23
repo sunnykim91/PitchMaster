@@ -101,3 +101,45 @@ export async function POST(request: NextRequest) {
   if (error) return apiError(error.message);
   return apiSuccess(data);
 }
+
+export async function DELETE(request: NextRequest) {
+  const ctx = await getApiContext();
+  if (ctx instanceof NextResponse) return ctx;
+
+  const matchId = request.nextUrl.searchParams.get("matchId");
+  if (!matchId) return apiError("matchId required");
+
+  const db = getSupabaseAdmin();
+  if (!db) return apiError("Database not available", 503);
+
+  const { data: matchCheck } = await db
+    .from("matches")
+    .select("id")
+    .eq("id", matchId)
+    .eq("team_id", ctx.teamId)
+    .single();
+  if (!matchCheck) return apiError("Match not found", 404);
+
+  const { data: teamSettings } = await db
+    .from("teams")
+    .select("mvp_vote_staff_only")
+    .eq("id", ctx.teamId)
+    .single();
+
+  const isStaff = hasMinRole(ctx.teamRole, "STAFF");
+  const mvpVoteStaffOnly = teamSettings?.mvp_vote_staff_only ?? false;
+
+  if (mvpVoteStaffOnly && !isStaff) {
+    return apiError("MVP 투표는 운영진 이상만 가능합니다", 403);
+  }
+
+  // 본인이 이 경기에 남긴 표 삭제. 없으면 조용히 성공 처리.
+  const { error } = await db
+    .from("match_mvp_votes")
+    .delete()
+    .eq("match_id", matchId)
+    .eq("voter_id", ctx.userId);
+
+  if (error) return apiError(error.message);
+  return apiSuccess({ ok: true });
+}

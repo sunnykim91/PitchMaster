@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
       .in("match_id", matchIds),
     db
       .from("match_mvp_votes")
-      .select("match_id, candidate_id")
+      .select("match_id, candidate_id, is_staff_decision")
       .in("match_id", matchIds),
     db
       .from("match_attendance")
@@ -295,26 +295,26 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // === 4. MOM (최다 MVP 득표) — 참석자 70% 이상 투표한 경기만 카운트 ===
-  const { isValidMvpVoteTurnout } = await import("@/lib/mvpThreshold");
+  // === 4. MOM (경기별 최다득표자 집계) ===
+  // 경기별 winner 한 명만 카운트. 투표율 70% 미달이면 "MVP 없음" → 아무도 카운트 안 됨.
+  // 운영진 직접 지정(is_staff_decision)은 투표율 무관 즉시 확정.
+  const { resolveValidMvp } = await import("@/lib/mvpThreshold");
   const attendedPerMatch = new Map<string, number>();
   for (const a of actualAttendRes.data ?? []) {
     attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
   }
-  const votesPerMatch = new Map<string, number>();
+  const mvpAggByMatch = new Map<string, { votes: string[]; staffDecision: string | null }>();
   for (const v of allMvpVotes) {
-    votesPerMatch.set(v.match_id, (votesPerMatch.get(v.match_id) ?? 0) + 1);
+    if (!v.candidate_id) continue;
+    const agg = mvpAggByMatch.get(v.match_id) ?? { votes: [], staffDecision: null };
+    agg.votes.push(v.candidate_id);
+    if (v.is_staff_decision) agg.staffDecision = v.candidate_id;
+    mvpAggByMatch.set(v.match_id, agg);
   }
-  const validMvpMatchIds = new Set<string>();
-  for (const [mid, voteCount] of votesPerMatch) {
-    const attended = attendedPerMatch.get(mid) ?? 0;
-    if (isValidMvpVoteTurnout(voteCount, attended)) validMvpMatchIds.add(mid);
-  }
-
   const mvpMap = new Map<string, number>();
-  for (const v of allMvpVotes) {
-    if (!v.candidate_id || !validMvpMatchIds.has(v.match_id)) continue;
-    mvpMap.set(v.candidate_id, (mvpMap.get(v.candidate_id) ?? 0) + 1);
+  for (const [mid, agg] of mvpAggByMatch) {
+    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, agg.staffDecision);
+    if (winner) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
   }
 
   let topMvp: AwardEntry | null = null;

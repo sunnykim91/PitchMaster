@@ -117,12 +117,13 @@ export async function GET(request: NextRequest) {
     return apiSuccess({ records, allTime: true });
   }
 
-  // Get team members (연동 + 미연동)
+  // Get team members (연동 + 미연동) — 휴면 회원도 시즌 중 뛰었으면 기록에 포함.
+  // SSR(getRecordsData)과 동일 기준으로 유지. BANNED만 제외.
   const { data: members } = await db
     .from("team_members")
     .select("id, user_id, pre_name, jersey_number, team_role, users(id, name, preferred_positions)")
     .eq("team_id", ctx.teamId)
-    .eq("status", "ACTIVE");
+    .in("status", ["ACTIVE", "DORMANT"]);
 
   if (!members) return apiSuccess({ records: [] });
 
@@ -200,7 +201,7 @@ export async function GET(request: NextRequest) {
   const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes] = await Promise.all([
     db.from("match_goals").select("scorer_id").in("match_id", matchIds).eq("is_own_goal", false),
     db.from("match_goals").select("assist_id").in("match_id", matchIds).not("assist_id", "is", null),
-    db.from("match_mvp_votes").select("match_id, candidate_id").in("match_id", matchIds),
+    db.from("match_mvp_votes").select("match_id, candidate_id, is_staff_decision").in("match_id", matchIds),
     db.from("match_attendance").select("user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
     db.from("match_attendance").select("match_id").in("match_id", matchIds).in("attendance_status", ["PRESENT", "LATE"]),
   ]);
@@ -216,25 +217,25 @@ export async function GET(request: NextRequest) {
     if (row.assist_id) assistMap.set(row.assist_id, (assistMap.get(row.assist_id) ?? 0) + 1);
   }
 
-  // MVP 70% 임계값 필터링 — 투표 참여율이 낮은 경기는 제외
-  const { isValidMvpVoteTurnout } = await import("@/lib/mvpThreshold");
+  // 경기별 MVP winner만 집계 — 투표율 70% 통과 시 최다득표자, 운영진 지정은 즉시 확정.
+  // 단순 투표 행 카운트는 투표받은 모든 사람이 MVP로 집계되는 버그를 낳음.
+  const { resolveValidMvp } = await import("@/lib/mvpThreshold");
   const attendedPerMatch = new Map<string, number>();
   for (const a of actualAttendRes.data ?? []) {
     attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
   }
-  const votesPerMatch = new Map<string, number>();
+  const mvpAggByMatch = new Map<string, { votes: string[]; staffDecision: string | null }>();
   for (const v of mvpRes.data ?? []) {
-    votesPerMatch.set(v.match_id, (votesPerMatch.get(v.match_id) ?? 0) + 1);
+    if (!v.candidate_id) continue;
+    const agg = mvpAggByMatch.get(v.match_id) ?? { votes: [], staffDecision: null };
+    agg.votes.push(v.candidate_id);
+    if (v.is_staff_decision) agg.staffDecision = v.candidate_id;
+    mvpAggByMatch.set(v.match_id, agg);
   }
-  const validMvpMatchIds = new Set<string>();
-  for (const [mid, voteCount] of votesPerMatch) {
-    if (isValidMvpVoteTurnout(voteCount, attendedPerMatch.get(mid) ?? 0)) validMvpMatchIds.add(mid);
-  }
-
   const mvpMap = new Map<string, number>();
-  for (const row of mvpRes.data ?? []) {
-    if (!row.candidate_id || !validMvpMatchIds.has(row.match_id)) continue;
-    mvpMap.set(row.candidate_id, (mvpMap.get(row.candidate_id) ?? 0) + 1);
+  for (const [mid, agg] of mvpAggByMatch) {
+    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, agg.staffDecision);
+    if (winner) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
   }
 
   const attendByUserId = new Map<string, number>();

@@ -151,13 +151,15 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
   const db = getSupabaseAdmin();
   if (!db) return EMPTY;
 
-  // 완료 경기 (REGULAR — 자체전·이벤트 제외) 최근 30경기
+  // 완료 경기 (REGULAR — 자체전·이벤트 제외) 최근 30경기.
+  // REGULAR 경기도 stats_included=false로 수동 제외된 경우가 있어 방어적으로 함께 필터링.
   const { data: matches } = await db
     .from("matches")
     .select("id, match_date, opponent_name, match_type")
     .eq("team_id", teamId)
     .eq("status", "COMPLETED")
     .eq("match_type", "REGULAR")
+    .neq("stats_included", false)
     .order("match_date", { ascending: false })
     .limit(30);
 

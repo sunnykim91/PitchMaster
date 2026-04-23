@@ -19,6 +19,7 @@ import { PlayerProfilePage, PlayerProfileEmpty } from "@/components/pitchmaster/
 import type { PlayerProfile, PlayerStats } from "@/components/pitchmaster/PlayerProfilePage";
 import type { PlayerCardProps, StatWithContext } from "@/components/pitchmaster/PlayerCard";
 import { firstOf, type JoinedRow } from "@/lib/supabaseJoins";
+import { resolveValidMvp } from "@/lib/mvpThreshold";
 
 type Props = {
   params: Promise<{ memberId: string }>;
@@ -91,12 +92,13 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
     };
   }
 
-  // 시즌 내 COMPLETED 경기
+  // 시즌 내 COMPLETED 경기 — 자체전 중 전적 반영 안 함은 제외
   const { data: matches } = await db
     .from("matches")
     .select("id, match_date, opponent_name, match_type")
     .eq("team_id", m.team_id)
     .eq("status", "COMPLETED")
+    .neq("stats_included", false)
     .gte("match_date", season.start_date)
     .lte("match_date", season.end_date)
     .order("match_date", { ascending: false });
@@ -130,24 +132,44 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
   const [allGoalsByScorerRes, allAssistsRes, allMvpRes, allGoalsRes] = await Promise.all([
     db.from("match_goals").select("match_id, scorer_id").in("match_id", matchIds).eq("is_own_goal", false),
     db.from("match_goals").select("match_id, assist_id").in("match_id", matchIds).not("assist_id", "is", null),
-    db.from("match_mvp_votes").select("match_id, candidate_id").in("match_id", matchIds),
+    db.from("match_mvp_votes").select("match_id, candidate_id, is_staff_decision").in("match_id", matchIds),
     db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", matchIds),
   ]);
 
+  // 경기별 MVP winner 확정 — 투표율 70% 미달이면 "MVP 없음", 운영진 지정은 즉시 확정.
+  // 단순 투표 행 카운트 대신 확정된 winner만 집계해야 "MOM" 숫자가 부풀지 않음.
+  const attendedPerMatch = new Map<string, number>();
+  for (const a of attendance) {
+    attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
+  }
+  const mvpVotesByMatch = new Map<string, { votes: string[]; staffDecision: string | null }>();
+  for (const v of allMvpRes.data ?? []) {
+    if (!v.candidate_id) continue;
+    const agg = mvpVotesByMatch.get(v.match_id) ?? { votes: [], staffDecision: null };
+    agg.votes.push(v.candidate_id);
+    if (v.is_staff_decision) agg.staffDecision = v.candidate_id;
+    mvpVotesByMatch.set(v.match_id, agg);
+  }
+  const mvpWinnerByMatch = new Map<string, string>();
+  for (const [mid, agg] of mvpVotesByMatch) {
+    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, agg.staffDecision);
+    if (winner) mvpWinnerByMatch.set(mid, winner);
+  }
+
   const myGoals = (allGoalsByScorerRes.data ?? []).filter((g) => lookupIds.includes(g.scorer_id));
   const myAssists = (allAssistsRes.data ?? []).filter((a) => lookupIds.includes(a.assist_id));
-  const myMvp = (allMvpRes.data ?? []).filter((v) => lookupIds.includes(v.candidate_id));
+  const myMvpMatches = [...mvpWinnerByMatch.entries()].filter(([, winner]) => lookupIds.includes(winner));
 
   const totalGoals = myGoals.length;
   const totalAssists = myAssists.length;
-  const totalMvp = myMvp.length;
+  const totalMvp = myMvpMatches.length;
 
   const goalsByMatch = new Map<string, number>();
   for (const g of myGoals) goalsByMatch.set(g.match_id, (goalsByMatch.get(g.match_id) ?? 0) + 1);
   const assistsByMatch = new Map<string, number>();
   for (const a of myAssists) assistsByMatch.set(a.match_id, (assistsByMatch.get(a.match_id) ?? 0) + 1);
   const mvpByMatch = new Set<string>();
-  for (const v of myMvp) mvpByMatch.add(v.match_id);
+  for (const [mid] of myMvpMatches) mvpByMatch.add(mid);
 
   const scoreMap = new Map<string, { our: number; opp: number }>();
   for (const g of allGoalsRes.data ?? []) {
@@ -183,8 +205,8 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
     const agg = memberAggs.find((mm) => mm.ids.includes(a.assist_id));
     if (agg) agg.assists++;
   }
-  for (const v of allMvpRes.data ?? []) {
-    const agg = memberAggs.find((mm) => mm.ids.includes(v.candidate_id));
+  for (const winner of mvpWinnerByMatch.values()) {
+    const agg = memberAggs.find((mm) => mm.ids.includes(winner));
     if (agg) agg.mvp++;
   }
 

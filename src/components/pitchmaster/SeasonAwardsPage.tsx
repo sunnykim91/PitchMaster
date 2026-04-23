@@ -240,10 +240,16 @@ function AwardCard({ awardKey, award, featured = false }: { awardKey: string; aw
 
           {/* Extra info for specific awards */}
           {awardKey === "ironWall" && award.cleanSheets && (
-            <p className="text-xs text-white/50 mt-1">클린시트 {award.cleanSheets}회</p>
+            <>
+              <p className="text-xs text-white/50 mt-1">클린시트 {award.cleanSheets}회</p>
+              <p className="text-[10px] text-white/40 mt-0.5">출전 경기 중 상대 무실점 경기 수</p>
+            </>
           )}
           {awardKey === "luckyCharm" && award.winRate && (
-            <p className="text-xs text-white/50 mt-1">승률 {Math.round(award.winRate * 100)}%</p>
+            <>
+              <p className="text-xs text-white/50 mt-1">승률 {Math.round(award.winRate * 100)}%</p>
+              <p className="text-[10px] text-white/40 mt-0.5">5경기 이상 출전 선수 중 최고 승률</p>
+            </>
           )}
           {awardKey === "bestMatch" && award.date && (
             <p className="text-xs text-white/50 mt-1">{award.date}</p>

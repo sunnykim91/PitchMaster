@@ -69,18 +69,12 @@ describe("isStaffOrAbove", () => {
 describe("canPerform", () => {
   // 경기 관련 권한 (STAFF 이상)
   describe("경기 관련 권한", () => {
-    const matchActions = ["MATCH_CREATE", "MATCH_EDIT"] as const;
+    const matchActions = ["MATCH_CREATE", "MATCH_EDIT", "MATCH_DELETE"] as const;
 
     it.each(matchActions)("%s: STAFF, PRESIDENT만 허용", (action) => {
       expect(canPerform("PRESIDENT", action)).toBe(true);
       expect(canPerform("STAFF", action)).toBe(true);
       expect(canPerform("MEMBER", action)).toBe(false);
-    });
-
-    it("MATCH_DELETE: PRESIDENT만 허용", () => {
-      expect(canPerform("PRESIDENT", "MATCH_DELETE")).toBe(true);
-      expect(canPerform("STAFF", "MATCH_DELETE")).toBe(false);
-      expect(canPerform("MEMBER", "MATCH_DELETE")).toBe(false);
     });
   });
 

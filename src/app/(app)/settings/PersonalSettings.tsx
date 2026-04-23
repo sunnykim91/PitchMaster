@@ -322,7 +322,7 @@ function PersonalSettingsComponent({
                   <Input
                     type="number"
                     min={0}
-                    max={99}
+                    max={999}
                     value={jerseyNumber}
                     onChange={(e) => setJerseyNumber(e.target.value)}
                     placeholder="미설정"
@@ -349,7 +349,7 @@ function PersonalSettingsComponent({
                     {jerseySaving ? "저장 중..." : "저장"}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">0~99 사이 숫자, 팀 내 중복 불가</p>
+                <p className="text-xs text-muted-foreground">0~999 사이 숫자, 팀 내 중복 불가</p>
               </div>
             </div>
           )}

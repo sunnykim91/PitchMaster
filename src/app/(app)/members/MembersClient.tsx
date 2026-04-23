@@ -727,7 +727,7 @@ export default function MembersClient({
                         <Input
                           type="number"
                           min={0}
-                          max={99}
+                          max={999}
                           value={tempJersey}
                           onChange={(e) => setTempJersey(e.target.value)}
                           placeholder="번호"

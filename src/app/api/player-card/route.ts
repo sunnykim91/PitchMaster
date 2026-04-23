@@ -161,12 +161,13 @@ export async function GET(request: NextRequest) {
   const teamName = (team?.name ?? "TEAM") as string;
   const primaryColor = ((team?.uniform_primary as string | null) ?? "#0b1428") as string;
 
-  // 4. 시즌 기간 내 COMPLETED 경기 조회
+  // 4. 시즌 기간 내 COMPLETED 경기 조회 — 자체전 중 전적 반영 안 함은 제외
   const { data: matches } = await db
     .from("matches")
     .select("id, match_date")
     .eq("team_id", ctx.teamId)
     .eq("status", "COMPLETED")
+    .neq("stats_included", false)
     .gte("match_date", season.start_date)
     .lte("match_date", season.end_date)
     .order("match_date", { ascending: false });
@@ -238,7 +239,7 @@ export async function GET(request: NextRequest) {
   const [goalsRes, assistsRes, mvpRes, allGoalsRes, actualAttendRes] = await Promise.all([
     db.from("match_goals").select("scorer_id").in("match_id", allMatchIds).eq("is_own_goal", false),
     db.from("match_goals").select("assist_id").in("match_id", allMatchIds).not("assist_id", "is", null),
-    db.from("match_mvp_votes").select("match_id, candidate_id").in("match_id", allMatchIds),
+    db.from("match_mvp_votes").select("match_id, candidate_id, is_staff_decision").in("match_id", allMatchIds),
     db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", allMatchIds),
     db.from("match_attendance").select("match_id").in("match_id", allMatchIds).in("attendance_status", ["PRESENT", "LATE"]),
   ]);
@@ -254,25 +255,24 @@ export async function GET(request: NextRequest) {
     if (lookupIds.includes(row.assist_id)) assists++;
   }
 
-  // MVP — 참석자 70% 이상 투표한 경기만 카운트
-  const { isValidMvpVoteTurnout } = await import("@/lib/mvpThreshold");
+  // MVP — 경기별 winner가 본인인 경기만 카운트 (단순 투표 수가 아님)
+  const { resolveValidMvp } = await import("@/lib/mvpThreshold");
   const attendedPerMatch = new Map<string, number>();
   for (const a of actualAttendRes.data ?? []) {
     attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
   }
-  const votesPerMatch = new Map<string, number>();
+  const mvpAggByMatch = new Map<string, { votes: string[]; staffDecision: string | null }>();
   for (const v of mvpRes.data ?? []) {
-    votesPerMatch.set(v.match_id, (votesPerMatch.get(v.match_id) ?? 0) + 1);
+    if (!v.candidate_id) continue;
+    const agg = mvpAggByMatch.get(v.match_id) ?? { votes: [], staffDecision: null };
+    agg.votes.push(v.candidate_id);
+    if (v.is_staff_decision) agg.staffDecision = v.candidate_id;
+    mvpAggByMatch.set(v.match_id, agg);
   }
-  const validMvpMatchIds = new Set<string>();
-  for (const [mid, voteCount] of votesPerMatch) {
-    if (isValidMvpVoteTurnout(voteCount, attendedPerMatch.get(mid) ?? 0)) validMvpMatchIds.add(mid);
-  }
-
   let mvp = 0;
-  for (const row of mvpRes.data ?? []) {
-    if (!validMvpMatchIds.has(row.match_id)) continue;
-    if (lookupIds.includes(row.candidate_id)) mvp++;
+  for (const [mid, agg] of mvpAggByMatch) {
+    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, agg.staffDecision);
+    if (winner && lookupIds.includes(winner)) mvp++;
   }
 
   // 7. 경기별 스코어 계산 (클린시트/승률/실점)

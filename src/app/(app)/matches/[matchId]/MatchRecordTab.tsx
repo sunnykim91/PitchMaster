@@ -292,6 +292,10 @@ function MatchRecordTabInner({
     await apiMutate("/api/mvp", "POST", { matchId, candidateId });
     await refetchMvp();
   }
+  async function handleCancelVote() {
+    await apiMutate(`/api/mvp?matchId=${encodeURIComponent(matchId)}`, "DELETE");
+    await refetchMvp();
+  }
 
   return (
     <>
@@ -673,32 +677,46 @@ function MatchRecordTabInner({
               })()}
 
               {canVoteMvp ? (
-                <div className="grid grid-cols-3 gap-2">
-                  {attendingMembers.map((player) => {
-                    const isVoted = votes[userId] === player.id;
-                    const count = voteCounts[player.id] ?? 0;
-                    return (
+                <>
+                  {votes[userId] && (
+                    <div className="mb-2 flex justify-end">
                       <button
-                        key={player.id}
                         type="button"
                         disabled={!!mvpVotingId}
-                        onClick={() => runMvpVote(player.id, () => handleVote(player.id))}
-                        className={cn(
-                          "relative rounded-xl p-3 text-sm font-medium transition-all",
-                          isVoted ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-                          mvpVotingId === player.id && "opacity-70"
-                        )}
+                        onClick={() => runMvpVote("__cancel__", handleCancelVote)}
+                        className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline disabled:opacity-50"
                       >
-                        {player.name}
-                        {count > 0 && (
-                          <Badge className="absolute -right-1.5 -top-1.5 bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] text-[10px] px-1.5 min-w-[20px] h-[20px]">
-                            {count}
-                          </Badge>
-                        )}
+                        투표 취소
                       </button>
-                    );
-                  })}
-                </div>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-3 gap-2">
+                    {attendingMembers.map((player) => {
+                      const isVoted = votes[userId] === player.id;
+                      const count = voteCounts[player.id] ?? 0;
+                      return (
+                        <button
+                          key={player.id}
+                          type="button"
+                          disabled={!!mvpVotingId}
+                          onClick={() => runMvpVote(player.id, () => handleVote(player.id))}
+                          className={cn(
+                            "relative rounded-xl p-3 text-sm font-medium transition-all",
+                            isVoted ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+                            mvpVotingId === player.id && "opacity-70"
+                          )}
+                        >
+                          {player.name}
+                          {count > 0 && (
+                            <Badge className="absolute -right-1.5 -top-1.5 bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] text-[10px] px-1.5 min-w-[20px] h-[20px]">
+                              {count}
+                            </Badge>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
               ) : (
                 // 일반 팀원 — 읽기 전용 결과 표시
                 <div className="grid grid-cols-3 gap-2">

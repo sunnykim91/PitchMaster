@@ -365,12 +365,15 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
 
   const activeSeason = (seasons ?? []).find((s: { is_active: boolean }) => s.is_active) ?? (seasons ?? [])[0];
 
+  // 자체전 중 전적 반영 안 함(stats_included=false) 경기는 팀 전적에서 제외.
+  // 현재 match_type=REGULAR 필터가 있지만 REGULAR 경기라도 stats_included=false가 올 수 있어 방어적으로 함께 건다.
   let completedQuery = db
     .from("matches")
     .select("id")
     .eq("team_id", teamId)
     .eq("status", "COMPLETED")
     .eq("match_type", "REGULAR")
+    .neq("stats_included", false)
     .order("match_date", { ascending: false });
 
   if (activeSeason) {

@@ -222,8 +222,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const num = jerseyNumber === null || jerseyNumber === "" ? null : Number(jerseyNumber);
-    if (num !== null && (isNaN(num) || num < 0 || num > 99)) {
-      return apiError("등번호는 0~99 사이 숫자입니다");
+    if (num !== null && (isNaN(num) || num < 0 || num > 999)) {
+      return apiError("등번호는 0~999 사이 숫자입니다");
     }
 
     const { error } = await db
