@@ -217,7 +217,7 @@ export async function GET(request: NextRequest) {
     if (row.assist_id) assistMap.set(row.assist_id, (assistMap.get(row.assist_id) ?? 0) + 1);
   }
 
-  // 경기별 MVP winner만 집계 — 투표율 70% 통과 시 최다득표자, 운영진 지정은 즉시 확정.
+  // 경기별 MVP winner만 집계 — 참석자 70% 이상 투표 통과 시 최다득표자, 또는 운영진 직접 지정.
   // 단순 투표 행 카운트는 투표받은 모든 사람이 MVP로 집계되는 버그를 낳음.
   const { resolveValidMvp } = await import("@/lib/mvpThreshold");
   const attendedPerMatch = new Map<string, number>();

@@ -60,8 +60,8 @@ export async function GET(request: NextRequest) {
       scorers = users?.map((u: { name: string }) => u.name) ?? [];
     }
 
-    // Get MVP — 투표율 70% 통과 + 최다득표자만 확정 MVP로 표기.
-    // 운영진 직접 지정은 투표율 무관 즉시 확정.
+    // Get MVP — 참석자 70% 이상 투표 통과 시 최다득표자, 또는 운영진 직접 지정.
+    // threshold 미달이면 "확정 MVP 없음" → 공유 카드엔 "-" 표기.
     const { data: mvpVotes } = await db
       .from("match_mvp_votes")
       .select("candidate_id, is_staff_decision")

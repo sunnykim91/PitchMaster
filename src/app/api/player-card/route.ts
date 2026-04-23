@@ -255,7 +255,7 @@ export async function GET(request: NextRequest) {
     if (lookupIds.includes(row.assist_id)) assists++;
   }
 
-  // MVP — 경기별 winner가 본인인 경기만 카운트 (단순 투표 수가 아님)
+  // MVP — 경기별 winner가 본인인 경기만 카운트 (투표율 70% 통과 또는 운영진 지정)
   const { resolveValidMvp } = await import("@/lib/mvpThreshold");
   const attendedPerMatch = new Map<string, number>();
   for (const a of actualAttendRes.data ?? []) {

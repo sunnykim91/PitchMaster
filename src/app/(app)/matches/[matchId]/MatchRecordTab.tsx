@@ -640,15 +640,22 @@ function MatchRecordTabInner({
                     </p>
                   );
                 }
-                // 일반 투표 모드 — 투표율 표시
+                // 일반 투표 모드 — 투표율 표시 + threshold 미달 시 확정 조건 안내
                 return (
-                  <div className="mb-3 flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">참석자만 1인 1표</p>
-                    {pct !== null && (
-                      <span className={cn("text-xs font-medium", reached ? "text-[hsl(var(--win))]" : "text-muted-foreground")}>
-                        {totalVotes}/{attendeeCount}명 투표 · {pct}%
-                        {threshold70 !== null && !reached && ` (${threshold70}명 이상 필요)`}
-                      </span>
+                  <div className="mb-3 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">참석자만 1인 1표</p>
+                      {pct !== null && (
+                        <span className={cn("text-xs font-medium", reached ? "text-[hsl(var(--win))]" : "text-muted-foreground")}>
+                          {totalVotes}/{attendeeCount}명 투표 · {pct}%
+                          {threshold70 !== null && !reached && ` (${threshold70}명 이상 필요)`}
+                        </span>
+                      )}
+                    </div>
+                    {attendeeCount > 0 && !reached && (
+                      <p className="rounded-md bg-[hsl(var(--warning))]/10 px-2.5 py-1.5 text-[11px] leading-snug text-[hsl(var(--warning))]">
+                        참석자 70% 이상이 투표해야 공식 MVP로 확정됩니다. 미달 시 운영진이 직접 지정할 수 있어요.
+                      </p>
                     )}
                   </div>
                 );

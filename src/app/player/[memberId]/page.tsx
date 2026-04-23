@@ -114,9 +114,11 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
   }
 
   // 출석 + 팀 멤버 전체 (랭킹 산출용)
-  const [attendanceRes, allMembersRes] = await Promise.all([
+  const [attendanceRes, allMembersRes, actualAttendRes] = await Promise.all([
     db.from("match_attendance").select("match_id, user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
     db.from("team_members").select("id, user_id").eq("team_id", m.team_id).in("status", ["ACTIVE", "DORMANT"]),
+    // MVP 투표율 70% 검증용 실제 체크인 (용병 제외)
+    db.from("match_attendance").select("match_id").in("match_id", matchIds).in("attendance_status", ["PRESENT", "LATE"]),
   ]);
   const attendance = attendanceRes.data ?? [];
   const allTeamMembers = (allMembersRes.data ?? []) as Array<{ id: string; user_id: string | null }>;
@@ -136,10 +138,9 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
     db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", matchIds),
   ]);
 
-  // 경기별 MVP winner 확정 — 투표율 70% 미달이면 "MVP 없음", 운영진 지정은 즉시 확정.
-  // 단순 투표 행 카운트 대신 확정된 winner만 집계해야 "MOM" 숫자가 부풀지 않음.
+  // 경기별 MVP winner 집계 — 참석자 70% 투표율 통과 시 최다득표자, 또는 운영진 직접 지정.
   const attendedPerMatch = new Map<string, number>();
-  for (const a of attendance) {
+  for (const a of actualAttendRes.data ?? []) {
     attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
   }
   const mvpVotesByMatch = new Map<string, { votes: string[]; staffDecision: string | null }>();

@@ -102,30 +102,32 @@ export async function getRecordsData(teamId: string) {
     };
   }
 
-  const [goalsRes, assistsRes, mvpRes, attendanceRes] = await Promise.all([
+  const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes] = await Promise.all([
     db.from("match_goals").select("scorer_id").in("match_id", matchIds).eq("is_own_goal", false),
     db.from("match_goals").select("assist_id").in("match_id", matchIds).not("assist_id", "is", null),
     db.from("match_mvp_votes").select("match_id, candidate_id, is_staff_decision").in("match_id", matchIds),
-    db.from("match_attendance").select("match_id, user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
+    db.from("match_attendance").select("user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
+    // MVP 투표율 70% 검증용 — 실제 체크인 기준 (용병 제외). /api/records와 기준 통일.
+    db.from("match_attendance").select("match_id").in("match_id", matchIds).in("attendance_status", ["PRESENT", "LATE"]),
   ]);
 
   const goalMap = new Map<string, number>();
   for (const row of goalsRes.data ?? []) { if (row.scorer_id) goalMap.set(row.scorer_id, (goalMap.get(row.scorer_id) ?? 0) + 1); }
   const assistMap = new Map<string, number>();
   for (const row of assistsRes.data ?? []) { if (row.assist_id) assistMap.set(row.assist_id, (assistMap.get(row.assist_id) ?? 0) + 1); }
-
-  // 경기별 MVP winner 집계 — 단순 표 수가 아니라 "확정된 MVP"만 카운트.
-  // - 운영진 직접 지정(is_staff_decision=true) → 즉시 확정
-  // - 그 외에는 참석자 70% 이상 투표율 통과 + 최다득표자
   const attendByUser = new Map<string, number>();
   const attendByMember = new Map<string, number>();
-  const attendedPerMatch = new Map<string, number>();
   for (const row of attendanceRes.data ?? []) {
     if (row.user_id) attendByUser.set(row.user_id, (attendByUser.get(row.user_id) ?? 0) + 1);
     if (row.member_id) attendByMember.set(row.member_id, (attendByMember.get(row.member_id) ?? 0) + 1);
-    attendedPerMatch.set(row.match_id, (attendedPerMatch.get(row.match_id) ?? 0) + 1);
   }
 
+  // 경기별 MVP winner 집계 — 정책: 참석자 70% 이상 투표 통과 시 최다득표자, 또는 운영진 직접 지정.
+  // threshold 미달 경기는 "MVP 확정 안 됨"으로 처리 (운영진이 직접 지정해야 확정).
+  const attendedPerMatch = new Map<string, number>();
+  for (const a of actualAttendRes.data ?? []) {
+    attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
+  }
   const votesByMatch = new Map<string, { votes: string[]; staffDecision: string | null }>();
   for (const row of mvpRes.data ?? []) {
     if (!row.candidate_id) continue;
