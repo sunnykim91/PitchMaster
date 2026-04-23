@@ -149,38 +149,45 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
 
   let recentResult = null;
   if (recentMatch) {
-    const [goalsRes, mvpRes, attendanceRes] = await Promise.all([
+    const [goalsRes, mvpRes, attendanceRes, staffRes] = await Promise.all([
       db.from("match_goals").select("scorer_id, is_own_goal").eq("match_id", recentMatch.id),
-      db.from("match_mvp_votes").select("candidate_id, users:candidate_id(name)").eq("match_id", recentMatch.id),
+      db.from("match_mvp_votes").select("voter_id, candidate_id, is_staff_decision, users:candidate_id(name)").eq("match_id", recentMatch.id),
       db.from("match_attendance").select("id").eq("match_id", recentMatch.id).in("attendance_status", ["PRESENT", "LATE"]),
+      // is_staff_decision 백필 누락 치유용 — 현재 STAFF+ voter 투표를 확정 취급
+      db.from("team_members").select("user_id").eq("team_id", teamId).in("role", ["STAFF", "PRESIDENT"]).not("user_id", "is", null),
     ]);
     type GoalRow = { scorer_id: string; is_own_goal: boolean };
     const goalRows = (goalsRes.data || []) as GoalRow[];
     const ourGoals = goalRows.filter((g) => g.scorer_id !== "OPPONENT" && !g.is_own_goal).length;
     const oppGoals = goalRows.filter((g) => g.scorer_id === "OPPONENT" || g.is_own_goal).length;
 
-    const mvpCounts: Record<string, { count: number; name: string }> = {};
-    type MvpVoteRow = { candidate_id: string; users: { name: string } | { name: string }[] | null };
+    type MvpVoteRow = { voter_id: string; candidate_id: string; is_staff_decision: boolean | null; users: { name: string } | { name: string }[] | null };
     const voteRows = (mvpRes.data || []) as MvpVoteRow[];
-    voteRows.forEach((v) => {
-      const id = v.candidate_id;
-      const name = Array.isArray(v.users) ? v.users[0]?.name : v.users?.name;
-      if (!mvpCounts[id]) mvpCounts[id] = { count: 0, name: name || "" };
-      mvpCounts[id].count++;
-    });
-    const topMvp = Object.values(mvpCounts).sort((a, b) => b.count - a.count)[0];
-
-    // 참석자 70% 이상 투표해야 실제 MVP로 인정
     const attendedCount = attendanceRes.data?.length ?? 0;
-    const { isValidMvpVoteTurnout } = await import("@/lib/mvpThreshold");
-    const mvpConfirmed = topMvp && isValidMvpVoteTurnout(voteRows.length, attendedCount);
+    const staffVoterIds = new Set<string>(
+      (staffRes.data ?? []).map((m) => (m as { user_id: string | null }).user_id).filter((id): id is string => !!id)
+    );
+
+    const { resolveValidMvp, pickStaffDecision } = await import("@/lib/mvpThreshold");
+    const staffDecision = pickStaffDecision(voteRows, staffVoterIds);
+    const winnerId = resolveValidMvp(
+      voteRows.map((v) => v.candidate_id).filter(Boolean),
+      attendedCount,
+      staffDecision,
+    );
+    const winnerName = winnerId
+      ? (() => {
+          const row = voteRows.find((v) => v.candidate_id === winnerId);
+          return row ? (Array.isArray(row.users) ? row.users[0]?.name : row.users?.name) ?? null : null;
+        })()
+      : null;
 
     recentResult = {
       id: recentMatch.id,
       date: recentMatch.match_date,
       score: `${ourGoals} : ${oppGoals}`,
       opponent: recentMatch.opponent_name,
-      mvp: mvpConfirmed ? topMvp.name : null,
+      mvp: winnerName,
     };
   }
 

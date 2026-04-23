@@ -64,25 +64,26 @@ export async function GET(request: NextRequest) {
     // threshold 미달이면 "확정 MVP 없음" → 공유 카드엔 "-" 표기.
     const { data: mvpVotes } = await db
       .from("match_mvp_votes")
-      .select("candidate_id, is_staff_decision")
+      .select("voter_id, candidate_id, is_staff_decision")
       .eq("match_id", matchId);
 
     if (mvpVotes && mvpVotes.length > 0) {
-      const { data: attendanceRows } = await db
-        .from("match_attendance")
-        .select("id")
-        .eq("match_id", matchId)
-        .in("attendance_status", ["PRESENT", "LATE"]);
-      const attendedCount = attendanceRows?.length ?? 0;
+      const [attendanceResp, staffResp] = await Promise.all([
+        db.from("match_attendance").select("id").eq("match_id", matchId).in("attendance_status", ["PRESENT", "LATE"]),
+        // is_staff_decision 백필 누락 치유 — 현재 STAFF+ voter 투표를 확정 취급
+        db.from("team_members").select("user_id").eq("team_id", ctx.teamId).in("role", ["STAFF", "PRESIDENT"]).not("user_id", "is", null),
+      ]);
+      const attendedCount = attendanceResp.data?.length ?? 0;
+      const staffVoterIds = new Set<string>(
+        (staffResp.data ?? []).map((m) => m.user_id).filter((id): id is string => !!id)
+      );
 
-      const staffPick = (mvpVotes as Array<{ candidate_id: string; is_staff_decision: boolean }>).find(
-        (v) => v.is_staff_decision
-      )?.candidate_id ?? null;
-      const votes = (mvpVotes as Array<{ candidate_id: string }>)
-        .map((v) => v.candidate_id)
-        .filter(Boolean);
+      const { resolveValidMvp, pickStaffDecision } = await import("@/lib/mvpThreshold");
+      type MvpRow = { voter_id: string; candidate_id: string; is_staff_decision: boolean | null };
+      const rows = (mvpVotes as MvpRow[]).filter((v) => !!v.candidate_id);
+      const staffPick = pickStaffDecision(rows, staffVoterIds);
+      const votes = rows.map((v) => v.candidate_id);
 
-      const { resolveValidMvp } = await import("@/lib/mvpThreshold");
       const winner = resolveValidMvp(votes, attendedCount, staffPick);
       if (winner) {
         const { data: mvpUser } = await db

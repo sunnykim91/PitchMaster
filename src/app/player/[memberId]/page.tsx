@@ -19,7 +19,7 @@ import { PlayerProfilePage, PlayerProfileEmpty } from "@/components/pitchmaster/
 import type { PlayerProfile, PlayerStats } from "@/components/pitchmaster/PlayerProfilePage";
 import type { PlayerCardProps, StatWithContext } from "@/components/pitchmaster/PlayerCard";
 import { firstOf, type JoinedRow } from "@/lib/supabaseJoins";
-import { resolveValidMvp } from "@/lib/mvpThreshold";
+import { resolveValidMvp, pickStaffDecision } from "@/lib/mvpThreshold";
 
 type Props = {
   params: Promise<{ memberId: string }>;
@@ -114,11 +114,13 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
   }
 
   // 출석 + 팀 멤버 전체 (랭킹 산출용)
-  const [attendanceRes, allMembersRes, actualAttendRes] = await Promise.all([
+  const [attendanceRes, allMembersRes, actualAttendRes, staffMembersRes] = await Promise.all([
     db.from("match_attendance").select("match_id, user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
     db.from("team_members").select("id, user_id").eq("team_id", m.team_id).in("status", ["ACTIVE", "DORMANT"]),
     // MVP 투표율 70% 검증용 실제 체크인 (용병 제외)
     db.from("match_attendance").select("match_id").in("match_id", matchIds).in("attendance_status", ["PRESENT", "LATE"]),
+    // is_staff_decision 백필 누락 치유 — 현재 STAFF+ voter의 과거 투표를 확정 취급
+    db.from("team_members").select("user_id").eq("team_id", m.team_id).in("role", ["STAFF", "PRESIDENT"]).not("user_id", "is", null),
   ]);
   const attendance = attendanceRes.data ?? [];
   const allTeamMembers = (allMembersRes.data ?? []) as Array<{ id: string; user_id: string | null }>;
@@ -134,7 +136,7 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
   const [allGoalsByScorerRes, allAssistsRes, allMvpRes, allGoalsRes] = await Promise.all([
     db.from("match_goals").select("match_id, scorer_id").in("match_id", matchIds).eq("is_own_goal", false),
     db.from("match_goals").select("match_id, assist_id").in("match_id", matchIds).not("assist_id", "is", null),
-    db.from("match_mvp_votes").select("match_id, candidate_id, is_staff_decision").in("match_id", matchIds),
+    db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision").in("match_id", matchIds),
     db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", matchIds),
   ]);
 
@@ -143,17 +145,22 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
   for (const a of actualAttendRes.data ?? []) {
     attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
   }
-  const mvpVotesByMatch = new Map<string, { votes: string[]; staffDecision: string | null }>();
-  for (const v of allMvpRes.data ?? []) {
+  const staffVoterIds = new Set<string>(
+    (staffMembersRes.data ?? []).map((x) => (x as { user_id: string | null }).user_id).filter((id): id is string => !!id)
+  );
+  type MvpRow = { match_id: string; voter_id: string; candidate_id: string; is_staff_decision: boolean | null };
+  const mvpVotesByMatch = new Map<string, { votes: string[]; rows: MvpRow[] }>();
+  for (const v of (allMvpRes.data ?? []) as MvpRow[]) {
     if (!v.candidate_id) continue;
-    const agg = mvpVotesByMatch.get(v.match_id) ?? { votes: [], staffDecision: null };
+    const agg = mvpVotesByMatch.get(v.match_id) ?? { votes: [], rows: [] };
     agg.votes.push(v.candidate_id);
-    if (v.is_staff_decision) agg.staffDecision = v.candidate_id;
+    agg.rows.push(v);
     mvpVotesByMatch.set(v.match_id, agg);
   }
   const mvpWinnerByMatch = new Map<string, string>();
   for (const [mid, agg] of mvpVotesByMatch) {
-    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, agg.staffDecision);
+    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds);
+    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
     if (winner) mvpWinnerByMatch.set(mid, winner);
   }
 

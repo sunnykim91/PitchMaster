@@ -197,13 +197,15 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Bulk 쿼리 5개로 전체 데이터 한번에 조회
-  const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes] = await Promise.all([
+  // Bulk 쿼리 — 전체 데이터 한번에 조회
+  const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes, staffMembersRes] = await Promise.all([
     db.from("match_goals").select("scorer_id").in("match_id", matchIds).eq("is_own_goal", false),
     db.from("match_goals").select("assist_id").in("match_id", matchIds).not("assist_id", "is", null),
-    db.from("match_mvp_votes").select("match_id, candidate_id, is_staff_decision").in("match_id", matchIds),
+    db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision").in("match_id", matchIds),
     db.from("match_attendance").select("user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
     db.from("match_attendance").select("match_id").in("match_id", matchIds).in("attendance_status", ["PRESENT", "LATE"]),
+    // is_staff_decision 백필 누락 치유 — 현재 STAFF+ voter의 과거 투표를 동적으로 확정 취급
+    db.from("team_members").select("user_id").eq("team_id", ctx.teamId).in("role", ["STAFF", "PRESIDENT"]).not("user_id", "is", null),
   ]);
 
   // 카운트 맵 빌드
@@ -218,23 +220,27 @@ export async function GET(request: NextRequest) {
   }
 
   // 경기별 MVP winner만 집계 — 참석자 70% 이상 투표 통과 시 최다득표자, 또는 운영진 직접 지정.
-  // 단순 투표 행 카운트는 투표받은 모든 사람이 MVP로 집계되는 버그를 낳음.
-  const { resolveValidMvp } = await import("@/lib/mvpThreshold");
+  const { resolveValidMvp, pickStaffDecision } = await import("@/lib/mvpThreshold");
   const attendedPerMatch = new Map<string, number>();
   for (const a of actualAttendRes.data ?? []) {
     attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
   }
-  const mvpAggByMatch = new Map<string, { votes: string[]; staffDecision: string | null }>();
-  for (const v of mvpRes.data ?? []) {
+  const staffVoterIds = new Set<string>(
+    (staffMembersRes.data ?? []).map((m) => m.user_id).filter((id): id is string => !!id)
+  );
+  type MvpRow = { match_id: string; voter_id: string; candidate_id: string; is_staff_decision: boolean | null };
+  const mvpAggByMatch = new Map<string, { votes: string[]; rows: MvpRow[] }>();
+  for (const v of (mvpRes.data ?? []) as MvpRow[]) {
     if (!v.candidate_id) continue;
-    const agg = mvpAggByMatch.get(v.match_id) ?? { votes: [], staffDecision: null };
+    const agg = mvpAggByMatch.get(v.match_id) ?? { votes: [], rows: [] };
     agg.votes.push(v.candidate_id);
-    if (v.is_staff_decision) agg.staffDecision = v.candidate_id;
+    agg.rows.push(v);
     mvpAggByMatch.set(v.match_id, agg);
   }
   const mvpMap = new Map<string, number>();
   for (const [mid, agg] of mvpAggByMatch) {
-    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, agg.staffDecision);
+    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds);
+    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
     if (winner) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
   }
 

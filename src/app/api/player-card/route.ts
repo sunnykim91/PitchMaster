@@ -239,7 +239,7 @@ export async function GET(request: NextRequest) {
   const [goalsRes, assistsRes, mvpRes, allGoalsRes, actualAttendRes] = await Promise.all([
     db.from("match_goals").select("scorer_id").in("match_id", allMatchIds).eq("is_own_goal", false),
     db.from("match_goals").select("assist_id").in("match_id", allMatchIds).not("assist_id", "is", null),
-    db.from("match_mvp_votes").select("match_id, candidate_id, is_staff_decision").in("match_id", allMatchIds),
+    db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision").in("match_id", allMatchIds),
     db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", allMatchIds),
     db.from("match_attendance").select("match_id").in("match_id", allMatchIds).in("attendance_status", ["PRESENT", "LATE"]),
   ]);
@@ -256,22 +256,33 @@ export async function GET(request: NextRequest) {
   }
 
   // MVP — 경기별 winner가 본인인 경기만 카운트 (투표율 70% 통과 또는 운영진 지정)
-  const { resolveValidMvp } = await import("@/lib/mvpThreshold");
+  const { resolveValidMvp, pickStaffDecision } = await import("@/lib/mvpThreshold");
+  const { data: staffMembersData } = await db
+    .from("team_members")
+    .select("user_id")
+    .eq("team_id", ctx.teamId)
+    .in("role", ["STAFF", "PRESIDENT"])
+    .not("user_id", "is", null);
+  const staffVoterIds = new Set<string>(
+    (staffMembersData ?? []).map((m) => m.user_id).filter((id): id is string => !!id)
+  );
   const attendedPerMatch = new Map<string, number>();
   for (const a of actualAttendRes.data ?? []) {
     attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
   }
-  const mvpAggByMatch = new Map<string, { votes: string[]; staffDecision: string | null }>();
-  for (const v of mvpRes.data ?? []) {
+  type MvpRow = { match_id: string; voter_id: string; candidate_id: string; is_staff_decision: boolean | null };
+  const mvpAggByMatch = new Map<string, { votes: string[]; rows: MvpRow[] }>();
+  for (const v of (mvpRes.data ?? []) as MvpRow[]) {
     if (!v.candidate_id) continue;
-    const agg = mvpAggByMatch.get(v.match_id) ?? { votes: [], staffDecision: null };
+    const agg = mvpAggByMatch.get(v.match_id) ?? { votes: [], rows: [] };
     agg.votes.push(v.candidate_id);
-    if (v.is_staff_decision) agg.staffDecision = v.candidate_id;
+    agg.rows.push(v);
     mvpAggByMatch.set(v.match_id, agg);
   }
   let mvp = 0;
   for (const [mid, agg] of mvpAggByMatch) {
-    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, agg.staffDecision);
+    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds);
+    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
     if (winner && lookupIds.includes(winner)) mvp++;
   }
 

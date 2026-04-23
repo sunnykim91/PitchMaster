@@ -8,6 +8,30 @@
 export const MVP_VOTE_THRESHOLD = 0.7;
 
 /**
+ * match_mvp_votes 원시 row에서 "확정 지정"(is_staff_decision)을 판정.
+ *
+ * 왜 동적 판정이 필요한가:
+ *  - `is_staff_decision` 컬럼은 2026-04-20 커밋(2d457b8)에서 도입됐고,
+ *    그 이전에 운영진이 남긴 투표 row는 모두 false로 저장되어 있음 → 집계 누락.
+ *  - 과거 데이터를 그대로 두되, 집계 시점에 voter가 현재 STAFF 이상이면
+ *    그 투표를 `staff_decision`으로 간주해 누락을 치유.
+ *  - 미래에 STAFF로 승격된 사람의 과거 투표도 자연스럽게 확정 처리됨.
+ *
+ * @param votes match_mvp_votes 원시 행들 (voter_id, candidate_id, is_staff_decision 필요)
+ * @param staffVoterIds 해당 팀에서 현재 STAFF 이상인 사용자의 user_id 집합
+ * @returns 첫 번째로 발견된 "staff 지정" candidate_id, 없으면 null
+ */
+export function pickStaffDecision(
+  votes: Array<{ voter_id: string; candidate_id: string; is_staff_decision: boolean | null }>,
+  staffVoterIds: Set<string>
+): string | null {
+  for (const v of votes) {
+    if (v.is_staff_decision || staffVoterIds.has(v.voter_id)) return v.candidate_id;
+  }
+  return null;
+}
+
+/**
  * 유효한 MVP 득표율인지 판정.
  * @param mvpVoteCount MVP 투표에 참여한 사람 수 (match_mvp_votes 고유 voter 수)
  * @param attendedCount 해당 경기 실제 참석 인원

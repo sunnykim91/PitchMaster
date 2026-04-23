@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { resolveValidMvp } from "@/lib/mvpThreshold";
+import { resolveValidMvp, pickStaffDecision } from "@/lib/mvpThreshold";
 
 type SeasonRow = { id: string; is_active: boolean; start_date: string; end_date: string; [key: string]: unknown };
 type MemberRow = {
@@ -102,13 +102,16 @@ export async function getRecordsData(teamId: string) {
     };
   }
 
-  const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes] = await Promise.all([
+  const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes, staffMembersRes] = await Promise.all([
     db.from("match_goals").select("scorer_id").in("match_id", matchIds).eq("is_own_goal", false),
     db.from("match_goals").select("assist_id").in("match_id", matchIds).not("assist_id", "is", null),
-    db.from("match_mvp_votes").select("match_id, candidate_id, is_staff_decision").in("match_id", matchIds),
+    // voter_id도 가져와서 is_staff_decision=false지만 voter가 현재 STAFF+인 과거 row도 확정 처리.
+    db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision").in("match_id", matchIds),
     db.from("match_attendance").select("user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
     // MVP 투표율 70% 검증용 — 실제 체크인 기준 (용병 제외). /api/records와 기준 통일.
     db.from("match_attendance").select("match_id").in("match_id", matchIds).in("attendance_status", ["PRESENT", "LATE"]),
+    // 현재 팀 STAFF 이상 user_id — is_staff_decision 백필 누락 치유용
+    db.from("team_members").select("user_id").eq("team_id", teamId).in("role", ["STAFF", "PRESIDENT"]).not("user_id", "is", null),
   ]);
 
   const goalMap = new Map<string, number>();
@@ -128,17 +131,21 @@ export async function getRecordsData(teamId: string) {
   for (const a of actualAttendRes.data ?? []) {
     attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
   }
-  const votesByMatch = new Map<string, { votes: string[]; staffDecision: string | null }>();
+  const staffVoterIds = new Set<string>(
+    (staffMembersRes.data ?? []).map((m) => m.user_id).filter((id): id is string => !!id)
+  );
+  const votesByMatch = new Map<string, { votes: string[]; rows: Array<{ voter_id: string; candidate_id: string; is_staff_decision: boolean | null }> }>();
   for (const row of mvpRes.data ?? []) {
     if (!row.candidate_id) continue;
-    const agg = votesByMatch.get(row.match_id) ?? { votes: [], staffDecision: null };
+    const agg = votesByMatch.get(row.match_id) ?? { votes: [], rows: [] };
     agg.votes.push(row.candidate_id);
-    if (row.is_staff_decision) agg.staffDecision = row.candidate_id;
+    agg.rows.push({ voter_id: row.voter_id, candidate_id: row.candidate_id, is_staff_decision: row.is_staff_decision });
     votesByMatch.set(row.match_id, agg);
   }
   const mvpMap = new Map<string, number>();
   for (const [mid, agg] of votesByMatch) {
-    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, agg.staffDecision);
+    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds);
+    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
     if (winner) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
   }
 

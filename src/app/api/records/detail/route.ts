@@ -114,19 +114,45 @@ export async function GET(request: NextRequest) {
       if (m) { const sc = scoreMap.get(matchId); details.push({ matchId, matchDate: m.match_date, opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""), count, score: sc ? `${sc.our}:${sc.their}` : undefined }); }
     }
   } else if (type === "mvp") {
-    const { data: mvps } = await db
-      .from("match_mvp_votes")
-      .select("match_id, candidate_id")
-      .in("match_id", matchIds)
-      .in("candidate_id", lookupIds);
-
-    const countMap = new Map<string, number>();
-    for (const v of mvps ?? []) {
-      countMap.set(v.match_id, (countMap.get(v.match_id) ?? 0) + 1);
+    // 기록 페이지 MVP 숫자와 일관성 유지 — "확정 winner가 본인인 경기"만 반환.
+    // (단순 득표 카운트는 투표받은 모두가 MVP로 찍히는 문제 + 숫자/상세 불일치를 낳음)
+    const [mvpRes, attendanceRes, staffRes] = await Promise.all([
+      db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision").in("match_id", matchIds),
+      db.from("match_attendance").select("match_id").in("match_id", matchIds).in("attendance_status", ["PRESENT", "LATE"]),
+      db.from("team_members").select("user_id").eq("team_id", ctx.teamId).in("role", ["STAFF", "PRESIDENT"]).not("user_id", "is", null),
+    ]);
+    const attendedPerMatch = new Map<string, number>();
+    for (const a of attendanceRes.data ?? []) {
+      attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
     }
-    for (const [matchId, count] of countMap) {
+    const staffVoterIds = new Set<string>(
+      (staffRes.data ?? []).map((m) => m.user_id).filter((id): id is string => !!id)
+    );
+    type MvpRow = { match_id: string; voter_id: string; candidate_id: string; is_staff_decision: boolean | null };
+    const aggByMatch = new Map<string, { votes: string[]; rows: MvpRow[] }>();
+    for (const v of (mvpRes.data ?? []) as MvpRow[]) {
+      if (!v.candidate_id) continue;
+      const agg = aggByMatch.get(v.match_id) ?? { votes: [], rows: [] };
+      agg.votes.push(v.candidate_id);
+      agg.rows.push(v);
+      aggByMatch.set(v.match_id, agg);
+    }
+    const { resolveValidMvp, pickStaffDecision } = await import("@/lib/mvpThreshold");
+    for (const [matchId, agg] of aggByMatch) {
+      const staffDecision = pickStaffDecision(agg.rows, staffVoterIds);
+      const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(matchId) ?? 0, staffDecision);
+      if (!winner || !lookupIds.includes(winner)) continue;
       const m = matchMap.get(matchId);
-      if (m) { const sc = scoreMap.get(matchId); details.push({ matchId, matchDate: m.match_date, opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""), count, score: sc ? `${sc.our}:${sc.their}` : undefined }); }
+      if (m) {
+        const sc = scoreMap.get(matchId);
+        details.push({
+          matchId,
+          matchDate: m.match_date,
+          opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""),
+          count: 1,
+          score: sc ? `${sc.our}:${sc.their}` : undefined,
+        });
+      }
     }
   } else if (type === "attendance") {
     const { data: attendance } = await db
