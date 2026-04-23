@@ -3,7 +3,7 @@
 import { memo, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import Image from "next/image";
-import { Bell, Sun, Moon, Monitor, Camera, Link2, AlertTriangle } from "lucide-react";
+import { Bell, Sun, Moon, Monitor, Camera, Link2, AlertTriangle, MessageSquare } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { subscribeToPush } from "@/lib/pushSubscription";
 import { apiMutate } from "@/lib/useApi";
@@ -19,6 +19,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn, formatPhone, stripPhone } from "@/lib/utils";
+
+const APP_VERSION = "Beta 1.0.1";
+const FEEDBACK_EMAIL = "tjsgnl2002@gmail.com";
 
 type Profile = {
   name: string;
@@ -61,6 +64,24 @@ function PersonalSettingsComponent({
   const [jerseySaving, setJerseySaving] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
   const confirm = useConfirm();
+
+  function handleFeedback() {
+    const lines = [
+      "",
+      "",
+      "",
+      "━━━━━━━━━━━━━━━━━━━━",
+      "아래는 디버그 정보입니다 (수정하지 마세요)",
+      `버전: ${APP_VERSION}`,
+      `기기: ${typeof navigator !== "undefined" ? navigator.userAgent : "N/A"}`,
+      `사용자: ${profile.name || "알 수 없음"}`,
+      `시각: ${new Date().toLocaleString("ko-KR")}`,
+      "━━━━━━━━━━━━━━━━━━━━",
+    ];
+    const subject = "[PitchMaster 피드백]";
+    const body = lines.join("\n");
+    window.location.href = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
 
   async function handleWithdraw() {
     // 2단계 확인 — 실수로 탈퇴하지 않도록
@@ -463,6 +484,23 @@ function PersonalSettingsComponent({
           {pushLoading && (
             <p className="mt-2 text-xs text-muted-foreground animate-pulse">알림 권한을 확인하고 있습니다...</p>
           )}
+        </div>
+
+        {/* 피드백 */}
+        <div className="rounded-xl border border-border p-4">
+          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">피드백</p>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <MessageSquare className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium">버그 제보 · 기능 건의</p>
+                <p className="text-sm text-muted-foreground">불편한 점이나 원하는 기능을 알려주세요</p>
+              </div>
+            </div>
+            <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={handleFeedback}>
+              보내기
+            </Button>
+          </div>
         </div>
 
         {/* 계정 관리 (탈퇴) — 카드 맨 하단 위험 영역 */}
