@@ -1,7 +1,7 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=81팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-04-19
+last_updated: 2026-04-24
 related: [completed-recent.md, reviews.md]
 ---
 
@@ -11,6 +11,40 @@ related: [completed-recent.md, reviews.md]
 - **HIGH**: 현재 81팀 운영에 직접 영향
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
+
+## HIGH — 29차 신규 추가 (2026-04-24)
+
+### v1.0.2 AAB 재빌드 + Play Console Alpha 업로드
+- [ ] TWA AAB 재빌드 (versionCode 올리기, 웹 변경사항 반영)
+- [ ] Play Console Alpha 트랙 업로드
+- [ ] 릴리스 노트 작성 (팀 앨범·월별 결산·게시판 통합·투표 마감 UX 개선)
+
+### migration 00044 Supabase 적용 ← (구 00042, 번호 충돌로 리네임)
+- [ ] `penalty_records` PARTIAL UNIQUE INDEX (match_id, rule_id, member_id)
+- [ ] Supabase SQL Editor에서 수동 실행 필요
+- 참고: `fdfed72` 에서 00042/43 → 00044/45 리네임 완료 (번호 충돌 해소)
+
+### ~~선수 프로필 주발 표시~~ ✅ 완료 (커밋 `1ff3dde`, 2026-04-24)
+- [x] 오른발/왼발/양발 — /player/[memberId] 프로필 카드 표시 완료
+
+## HIGH — 27차 신규 추가 (2026-04-23)
+
+### Play Console 프로덕션 재신청 대응 (14일 테스트)
+
+- [ ] v1.0.1 AAB Alpha 트랙 업로드 (파일: `C:\dev\pitchmaster-twa\app-release-bundle.aab`)
+- [ ] 기존 테스터에게 재참여 카톡 공지 (`docs/play-console-v1.0.1-release.md` 3절 템플릿)
+- [ ] 4/28~29 v1.0.2 중간 릴리스 (피드백 반영 버그픽스)
+- [ ] 5/2~3 v1.0.3 릴리스
+- [ ] 5/6~7 v1.0.4 최종 안정화
+- [ ] 5/8 프로덕션 액세스 재신청 (증빙: 테스터 수·피드백 건수·버전 이력)
+
+### 홍보 영상 제작 (12컷 스토리보드 기반)
+
+- [ ] 영상화 파이프라인: Runway Gen-3 또는 Kling으로 각 컷 2.5초 렌더
+- [ ] 내레이션: ElevenLabs 한국어 또는 자체 녹음
+- [ ] BGM/SFX 적용 (문서 BGM 디렉션 참조)
+- [ ] 30초 풀버전 + 15초 숏컷 + 썸네일 3종 파생물
+- [ ] 배포 채널: 인스타 릴스·유튜브 쇼츠·플레이스토어 프리뷰·조기축구 페북/카페
 
 ## 🔄 다음 세션 즉시 착수 (26차 작업 연속성)
 
@@ -177,3 +211,11 @@ W1(보안)·W2(운영 안전망) 완료 후 순차 착수.
 - [ ] 다른 스포츠 확장 (농구, 배구)
 - [ ] 실력 기반 자체전 팀 분배 (레이팅)
 - [ ] 출석률 기반 자동 휴면 전환
+
+## v1.0.3 이후 후보 (29차 숨은 자산 발굴 결과)
+
+- [ ] **상대팀 전적 UI** — AI 내부 집계(`aiTeamStats`의 opponentHistory)가 이미 있음. UI만 없는 상태. 기록 페이지 또는 경기 상세 정보 탭에 표시
+- [ ] **포메이션별 승률 UI** — 내부 집계 존재, UI 미노출. 기록 페이지 통계 탭 후보
+- [ ] **개인 출석률 히트맵** — 월별 참석 패턴 시각화 (GitHub contribution 스타일)
+- [ ] **AI 회비 독촉 문구 생성** — 총무 pain 직접 해소. TeamLinkt Emi 벤치마크. 미납자 목록 → Haiku로 문구 초안 생성
+- [ ] **AI 경기 공지 초안 생성** — 경기 일정 정보 → 카카오 단체방용 공지 초안

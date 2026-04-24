@@ -1,12 +1,99 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~28차)
-summary: 2026-04-11~23 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유
-sections: [28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-04-23
+title: 개선 백로그 — 최근 완료 (16~30차)
+summary: 2026-04-11~24 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정
+sections: [30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-04-24
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~28차)
+# 최근 완료 (16~30차)
+
+## 30차 (2026-04-24) — 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정
+
+**자동편성 AI-free 모드 전술판 초기화 버그 최종 수정** (`AutoFormationBuilder.tsx`)
+- [x] 근본 원인: AI-free 모드에서 sheet apply 시 `applyAiPlanToResults()` fallback 미전달 → `results` stale closure가 null → AI 누락 쿼터(Q1 포함) 드롭 → 전술판 빈 화면
+- [x] `useRef` import 추가, `aiFreeFallbackRef` 추가 — AI fetch 전 `scheduleQuarters` 기본 스케줄 보존
+- [x] `setResults(currentResults)` 조기 호출 제거 — re-render 유발로 stale closure 악화 방지
+- [x] sheet apply 버튼: `applyAiPlanToResults(undefined, aiFreeFallbackRef.current)` — fallback 전달
+- [x] AI placeholder[] 반환 시 빈 positions 방어: `assignments.length === 0` 스킵 + `validSquads` 필터 + `onGenerated([])` 보호
+- 커밋: `f821c13`
+
+**AI 코치 버튼 앱 재진입 후 비활성 버그 수정** (`MatchTacticsTab.tsx`)
+- [x] 근본 원인: `dbAiCoachContext` useMemo에서 `nameMap.get(posEntry.playerId)` 없으면 `continue` → DB 배치 선수가 `attendingPlayers`에 없을 경우(참석 취소 등) 슬롯 카운트 제외 → `totalAssignedFieldSlots < expectedTotal` → `allSlotsFilled = false` → 버튼 비활성
+- [x] `if (!playerName) continue;` 제거 → `nameMap.get(playerId) ?? \`선수(${playerId.slice(0,6)})\`` fallback 방식으로 교체
+- [x] DB에 배치 기록만 있으면 attendingPlayers 목록 무관하게 카운트 포함 — 앱 재진입 후 정상 활성화 보장
+- 이미 HEAD 커밋에 반영됨
+
+**반쿼터 출전 표기** (`MatchTacticsTab.tsx` 내 쿼터별 출전 현황 매트릭스)
+- [x] `●` 풀타임 / `전` 전반 출전 후 교체 아웃 / `교` 교체(후반 인) — 반투명 채운 원 / 테두리만 원 구분
+- [x] 합계 열: 풀타임=1, 반쿼터=0.5 가중치 계산 (`3.5/4` 형식)
+- [x] 범례(legend) Sheet 상단 추가
+- 커밋: `2b062b1` (이전 세션 완료 기록)
+
+**자동편성 formationId stale closure 버그** (`AutoFormationBuilder.tsx`, `TacticsBoard.tsx`)
+- [x] `scheduleQuarters` 결과에 `formationId` 미포함 → stale closure의 `formation` 사용 → 슬롯 불일치 → `positions: {}` 저장 → 전술판 초기화. 수정: `formationId: formation.id` 추가
+- [x] `boardState` lazy initializer 미적용 → 재마운트 시 빈 화면 flash. 수정: `useState(() => {...})` lazy 패턴
+- [x] `saveToTacticsBoard` 빈 positions 그대로 API 저장 → `positions 0개` 스쿼드 DB 저장. 수정: 빈 squad skip
+- 커밋: `2b062b1`, `77fc83d`
+
+**삽질 기록**
+- `git show HEAD` 로 이미 수정된 코드 확인 — 이전 세션 종료 시 자동 커밋 포함된 것으로 추정. Edit 중복 적용됐으나 결과 동일
+- 자동편성 버그는 단일 원인이 아니라 4가지 원인 복합: formationId 미포함 / boardState lazy 초기화 미적용 / fallback 누락 / stale closure
+
+## 29차 (2026-04-24) — 투표 마감 UX + 서버 가드 일괄 + 팀 앨범 + 월별 결산 + 게시판 통합
+
+**투표 마감 UX 일관화** (커밋 `7769848`, `d26bb89`, `f7361aa`)
+- [x] DashboardClient: `vote_deadline` 기반 `isVoteClosed` 계산, 마감 시 버튼 → "투표 마감되었습니다" 박스 + 내 투표 배지
+- [x] getDashboardData 타입에 `vote_deadline` 노출 (서버 select에는 있었으나 타입 미정의)
+- [x] MatchesClient 리스트뷰: 동일 마감 패턴 적용
+- [x] 본인 투표 하이라이트 버그 수정: `attendance[match.id]?.[userId]` → `myMemberId` useMemo 도입 후 memberId 키로 교체 (2176eda 회귀 수정)
+- [x] MatchCalendar: voteDeadline props 추가 + isVoteClosed 계산 + 마감 안내 박스
+- [x] MatchRecordTab: `match.status === "COMPLETED"` 검증 없어 예정 경기에도 MVP 카드 노출 → status 체크로 감쌈
+
+**API 서버 가드 5건 일괄 강화** (커밋 `bab979b`)
+- [x] `/api/match-comments` DELETE: cross-team 삭제 방지 (comment → match.team_id 조인 검증) + 운영진 타인 댓글 삭제 허용
+- [x] `/api/attendance` POST: 투표 마감 체크 (본인 경로)
+- [x] `/api/mvp` POST: `match.status === "COMPLETED"` 검증
+- [x] `/api/diary` POST: requireRole(STAFF) 권한 검증
+- [x] `/api/posts/vote` POST: optionId ↔ pollId 귀속 검증
+
+**운영진 대리 투표 마감 후 허용 복구** (커밋 `4e17874`)
+- [x] attendance API: isProxy 경로 마감 체크 스킵 (운영진 override 의도 복원)
+- [x] attendance-check generatePenalty: DORMANT/PENDING/BANNED 회원 벌금 제외
+- [x] migration 00042: penalty_records 중복 방지 PARTIAL UNIQUE INDEX (match_id, rule_id, member_id)
+- [x] dues/penalties POST: 23505(UNIQUE 위반) 무시로 race condition 대응
+
+**v1.0.2 핵심 기능 — 팀 앨범** (커밋 `df016cd`)
+- [x] `GET /api/gallery`: match_diaries.photos 집계 + matches 조인
+- [x] GalleryView 컴포넌트 추출 (`src/components/gallery/`) — 독립 페이지·탭 양쪽 재사용
+- [x] 경기별 그룹화 3열 그리드 + ImageLightbox 재활용 + 좌/우 네비게이션
+
+**v1.0.2 핵심 기능 — 월별 결산 + 게시판/앨범 통합** (커밋 `0e4e1ef`)
+- [x] `GET /api/reports/monthly?month=YYYY-MM`: 재무(수입·지출·카테고리) + 경기(승무패·득실) + 출석 집계
+- [x] `/dues/monthly`: 월 선택기 + 공유 카드 (html-to-image + Web Share API + PNG 폴백)
+- [x] 게시판 탭 UI: `[게시글][앨범]`, URL `?tab=gallery` 동기화
+- [x] `/matches/gallery` → `/board?tab=gallery` 레거시 리다이렉트
+- [x] 더보기 메뉴 "팀 앨범" 제거 (게시판·앨범으로 통합)
+- [x] 회비 탭 상단 "월별 결산 리포트" 배너 (운영진 only)
+
+**메뉴 라벨 통일** (커밋 `a26f5f5`)
+- [x] 햄버거·하단 Sheet·더보기 페이지 3곳: "게시판" → "게시판 · 앨범"
+- [x] 설명: "공지/자유" → "공지/자유/경기사진"
+
+**경기 목록 상단 앨범 버튼 제거** (커밋 `c14ea2d`) — 중복 진입점 정리
+
+**주요 의사결정**
+- AI 월간 총평 이번 버전 제외 ("미납 알림은 일반 기능으로 커버", "AI 총평 별 의미 없어 보인다")
+- 경쟁사 리서치 (TeamLinkt·Spond·TeamSnap·JoGi·축구고) → 아마추어 팀 관리 AI 블루오션 확인
+- 사용자 재방향: AI보다 "이미 만들었지만 활용 못하는 기능" 발굴 우선
+- 초기 /matches/gallery 독립 페이지 구현 완료 후 사용자 제안으로 게시판 탭 통합으로 즉시 방향 전환
+
+**삽질 기록**
+- 투표 마감 체크를 attendance API 공통으로 추가 → isProxy 운영진 대리 경로도 차단 → 사용자 피드백 후 롤백 (feedback_understand_existing_flow.md)
+- "PlayerCard 다운로드 주석 처리 = 미완성 기능" 으로 오판 → 실제 /player/[memberId] 이미 라이브 (feedback_verify_live_state.md)
+- bash에서 `src/app/(app)/...` 경로 괄호 이스케이프 없이 실행 → syntax error
+
+**커밋 목록**: `7769848`, `d26bb89`, `f7361aa`, `bab979b`, `4e17874`, `df016cd`, `0e4e1ef`, `a26f5f5`, `c14ea2d`
 
 ## 28차 (2026-04-23) — 실사용자 CS 5건 대응 + 연관 버그 선제 수정 + MVP 집계 9곳 통일
 

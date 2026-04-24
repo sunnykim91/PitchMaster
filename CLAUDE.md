@@ -216,6 +216,14 @@ MatchTacticsTab
 - `playerWorkload`에서 전 쿼터 출전 선수 → 3단락 체력 부담 언급 필수
 - 쿼터별 득실 패턴(3쿼터 실점 집중 등) → 해당 쿼터 주의점으로 반영
 
+### dbAiCoachContext allSlotsFilled 계산 규칙 (2026-04-24 버그 수정)
+
+`MatchTacticsTab.tsx` `dbAiCoachContext` useMemo 내 슬롯 카운팅:
+- **playerId 존재 여부만으로 카운트** — `nameMap`(attendingPlayers+guests)에 없어도 포함
+- 수정 전: `if (!playerName) continue;` → 참석 취소 선수 슬롯 카운트 누락 → `allSlotsFilled=false` → 버튼 비활성
+- 수정 후: `nameMap.get(playerId) ?? \`선수(${playerId.slice(0,6)})\`` — DB 배치 기록 있으면 무조건 카운트
+- ⚠️ 이 규칙 절대 원상복구 금지: nameMap 기반으로 되돌리면 앱 재진입 후 버튼 비활성 버그 재발
+
 ### AI UI 공통 컴포넌트 (2026-04-19 신규)
 - `src/components/AiBadge.tsx` — variant: `ai`/`rule`/`loading`/`error`, size: `sm`/`md`
 - 박스 안에 variant별 아이콘(Sparkles/Cog/Loader2/AlertCircle) + 축약 라벨("AI"/"룰"/"생성중"/"실패")
