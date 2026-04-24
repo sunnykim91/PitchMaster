@@ -45,6 +45,7 @@ export type PlayerProfile = {
   teamName: string;
   teamPrimaryColor: string;
   positions: string[];
+  preferredFoot: "RIGHT" | "LEFT" | "BOTH" | null;
   jerseyNumber: number | null;
   teamRole: "CAPTAIN" | "VICE_CAPTAIN" | null;
   seasonName: string;
@@ -350,7 +351,7 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showImageShareModal, setShowImageShareModal] = useState(false);
   const [shareToast, setShareToast] = useState<string | null>(null);
-  const { name, teamName, teamPrimaryColor, positions, jerseyNumber, teamRole, seasonName, signature, playerCardProps, stats, bestMoments, recentMatches } = profile;
+  const { name, teamName, teamPrimaryColor, positions, preferredFoot, jerseyNumber, teamRole, seasonName, signature, playerCardProps, stats, bestMoments, recentMatches } = profile;
 
   function handleBack() {
     if (typeof window === "undefined") return;
@@ -501,6 +502,12 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
                   <>
                     <span className="mx-2 text-white/30">·</span>
                     <span className="font-semibold">#{jerseyNumber}</span>
+                  </>
+                )}
+                {preferredFoot && (
+                  <>
+                    <span className="mx-2 text-white/30">·</span>
+                    <span>{preferredFoot === "RIGHT" ? "오른발" : preferredFoot === "LEFT" ? "왼발" : "양발"}</span>
                   </>
                 )}
                 {stats && (
@@ -784,6 +791,7 @@ export function PlayerProfileDemo() {
     teamName: "FC 피치마스터",
     teamPrimaryColor: "#e8613a",
     positions: ["FW", "ST"],
+    preferredFoot: "RIGHT",
     jerseyNumber: 10,
     teamRole: "CAPTAIN",
     seasonName: "2026 시즌",

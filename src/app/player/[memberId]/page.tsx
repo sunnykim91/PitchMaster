@@ -35,7 +35,7 @@ type MemberRow = {
   team_id: string;
   ai_signature: string | null;
   ai_signature_generated_at: string | null;
-  users: JoinedRow<{ name: string; preferred_positions: string[]; profile_image_url: string | null }>;
+  users: JoinedRow<{ name: string; preferred_positions: string[]; preferred_foot: "RIGHT" | "LEFT" | "BOTH" | null; profile_image_url: string | null }>;
   teams: JoinedRow<{ name: string; sport_type: string; uniform_primary: string | null; logo_url: string | null }>;
 };
 
@@ -47,7 +47,7 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
   // ACTIVE + DORMANT 모두 허용 (휴면 회원도 프로필 열람 가능, BANNED만 제외)
   let query = db
     .from("team_members")
-    .select("id, user_id, pre_name, jersey_number, team_role, team_id, ai_signature, ai_signature_generated_at, users(name, preferred_positions, profile_image_url), teams(name, sport_type, uniform_primary, logo_url)")
+    .select("id, user_id, pre_name, jersey_number, team_role, team_id, ai_signature, ai_signature_generated_at, users(name, preferred_positions, preferred_foot, profile_image_url), teams(name, sport_type, uniform_primary, logo_url)")
     .or(`user_id.eq.${memberId},id.eq.${memberId}`)
     .in("status", ["ACTIVE", "DORMANT"]);
   if (teamId) query = query.eq("team_id", teamId);
@@ -62,6 +62,7 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
   const teamPrimaryColor = team?.uniform_primary ?? "#e8613a";
   const teamLogoUrl = team?.logo_url ?? undefined;
   const positions = user?.preferred_positions ?? [];
+  const preferredFoot = user?.preferred_foot ?? null;
   const photoUrl = user?.profile_image_url ?? undefined;
   const lookupIds = m.user_id ? [m.user_id, m.id] : [m.id];
   const cat = classifyPosition(positions);
@@ -85,7 +86,7 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
 
   if (!season) {
     return {
-      name, teamName, teamPrimaryColor, positions, jerseyNumber: m.jersey_number,
+      name, teamName, teamPrimaryColor, positions, preferredFoot, jerseyNumber: m.jersey_number,
       teamRole: (m.team_role === "CAPTAIN" || m.team_role === "VICE_CAPTAIN" ? m.team_role : null) as PlayerProfile["teamRole"],
       seasonName: "", signature: "", playerCardProps: emptyCardProps,
       stats: null, bestMoments: [], recentMatches: [],
@@ -106,7 +107,7 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
   const matchIds = (matches ?? []).map((mm) => mm.id);
   if (matchIds.length === 0) {
     return {
-      name, teamName, teamPrimaryColor, positions, jerseyNumber: m.jersey_number,
+      name, teamName, teamPrimaryColor, positions, preferredFoot, jerseyNumber: m.jersey_number,
       teamRole: (m.team_role === "CAPTAIN" || m.team_role === "VICE_CAPTAIN" ? m.team_role : null) as PlayerProfile["teamRole"],
       seasonName: season.name, signature: "", playerCardProps: { ...emptyCardProps, seasonName: season.name },
       stats: null, bestMoments: [], recentMatches: [],
@@ -379,7 +380,7 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
   };
 
   return {
-    name, teamName, teamPrimaryColor, positions,
+    name, teamName, teamPrimaryColor, positions, preferredFoot,
     jerseyNumber: m.jersey_number,
     teamRole: (m.team_role === "CAPTAIN" || m.team_role === "VICE_CAPTAIN" ? m.team_role : null) as PlayerProfile["teamRole"],
     seasonName: season.name, signature: signature ?? "",
