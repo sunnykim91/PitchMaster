@@ -224,7 +224,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       { href: "/records", label: "내 기록", detail: "통계/랭킹", icon: Trophy },
       { href: "/dues", label: "회비 관리", detail: "거래 내역/납부", icon: Wallet },
       { href: "/members", label: "회원 관리", detail: "멤버/권한", icon: Users },
-      { href: "/board", label: "게시판", detail: "공지/자유", icon: MessageSquare },
+      { href: "/board", label: "게시판 · 앨범", detail: "공지/자유/경기사진", icon: MessageSquare },
       { href: "/rules", label: "회칙", detail: "팀 규정", icon: BookOpen },
       { href: "/settings", label: "설정", detail: "개인/팀", icon: Settings },
       { href: "/guide.html", label: "가이드", detail: "기능 안내", icon: HelpCircle },
@@ -617,7 +617,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             <nav className="grid gap-1" aria-label="추가 메뉴">
               {[
                 { href: "/members", icon: Users, label: "회원관리" },
-                { href: "/board", icon: MessageSquare, label: "게시판" },
+                { href: "/board", icon: MessageSquare, label: "게시판 · 앨범" },
                 { href: "/rules", icon: BookOpen, label: "회칙" },
                 { href: "/settings", icon: Settings, label: "설정" },
               ].map((item) => (
