@@ -91,7 +91,10 @@ export async function GET(request: NextRequest) {
       .lt("recorded_at", endExclusive),
     db
       .from("matches")
-      .select("id, match_date, status, stats_included, match_type")
+      // 월별 결산은 발생한 모든 경기 집계 — stats_included/match_type 필터 제거
+      // (records/season-awards 는 커리어 통계용이라 stats_included=false 제외하지만,
+      //  결산은 "이번 달에 얼마나 뛰었나" 기준이므로 자체전·이벤트전 포함)
+      .select("id, match_date, match_type")
       .eq("team_id", ctx.teamId)
       .eq("status", "COMPLETED")
       .gte("match_date", ym + "-01")
@@ -124,11 +127,9 @@ export async function GET(request: NextRequest) {
   }
   const categories = [...categoryMap.values()].sort((a, b) => b.amount - a.amount);
 
-  // 경기 집계 (stats_included 필터 — EVENT 는 제외)
-  type MatchRow = { id: string; status: string; stats_included: boolean | null; match_type: string | null };
-  const matchRows = ((matchesRes.data ?? []) as MatchRow[]).filter(
-    (m) => m.stats_included !== false && m.match_type !== "EVENT",
-  );
+  // 경기 집계 — 완료된 경기 전체 (자체전·이벤트전 포함)
+  type MatchRow = { id: string; match_type: string | null };
+  const matchRows = (matchesRes.data ?? []) as MatchRow[];
   const matchIds = matchRows.map((m) => m.id);
 
   let wins = 0, draws = 0, losses = 0, goalsFor = 0, goalsAgainst = 0;
