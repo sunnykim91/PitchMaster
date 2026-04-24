@@ -114,6 +114,15 @@ export async function GET(request: NextRequest) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function generatePenalty(db: any, teamId: string, matchId: string, targetUserId: string, status: string) {
   try {
+    // DORMANT/PENDING/BANNED 회원이면 벌금 생성 안 함 (ACTIVE 만 대상)
+    const { data: memberRow } = await db
+      .from("team_members")
+      .select("status")
+      .eq("team_id", teamId)
+      .eq("user_id", targetUserId)
+      .maybeSingle();
+    if (!memberRow || memberRow.status !== "ACTIVE") return;
+
     // 면제/휴회/부상 회원이면 벌금 생성 안 함
     const { data: exemption } = await db
       .from("member_dues_exemptions")

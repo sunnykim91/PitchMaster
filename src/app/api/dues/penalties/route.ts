@@ -278,8 +278,10 @@ export async function POST(request: NextRequest) {
   }
 
   if (newPenalties.length > 0) {
+    // 레이스 컨디션 대비 — UNIQUE (match_id, rule_id, member_id) 위반 시 무시
+    // (existingSet 검사로 대부분 걸러지지만 동시 호출 대응)
     const { error } = await db.from("penalty_records").insert(newPenalties);
-    if (error) return apiError(error.message);
+    if (error && error.code !== "23505") return apiError(error.message);
   }
 
   return apiSuccess({ created: newPenalties.length });
