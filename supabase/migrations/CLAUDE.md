@@ -13,8 +13,11 @@
 
 **대응**:
 - 현재 파일명 그대로 유지
-- 새 마이그레이션은 반드시 **마지막 번호 + 1** (현재 최신 `00042` 다음은 `00043`)
-- 번호 충돌 여부는 `ls supabase/migrations/ | awk -F_ '{print $1}' | sort | uniq -c | awk '$1>1'` 로 체크 가능
+- 새 마이그레이션은 반드시 **`ls supabase/migrations/` 로 최신 번호 직접 확인** 후 **마지막 번호 + 1**
+- CLAUDE.md 문서는 항상 최신 상태가 아닐 수 있음 — 파일 시스템이 단일 진실원
+- 번호 충돌 여부는 `ls supabase/migrations/ | awk -F_ '{print $1}' | sort | uniq -c | awk '$1>1'` 로 체크 필수
+
+**현재 최신 (2026-04-24 기준)**: `00045_mvp_push_and_ovr_tracking.sql` — 다음은 `00046`
 
 ## 실행 순서 (00001 → 최신)
 
