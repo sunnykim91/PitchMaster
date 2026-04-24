@@ -1,5 +1,5 @@
 -- ============================================================
--- 00043: MVP 투표 시작 푸시 + 선수 카드 OVR 변동 알림 인프라
+-- 00045: MVP 투표 시작 푸시 + 선수 카드 OVR 변동 알림 인프라
 -- ============================================================
 --
 -- 목적:
@@ -25,6 +25,14 @@ COMMENT ON COLUMN public.matches.mvp_push_sent_at IS
 CREATE INDEX IF NOT EXISTS matches_mvp_push_unsent_idx
   ON public.matches (status, match_date)
   WHERE mvp_push_sent_at IS NULL AND status = 'COMPLETED';
+
+-- 중요: 기존 COMPLETED 경기는 전부 "이미 발송됨" 으로 백필 처리.
+-- 이 백필이 없으면 크론이 전체 과거 경기에 대해 MVP 푸시를 쏘는 사고가 남
+-- (실제로 2026-04-24 첫 배포 때 발생해 수습 SQL 별도로 실행).
+UPDATE public.matches
+   SET mvp_push_sent_at = NOW()
+ WHERE status = 'COMPLETED'
+   AND mvp_push_sent_at IS NULL;
 
 -- 2. team_members.last_ovr — 직전 시즌 OVR 스냅샷
 ALTER TABLE public.team_members
