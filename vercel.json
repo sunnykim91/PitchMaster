@@ -29,6 +29,10 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/cron/role-guide-push",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/cron/no-vote-penalty",
       "schedule": "0 14 * * *"
     },

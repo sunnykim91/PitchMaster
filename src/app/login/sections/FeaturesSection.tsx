@@ -258,6 +258,79 @@ export default function FeaturesSection() {
         </div>
         <TacticsBoard />
 
+        {/* Role Guide — 내 포지션 내 역할 */}
+        <div className="mt-24 mb-10 text-center">
+          <p className="mb-3 text-xs font-bold uppercase tracking-[0.3em] text-[hsl(var(--info))]">Role Guide</p>
+          <h3 className="mb-2 font-heading text-2xl font-bold sm:text-3xl">
+            &ldquo;나 이 포지션인데 뭐 해야 돼?&rdquo;
+          </h3>
+          <p className="mx-auto max-w-lg text-sm text-muted-foreground">
+            24 포지션 × 10 포메이션. 쿼터별 내 역할과 연결 플레이까지 한 카드로.
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground/70">
+            투표 마감되면 <strong className="text-[hsl(var(--info))]">당신의 예상 역할이 푸시로 도착</strong>합니다
+          </p>
+        </div>
+
+        {/* Role Card 샘플 그리드 */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
+          {[
+            {
+              tag: "2쿼터 · 4-3-3",
+              role: "RCB (우측 센터백)",
+              tagline: "라인 유지가 핵심",
+              points: [
+                "우측 풀백과 간격 5m 유지 · 라인 나란히",
+                "공 뺏기보단 위치 선점 → 상대 전진 차단",
+                "롱볼 클리어는 측면보다 중앙 피하기",
+              ],
+            },
+            {
+              tag: "1·3쿼터 · 4-2-3-1",
+              role: "CAM (공격형 미드필더)",
+              tagline: "ST 뒤에서 해결사",
+              points: [
+                "페널티박스 아크에서 반박자 빠른 패스",
+                "수비 복귀 시 DM 옆 공간 메우기",
+                "세트피스에서 2차 슛 대기 포지션",
+              ],
+            },
+            {
+              tag: "전 쿼터 · 3-5-2",
+              role: "LWB (좌측 윙백)",
+              tagline: "체력 분배 잊지 말기",
+              points: [
+                "공격 가담 시 오버래핑 OK, 수비 복귀 필수",
+                "크로스는 땅볼보다 얼리 크로스 추천",
+                "후반 체력 위해 전반엔 70%로",
+              ],
+            },
+          ].map((card) => (
+            <div
+              key={card.role}
+              className="group relative overflow-hidden rounded-2xl border border-[hsl(var(--info))]/20 bg-[hsl(var(--info))]/5 p-5 transition-all duration-300 hover:scale-[1.02]"
+            >
+              <p className="text-[10px] tracking-[0.2em] font-bold text-[hsl(var(--info))] uppercase mb-2">
+                {card.tag}
+              </p>
+              <h4 className="text-base font-bold text-foreground mb-1">{card.role}</h4>
+              <p className="text-sm text-[hsl(var(--info))] italic mb-4">&ldquo;{card.tagline}&rdquo;</p>
+              <ul className="space-y-2 text-xs text-muted-foreground leading-relaxed">
+                {card.points.map((p) => (
+                  <li key={p} className="flex gap-2">
+                    <span className="shrink-0 text-[hsl(var(--info))] mt-0.5">•</span>
+                    <span>{p}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-6 text-center text-xs text-muted-foreground/60">
+          * 현재 축구 11인제 10 포메이션 지원 · 풋살·8~10인제 순차 추가
+        </p>
+
         {/* Player Card & Season Awards */}
         <div className="mt-24 mb-10 text-center">
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.3em] text-[hsl(var(--warning))]">Player Card & Awards</p>
