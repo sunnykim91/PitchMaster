@@ -762,6 +762,9 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
           const absentCount = matchVotes.filter((v) => v === "ABSENT").length;
           const maybeCount = matchVotes.filter((v) => v === "MAYBE").length;
           const isCompleted = match.status === "COMPLETED";
+          const isVoteClosed = match.voteDeadline
+            ? new Date(match.voteDeadline) <= new Date()
+            : false;
           return (
             <Card key={match.id} className={cn("rounded-xl overflow-hidden transition-all hover:border-border/80", isCompleted && "opacity-70")}>
               {/* 메인: 클릭 → 상세 */}
@@ -842,9 +845,19 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 )}
               </Link>
 
-              {/* 투표 버튼 + 공유 — 예정 경기만 */}
+              {/* 투표 버튼 + 공유 — 예정 경기만, 투표 마감 시엔 안내만 */}
               {!isCompleted && (
                 <div className="px-4 pb-3">
+                  {isVoteClosed ? (
+                    <div className="flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary/40 py-2 text-sm text-muted-foreground">
+                      <span>투표 마감</span>
+                      {vote && (
+                        <span className="text-xs">
+                          · 내 투표: {vote === "ATTEND" ? "참석" : vote === "ABSENT" ? "불참" : "미정"}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
                   <div className="flex items-center gap-2">
                     {([
                       { value: "ATTEND" as const, label: "참석" },
@@ -887,6 +900,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       <Share2 className="h-4 w-4" />
                     </button>
                   </div>
+                  )}
                 </div>
               )}
             </Card>

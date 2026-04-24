@@ -30,6 +30,7 @@ export type DashboardData = {
     match_date: string;
     match_time: string | null;
     match_end_time: string | null;
+    vote_deadline: string | null;
     opponent_name: string | null;
     location: string | null;
     uniform_type: string | null;

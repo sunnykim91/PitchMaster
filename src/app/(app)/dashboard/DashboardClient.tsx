@@ -25,6 +25,7 @@ type UpcomingMatch = {
   match_date: string;
   match_time: string | null;
   match_end_time: string | null;
+  vote_deadline: string | null;
   opponent_name: string | null;
   location: string | null;
   voteCounts: { attend: number; absent: number; undecided: number };
@@ -255,6 +256,10 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
 
   // 낙관적 상태가 있으면 우선 사용
   const displayVote = optimisticVote !== undefined ? optimisticVote : upcomingMatch?.myVote;
+  // 투표 마감 여부 — vote_deadline 이 과거면 마감 (null 이면 마감 없음으로 간주)
+  const isVoteClosed = upcomingMatch?.vote_deadline
+    ? new Date(upcomingMatch.vote_deadline) <= new Date()
+    : false;
   // Attendance bar percentages
   const voteCounts = optimisticCounts ?? upcomingMatch?.voteCounts ?? { attend: 0, absent: 0, undecided: 0 };
   const voteTotal = voteCounts.attend + voteCounts.absent + voteCounts.undecided;
@@ -524,36 +529,47 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
             </div>
           </Link>
 
-          {/* 투표 버튼 */}
+          {/* 투표 버튼 — 마감 전에만 노출, 마감 후엔 안내 메시지 */}
           {upcomingMatch.myMemberId && (
-            <div className="mt-4 flex items-center gap-2">
-              {([
-                { value: "ATTEND" as const, label: "참석" },
-                { value: "MAYBE" as const, label: "미정" },
-                { value: "ABSENT" as const, label: "불참" },
-              ]).map((opt) => {
-                const isSelected = displayVote === opt.value;
-                const isLoading = loadingVote === opt.value;
-                const isShaking = shakeVote === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    disabled={pendingVote || !!loadingVote}
-                    aria-pressed={displayVote === opt.value}
-                    className={cn(
-                      "relative flex-1 rounded-lg py-1.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-1",
-                      isSelected ? voteStyles[opt.value].active : "border border-border text-muted-foreground hover:bg-secondary",
-                      isShaking && "animate-shake ring-2 ring-destructive"
-                    )}
-                    onClick={() => handleQuickVote(upcomingMatch.id, upcomingMatch.myMemberId!, opt.value)}
-                  >
-                    {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                    {opt.label}
-                  </button>
-                );
-              })}
-            </div>
+            isVoteClosed ? (
+              <div className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary/40 py-2 text-sm text-muted-foreground">
+                <span>이 경기의 투표는 마감되었습니다</span>
+                {displayVote && (
+                  <span className="text-xs">
+                    · 내 투표: {displayVote === "ATTEND" ? "참석" : displayVote === "ABSENT" ? "불참" : "미정"}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <div className="mt-4 flex items-center gap-2">
+                {([
+                  { value: "ATTEND" as const, label: "참석" },
+                  { value: "MAYBE" as const, label: "미정" },
+                  { value: "ABSENT" as const, label: "불참" },
+                ]).map((opt) => {
+                  const isSelected = displayVote === opt.value;
+                  const isLoading = loadingVote === opt.value;
+                  const isShaking = shakeVote === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      disabled={pendingVote || !!loadingVote}
+                      aria-pressed={displayVote === opt.value}
+                      className={cn(
+                        "relative flex-1 rounded-lg py-1.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-1",
+                        isSelected ? voteStyles[opt.value].active : "border border-border text-muted-foreground hover:bg-secondary",
+                        isShaking && "animate-shake ring-2 ring-destructive"
+                      )}
+                      onClick={() => handleQuickVote(upcomingMatch.id, upcomingMatch.myMemberId!, opt.value)}
+                    >
+                      {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )
           )}
           </>
         ) : !showWizard ? (
