@@ -725,6 +725,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   status: m.status,
                   score: m.score,
                   matchType: m.matchType,
+                  voteDeadline: m.voteDeadline ?? null,
                   attendCount: matchVotes.filter((v) => v === "ATTEND").length,
                   absentCount: matchVotes.filter((v) => v === "ABSENT").length,
                   maybeCount: matchVotes.filter((v) => v === "MAYBE").length,

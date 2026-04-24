@@ -18,6 +18,7 @@ type CalendarMatch = {
   score?: string | null;
   matchType: "REGULAR" | "INTERNAL" | "EVENT";
   endDate?: string | null;
+  voteDeadline?: string | null;
   // 투표 집계
   attendCount?: number;
   absentCount?: number;
@@ -204,6 +205,7 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
           )}
           {selectedMatches.map((m) => {
             const isCompleted = m.status === "COMPLETED";
+            const isVoteClosed = m.voteDeadline ? new Date(m.voteDeadline) <= new Date() : false;
             let resultBadge = null;
             if (isCompleted && m.score) {
               const [l, r] = m.score.split(":").map((s) => parseInt(s.trim(), 10));
@@ -238,8 +240,19 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
                     {m.opponent && (m.matchType === "EVENT" ? ` · ${m.opponent}` : ` · vs ${m.opponent}`)}
                   </p>
                 </Link>
-                {/* 투표 버튼 (예정 경기 + onVote 있을 때) */}
-                {!isCompleted && onVote && (
+                {/* 투표 마감 안내 (예정 경기 + 마감됨) */}
+                {!isCompleted && isVoteClosed && (
+                  <div className="px-3 pb-3">
+                    <div className="flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary/40 py-1.5 text-xs text-muted-foreground">
+                      <span>투표 마감</span>
+                      {myVote && (
+                        <span>· 내 투표: {myVote === "ATTEND" ? "참석" : myVote === "ABSENT" ? "불참" : "미정"}</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {/* 투표 버튼 (예정 경기 + 마감 전 + onVote 있을 때) */}
+                {!isCompleted && !isVoteClosed && onVote && (
                   <div className="px-3 pb-3 flex items-center gap-2">
                     {(["ATTEND", "MAYBE", "ABSENT"] as const).map((v) => {
                       const label = v === "ATTEND" ? "참석" : v === "MAYBE" ? "미정" : "불참";

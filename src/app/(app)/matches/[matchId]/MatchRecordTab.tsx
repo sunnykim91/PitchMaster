@@ -611,7 +611,8 @@ function MatchRecordTabInner({
 
         {/* ── 우측 컬럼 ── */}
         <div className="space-y-5">
-          {/* ── MVP 투표 ── */}
+          {/* ── MVP 투표 — 완료된 경기에서만 노출 ── */}
+          {match.status === "COMPLETED" && (
           <Card className="rounded-xl border-border/30">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base font-bold">
@@ -747,6 +748,7 @@ function MatchRecordTabInner({
               )}
             </CardContent>
           </Card>
+          )}
 
           {/* 출석 체크는 별도 "출석" 탭으로 이동됨 */}
         </div>
