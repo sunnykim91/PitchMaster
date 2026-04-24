@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
+import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { useConfirm } from "@/lib/ConfirmContext";
@@ -408,6 +409,20 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
             )}
           </div>
           <MonthlySettlement records={records} />
+          {isStaffOrAbove(role) && (
+            <div className="pt-1">
+              <Link
+                href="/dues/monthly"
+                className="flex items-center justify-between rounded-lg border border-border bg-secondary/30 px-3 py-2 text-sm transition-colors hover:bg-secondary/50 active:scale-[0.99]"
+              >
+                <span className="flex items-center gap-2 text-foreground/80">
+                  <span className="text-base">📊</span>
+                  <span className="font-medium">월별 결산 리포트</span>
+                </span>
+                <span className="text-xs text-muted-foreground">과거 월 조회 · 공유 &rarr;</span>
+              </Link>
+            </div>
+          )}
         </CardContent>
       </Card>
 

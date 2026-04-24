@@ -1,16 +1,9 @@
-import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import GalleryClient from "./GalleryClient";
 
-export const metadata = {
-  title: "팀 사진 갤러리 | PitchMaster",
-  description: "경기 후기 사진을 한곳에서 모아봅니다.",
-};
-
-export default async function GalleryPage() {
-  const session = await auth();
-  if (!session) redirect("/login");
-  if (!session.user.teamId) redirect("/team");
-
-  return <GalleryClient teamName={session.user.teamName ?? "우리 팀"} />;
+/**
+ * 레거시 라우트 — 현재는 게시판 내부 "앨범" 탭으로 통합됨.
+ * 기존 북마크·외부 링크 호환성을 위해 리다이렉트만 수행.
+ */
+export default function LegacyGalleryRedirect() {
+  redirect("/board?tab=gallery");
 }

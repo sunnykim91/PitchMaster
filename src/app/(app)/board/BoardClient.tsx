@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import type { FormEvent } from "react";
-import { MessageSquare, Plus, X } from "lucide-react";
+import { MessageSquare, Plus, X, Images } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
 import { isStaffOrAbove } from "@/lib/permissions";
@@ -18,6 +18,8 @@ import { ImageLightbox } from "@/components/ImageLightbox";
 
 import { PostCard } from "@/components/board/PostCard";
 import { PostEditor } from "@/components/board/PostEditor";
+import { GalleryView } from "@/components/gallery/GalleryView";
+import { cn } from "@/lib/utils";
 
 /* ── Exported Types ── */
 export type PollOption = { id: string; label: string; votes: number };
@@ -124,6 +126,11 @@ export default function BoardClient({
   const searchParams = useSearchParams();
   const isStaff = isStaffOrAbove(userRole);
 
+  // 탭 상태 (URL ?tab=gallery 또는 기본값 posts)
+  const [activeTab, setActiveTab] = useState<"posts" | "gallery">(
+    searchParams.get("tab") === "gallery" ? "gallery" : "posts"
+  );
+
   // ?post=xxx 쿼리로 해당 글로 스크롤
   useEffect(() => {
     const postId = searchParams.get("post");
@@ -133,6 +140,12 @@ export default function BoardClient({
       if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 500);
     return () => clearTimeout(timer);
+  }, [searchParams]);
+
+  // ?tab 쿼리 변경 시 동기화 (뒤로가기 등)
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    setActiveTab(tab === "gallery" ? "gallery" : "posts");
   }, [searchParams]);
 
   /* ── Data fetching ── */
@@ -490,25 +503,59 @@ export default function BoardClient({
 
   return (
     <div className="space-y-4">
-      {/* ── Header ── */}
+      {/* ── Header with Tabs ── */}
       <div className="flex items-center justify-between">
-        <h1 className="font-heading text-lg sm:text-2xl font-bold uppercase">게시판</h1>
-        <Button
-          size="sm"
-          className="rounded-full gap-1.5"
-          onClick={() => {
-            if (showForm) {
-              handleCancelEdit();
-            } else {
-              setShowForm(true);
-            }
-          }}
-        >
-          {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          {showForm ? "닫기" : "글쓰기"}
-        </Button>
+        <div className="flex rounded-lg bg-secondary/50 p-0.5">
+          <button
+            type="button"
+            onClick={() => setActiveTab("posts")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
+              activeTab === "posts"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <MessageSquare className="h-3.5 w-3.5" />
+            게시글
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("gallery")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
+              activeTab === "gallery"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Images className="h-3.5 w-3.5" />
+            앨범
+          </button>
+        </div>
+        {activeTab === "posts" && (
+          <Button
+            size="sm"
+            className="rounded-full gap-1.5"
+            onClick={() => {
+              if (showForm) {
+                handleCancelEdit();
+              } else {
+                setShowForm(true);
+              }
+            }}
+          >
+            {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            {showForm ? "닫기" : "글쓰기"}
+          </Button>
+        )}
       </div>
 
+      {/* ── Gallery Tab ── */}
+      {activeTab === "gallery" && <GalleryView showSummary />}
+
+      {/* ── Posts Tab ── */}
+      {activeTab === "posts" && <>
       {/* ── Write Form (collapsible) ── */}
       {showForm && (
         <PostEditor
@@ -573,6 +620,7 @@ export default function BoardClient({
           ))}
         </div>
       )}
+      </>}
 
       <ImageLightbox
         src={lightboxSrc}

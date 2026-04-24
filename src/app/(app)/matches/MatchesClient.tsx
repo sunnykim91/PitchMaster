@@ -444,7 +444,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 className="gap-1 text-xs text-muted-foreground hover:text-foreground"
                 asChild
               >
-                <Link href="/matches/gallery">
+                <Link href="/board?tab=gallery">
                   <Images className="h-3.5 w-3.5" />
                   앨범
                 </Link>
