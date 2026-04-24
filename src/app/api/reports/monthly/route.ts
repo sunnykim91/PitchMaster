@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
+import { getApiContext, requireRole, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { PERMISSIONS } from "@/lib/permissions";
 
 /**
  * 월별 결산 리포트 API
@@ -26,16 +27,23 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
  *   }
  */
 
-function parseMonth(raw: string | null): { ym: string; start: string; endExclusive: string } | null {
+/**
+ * 월 파싱 — KST(+09:00) 기준 월 경계 사용
+ * UTC 기준으로 하면 자정 전후 KST 기록이 다른 달로 분류되는 문제 발생
+ */
+function parseMonth(raw: string | null): { ym: string; start: string; endExclusive: string; dateEnd: string } | null {
   const now = new Date();
   const defaultYm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const ym = raw && /^\d{4}-\d{2}$/.test(raw) ? raw : defaultYm;
   const [y, m] = ym.split("-").map(Number);
-  const start = `${y}-${String(m).padStart(2, "0")}-01T00:00:00.000Z`;
+  // KST(+09:00) 기준 월 경계 — 한국 서비스에서 자정 기록이 다음 달로 잘리는 문제 방지
+  const start = `${y}-${String(m).padStart(2, "0")}-01T00:00:00+09:00`;
   const nextY = m === 12 ? y + 1 : y;
   const nextM = m === 12 ? 1 : m + 1;
-  const endExclusive = `${nextY}-${String(nextM).padStart(2, "0")}-01T00:00:00.000Z`;
-  return { ym, start, endExclusive };
+  const endExclusive = `${nextY}-${String(nextM).padStart(2, "0")}-01T00:00:00+09:00`;
+  // DATE 컬럼 비교용 (match_date)
+  const dateEnd = `${nextY}-${String(nextM).padStart(2, "0")}-01`;
+  return { ym, start, endExclusive, dateEnd };
 }
 
 /** description 에서 대분류 추출 — OCR 자동 분류 태그(선납/휴면/지출/용병비) 우선 */
@@ -62,14 +70,18 @@ export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
 
+  // STAFF 이상만 접근 (회비 재무 데이터 포함)
+  const roleCheck = requireRole(ctx, PERMISSIONS.DUES_RECORD_ADD);
+  if (roleCheck) return roleCheck;
+
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
   const parsed = parseMonth(request.nextUrl.searchParams.get("month"));
   if (!parsed) return apiError("invalid month format (YYYY-MM)", 400);
-  const { ym, start, endExclusive } = parsed;
+  const { ym, start, endExclusive, dateEnd } = parsed;
 
-  // 병렬 조회: 회비 거래 + 경기 + 출석
+  // 병렬 조회: 회비 거래 + 경기
   const [duesRes, matchesRes] = await Promise.all([
     db
       .from("dues_records")
@@ -83,7 +95,7 @@ export async function GET(request: NextRequest) {
       .eq("team_id", ctx.teamId)
       .eq("status", "COMPLETED")
       .gte("match_date", ym + "-01")
-      .lt("match_date", endExclusive.slice(0, 10)),
+      .lt("match_date", dateEnd),
   ]);
 
   // 재무 집계
@@ -123,19 +135,31 @@ export async function GET(request: NextRequest) {
   let totalParticipants = 0;
 
   if (matchIds.length > 0) {
-    // 골 데이터
-    const { data: goalsData } = await db
-      .from("match_goals")
-      .select("match_id, scorer_id, is_own_goal")
-      .in("match_id", matchIds);
-    type GoalRow = { match_id: string; scorer_id: string; is_own_goal: boolean };
-    const goalRows = (goalsData ?? []) as GoalRow[];
+    // 골 데이터 + 출석 데이터 병렬 조회
+    const [goalsRes, attRes] = await Promise.all([
+      db
+        .from("match_goals")
+        .select("match_id, scorer_id, is_own_goal")
+        .in("match_id", matchIds),
+      db
+        .from("match_attendance")
+        .select("match_id, attendance_status, vote")
+        .in("match_id", matchIds),
+    ]);
+
+    type GoalRow = { match_id: string; scorer_id: string | null; is_own_goal: boolean | null };
+    const goalRows = (goalsRes.data ?? []) as GoalRow[];
 
     const scoreByMatch = new Map<string, { our: number; opp: number }>();
     for (const g of goalRows) {
       const s = scoreByMatch.get(g.match_id) ?? { our: 0, opp: 0 };
-      if (g.scorer_id === "OPPONENT" || g.is_own_goal) s.opp++;
-      else s.our++;
+      // OPPONENT 레코드 또는 자책골 → 상대팀 득점
+      // scorer_id가 null인 경우 = 득점자 모름 → 우리팀 골로 집계
+      if (g.scorer_id === "OPPONENT" || g.is_own_goal === true) {
+        s.opp++;
+      } else {
+        s.our++;
+      }
       scoreByMatch.set(g.match_id, s);
     }
 
@@ -148,13 +172,15 @@ export async function GET(request: NextRequest) {
       else losses++;
     }
 
-    // 출석 집계 (PRESENT + LATE)
-    const { data: attData } = await db
-      .from("match_attendance")
-      .select("match_id")
-      .in("match_id", matchIds)
-      .in("attendance_status", ["PRESENT", "LATE"]);
-    totalParticipants = attData?.length ?? 0;
+    // 출석 집계 — attendance_status 우선, NULL이면 vote='ATTEND' 폴백
+    // (attendance_status 는 마이그레이션 이전 레코드에서 NULL일 수 있음)
+    type AttRow = { match_id: string; attendance_status: string | null; vote: string | null };
+    const attRows = (attRes.data ?? []) as AttRow[];
+    totalParticipants = attRows.filter((a) => {
+      if (a.attendance_status === "PRESENT" || a.attendance_status === "LATE") return true;
+      if (a.attendance_status == null && a.vote === "ATTEND") return true;
+      return false;
+    }).length;
   }
 
   const avgPerMatch = matchRows.length > 0 ? Math.round((totalParticipants / matchRows.length) * 10) / 10 : 0;
