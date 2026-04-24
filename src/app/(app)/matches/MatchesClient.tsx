@@ -24,7 +24,7 @@ import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
 import { shareVoteLink } from "@/lib/kakaoShare";
 import { EmptyState } from "@/components/EmptyState";
 import { MatchCalendar } from "@/components/MatchCalendar";
-import { Calendar, Loader2, Share2, Images } from "lucide-react";
+import { Calendar, Loader2, Share2 } from "lucide-react";
 import { getUniformStyle } from "@/lib/uniformUtils";
 
 type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
@@ -436,30 +436,16 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 </button>
               </div>
             </div>
-            <div className="flex items-center gap-1.5">
+            {isStaffOrAbove(role) && (
               <Button
                 type="button"
-                variant="ghost"
+                variant="default"
                 size="sm"
-                className="gap-1 text-xs text-muted-foreground hover:text-foreground"
-                asChild
+                onClick={() => { setIsOpen((prev) => !prev); setFormErrors({}); }}
               >
-                <Link href="/board?tab=gallery">
-                  <Images className="h-3.5 w-3.5" />
-                  앨범
-                </Link>
+                일정 등록하기
               </Button>
-              {isStaffOrAbove(role) && (
-                <Button
-                  type="button"
-                  variant="default"
-                  size="sm"
-                  onClick={() => { setIsOpen((prev) => !prev); setFormErrors({}); }}
-                >
-                  일정 등록하기
-                </Button>
-              )}
-            </div>
+            )}
           </div>
         </CardHeader>
 
