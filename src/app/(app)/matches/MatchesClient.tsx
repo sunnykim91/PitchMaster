@@ -237,6 +237,12 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     return state;
   }, [attendanceData.attendance, teamMembersData.members]);
 
+  // 현재 로그인 사용자의 team_member.id — attendance 상태가 memberId 키라 본인 투표 조회에 필요
+  const myMemberId = useMemo(
+    () => teamMembersData.members.find((m) => m.user_id === userId)?.id ?? null,
+    [teamMembersData.members, userId],
+  );
+
   const sortedMatches = useMemo(() => {
     const today = new Date().toISOString().split("T")[0];
     return [...matches].sort((a, b) => {
@@ -725,7 +731,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 };
               })}
               myVotes={Object.fromEntries(
-                sortedMatches.map((m) => [m.id, attendance[m.id]?.[userId] ?? ""])
+                sortedMatches.map((m) => [m.id, (myMemberId ? attendance[m.id]?.[myMemberId] : undefined) ?? ""])
                   .filter(([, v]) => v)
               )}
               onVote={handleVote}
@@ -756,7 +762,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
           </Card>
         )}
         {sortedMatches.map((match) => {
-          const vote = attendance[match.id]?.[userId];
+          const vote = myMemberId ? attendance[match.id]?.[myMemberId] : undefined;
           const matchVotes = Object.values(attendance[match.id] ?? {});
           const attendCount = matchVotes.filter((v) => v === "ATTEND").length;
           const absentCount = matchVotes.filter((v) => v === "ABSENT").length;
