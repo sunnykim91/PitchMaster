@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
+import { getApiContext, apiError, apiSuccess, requireRole } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 export async function GET(request: NextRequest) {
@@ -33,6 +33,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
+
+  // 경기 일지 작성·수정은 운영진(STAFF+) 만 가능
+  const roleError = requireRole(ctx, "STAFF");
+  if (roleError) return roleError;
 
   const body = await request.json();
   if (!body.matchId) return apiError("matchId required");

@@ -70,12 +70,25 @@ export async function DELETE(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  // 본인 댓글만 삭제 가능
-  const { error } = await db
+  // 1) 댓글 → 경기 → 팀 소속 검증 (cross-team 삭제 방지)
+  const { data: commentRow } = await db
     .from("match_comments")
-    .delete()
+    .select("id, user_id, match_id, matches!inner(team_id)")
     .eq("id", id)
-    .eq("user_id", ctx.userId);
+    .single<{ id: string; user_id: string; match_id: string; matches: { team_id: string } }>();
+  if (!commentRow) return apiError("댓글을 찾을 수 없습니다", 404);
+  if (commentRow.matches.team_id !== ctx.teamId) {
+    return apiError("해당 팀의 댓글이 아닙니다", 403);
+  }
+
+  // 2) 본인 댓글이거나 운영진(STAFF+) 만 삭제 가능
+  const isOwn = commentRow.user_id === ctx.userId;
+  const isStaff = ctx.teamRole === "PRESIDENT" || ctx.teamRole === "STAFF";
+  if (!isOwn && !isStaff) {
+    return apiError("본인 댓글이거나 운영진만 삭제할 수 있습니다", 403);
+  }
+
+  const { error } = await db.from("match_comments").delete().eq("id", id);
 
   if (error) return apiError(error.message);
   return apiSuccess({ ok: true });

@@ -43,14 +43,17 @@ export async function POST(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  // 경기가 현재 팀 소속인지 검증
+  // 경기가 현재 팀 소속인지 + 완료 상태인지 검증
   const { data: matchCheck } = await db
     .from("matches")
-    .select("id")
+    .select("id, status")
     .eq("id", matchId)
     .eq("team_id", ctx.teamId)
     .single();
   if (!matchCheck) return apiError("Match not found", 404);
+  if (matchCheck.status !== "COMPLETED") {
+    return apiError("완료된 경기에만 MVP 투표가 가능합니다", 400);
+  }
 
   // 팀 MVP 투표 설정 조회 (운영진 전용 여부)
   const { data: teamSettings } = await db

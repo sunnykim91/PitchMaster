@@ -33,6 +33,15 @@ export async function POST(request: NextRequest) {
     .single();
   if (!post || post.team_id !== ctx.teamId) return apiError("Forbidden", 403);
 
+  // optionId 가 해당 pollId 소속인지 검증 (cross-poll 투표 차단)
+  const { data: optionRow } = await db
+    .from("post_poll_options")
+    .select("id")
+    .eq("id", optionId)
+    .eq("poll_id", pollId)
+    .maybeSingle();
+  if (!optionRow) return apiError("잘못된 투표 옵션입니다", 400);
+
   // Check existing vote
   const { data: existing } = await db
     .from("post_poll_votes")

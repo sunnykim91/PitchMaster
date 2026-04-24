@@ -48,7 +48,21 @@ export async function POST(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  // 대리 투표 또는 미연동 멤버 투표: 운영진 이상만 가능
+  // 1) 경기 존재·팀 소속·마감 시간 체크 — 모든 경로 공통
+  //    (운영진 대리 투표도 예외 없음. 마감 후 투표 필요하면 "재개" 버튼으로
+  //     vote_deadline 먼저 연장 후 투표해야 함)
+  const { data: match } = await db
+    .from("matches")
+    .select("vote_deadline, team_id")
+    .eq("id", matchId)
+    .single();
+  if (!match) return apiError("경기를 찾을 수 없습니다", 404);
+  if (match.team_id !== ctx.teamId) return apiError("해당 팀의 경기가 아닙니다", 403);
+  if (match.vote_deadline && new Date(match.vote_deadline).getTime() <= Date.now()) {
+    return apiError("투표 마감 시간이 지났습니다", 400);
+  }
+
+  // 2) 대리 투표 또는 미연동 멤버 투표: 운영진 이상만 가능
   const isProxy = (targetUserId && targetUserId !== ctx.userId) || memberId;
   if (isProxy) {
     const { data: callerMember } = await db
@@ -59,18 +73,6 @@ export async function POST(request: NextRequest) {
       .single();
     if (!callerMember || (callerMember.role !== "PRESIDENT" && callerMember.role !== "STAFF")) {
       return apiError("권한이 없습니다", 403);
-    }
-  } else {
-    // 본인 투표: 팀 소속 + 마감시간 체크
-    const { data: match } = await db
-      .from("matches")
-      .select("vote_deadline, team_id")
-      .eq("id", matchId)
-      .single();
-    if (!match) return apiError("경기를 찾을 수 없습니다", 404);
-    if (match.team_id !== ctx.teamId) return apiError("해당 팀의 경기가 아닙니다", 403);
-    if (match.vote_deadline && new Date(match.vote_deadline).getTime() <= Date.now()) {
-      return apiError("투표 마감 시간이 지났습니다", 400);
     }
   }
 
