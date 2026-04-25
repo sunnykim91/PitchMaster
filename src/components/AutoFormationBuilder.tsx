@@ -152,19 +152,19 @@ const POS_LABEL: Record<PreferredPosition, string> = {
   PIVO: "PIVO",
 };
 const POS_COLOR: Record<PreferredPosition, string> = {
-  GK: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-  CB: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  LB: "bg-sky-500/20 text-sky-400 border-sky-500/30",
-  RB: "bg-sky-500/20 text-sky-400 border-sky-500/30",
-  CDM: "bg-green-500/20 text-green-400 border-green-500/30",
-  CM: "bg-teal-500/20 text-teal-400 border-teal-500/30",
-  CAM: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
-  LW: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-  RW: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-  ST: "bg-rose-500/20 text-rose-400 border-rose-500/30",
-  FIXO: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  ALA: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
-  PIVO: "bg-rose-500/20 text-rose-400 border-rose-500/30",
+  GK: "bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/30",
+  CB: "bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30",
+  LB: "bg-sky-500/20 text-sky-700 dark:text-sky-400 border-sky-500/30",
+  RB: "bg-sky-500/20 text-sky-700 dark:text-sky-400 border-sky-500/30",
+  CDM: "bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30",
+  CM: "bg-teal-500/20 text-teal-700 dark:text-teal-400 border-teal-500/30",
+  CAM: "bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 border-cyan-500/30",
+  LW: "bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-500/30",
+  RW: "bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-500/30",
+  ST: "bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-500/30",
+  FIXO: "bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30",
+  ALA: "bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 border-cyan-500/30",
+  PIVO: "bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-500/30",
 };
 
 /* ── Distribution calculator ── */
@@ -1258,7 +1258,7 @@ export default function AutoFormationBuilder({
                         className={cn(
                           "flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold transition-all",
                           player.isGK
-                            ? "bg-amber-500/30 text-amber-400"
+                            ? "bg-amber-500/30 text-amber-700 dark:text-amber-400"
                             : "bg-muted text-muted-foreground hover:bg-muted/80"
                         )}
                       >
@@ -1277,7 +1277,7 @@ export default function AutoFormationBuilder({
                 {/* Quarter +/- buttons */}
                 <div className="flex shrink-0 items-center gap-1.5">
                   {player.isGK ? (
-                    <span className="min-w-[52px] text-center text-xs font-semibold text-amber-400">
+                    <span className="min-w-[52px] text-center text-xs font-semibold text-amber-700 dark:text-amber-400">
                       {gks.length <= 1 ? `${quarterCount}Q` : `${Math.ceil(quarterCount / gks.length)}Q`}
                     </span>
                   ) : (

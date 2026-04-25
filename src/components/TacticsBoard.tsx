@@ -1079,8 +1079,8 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                   const p = roster.find((r) => r.id === referee);
                   return p ? (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-sky-400">심판</span>
-                      <span className="inline-block rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-400">
+                      <span className="text-xs font-bold text-sky-700 dark:text-sky-400">심판</span>
+                      <span className="inline-block rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-400">
                         {p.name}
                       </span>
                     </div>
@@ -1090,8 +1090,8 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                   const p = roster.find((r) => r.id === camera);
                   return p ? (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-violet-400">촬영</span>
-                      <span className="inline-block rounded-md border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-medium text-violet-400">
+                      <span className="text-xs font-bold text-violet-700 dark:text-violet-400">촬영</span>
+                      <span className="inline-block rounded-md border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-medium text-violet-700 dark:text-violet-400">
                         {p.name}
                       </span>
                     </div>
