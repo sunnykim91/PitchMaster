@@ -1037,7 +1037,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                           "flex max-w-[64px] items-center gap-1 whitespace-nowrap rounded-md px-1 py-0.5 text-[10px] font-bold shadow-sm sm:max-w-[110px] sm:px-1.5 sm:text-xs",
                           singleMatched
                             ? "bg-[hsl(var(--success))] text-white ring-2 ring-[hsl(var(--success))] shadow-[0_0_10px_hsl(var(--success)/0.6)]"
-                            : "bg-black/60 text-foreground"
+                            : "bg-black/70 text-white"
                         )}
                         title={singleMatched ? "선호 포지션과 일치" : undefined}
                       >
