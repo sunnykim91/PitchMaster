@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { OpponentHistoryCard } from "@/components/OpponentHistoryCard";
 import { cn, formatPhone, formatDateKo, formatTime } from "@/lib/utils";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { useConfirm } from "@/lib/ConfirmContext";
@@ -491,6 +492,11 @@ function MatchInfoTabInner({
           )}
         </CardContent>
       </Card>
+
+      {/* ═══ 3.5. 상대팀 전적 (REGULAR + opponent 있을 때만) ═══ */}
+      {match.matchType === "REGULAR" && match.opponent && match.opponent.trim() && (
+        <OpponentHistoryCard opponentName={match.opponent} currentMatchId={matchId} />
+      )}
 
       {/* ═══ 4. 날씨 카드 ═══ */}
       {weather && (

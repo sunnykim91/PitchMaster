@@ -40,6 +40,12 @@ export type RecentMatch = {
   isHighlight: boolean;
 };
 
+export type AttendanceCell = {
+  date: string;
+  attended: boolean;
+  result: "W" | "D" | "L" | null;
+};
+
 export type PlayerProfile = {
   name: string;
   teamName: string;
@@ -54,6 +60,8 @@ export type PlayerProfile = {
   stats: PlayerStats | null;
   bestMoments: BestMoment[];
   recentMatches: RecentMatch[];
+  /** 최근 15경기의 출석/결과 — 히트맵 시각화용. date 오름차순 (오래된 → 최신) */
+  attendanceHistory: AttendanceCell[];
 };
 
 // Role Badge Component
@@ -71,6 +79,39 @@ function RoleBadge({ role }: { role: "CAPTAIN" | "VICE_CAPTAIN" }) {
       {isCaption ? "C" : "VC"}
       <span>{isCaption ? "주장" : "부주장"}</span>
     </span>
+  );
+}
+
+// Attendance Heatmap — 최근 N경기 출석/결과 시각화
+function AttendanceHeatmap({ cells }: { cells: AttendanceCell[] }) {
+  function cellColor(c: AttendanceCell): string {
+    if (!c.attended) return "bg-white/15";
+    if (c.result === "W") return "bg-emerald-500/80";
+    if (c.result === "D") return "bg-amber-500/70";
+    if (c.result === "L") return "bg-rose-500/70";
+    return "bg-white/30"; // 출석은 했는데 결과 미상 (스코어 없음)
+  }
+  function cellLabel(c: AttendanceCell): string {
+    const date = c.date.slice(5).replace("-", "/");
+    if (!c.attended) return `${date} · 결석`;
+    if (c.result === "W") return `${date} · 승`;
+    if (c.result === "D") return `${date} · 무`;
+    if (c.result === "L") return `${date} · 패`;
+    return `${date} · 출석`;
+  }
+  return (
+    <div className="grid grid-cols-15 gap-1.5 max-w-md sm:gap-2" style={{ gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))` }}>
+      {cells.map((c, i) => (
+        <div
+          key={`${c.date}-${i}`}
+          title={cellLabel(c)}
+          className={cn(
+            "aspect-square rounded transition-transform hover:scale-110 cursor-default",
+            cellColor(c),
+          )}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -351,7 +392,7 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showImageShareModal, setShowImageShareModal] = useState(false);
   const [shareToast, setShareToast] = useState<string | null>(null);
-  const { name, teamName, teamPrimaryColor, positions, preferredFoot, jerseyNumber, teamRole, seasonName, signature, playerCardProps, stats, bestMoments, recentMatches } = profile;
+  const { name, teamName, teamPrimaryColor, positions, preferredFoot, jerseyNumber, teamRole, seasonName, signature, playerCardProps, stats, bestMoments, recentMatches, attendanceHistory } = profile;
 
   function handleBack() {
     if (typeof window === "undefined") return;
@@ -643,11 +684,34 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
         </section>
       )}
 
+      {/* Attendance Heatmap — 최근 15경기 출석 시각화 */}
+      {attendanceHistory.length > 0 && (
+        <section className="max-w-4xl mx-auto px-4 py-6">
+          <h3 className="text-lg font-bold text-white mb-1">출석 히트맵</h3>
+          <p className="text-xs text-white/40 mb-4">최근 {attendanceHistory.length}경기 · 왼쪽=오래된 경기, 오른쪽=최신</p>
+          <AttendanceHeatmap cells={attendanceHistory} />
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-white/50">
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded bg-emerald-500/80" />출석·승
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded bg-amber-500/70" />출석·무
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded bg-rose-500/70" />출석·패
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded bg-white/15" />결석
+            </span>
+          </div>
+        </section>
+      )}
+
       {/* Recent Matches Timeline */}
       {recentMatches.length > 0 && (
         <section className="max-w-4xl mx-auto px-4 py-6">
           <h3 className="text-lg font-bold text-white mb-4">최근 경기</h3>
-          
+
           <div className="max-w-md mx-auto lg:mx-0">
             {recentMatches.map((match, index) => (
               <MatchTimelineItem
@@ -902,6 +966,13 @@ export function PlayerProfileDemo() {
         mvp: false,
         isHighlight: false,
       },
+    ],
+    attendanceHistory: [
+      { date: "2026-04-01", attended: true, result: "W" },
+      { date: "2026-04-08", attended: true, result: "L" },
+      { date: "2026-04-15", attended: false, result: null },
+      { date: "2026-04-22", attended: true, result: "W" },
+      { date: "2026-04-29", attended: true, result: "D" },
     ],
   };
 

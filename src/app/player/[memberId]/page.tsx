@@ -89,7 +89,7 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
       name, teamName, teamPrimaryColor, positions, preferredFoot, jerseyNumber: m.jersey_number,
       teamRole: (m.team_role === "CAPTAIN" || m.team_role === "VICE_CAPTAIN" ? m.team_role : null) as PlayerProfile["teamRole"],
       seasonName: "", signature: "", playerCardProps: emptyCardProps,
-      stats: null, bestMoments: [], recentMatches: [],
+      stats: null, bestMoments: [], recentMatches: [], attendanceHistory: [],
     };
   }
 
@@ -110,7 +110,7 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
       name, teamName, teamPrimaryColor, positions, preferredFoot, jerseyNumber: m.jersey_number,
       teamRole: (m.team_role === "CAPTAIN" || m.team_role === "VICE_CAPTAIN" ? m.team_role : null) as PlayerProfile["teamRole"],
       seasonName: season.name, signature: "", playerCardProps: { ...emptyCardProps, seasonName: season.name },
-      stats: null, bestMoments: [], recentMatches: [],
+      stats: null, bestMoments: [], recentMatches: [], attendanceHistory: [],
     };
   }
 
@@ -369,6 +369,19 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
       };
     });
 
+  // 출석 히트맵 — 최근 15경기 (출석/결석 + 결과). 오래된 경기 → 최신 순서
+  const attendanceHistory = (matches ?? [])
+    .slice(0, 15)
+    .reverse()
+    .map((mm) => {
+      const attended = attendedMatchIds.has(mm.id);
+      const s = scoreMap.get(mm.id) ?? { our: 0, opp: 0 };
+      const result: "W" | "D" | "L" | null = !attended
+        ? null
+        : s.our > s.opp ? "W" : s.our < s.opp ? "L" : "D";
+      return { date: mm.match_date, attended, result };
+    });
+
   const stats: PlayerStats = {
     goals: totalGoals, assists: totalAssists, mvp: totalMvp,
     attended, totalMatches: matchIds.length,
@@ -384,7 +397,7 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
     jerseyNumber: m.jersey_number,
     teamRole: (m.team_role === "CAPTAIN" || m.team_role === "VICE_CAPTAIN" ? m.team_role : null) as PlayerProfile["teamRole"],
     seasonName: season.name, signature: signature ?? "",
-    playerCardProps, stats, bestMoments, recentMatches,
+    playerCardProps, stats, bestMoments, recentMatches, attendanceHistory,
   };
 }
 
