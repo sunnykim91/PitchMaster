@@ -248,6 +248,8 @@ function DuesBulkTabInner({
    * AI(Claude Vision) OCR — 이미지 → 거래 JSON 배열을 BulkRow로 직접 변환.
    * 기존엔 텍스트로 재합성 후 parseTransactions를 거쳤으나, Clova용 정규식과 포맷이
    * 맞지 않아 매번 0건으로 떨어짐. 이미 구조화된 JSON을 직접 쓰는 게 정답.
+   *
+   * 메인 경로에서 호출 시 caller가 폴백 결정해야 하므로 여기선 toast 안 띄움.
    */
   async function runAiOcr(file: File): Promise<{ rows: BulkRow[]; latestBalance: number | null } | null> {
     const formData = new FormData();
@@ -255,10 +257,7 @@ function DuesBulkTabInner({
     const res = await fetch("/api/ocr/smart", { method: "POST", body: formData });
     const json = await res.json();
     if (!res.ok) {
-      const msg = json.error === "ai_not_available"
-        ? "AI OCR은 관리자 계정 전용입니다"
-        : `AI OCR 실패: ${json.error ?? res.status}`;
-      showToast(msg, "error");
+      console.warn("[AI OCR] failed:", json.error ?? res.status);
       return null;
     }
 
@@ -310,17 +309,70 @@ function DuesBulkTabInner({
     const imageUrl = URL.createObjectURL(file);
     setBulkImage(imageUrl);
     setOcrLoading(true);
-    setOcrStatus("스크린샷 분석 중...");
+    setOcrStatus("AI OCR 분석 중...");
     setPartialRows([]);
+
+    const fileInfo = `${file.name} (${file.type || "unknown"}, ${(file.size / 1024).toFixed(0)}KB)`;
+
+    // 중복 체크 helper (AI/Clova 양쪽에서 공유)
+    const currentRecords = recordsRef.current;
+    const toKSTDate = (isoStr: string) => {
+      const d = new Date(isoStr);
+      const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+      return kst.toISOString().slice(0, 10);
+    };
+    const normalizeDesc = (s: string | null | undefined) => (s ?? "").replace(/\s+/g, "").trim();
+    const isDupAgainstRecords = (row: { date: string; amount: string | number; type: "INCOME" | "EXPENSE"; description: string }) => {
+      const rowDesc = normalizeDesc(row.description);
+      const amountNum = typeof row.amount === "number" ? row.amount : Number(row.amount);
+      return currentRecords.some(
+        (r) =>
+          toKSTDate(r.recordedAt) === row.date &&
+          r.amount === amountNum &&
+          r.type === row.type &&
+          normalizeDesc(r.description) === rowDesc
+      );
+    };
+
     try {
-      // 원본 그대로 업로드 (Clova는 jpg, png, pdf, tiff 지원)
-      // 리사이즈는 서버에서 포맷 감지 후 처리
+      // ── ① AI OCR 우선 (Claude Haiku Vision)
+      // 그리드 레이아웃(카카오뱅크 등) 시각적 이해. 시간/날짜 누락 거의 없음.
+      console.log("[OCR] uploading (AI primary):", fileInfo);
+      const aiResult = await runAiOcr(file);
+
+      if (aiResult && aiResult.rows.length > 0) {
+        const newRows = aiResult.rows.filter((row) => !isDupAgainstRecords(row));
+        const duplicateCount = aiResult.rows.length - newRows.length;
+        console.log("[OCR] AI:", aiResult.rows.length, "rows,", duplicateCount, "dup");
+
+        setOcrLoading(false);
+        if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
+
+        if (aiResult.latestBalance !== null) setPendingBalance(aiResult.latestBalance);
+
+        const msgParts: string[] = [];
+        if (newRows.length > 0) {
+          setBulkRows(newRows);
+          msgParts.push(`${newRows.length}건 인식`);
+        }
+        if (duplicateCount > 0) msgParts.push(`${duplicateCount}건 중복 제외`);
+
+        if (newRows.length > 0) {
+          setOcrStatus(msgParts.join(", ") + ". 확인 후 저장하세요.");
+          showToast(msgParts.join(", "), "success");
+        } else {
+          setOcrStatus(`${aiResult.rows.length}건 모두 이미 등록된 내역입니다.`);
+          showToast(`${aiResult.rows.length}건 모두 중복`, "info");
+        }
+        return;
+      }
+
+      // ── ② AI 실패/0건 → Clova OCR + 정규식 폴백
+      console.log("[OCR] AI failed or 0 rows, fallback to Clova");
+      setOcrStatus("기본 OCR로 재시도 중...");
+
       const formData = new FormData();
       formData.append("image", file);
-
-      const fileInfo = `${file.name} (${file.type || "unknown"}, ${(file.size / 1024).toFixed(0)}KB)`;
-      console.log("[OCR] uploading:", fileInfo);
-
       const res = await fetch("/api/ocr", { method: "POST", body: formData });
       const json = await res.json();
 
@@ -331,7 +383,6 @@ function DuesBulkTabInner({
         showToast(`OCR 실패 — ${fileInfo}`, "error");
         return;
       }
-
       if (!json.text) {
         setOcrLoading(false);
         if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
@@ -340,61 +391,27 @@ function DuesBulkTabInner({
         return;
       }
 
-      console.log("[OCR] raw text:", json.text);
       const { rows: parsed, latestBalance } = parseTransactions(json.text);
-      console.log("[OCR] parsed rows:", parsed.map((r) => ({ date: r.date, time: r.time, desc: r.description, amount: r.amount, type: r.type })));
-      // 잔고가 인식되면 항상 업데이트 (올린 시점이 곧 최신)
       const shouldUpdateBalance = latestBalance !== null;
 
-      // 기존 DB 레코드와 비교하여 중복 제거 (날짜 + 금액 + 타입 + description)
-      // description까지 비교해야 같은 날 같은 금액의 다른 입금자가 중복으로 잘못 묶이지 않음
-      const currentRecords = recordsRef.current;
-      // KST 기준 날짜 변환 함수 (UTC → KST)
-      const toKSTDate = (isoStr: string) => {
-        const d = new Date(isoStr);
-        const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
-        return kst.toISOString().slice(0, 10);
-      };
-      const normalizeDesc = (s: string | null | undefined) => (s ?? "").replace(/\s+/g, "").trim();
-      const isDupAgainstRecords = (row: { date: string; amount: string | number; type: "INCOME" | "EXPENSE"; description: string }) => {
-        const rowDesc = normalizeDesc(row.description);
-        const amountNum = typeof row.amount === "number" ? row.amount : Number(row.amount);
-        return currentRecords.some(
-          (r) =>
-            toKSTDate(r.recordedAt) === row.date &&
-            r.amount === amountNum &&
-            r.type === row.type &&
-            normalizeDesc(r.description) === rowDesc
-        );
-      };
-      console.log("[OCR] checking duplicates against", currentRecords.length, "records");
-
-      // 부분 인식 / 정상 분리
+      // 부분 / 정상 분리 — time_missing 단독은 정상으로 처리
+      // (시간(HH:MM)은 회비 등록에 필수 아님. 날짜·금액·이름만 있으면 됨)
       const fullParsed: ParsedRow[] = [];
       const partialParsed: ParsedRow[] = [];
       for (const row of parsed) {
-        if (row._partialReasons.length > 0) partialParsed.push(row);
+        const significantReasons = row._partialReasons.filter((r) => r !== "time_missing");
+        if (significantReasons.length > 0) partialParsed.push(row);
         else fullParsed.push(row);
       }
 
-      // 중복 제거는 정상 행에만 적용 (부분 행은 사용자 명시 추가 시점에 한 번 더 검사)
-      const newRows = fullParsed.filter((row) => {
-        const dup = isDupAgainstRecords(row);
-        if (dup) console.log("[OCR] duplicate:", row.date, row.amount, row.description);
-        return !dup;
-      });
+      const newRows = fullParsed.filter((row) => !isDupAgainstRecords(row));
       const duplicateCount = fullParsed.length - newRows.length;
-      console.log("[OCR] newRows:", newRows.length, "duplicates:", duplicateCount, "partial:", partialParsed.length);
 
       setOcrLoading(false);
       if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
 
-      // 잔고가 인식되면 사용자 확인 대기 (바로 반영하지 않음)
-      if (shouldUpdateBalance) {
-        setPendingBalance(latestBalance);
-      }
+      if (shouldUpdateBalance) setPendingBalance(latestBalance);
 
-      // 부분 인식 행을 별도 영역으로 세팅 (메타데이터 분리)
       const partialRowsForState: PartialBulkRow[] = partialParsed.map((r) => ({
         date: r.date,
         time: r.time,
@@ -406,12 +423,8 @@ function DuesBulkTabInner({
       }));
       setPartialRows(partialRowsForState);
 
-      // 정상 행: 메타데이터 제거 후 BulkRow로 캐스팅
       const normalRowsForState: BulkRow[] = newRows.map(({ _partialReasons: _r, ...rest }) => rest);
-
-      if (normalRowsForState.length > 0) {
-        setBulkRows(normalRowsForState);
-      }
+      if (normalRowsForState.length > 0) setBulkRows(normalRowsForState);
 
       const msgParts: string[] = [];
       if (normalRowsForState.length > 0) msgParts.push(`${normalRowsForState.length}건 인식`);
@@ -426,27 +439,11 @@ function DuesBulkTabInner({
         setOcrStatus(`${parsed.length}건 모두 이미 등록된 내역입니다.`);
         showToast(`${parsed.length}건 모두 중복`, "info");
       } else {
-        // 기본 OCR(Clova) 인식 0건 → AI OCR 자동 폴백
-        setOcrLoading(true);
-        setOcrStatus("기본 OCR에서 인식 못함. AI OCR로 자동 재시도 중...");
-        try {
-          const aiResult = await runAiOcr(file);
-          setOcrLoading(false);
-          if (aiResult && aiResult.rows.length > 0) {
-            setBulkRows(aiResult.rows);
-            if (aiResult.latestBalance !== null) setPendingBalance(aiResult.latestBalance);
-            setOcrStatus(`AI OCR 폴백으로 ${aiResult.rows.length}건 인식. 확인 후 저장하세요.`);
-            showToast(`AI OCR로 ${aiResult.rows.length}건 인식`, "success");
-            return;
-          }
-        } catch (err) {
-          console.error("[Auto AI fallback] failed:", err);
-        }
-        setOcrLoading(false);
         setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
         showToast("거래 내역을 인식하지 못했습니다.", "error");
       }
-    } catch {
+    } catch (err) {
+      console.error("[OCR] error:", err);
       setOcrLoading(false);
       if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
       setOcrStatus("OCR 처리 중 오류가 발생했습니다. 수동으로 입력해주세요.");
