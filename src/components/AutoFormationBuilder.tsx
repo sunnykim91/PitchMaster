@@ -26,12 +26,22 @@ import { Zap, Sparkles, Loader2, Palette } from "lucide-react";
 /* ── Types ── */
 
 export type AttendingPlayer = {
+  /** 표시용 메인 id — 연동 회원은 users.id, 미연동·용병은 team_members.id / match_guests.id */
   id: string;
   name: string;
   preferredPosition: PreferredPosition; // 주 포지션 (하위 호환)
   preferredPositions?: PreferredPosition[]; // 복수 선호 포지션
   /** 용병 여부 — AI 프롬프트에 전달해 실력 불확실성 반영 */
   isGuest?: boolean;
+  /**
+   * 연동 회원의 users.id — squad가 user_id 또는 member_id 어느 쪽으로 저장돼도 매칭하기 위해 별도 보존.
+   * 회원: id === userId 일 수 있고 그 경우 memberId도 있음. 미연동/용병은 undefined.
+   */
+  userId?: string;
+  /**
+   * team_members.id — 연동 회원이면 user_id 외에도 함께 보존. 미연동 회원은 id === memberId.
+   */
+  memberId?: string;
 };
 
 type PlayerAssignment = AttendingPlayer & {

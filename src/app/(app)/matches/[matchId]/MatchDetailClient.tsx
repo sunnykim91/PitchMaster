@@ -265,6 +265,9 @@ export default function MatchDetailClient({
           preferredPosition: pos as AttendingPlayer["preferredPosition"],
           preferredPositions: positions.length > 0 ? positions as AttendingPlayer["preferredPosition"][] : undefined,
           isGuest: false,
+          // 양쪽 ID 모두 보존 — 전술판이 user_id/member_id 어느 쪽으로 저장됐어도 매칭 가능
+          userId: a.user_id ?? undefined,
+          memberId: a.member_id ?? undefined,
         };
       });
     // 용병 추가

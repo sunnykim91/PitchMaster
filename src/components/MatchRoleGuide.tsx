@@ -26,7 +26,7 @@ import {
 import type { CautionItem, LinkageItem, MergedPositionRole } from "@/lib/positionRoles/types";
 import type { SportType } from "@/lib/types";
 
-type RosterEntry = { id: string; name: string };
+type RosterEntry = { id: string; name: string; userId?: string; memberId?: string };
 
 export interface MatchRoleGuideProps {
   matchId: string;
@@ -151,11 +151,20 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
     );
   }
 
+  // squad의 playerId는 users.id / team_members.id 중 어느 쪽이든 저장될 수 있으므로
+  // 매칭되는 RosterEntry의 양쪽 id를 모두 targetIds에 넣어 어느 쪽이든 매칭되게 한다.
   const targetIds: string[] = [selectedPlayerId];
   if (selectedPlayerId === currentMemberId && currentUserId) {
     targetIds.push(currentUserId);
   } else if (selectedPlayerId === currentUserId && currentMemberId) {
     targetIds.push(currentMemberId);
+  }
+  const selectedEntry = memberRoster.find((p) => p.id === selectedPlayerId);
+  if (selectedEntry?.userId && !targetIds.includes(selectedEntry.userId)) {
+    targetIds.push(selectedEntry.userId);
+  }
+  if (selectedEntry?.memberId && !targetIds.includes(selectedEntry.memberId)) {
+    targetIds.push(selectedEntry.memberId);
   }
 
   const groups = buildAssignmentGroups(squads, targetIds);
