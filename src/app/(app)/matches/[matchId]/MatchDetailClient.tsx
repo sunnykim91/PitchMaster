@@ -210,13 +210,21 @@ export default function MatchDetailClient({
     return self?.id;
   }, [membersData.members, userId]);
 
-  /* ── 본인 참석 여부 — attendance는 user_id/member_id 둘 다 키로 들어감 ── */
+  /* ── 본인 참석 여부 — 실제 출석 체크(PRESENT/LATE) 또는 참석 투표(ATTEND) ──
+   * 경기 전·출석 체크 전에는 status가 비어 있으므로 vote도 함께 본다.
+   * attendingPlayers가 vote === "ATTEND" 기준으로 만들어지는 것과 일관 유지. */
   const currentMemberAttended = useMemo(() => {
     const byUser = attendance[userId];
     const byMember = currentMemberId ? attendance[currentMemberId] : undefined;
     const status = byUser ?? byMember;
-    return status === "PRESENT" || status === "LATE";
-  }, [attendance, userId, currentMemberId]);
+    if (status === "PRESENT" || status === "LATE") return true;
+    return voteData.attendance.some(
+      (a) =>
+        a.vote === "ATTEND" &&
+        ((a.user_id && a.user_id === userId) ||
+          (a.member_id && currentMemberId && a.member_id === currentMemberId))
+    );
+  }, [attendance, voteData.attendance, userId, currentMemberId]);
 
   const guests = useMemo(
     () => guestsData.guests.map(mapGuest),
