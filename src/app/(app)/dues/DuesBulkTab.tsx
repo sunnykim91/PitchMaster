@@ -296,7 +296,8 @@ function DuesBulkTabInner({
         memberName: matchedMember?.id || "",
       });
 
-      if (t.balance != null) latestBalance = t.balance;
+      // 첫 번째 잔고만 채택 (은행 앱은 최신순 → AI Vision도 위→아래 = 최신→오래된 순서)
+      if (t.balance != null && latestBalance === null) latestBalance = t.balance;
     }
 
     return { rows, latestBalance };
@@ -315,22 +316,24 @@ function DuesBulkTabInner({
     const fileInfo = `${file.name} (${file.type || "unknown"}, ${(file.size / 1024).toFixed(0)}KB)`;
 
     // 중복 체크 helper (AI/Clova 양쪽에서 공유)
+    // description 정확 매칭 대신 "첫 단어(이름)" 비교 — AI 한글 인식이 메모 부분에서 미세 차이를 만들어
+    // false negative(같은 거래인데 새 행으로 보임)가 잦았던 문제 해소.
     const currentRecords = recordsRef.current;
     const toKSTDate = (isoStr: string) => {
       const d = new Date(isoStr);
       const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
       return kst.toISOString().slice(0, 10);
     };
-    const normalizeDesc = (s: string | null | undefined) => (s ?? "").replace(/\s+/g, "").trim();
+    const firstToken = (s: string | null | undefined) => ((s ?? "").trim().split(/\s+/)[0] ?? "").toLowerCase();
     const isDupAgainstRecords = (row: { date: string; amount: string | number; type: "INCOME" | "EXPENSE"; description: string }) => {
-      const rowDesc = normalizeDesc(row.description);
+      const rowName = firstToken(row.description);
       const amountNum = typeof row.amount === "number" ? row.amount : Number(row.amount);
       return currentRecords.some(
         (r) =>
           toKSTDate(r.recordedAt) === row.date &&
           r.amount === amountNum &&
           r.type === row.type &&
-          normalizeDesc(r.description) === rowDesc
+          firstToken(r.description) === rowName
       );
     };
 
@@ -466,14 +469,15 @@ function DuesBulkTabInner({
       const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
       return kst.toISOString().slice(0, 10);
     };
-    const normalizeDesc = (s: string | null | undefined) => (s ?? "").replace(/\s+/g, "").trim();
-    const rowDesc = normalizeDesc(row.description);
+    // 첫 단어(이름) 비교 — handleBulkImageChange의 isDupAgainstRecords와 동일 정책
+    const firstToken = (s: string | null | undefined) => ((s ?? "").trim().split(/\s+/)[0] ?? "").toLowerCase();
+    const rowName = firstToken(row.description);
     const isDup = recordsRef.current.some(
       (r) =>
         toKSTDate(r.recordedAt) === row.date &&
         r.amount === Number(row.amount) &&
         r.type === row.type &&
-        normalizeDesc(r.description) === rowDesc
+        firstToken(r.description) === rowName
     );
     if (isDup) {
       showToast("이미 등록된 거래입니다", "info");
