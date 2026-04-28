@@ -12,6 +12,47 @@ related: [completed-recent.md, reviews.md]
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
 
+## 🔴 최우선 — 즉시 처리 (2026-04-28)
+
+### ~~PWA/앱 아이콘 모서리 흰 영역 제거~~ ✅ 완료 (1ac37cb, 34차)
+- [x] scripts/fill-icon-bg.mjs로 icon-192·512·maskable-192·512 픽셀 변환 완료
+- [ ] TWA AAB 재빌드 시점에 Android 적응형 아이콘도 같이 갱신 (아직 미완)
+
+## HIGH — 33차 신규 추가 (2026-04-28) — 랜딩 추가 디자인
+
+### Claude Design 추가 섹션 적용 (사용자가 한도 초기화 후 받아올 예정)
+
+- [ ] **BeforeAfterSection** — Claude Design 결과물 수령 후 적용 (프롬프트 이미 제공, 차별점 강조 포함)
+- [ ] **FinalCtaSection** — Claude Design 결과물 수령 후 적용
+- [ ] **FaqSection** — 비주얼 업그레이드 (현재 텍스트 기반, 클로드 디자인 레이아웃으로 교체)
+- [ ] **ComparisonSection** — 비주얼 강화
+- [ ] **TestimonialsSection** — 실 사용자 후기로 교체 포함
+- [ ] **MoreFeaturesSection** — 추가 기능 섹션 신설
+- [ ] **FooterSection** — 리뉴얼
+
+### .gitattributes LF 설정 추가 (선택 — Vercel 환경 sh 실행 안정성)
+- [ ] `.gitattributes`에 `*.sh text eol=lf` 추가 — Windows CRLF/LF 경고 해소
+- [ ] `scripts/vercel-ignore.sh` LF 확인 (현재는 동작 중이나 경고 잠재적)
+
+### 카피·마케팅 톤 통일 (33차 카피 정정 결과 적용 확산)
+- [ ] 카페 글·인스타 광고에서 "휴면·부상 자동 면제"·"AI 전술 감독" 강조 톤을 랜딩과 통일
+- [ ] 아직 v1 카피인 나머지 섹션에 사실 기반 차별화 카피 반영 여부 검토 (특히 BeforeAfter·Comparison)
+
+## HIGH — 34차 신규 추가 (2026-04-28)
+
+### velog/블로그 게시 후속 작업
+- [ ] velog 프로필 정비 (소개·링크 업데이트)
+- [ ] GeekNews 제출 (1~2차 velog 글 기반)
+- [ ] Threads 스레드 — 랜딩 v2 + velog 연동 게시
+
+### 네이버 서치어드바이저 사이트맵 재제출 (사용자 수동)
+- [ ] https://searchadvisor.naver.com/ 에서 www 제출 삭제 후 non-www(pitch-master.app) 로 재제출
+- [ ] 완료 후 색인 상태 2~4주 후 확인
+
+### CLAUDE.md 통계 수치 outdated 정정
+- [ ] "82개 팀, 647+ 명" 고정 수치 제거 → "실사용자 통계는 Supabase 직접 조회" 안내로 대체
+- [ ] 이후 외부 콘텐츠 생성 시 reference_pitchmaster_stats.md + 직접 조회 활용
+
 ## HIGH — 32차 신규 추가 (2026-04-28)
 
 ### Meta 비즈니스 제한 — 검토 대기 (2026-04-28 발생)
@@ -30,10 +71,8 @@ related: [completed-recent.md, reviews.md]
   - `analytics.ts`에 `fbq()` 호출 추가 (PageView·Lead·CompleteRegistration)
 - [ ] 참고: reference_meta_ads_setup.md
 
-### 랜딩 개선 (1순위 A — 다른 에이전트 작업 완료 후 재검토)
-- [ ] Hero/Sticky Header 이후 추가 개선 사항 협의
-- [ ] 다른 에이전트의 랜딩 작업이 완료·커밋된 후 착수 (충돌 방지)
-- [ ] 작업 전 `git status`로 미커밋 변경 반드시 확인
+### ~~랜딩 개선 (1순위 A)~~ ✅ 33차에서 Hero·HowItWorks·Features v2 완료 (e4ba64c, f67fb28)
+- 나머지 섹션(BeforeAfter·Faq·Comparison·Testimonials·Footer)은 33차 신규 추가 항목으로 이동
 
 ### 네이버 서치어드바이저 사이트맵 재제출 (사용자 수동)
 - [ ] https://searchadvisor.naver.com/ 에서 www 제출 삭제

@@ -31,7 +31,40 @@
       "Bash(grep -n \"LATE\" /c/Users/온유아빠/develop/PitchMaster/supabase/migrations/*.sql)",
       "Bash(ls /c/Users/온유아빠/develop/PitchMaster/docs/v0-*.md)",
       "Bash(grep -n \"^];$\\\\|^]$\\\\|sportType: \\\\\"FUTSAL\\\\\"\" src/lib/formations.ts)",
-      "Bash(grep -n \"defaultPlayerCount\\\\|default_player_count\" src/app/\\\\\\(app\\\\\\)/settings/*.tsx src/app/\\\\\\(app\\\\\\)/settings/page.tsx)"
+      "Bash(grep -n \"defaultPlayerCount\\\\|default_player_count\" src/app/\\\\\\(app\\\\\\)/settings/*.tsx src/app/\\\\\\(app\\\\\\)/settings/page.tsx)",
+      "WebFetch(domain:namu.wiki)",
+      "WebFetch(domain:www.sisaon.co.kr)",
+      "WebFetch(domain:jadblog.co.kr)",
+      "WebFetch(domain:footballk.net)",
+      "WebFetch(domain:www.soccercoachingpro.com)",
+      "WebFetch(domain:www.timscoachingblog.com)",
+      "Bash(node -e ' *)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(grep -r \"session\\\\\\\\.user\" /c/Users/온유아빠/develop/PitchMaster/src -n --include=\"*.ts\" --include=\"*.tsx\")",
+      "Bash(rm src/lib/rateLimit.ts)",
+      "Bash(npm uninstall *)",
+      "Bash(git reset *)",
+      "Bash(git restore *)",
+      "Bash(npm ci *)",
+      "Bash(npx eslint *)",
+      "Bash(xargs -I {} grep -H \"getSupabaseAdmin\\\\|getServerSupabase\\\\|createClient\" {})",
+      "WebFetch(domain:apps.apple.com)",
+      "WebFetch(domain:play.google.com)",
+      "Bash(gh --version)",
+      "Bash(git -c user.name=thepsySunny -c user.email=tjsgnl2002@gmail.com commit -m 'initial memory snapshot \\(2026-04-22\\) *)",
+      "Bash(grep -n '`' src/lib/server/aiTacticsAnalysis.ts)",
+      "Bash(node -e \"try { require\\('sharp'\\); console.log\\('sharp OK'\\); } catch\\(e\\) { console.log\\('sharp missing'\\); }\")",
+      "Bash(rm public/icon-512.png)",
+      "Bash(mv public/feature-graphic-1024x500.png public/feature-graphic.png)",
+      "Bash(grep -E \"\\(ts|sql\\)$\")",
+      "Bash(bubblewrap --version)",
+      "Read(//c//**)",
+      "Read(//c/dev/pitchmaster-twa/**)",
+      "Read(//c/dev/bw//**)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\온유아빠\\.claude",
+      "c:\\dev\\pitchmaster-twa"
     ]
   }
 }

@@ -1,12 +1,92 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~32차)
-summary: 2026-04-11~28 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리
-sections: [32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+title: 개선 백로그 — 최근 완료 (16~33차)
+summary: 2026-04-11~28 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리
+sections: [33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
 last_updated: 2026-04-28
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~32차)
+# 최근 완료 (16~33차)
+
+## 34차 (2026-04-28) — SEO 안정화 + GA4 이벤트 완성 + PWA 아이콘 픽셀 수정 + 마케팅 분석
+
+**커밋 7개, 모두 main 푸시 완료**
+
+**SEO 인프라 (225187a, 963b725, b58ea4b, 9dba6d9)**
+- [x] robots.ts 인증 영역 disallow 적용 (/dashboard·/matches 등) — `225187a`
+- [x] www→non-www redirect 코드 추가 → ERR_TOO_MANY_REDIRECTS 라이브 다운 → `963b725` revert
+- [x] CLAUDE.md 협업 규칙 4번 추가 (인프라 영향 설정 사전 확인) — `b58ea4b`
+- [x] canonical 4페이지(/login·/privacy·/terms·/guide) 명시 — `9dba6d9`
+
+**GA4 이벤트 퍼널 완성 (10bd479)**
+- [x] dead 이벤트 4종 발화 추가: team_join·onboarding_complete·push_toggle·pwa_install
+
+**OCR UX 이중 표시 제거 (37f4fb2)**
+- [x] setOcrStatus + showToast 페어 → ocrStatus 영역 단일 노출으로 통일
+
+**PWA 아이콘 모서리 흰 여백 제거 (1ac37cb)**
+- [x] PNG 모서리 픽셀이 alpha 투명이 아닌 RGB 흰색임을 사전 분석으로 확인
+- [x] scripts/fill-icon-bg.mjs 신규 작성 — pixel 배열 순회로 #0a0c10 직접 교체
+- [x] icon-192·512·maskable-192·512 4개 모두 적용
+
+**분석 (코드 변경 없음)**
+- GA4 1차 광고 분석: ₩172/프로필방문, 3초재생 23%(미달), 5팀 가입 ₩1,517/팀
+- Search Console 색인 4개 원인 파악 (www/non-www 분산 + robots 미적용)
+- 네이버 서치어드바이저 색인 0개 — www 도메인으로 잘못 제출, non-www 재제출 필요
+- Meta Pixel 설치 시도 → 비즈니스 제한 발생 (자동화 의심), 검토 대기
+- velog 블로그 1·2·3편 톤 재작성 (89팀 706명 수치 반영)
+
+**삽질·반성**
+- www→non-www redirect 코드 1줄 추가 → 라이브 전체 다운 (Vercel+Cloudflare 핑퐁)
+  → 인프라 영향 설정은 반드시 사전 확인 (CLAUDE.md 협업 규칙 4번 박제)
+- PNG flatten 만으로 흰 여백 제거 시도 → 무효. corner pixel 분석 후 픽셀 순회 방식으로 재작업
+  → 이미지 처리 전 픽셀 타입 사전 분석 필수 (feedback_image_processing_verify.md 신규)
+- CLAUDE.md "82팀 647명" 수치를 블로그 초안에 인용 → 실제 89팀 706명으로 정정 필요
+  → 외부 콘텐츠 생성 전 Supabase 직접 조회로 최신 수치 확인 (reference_pitchmaster_stats.md 신규)
+- Meta UI 옛 메뉴명("Pixel") 안내로 사용자 헤맴 → 최신 UI는 "데이터세트"로 통합됨
+
+## 33차 (2026-04-28) — 랜딩 페이지 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리
+
+**커밋 6개, 모두 main 푸시 완료**
+
+**Hero·Sticky Header v2 (e4ba64c)**
+- [x] `framer-motion@11` 신규 도입
+- [x] HeroSection 전면 교체 — 5년차 회장 정체성, 프리미엄 모션, 스크롤 parallax
+- [x] SiteHeader(Sticky) 신규 — 스크롤 감지 배경/그림자 전환, CTA 버튼 포함
+- 1000+ insertions
+
+**HowItWorks·Features v2 + 차별화 카피 정정 (f67fb28)**
+- [x] HowItWorksSection 통째 교체
+- [x] FeaturesSection 합본 신규 베이스 — 실 PlayerCard·TacticsBoard 데모 보존
+- [x] ComparisonSection·FaqSection·BeforeAfterSection 카피 보강
+- [x] 차별화 카피 사실 기반 정정:
+  - 참석투표: "링크 1개로 다음 6경기까지 한 번에 응답" (이전: "이름·전화번호 없이" — 사실 아님)
+  - 회비정산: "휴면·부상 회원 자동 면제" 강조 (타 앱 없는 unique 기능)
+  - AI 편성: "또 하나의 전술 감독 AI" 톤 강화
+- 1668 insertions
+
+**5년차 회장 정체성 + 차별화 강화 (3aa6478)**
+- [x] 4개 파일 텍스트 패치 — 회장 시점 공감 카피 도입
+
+**.gitignore 정리 (f2773ff)**
+- [x] `.serena/`, `.agents/skills/`, `.claude/skills/`, `.claude/worktrees/` 도구 메타 ignore
+- [x] `public/cardscreenshot/`, `duelsscreenshot/`, `newscreenshot/` 작업 캡처 ignore
+- [x] `v0card/`, `scripts/fix-*.mjs`, `scripts/run-migration-*.mjs` ignore
+- [x] 마케팅 docs 13개·시드 3개·demo-cards 페이지는 신규 커밋으로 보존
+
+**Vercel ignoreCommand 추가 (a12efbc, b90b466)**
+- [x] `deploymentEnabled: true` + `ignoreCommand` 설정
+- [x] 256자 제한으로 `scripts/vercel-ignore.sh` 분리 후 `bash scripts/vercel-ignore.sh` 호출
+
+**삽질·반성**
+- 전술판 jersey 정렬: "SVG 수학적 대칭" 반박 3회 반복 → 사용자 짜증. 결국 좌표 보정 -3% ~ -5%로 해결
+  - 교훈: 사용자 시각 판단에 수학 논리 반박 금지. 즉시 보정 후 검증 요청
+- Jersey 매칭 표시: 실 코드 grep 없이 즉흥 디자인 반복 → 나중에 TacticsBoard.tsx grep 후 정상 구현
+  - 교훈: 실 서비스 복제 목표라면 처음부터 grep
+- AI 전술 카드 이미지: "실 스크린샷 신뢰감" 판단으로 교체 추천 → 카드 균형 깨짐 → SVG 복귀
+  - 교훈: 스크린샷 vs SVG는 비주얼 균형·크기 같이 판단
+- vercel.json ignoreCommand 256자 제한 사전 미검증 → Vercel 스키마 에러 → 스크립트 분리로 수정
+- Cloudflare redirect rule 확인 안내: 메뉴 경로 불충분 → 사용자 재질문 → 구체 경로 명시 후 해결
 
 ## 32차 (2026-04-28) — 광고 ROI 측정 이벤트 완성 + SEO 안정화 + OCR UX 정리
 
