@@ -10,12 +10,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { GA } from "@/lib/analytics";
 
 export default function TeamClient({ hasExistingTeam = false }: { hasExistingTeam?: boolean }) {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
   const pending = searchParams.get("pending");
   const codeFromUrl = searchParams.get("code") ?? "";
+
+  // 온보딩 완료 신호 — completeOnboarding 이 ?welcome=onboarded 로 redirect
+  useEffect(() => {
+    if (searchParams.get("welcome") === "onboarded") {
+      GA.onboardingComplete();
+      // URL 깨끗이 — code 파라미터는 유지
+      const code = searchParams.get("code");
+      const cleanUrl = code ? `/team?code=${encodeURIComponent(code)}` : "/team";
+      window.history.replaceState(null, "", cleanUrl);
+    }
+  }, [searchParams]);
 
   const [teamName, setTeamName] = useState("");
   const [nameStatus, setNameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");

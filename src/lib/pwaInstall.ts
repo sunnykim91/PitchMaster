@@ -25,6 +25,8 @@ export async function triggerInstall(): Promise<boolean> {
     localStorage.setItem("pwa-installed", "true");
     deferredPrompt = null;
     notifyListeners();
+    // GA — 광고 클릭으로 들어온 사람의 설치 전환률 측정용
+    void import("@/lib/analytics").then(({ GA }) => GA.pwaInstall()).catch(() => {});
     return true;
   }
   deferredPrompt = null;

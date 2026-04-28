@@ -178,12 +178,19 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
 
-  // 팀 생성 후 환영 토스트
+  // 팀 생성/가입 후 환영 토스트
   useEffect(() => {
-    if (searchParams.get("welcome") === "created") {
+    const welcome = searchParams.get("welcome");
+    if (welcome === "created") {
       const team = searchParams.get("team") ?? "";
       showToast(`${team} 팀이 생성되었습니다! 초대 코드를 팀원에게 공유해보세요.`, "success");
       GA.teamCreate(team);
+      window.history.replaceState(null, "", "/dashboard");
+    } else if (welcome === "joined") {
+      const team = searchParams.get("team") ?? "";
+      const method = searchParams.get("method") ?? "invite_code";
+      showToast(`${team} 팀에 가입되었습니다.`, "success");
+      GA.teamJoin(method);
       window.history.replaceState(null, "", "/dashboard");
     }
   }, [searchParams]);

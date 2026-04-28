@@ -59,5 +59,8 @@ export async function completeOnboarding(formData: FormData) {
   });
 
   const inviteCode = String(formData.get("inviteCode") || "").trim();
-  redirect(inviteCode ? `/team?code=${encodeURIComponent(inviteCode)}` : "/team");
+  // welcome=onboarded 신호로 TeamClient 가 GA.onboardingComplete() 발화
+  const params = new URLSearchParams({ welcome: "onboarded" });
+  if (inviteCode) params.set("code", inviteCode);
+  redirect(`/team?${params.toString()}`);
 }

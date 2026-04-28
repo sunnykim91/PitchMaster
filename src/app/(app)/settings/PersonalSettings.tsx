@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Bell, Sun, Moon, Monitor, Camera, Link2, AlertTriangle, MessageSquare } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { subscribeToPush } from "@/lib/pushSubscription";
+import { GA } from "@/lib/analytics";
 import { apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
 import { useConfirm } from "@/lib/ConfirmContext";
@@ -209,6 +210,7 @@ function PersonalSettingsComponent({
         body: JSON.stringify({ push: next }),
       });
       setPushEnabled(next);
+      GA.pushSubscribe(next);
       setMessage(next ? "푸시 알림이 활성화되었습니다" : "푸시 알림이 비활성화되었습니다");
     } catch {
       setMessage("알림 설정 변경에 실패했습니다");

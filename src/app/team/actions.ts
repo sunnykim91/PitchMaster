@@ -247,7 +247,7 @@ export async function joinTeam(formData: FormData) {
       teamRole: linkedRole as "PRESIDENT" | "STAFF" | "MEMBER",
       inviteCode: team.invite_code,
     });
-    redirect("/dashboard");
+    redirect(`/dashboard?welcome=joined&team=${encodeURIComponent(team.name)}&method=auto_link`);
     return;
   }
 
@@ -323,5 +323,5 @@ export async function joinTeam(formData: FormData) {
     teamRole: "MEMBER",
     inviteCode: team.invite_code,
   });
-  redirect("/dashboard");
+  redirect(`/dashboard?welcome=joined&team=${encodeURIComponent(team.name)}&method=invite_code`);
 }
