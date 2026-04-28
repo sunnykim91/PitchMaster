@@ -183,6 +183,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
     if (searchParams.get("welcome") === "created") {
       const team = searchParams.get("team") ?? "";
       showToast(`${team} 팀이 생성되었습니다! 초대 코드를 팀원에게 공유해보세요.`, "success");
+      GA.teamCreate(team);
       window.history.replaceState(null, "", "/dashboard");
     }
   }, [searchParams]);

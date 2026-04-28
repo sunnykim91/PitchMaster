@@ -10,6 +10,8 @@ export const metadata: Metadata = {
 };
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { Button } from "@/components/ui/button";
+import { LandingViewTracker } from "@/components/LandingViewTracker";
+import { KakaoLoginLink } from "@/components/KakaoLoginLink";
 import DemoButton from "./DemoButton";
 import HeroSection from "./sections/HeroSection";
 import BeforeAfterSection from "./sections/BeforeAfterSection";
@@ -69,7 +71,7 @@ export default async function LoginPage({
 
   const kakaoButton = kakaoEnabled ? (
     <Button className={kakaoButtonClass} asChild>
-      <a href={kakaoHref}>{kakaoIcon}카카오로 간편 시작</a>
+      <KakaoLoginLink href={kakaoHref} source="hero">{kakaoIcon}카카오로 간편 시작</KakaoLoginLink>
     </Button>
   ) : (
     <Button className={kakaoButtonClass} disabled>카카오로 시작하기 (환경변수 필요)</Button>
@@ -77,7 +79,7 @@ export default async function LoginPage({
 
   const kakaoButtonFinal = kakaoEnabled ? (
     <Button className={kakaoButtonClass} asChild>
-      <a href={kakaoHref}>{kakaoIcon}무료로 시작하기</a>
+      <KakaoLoginLink href={kakaoHref} source="final_cta">{kakaoIcon}무료로 시작하기</KakaoLoginLink>
     </Button>
   ) : (
     <Button className={kakaoButtonClass} disabled>무료로 시작하기</Button>
@@ -85,6 +87,7 @@ export default async function LoginPage({
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-background pb-20 lg:pb-0">
+      <LandingViewTracker />
       <HeroSection
         kakaoButton={kakaoButton}
         demoButton={<Suspense fallback={<div className="h-10" />}><DemoButton /></Suspense>}
@@ -109,7 +112,7 @@ export default async function LoginPage({
         <div className="flex gap-2" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
           {kakaoEnabled ? (
             <Button className="h-12 flex-1 rounded-xl bg-[hsl(var(--kakao))] text-sm font-bold text-[hsl(var(--kakao-foreground))] shadow-lg shadow-[hsl(var(--kakao))]/25 hover:bg-[hsl(var(--kakao))]/90" asChild>
-              <a href={kakaoHref}>무료로 시작</a>
+              <KakaoLoginLink href={kakaoHref} source="sticky_mobile">무료로 시작</KakaoLoginLink>
             </Button>
           ) : (
             <Button className="h-12 flex-1 rounded-xl bg-[hsl(var(--kakao))] text-sm font-bold text-[hsl(var(--kakao-foreground))]" disabled>무료로 시작</Button>
