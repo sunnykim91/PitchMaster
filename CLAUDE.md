@@ -271,7 +271,8 @@ MatchTacticsTab
 카드 순서 프리셋 드롭다운 제거 + 고정 `order` 기반 배치. 상세는 [src/app/(app)/matches/CLAUDE.md](src/app/(app)/matches/CLAUDE.md) 참고.
 
 - 용병 카드는 **편성 완료 여부**에 따라 동적 이동 (-5 상단 / 95 하단)
-- "편성 완료" = 매 쿼터마다 정규 슬롯 전부 채워진 squad 존재 (심판/촬영 제외, `match_squads`에 DB 영속 기준)
+- "편성 완료" = 매 쿼터마다 정규 슬롯 전부 채워진 squad 존재 (주심/부심1·2/촬영 제외, `match_squads`에 DB 영속 기준)
+- 메타 슬롯 키(formation.slots에 없음, `__` prefix): `__referee`(주심·sky) · `__linesman1`·`__linesman2`(부심 2명·emerald, 2026-04-29 추가) · `__camera`(촬영·violet). 모두 `match_squads.positions` JSONB에 동일 Placement 형식으로 저장
 
 ---
 

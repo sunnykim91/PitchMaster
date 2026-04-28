@@ -219,8 +219,10 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       formation.slots.forEach((slot) => {
         normalizedPlacements[slot.id] = row.positions?.[slot.id] ?? null;
       });
-      // 심판/촬영 역할도 복원
+      // 주심/부심/촬영 역할도 복원
       if (row.positions?.["__referee"]) normalizedPlacements["__referee"] = row.positions["__referee"] as Placement;
+      if (row.positions?.["__linesman1"]) normalizedPlacements["__linesman1"] = row.positions["__linesman1"] as Placement;
+      if (row.positions?.["__linesman2"]) normalizedPlacements["__linesman2"] = row.positions["__linesman2"] as Placement;
       if (row.positions?.["__camera"]) normalizedPlacements["__camera"] = row.positions["__camera"] as Placement;
       setBoardState({ formationId: formation.id, placements: normalizedPlacements });
     } else {
@@ -331,17 +333,24 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     formation.slots.forEach((slot) => {
       normalized[slot.id] = boardState.placements[slot.id] ?? null;
     });
-    // 심판/촬영 역할도 보존
+    // 주심/부심/촬영 역할도 보존
     if (boardState.placements["__referee"]) normalized["__referee"] = boardState.placements["__referee"];
+    if (boardState.placements["__linesman1"]) normalized["__linesman1"] = boardState.placements["__linesman1"];
+    if (boardState.placements["__linesman2"]) normalized["__linesman2"] = boardState.placements["__linesman2"];
     if (boardState.placements["__camera"]) normalized["__camera"] = boardState.placements["__camera"];
     return normalized;
   }, [boardState.placements, formation.slots]);
 
-  // 심판/촬영 역할 (쿼터별 positions에 __referee, __camera 키로 저장)
+  // 주심/부심/촬영 역할 (positions에 __referee, __linesman1, __linesman2, __camera 키로 저장)
   const referee = placements["__referee"]?.playerId ?? "";
+  const linesman1 = placements["__linesman1"]?.playerId ?? "";
+  const linesman2 = placements["__linesman2"]?.playerId ?? "";
   const camera = placements["__camera"]?.playerId ?? "";
 
-  function handleRoleAssign(role: "__referee" | "__camera", playerId: string) {
+  function handleRoleAssign(
+    role: "__referee" | "__linesman1" | "__linesman2" | "__camera",
+    playerId: string
+  ) {
     updateBoardState((prev) => ({
       ...prev,
       placements: {
@@ -370,7 +379,14 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     const map = new Map<string, Map<number, PlayType>>();
 
     const addPlayer = (pid: string, q: number, type: PlayType) => {
-      if (!pid || pid === "__referee" || pid === "__camera") return;
+      if (
+        !pid ||
+        pid === "__referee" ||
+        pid === "__linesman1" ||
+        pid === "__linesman2" ||
+        pid === "__camera"
+      )
+        return;
       if (!map.has(pid)) map.set(pid, new Map());
       // 이미 등록된 쿼터면 덮어쓰지 않음
       if (!map.get(pid)!.has(q)) map.get(pid)!.set(q, type);
@@ -1071,16 +1087,38 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             </div>
           )}
 
-          {/* 심판/촬영 역할 표시 (캡처 영역 내) */}
-          {(referee || camera) && (
-            <div className="rounded-xl bg-sky-500/10 px-4 py-3">
+          {/* 주심/부심/촬영 역할 표시 (캡처 영역 내) */}
+          {(referee || linesman1 || linesman2 || camera) && (
+            <div className="rounded-xl bg-secondary/50 px-4 py-3">
               <div className="flex flex-wrap gap-3">
                 {referee && (() => {
                   const p = roster.find((r) => r.id === referee);
                   return p ? (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-sky-700 dark:text-sky-400">심판</span>
+                      <span className="text-xs font-bold text-sky-700 dark:text-sky-400">주심</span>
                       <span className="inline-block rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-400">
+                        {p.name}
+                      </span>
+                    </div>
+                  ) : null;
+                })()}
+                {linesman1 && (() => {
+                  const p = roster.find((r) => r.id === linesman1);
+                  return p ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">부심1</span>
+                      <span className="inline-block rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                        {p.name}
+                      </span>
+                    </div>
+                  ) : null;
+                })()}
+                {linesman2 && (() => {
+                  const p = roster.find((r) => r.id === linesman2);
+                  return p ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">부심2</span>
+                      <span className="inline-block rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
                         {p.name}
                       </span>
                     </div>
@@ -1106,7 +1144,9 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               <p className="mb-2 text-sm font-bold">역할 배정</p>
               <div className="space-y-3">
                 {[
-                  { key: "__referee" as const, label: "심판", current: referee },
+                  { key: "__referee" as const, label: "주심", current: referee },
+                  { key: "__linesman1" as const, label: "부심1", current: linesman1 },
+                  { key: "__linesman2" as const, label: "부심2", current: linesman2 },
                   { key: "__camera" as const, label: "촬영", current: camera },
                 ].map(({ key, label, current }) => (
                   <div key={key} className="flex items-center gap-3">
@@ -1272,13 +1312,15 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               </CardContent>
             </Card>
 
-            {/* 심판/촬영 역할 배정 */}
+            {/* 주심/부심/촬영 역할 배정 */}
             <Card className="border-0 bg-secondary">
               <CardContent className="p-4">
                 <p className="text-sm font-bold text-foreground">역할 배정</p>
                 <div className="mt-3 space-y-3">
                   {[
-                    { key: "__referee" as const, label: "심판", current: referee },
+                    { key: "__referee" as const, label: "주심", current: referee },
+                    { key: "__linesman1" as const, label: "부심1", current: linesman1 },
+                    { key: "__linesman2" as const, label: "부심2", current: linesman2 },
                     { key: "__camera" as const, label: "촬영", current: camera },
                   ].map(({ key, label, current }) => (
                     <div key={key} className="space-y-1">
@@ -1527,19 +1569,27 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               {/* 쉬는 선수 + 역할 */}
               {(() => {
                 const qRef = row?.positions?.["__referee"] as Placement | null | undefined;
+                const qLn1 = row?.positions?.["__linesman1"] as Placement | null | undefined;
+                const qLn2 = row?.positions?.["__linesman2"] as Placement | null | undefined;
                 const qCam = row?.positions?.["__camera"] as Placement | null | undefined;
                 const refName = qRef?.playerId ? roster.find((r) => r.id === qRef.playerId)?.name : null;
+                const ln1Name = qLn1?.playerId ? roster.find((r) => r.id === qLn1.playerId)?.name : null;
+                const ln2Name = qLn2?.playerId ? roster.find((r) => r.id === qLn2.playerId)?.name : null;
                 const camName = qCam?.playerId ? roster.find((r) => r.id === qCam.playerId)?.name : null;
+                const lineNames = [ln1Name, ln2Name].filter(Boolean) as string[];
+                const roleParts = [
+                  refName && `주심: ${refName}`,
+                  lineNames.length > 0 && `부심: ${lineNames.join(", ")}`,
+                  camName && `촬영: ${camName}`,
+                ].filter(Boolean) as string[];
                 return (
                   <div style={{ padding: "6px 10px", fontSize: 10 }}>
                     {qResting.length > 0 && (
                       <div style={{ color: "hsl(var(--warning))" }}>쉬는 선수: {qResting.map((r) => r.name).join(", ")}</div>
                     )}
-                    {(refName || camName) && (
+                    {roleParts.length > 0 && (
                       <div style={{ color: "hsl(var(--muted-foreground))", marginTop: 2 }}>
-                        {refName && <span>심판: {refName}</span>}
-                        {refName && camName && <span> · </span>}
-                        {camName && <span>촬영: {camName}</span>}
+                        {roleParts.join(" · ")}
                       </div>
                     )}
                   </div>
