@@ -362,10 +362,8 @@ function DuesBulkTabInner({
 
         if (newRows.length > 0) {
           setOcrStatus(msgParts.join(", ") + ". 확인 후 저장하세요.");
-          showToast(msgParts.join(", "), "success");
         } else {
           setOcrStatus(`${aiResult.rows.length}건 모두 이미 등록된 내역입니다.`);
-          showToast(`${aiResult.rows.length}건 모두 중복`, "info");
         }
         return;
       }
@@ -382,15 +380,13 @@ function DuesBulkTabInner({
       if (!res.ok) {
         setOcrLoading(false);
         if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
-        setOcrStatus(`OCR 오류: ${json.error || res.status}. 다른 이미지로 시도해주세요.`);
-        showToast(`OCR 실패 — ${fileInfo}`, "error");
+        setOcrStatus(`OCR 오류 (${fileInfo}): ${json.error || res.status}. 다른 이미지로 시도해주세요.`);
         return;
       }
       if (!json.text) {
         setOcrLoading(false);
         if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
-        setOcrStatus("텍스트를 인식하지 못했습니다. 다른 이미지로 시도해주세요.");
-        showToast(`인식 실패 — ${fileInfo}`, "error");
+        setOcrStatus(`텍스트를 인식하지 못했습니다 (${fileInfo}). 다른 이미지로 시도해주세요.`);
         return;
       }
 
@@ -437,20 +433,16 @@ function DuesBulkTabInner({
       if (normalRowsForState.length > 0 || partialRowsForState.length > 0) {
         const status = msgParts.join(", ") + (partialRowsForState.length > 0 ? ". 정보 부족 거래는 직접 확인 후 추가하세요." : ". 확인 후 저장하세요.");
         setOcrStatus(status);
-        showToast(msgParts.join(", "), "success");
       } else if (parsed.length > 0) {
         setOcrStatus(`${parsed.length}건 모두 이미 등록된 내역입니다.`);
-        showToast(`${parsed.length}건 모두 중복`, "info");
       } else {
         setOcrStatus("거래 내역을 인식하지 못했습니다. 수동으로 입력해주세요.");
-        showToast("거래 내역을 인식하지 못했습니다.", "error");
       }
     } catch (err) {
       console.error("[OCR] error:", err);
       setOcrLoading(false);
       if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
       setOcrStatus("OCR 처리 중 오류가 발생했습니다. 수동으로 입력해주세요.");
-      showToast("OCR 처리 중 오류 발생", "error");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refetchSummary]);
