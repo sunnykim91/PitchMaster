@@ -326,6 +326,15 @@ git push origin main        # Vercel 자동배포
 - 1~2개 가능성으로 좁혀지면 "A인가요 B인가요?" 형식으로 질문
 - 코드 작성·파일 수정에 들어가기 전에 확인 — 작업 중간에 방향 틀면 롤백 비용 큼
 
+### 4. 인프라 동작 영향 설정은 라인 수 무관 사전 확인 필수
+- `next.config.ts`의 `redirects()`/`rewrites()`/`headers()`/`middleware`, `vercel.json`, `robots.ts`, `sitemap.ts` 등 **인프라/엣지 동작에 영향을 주는 설정**은 1줄 수정이라도 사전 확인
+- 이 프로젝트 인프라: **Cloudflare DNS + Vercel 자동배포**
+- **Cloudflare/Vercel이 이미 처리 중인 동작을 코드 단에서 중복 추가하면 무한루프 등 라이브 다운 위험** (실제 사례: 2026-04-28 next.config redirects www→non-www 추가 후 Vercel/Cloudflare 와 핑퐁 → ERR_TOO_MANY_REDIRECTS)
+- 사전에 확인할 것:
+  - 같은 동작이 Vercel 도메인 설정 / Cloudflare Page Rule / Cloudflare Workers / 다른 미들웨어에서 이미 처리되고 있는지
+  - 의심되면 사용자에게 "Vercel/Cloudflare 단에서 X 처리되고 있나요?" 물어보고 진행
+- 인프라 redirect는 인프라에서, 코드 redirect는 코드에서. 둘 다 만지면 충돌
+
 ---
 
 ## 주요 데이터 (실제 팀)
