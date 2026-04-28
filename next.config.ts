@@ -40,19 +40,9 @@ const nextConfig: NextConfig = {
       { source: "/guide", destination: "/guide.html" },
     ];
   },
-  async redirects() {
-    return [
-      // canonical 도메인 통일 — www.pitch-master.app → pitch-master.app (영구)
-      // Search Console에서 "리디렉션이 포함된 페이지" / "리디렉션 오류" 정리 목적.
-      // http → https 는 Vercel 단에서 자동 처리되므로 별도 룰 불필요.
-      {
-        source: "/:path*",
-        has: [{ type: "host", value: "www.pitch-master.app" }],
-        destination: "https://pitch-master.app/:path*",
-        permanent: true,
-      },
-    ];
-  },
+  // ⚠️ www → non-www redirect 는 Vercel/Cloudflare 단에서 처리 중. next.config 에서
+  // 동일 룰 추가 시 두 시스템이 핑퐁 → ERR_TOO_MANY_REDIRECTS. 절대 다시 추가 금지.
+  // canonical 통일 필요 시 Vercel 도메인 설정 또는 Cloudflare Page Rule 에서만 변경.
   async headers() {
     return [
       {
