@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { Check, Copy, Link2, Menu, ChevronDown, ChevronRight, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Sun, Moon } from "lucide-react";
+import { Check, Copy, Link2, Menu, ChevronDown, ChevronRight, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Sun, Moon, LogOut } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
@@ -68,6 +68,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const { viewAsRole, setViewAsRole } = useViewAsRole();
   const canSwitchRole = session.user.name === "김선휘";
   const [copied, setCopied] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [sheetClosing, setSheetClosing] = useState(false);
   const [notiOpen, setNotiOpen] = useState(false);
@@ -217,6 +218,26 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
     };
   }, [teamMenuOpen]);
 
+  function handleFeedback() {
+    const lines = [
+      "", "", "",
+      "━━━━━━━━━━━━━━━━━━━━",
+      "아래는 디버그 정보입니다 (수정하지 마세요)",
+      `버전: Beta 1.0.1`,
+      `기기: ${typeof navigator !== "undefined" ? navigator.userAgent : "N/A"}`,
+      `사용자: ${session.user.name || "알 수 없음"}`,
+      `시각: ${new Date().toLocaleString("ko-KR")}`,
+      "━━━━━━━━━━━━━━━━━━━━",
+    ];
+    window.location.href = `mailto:tjsgnl2002@gmail.com?subject=${encodeURIComponent("[PitchMaster 피드백]")}&body=${encodeURIComponent(lines.join("\n"))}`;
+  }
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+  }
+
   const navItems = useMemo(
     () => [
       { href: "/dashboard", label: "홈", detail: "대시보드", icon: Home },
@@ -349,6 +370,28 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       <Separator className="my-4" />
       <SidebarNav items={navItems} />
       <Separator className="my-4" />
+      <div className="flex flex-col gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full justify-start gap-2 text-muted-foreground"
+          onClick={handleFeedback}
+        >
+          <MessageSquare className="h-4 w-4 shrink-0" />
+          피드백 보내기
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          onClick={handleLogout}
+          disabled={loggingOut}
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          {loggingOut ? "로그아웃 중..." : "로그아웃"}
+        </Button>
+      </div>
+      <Separator className="my-4" />
       <Card className="border-[hsl(var(--accent))]/20 bg-[hsl(var(--accent))]/5">
         <CardContent className="p-4">
           <p className="type-overline text-[hsl(var(--accent))]">초대 코드</p>
@@ -371,12 +414,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           </Button>
         </CardContent>
       </Card>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" className="gap-1" asChild>
-          <Link href="/team"><Plus className="h-3.5 w-3.5" />새 팀</Link>
-        </Button>
-      </div>
-      <p className="mt-4 text-xs text-muted-foreground/50">
+      <p className="mt-2 text-xs text-muted-foreground/50">
         v{process.env.NEXT_PUBLIC_COMMIT_HASH}
       </p>
     </>
