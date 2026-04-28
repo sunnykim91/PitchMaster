@@ -137,3 +137,6 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Claude Design 핸드오프 자산 (참조용, 로컬 전용)
+/project/

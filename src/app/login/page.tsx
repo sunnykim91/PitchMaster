@@ -14,6 +14,7 @@ import { LandingViewTracker } from "@/components/LandingViewTracker";
 import { KakaoLoginLink } from "@/components/KakaoLoginLink";
 import DemoButton from "./DemoButton";
 import HeroSection from "./sections/HeroSection";
+import SiteHeader from "./sections/SiteHeader";
 import BeforeAfterSection from "./sections/BeforeAfterSection";
 import FeaturesSection from "./sections/FeaturesSection";
 import MoreFeaturesSection from "./sections/MoreFeaturesSection";
@@ -69,14 +70,6 @@ export default async function LoginPage({
 
   const kakaoButtonClass = "h-14 rounded-2xl bg-[hsl(var(--kakao))] px-10 text-base font-bold text-[hsl(var(--kakao-foreground))] shadow-lg shadow-[hsl(var(--kakao))]/25 transition-all hover:bg-[hsl(var(--kakao))]/90 hover:shadow-xl hover:shadow-[hsl(var(--kakao))]/30 hover:scale-[1.02]";
 
-  const kakaoButton = kakaoEnabled ? (
-    <Button className={kakaoButtonClass} asChild>
-      <KakaoLoginLink href={kakaoHref} source="hero">{kakaoIcon}카카오로 간편 시작</KakaoLoginLink>
-    </Button>
-  ) : (
-    <Button className={kakaoButtonClass} disabled>카카오로 시작하기 (환경변수 필요)</Button>
-  );
-
   const kakaoButtonFinal = kakaoEnabled ? (
     <Button className={kakaoButtonClass} asChild>
       <KakaoLoginLink href={kakaoHref} source="final_cta">{kakaoIcon}무료로 시작하기</KakaoLoginLink>
@@ -88,11 +81,12 @@ export default async function LoginPage({
   return (
     <main className="relative min-h-screen overflow-hidden bg-background pb-20 lg:pb-0">
       <LandingViewTracker />
+      <SiteHeader kakaoEnabled={kakaoEnabled} kakaoHref={kakaoHref} />
       <HeroSection
-        kakaoButton={kakaoButton}
-        demoButton={<Suspense fallback={<div className="h-10" />}><DemoButton /></Suspense>}
         teamCount={teamCount}
         memberCount={memberCount}
+        kakaoEnabled={kakaoEnabled}
+        kakaoHref={kakaoHref}
       />
       <BeforeAfterSection />
       <HowItWorksSection />

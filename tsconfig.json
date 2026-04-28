@@ -39,6 +39,7 @@
   "exclude": [
     "node_modules",
     "v0",
-    "v0card"
+    "v0card",
+    "project"
   ]
 }

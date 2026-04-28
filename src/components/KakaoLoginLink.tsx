@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, PointerEventHandler, ReactNode } from "react";
 import { GA } from "@/lib/analytics";
 
 /**
@@ -13,17 +13,23 @@ export function KakaoLoginLink({
   href,
   source,
   className,
+  style,
+  onPointerDown,
   children,
 }: {
   href: string;
   source: string;
   className?: string;
+  style?: CSSProperties;
+  onPointerDown?: PointerEventHandler<HTMLAnchorElement>;
   children: ReactNode;
 }) {
   return (
     <a
       href={href}
       className={className}
+      style={style}
+      onPointerDown={onPointerDown}
       onClick={() => GA.loginClick(source)}
     >
       {children}
