@@ -19,8 +19,8 @@ const comparisons = [
   {
     icon: LayoutGrid,
     title: "선수 배치",
-    before: { text: "경기장 도착해서야 포지션 정함", time: "20분" },
-    after: { text: "선호 포지션 기반 자동 배치", time: "3초" },
+    before: { text: "경기장 도착 후 즉석 편성 + '왜 나만 수비?' 클레임", time: "20분" },
+    after: { text: "선호 포지션 기반 자동 배치 + AI 감독 코칭", time: "3초" },
   },
 ];
 

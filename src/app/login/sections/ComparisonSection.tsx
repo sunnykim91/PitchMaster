@@ -4,21 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Minus } from "lucide-react";
 
 const rows = [
-  { feature: "참석 투표", pm: "실시간 자동 집계", kakao: "수동 집계", band: "투표 기능" },
-  { feature: "AI 전술 편성", pm: "우리 팀 기록·참석자·상대 이력으로 AI가 자동 설계", kakao: null, band: null },
-  { feature: "AI 감독 코칭", pm: "편성 근거·공격 루트·고비 쿼터 자동 브리핑", kakao: null, band: null },
-  { feature: "AI 회비 OCR", pm: "통장 캡쳐·카뱅 엑셀 자동 매칭", kakao: "엑셀 / 메모", band: null },
-  { feature: "자동 경기 후기", pm: "경기 끝나면 즉시 한 문장 완성", kakao: null, band: null },
-  { feature: "PC·모바일 모두", pm: "브라우저만 있으면 어디서나", kakao: "앱 전용", band: "앱 전용" },
-  { feature: "회비 자동 벌금 부과", pm: "지각·불참 자동 차감", kakao: null, band: null },
-  { feature: "풋살 전용 지원 (3~8인제)", pm: "포지션·전술판 별도", kakao: null, band: null },
-  { feature: "경기 기록", pm: "골/어시/MVP 자동", kakao: null, band: null },
-  { feature: "데이터 분석", pm: "레이더 차트 + 랭킹", kakao: null, band: null },
-  { feature: "선수 카드 & 시즌 어워드", pm: "FIFA 스타일 + 7종 자동 시상", kakao: null, band: null },
-  { feature: "게시판 / 공지", pm: "고정 공지 + 투표", kakao: "공지 묻힘", band: "게시판" },
-  { feature: "푸시 알림", pm: "투표 마감 자동 알림", kakao: null, band: "앱 알림" },
-  { feature: "데모 체험", pm: "가입 없이 둘러보기", kakao: null, band: null },
-  { feature: "멀티팀", pm: "한 계정 전환", kakao: "방 여러 개", band: "밴드 여러 개" },
+  { feature: "참석 투표", pm: "실시간 자동 집계 + 마감 자동 알림", other: "수동 집계 / 갠톡 추적" },
+  { feature: "AI 라인업·전술 편성", pm: "참석자·기록·상대 이력 반영 자동 설계", other: null },
+  { feature: "AI 감독 코칭", pm: "편성 근거·고비 쿼터·공격 루트 자동 브리핑", other: null },
+  { feature: "회비 OCR", pm: "통장 캡처 한 장으로 이름·금액 자동 매칭", other: "엑셀 / 메모 수기" },
+  { feature: "자동 경기 후기", pm: "경기 종료 즉시 한 문장 후기 자동 생성", other: null },
+  { feature: "선수 카드 & 시즌 어워드", pm: "FIFA 스타일 카드 + 7종 자동 시상", other: null },
+  { feature: "PC·모바일", pm: "브라우저로 어디서나, 설치 없이", other: "앱 전용" },
 ];
 
 export default function ComparisonSection() {
@@ -38,17 +30,16 @@ export default function ComparisonSection() {
           <h2 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
             왜 PitchMaster인가요?
           </h2>
-          <p className="mt-2 text-muted-foreground">카카오톡, 밴드로는 할 수 없는 것들</p>
+          <p className="mt-2 text-muted-foreground">조기축구 5년차 회장이 직접 만든, 운영에 진짜 필요한 기능들</p>
         </div>
 
         <div className={`overflow-x-auto rounded-2xl border border-border bg-card ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
-          <table className="w-full min-w-[550px] text-sm">
+          <table className="w-full min-w-[480px] text-sm">
             <thead>
               <tr className="border-b border-border bg-secondary/50">
                 <th className="p-4 text-left font-medium text-muted-foreground sm:p-5">기능</th>
                 <th className="p-4 text-center sm:p-5"><span className="text-lg font-bold text-primary">PitchMaster</span></th>
-                <th className="p-4 text-center text-muted-foreground sm:p-5">카톡</th>
-                <th className="p-4 text-center text-muted-foreground sm:p-5">밴드</th>
+                <th className="p-4 text-center text-muted-foreground sm:p-5">타 앱</th>
               </tr>
             </thead>
             <tbody>
@@ -68,10 +59,7 @@ export default function ComparisonSection() {
                     </div>
                   </td>
                   <td className="p-4 text-center text-muted-foreground/60 sm:p-5">
-                    {r.kakao ?? <Minus className="mx-auto h-4 w-4 text-muted-foreground/30" />}
-                  </td>
-                  <td className="p-4 text-center text-muted-foreground/60 sm:p-5">
-                    {r.band ?? <Minus className="mx-auto h-4 w-4 text-muted-foreground/30" />}
+                    {r.other ?? <Minus className="mx-auto h-4 w-4 text-muted-foreground/30" />}
                   </td>
                 </tr>
               ))}

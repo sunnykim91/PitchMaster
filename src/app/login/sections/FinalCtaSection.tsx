@@ -16,12 +16,12 @@ export default function FinalCtaSection({
 
           <div className="relative text-center">
             <h2 className="mx-auto max-w-3xl font-heading text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
-              이번 주부터 카톡 대신
+              이번 주 금요일,
               <br />
-              <span className="text-primary">PitchMaster로 운영해보세요</span>
+              <span className="text-primary">갠톡 5통 대신 링크 하나</span>
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-muted-foreground sm:text-lg">
-              현재 무료. 팀원 초대도 링크 하나면 끝.
+              조기축구 5년차 총무가 직접 만들어 쓰는 앱. 현재 무료, 팀원 초대도 링크 하나면 끝.
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
               {kakaoButton}
