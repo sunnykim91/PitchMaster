@@ -64,11 +64,26 @@ PRESIDENT (회장) > STAFF (운영진) > MEMBER (일반 회원)
 
 ```
 하단 탭바: 홈 | 일정 | 기록 | 회비 | 더보기(Sheet)
-상단 햄버거: 전체 메뉴 Sheet (홈/경기/기록/회비/회원/게시판/회칙/설정)
+상단 햄버거: 전체 메뉴 Sheet (홈/경기/기록/회비/회원/게시판/회칙/설정/가이드)
 ```
 
 두 시스템이 공존하는 건 의도된 설계 (탭바=빠른이동, 햄버거=팀전환/설정).
 `src/app/(app)/ClientLayout.tsx`에 둘 다 구현되어 있음.
+
+### 햄버거 Drawer 구조 (2026-04-29 갱신)
+```
+프로필 (팀명·역할·이름)
+──────────────────────
+SidebarNav (홈/경기/기록/회비/회원/게시판/회칙/설정/가이드)
+[계정 섹션 레이블]
+  📩 피드백 보내기  (nav-row 스타일, mailto 열기)
+  🚪 로그아웃       (nav-row 스타일, hover 시 destructive)
+──────────────────────
+초대 코드 카드
+v{hash}
+```
+- 피드백/로그아웃은 SidebarNav와 동일한 nav-row 시각 언어 (`ghost`, `py-2.5 px-3`, icon+label)
+- 로그아웃: `POST /api/auth/logout` → `/login` redirect, `loggingOut` state로 버튼 비활성
 
 ---
 
@@ -262,10 +277,17 @@ MatchTacticsTab
 
 ## 알려진 코드 품질 이슈
 
-- **OCR 에러 이중 표시**: `setOcrStatus()` + `showToast()` 동시 발생
 - **stagger-children 딜레이**: 12번째 항목까지 360ms — 리스트 많으면 답답
 - **생일 confetti**: JSX div 6개로 하드코딩 (CSS pseudo-element로 대체 가능)
 - **스크린샷 경로**: `/screenshot/` vs `/screenshots/` 혼재
+
+## Supabase Realtime 구독 주의사항 (2026-04-29)
+
+- `useRealtimeSubscription` 사용 시 **반드시 filter 지정** (`match_id=eq.xxx` 등)
+- **filter 없는 전체 테이블 구독 절대 금지** — WAL 폴링이 전체 DB 시간의 86%를 점유하는 사고 발생 (2026-04-29)
+- 현재 안전한 구독: `MatchDetailClient.tsx` (3개 — 모두 `match_id=eq.${matchId}` 필터)
+- 제거된 위험 구독: `MatchesClient.tsx` match_attendance 전체 구독 (필터 없음)
+- 대안: 본인 액션 직후 refetch, 또는 window CustomEvent로 동기화
 
 ---
 
