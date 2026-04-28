@@ -369,27 +369,30 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       )}
       <Separator className="my-4" />
       <SidebarNav items={navItems} />
-      <Separator className="my-4" />
-      <div className="flex flex-col gap-1">
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full justify-start gap-2 text-muted-foreground"
+      <div className="mt-1 space-y-0.5">
+        <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">계정</p>
+        <button
+          type="button"
           onClick={handleFeedback}
+          className="flex w-full items-center justify-between rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-white/[0.03] hover:text-foreground"
         >
-          <MessageSquare className="h-4 w-4 shrink-0" />
-          피드백 보내기
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          <span className="flex items-center gap-2.5">
+            <MessageSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <span className="font-semibold">피드백 보내기</span>
+          </span>
+          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+        <button
+          type="button"
           onClick={handleLogout}
           disabled={loggingOut}
+          className="flex w-full items-center justify-between rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-destructive/5 hover:text-destructive disabled:opacity-50"
         >
-          <LogOut className="h-4 w-4 shrink-0" />
-          {loggingOut ? "로그아웃 중..." : "로그아웃"}
-        </Button>
+          <span className="flex items-center gap-2.5">
+            <LogOut className="h-4 w-4 shrink-0" />
+            <span className="font-semibold">{loggingOut ? "로그아웃 중..." : "로그아웃"}</span>
+          </span>
+        </button>
       </div>
       <Separator className="my-4" />
       <Card className="border-[hsl(var(--accent))]/20 bg-[hsl(var(--accent))]/5">
