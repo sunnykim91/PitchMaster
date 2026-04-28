@@ -140,3 +140,26 @@ vite.config.ts.timestamp-*
 
 # Claude Design 핸드오프 자산 (참조용, 로컬 전용)
 /project/
+
+# Tool metadata (도구 자동 생성)
+.serena/
+.agents/skills/
+.claude/skills/
+.claude/worktrees/
+
+# Working captures (작업 중 스크린샷·임시 자산)
+public/cardscreenshot/
+public/duelsscreenshot/
+public/newscreenshot/
+public/styles/
+public/v6.png
+public/전술판.png
+public/localhost_*.png
+public/screenshots/www.pitch-master.app_*.png
+
+# v0 design export (참조용)
+v0card/
+
+# 일회성 fix·migration 스크립트 (실행 후 의미 없음)
+scripts/fix-*.mjs
+scripts/run-migration-*.mjs

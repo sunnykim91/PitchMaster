@@ -1,7 +1,7 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=81팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-04-24
+last_updated: 2026-04-28
 related: [completed-recent.md, reviews.md]
 ---
 
@@ -12,31 +12,103 @@ related: [completed-recent.md, reviews.md]
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
 
-## HIGH — 29차 신규 추가 (2026-04-24)
+## HIGH — 32차 신규 추가 (2026-04-28)
 
-### v1.0.2 AAB 재빌드 + Play Console Alpha 업로드
-- [ ] TWA AAB 재빌드 (versionCode 올리기, 웹 변경사항 반영)
+### Meta 비즈니스 제한 — 검토 대기 (2026-04-28 발생)
+- [ ] **검토 결과 대기 중** (보통 1~7일, 대부분 1~3일)
+- [ ] 비즈니스 ID: `1455008159692614` (피치마스터)
+- [ ] 원인: redirect loop·로그인 재시도 반복으로 자동화 의심 분류 (사용자 잘못 X)
+- [ ] **현재 광고 자동 정지 + Meta Pixel 설치 불가 + 환불 자동 처리 예정**
+- [ ] **검토 기다리는 동안 절대 금지**: 페이스북·비즈니스 매니저 반복 로그인, 시크릿 창 우회, 다른 IP 시도 (검토 결과 악화)
+- [ ] 검토 통과 시 → Meta Pixel 설치 작업 재개 (아래 항목)
+
+### Meta Pixel 설치 (검토 통과 후 재개)
+- [ ] 비즈니스 매니저 → 이벤트 관리자 → ➕ 데이터 연결 → 웹 → Meta Pixel → 수동 설치
+- [ ] ⚠️ Vible(앱 데이터세트) 클릭 X / Shopify·파트너 통합 옵션 X
+- [ ] Pixel ID 16자리 받으면 코드 작업 (5분):
+  - `layout.tsx`에 `<Script>` 컴포넌트로 Meta Pixel base script 삽입 (`afterInteractive`)
+  - `analytics.ts`에 `fbq()` 호출 추가 (PageView·Lead·CompleteRegistration)
+- [ ] 참고: reference_meta_ads_setup.md
+
+### 랜딩 개선 (1순위 A — 다른 에이전트 작업 완료 후 재검토)
+- [ ] Hero/Sticky Header 이후 추가 개선 사항 협의
+- [ ] 다른 에이전트의 랜딩 작업이 완료·커밋된 후 착수 (충돌 방지)
+- [ ] 작업 전 `git status`로 미커밋 변경 반드시 확인
+
+### 네이버 서치어드바이저 사이트맵 재제출 (사용자 수동)
+- [ ] https://searchadvisor.naver.com/ 에서 www 제출 삭제
+- [ ] non-www(pitch-master.app) 도메인으로 사이트맵 재제출
+
+### UTM 파라미터 다음 광고에 적용
+- [ ] 인스타 광고 링크에 `?utm_source=instagram&utm_medium=paid&utm_campaign=YYYYMMDD` 추가
+- [ ] 카페 포스팅 링크에도 `?utm_source=naver_cafe&utm_medium=community` 적용
+
+## HIGH — 31차 신규 추가 (2026-04-28)
+
+### GA4 404 referrer 추적 + redirect 정비
+- [ ] GA4 탐색 분석에서 404 페이지 유입 소스 확인 (세션 소스/매체 + 페이지 경로 필터)
+- [ ] 오래된 외부 링크 → 실제 경로 redirect 추가 (`next.config.ts` redirects)
+- [ ] 대상 후보: `/public/guide.html` 등 legacy 경로
+- 배경: 이탈률 91.7% 페이지 GA4 보고서에서 발견. referrer 확인 후 조치 결정.
+
+### 광고/SEO 백로그 (2026-04-28 신규)
+**2순위 — 배포 대기 (사용자 직접 작업)**
+- [ ] v1.0.2 AAB 재빌드 + Play Console Alpha 업로드 (웹 코드 `c14ea2d`)
+- [ ] migration 00044 Supabase SQL Editor 수동 실행
+
+**3순위 — 알려진 미구현 (CLAUDE.md)**
+- [ ] 회비 선납 (6개월/1년) — UI·로직 모두 없음. 신규 기능 (3~5파일)
+- [ ] 회원 벌크 CSV 등록 — 한 명씩만 가능. 중간 작업 (2~3파일)
+- [ ] guide.html → Next.js 마이그레이션 — 883줄 정적 HTML 컴포넌트화 (장기)
+
+**4순위 — 코드 품질**
+- [ ] OCR 에러 이중 표시 (`setOcrStatus` + `showToast` 동시 발생) 정리
+- [ ] 생일 confetti CSS pseudo-element 리팩토링 (현재 div 6개 하드코딩)
+- [ ] 스크린샷 경로 통일 (`/screenshot/` vs `/screenshots/`)
+
+**SEO 장기 — 광고 안정화 후**
+- [ ] 랜딩 텍스트 SEO 키워드 보강 (HeroSection·FeaturesSection·FaqSection 등)
+  - "조기축구 팀관리", "풋살 매니저 앱", "조기축구 회비 관리" 등 롱테일 키워드 자연스럽게 포함
+  - h1/h2 구조 강화
+- [ ] velog 1·2편 게시 + 카페 게시 (초안: docs/blog-post-1·2-draft.md, marketing-cafe-post.md)
+- [ ] /login 콘텐츠를 / 로 통합 (현재 / 는 redirect만 — 색인 효율 떨어짐)
+
+## HIGH — 30차 후반부 신규 추가 (2026-04-25)
+
+### v1.0.3 빌드 + Alpha 업로드 (5/2~3 목표)
+- [ ] 상대팀 전적 UI + 개인 출석 히트맵 포함 (코드 완료: `ac5f2aa`)
+- [ ] TWA AAB 재빌드 (versionCode=7, versionName=1.0.3)
 - [ ] Play Console Alpha 트랙 업로드
-- [ ] 릴리스 노트 작성 (팀 앨범·월별 결산·게시판 통합·투표 마감 UX 개선)
+
+### 5/8 프로덕션 재신청
+- [ ] 증빙 자료 준비: 테스터 수(12명+)·버전 이력(v1.0.1/1.0.2/1.0.3)·피드백 건수 정성 작성
+
+### 인스타 광고 2차 사이클 개선
+- [ ] 첫 3초 후킹 강화 (현재 시청률 23%, 목표 30%+)
+- [ ] UTM 파라미터 적용 (`?utm_source=instagram&utm_medium=paid&utm_campaign=...`)
+
+### 온보딩 가입 경로 1문항 추가
+- [ ] "어디서 알게 됐나요?" (조기축구 카페 / 인스타 광고 / 지인 소개 / 구글 검색 / 기타)
+
+## HIGH — 29차 신규 추가 (2026-04-24) — 일부 완료
+
+### ~~v1.0.2 AAB 재빌드 + Play Console Alpha 업로드~~ ✅ 완료 (4/25 23:16)
+- [x] TWA AAB 재빌드 versionCode=6, Play Console Alpha 업로드, 12명 테스터 자동 배포
 
 ### migration 00044 Supabase 적용 ← (구 00042, 번호 충돌로 리네임)
 - [ ] `penalty_records` PARTIAL UNIQUE INDEX (match_id, rule_id, member_id)
 - [ ] Supabase SQL Editor에서 수동 실행 필요
 - 참고: `fdfed72` 에서 00042/43 → 00044/45 리네임 완료 (번호 충돌 해소)
 
-### ~~선수 프로필 주발 표시~~ ✅ 완료 (커밋 `1ff3dde`, 2026-04-24)
-- [x] 오른발/왼발/양발 — /player/[memberId] 프로필 카드 표시 완료
-
 ## HIGH — 27차 신규 추가 (2026-04-23)
 
 ### Play Console 프로덕션 재신청 대응 (14일 테스트)
 
-- [ ] v1.0.1 AAB Alpha 트랙 업로드 (파일: `C:\dev\pitchmaster-twa\app-release-bundle.aab`)
-- [ ] 기존 테스터에게 재참여 카톡 공지 (`docs/play-console-v1.0.1-release.md` 3절 템플릿)
-- [ ] 4/28~29 v1.0.2 중간 릴리스 (피드백 반영 버그픽스)
-- [ ] 5/2~3 v1.0.3 릴리스
+- [x] v1.0.1 AAB Alpha 업로드 (4/23)
+- [x] v1.0.2 AAB Alpha 업로드 (4/25)
+- [ ] 5/2~3 v1.0.3 릴리스 (코드 완료)
 - [ ] 5/6~7 v1.0.4 최종 안정화
-- [ ] 5/8 프로덕션 액세스 재신청 (증빙: 테스터 수·피드백 건수·버전 이력)
+- [ ] 5/8 프로덕션 액세스 재신청 (증빙: 테스터 수·피드백 건수·버전 이력·정성 작성)
 
 ### 홍보 영상 제작 (12컷 스토리보드 기반)
 

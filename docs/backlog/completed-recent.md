@@ -1,12 +1,97 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~30차)
-summary: 2026-04-11~24 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정
-sections: [30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-04-24
+title: 개선 백로그 — 최근 완료 (16~32차)
+summary: 2026-04-11~28 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리
+sections: [32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-04-28
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~30차)
+# 최근 완료 (16~32차)
+
+## 32차 (2026-04-28) — 광고 ROI 측정 이벤트 완성 + SEO 안정화 + OCR UX 정리
+
+**SEO 인프라 안정화**
+- [x] robots.ts 인증 영역(/dashboard, /matches 등) disallow 적용 — `225187a`
+- [x] canonical 페이지별 명시(/login·/privacy·/terms·/guide) — `9dba6d9`
+- [x] CLAUDE.md 협업 규칙 4번 추가(인프라 영향 설정 사전 확인) — `b58ea4b`
+
+**사고: www→non-www redirect 라이브 다운**
+- `225187a`에서 next.config redirects()에 www→non-www 1줄 추가 → Vercel/Cloudflare 핑퐁 → ERR_TOO_MANY_REDIRECTS 전체 다운
+- `963b725`로 즉시 revert 복구
+- 교훈: Vercel+Cloudflare 환경에서 인프라 처리 여부 미확인하고 코드 추가 금지
+
+**GA4 이벤트 완성 (analytics.ts 13개 전부 호출 박힘)**
+- [x] team_join / onboarding_complete / push_toggle / pwa_install 4종 추가 — `10bd479`
+
+**OCR UX 알림 이중 표시 제거**
+- [x] setOcrStatus + showToast 페어 → ocrStatus 영역 단일 노출으로 통일 — `37f4fb2`
+
+**분석(코드 변경 없음)**
+- GA4 화면 해석: (not set) 소스 원인 = App Router SPA 구조 + send_page_view 미비활성 (31차에서 수정됨)
+- Search Console: 색인 4개 → www/non-www 분산 + 인증 영역 크롤 원인. robots.ts 수정으로 개선 예상
+- 네이버 서치어드바이저: 색인 0개 → www 도메인으로 잘못 제출. non-www 재제출 필요(사용자 수동)
+- Meta Ads 1차 캠페인 분석: ₩172/프로필 방문(효율적), 3초 재생률 23%(미달), 5팀 가입 ₩1,517/팀
+- Meta Pixel 설치 시도: 페이스북 로그인 redirect 차단 이슈로 보류 → 다음 광고 사이클 전 재시도
+
+**삽질·보류**
+- www→non-www redirect 코드 추가 → 라이브 다운 (상세: feedback_infra_redirect_risk.md)
+- Meta Pixel 설치 — UI가 "픽셀" 대신 "데이터세트"로 변경되어 경로 혼동 + 페이스북 로그인 차단으로 보류
+
+## 31차 (2026-04-28) — 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정
+
+**라이트 모드 색상 대비 (접근성)**
+- [x] 전술판 미매칭 이름 셀: `bg-black/70` 위 텍스트를 `text-foreground` → `text-white`로 수정 — `ffdc7c6`
+- [x] 심판/촬영 라벨, AutoFormationBuilder POS_COLOR 13개, GK 칩/인디케이터 총 17곳: `text-{color}-400` → `text-{color}-700 dark:text-{color}-400` — `1b49ee8`
+
+**삽질:** 1차 수정 후 커밋만 하고 푸시 안 해 사용자가 라이브에서 변화를 못 봄. 동일 피드백 두 번 수신 후 푸시.
+
+**OCR 회비 일괄 등록 (DuesBulkTab.tsx)**
+- [x] AI Haiku Vision을 메인 경로로 전환, Clova는 폴백 — `b282ba3`
+- [x] `time_missing` 단독은 정상 분류, 잔고는 첫 번째(최신) 사용, 중복 체크는 description 첫 단어(이름) 기준으로 완화 — `7bf9e72`
+
+**역할 가이드 ID 매핑 수정 (MatchRoleGuide.tsx)**
+- [x] `AttendingPlayer`에 `userId?` / `memberId?` 양쪽 보존 — `b918d1a`
+- [x] `currentMemberAttended`: attendance status OR vote=ATTEND 중 하나면 참석으로 인정 — `2da84c0`
+
+**GA4 App Router page_view 수정 (GAPageTracker.tsx 신규)**
+- [x] `gtag config`의 `send_page_view: false` + `GAPageTracker`(usePathname 변화 감지) 직접 발화 — `2a1265c`
+- [x] GA4 보고서 (not set) 소스 원인 해소
+
+**CLAUDE.md 협업 규칙 추가**
+- [x] 큰 변경 사전 확인, 모듈화 원칙, 모호하면 확인 3종 추가 — `d632232`
+
+## 30차 후반부 (2026-04-25) — v1.0.2 AAB 업로드 + 푸시 인프라 + v1.0.3 코드 사전 + 광고 분석
+
+**선수 프로필 주발 표시** (커밋 `1ff3dde`)
+- [x] /player/[memberId] 쿼리에 preferred_foot 추가, 히어로 subtitle 에 "오른발/왼발/양발" 표시
+
+**MVP 푸시 + OVR 변동 알림 인프라** (커밋 `131308c` → `c5731a6` → `4e17874`)
+- [x] migration 00045: matches.mvp_push_sent_at + team_members.last_ovr (백필 포함)
+- [x] processMatchCompletedPush.ts / computeSeasonOvr.ts / /api/cron/match-completed-push
+- [x] autoCompleteTeamMatches 즉시 트리거 + vercel.json cron 등록
+
+**역할 가이드 푸시** (커밋 `255733b`)
+- [x] migration 00046: matches.role_guide_push_sent_at + 백필
+- [x] processRoleGuidePush.ts: vote_deadline 후 ATTEND 투표자별 개인 푸시 ("2쿼터 RCB" 구체)
+- [x] 랜딩 FeaturesSection 역할 가이드 스포트라이트 신설
+
+**마이그레이션 번호 충돌 수정** (커밋 `fdfed72`)
+- [x] 00042/43 → 00044/45 리네임 (번호 충돌 수습)
+
+**v1.0.2 TWA AAB + Play Console 업로드** (사용자 수동)
+- [x] versionCode=6, versionName=1.0.2, Play Console Alpha 업로드 (4/25 23:16), 12명 테스터 자동 배포
+
+**v1.0.3 코드 사전 완료** (커밋 `ac5f2aa`)
+- [x] /api/team-stats/opponent + OpponentHistoryCard.tsx (경기 상세 정보 탭)
+- [x] AttendanceHeatmap 컴포넌트 (15셀, 색상 4종)
+
+**카페 3편 + 인스타 광고 효과 분석**
+- [x] 카페 3편 작성 (AI 코칭 포함 재수정), 4/27~28 신규 5팀 가입 확인 (₩1,517/팀)
+
+**사고 기록**
+- mvp_push_sent_at 백필 누락 → 과거 경기 전체 푸시 폭탄 → 긴급 수습 (feedback_push_cron_backfill.md 신규)
+- 카페 3편 1차에서 AI 코칭 누락 → 재작성 (feedback_release_notes_critical_features.md 신규)
+- 마이그레이션 번호 충돌 재발 (동일 세션, 메모리 저장 후에도)
 
 ## 30차 (2026-04-24) — 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정
 
