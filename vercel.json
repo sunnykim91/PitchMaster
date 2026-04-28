@@ -4,7 +4,7 @@
       "main": true
     }
   },
-  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- ':(exclude)docs' ':(exclude)*.md' ':(exclude)scripts' ':(exclude)public/screenshots' ':(exclude)public/screenshot' ':(exclude)public/cardscreenshot' ':(exclude)public/duelsscreenshot' ':(exclude)public/newscreenshot' ':(exclude).claude' ':(exclude).serena' ':(exclude).agents' ':(exclude)e2e' ':(exclude)src/__tests__' ':(exclude).github' ':(exclude)v0' ':(exclude)v0card' ':(exclude)public/styles' ':(exclude)public/*.png'",
+  "ignoreCommand": "bash scripts/vercel-ignore.sh",
   "crons": [
     {
       "path": "/api/cron/vote-reminder",
