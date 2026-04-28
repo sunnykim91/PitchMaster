@@ -4,10 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Minus } from "lucide-react";
 
 const rows = [
-  { feature: "참석 투표", pm: "실시간 자동 집계 + 마감 자동 알림", other: "수동 집계 / 갠톡 추적" },
-  { feature: "AI 라인업·전술 편성", pm: "참석자·기록·상대 이력 반영 자동 설계", other: null },
+  { feature: "참석 투표", pm: "링크 1개 → 다음 6경기 한 번에 응답 + 마감 자동 알림", other: "경기마다 새 투표 / 갠톡 추적" },
+  { feature: "AI 라인업·전술 편성", pm: "팀 기록·상대팀 이력·참석자 분석해 포메이션 추천", other: null },
   { feature: "AI 감독 코칭", pm: "편성 근거·고비 쿼터·공격 루트 자동 브리핑", other: null },
-  { feature: "회비 OCR", pm: "통장 캡처 한 장으로 이름·금액 자동 매칭", other: "엑셀 / 메모 수기" },
+  { feature: "공정 쿼터 로테이션", pm: "벤치 편중 자동 분배, 출전 시간 균형", other: null },
+  { feature: "회비 OCR + 휴면 면제", pm: "은행 앱 캡처 자동 매칭 + 휴면·부상 회원 자동 면제", other: "엑셀 / 메모 수기" },
   { feature: "자동 경기 후기", pm: "경기 종료 즉시 한 문장 후기 자동 생성", other: null },
   { feature: "선수 카드 & 시즌 어워드", pm: "FIFA 스타일 카드 + 7종 자동 시상", other: null },
   { feature: "PC·모바일", pm: "브라우저로 어디서나, 설치 없이", other: "앱 전용" },

@@ -7,20 +7,20 @@ const comparisons = [
   {
     icon: MessageSquare,
     title: "참석 확인",
-    before: { text: "카톡에 물어보고, 읽씹, 결국 갠톡", time: "30분" },
-    after: { text: "링크 하나 → 실시간 자동 집계", time: "30초" },
+    before: { text: "경기마다 카톡 투표, 읽씹, 결국 갠톡 추적", time: "30분" },
+    after: { text: "링크 1개 → 다음 6경기 한 번에 응답·자동 집계", time: "30초" },
   },
   {
     icon: CreditCard,
     title: "회비 정산",
-    before: { text: "통장 캡쳐 → 엑셀 → 이름 대조", time: "30분" },
-    after: { text: "캡쳐 올리면 AI가 자동 인식·매칭", time: "1분" },
+    before: { text: "통장 캡쳐 → 엑셀 → 이름 대조 → 부상자 면제 수기 처리", time: "30분" },
+    after: { text: "은행 앱 캡처 한 장으로 자동 매칭 + 휴면·부상 자동 면제", time: "1분" },
   },
   {
     icon: LayoutGrid,
     title: "선수 배치",
     before: { text: "경기장 도착 후 즉석 편성 + '왜 나만 수비?' 클레임", time: "20분" },
-    after: { text: "선호 포지션 기반 자동 배치 + AI 감독 코칭", time: "3초" },
+    after: { text: "팀 기록·상대 이력 기반 AI 추천 + 공정 쿼터 로테이션", time: "3초" },
   },
 ];
 
