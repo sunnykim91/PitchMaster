@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "이용약관 — PitchMaster",
+  alternates: {
+    canonical: "https://pitch-master.app/terms",
+  },
 };
 
 export default function TermsPage() {
