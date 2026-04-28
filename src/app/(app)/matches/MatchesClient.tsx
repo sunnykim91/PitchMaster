@@ -20,7 +20,6 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
 import { shareVoteLink } from "@/lib/kakaoShare";
 import { EmptyState } from "@/components/EmptyState";
 import { MatchCalendar } from "@/components/MatchCalendar";
@@ -125,13 +124,6 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     loading: attendanceLoading,
     refetch: refetchAttendance,
   } = useApi<{ attendance: DbAttendance[] }>("/api/attendance", { attendance: [] });
-
-  // 실시간 참석 투표 동기화
-  useRealtimeSubscription({
-    table: "match_attendance",
-    events: ["INSERT", "UPDATE"],
-    onchange: () => refetchAttendance(),
-  });
 
   const defaults = SPORT_DEFAULTS[sportType];
   const isFutsal = sportType === "FUTSAL";
