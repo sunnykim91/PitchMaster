@@ -19,13 +19,18 @@ export async function processMatchCompletedPush(
   matchIds?: string[],
 ): Promise<{ matches: number; mvpSent: number; ovrSent: number; teamsProcessed: number }> {
   // 대상 경기 조회 (EVENT 제외)
+  // 7일 이상 지난 경기는 발송 스킵 — mvp_push_sent_at 백필 누락이나 cron 지연으로 옛 경기가
+  // 갑자기 푸시되는 사고 방지 (2026-04-29 FCMZ 풋살 4/19 자체전 10일 늦게 발송 사례)
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   let query = db
     .from("matches")
-    .select("id, team_id, match_date, opponent_name, match_type, stats_included")
+    .select("id, team_id, match_date, opponent_name, match_type, stats_included, teams(name)")
     .eq("status", "COMPLETED")
     .is("mvp_push_sent_at", null)
-    .neq("match_type", "EVENT");
+    .neq("match_type", "EVENT")
+    .gte("match_date", sevenDaysAgo);
   if (matchIds && matchIds.length > 0) {
+    // 명시적 matchIds 호출은 7일 가드 우회 (autoCompleteTeamMatches 직후 호출용)
     query = query.in("id", matchIds);
   }
   const { data: matches } = await query;
@@ -45,6 +50,7 @@ export async function processMatchCompletedPush(
     opponent_name: string | null;
     match_type: string | null;
     stats_included: boolean | null;
+    teams: { name: string } | { name: string }[] | null;
   }>) {
     // 멱등 claim
     const { data: claimed } = await db
@@ -57,12 +63,17 @@ export async function processMatchCompletedPush(
     if (!claimed) continue;
 
     // MVP 투표 시작 팀 전체 푸시
+    // 카피: "오늘" 키워드 제거 + 팀명·경기 날짜 명시 (다중 팀 멤버 헷갈림 방지, 옛 경기 발송 시 오해 방지)
     const opponent = match.match_type === "INTERNAL"
       ? "자체전"
       : (match.opponent_name ?? "상대팀");
+    const teamObj = Array.isArray(match.teams) ? match.teams[0] : match.teams;
+    const teamName = teamObj?.name ?? "";
+    const dateLabel = match.match_date.slice(5); // "MM-DD"
+    const teamPrefix = teamName ? `[${teamName}] ` : "";
     const mvpPush = await sendTeamPush(match.team_id, {
       title: "🏆 MVP 투표 시작",
-      body: `오늘 vs ${opponent} 경기의 MVP를 뽑아주세요!`,
+      body: `${teamPrefix}${dateLabel} vs ${opponent} MVP를 뽑아주세요!`,
       url: `/matches/${match.id}?tab=record`,
     });
     mvpSent += mvpPush.sent;
