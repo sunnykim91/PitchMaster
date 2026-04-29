@@ -1,12 +1,92 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~33차)
-summary: 2026-04-11~28 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리
-sections: [33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-04-28
+title: 개선 백로그 — 최근 완료 (16~36차)
+summary: 2026-04-11~29 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증
+sections: [36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-04-29
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~33차)
+# 최근 완료 (16~36차)
+
+## 36차 (2026-04-29) — 부심 기능 + OCR X 삭제 + 회장 권한 보호 + 풋살 sport_type fix + 광고 3차 셋업
+
+**커밋 8개 (메인 직접 푸시 완료)**
+
+**부심 역할 추가 (210c687)**
+- [x] 메타 슬롯 키 추가: 주심(referee) + 부심1(assistant_referee_1) + 부심2(assistant_referee_2) + 촬영(camera)
+- [x] 기존 "심판" 워딩 → "주심"으로 일괄 변경
+
+**CLAUDE.md 통계 수치 정정 (e140bc4)**
+- [x] "82개 팀, 647+ 명" 고정 수치 제거 → Supabase 직접 조회 안내로 교체
+- [x] 기존 `reference_pitchmaster_stats.md` 최신 수치(90팀·737명, 4/29 기준) 반영
+
+**회장 0명 방지 다층 방어 (d62a72f)**
+- [x] PUT /api/members: 본인 강등 차단 + 다른 PRESIDENT 강등 차단
+- [x] DELETE /api/members: PRESIDENT 강퇴 차단
+- [x] POST /api/account/withdraw: 회장직 보유 시 탈퇴 409 차단
+- [x] MembersClient: STAFF·MEMBER 강등에도 confirm 추가 + Select h-8→h-10 터치 타겟 개선
+- 계기: 이샛별 데프스피릿FC 가입 12분 만에 회장→탈퇴 사고 (모바일 오터치 추정)
+
+**랜딩 TestimonialsSection 동적 수치 + ComparisonSection 태블릿 호환 (c214df0)**
+- [x] 다른 에이전트 작업분 흡수 후 main 푸시
+
+**OCR 스크린샷 X 삭제 버튼 (544c871)**
+- [x] 미리보기 이미지에 X 버튼 추가 → 사용자 재선택 가능
+
+**풋살팀 sport_type 버그 수정 3회차 (3c717b5 → bad7943 → 26c57ad)**
+- [x] 1차 (3c717b5): SSR useMemo 경로 수정 → 배포 후 재현
+- [x] 2차 (bad7943): 팀 전환 sport_type 미반영 수정 → 배포 후 재현
+- [x] 3차 (26c57ad, 최종): **useApi fallback 객체에 sport_type·default_player_count 누락이 진짜 원인**
+  - skip: hasInitialData=true 라 fetch 미실행 → fallback이 그대로 teamApiData 됨
+  - fallback 누락 필드 → undefined → mapTeamResponse가 SOCCER 기본값으로 떨어뜨림
+  - 포메이션 동적 노출 + sport_type 서버 검증(풋살 3~6·축구 8~11) 동시 추가
+- [x] 기존 비표준 데이터 3건(야로수·FC워리어스 등) 수동 SQL 보정
+
+**인스타 3차 광고 셋업 가이드 (코드 변경 없음)**
+- ₩2,500×2일=₩5,000 검증 캠페인
+- UTM: `utm_source=instagram&utm_medium=paid&utm_campaign=20260429_hook&utm_content=11s_v1`
+- Facebook 페이지 → PitchMaster 변경, 기존 게시물 활용, 광고 최적화 지수 98
+
+**GA4 광고 분석 (코드 변경 없음)**
+- 1차 ₩7,583/5팀(₩1,517) → 2차 ₩13,594/7팀(₩1,942)
+- team_create 1회 vs Supabase 7팀 = 6개 누락 (카카오 인앱 useEffect 미실행)
+- 가입 측정: Supabase 직접 조회만 신뢰
+- 유입 소스: (direct) 70% / l.instagram.com 15 / hero 9 / cafe.daum.net 4
+
+**삽질·반성**
+- useApi fallback 누락 → 3회 fix 시도, 사용자 30분+ 시간 낭비
+  - 1·2차: SSR 경로만 봄. 클라이언트 fetch fallback 경로 놓침
+  - 콘솔 디버깅("teamApi_sport_type: undefined") 으로 진짜 원인 확정
+  - 교훈: "SSR 정상·클라 깨짐" → 즉시 양쪽 동시 점검 + 추정 fix 1회 후 재발하면 콘솔 제안
+- 회장 보호: 권한 변경만 막고 탈퇴·강퇴 경로는 나중에 추가 → 전체 경로 동시 점검 필요했음
+- sport_type 검증 추가 전에 비표준 데이터 이미 3건 저장됨 → 검증+백필 동시 진행이 정석
+
+## 35차 (2026-04-28~29) — SEO 최종 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 마케팅 분석
+
+**커밋 4개 (6b1ff29·2d32c4e는 main 푸시 완료, f261690·추가는 푸시 완료)**
+
+**푸시 카피 정정 + 옛 경기 발송 차단 (6b1ff29·2d32c4e)**
+- [x] MVP 푸시 카피: "오늘 vs X" → "[팀명] vs X 경기 MVP" (다중 팀 회원 혼동 방지)
+- [x] 역할 가이드 푸시 카피 동일 정정
+- [x] MVP·역할 가이드 cron 양쪽에 `match_date >= NOW() - INTERVAL '7 days'` 가드 추가
+- 원인: 4/19 FCMZ 풋살 INTERNAL 경기 `mvp_push_sent_at` 백필 누락 → 10일 후 cron에서 발송
+
+**Supabase Realtime WAL 폭발 수정 (f261690)**
+- [x] `MatchesClient.tsx` 전체 테이블 무필터 구독 제거 → Supabase WAL CPU 86% → 전 사용자 응답 지연 해소
+- 교훈: Realtime 구독은 반드시 `match_id=eq.xxx` 같은 filter 지정 (feedback_realtime_filter_required.md)
+
+**마케팅 분석 (코드 변경 없음)**
+- 2차 광고(4/26~29): ₩13,594 지출, 실 신규 팀 7개, 팀당 ₩1,942
+- 3초 재생률 22.6% — 2차 연속 22~24% 정체, 영상 첫 1~2초 후킹 재설계 필요
+- GA4 `team_create` 1회 vs Supabase 7팀 불일치 → 카카오 인앱 누락 확인 (feedback_ga_funnel_unreliable.md)
+- velog 1·2·3편 게시 완료(사용자), 티스토리 152·153 도메인·카테고리 정정(사용자)
+- 네이버 서치어드바이저 non-www 사이트맵 재제출(사용자)
+- Supabase Query Performance 점검: 74% 쿼리는 Realtime 백그라운드 + Cache hit 100%
+
+**삽질·반성**
+- 옛 경기 푸시 발송: 4/24 백필 누락(mvp_push_sent_at) 잔재가 4/29 터짐 → 7일 가드 패턴 표준화
+- Realtime 전체 테이블 구독 → WAL 폭탄: 리스트 화면에 Realtime 부적합, SSR + pull-to-refresh 권장
+- GA4 team_create 1회 → 실제 7팀 미인치 오차 → 가입자 측정은 Supabase 직접 조회만 신뢰
 
 ## 34차 (2026-04-28) — SEO 안정화 + GA4 이벤트 완성 + PWA 아이콘 픽셀 수정 + 마케팅 분석
 

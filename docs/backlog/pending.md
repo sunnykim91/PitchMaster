@@ -1,14 +1,14 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
-summary: 우선순위별 미완료 항목 정리. HIGH=81팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-04-28
+summary: 우선순위별 미완료 항목 정리. HIGH=89팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
+last_updated: 2026-04-29
 related: [completed-recent.md, reviews.md]
 ---
 
 # 미완료 백로그
 
 우선순위 기준:
-- **HIGH**: 현재 81팀 운영에 직접 영향
+- **HIGH**: 현재 89팀 운영에 직접 영향
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
 
@@ -17,6 +17,20 @@ related: [completed-recent.md, reviews.md]
 ### ~~PWA/앱 아이콘 모서리 흰 영역 제거~~ ✅ 완료 (1ac37cb, 34차)
 - [x] scripts/fill-icon-bg.mjs로 icon-192·512·maskable-192·512 픽셀 변환 완료
 - [ ] TWA AAB 재빌드 시점에 Android 적응형 아이콘도 같이 갱신 (아직 미완)
+
+### ~~옛 경기 푸시 카피 정정 + 7일 가드~~ ✅ 완료 (6b1ff29·2d32c4e, 35차)
+- [x] MVP·역할 가이드 cron 카피 팀명 prefix 추가
+- [x] match_date 7일 가드 적용
+
+### ~~Realtime 전체 테이블 무필터 구독 제거~~ ✅ 완료 (35차)
+- [x] MatchesClient.tsx 무필터 구독 제거 → WAL CPU 86% 해소
+
+### ~~OCR 스크린샷 삭제 버튼 누락~~ ✅ 완료 (544c871, 36차)
+- [x] 미리보기 X 삭제 버튼 추가
+
+### ~~풋살팀 sport_type 설정 화면 버그~~ ✅ 완료 (26c57ad, 36차)
+- [x] useApi fallback 객체 누락 필드 추가 (진짜 원인)
+- [x] sport_type 서버 검증 + 기존 비표준 데이터 보정
 
 ## HIGH — 33차 신규 추가 (2026-04-28) — 랜딩 추가 디자인
 
@@ -38,9 +52,42 @@ related: [completed-recent.md, reviews.md]
 - [ ] 카페 글·인스타 광고에서 "휴면·부상 자동 면제"·"AI 전술 감독" 강조 톤을 랜딩과 통일
 - [ ] 아직 v1 카피인 나머지 섹션에 사실 기반 차별화 카피 반영 여부 검토 (특히 BeforeAfter·Comparison)
 
+## HIGH — 36차 신규 추가 (2026-04-29)
+
+### 인스타 3차 광고 결과 분석 (5/1 종료 후)
+- [ ] Supabase 신규 팀 수 직접 조회 (4/29~5/1 기간 필터)
+- [ ] UTM 파라미터 적용 첫 광고 → GA4 소스 추적 확인
+- [ ] 3초 재생률 22~24% 정체 개선 여부 확인 (목표 30%+)
+
+### ~~회장 0명 방지 다층 방어~~ ✅ 완료 (d62a72f, 36차)
+- [x] 강등·강퇴·탈퇴 3경로 모두 차단 완료
+
+### 야로수/FC워리어스 default_player_count 안내 (선택)
+- [ ] 회장들에게 팀 설정에서 기본 인원을 풋살 인원(5~6명)으로 재설정 안내
+- [ ] 이미 수동 SQL 보정 완료 — 앱 재확인 정도만 필요
+
+## HIGH — 35차 신규 추가 (2026-04-29)
+
+### GA4 가입 퍼널 발화 안정화 (카카오 인앱 누락 해소)
+- [ ] 현 상태: `team_create`·`team_join`·`onboarding_complete` 카카오 인앱에서 누락 (4/29 확인)
+- [ ] 옵션 A: Server Action에서 GA Measurement Protocol 직접 호출 (서버 사이드 발화)
+- [ ] 옵션 B: redirect 후 즉시 동기 fetch로 GA 이벤트 전송
+- [ ] 참고: feedback_ga_funnel_unreliable.md
+
+### 광고 소재 후킹 강화 (3차 캠페인 전)
+- [ ] 첫 1~2초 페인포인트 직접 후킹: "카카오톡 단체방 공지 밀렸죠?" 등
+- [ ] 2차 연속 3초 재생률 22~24% — 30%+ 목표
+- [ ] UTM 적용 필수 (`?utm_source=instagram&utm_medium=paid&utm_campaign=YYYYMMDD`)
+
+### v1.0.3 AAB 재빌드 + Play Console Alpha 업로드 (5/2~3 목표)
+- [ ] TWA AAB 재빌드 (versionCode=7, versionName=1.0.3)
+- [ ] Android 적응형 아이콘 #0a0c10 갱신 포함
+- [ ] Play Console Alpha 트랙 업로드
+
 ## HIGH — 34차 신규 추가 (2026-04-28)
 
 ### velog/블로그 게시 후속 작업
+- [x] velog 1·2·3편 게시 완료 (사용자, 4/29)
 - [ ] velog 프로필 정비 (소개·링크 업데이트)
 - [ ] GeekNews 제출 (1~2차 velog 글 기반)
 - [ ] Threads 스레드 — 랜딩 v2 + velog 연동 게시
