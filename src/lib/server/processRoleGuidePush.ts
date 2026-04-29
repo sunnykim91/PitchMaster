@@ -26,16 +26,21 @@ export async function processRoleGuidePush(
   matchIds?: string[],
 ): Promise<{ matches: number; sent: number; teamsProcessed: number }> {
   const nowIso = new Date().toISOString();
+  // 7일 이상 지난 경기는 발송 스킵 — role_guide_push_sent_at 백필 누락이나 cron 지연으로
+  // 옛 경기가 갑자기 푸시되는 사고 방지 (MVP 푸시와 동일 정책)
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
   let query = db
     .from("matches")
-    .select("id, team_id, match_date, match_time, opponent_name, match_type, vote_deadline")
+    .select("id, team_id, match_date, match_time, opponent_name, match_type, vote_deadline, teams(name)")
     .eq("status", "SCHEDULED")
     .is("role_guide_push_sent_at", null)
     .not("vote_deadline", "is", null)
     .lte("vote_deadline", nowIso)
-    .neq("match_type", "EVENT");
+    .neq("match_type", "EVENT")
+    .gte("match_date", sevenDaysAgo);
   if (matchIds && matchIds.length > 0) {
+    // 명시적 matchIds 호출은 7일 가드 우회
     query = query.in("id", matchIds);
   }
   const { data: matches } = await query;
@@ -54,6 +59,7 @@ export async function processRoleGuidePush(
     opponent_name: string | null;
     match_type: string | null;
     vote_deadline: string;
+    teams: { name: string } | { name: string }[] | null;
   }>) {
     // 멱등 claim
     const { data: claimed } = await db
@@ -106,6 +112,10 @@ export async function processRoleGuidePush(
     const opponent = match.match_type === "INTERNAL"
       ? "자체전"
       : (match.opponent_name ?? "상대팀");
+    // 팀명 prefix — 다중 팀 멤버 헷갈림 방지
+    const teamObj = Array.isArray(match.teams) ? match.teams[0] : match.teams;
+    const teamName = teamObj?.name ?? "";
+    const teamPrefix = teamName ? `[${teamName}] ` : "";
 
     // 4) 유저별 푸시 발송
     for (const userId of attendingUserIds) {
@@ -130,14 +140,14 @@ export async function processRoleGuidePush(
       let body: string;
       if (personalRole) {
         title = "⚽ 경기 역할 안내";
-        body = `${match.match_date.slice(5)} ${matchTimeLabel} vs ${opponent} · ${personalRole.quarter}쿼터 ${personalRole.slot}`;
+        body = `${teamPrefix}${match.match_date.slice(5)} ${matchTimeLabel} vs ${opponent} · ${personalRole.quarter}쿼터 ${personalRole.slot}`;
       } else if (hasSquad) {
         // 편성은 있는데 내가 없음 (벤치 대기)
         title = "⚽ 경기 준비";
-        body = `${match.match_date.slice(5)} ${matchTimeLabel} vs ${opponent} · 벤치 대기 예정`;
+        body = `${teamPrefix}${match.match_date.slice(5)} ${matchTimeLabel} vs ${opponent} · 벤치 대기 예정`;
       } else {
         title = "⚽ 투표 마감";
-        body = `${match.match_date.slice(5)} ${matchTimeLabel} vs ${opponent} · 편성 준비 중 · 내 예상 역할 확인`;
+        body = `${teamPrefix}${match.match_date.slice(5)} ${matchTimeLabel} vs ${opponent} · 편성 준비 중 · 내 예상 역할 확인`;
       }
 
       const push = await sendTeamPush(match.team_id, {
