@@ -137,8 +137,9 @@ function MatchInfoTabInner({
   } | null>(initialWeather ?? null);
 
   useEffect(() => {
-    // initialWeather가 있으면 서버에서 이미 조회됨 → 클라 재fetch 불필요
-    if (initialWeather !== undefined) return;
+    // initialWeather가 객체면 SSR이 정상 조회 → 재fetch 불필요
+    // null 이면 SSR 시점 KST 자정 경계·OpenWeather forecast 끝단 등으로 실패 → 클라에서 보강 fetch
+    if (initialWeather) return;
     if (match.status === "COMPLETED") return;
     if (!match.date) return;
 
