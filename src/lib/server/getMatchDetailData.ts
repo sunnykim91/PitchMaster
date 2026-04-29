@@ -30,11 +30,12 @@ export async function getMatchDetailData(matchId: string, teamId: string, _enabl
   ]);
 
   // 날씨 prefetch — 미래 경기(≤5일)만 실제 호출, 아니면 null
-  // COMPLETED 경기는 호출 생략
+  // COMPLETED 경기는 호출 생략. DB 컬럼은 match_date (클라 변환 전).
   const match = matchRes.data;
+  const matchDate = (match as { match_date?: string } | null)?.match_date;
   let weather: Awaited<ReturnType<typeof getWeatherData>> = null;
-  if (match && match.status !== "COMPLETED" && match.date) {
-    weather = await getWeatherData(match.date, match.location ?? "");
+  if (match && match.status !== "COMPLETED" && matchDate) {
+    weather = await getWeatherData(matchDate, match.location ?? "");
   }
 
   // AI 경기 후기 — 캐시된 값만 SSR에서 반환. 첫 생성은 클라이언트 MatchDiaryTab 에서 트리거.
