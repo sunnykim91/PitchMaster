@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
+import { formationTemplates } from "@/lib/formations";
 import { cn } from "@/lib/utils";
 import { toKoreanError } from "@/lib/errorMessages";
 import TeamLogo from "@/components/TeamLogo";
@@ -514,26 +515,44 @@ function TeamSettingsComponent({
             <div className="rounded-xl border border-border p-4 space-y-3">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">기본 포메이션</p>
               <p className="text-xs text-muted-foreground">자동 편성과 전술판에서 기본으로 사용됩니다.</p>
-              <Select
-                value={team.defaultFormationId || "__none__"}
-                onValueChange={(v) => {
-                  const val = v === "__none__" ? "" : v;
-                  setTeam({ ...team, defaultFormationId: val });
-                }}
-                disabled={!canEditTeam}
-              >
-                <SelectTrigger className="w-full text-sm">
-                  <SelectValue placeholder="선택 안 함" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">선택 안 함</SelectItem>
-                  <SelectItem value="4-4-2">4-4-2</SelectItem>
-                  <SelectItem value="4-2-3-1">4-2-3-1</SelectItem>
-                  <SelectItem value="4-3-3">4-3-3</SelectItem>
-                  <SelectItem value="3-5-2">3-5-2</SelectItem>
-                  <SelectItem value="3-4-3">3-4-3</SelectItem>
-                </SelectContent>
-              </Select>
+              {(() => {
+                // sportType + defaultPlayerCount 에 맞는 포메이션만 노출
+                const isFutsal =
+                  team.sportType === "FUTSAL" ||
+                  (team.sportType !== "SOCCER" &&
+                    team.defaultPlayerCount !== undefined &&
+                    team.defaultPlayerCount > 0 &&
+                    team.defaultPlayerCount <= 6);
+                const sportType = isFutsal ? "FUTSAL" : "SOCCER";
+                const targetCount = team.defaultPlayerCount;
+                const availableFormations = formationTemplates.filter((f) => {
+                  if (f.sportType !== sportType) return false;
+                  if (targetCount && f.fieldCount && f.fieldCount !== targetCount) return false;
+                  return true;
+                });
+                return (
+                  <Select
+                    value={team.defaultFormationId || "__none__"}
+                    onValueChange={(v) => {
+                      const val = v === "__none__" ? "" : v;
+                      setTeam({ ...team, defaultFormationId: val });
+                    }}
+                    disabled={!canEditTeam}
+                  >
+                    <SelectTrigger className="w-full text-sm">
+                      <SelectValue placeholder="선택 안 함" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">선택 안 함</SelectItem>
+                      {availableFormations.map((f) => (
+                        <SelectItem key={f.id} value={f.id}>
+                          {f.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                );
+              })()}
             </div>
 
             {canEditTeam && (

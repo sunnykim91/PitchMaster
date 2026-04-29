@@ -212,6 +212,8 @@ export default function SettingsClient({
       default_formation_id: defaultTeam.defaultFormationId,
       stats_recording_staff_only: defaultTeam.statsRecordingStaffOnly,
       mvp_vote_staff_only: defaultTeam.mvpVoteStaffOnly,
+      sport_type: defaultTeam.sportType,
+      default_player_count: defaultTeam.defaultPlayerCount,
     },
   }, { skip: hasInitialData });
 
