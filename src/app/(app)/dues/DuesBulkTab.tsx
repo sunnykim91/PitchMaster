@@ -3,7 +3,7 @@
 import React, { useRef, useState, useCallback } from "react";
 import { GA } from "@/lib/analytics";
 import Image from "next/image";
-import { Camera, FileSpreadsheet, Check, Trash2 } from "lucide-react";
+import { Camera, FileSpreadsheet, Check, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -669,8 +669,25 @@ function DuesBulkTabInner({
 
       {/* 업로드된 이미지 미리보기 */}
       {bulkImage && (
-        <div className="max-h-[300px] overflow-auto rounded-lg border border-white/[0.06]">
+        <div className="relative max-h-[300px] overflow-auto rounded-lg border border-white/[0.06]">
           <Image src={bulkImage} alt="거래내역 스크린샷" width={600} height={800} className="w-full" />
+          <button
+            type="button"
+            aria-label="스크린샷 삭제"
+            onClick={() => {
+              setBulkImage(null);
+              setBulkRows([{ date: "", time: "", type: "INCOME", amount: "", description: "", memberName: "" }]);
+              setBulkErrors({});
+              setPartialRows([]);
+              setOcrStatus("");
+              setOcrLoading(false);
+              setPendingBalance(null);
+              if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
+            }}
+            className="absolute top-2 right-2 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur-sm hover:bg-black/85 active:scale-95 transition"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
       )}
 
