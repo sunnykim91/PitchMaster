@@ -93,7 +93,7 @@ export default async function LoginPage({
       <FeaturesSection />
       <MoreFeaturesSection />
       <ComparisonSection />
-      <TestimonialsSection />
+      <TestimonialsSection teamCount={teamCount} memberCount={memberCount} />
       <FaqSection />
       <FinalCtaSection
         kakaoButton={kakaoButtonFinal}

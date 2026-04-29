@@ -113,7 +113,7 @@ export default function ComparisonSection() {
 
         {/* Header row (desktop only) */}
         <div
-          className="hidden lg:grid mt-12 grid-cols-[1.1fr_1.5fr_1.2fr] gap-4 px-5 pb-3 text-[11px] font-display tracking-[0.22em]"
+          className="hidden md:grid mt-12 grid-cols-[1.1fr_1.5fr_1.2fr] gap-4 px-5 pb-3 text-[11px] font-display tracking-[0.22em]"
           style={{ color: "hsl(var(--muted-foreground))", borderBottom: "1px solid hsl(var(--border))" }}
         >
           <div>FEATURE</div>
@@ -121,7 +121,7 @@ export default function ComparisonSection() {
           <div>다른 운영 / 카톡</div>
         </div>
 
-        <div className="mt-4 lg:mt-2 flex flex-col gap-2">
+        <div className="mt-4 md:mt-2 flex flex-col gap-2">
           {ROWS.map((r, i) => (
             <motion.div
               key={r.feature}
@@ -132,7 +132,7 @@ export default function ComparisonSection() {
                   ? { duration: 0 }
                   : { duration: 0.45, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }
               }
-              className="group relative grid lg:grid-cols-[1.1fr_1.5fr_1.2fr] grid-cols-1 gap-2 lg:gap-4 items-start lg:items-center p-5 lg:px-5 lg:py-4 rounded-[14px] transition-colors duration-200"
+              className="group relative grid md:grid-cols-[1.1fr_1.5fr_1.2fr] grid-cols-1 gap-2 md:gap-4 items-start md:items-center p-5 md:px-5 md:py-4 rounded-[14px] transition-colors duration-200"
               style={{
                 background: r.highlight
                   ? "linear-gradient(90deg, hsl(var(--primary) / 0.08), hsl(var(--accent) / 0.04) 60%, transparent)"

@@ -58,7 +58,15 @@ const T: Testimonial[] = [
   },
 ];
 
-export default function TestimonialsSection() {
+export type TestimonialsSectionProps = {
+  teamCount: number;
+  memberCount: number;
+};
+
+export default function TestimonialsSection({
+  teamCount,
+  memberCount,
+}: TestimonialsSectionProps) {
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: "-10% 0px" });
   const reduced = useReducedMotion();
@@ -107,7 +115,7 @@ export default function TestimonialsSection() {
           className="text-[15.5px] lg:text-[17px] leading-[1.55] max-w-[680px]"
           style={{ color: "hsl(var(--muted-foreground))", textWrap: "pretty" }}
         >
-          이미 80개 팀, 640+명이 매주 PitchMaster를 켭니다.
+          이미 {teamCount}개 팀, {memberCount.toLocaleString("ko-KR")}+명이 매주 PitchMaster를 켭니다.
         </p>
       </div>
 
