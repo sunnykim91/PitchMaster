@@ -1,28 +1,6 @@
-/* ── 한국 주요 장소 → 좌표 매핑 ── */
-const LOCATION_COORDS: Record<string, { lat: number; lon: number }> = {
-  서울: { lat: 37.5665, lon: 126.978 },
-  강남: { lat: 37.4979, lon: 127.0276 },
-  잠실: { lat: 37.5145, lon: 127.1 },
-  상암: { lat: 37.5775, lon: 126.8855 },
-  마포: { lat: 37.5547, lon: 126.9083 },
-  영등포: { lat: 37.5264, lon: 126.8963 },
-  송파: { lat: 37.5146, lon: 127.1059 },
-  광명: { lat: 37.4786, lon: 126.8646 },
-  성남: { lat: 37.4201, lon: 127.1265 },
-  분당: { lat: 37.3825, lon: 127.1192 },
-  수원: { lat: 37.2636, lon: 127.0286 },
-  용인: { lat: 37.2411, lon: 127.1776 },
-  인천: { lat: 37.4563, lon: 126.7052 },
-  부산: { lat: 35.1796, lon: 129.0756 },
-  대구: { lat: 35.8714, lon: 128.6014 },
-  대전: { lat: 36.3504, lon: 127.3845 },
-  광주: { lat: 35.1595, lon: 126.8526 },
-  일산: { lat: 37.6584, lon: 126.832 },
-  고양: { lat: 37.6584, lon: 126.832 },
-  파주: { lat: 37.76, lon: 126.78 },
-  안양: { lat: 37.3943, lon: 126.9568 },
-};
+import { getCoords } from "@/lib/server/getCoords";
 
+/* 좌표 미해결 시 폴백 — 서울 시청 */
 const DEFAULT_COORDS = { lat: 37.5665, lon: 126.978 };
 
 const ICON_MAP: Record<string, string> = {
@@ -61,10 +39,11 @@ const DESC_MAP: Record<string, string> = {
   Tornado: "토네이도",
 };
 
-function resolveCoords(location: string): { lat: number; lon: number } {
-  for (const [keyword, coords] of Object.entries(LOCATION_COORDS)) {
-    if (location.includes(keyword)) return coords;
-  }
+async function resolveCoords(location: string): Promise<{ lat: number; lon: number }> {
+  // 카카오 로컬 API + Supabase 캐시 (정확도 95%+)
+  const c = await getCoords(location);
+  if (c) return { lat: c.lat, lon: c.lon };
+  // 카카오 검색 실패 시 서울 폴백
   return DEFAULT_COORDS;
 }
 
@@ -109,7 +88,7 @@ export async function getWeatherData(date: string, location: string): Promise<We
   if (diffDays > 5) return null;
 
   const apiKey = process.env.OPENWEATHERMAP_API_KEY;
-  const coords = resolveCoords(location);
+  const coords = await resolveCoords(location);
 
   if (!apiKey) return getFallbackWeather(date);
 
