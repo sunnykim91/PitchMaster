@@ -478,24 +478,36 @@ function TeamSettingsComponent({
               <p className="text-xs text-muted-foreground">
                 새 경기 등록 시 자동 적용됩니다. 경기별로 개별 변경 가능.
               </p>
-              <Select
-                value={String(team.defaultPlayerCount ?? (team.sportType === "FUTSAL" ? 6 : 11))}
-                onValueChange={(v) => setTeam({ ...team, defaultPlayerCount: Number(v) })}
-                disabled={!canEditTeam}
-              >
-                <SelectTrigger className="w-full text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {team.sportType === "FUTSAL"
-                    ? [3, 4, 5, 6].map((n) => (
-                        <SelectItem key={n} value={String(n)}>{n}:{n} (GK 포함 {n}명)</SelectItem>
-                      ))
-                    : [8, 9, 10, 11].map((n) => (
-                        <SelectItem key={n} value={String(n)}>{n}:{n} (GK 포함 {n}명)</SelectItem>
+              {(() => {
+                // sportType이 명시되지 않거나 잘못 들어온 케이스 방어:
+                // defaultPlayerCount 가 6 이하면 풋살, 8 이상이면 축구로 보정 추정
+                const isFutsal =
+                  team.sportType === "FUTSAL" ||
+                  (team.sportType !== "SOCCER" &&
+                    team.defaultPlayerCount !== undefined &&
+                    team.defaultPlayerCount > 0 &&
+                    team.defaultPlayerCount <= 6);
+                const options = isFutsal ? [3, 4, 5, 6] : [8, 9, 10, 11];
+                const fallbackValue = isFutsal ? 6 : 11;
+                return (
+                  <Select
+                    value={String(team.defaultPlayerCount ?? fallbackValue)}
+                    onValueChange={(v) => setTeam({ ...team, defaultPlayerCount: Number(v) })}
+                    disabled={!canEditTeam}
+                  >
+                    <SelectTrigger className="w-full text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {options.map((n) => (
+                        <SelectItem key={n} value={String(n)}>
+                          {n}:{n} (GK 포함 {n}명)
+                        </SelectItem>
                       ))}
-                </SelectContent>
-              </Select>
+                    </SelectContent>
+                  </Select>
+                );
+              })()}
             </div>
 
             {/* 기본 포메이션 */}

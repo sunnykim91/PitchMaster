@@ -223,8 +223,10 @@ export default function SettingsClient({
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
 
   // API 데이터가 도착하면 로컬 상태에 동기화
+  // teamName/sport_type 시그니처 변경(팀 전환) 또는 저장 후 reset(false) 감지 시 동기화
   const profileSynced = useRef(false);
   const teamSynced = useRef(false);
+  const syncedTeamSignatureRef = useRef<string>("");
 
   useEffect(() => {
     if (!profileLoading && profileApiData.profile.id && !profileSynced.current) {
@@ -235,10 +237,16 @@ export default function SettingsClient({
   }, [profileLoading, profileApiData]);
 
   useEffect(() => {
-    if (!teamLoading && teamApiData.team.name && !teamSynced.current) {
-      teamSynced.current = true;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTeam(mapTeamResponse(teamApiData, defaultTeam));
+    if (!teamLoading && teamApiData.team.name) {
+      // 팀 전환 감지: name|sport_type|default_player_count 시그니처
+      const signature = `${teamApiData.team.name}|${teamApiData.team.sport_type ?? ""}|${teamApiData.team.default_player_count ?? ""}`;
+      const shouldSync = !teamSynced.current || signature !== syncedTeamSignatureRef.current;
+      if (shouldSync) {
+        teamSynced.current = true;
+        syncedTeamSignatureRef.current = signature;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setTeam(mapTeamResponse(teamApiData, defaultTeam));
+      }
     }
   }, [teamLoading, teamApiData, defaultTeam]);
 
