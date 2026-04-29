@@ -4,7 +4,9 @@
 풋살/축구 팀 관리 웹앱. 총무/회장이 카카오톡 단체방으로 하던 운영(출석, 회비, 일정, 기록)을 앱 하나로 대체하는 서비스.
 
 - **도메인**: pitch-master.app (Cloudflare DNS + Vercel 자동배포)
-- **실서비스 중**: 82개 팀, 647+ 명 회원 (2026-04 기준)
+- **실서비스 중**: 90+ 팀 / 700+ 명 회원 (2026-04-29 기준, 일 단위로 변동)
+  - **외부 콘텐츠·블로그·광고 작성 시 반드시 Supabase 직접 조회로 최신 수치 확인** (참고: `reference_supabase_direct.md`, `reference_pitchmaster_stats.md`)
+  - 이 README 수치는 outdated 가능성 높음 — 절대 그대로 인용 금지
 - **데모 계정**: kakao_id=`demo_kakao_id_pitchmaster`, 팀=FC DEMO, 역할=회장
 
 ---
