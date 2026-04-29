@@ -1,56 +1,275 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Minus } from "lucide-react";
+/**
+ * FaqSection — 자주 묻는 질문 (15개)
+ *
+ * - 카테고리 chip 4개(비용/기능/시작/관리)로 필터
+ * - 검색 input (Q 키워드)
+ * - 첫 번째 Q 기본 펼침
+ * - 펼친 답변에 코랄 키워드 자동 하이라이트 ("무료","AI","자동","휴면","면제")
+ * - 펼친 카드 좌측 코랄 strip
+ */
 
-const faqs = [
-  { q: "정말 무료인가요?", a: "네, 현재는 무료입니다. 인원 제한도 없습니다. 저도 매주 쓰는 앱이라 갑작스럽게 유료로 전환할 계획은 없습니다." },
-  { q: "우리 팀 데이터는 안전한가요?", a: "한국 서울 리전에 암호화 저장됩니다. 카카오 로그인만 사용하며, 별도 비밀번호를 보관하지 않습니다." },
-  { q: "축구와 풋살 둘 다 되나요?", a: "네, 팀 생성 시 종목을 선택하면 포지션·전술판·코트 비율이 자동으로 맞춰집니다. 풋살은 3인제부터 8인제까지 완전 지원합니다." },
-  { q: "팀원이 카카오가 없으면 어떻게 하나요?", a: "현재는 카카오 계정으로만 가입이 가능합니다. 카카오는 국내 스마트폰 사용자의 90% 이상이 사용 중이라 대부분 문제가 없습니다." },
-  { q: "여러 팀을 동시에 관리할 수 있나요?", a: "네, 한 계정으로 여러 팀에 소속될 수 있습니다. 앱 내에서 팀 전환이 가능하고, 각 팀의 역할(회장/운영진/회원)도 별도로 설정됩니다." },
-  { q: "회비 기록을 엑셀로 내보낼 수 있나요?", a: "네, 회비 관리 탭에서 월별 납부 현황을 엑셀(.xlsx)로 내보낼 수 있습니다. 회계 정리나 공유가 필요할 때 바로 사용하세요." },
-  { q: "기존에 쓰던 회원/경기 데이터를 옮길 수 있나요?", a: "현재는 직접 입력 방식만 지원합니다. 대량 데이터 이관이 필요하신 경우 운영팀에 문의해 주시면 지원 가능 여부를 안내드립니다." },
-  { q: "조기축구 관리 앱, 뭐가 좋은가요?", a: "PitchMaster는 조기축구 · 풋살 팀 관리를 위해 만들어진 전용 앱입니다. 참석 투표, 회비 납부 관리, AI 라인업 편성, 경기 기록까지 총무 업무 전체를 커버합니다. 별도 앱 설치 없이 카카오톡으로 바로 사용할 수 있어 팀원 모두가 쉽게 참여합니다." },
-  { q: "조기축구 총무를 처음 맡았는데 어디서부터 시작하나요?", a: "팀 생성 → 초대 링크로 팀원 등록 → 첫 경기 일정 등록, 세 단계면 됩니다. 이후 참석 투표 링크를 카카오톡 단체방에 공유하면 팀원들이 직접 참석 여부를 입력합니다. 회비는 통장 캡처 한 장으로 자동 정리됩니다." },
-  { q: "통장 캡처로 회비 정리가 어떻게 되는 건가요?", a: "카카오뱅크·토스(토뱅 모임)·국민·신한 등 어떤 은행 앱이든 모임통장 거래 내역 화면을 캡처해서 올리면 AI(OCR)가 자동으로 날짜·이름·금액을 읽어 표로 만듭니다. 미입금자 자동 체크, 휴면·부상 회원은 자동 면제 처리, 월별 결산까지 한 번에. 엑셀에 일일이 옮겨 적던 시간이 사라집니다." },
-  { q: "AI 라인업 자동 편성은 어떻게 작동하나요?", a: "감독 조수가 아니라 '또 하나의 전술 감독 AI'입니다. 우리 팀 과거 경기 이력, 상대팀 맞대결 기록, 참석자, 선수별 선호 포지션과 누적 스탯을 모두 분석해 포메이션을 추천하고 쿼터별로 11명을 자동 배치합니다. 동시에 출전 시간이 한쪽으로 쏠리지 않도록 공정 쿼터 로테이션도 자동. 결과는 전술판에서 드래그로 수동 조정 가능합니다." },
-  { q: "PC에서도 쓸 수 있나요?", a: "네, 브라우저 기반 PWA라서 PC·태블릿·폰 어디서나 바로 사용 가능합니다. 경기 전날 밤에 PC로 편성을 준비하고, 경기 당일엔 폰으로 확인하는 이중 사용 패턴에 최적화되어 있습니다. 11명 드래그 배치는 큰 화면이 압도적으로 편합니다." },
-  { q: "참석 투표는 어떻게 공유하나요?", a: "팀 초대 링크 한 번만 단톡방에 보내면 됩니다. 팀원이 링크를 눌러 들어오면 등록된 모든 다음 일정(예: 다음 6경기)이 한 화면에 떠서 한 번에 참석/불참/미정 응답 가능. 경기마다 새 투표 링크 다시 올릴 필요 없고, 마감 전 미응답자 자동 알림까지 갑니다." },
-  { q: "휴면·부상으로 회비를 못 낼 때 면제 처리 가능한가요?", a: "네, 회비 설정 탭에서 회원별로 휴회·부상·선납·면제 4가지 사유로 면제 기간을 등록할 수 있습니다. 해당 기간 동안 자동으로 '면제' 상태로 집계되고, 기간이 끝나면 정상 납부 대상으로 복귀합니다." },
-  { q: "경기 후 MVP는 어떻게 뽑나요?", a: "경기 종료 후 MVP 투표 탭이 자동 열리며, 팀원들이 각자 앱에서 투표합니다. 투표 결과는 실시간으로 집계되고, 시즌 누적 MVP 통계로 이어집니다. 일부 운영진만 후보를 추릴 수 있도록 '스태프 투표 전용' 옵션도 있습니다." },
+import { useMemo, useRef, useState } from "react";
+import { motion, useInView, useReducedMotion, AnimatePresence } from "framer-motion";
+import { Plus, Search } from "lucide-react";
+
+type Cat = "비용" | "기능" | "시작" | "관리";
+
+const FAQS: Array<{ q: string; a: string; cat: Cat }> = [
+  { cat: "비용", q: "정말 무료인가요?", a: "네, 현재는 모든 기능이 무료입니다. 광고도 없습니다. 팀이 늘어나도 부담 없이 쓰실 수 있게 만들었습니다." },
+  { cat: "비용", q: "유료 전환 계획이 있나요?", a: "장기적으로 일부 고급 기능은 유료가 될 수 있습니다. 그 경우에도 기존 사용자 혜택과 충분한 사전 공지가 있습니다." },
+  { cat: "시작", q: "가입 없이 둘러볼 수 있나요?", a: "데모 모드가 있어서 가입 없이 30초 만에 핵심 화면을 둘러볼 수 있습니다. 실제로 데이터를 만들어보지는 않아도 흐름은 다 확인됩니다." },
+  { cat: "시작", q: "어떻게 시작하나요?", a: "카카오로 1분 안에 가입 → 팀 만들기 → 초대 링크 공유. 팀원은 가입 없이도 링크로 참석 투표가 가능합니다." },
+  { cat: "시작", q: "기존 팀 데이터를 옮길 수 있나요?", a: "엑셀·시트로 정리된 회비/명단은 한 번에 import 가능합니다. 카톡 출석 기록은 자동 변환은 어렵고 처음부터 PitchMaster에서 쌓는 걸 추천드립니다." },
+  { cat: "기능", q: "AI 라인업은 어떻게 동작하나요?", a: "참석자 명단·선호 포지션·과거 경기 기록·상대팀 이력을 분석해 포메이션과 쿼터별 출전을 자동 추천합니다. 이건 다른 운영 앱에 없는 기능입니다." },
+  { cat: "기능", q: "회비 OCR이 정확한가요?", a: "은행 앱 캡처를 올리면 입금자명·금액을 자동 인식해 명단과 매칭합니다. 휴면·부상 회원은 자동 면제 처리됩니다." },
+  { cat: "기능", q: "축구뿐 아니라 풋살도 되나요?", a: "네, 풋살 3~8인제 전용 포지션·전술판이 별도로 지원됩니다. 한 팀에서 축구/풋살을 같이 운영하는 경우도 OK입니다." },
+  { cat: "기능", q: "팀원이 카카오 계정이 없으면요?", a: "초대 링크는 가입 없이도 참석 투표가 가능합니다. 다만 기록·MVP 등 개인 페이지는 카카오 계정으로 로그인해야 보입니다." },
+  { cat: "관리", q: "여러 팀을 동시에 운영할 수 있나요?", a: "한 카카오 계정으로 여러 팀을 만들고 전환할 수 있습니다. 회장이 두 팀 운영하는 경우도 흔해서 초기부터 지원합니다." },
+  { cat: "관리", q: "회칙·공지는 따로 관리되나요?", a: "회칙 페이지와 공지/게시판이 분리되어 있어서 단톡방에 묻히지 않습니다. 고정 공지·댓글도 가능합니다." },
+  { cat: "관리", q: "벌금은 자동으로 부과되나요?", a: "지각·불참 자동 차감 규칙을 회칙에 명시하면, 매번 묻지 않아도 자동으로 회비에서 차감됩니다." },
+  { cat: "관리", q: "월별 결산은 어떻게 보나요?", a: "월별 결산 리포트가 자동 집계되어 PDF로 내보내기 가능합니다. 팀원 공유용 요약 카드도 자동 생성됩니다." },
+  { cat: "기능", q: "PC에서도 쓸 수 있나요?", a: "PitchMaster는 브라우저로 동작합니다. 설치 앱이 아니어서 PC·모바일 어디서든 동일하게 쓸 수 있습니다." },
+  { cat: "관리", q: "운영진 권한 분리가 되나요?", a: "회장/총무/일반 팀원 권한이 분리되어 있고, 회비·라인업·공지 권한도 세부 토글이 가능합니다." },
 ];
 
+const CATS: Cat[] = ["비용", "기능", "시작", "관리"];
+const HIGHLIGHT_WORDS = ["무료", "AI", "자동", "휴면", "면제"];
+
+function highlight(text: string) {
+  // split by any highlight word and re-render with span around matches
+  const re = new RegExp(`(${HIGHLIGHT_WORDS.join("|")})`, "g");
+  const parts = text.split(re);
+  return parts.map((p, i) =>
+    HIGHLIGHT_WORDS.includes(p) ? (
+      <strong
+        key={i}
+        style={{
+          color: "hsl(var(--primary))",
+          fontWeight: 700,
+        }}
+      >
+        {p}
+      </strong>
+    ) : (
+      <span key={i}>{p}</span>
+    )
+  );
+}
+
 export default function FaqSection() {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const ref = useRef<HTMLElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-10% 0px" });
+  const reduced = useReducedMotion();
+
+  const [activeCat, setActiveCat] = useState<Cat | null>(null);
+  const [query, setQuery] = useState("");
+  const [openIdx, setOpenIdx] = useState<number | null>(0);
+
+  const filtered = useMemo(() => {
+    return FAQS.map((f, i) => ({ ...f, _i: i })).filter((f) => {
+      if (activeCat && f.cat !== activeCat) return false;
+      if (query) {
+        const q = query.trim().toLowerCase();
+        if (!f.q.toLowerCase().includes(q) && !f.a.toLowerCase().includes(q))
+          return false;
+      }
+      return true;
+    });
+  }, [activeCat, query]);
 
   return (
-    <section id="faq" className="relative border-t border-border/30 bg-card/30 py-20 sm:py-28">
-      <div className="mx-auto max-w-3xl px-5">
-        <div className="mb-14 text-center">
-          <p className="mb-3 text-xs font-bold uppercase tracking-[0.3em] text-primary">FAQ</p>
-          <h2 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">자주 묻는 질문</h2>
+    <section
+      ref={ref}
+      id="faq"
+      className="relative overflow-hidden py-24 lg:py-32 px-5 lg:px-14"
+      style={{
+        background:
+          "radial-gradient(ellipse 60% 40% at 50% 0%, hsl(var(--accent) / 0.10), transparent 60%), hsl(var(--background))",
+        wordBreak: "keep-all",
+      }}
+    >
+      <div className="relative max-w-[760px] mx-auto">
+        <div className="text-center">
+          <span
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-display tracking-[0.20em] whitespace-nowrap"
+            style={{
+              background: "hsl(var(--accent) / 0.14)",
+              border: "1px solid hsl(var(--accent) / 0.32)",
+              color: "hsl(var(--accent))",
+            }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-current" />
+            FAQ
+          </span>
+          <motion.h2
+            initial={{ opacity: 0, y: 14 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={reduced ? { duration: 0 } : { duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="font-extrabold leading-[1.12] mt-4 mb-3"
+            style={{
+              fontSize: "clamp(30px, 5.4vw, 52px)",
+              letterSpacing: "-0.03em",
+              textWrap: "balance",
+            }}
+          >
+            자주 묻는 <span style={{ color: "hsl(var(--accent))" }}>질문</span>
+          </motion.h2>
+          <p
+            className="text-[15.5px] lg:text-[17px] leading-[1.55]"
+            style={{ color: "hsl(var(--muted-foreground))", textWrap: "pretty" }}
+          >
+            총무가 가장 많이 물어본 것들.
+          </p>
         </div>
 
-        <div className="space-y-3">
-          {faqs.map((faq, i) => (
-            <div key={i} className="overflow-hidden rounded-xl border border-border bg-card">
+        {/* Filter chips + search */}
+        <div className="mt-10 flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setActiveCat(null)}
+            className="h-9 px-3.5 rounded-full text-[13px] font-bold tracking-[-0.01em] transition-colors duration-200"
+            style={{
+              background: activeCat === null ? "hsl(var(--primary))" : "hsl(var(--secondary) / 0.6)",
+              color: activeCat === null ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))",
+              border: activeCat === null ? "1px solid transparent" : "1px solid hsl(var(--border))",
+            }}
+          >
+            전체
+          </button>
+          {CATS.map((c) => {
+            const on = activeCat === c;
+            return (
               <button
-                onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                className="flex w-full items-center justify-between p-5 text-left transition-colors hover:bg-secondary/50 sm:p-6"
+                key={c}
+                onClick={() => setActiveCat(on ? null : c)}
+                className="h-9 px-3.5 rounded-full text-[13px] font-bold tracking-[-0.01em] transition-colors duration-200"
+                style={{
+                  background: on ? "hsl(var(--primary))" : "hsl(var(--secondary) / 0.6)",
+                  color: on ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))",
+                  border: on ? "1px solid transparent" : "1px solid hsl(var(--border))",
+                }}
               >
-                <span className="pr-4 text-base font-semibold sm:text-lg">{faq.q}</span>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary">
-                  {openIndex === i ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                </div>
+                {c}
               </button>
-              <div className={`grid transition-all duration-300 ease-out ${openIndex === i ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
-                <div className="overflow-hidden">
-                  <p className="px-5 pb-5 leading-relaxed text-muted-foreground sm:px-6 sm:pb-6 sm:text-lg">{faq.a}</p>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
+
+          <div
+            className="ml-auto flex items-center gap-2 h-9 px-3 rounded-full"
+            style={{
+              background: "hsl(var(--secondary) / 0.5)",
+              border: "1px solid hsl(var(--border))",
+              minWidth: 220,
+            }}
+          >
+            <Search className="w-4 h-4" style={{ color: "hsl(var(--muted-foreground))" }} />
+            <input
+              type="text"
+              placeholder="질문 키워드 검색"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="flex-1 bg-transparent border-0 outline-none text-[13px]"
+              style={{ color: "hsl(var(--foreground))" }}
+            />
+          </div>
+        </div>
+
+        {/* List */}
+        <div className="mt-6 flex flex-col gap-2.5">
+          {filtered.length === 0 && (
+            <p className="py-10 text-center text-[14px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+              검색어와 일치하는 질문이 없습니다.
+            </p>
+          )}
+          {filtered.map((f) => {
+            const open = openIdx === f._i;
+            return (
+              <motion.div
+                key={f._i}
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={inView ? { opacity: 1, y: 0 } : {}}
+                transition={reduced ? { duration: 0 } : { duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="relative rounded-[14px] overflow-hidden cursor-pointer transition-transform duration-200 hover:-translate-y-[1px]"
+                style={{
+                  background: open
+                    ? "hsl(var(--card) / 0.85)"
+                    : "hsl(var(--secondary) / 0.45)",
+                  border: open ? "1px solid hsl(var(--primary) / 0.35)" : "1px solid hsl(var(--border))",
+                }}
+                onClick={() => setOpenIdx(open ? null : f._i)}
+              >
+                {/* coral strip when open */}
+                {open && (
+                  <span
+                    className="absolute left-0 top-0 bottom-0 w-[3px]"
+                    style={{
+                      background:
+                        "linear-gradient(180deg, hsl(var(--primary)), hsl(var(--accent)))",
+                    }}
+                  />
+                )}
+
+                <button
+                  className="w-full flex items-start justify-between gap-4 px-5 lg:px-6 py-4 lg:py-5 text-left bg-transparent border-0"
+                  aria-expanded={open}
+                >
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                    <span
+                      className="text-[10px] font-display tracking-[0.20em] px-1.5 py-0.5 rounded shrink-0"
+                      style={{
+                        background: "hsl(var(--accent) / 0.14)",
+                        color: "hsl(var(--accent))",
+                        border: "1px solid hsl(var(--accent) / 0.30)",
+                      }}
+                    >
+                      {f.cat}
+                    </span>
+                    <span
+                      className="text-[15px] lg:text-[16px] font-bold leading-[1.4]"
+                      style={{ color: "hsl(var(--foreground))", letterSpacing: "-0.01em" }}
+                    >
+                      {f.q}
+                    </span>
+                  </div>
+                  <motion.span
+                    animate={{ rotate: open ? 45 : 0 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                    className="inline-flex items-center justify-center w-7 h-7 rounded-full shrink-0"
+                    style={{
+                      background: open ? "hsl(var(--primary) / 0.16)" : "hsl(var(--muted) / 0.5)",
+                      color: open ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
+                    }}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </motion.span>
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {open && (
+                    <motion.div
+                      key="ans"
+                      initial={{ gridTemplateRows: "0fr", opacity: 0 }}
+                      animate={{ gridTemplateRows: "1fr", opacity: 1 }}
+                      exit={{ gridTemplateRows: "0fr", opacity: 0 }}
+                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                      style={{ display: "grid" }}
+                    >
+                      <div className="overflow-hidden">
+                        <div
+                          className="px-5 lg:px-6 pb-5 pt-1 text-[14px] lg:text-[14.5px] leading-[1.65]"
+                          style={{ color: "hsl(var(--muted-foreground))", textWrap: "pretty" }}
+                        >
+                          {highlight(f.a)}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
