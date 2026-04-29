@@ -8,7 +8,8 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
  * 회원 탈퇴 — 개인정보 즉시 익명화 + soft delete (14일 후 cron 으로 hard delete).
  *
  * 흐름 (순서 중요):
- *   1. 인증·세션 검증
+ *   0. 인증·세션 검증
+ *   1. 회장(PRESIDENT) 인 팀이 있으면 탈퇴 차단 — 회장 0명 상태 방지
  *   2. users 레코드 anonymize + deleted_at 설정
  *   3. 해당 사용자 전체 team_members → status='LEFT'
  *   4. push_subscriptions 즉시 삭제 (본인 기기 알림 차단)
@@ -28,6 +29,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
  * Response:
  *   204 No Content — 정상 탈퇴
  *   401 unauthorized
+ *   409 president_team_exists — 회장직 보유 시 탈퇴 차단
  *   503 db_unavailable
  *   500 withdraw_failed
  */
@@ -45,6 +47,32 @@ export async function POST() {
   const userId = session.user.id;
 
   try {
+    // 회장 보호: PRESIDENT 인 팀이 있으면 탈퇴 차단 (회장 0명 상태 방지)
+    const { data: presidentTeams } = await db
+      .from("team_members")
+      .select("team_id, teams(name)")
+      .eq("user_id", userId)
+      .eq("role", "PRESIDENT")
+      .in("status", ["ACTIVE", "DORMANT"]);
+
+    if (presidentTeams && presidentTeams.length > 0) {
+      const names = presidentTeams
+        .map((t) => (t as unknown as { teams: { name: string } | null }).teams?.name)
+        .filter(Boolean)
+        .join(", ");
+      return NextResponse.json(
+        {
+          error: "president_team_exists",
+          message: `회장으로 운영 중인 팀이 있어 탈퇴할 수 없습니다. ${names ? `[${names}]` : ""} 다른 회원에게 회장을 이임한 뒤 다시 시도해주세요.`,
+          teams: presidentTeams.map((t) => ({
+            teamId: t.team_id,
+            teamName: (t as unknown as { teams: { name: string } | null }).teams?.name ?? "",
+          })),
+        },
+        { status: 409 }
+      );
+    }
+
     // 감사 로그용 kakao_id 확보 (users 익명화 전)
     const { data: existingUser } = await db
       .from("users")

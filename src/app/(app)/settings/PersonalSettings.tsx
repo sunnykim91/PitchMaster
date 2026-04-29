@@ -114,10 +114,13 @@ function PersonalSettingsComponent({
         window.location.href = "/login";
       } else {
         const body = await res.json().catch(() => ({}));
-        showToast(
-          body.error === "db_unavailable" ? "일시적인 오류입니다. 잠시 후 다시 시도해주세요" : "탈퇴 처리에 실패했습니다",
-          "error",
-        );
+        const message =
+          body.error === "president_team_exists"
+            ? body.message ?? "회장으로 운영 중인 팀이 있어 탈퇴할 수 없습니다. 다른 회원에게 회장을 이임한 뒤 다시 시도해주세요."
+            : body.error === "db_unavailable"
+              ? "일시적인 오류입니다. 잠시 후 다시 시도해주세요"
+              : "탈퇴 처리에 실패했습니다";
+        showToast(message, "error");
       }
     } catch {
       showToast("네트워크 오류로 탈퇴에 실패했습니다", "error");

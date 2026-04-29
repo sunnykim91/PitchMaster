@@ -188,14 +188,16 @@ export default function MembersClient({
       const { error: err } = await apiMutate("/api/members", "PUT", { memberId, role: newRole });
       if (!err) {
         if (newRole === "PRESIDENT") {
-          showToast("회장이 이임되었습니다. 페이지를 새로고침합니다.");
-          setTimeout(() => window.location.reload(), 1000);
+          showToast(
+            "회장 권한이 이양되었습니다. 본인은 자동으로 운영진(STAFF)으로 변경됩니다. 잘못 누르셨다면 새 회장님께 다시 회장 권한 부여를 요청해주세요.",
+          );
+          setTimeout(() => window.location.reload(), 1500);
           return;
         }
         showToast("역할이 변경되었습니다.");
         await refetch();
       } else {
-        showToast("역할 변경에 실패했습니다.", "error");
+        showToast(typeof err === "string" ? err : "역할 변경에 실패했습니다.", "error");
       }
     } finally {
       setChangingRoleId(null);
@@ -204,18 +206,32 @@ export default function MembersClient({
 
   async function handleRoleChange(memberId: string, newRole: Role) {
     if (!canChangeRole) return;
+    const target = members.find((m) => m.id === memberId);
+    const targetName = target?.name ?? "해당 회원";
+
     if (newRole === "PRESIDENT") {
-      const target = members.find((m) => m.id === memberId);
       const ok = await confirm({
-        title: `${target?.name ?? "해당 회원"}에게 회장을 이임할까요?`,
-        description: "이임 후 본인은 운영진으로 변경됩니다.",
+        title: `${targetName}님에게 회장을 이임할까요?`,
+        description:
+          "⚠️ 이임 후 본인은 자동으로 운영진(STAFF)으로 변경됩니다. 실수로 누르신 게 아닌지 한 번 더 확인해주세요. 되돌리려면 새 회장이 본인을 다시 회장으로 변경해야 합니다.",
         variant: "destructive",
-        confirmLabel: "이임",
+        confirmLabel: "회장 이임",
       });
       if (ok) doRoleChange(memberId, newRole);
       return;
     }
-    doRoleChange(memberId, newRole);
+
+    // STAFF·MEMBER 강등도 confirm 추가 (모바일 스크롤 우발 터치 방지)
+    const roleLabel = newRole === "STAFF" ? "운영진(STAFF)" : "평회원(MEMBER)";
+    const ok = await confirm({
+      title: `${targetName}님을 ${roleLabel}으로 변경할까요?`,
+      description:
+        newRole === "MEMBER"
+          ? "운영진 권한(회비·회원·경기 관리)이 모두 사라집니다."
+          : "운영진 권한을 부여합니다. 회비·회원·경기 관리가 가능해집니다.",
+      confirmLabel: "변경",
+    });
+    if (ok) doRoleChange(memberId, newRole);
   }
 
   async function handleKick(memberId: string) {
@@ -804,7 +820,7 @@ export default function MembersClient({
                         )}
                         {canChangeRole && member.userIdRaw !== userId && (
                           <Select value={member.role} onValueChange={(value) => handleRoleChange(member.id, value as Role)} disabled={changingRoleId === member.id}>
-                            <SelectTrigger className="w-auto min-w-[80px] text-xs h-8">
+                            <SelectTrigger className="w-auto min-w-[88px] text-xs h-10">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>

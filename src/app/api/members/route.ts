@@ -283,13 +283,22 @@ export async function PUT(request: NextRequest) {
   // 자기 자신 역할 변경 차단 (회장이 스스로 강등하면 복구 불가)
   const { data: targetMember } = await db
     .from("team_members")
-    .select("user_id")
+    .select("user_id, role")
     .eq("id", body.memberId)
     .eq("team_id", ctx.teamId)
     .single();
 
   if (targetMember?.user_id === ctx.userId) {
-    return apiError("자신의 역할은 변경할 수 없습니다");
+    return apiError(
+      "본인 권한은 직접 변경할 수 없습니다. 회장 자리를 옮기려면 다른 회원에게 회장을 이임하세요 (이임 시 본인은 자동으로 운영진이 됩니다)."
+    );
+  }
+
+  // 회장 보호: PRESIDENT 인 다른 회원을 STAFF·MEMBER 로 강등 금지
+  if (targetMember?.role === "PRESIDENT" && body.role !== "PRESIDENT") {
+    return apiError(
+      "다른 회원이 회장을 강등할 수 없습니다. 회장이 직접 다른 회원에게 회장을 이임해야 합니다."
+    );
   }
 
   // 회장 이임: 다른 회원을 PRESIDENT로 변경 시 기존 회장을 STAFF로 강등
@@ -325,6 +334,25 @@ export async function DELETE(request: NextRequest) {
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  // 회장 보호: PRESIDENT 는 강퇴 금지 (회장 0명 상태 방지)
+  const { data: target } = await db
+    .from("team_members")
+    .select("user_id, role")
+    .eq("id", memberId)
+    .eq("team_id", ctx.teamId)
+    .single();
+
+  if (target?.role === "PRESIDENT") {
+    return apiError(
+      "회장은 강퇴할 수 없습니다. 회장이 직접 다른 회원에게 회장을 이임한 뒤 본인이 탈퇴하거나 강퇴해주세요."
+    );
+  }
+
+  // 자기 자신 강퇴도 차단 (의도치 않은 본인 제명 방지)
+  if (target?.user_id === ctx.userId) {
+    return apiError("본인은 강퇴할 수 없습니다. 회원 탈퇴 기능을 이용해주세요.");
+  }
 
   const { error } = await db
     .from("team_members")

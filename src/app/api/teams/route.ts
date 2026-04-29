@@ -78,6 +78,34 @@ export async function PUT(request: NextRequest) {
     updates.default_player_count = n;
   }
 
+  // sport_type ↔ default_player_count 일치성 검증
+  // 풋살: 3~6, 축구: 8~11 만 허용 (UI 셀렉트 옵션과 일치)
+  if (updates.sport_type !== undefined || updates.default_player_count !== undefined) {
+    const { data: cur } = await db
+      .from("teams")
+      .select("sport_type, default_player_count")
+      .eq("id", ctx.teamId)
+      .single();
+
+    const finalSport = (updates.sport_type as string | undefined) ?? cur?.sport_type ?? "SOCCER";
+    const finalCount =
+      (updates.default_player_count as number | undefined) ?? cur?.default_player_count;
+
+    if (finalCount !== null && finalCount !== undefined) {
+      const valid =
+        finalSport === "FUTSAL"
+          ? finalCount >= 3 && finalCount <= 6
+          : finalCount >= 8 && finalCount <= 11;
+      if (!valid) {
+        const sportLabel = finalSport === "FUTSAL" ? "풋살" : "축구";
+        const range = finalSport === "FUTSAL" ? "3~6" : "8~11";
+        return apiError(
+          `${sportLabel}팀의 기본 참가 인원은 ${range}만 가능합니다. 종목과 인원수를 함께 변경해주세요.`,
+        );
+      }
+    }
+  }
+
   const { error } = await db.from("teams").update(updates).eq("id", ctx.teamId);
   if (error) return apiError(error.message);
   return apiSuccess({ ok: true });
