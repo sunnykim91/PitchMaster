@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Shield, Users, Activity, UserPlus } from "lucide-react";
+import { AdminUsageCard } from "./AdminUsageCard";
 
 // ── Types ──────────────────────────────────────────────
 
@@ -456,6 +457,9 @@ export default function AdminClient() {
           </CardContent>
         </Card>
       )}
+
+      {/* ── AI 사용량 모니터링 ── */}
+      <AdminUsageCard />
     </div>
   );
 }
