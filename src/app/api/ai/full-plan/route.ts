@@ -12,17 +12,13 @@ import type { TacticsAnalysisInput } from "@/lib/server/aiTacticsAnalysis";
  * Body: TacticsAnalysisInput (formationName은 기본값 참고용)
  * Response: { plans: QuarterPlan[], source: "ai" | "rule", error?: string }
  *
- * 김선휘 Feature Flag (베타).
+ * UI 레벨에서 운영진(STAFF+) 이상만 접근. API 레벨 rate limit으로 남용 방지.
  * 레이트리밋: tactics 카테고리 공유 (user 40 / team 200 per day).
  */
 export async function POST(req: NextRequest) {
   const session = await auth().catch(() => null);
   if (!session?.user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
-  // 🔴 Feature flag — 김선휘 베타 전용. API 레벨 차단 (UI 우회 방지)
-  if (session.user.name !== "김선휘") {
-    return NextResponse.json({ error: "ai_not_available" }, { status: 403 });
   }
   // 풋살 팀 AI 차단 (API 레벨)
   if (session.user.teamId) {

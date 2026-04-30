@@ -36,6 +36,16 @@ function resolveResultText(score: { us: number; opp: number } | null, result: "W
   return `${us}-${opp} 경기`;
 }
 
+/** 마지막 글자의 받침 여부로 주격 조사 '이/가' 반환 */
+function getJosa이가(str: string): string {
+  if (!str) return "이(가)";
+  const last = str.charAt(str.length - 1);
+  const code = last.charCodeAt(0);
+  if (code < 0xAC00 || code > 0xD7A3) return "이(가)"; // 한글 외 문자 fallback
+  const hasBatchim = (code - 0xAC00) % 28 !== 0;
+  return hasBatchim ? "이" : "가";
+}
+
 /** 중복 제거하되 순서 유지 */
 function unique<T>(arr: T[]): T[] {
   const seen = new Set<T>();
@@ -68,9 +78,9 @@ function buildHighlightsParagraph(input: MatchSummaryInput): string {
     const name = uniqueScorers[0];
     const count = scorerNames.filter((n) => n === name).length;
     if (count >= 2) {
-      parts.push(`${name}이(가) ${count}골로 득점을 책임졌습니다.`);
+      parts.push(`${name}${getJosa이가(name)} ${count}골로 득점을 책임졌습니다.`);
     } else {
-      parts.push(`${name}이(가) 득점했습니다.`);
+      parts.push(`${name}${getJosa이가(name)} 득점했습니다.`);
     }
   } else if (uniqueScorers.length >= 2) {
     // 여러 명 — 최다 득점자 강조 여부
@@ -81,10 +91,11 @@ function buildHighlightsParagraph(input: MatchSummaryInput): string {
       // 한 명이 3골+ 이면 강조
       const others = uniqueScorers.filter((n) => n !== top[0]);
       parts.push(
-        `${top[0]}이(가) ${top[1]}골로 득점을 주도했고, ${joinNamesWithOverflow(others, 5)}도 득점에 가세했습니다.`
+        `${top[0]}${getJosa이가(top[0])} ${top[1]}골로 득점을 주도했고, ${joinNamesWithOverflow(others, 5)}도 득점에 가세했습니다.`
       );
     } else {
-      parts.push(`${joinNamesWithOverflow(uniqueScorers, 6)}이(가) 득점을 나눠 쌓았습니다.`);
+      const joined = joinNamesWithOverflow(uniqueScorers, 6);
+      parts.push(`${joined}${getJosa이가(joined)} 득점을 나눠 쌓았습니다.`);
     }
   }
 

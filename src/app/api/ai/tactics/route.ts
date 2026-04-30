@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
 
 /**
  * POST /api/ai/tactics
- * 김선휘 Feature Flag 전용. SSE로 코치식 3단락 분석 스트리밍.
+ * SSE로 코치식 3단락 분석 스트리밍. UI 레벨에서 운영진(STAFF+) 이상만 접근 가능.
  *
  * Body: TacticsAnalysisInput
  * Response: text/event-stream
@@ -62,11 +62,6 @@ export async function POST(req: NextRequest) {
   const session = await auth().catch(() => null);
   if (!session?.user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
-  // 🔴 Feature flag — 김선휘 베타 전용. UI(page.tsx) 차단과 별개로 API 레벨에서도 차단.
-  // (UI 만 숨기면 DevTools·curl 직접 호출 시 Anthropic 토큰 누수)
-  if (session.user.name !== "김선휘") {
-    return NextResponse.json({ error: "ai_not_available" }, { status: 403 });
   }
   // 풋살 팀 AI 차단 (API 레벨)
   // 🔴 team 조회 실패 시 열어주지 말고 차단 — DB 오류를 "풋살 아님" 으로 오인하면 정책 우회됨
