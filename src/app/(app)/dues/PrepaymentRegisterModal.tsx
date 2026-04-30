@@ -24,7 +24,7 @@ type Props = {
   members: Member[];
   /** 선택지로 보여줄 월 회비 금액 후보 (3·6·12개월 곱해 자동 채움) */
   monthlyAmountCandidates: number[];
-  onSuccess: (msg: string) => void;
+  onSuccess: (msg: string) => void | Promise<void>;
   onError: (msg: string) => void;
   showToast?: (msg: string, type?: "success" | "error" | "info") => void;
 };
@@ -134,7 +134,7 @@ export default function PrepaymentRegisterModal({
       onError(error);
       return;
     }
-    onSuccess(
+    await onSuccess(
       `${selectedMember.name} ${periodMonths}개월 선납 등록 완료 (${formatAmount(totalAmount)})`,
     );
     onClose();
