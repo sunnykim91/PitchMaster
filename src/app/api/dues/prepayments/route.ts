@@ -10,9 +10,30 @@ import { PERMISSIONS } from "@/lib/permissions";
 import { computeEndMonth } from "@/lib/duesPrepayment";
 
 /**
- * GET /api/dues/prepayments?status=active|all
- *   - 팀의 선납 목록. status 미지정 시 active만.
+ * 선납 = 운영진이 "회원 N개월치 회비 선납 받았다"는 사실 기록 + 그 N개월을 PAID로 일괄 표시.
+ *
+ * 의도적 단순화 (2026-04-30):
+ *   - dues_records(INCOME) 자동 생성 X — 입출금 거래는 운영진이 별도로 등록
+ *   - dues_prepayments는 audit/추적용 (활성 선납 목록 표시·취소용)
+ *   - 핵심 효과는 dues_payment_status에 N개월치 PAID 일괄 기록으로 발생
  */
+
+/** YYYY-MM-01 형식의 시작월에서 N개월간의 month 문자열(YYYY-MM) 배열 생성 */
+function generateMonths(startMonth: string, periodMonths: number): string[] {
+  const [yStr, mStr] = startMonth.slice(0, 7).split("-");
+  const y0 = parseInt(yStr, 10);
+  const m0 = parseInt(mStr, 10);
+  const months: string[] = [];
+  for (let i = 0; i < periodMonths; i++) {
+    const total = (m0 - 1) + i;
+    const yy = y0 + Math.floor(total / 12);
+    const mm = (total % 12) + 1;
+    months.push(`${yy}-${String(mm).padStart(2, "0")}`);
+  }
+  return months;
+}
+
+/** GET /api/dues/prepayments?status=active|all */
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
@@ -39,15 +60,9 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/dues/prepayments
- *   - 선납 등록 + dues_records(INCOME) 자동 생성
- *   body: { memberId, userId?, memberName?, amount, periodMonths, startMonth, notes?, recordTransaction? }
- *     · memberId: team_members.id (필수, 회원 식별)
- *     · userId:   users.id (선택, member에 연동된 유저)
- *     · memberName: 스냅샷 (선택, 회원 삭제 후에도 보존)
- *     · amount:   총 합계 금액 (period_months × 월회비 권장)
- *     · periodMonths: 3 | 6 | 12
- *     · startMonth: "YYYY-MM-01" (기본 다음 달 1일)
- *     · recordTransaction: false → dues_records 자동 생성 안 함 (default: true)
+ *   1) dues_prepayments insert (audit/추적용)
+ *   2) N개월치 dues_payment_status를 PAID로 일괄 upsert (note에 "N개월 선납" 표기)
+ *      - 기존 EXEMPT 상태인 월은 건드리지 않음 (면제 우선 정책)
  */
 export async function POST(request: NextRequest) {
   const ctx = await getApiContext();
@@ -68,7 +83,6 @@ export async function POST(request: NextRequest) {
     periodMonths,
     startMonth,
     notes,
-    recordTransaction = true,
   } = body;
 
   if (!memberId) return apiError("memberId required", 400);
@@ -83,65 +97,80 @@ export async function POST(request: NextRequest) {
   }
 
   const endMonth = computeEndMonth(startMonth, periodMonths);
-
-  // 자동 거래 기록 생성 (회비 매칭 위해 먼저 생성하고 ID 받아 prepayment에 연결)
   const resolvedUserId = userId && !String(userId).startsWith("unlinked_") ? userId : null;
-  let linkedDuesRecordId: string | null = null;
+  const resolvedMemberId = String(memberId).startsWith("unlinked_")
+    ? String(memberId).replace("unlinked_", "")
+    : memberId;
 
-  if (recordTransaction) {
-    const description = `${memberName ?? "회원"} ${periodMonths}개월 선납 (${startMonth.slice(0, 7)} ~ ${endMonth.slice(0, 7)})`;
-    const { data: duesRecord, error: duesErr } = await db
-      .from("dues_records")
-      .insert({
-        team_id: ctx.teamId,
-        user_id: resolvedUserId,
-        type: "INCOME",
-        amount,
-        description,
-        recorded_by: ctx.userId,
-        recorded_at: new Date().toISOString(),
-      })
-      .select("id")
-      .single();
-
-    if (duesErr) return apiError(`거래 기록 생성 실패: ${duesErr.message}`);
-    linkedDuesRecordId = duesRecord?.id ?? null;
-  }
-
+  // 1. 선납 row 생성 (audit/추적용)
   const { data: prepayment, error } = await db
     .from("dues_prepayments")
     .insert({
       team_id: ctx.teamId,
       user_id: resolvedUserId,
-      member_id: memberId,
+      member_id: resolvedMemberId,
       member_name: memberName ?? null,
       amount,
       period_months: periodMonths,
       start_month: startMonth,
       end_month: endMonth,
       status: "active",
-      linked_dues_record_id: linkedDuesRecordId,
       notes: notes ?? null,
       recorded_by: ctx.userId,
     })
     .select()
     .single();
 
-  if (error) {
-    // 롤백: prepayment insert 실패 시 거래 기록도 삭제
-    if (linkedDuesRecordId) {
-      await db.from("dues_records").delete().eq("id", linkedDuesRecordId);
-    }
-    return apiError(error.message);
+  if (error) return apiError(error.message);
+
+  // 2. N개월치 payment_status 일괄 PAID upsert (EXEMPT는 건드리지 않음)
+  const months = generateMonths(startMonth, periodMonths);
+  const startYM = startMonth.slice(0, 7);
+  const endYM = endMonth.slice(0, 7);
+  const note = `${periodMonths}개월 선납 (${startYM}~${endYM})`;
+  const monthlyAmount = Math.round(amount / periodMonths);
+
+  // 기존 EXEMPT 월 식별
+  const { data: existingRows } = await db
+    .from("dues_payment_status")
+    .select("month, status")
+    .eq("team_id", ctx.teamId)
+    .eq("member_id", resolvedMemberId)
+    .in("month", months);
+
+  const exemptMonths = new Set(
+    (existingRows ?? []).filter((r) => r.status === "EXEMPT").map((r) => r.month),
+  );
+
+  let upsertedCount = 0;
+  for (const month of months) {
+    if (exemptMonths.has(month)) continue;
+    const { error: upsertErr } = await db
+      .from("dues_payment_status")
+      .upsert(
+        {
+          team_id: ctx.teamId,
+          member_id: resolvedMemberId,
+          month,
+          status: "PAID",
+          paid_amount: monthlyAmount,
+          note,
+          updated_by: ctx.userId,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "team_id,member_id,month" },
+      );
+    if (!upsertErr) upsertedCount++;
   }
 
-  return apiSuccess({ prepayment }, 201);
+  return apiSuccess({ prepayment, monthsMarkedPaid: upsertedCount, exemptMonthsSkipped: exemptMonths.size }, 201);
 }
 
 /**
  * PATCH /api/dues/prepayments
- *   - 선납 취소 (status='cancelled'). linked dues_record 도 함께 삭제.
- *   body: { id }
+ *   1) dues_prepayments status='cancelled'
+ *   2) N개월치 payment_status 중 이 선납이 만든 row만 UNPAID로 reset
+ *      - note가 정확히 일치하는 row만 되돌림 (다른 출처로 PAID 된 row는 보존)
  */
 export async function PATCH(request: NextRequest) {
   const ctx = await getApiContext();
@@ -157,10 +186,10 @@ export async function PATCH(request: NextRequest) {
   const { id } = body;
   if (!id) return apiError("id required", 400);
 
-  // 1. 기존 선납 조회 (linked_dues_record_id 확보)
+  // 1. 선납 조회
   const { data: existing, error: fetchErr } = await db
     .from("dues_prepayments")
-    .select("id, team_id, status, linked_dues_record_id")
+    .select("id, team_id, status, member_id, start_month, end_month, period_months")
     .eq("id", id)
     .eq("team_id", ctx.teamId)
     .single();
@@ -186,14 +215,30 @@ export async function PATCH(request: NextRequest) {
 
   if (error) return apiError(error.message);
 
-  // 3. 자동 생성된 거래 기록 삭제 (있다면)
-  if (existing.linked_dues_record_id) {
-    await db
-      .from("dues_records")
-      .delete()
-      .eq("id", existing.linked_dues_record_id)
-      .eq("team_id", ctx.teamId);
+  // 3. payment_status 되돌리기 — 정확히 이 선납이 만든 note만 매칭
+  const months = generateMonths(existing.start_month, existing.period_months);
+  const startYM = existing.start_month.slice(0, 7);
+  const endYM = existing.end_month.slice(0, 7);
+  const expectedNote = `${existing.period_months}개월 선납 (${startYM}~${endYM})`;
+
+  let revertedCount = 0;
+  for (const month of months) {
+    const { data: rev, error: revErr } = await db
+      .from("dues_payment_status")
+      .update({
+        status: "UNPAID",
+        paid_amount: 0,
+        note: null,
+        updated_by: ctx.userId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("team_id", ctx.teamId)
+      .eq("member_id", existing.member_id)
+      .eq("month", month)
+      .eq("note", expectedNote)
+      .select("id");
+    if (!revErr && rev && rev.length > 0) revertedCount++;
   }
 
-  return apiSuccess({ prepayment: updated });
+  return apiSuccess({ prepayment: updated, monthsReverted: revertedCount });
 }

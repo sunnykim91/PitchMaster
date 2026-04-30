@@ -28,8 +28,6 @@ type DuesStatusMember = {
   paidAmount: number;
   status: "PAID" | "UNPAID" | "EXEMPT";
   note?: string;
-  isPrepaid?: boolean;
-  prepaymentPeriodMonths?: number;
 };
 
 type ApiMember = {
@@ -101,7 +99,7 @@ function DuesStatusTabInner({
   async function handleCancelPrepayment(p: PrepaymentRow) {
     const ok = await confirm({
       title: "선납을 취소하시겠습니까?",
-      description: "자동 등록된 입금 거래도 함께 삭제됩니다.",
+      description: "선납으로 자동 처리된 월들이 다시 미납으로 돌아갑니다. (수동으로 PAID 표시한 월은 영향 없음)",
       variant: "destructive",
       confirmLabel: "선납 취소",
     });
@@ -403,15 +401,7 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
               <span className="text-sm font-semibold text-foreground truncate">{m.name}</span>
-              {m.status === "PAID" && m.isPrepaid && (
-                <Badge
-                  className="border-0 bg-primary/15 text-primary text-[10px] px-1.5 py-0 shrink-0"
-                  title={`${m.prepaymentPeriodMonths ?? ""}개월 선납 적용`}
-                >
-                  선납
-                </Badge>
-              )}
-              {m.status === "PAID" && !m.isPrepaid && (
+              {m.status === "PAID" && (
                 <Badge variant="success" className="border-0 text-[10px] px-1.5 py-0 shrink-0">납부</Badge>
               )}
               {m.status === "UNPAID" && (

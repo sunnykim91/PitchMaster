@@ -55,7 +55,6 @@ export default function PrepaymentRegisterModal({
     monthlyAmountCandidates[0] ?? 30000,
   );
   const [notes, setNotes] = useState<string>("");
-  const [recordTransaction, setRecordTransaction] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState(false);
 
   // 모달이 열릴 때 기본값 리셋
@@ -66,7 +65,6 @@ export default function PrepaymentRegisterModal({
     setStartMonth(nextMonthFirst());
     setMonthlyAmount(monthlyAmountCandidates[0] ?? 30000);
     setNotes("");
-    setRecordTransaction(true);
   }, [open, monthlyAmountCandidates]);
 
   const totalAmount = useMemo(
@@ -130,7 +128,6 @@ export default function PrepaymentRegisterModal({
       periodMonths,
       startMonth,
       notes: notes.trim() || undefined,
-      recordTransaction,
     });
     setSubmitting(false);
     if (error) {
@@ -300,28 +297,13 @@ export default function PrepaymentRegisterModal({
             />
           </div>
 
-          {/* 거래기록 자동 추가 토글 */}
-          <label className="flex items-start gap-2.5 cursor-pointer rounded-lg border border-border bg-secondary/30 p-3">
-            <input
-              type="checkbox"
-              checked={recordTransaction}
-              onChange={(e) => setRecordTransaction(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
-            />
-            <div className="flex-1 text-sm">
-              <p className="font-medium text-foreground">입출금 기록에 자동 추가</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                INCOME 거래로 자동 등록됩니다. 이미 별도 입금 등록을 했다면 해제하세요.
-              </p>
-            </div>
-          </label>
-
           {/* 안내 박스 */}
           <div className="flex gap-2 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
             <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <p>선납 기간 동안 매월 자동 "납부 완료" 처리됩니다.</p>
-              <p>취소 시 자동 거래 기록도 함께 삭제됩니다.</p>
+              <p>선납 기간 {periodMonths}개월이 자동으로 "납부 완료" 표시됩니다.</p>
+              <p>입금 거래 기록은 입출금 탭에서 별도로 등록해 주세요.</p>
+              <p>취소 시 해당 월들이 다시 미납으로 돌아갑니다.</p>
             </div>
           </div>
         </div>
