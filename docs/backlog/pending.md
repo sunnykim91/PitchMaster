@@ -1,7 +1,7 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=89팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-04-29
+last_updated: 2026-04-30
 related: [completed-recent.md, reviews.md]
 ---
 
@@ -11,6 +11,40 @@ related: [completed-recent.md, reviews.md]
 - **HIGH**: 현재 89팀 운영에 직접 영향
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
+
+## 🟡 진행 중 — 36차 후반 (2026-04-30) — 회비 선납 셀링 UI
+
+**배경**: Migration 00048(grandfather)·00049(dues_prepayments) 이미 배포됨. 헬퍼(`src/lib/duesPrepayment.ts`)도 작성됨. UI만 만들면 즉시 동작. 결제 인프라 없이 수동(현금) 선납 매출 가능 → **활성 100팀 도달 전 워밍업용 첫 매출 채널**.
+
+**완료된 인프라**:
+- [x] `supabase/migrations/00049_dues_prepayments.sql` 배포 완료
+- [x] `src/lib/duesPrepayment.ts` — `computeEndMonth`·`isMonthPrepaid`·`remainingMonthsByMember`·`formatPrepaymentLabel` 4개 헬퍼
+
+**작업 범위 (ToDo, 36차 후반에 시작)**:
+- [ ] `src/app/api/dues/prepayments/route.ts` — GET(목록)·POST(등록)·PATCH(취소) 라우트
+  - POST: dues_prepayments insert + dues_records(INCOME) insert + linked_dues_record_id 연결
+  - PATCH: status='cancelled', cancelled_at·cancelled_by 갱신, linked dues_record 무효화 (deleted_at)
+- [ ] `src/app/(app)/dues/PrepaymentRegisterModal.tsx` — 신규 컴포넌트
+  - 회원 select + 시작월(기본 다음달) + 3/6/12개월 선택 + 금액 입력 + 메모
+  - 미리보기: "2026-05 ~ 2026-10 6개월 (180,000원)" 자동 계산
+  - 취소 시 환불 안내 박스
+- [ ] `src/app/(app)/dues/DuesClient.tsx` 수정
+  - 납부현황 탭 상단에 "선납 등록" 버튼 (PRESIDENT/STAFF만)
+  - 활성 prepayment 목록 카드 + 취소 버튼
+- [ ] `src/app/(app)/dues/DuesStatusTab.tsx` 수정
+  - 월별 셀에 `isMonthPrepaid()` 적용 → 선납 기간엔 "선납" 뱃지로 자동 납부 표시
+  - 회원 행 옆에 `formatPrepaymentLabel()` 라벨
+- [ ] 테스트: `src/__tests__/lib/duesPrepayment.test.ts` (헬퍼 단위 테스트)
+- [ ] 빌드·타입체크·커밋·푸시
+
+**제한 사항** (사용자 결정 필요한 부분):
+- 환불 정책: 현재 마이그레이션은 status='cancelled'만 지원. 부분 환불(N개월만 사용 후 취소)은 코드로 직접 dues_records 추가 작성 권장 — UI에는 단순 "전체 취소"만 노출
+- 면제 기간 자동 연장: 마이그레이션 주석은 "단순 차감 X" 정책 → UI도 일단 단순 모델로 (휴면·부상 들어가도 선납 기간은 유지)
+
+**관련 메모**:
+- 정책: `memory/project_pricing.md` — 활성 100팀 트리거, "먼저 함께한 팀" 보호
+- 마이그레이션: `supabase/migrations/00049_dues_prepayments.sql`
+- 헬퍼: `src/lib/duesPrepayment.ts`
 
 ## 🔴 최우선 — 즉시 처리 (2026-04-28)
 

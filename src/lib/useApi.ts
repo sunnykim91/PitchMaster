@@ -120,10 +120,10 @@ export function useApi<T>(
   return { data, setData, loading, error, refetch };
 }
 
-/** Helper for POST/PUT/DELETE mutations — 관련 캐시 무효화 */
+/** Helper for POST/PUT/PATCH/DELETE mutations — 관련 캐시 무효화 */
 export async function apiMutate<T = unknown>(
   url: string,
-  method: "POST" | "PUT" | "DELETE",
+  method: "POST" | "PUT" | "PATCH" | "DELETE",
   body?: unknown
 ): Promise<{ data: T | null; error: string | null }> {
   try {

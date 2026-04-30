@@ -22,6 +22,7 @@ import { DuesStatusTab } from "./DuesStatusTab";
 import { DuesBulkTab } from "./DuesBulkTab";
 import { DuesSettingsTab } from "./DuesSettingsTab";
 import { DuesPenaltyTab } from "./DuesPenaltyTab";
+import { isMonthPrepaid, type PrepaymentRow } from "@/lib/duesPrepayment";
 
 /* ── API / 초기 데이터 타입은 initialData.types.ts 공유 파일에서 import ── */
 
@@ -180,6 +181,16 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
     `/api/dues/payment-status?month=${monthFilter}`,
     [],
   );
+
+  // 선납 목록 (활성만)
+  const { data: prepaymentsData, refetch: refetchPrepayments } = useApi<{ prepayments: PrepaymentRow[] }>(
+    "/api/dues/prepayments?status=active",
+    { prepayments: [] },
+  );
+  const activePrepayments: PrepaymentRow[] = useMemo(
+    () => prepaymentsData?.prepayments ?? [],
+    [prepaymentsData],
+  );
   const paymentStatusMap = useMemo(() => {
     const map = new Map<string, { status: string; paidAmount: number; note?: string }>();
     for (const ps of paymentStatusRaw ?? []) {
@@ -310,11 +321,27 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
     }
   }, [settings.length, monthRecords, isDuesPayment, members, monthFilter, refetchPaymentStatus, showToast, paymentStatusRaw]);
 
-  /** 월별 회비 납부 현황 계산 */
+  /** 월별 회비 납부 현황 계산 (선납 우선 적용) */
   const duesStatus = useMemo(() => {
     if (!members.length) return [];
 
     const list = members.map((m) => {
+      // 1. 선납 우선: 해당 월이 활성 선납 기간에 포함되면 자동 PAID
+      const prepaidCheck = isMonthPrepaid(activePrepayments, m.memberId, monthFilter);
+      if (prepaidCheck.prepaid && prepaidCheck.prepayment) {
+        return {
+          id: m.id,
+          memberId: m.memberId,
+          name: m.name,
+          role: m.role,
+          paidAmount: 0, // 선납은 별도 거래로 기록되어 paidAmount는 표시 X
+          status: "PAID" as "PAID" | "UNPAID" | "EXEMPT",
+          note: undefined as string | undefined,
+          isPrepaid: true,
+          prepaymentPeriodMonths: prepaidCheck.prepayment.period_months,
+        };
+      }
+
       const dbStatus = paymentStatusMap.get(m.memberId);
 
       if (dbStatus) {
@@ -326,6 +353,8 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
           paidAmount: dbStatus.paidAmount,
           status: dbStatus.status as "PAID" | "UNPAID" | "EXEMPT",
           note: dbStatus.note,
+          isPrepaid: false,
+          prepaymentPeriodMonths: undefined as number | undefined,
         };
       }
 
@@ -342,6 +371,8 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
         paidAmount,
         status: (paidAmount > 0 ? "PAID" : "UNPAID") as "PAID" | "UNPAID" | "EXEMPT",
         note: undefined as string | undefined,
+        isPrepaid: false,
+        prepaymentPeriodMonths: undefined as number | undefined,
       };
     });
 
@@ -352,7 +383,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
     });
 
     return list;
-  }, [members, monthRecords, isDuesPayment, paymentStatusMap]);
+  }, [members, monthRecords, isDuesPayment, paymentStatusMap, activePrepayments, monthFilter]);
 
   /* 최초 로딩 시에만 스켈레톤 표시 (refetch 중에는 탭 콘텐츠 유지하여 state 보존) */
   const [initialLoaded, setInitialLoaded] = useState(false);
@@ -647,6 +678,10 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
           syncPaymentStatus={syncPaymentStatus}
           setDuesTab={setDuesTab}
           showToast={showToast}
+          prepayments={activePrepayments}
+          refetchPrepayments={refetchPrepayments}
+          members={members}
+          duesAmounts={duesAmounts}
         />
       </div>
 

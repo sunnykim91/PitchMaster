@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, Bell, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, RefreshCw, Users } from "lucide-react";
+import { AlertTriangle, Bell, CalendarClock, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Plus, RefreshCw, Users, X as XIcon } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,9 +11,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { apiMutate } from "@/lib/useApi";
+import { useConfirm } from "@/lib/ConfirmContext";
 import { useItemAction } from "@/lib/useAsyncAction";
 import { formatAmount } from "@/lib/formatters";
 import type { Role } from "@/lib/types";
+import { formatPrepaymentLabel, type PrepaymentRow } from "@/lib/duesPrepayment";
+import PrepaymentRegisterModal from "./PrepaymentRegisterModal";
 
 /* ── 타입 정의 ── */
 
@@ -25,6 +28,15 @@ type DuesStatusMember = {
   paidAmount: number;
   status: "PAID" | "UNPAID" | "EXEMPT";
   note?: string;
+  isPrepaid?: boolean;
+  prepaymentPeriodMonths?: number;
+};
+
+type ApiMember = {
+  id: string;
+  memberId: string;
+  name: string;
+  role: string;
 };
 
 type DuesSetting = {
@@ -50,6 +62,14 @@ export type DuesStatusTabProps = {
   syncPaymentStatus: () => Promise<void>;
   setDuesTab: (tab: DuesTabKey) => void;
   showToast?: (msg: string, type?: "success" | "error" | "info") => void;
+  /** 활성 선납 목록 */
+  prepayments?: PrepaymentRow[];
+  /** 선납 등록·취소 후 새로고침 */
+  refetchPrepayments?: () => Promise<unknown>;
+  /** 선납 등록 모달 회원 선택용 */
+  members?: ApiMember[];
+  /** 월 회비 후보 (선납 모달 자동 채움용) */
+  duesAmounts?: number[];
 };
 
 const ROLE_LABEL: Record<string, string> = { OWNER: "회장", MANAGER: "운영진", STAFF: "스태프" };
@@ -68,8 +88,35 @@ function DuesStatusTabInner({
   syncPaymentStatus,
   setDuesTab,
   showToast,
+  prepayments = [],
+  refetchPrepayments,
+  members = [],
+  duesAmounts = [],
 }: DuesStatusTabProps) {
   const [sendingNudge, setSendingNudge] = useState(false);
+  const [prepayModalOpen, setPrepayModalOpen] = useState(false);
+  const [cancellingPrepayId, setCancellingPrepayId] = useState<string | null>(null);
+  const confirm = useConfirm();
+
+  async function handleCancelPrepayment(p: PrepaymentRow) {
+    const ok = await confirm({
+      title: "선납을 취소하시겠습니까?",
+      description: "자동 등록된 입금 거래도 함께 삭제됩니다.",
+      variant: "destructive",
+      confirmLabel: "선납 취소",
+    });
+    if (!ok) return;
+    setCancellingPrepayId(p.id);
+    const { error } = await apiMutate("/api/dues/prepayments", "PATCH", { id: p.id });
+    setCancellingPrepayId(null);
+    if (error) {
+      showToast?.(error, "error");
+      return;
+    }
+    await refetchPrepayments?.();
+    await refetchPaymentStatus();
+    showToast?.(`${p.member_name ?? "회원"} 선납 취소 완료`, "success");
+  }
 
   async function handleUnpaidNudge() {
     const unpaidMembers = duesStatus.filter((m) => m.status === "UNPAID");
@@ -163,11 +210,11 @@ function DuesStatusTabInner({
 
       {/* 액션 버튼 */}
       {isStaffOrAbove(role) && (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => syncPaymentStatus()}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border/40 bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors active:scale-[0.97]"
+            className="flex flex-1 min-w-[110px] items-center justify-center gap-2 rounded-lg border border-border/40 bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors active:scale-[0.97]"
           >
             <RefreshCw className="h-4 w-4" />
             납부 자동 확인
@@ -176,13 +223,75 @@ function DuesStatusTabInner({
             type="button"
             onClick={handleUnpaidNudge}
             disabled={sendingNudge || duesStatus.filter((m) => m.status === "UNPAID").length === 0}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border/40 bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors active:scale-[0.97] disabled:opacity-50"
+            className="flex flex-1 min-w-[110px] items-center justify-center gap-2 rounded-lg border border-border/40 bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors active:scale-[0.97] disabled:opacity-50"
           >
             <Bell className="h-4 w-4" />
             {sendingNudge ? "발송 중..." : "미납 알림"}
           </button>
+          <button
+            type="button"
+            onClick={() => setPrepayModalOpen(true)}
+            className="flex flex-1 min-w-[110px] items-center justify-center gap-2 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 transition-colors active:scale-[0.97]"
+          >
+            <Plus className="h-4 w-4" />
+            선납 등록
+          </button>
         </div>
       )}
+
+      {/* 활성 선납 목록 */}
+      {isStaffOrAbove(role) && prepayments.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <CalendarClock className="h-3.5 w-3.5" />
+            활성 선납 ({prepayments.length}건)
+          </div>
+          <div className="space-y-1.5">
+            {prepayments.map((p) => (
+              <Card key={p.id} className="border-white/[0.06] bg-card py-2">
+                <CardContent className="flex items-center justify-between gap-2 px-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-semibold text-foreground truncate">
+                        {p.member_name ?? "회원"}
+                      </span>
+                      <Badge variant="outline" className="border-primary/30 text-primary text-[10px] px-1.5 py-0 shrink-0">
+                        {p.period_months}개월
+                      </Badge>
+                    </div>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {formatPrepaymentLabel(p)} · {formatAmount(p.amount)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleCancelPrepayment(p)}
+                    disabled={cancellingPrepayId === p.id}
+                    aria-label="선납 취소"
+                    className="rounded-md p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50"
+                  >
+                    <XIcon className="h-4 w-4" />
+                  </button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 선납 등록 모달 */}
+      <PrepaymentRegisterModal
+        open={prepayModalOpen}
+        onClose={() => setPrepayModalOpen(false)}
+        members={members}
+        monthlyAmountCandidates={duesAmounts.filter((a) => a > 0)}
+        onSuccess={async (msg) => {
+          showToast?.(msg, "success");
+          await refetchPrepayments?.();
+          await refetchPaymentStatus();
+        }}
+        onError={(msg) => showToast?.(msg, "error")}
+      />
 
       {/* 납부 통계 */}
       <PaymentStats monthFilter={monthFilter} duesStatus={duesStatus} />
@@ -294,7 +403,15 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
               <span className="text-sm font-semibold text-foreground truncate">{m.name}</span>
-              {m.status === "PAID" && (
+              {m.status === "PAID" && m.isPrepaid && (
+                <Badge
+                  className="border-0 bg-primary/15 text-primary text-[10px] px-1.5 py-0 shrink-0"
+                  title={`${m.prepaymentPeriodMonths ?? ""}개월 선납 적용`}
+                >
+                  선납
+                </Badge>
+              )}
+              {m.status === "PAID" && !m.isPrepaid && (
                 <Badge variant="success" className="border-0 text-[10px] px-1.5 py-0 shrink-0">납부</Badge>
               )}
               {m.status === "UNPAID" && (
