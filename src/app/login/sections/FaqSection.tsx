@@ -83,7 +83,7 @@ export default function FaqSection() {
     <section
       ref={ref}
       id="faq"
-      className="relative overflow-hidden py-24 lg:py-32 px-5 lg:px-14"
+      className="relative overflow-hidden py-20 lg:py-28 px-5 lg:px-14"
       style={{
         background:
           "radial-gradient(ellipse 60% 40% at 50% 0%, hsl(var(--accent) / 0.10), transparent 60%), hsl(var(--background))",
@@ -101,7 +101,7 @@ export default function FaqSection() {
             }}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-current" />
-            FAQ
+            자주 묻는 질문
           </span>
           <motion.h2
             initial={{ opacity: 0, y: 14 }}

@@ -113,7 +113,7 @@ export default function HowItWorksSection() {
       <section
         ref={sectionRef}
         id="how-it-works"
-        className="relative py-20 lg:py-32 px-5 lg:px-14 overflow-hidden"
+        className="relative py-16 lg:py-24 px-5 lg:px-14 overflow-hidden"
         style={{
           background:
             "radial-gradient(ellipse 80% 50% at 50% 0%, hsl(var(--primary) / 0.10), transparent 60%)," +
@@ -139,7 +139,7 @@ export default function HowItWorksSection() {
                 boxShadow: "0 0 0 3px hsl(var(--primary) / 0.2)",
               }}
             />
-            HOW IT WORKS
+            사용 방법
           </span>
 
           {/* Headline */}

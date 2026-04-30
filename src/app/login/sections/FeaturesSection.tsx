@@ -115,7 +115,6 @@ const PLAYER_CARDS: PlayerCardProps[] = [
       { label: "공격P", value: "50", streak: "🔥 9경기 연속" },
       { label: "MOM", value: "12", rank: "🏆 팀 1위" },
       { label: "출석률", value: "96%" },
-      { label: "승률", value: "82%" },
     ],
   },
   {
@@ -134,7 +133,6 @@ const PLAYER_CARDS: PlayerCardProps[] = [
       { label: "골", value: "5" },
       { label: "MOM", value: "5", streak: "🔥 5연속" },
       { label: "출석률", value: "88%" },
-      { label: "승률", value: "68%" },
       { label: "경기", value: "20" },
     ],
   },
@@ -155,7 +153,6 @@ const PLAYER_CARDS: PlayerCardProps[] = [
       { label: "출석률", value: "88%", streak: "🔥 8연속" },
       { label: "MOM", value: "2" },
       { label: "실점", value: "1.0" },
-      { label: "경기", value: "20" },
     ],
   },
   {
@@ -175,7 +172,6 @@ const PLAYER_CARDS: PlayerCardProps[] = [
       { label: "승률", value: "45%" },
       { label: "출석률", value: "62%" },
       { label: "MOM", value: "0" },
-      { label: "경기", value: "10" },
     ],
   },
 ];
@@ -636,7 +632,7 @@ function CoreFeatures() {
   return (
     <div className="mb-24 lg:mb-32">
       <motion.div initial="hidden" animate={inView ? "show" : "hidden"} variants={fadeUp} ref={ref}>
-        <Eyebrow tone="primary">CORE FEATURES</Eyebrow>
+        <Eyebrow tone="primary">핵심 기능</Eyebrow>
       </motion.div>
       <motion.h2
         initial="hidden"
@@ -691,7 +687,7 @@ function SmartLineup() {
   return (
     <div className="mb-24 lg:mb-32" ref={ref}>
       <motion.div initial="hidden" animate={inView ? "show" : "hidden"} variants={fadeUp}>
-        <Eyebrow tone="accent">SMART LINEUP</Eyebrow>
+        <Eyebrow tone="accent">AI 라인업</Eyebrow>
       </motion.div>
 
       <motion.div
@@ -982,7 +978,7 @@ function RoleGuide() {
   return (
     <div className="mb-24 lg:mb-32" ref={ref}>
       <motion.div initial="hidden" animate={inView ? "show" : "hidden"} variants={fadeUp}>
-        <Eyebrow tone="info">ROLE GUIDE</Eyebrow>
+        <Eyebrow tone="info">역할 가이드</Eyebrow>
       </motion.div>
       <motion.h2
         initial="hidden"
@@ -1115,7 +1111,7 @@ function PlayerCardsAndAwards() {
   return (
     <div ref={ref}>
       <motion.div initial="hidden" animate={inView ? "show" : "hidden"} variants={fadeUp}>
-        <Eyebrow tone="warning">PLAYER CARD</Eyebrow>
+        <Eyebrow tone="warning">선수 카드</Eyebrow>
       </motion.div>
       <motion.h2
         initial="hidden"
@@ -1256,7 +1252,7 @@ export default function FeaturesSection() {
 
       <section
         id="features"
-        className="relative py-20 lg:py-32 px-5 lg:px-14 overflow-hidden"
+        className="relative py-16 lg:py-24 px-5 lg:px-14 overflow-hidden"
         style={{
           background:
             "radial-gradient(ellipse 80% 40% at 50% 0%, hsl(var(--primary) / 0.08), transparent 60%)," +

@@ -78,7 +78,7 @@ export default function TestimonialsSection({
     <section
       ref={ref}
       id="testimonials"
-      className="relative overflow-hidden py-24 lg:py-32"
+      className="relative overflow-hidden py-20 lg:py-28"
       style={{
         background:
           "radial-gradient(ellipse 60% 40% at 50% 100%, hsl(var(--success) / 0.10), transparent 60%), hsl(var(--background))",
@@ -95,7 +95,7 @@ export default function TestimonialsSection({
           }}
         >
           <span className="w-1.5 h-1.5 rounded-full bg-current" />
-          TESTIMONIALS
+          사용자 후기
         </span>
 
         <motion.h2

@@ -70,7 +70,7 @@ export default function MoreFeaturesSection() {
     <section
       ref={ref}
       id="more-features"
-      className="relative overflow-hidden py-24 lg:py-32 px-5 lg:px-14"
+      className="relative overflow-hidden py-16 lg:py-24 px-5 lg:px-14"
       style={{
         background:
           "radial-gradient(ellipse 70% 40% at 50% 0%, hsl(var(--info) / 0.08), transparent 60%), hsl(var(--background))",
@@ -87,7 +87,7 @@ export default function MoreFeaturesSection() {
           }}
         >
           <span className="w-1.5 h-1.5 rounded-full bg-current" />
-          MORE FEATURES
+          더 많은 기능
         </span>
 
         <h2

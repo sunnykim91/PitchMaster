@@ -38,7 +38,7 @@ export default function FinalCtaSection({
     <section
       ref={ref}
       id="final-cta"
-      className="relative overflow-hidden py-28 lg:py-40 px-5 lg:px-14"
+      className="relative overflow-hidden py-20 lg:py-28 px-5 lg:px-14"
       style={{
         background:
           "radial-gradient(ellipse 80% 60% at 22% 18%, hsl(var(--primary) / 0.22), transparent 60%)," +
@@ -51,7 +51,7 @@ export default function FinalCtaSection({
       {/* Wordmark flowing background */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <div
-          className="absolute top-[8%] left-0 flex gap-10 whitespace-nowrap font-display text-[clamp(40px,6vw,80px)] tracking-[0.04em] opacity-[0.04]"
+          className="hidden lg:flex absolute top-[8%] left-0 gap-10 whitespace-nowrap font-display text-[clamp(40px,6vw,80px)] tracking-[0.04em] opacity-[0.04]"
           style={{
             color: "hsl(var(--foreground))",
             animation: reduced ? undefined : "fc-marquee 50s linear infinite",
@@ -62,7 +62,7 @@ export default function FinalCtaSection({
           ))}
         </div>
         <div
-          className="absolute bottom-[10%] left-0 flex gap-10 whitespace-nowrap font-display text-[clamp(40px,6vw,80px)] tracking-[0.04em] opacity-[0.04]"
+          className="hidden lg:flex absolute bottom-[10%] left-0 gap-10 whitespace-nowrap font-display text-[clamp(40px,6vw,80px)] tracking-[0.04em] opacity-[0.04]"
           style={{
             color: "hsl(var(--foreground))",
             animation: reduced ? undefined : "fc-marquee-rev 70s linear infinite",
@@ -98,7 +98,7 @@ export default function FinalCtaSection({
           }}
         >
           <span className="w-1.5 h-1.5 rounded-full bg-current" />
-          GET STARTED
+          지금 시작
         </span>
 
         {/* Headline */}
@@ -113,7 +113,9 @@ export default function FinalCtaSection({
             textWrap: "balance",
           }}
         >
-          이번 주{" "}
+          이제{" "}
+          <span style={{ color: "hsl(var(--destructive))" }}>&ldquo;투표 좀요&rdquo;</span>
+          <br />
           <span
             className="bg-clip-text"
             style={{
@@ -126,11 +128,8 @@ export default function FinalCtaSection({
               animation: reduced ? undefined : "fc-grad-flow 4s ease-in-out infinite",
             }}
           >
-            금요일,
+            그만 보내세요
           </span>
-          <br />
-          갠톡 <span style={{ color: "hsl(var(--destructive))" }}>5통</span> 대신{" "}
-          <span style={{ color: "hsl(var(--primary))" }}>링크 하나</span>
         </motion.h2>
 
         {/* 5→1 visual */}
@@ -144,9 +143,9 @@ export default function FinalCtaSection({
             textWrap: "pretty",
           }}
         >
-          조기축구 5년차 총무가 직접 만들어 쓰는 앱.
+          링크 1개 → 미응답자 자동 알림 → 갠톡 추적 <b className="font-bold text-foreground">0</b>
           <br />
-          현재 무료, 팀원 초대도 링크 하나면 끝.
+          <span className="opacity-70">조기축구 5년차 회장이 직접 만들어 쓰는 앱 · 현재 무료</span>
         </p>
 
         {/* CTAs */}
@@ -231,7 +230,7 @@ function FiveToOne({ inView, reduced }: { inView: boolean; reduced: boolean }) {
   ];
 
   return (
-    <div className="relative mx-auto mt-10 h-[100px] lg:h-[110px]" style={{ maxWidth: 620 }}>
+    <div className="relative mx-auto mt-10 h-[100px] lg:h-[110px] hidden lg:block" style={{ maxWidth: 620 }}>
       {bubbles.map((b, i) => (
         <motion.span
           key={i}

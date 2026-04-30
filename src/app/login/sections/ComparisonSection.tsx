@@ -74,7 +74,7 @@ export default function ComparisonSection() {
     <section
       ref={ref}
       id="comparison"
-      className="relative overflow-hidden py-24 lg:py-32 px-5 lg:px-14"
+      className="relative overflow-hidden py-20 lg:py-28 px-5 lg:px-14"
       style={{
         background:
           "radial-gradient(ellipse 80% 50% at 50% 0%, hsl(var(--primary) / 0.10), transparent 60%), hsl(var(--background))",
@@ -91,7 +91,7 @@ export default function ComparisonSection() {
           }}
         >
           <span className="w-1.5 h-1.5 rounded-full bg-current" />
-          COMPARISON
+          왜 PitchMaster?
         </span>
 
         <h2

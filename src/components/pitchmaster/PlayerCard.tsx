@@ -194,10 +194,10 @@ function CardBack({
         {jerseyNumber ?? "?"}
       </div>
 
-      <div className="relative h-full p-4 sm:p-5 flex flex-col">
-        {/* Header — 넉넉하게 */}
-        <div className="mb-3">
-          <div className="flex items-center justify-between mb-2">
+      <div className="relative h-full p-3 sm:p-4 flex flex-col">
+        {/* Header — 컴팩트 */}
+        <div className="mb-2">
+          <div className="flex items-center justify-between mb-1">
             <p className={cn("text-[10px] tracking-[0.3em] font-bold", config.labelColor)}>
               {config.label}
             </p>
@@ -209,18 +209,18 @@ function CardBack({
               {ovr}
             </span>
           </div>
-          <p className="text-[11px] text-white/50 mt-1.5">{teamName} · {seasonName}</p>
+          <p className="text-[11px] text-white/50 mt-1">{teamName} · {seasonName}</p>
         </div>
 
         {/* Divider with rarity color */}
-        <div className={cn("h-px w-full mb-3", config.labelColor.replace("text-", "bg-"), "opacity-30")} />
+        <div className={cn("h-px w-full mb-2", config.labelColor.replace("text-", "bg-"), "opacity-30")} />
 
-        {/* Stats Table — 여유 있게 */}
+        {/* Stats Table */}
         <div className="flex-1 min-h-0">
-          <p className="text-[9px] tracking-[0.25em] text-white/40 uppercase mb-2 font-bold">시즌 기록</p>
+          <p className="text-[9px] tracking-[0.25em] text-white/40 uppercase mb-1 font-bold">시즌 기록</p>
           <div className="space-y-0">
             {stats.map((stat, i) => (
-              <div key={i} className="flex items-center justify-between py-2 border-b border-white/10 last:border-0">
+              <div key={i} className="flex items-center justify-between py-1.5 border-b border-white/10 last:border-0">
                 <span className="text-sm text-white/70 font-medium">{stat.label}</span>
                 <div className="flex items-center gap-2">
                   <span className="text-lg sm:text-xl font-black text-white">{stat.value}</span>
@@ -234,7 +234,7 @@ function CardBack({
         </div>
 
         {/* Footer — 뒤집기 힌트 */}
-        <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between">
+        <div className="mt-2 pt-1.5 border-t border-white/5 flex items-center justify-between">
           <p className="text-[9px] tracking-[0.3em] text-white/30 font-bold">PITCHMASTER</p>
           <p className="text-[9px] text-white/30 flex items-center gap-1">
             <span>탭하면 앞면</span>
