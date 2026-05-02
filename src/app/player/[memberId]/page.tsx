@@ -430,6 +430,14 @@ export default async function PlayerProfilePageRoute({ params, searchParams }: P
   const data = await getPlayerData(memberId, team, enableAi, session?.user?.id ?? null, session?.user?.teamId ?? null);
   if (!data) return notFound();
 
+  // PitchScore™ 점진 출시 — 김선휘만 활성 (검증 단계). CLAUDE.md AI Feature Flag 패턴과 동일.
+  // 비로그인 viewer + 일반 로그인 사용자 모두 카드 안 노출. 김선휘가 본인 자가 평가로 흐름 검증.
+  // 안정되면 이 조건을 제거(또는 팀 단위 점진 확대)하여 전체 오픈.
+  const enablePitchScore = session?.user?.name === "김선휘";
+  if (!enablePitchScore) {
+    data.userId = undefined;
+  }
+
   if (!data.stats) {
     return <PlayerProfileEmpty name={data.name} teamName={data.teamName} positions={data.positions} />;
   }

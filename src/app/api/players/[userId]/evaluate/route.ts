@@ -72,8 +72,23 @@ export async function POST(
   if (targetErr) return apiError(targetErr.message, 500);
   if (!targetUser) return apiError("target user not found", 404);
 
-  // source 자동 결정
+  // 같은 팀 검증 — 본인이 아니면 target과 evaluator가 같은 팀 소속이어야 평가 가능
   const isSelf = targetUserId === ctx.userId;
+  if (!isSelf) {
+    const { data: targetMembership, error: membershipErr } = await sb
+      .from("team_members")
+      .select("id")
+      .eq("user_id", targetUserId)
+      .eq("team_id", ctx.teamId)
+      .in("status", ["ACTIVE", "DORMANT"])
+      .limit(1);
+    if (membershipErr) return apiError(membershipErr.message, 500);
+    if (!targetMembership || targetMembership.length === 0) {
+      return apiError("같은 팀 멤버만 평가할 수 있습니다", 403);
+    }
+  }
+
+  // source 자동 결정 — 같은 팀 검증 후라 ctx.teamRole 신뢰 가능
   const isStaffOrPresident =
     ctx.teamRole === "PRESIDENT" || ctx.teamRole === "STAFF";
   const source: EvaluationSource = isSelf

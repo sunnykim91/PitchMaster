@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import PitchScoreRadar from "./PitchScoreRadar";
 import PitchScoreBarList from "./PitchScoreBarList";
 import EvaluationModal from "./EvaluationModal";
+import { CATEGORY_META } from "@/lib/playerAttributes/config";
 import type {
   AttributeCode,
   AttributeCategory,
@@ -20,9 +21,36 @@ interface AttributeRow {
   level: 1 | 2 | 3 | 4 | 5 | null;
 }
 
+interface CategoryAvg {
+  category: AttributeCategory;
+  avg: number;
+  count: number;
+}
+
+interface CommentResult {
+  comment: string;
+  archetype: string | null;
+  strengths: AttributeCategory[];
+  weaknesses: AttributeCategory[];
+}
+
+interface PositionRec {
+  position: string;
+  name_ko: string;
+  score: number;
+  matched_count: number;
+  top_attributes: { code: AttributeCode; name_ko: string; score: number }[];
+}
+
 interface AttributesResponse {
   user_id: string;
+  is_goalkeeper: boolean;
   attributes: AttributeRow[];
+  category_averages: CategoryAvg[];
+  overall_pitch_score: number;
+  total_samples: number;
+  comment: CommentResult | null;
+  recommended_positions: PositionRec[];
   algorithm: string;
   product: string;
 }
@@ -37,9 +65,10 @@ interface Props {
   targetUserId: string;
   targetUserName: string;
   isGoalkeeper?: boolean;
-  /** 본인 또는 운영진은 평가 가능 (UI 표시용) */
   canEvaluate?: boolean;
 }
+
+const COMMENT_MIN_SAMPLES = 5;
 
 export default function PitchScoreCard({
   targetUserId,
@@ -78,35 +107,32 @@ export default function PitchScoreCard({
     load();
   }, [load]);
 
-  const attributes = (data?.attributes ?? []).filter(
-    (a) => isGoalkeeper || !a.gk_only,
-  );
-  const totalSamples = attributes.reduce((sum, a) => sum + a.sample_count, 0);
+  const effectiveIsGK = isGoalkeeper ?? data?.is_goalkeeper ?? false;
+  const attributes = (data?.attributes ?? []).filter((a) => effectiveIsGK || !a.gk_only);
+  const totalSamples = data?.total_samples ?? 0;
+  const overall = data?.overall_pitch_score ?? 0;
+  const comment = data?.comment ?? null;
+  const recommendations = data?.recommended_positions ?? [];
+  const categoryAvgs = data?.category_averages ?? [];
 
-  // 카테고리별 평균 (레이더 차트)
-  const categoryAvg: Array<{ category: AttributeCategory; avg: number; count: number }> = [];
-  const grouped = new Map<AttributeCategory, AttributeRow[]>();
-  for (const a of attributes) {
-    const arr = grouped.get(a.category) ?? [];
-    arr.push(a);
-    grouped.set(a.category, arr);
-  }
-  for (const [cat, items] of grouped) {
-    const rated = items.filter((i) => i.sample_count > 0);
-    const avg = rated.length > 0
-      ? rated.reduce((s, i) => s + i.pitch_score, 0) / rated.length
-      : 0;
-    const count = rated.reduce((s, i) => s + i.sample_count, 0);
-    categoryAvg.push({ category: cat, avg, count });
-  }
+  // 5명 미만이면 코멘트·추천 비활성
+  const showInsights = totalSamples >= COMMENT_MIN_SAMPLES;
 
   return (
-    <section className="rounded-xl border border-border bg-card p-5">
-      <header className="mb-4 flex items-start justify-between">
-        <div>
-          <h2 className="text-lg font-bold">
-            PitchScore<sup className="text-xs">™</sup>
-          </h2>
+    <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
+      <header className="mb-4 flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline gap-2">
+            <h2 className="text-lg font-bold">
+              PitchScore<sup className="text-xs">™</sup>
+            </h2>
+            {totalSamples > 0 && (
+              <span className="text-xl font-black text-[hsl(var(--primary))]">
+                {overall.toFixed(1)}
+                <span className="text-xs text-muted-foreground"> / 5</span>
+              </span>
+            )}
+          </div>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Triple Trust 알고리즘 — 누가·언제·어떻게 평가했는지 모두 반영
           </p>
@@ -115,9 +141,9 @@ export default function PitchScoreCard({
           <button
             type="button"
             onClick={() => setModalOpen(true)}
-            className="rounded-md bg-[hsl(var(--primary))] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
+            className="shrink-0 whitespace-nowrap rounded-md bg-[hsl(var(--primary))] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
           >
-            평가하기
+            + 평가
           </button>
         )}
       </header>
@@ -128,9 +154,7 @@ export default function PitchScoreCard({
         </div>
       ) : totalSamples === 0 ? (
         <div className="py-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            아직 평가가 없어요
-          </p>
+          <p className="text-sm text-muted-foreground">아직 평가가 없어요</p>
           {canEvaluate && (
             <button
               type="button"
@@ -143,11 +167,97 @@ export default function PitchScoreCard({
         </div>
       ) : (
         <div className="space-y-5">
-          <PitchScoreRadar data={categoryAvg} />
-          <div className="text-xs text-muted-foreground">
-            평가 누적 {totalSamples}건
+          {/* 룰 기반 한 줄 코멘트 (5명+ 평가) */}
+          {showInsights && comment && (
+            <div className="rounded-lg border border-[hsl(var(--primary))]/20 bg-[hsl(var(--primary))]/5 p-3">
+              {comment.archetype && (
+                <div className="mb-1 text-sm font-bold text-[hsl(var(--primary))]">
+                  {comment.archetype}
+                </div>
+              )}
+              <p className="text-sm leading-relaxed">{comment.comment}</p>
+            </div>
+          )}
+
+          {/* 강점 카테고리 칩 (5명+ 평가) */}
+          {showInsights && comment && comment.strengths.length > 0 && (
+            <div>
+              <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                강점
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {comment.strengths.map((cat) => (
+                  <span
+                    key={cat}
+                    className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold"
+                    style={{
+                      backgroundColor: `${CATEGORY_META[cat].color}20`,
+                      color: CATEGORY_META[cat].color,
+                    }}
+                  >
+                    <span>{CATEGORY_META[cat].emoji}</span>
+                    {CATEGORY_META[cat].name_ko}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 적합 포지션 추천 (5명+ 평가) */}
+          {showInsights && recommendations.length > 0 && (
+            <div>
+              <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                적합 포지션
+              </div>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {recommendations.map((rec, idx) => (
+                  <div
+                    key={rec.position}
+                    className="rounded-lg border border-border bg-background/40 p-3"
+                  >
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-sm font-bold">
+                        {idx === 0 && "👑 "}
+                        {rec.name_ko}
+                      </span>
+                      <span className="text-sm font-bold text-[hsl(var(--primary))]">
+                        {rec.score.toFixed(1)}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-[11px] text-muted-foreground line-clamp-1">
+                      {rec.top_attributes.map((a) => a.name_ko).join(" · ")}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 레이더 차트 */}
+          <PitchScoreRadar
+            data={categoryAvgs.map((c) => ({
+              category: c.category,
+              avg: c.avg,
+              count: c.count,
+            }))}
+          />
+
+          {/* 5명 미만 안내 */}
+          {!showInsights && (
+            <div className="rounded-lg border border-border bg-background/40 p-3 text-center text-xs text-muted-foreground">
+              평가가 {COMMENT_MIN_SAMPLES}건 이상 누적되면 한 줄 코멘트와 적합 포지션이 노출돼요
+              <br />
+              (현재 {totalSamples}건)
+            </div>
+          )}
+
+          {/* 22개 능력치 막대 */}
+          <div>
+            <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              세부 능력치
+            </div>
+            <PitchScoreBarList attributes={attributes} labelMap={labels} />
           </div>
-          <PitchScoreBarList attributes={attributes} labelMap={labels} />
         </div>
       )}
 
@@ -156,7 +266,7 @@ export default function PitchScoreCard({
         onClose={() => setModalOpen(false)}
         targetUserId={targetUserId}
         targetUserName={targetUserName}
-        isGoalkeeper={isGoalkeeper}
+        isGoalkeeper={effectiveIsGK}
         onSaved={load}
       />
     </section>

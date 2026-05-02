@@ -396,7 +396,8 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
   const [showImageShareModal, setShowImageShareModal] = useState(false);
   const [shareToast, setShareToast] = useState<string | null>(null);
   const { name, teamName, teamPrimaryColor, positions, preferredFoot, jerseyNumber, teamRole, seasonName, signature, playerCardProps, stats, bestMoments, recentMatches, attendanceHistory, userId } = profile;
-  const isGoalkeeper = positions.some((p) => p?.toUpperCase() === "GK");
+  // 1순위 포지션이 GK일 때만 GK로 분류 — API의 isGoalkeeper 판정 룰과 일치
+  const isGoalkeeper = positions[0]?.toUpperCase() === "GK";
 
   function handleBack() {
     if (typeof window === "undefined") return;
