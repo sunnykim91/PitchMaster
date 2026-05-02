@@ -22,7 +22,6 @@ import { DuesStatusTab } from "./DuesStatusTab";
 import { DuesBulkTab } from "./DuesBulkTab";
 import { DuesSettingsTab } from "./DuesSettingsTab";
 import { DuesPenaltyTab } from "./DuesPenaltyTab";
-import type { PrepaymentRow } from "@/lib/duesPrepayment";
 
 /* ── API / 초기 데이터 타입은 initialData.types.ts 공유 파일에서 import ── */
 
@@ -182,15 +181,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
     [],
   );
 
-  // 선납 목록 (활성만)
-  const { data: prepaymentsData, refetch: refetchPrepayments } = useApi<{ prepayments: PrepaymentRow[] }>(
-    "/api/dues/prepayments?status=active",
-    { prepayments: [] },
-  );
-  const activePrepayments: PrepaymentRow[] = useMemo(
-    () => prepaymentsData?.prepayments ?? [],
-    [prepaymentsData],
-  );
   const paymentStatusMap = useMemo(() => {
     const map = new Map<string, { status: string; paidAmount: number; note?: string }>();
     for (const ps of paymentStatusRaw ?? []) {
@@ -321,9 +311,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
     }
   }, [settings.length, monthRecords, isDuesPayment, members, monthFilter, refetchPaymentStatus, showToast, paymentStatusRaw]);
 
-  /** 월별 회비 납부 현황 계산
-   *  선납은 등록 시 N개월치 payment_status를 PAID로 직접 기록 → 별도 override 불필요.
-   */
   const duesStatus = useMemo(() => {
     if (!members.length) return [];
 
@@ -660,10 +647,6 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
           syncPaymentStatus={syncPaymentStatus}
           setDuesTab={setDuesTab}
           showToast={showToast}
-          prepayments={activePrepayments}
-          refetchPrepayments={refetchPrepayments}
-          members={members}
-          duesAmounts={duesAmounts}
         />
       </div>
 

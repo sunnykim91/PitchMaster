@@ -21,7 +21,7 @@ export async function GET() {
   return apiSuccess({ exemptions: data ?? [] });
 }
 
-/** POST: 면제/휴회/부상 등록 */
+/** POST: 면제/선납/휴회/부상 등록 */
 export async function POST(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
@@ -30,7 +30,16 @@ export async function POST(request: NextRequest) {
   if (roleCheck) return roleCheck;
 
   const body = await request.json();
-  const { memberId, exemptionType, reason, startDate, endDate } = body;
+  const {
+    memberId,
+    exemptionType,
+    reason,
+    startDate,
+    endDate,
+    monthlyAmount,
+    periodMonths,
+    actualPaidAmount,
+  } = body;
 
   if (!memberId || !exemptionType || !startDate) {
     return apiError("memberId, exemptionType, startDate are required", 400);
@@ -42,6 +51,26 @@ export async function POST(request: NextRequest) {
 
   if (endDate && startDate && endDate < startDate) {
     return apiError("종료일은 시작일 이후여야 합니다.", 400);
+  }
+
+  // PREPAID 전용 검증
+  let prepaidFields: { monthly_amount?: number; period_months?: number; actual_paid_amount?: number } = {};
+  if (exemptionType === "PREPAID") {
+    if (!endDate) return apiError("선납은 종료일이 필요합니다.", 400);
+    if (typeof monthlyAmount !== "number" || monthlyAmount <= 0) {
+      return apiError("선납 월 회비는 0보다 커야 합니다.", 400);
+    }
+    if (typeof periodMonths !== "number" || periodMonths <= 0) {
+      return apiError("선납 기간은 1개월 이상이어야 합니다.", 400);
+    }
+    if (typeof actualPaidAmount !== "number" || actualPaidAmount <= 0) {
+      return apiError("받은 금액은 0보다 커야 합니다.", 400);
+    }
+    prepaidFields = {
+      monthly_amount: monthlyAmount,
+      period_months: periodMonths,
+      actual_paid_amount: actualPaidAmount,
+    };
   }
 
   const db = getSupabaseAdmin();
@@ -57,6 +86,7 @@ export async function POST(request: NextRequest) {
       start_date: startDate,
       end_date: endDate || null,
       created_by: ctx.userId,
+      ...prepaidFields,
     })
     .select()
     .single();

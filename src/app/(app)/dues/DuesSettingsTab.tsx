@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, X, UserX } from "lucide-react";
+import Link from "next/link";
+import { Plus, X, UserX, Wallet } from "lucide-react";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -437,7 +438,7 @@ function DuesSettingsTabInner({
       <PenaltyRulesSection refetchSummary={refetchSummary} />
 
       {/* ── 회원 회비 면제 관리 ── */}
-      <MemberExemptionSection members={members ?? []} refetchPaymentStatus={refetchPaymentStatus} />
+      <MemberExemptionSection members={members ?? []} refetchPaymentStatus={refetchPaymentStatus} settings={settings} />
     </div>
   );
 }
@@ -640,13 +641,17 @@ function PenaltyRulesSection({ refetchSummary }: { refetchSummary: () => Promise
   );
 }
 
-// ── 회원 회비 상태 관리 (면제/휴회/부상) ──
+// ── 회원 회비 상태 관리 (면제/선납/휴회/부상) ──
 const EXEMPTION_TYPES = [
   { value: "EXEMPT", label: "면제", color: "text-[hsl(var(--warning))]" },
   { value: "PREPAID", label: "선납", color: "text-[hsl(var(--success))]" },
   { value: "LEAVE", label: "휴회", color: "text-[hsl(var(--info))]" },
   { value: "INJURED", label: "부상", color: "text-destructive" },
 ] as const;
+
+type ExemptionType = "EXEMPT" | "PREPAID" | "LEAVE" | "INJURED";
+
+const PREPAID_PERIOD_OPTIONS = [3, 6, 12] as const;
 
 type Exemption = {
   id: string;
@@ -657,14 +662,69 @@ type Exemption = {
   end_date: string | null;
   is_active: boolean;
   created_at: string;
+  monthly_amount: number | null;
+  period_months: number | null;
+  actual_paid_amount: number | null;
 };
 
-function MemberExemptionSection({ members, refetchPaymentStatus }: { members: ApiMember[]; refetchPaymentStatus?: () => Promise<unknown> }) {
+function nextMonthFirstISO(): string {
+  const now = new Date();
+  const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-01`;
+}
+
+function computePrepaidEndDate(startMonth: string, periodMonths: number): string {
+  if (!/^\d{4}-\d{2}-01$/.test(startMonth)) return "";
+  const [y, m] = startMonth.slice(0, 7).split("-").map(Number);
+  const endMonthIdx = m - 1 + periodMonths - 1;
+  const carryYear = y + Math.floor(endMonthIdx / 12);
+  const carryMonth = ((endMonthIdx % 12) + 12) % 12;
+  const last = new Date(carryYear, carryMonth + 1, 0);
+  const yyyy = last.getFullYear();
+  const mm = String(last.getMonth() + 1).padStart(2, "0");
+  const dd = String(last.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function MemberExemptionSection({
+  members,
+  refetchPaymentStatus,
+  settings,
+}: {
+  members: ApiMember[];
+  refetchPaymentStatus?: () => Promise<unknown>;
+  settings: DuesSetting[];
+}) {
   const [exemptions, setExemptions] = useState<Exemption[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [adding, setAdding] = useState(false);
   const [runAction, actionLoading] = useAsyncAction();
   const confirm = useConfirm();
+
+  // 폼 상태
+  const defaultMonthlyAmount = settings[0]?.monthlyAmount ?? 30000;
+  const [memberId, setMemberId] = useState("");
+  const [exemptionType, setExemptionType] = useState<ExemptionType>("EXEMPT");
+  const [reason, setReason] = useState("");
+  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
+  const [endDate, setEndDate] = useState("");
+  // PREPAID 전용
+  const [periodMonths, setPeriodMonths] = useState<3 | 6 | 12>(6);
+  const [startMonth, setStartMonth] = useState(nextMonthFirstISO());
+  const [monthlyAmount, setMonthlyAmount] = useState<number>(defaultMonthlyAmount);
+  const [actualPaidAmount, setActualPaidAmount] = useState<number>(defaultMonthlyAmount * 6);
+
+  function resetForm() {
+    setMemberId("");
+    setExemptionType("EXEMPT");
+    setReason("");
+    setStartDate(new Date().toISOString().slice(0, 10));
+    setEndDate("");
+    setPeriodMonths(6);
+    setStartMonth(nextMonthFirstISO());
+    setMonthlyAmount(defaultMonthlyAmount);
+    setActualPaidAmount(defaultMonthlyAmount * 6);
+  }
 
   React.useEffect(() => {
     fetch("/api/dues/member-status")
@@ -673,21 +733,39 @@ function MemberExemptionSection({ members, refetchPaymentStatus }: { members: Ap
       .catch(() => setLoaded(true));
   }, []);
 
-  async function handleAdd(formData: FormData) {
-    const memberId = String(formData.get("memberId") || "");
-    const exemptionType = String(formData.get("exemptionType") || "EXEMPT");
-    const reason = String(formData.get("reason") || "").trim();
-    const startDate = String(formData.get("startDate") || "");
-    const endDate = String(formData.get("endDate") || "");
-    if (!memberId || !startDate) return;
+  async function handleAdd() {
+    if (!memberId) return;
+
+    let payload: Record<string, unknown>;
+    if (exemptionType === "PREPAID") {
+      if (!/^\d{4}-\d{2}-01$/.test(startMonth) || monthlyAmount <= 0 || actualPaidAmount <= 0) return;
+      payload = {
+        memberId,
+        exemptionType,
+        reason: reason.trim() || null,
+        startDate: startMonth,
+        endDate: computePrepaidEndDate(startMonth, periodMonths),
+        monthlyAmount,
+        periodMonths,
+        actualPaidAmount,
+      };
+    } else {
+      if (!startDate) return;
+      payload = {
+        memberId,
+        exemptionType,
+        reason: reason.trim() || null,
+        startDate,
+        endDate: endDate || null,
+      };
+    }
 
     await runAction(async () => {
-      const { data } = await apiMutate("/api/dues/member-status", "POST", {
-        memberId, exemptionType, reason: reason || null, startDate, endDate: endDate || null,
-      });
+      const { data } = await apiMutate("/api/dues/member-status", "POST", payload);
       if (data) {
         setExemptions((prev) => [data as Exemption, ...prev]);
         setAdding(false);
+        resetForm();
         refetchPaymentStatus?.();
       }
     });
@@ -717,12 +795,17 @@ function MemberExemptionSection({ members, refetchPaymentStatus }: { members: Ap
 
   if (!loaded) return null;
 
+  const isPrepaidForm = exemptionType === "PREPAID";
+  const prepaidTotal = monthlyAmount * periodMonths;
+  const prepaidDiscount = prepaidTotal - actualPaidAmount;
+  const prepaidEndDate = computePrepaidEndDate(startMonth, periodMonths);
+
   return (
     <div className="mt-8 space-y-3">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-foreground">회원 회비 상태</h3>
-          <p className="text-xs text-muted-foreground">면제/선납/휴회/부상 설정 시 매월 자동 면제 처리</p>
+          <p className="text-xs text-muted-foreground">면제·선납·휴회·부상 설정 시 매월 자동 면제 처리</p>
         </div>
         {!adding && (
           <Button type="button" variant="outline" size="sm" onClick={() => setAdding(true)}>
@@ -731,80 +814,199 @@ function MemberExemptionSection({ members, refetchPaymentStatus }: { members: Ap
         )}
       </div>
 
-      {/* 선납 안내 박스 */}
-      <Card className="border-success/30 bg-[hsl(var(--success))]/5 p-3">
-        <div className="flex gap-2">
-          <div className="text-lg leading-none">💡</div>
-          <div className="space-y-1 text-xs text-muted-foreground leading-relaxed">
-            <p className="font-semibold text-foreground">선납 회원은 이렇게 관리하세요</p>
-            <p>• 상태를 <b>&ldquo;선납&rdquo;</b>으로 선택하고 기간을 지정하세요 (예: 2026-01-01 ~ 2026-12-31)</p>
-            <p>• 실제 받은 금액은 <b>회비 기록 탭</b>에서 입금 1건으로 기록하세요</p>
-            <p>• 해당 기간 동안 월별 납부 상태는 자동으로 면제 처리됩니다</p>
-            <p className="text-muted-foreground/70">※ 정식 선납 관리 기능은 추후 업데이트 예정</p>
-          </div>
-        </div>
-      </Card>
-
       {/* 추가 폼 */}
       {adding && (
         <Card className="border-primary/20 bg-card p-3">
-          <form action={handleAdd} className="space-y-2">
+          <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label className="text-[11px] text-muted-foreground">회원</Label>
-                <NativeSelect name="memberId" required className="h-9 text-sm">
+                <NativeSelect value={memberId} onChange={(e) => setMemberId(e.target.value)} className="h-9 text-sm">
                   <option value="">선택</option>
                   {members.map((m) => <option key={m.memberId} value={m.memberId}>{m.name}</option>)}
                 </NativeSelect>
               </div>
               <div className="space-y-1">
                 <Label className="text-[11px] text-muted-foreground">상태</Label>
-                <NativeSelect name="exemptionType" className="h-9 text-sm">
+                <NativeSelect
+                  value={exemptionType}
+                  onChange={(e) => {
+                    const v = e.target.value as ExemptionType;
+                    setExemptionType(v);
+                    if (v === "PREPAID") setActualPaidAmount(monthlyAmount * periodMonths);
+                  }}
+                  className="h-9 text-sm"
+                >
                   {EXEMPTION_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </NativeSelect>
               </div>
             </div>
-            <div className="space-y-1">
-              <Label className="text-[11px] text-muted-foreground">사유</Label>
-              <Input name="reason" placeholder="예: 1년치 선납, 6개월 선납, 무릎 부상, 해외 출장" className="h-9 text-sm" />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">시작일</Label>
-                <Input name="startDate" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} className="h-9 text-sm" />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">종료일 (미정이면 비움)</Label>
-                <Input name="endDate" type="date" className="h-9 text-sm" />
-              </div>
-            </div>
+
+            {isPrepaidForm ? (
+              <>
+                {/* 기간 */}
+                <div className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">기간</Label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {PREPAID_PERIOD_OPTIONS.map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => {
+                          setPeriodMonths(p);
+                          setActualPaidAmount(monthlyAmount * p);
+                        }}
+                        className={cn(
+                          "h-9 rounded-lg border text-sm font-medium transition-colors",
+                          periodMonths === p
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-background text-foreground hover:bg-secondary"
+                        )}
+                      >
+                        {p}개월
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">월 회비</Label>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      value={monthlyAmount || ""}
+                      onChange={(e) => {
+                        const v = Number(e.target.value) || 0;
+                        setMonthlyAmount(v);
+                        setActualPaidAmount(v * periodMonths);
+                      }}
+                      className="h-9 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">시작월</Label>
+                    <Input
+                      type="month"
+                      value={startMonth.slice(0, 7)}
+                      onChange={(e) => {
+                        if (/^\d{4}-\d{2}$/.test(e.target.value)) setStartMonth(`${e.target.value}-01`);
+                      }}
+                      className="h-9 text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* 미리보기 박스 */}
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">합계</span>
+                    <span className="font-medium tabular-nums">{formatAmount(prepaidTotal)}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-muted-foreground shrink-0">받은 금액</span>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      value={actualPaidAmount || ""}
+                      onChange={(e) => setActualPaidAmount(Number(e.target.value) || 0)}
+                      className="h-8 w-32 text-right text-sm font-bold text-primary"
+                    />
+                  </div>
+                  {prepaidDiscount > 0 && actualPaidAmount > 0 && (
+                    <div className="flex items-center justify-end text-xs text-[hsl(var(--success))] font-medium">
+                      {formatAmount(prepaidDiscount)} 우대
+                    </div>
+                  )}
+                  {prepaidEndDate && (
+                    <div className="text-[11px] text-muted-foreground/70 pt-1">
+                      {startMonth.slice(0, 7)} ~ {prepaidEndDate.slice(0, 7)}
+                    </div>
+                  )}
+                </div>
+
+                {/* 입금 안내 + 버튼 */}
+                <div className="flex flex-col gap-2 rounded-lg bg-muted/50 p-3">
+                  <div className="text-xs text-muted-foreground leading-relaxed">
+                    💡 받은 <b>{formatAmount(actualPaidAmount)}</b>은 회비 기록에 입금 1건으로 남겨주세요. OCR·엑셀·수기 모두 가능합니다.
+                  </div>
+                  <Link
+                    href="/dues?tab=records"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-md border border-primary/40 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+                  >
+                    <Wallet className="h-3.5 w-3.5" />
+                    입금 등록하러 가기
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">사유</Label>
+                  <Input
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="예: 임원, 키퍼, 무릎 부상, 해외 출장"
+                    className="h-9 text-sm"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">시작일</Label>
+                    <Input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="h-9 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">종료일 (미정이면 비움)</Label>
+                    <Input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="h-9 text-sm"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
             <div className="flex gap-2 justify-end">
-              <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(false)}>취소</Button>
-              <Button type="submit" size="sm" disabled={actionLoading}>{actionLoading ? "등록 중..." : "등록"}</Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => { setAdding(false); resetForm(); }}>취소</Button>
+              <Button type="button" size="sm" disabled={actionLoading} onClick={handleAdd}>{actionLoading ? "등록 중..." : "등록"}</Button>
             </div>
-          </form>
+          </div>
         </Card>
       )}
 
       {/* 활성 목록 */}
       {activeExemptions.length === 0 && !adding && (
-        <p className="text-xs text-muted-foreground/60 py-4 text-center">등록된 면제/선납/휴회/부상 회원이 없습니다</p>
+        <p className="text-xs text-muted-foreground/60 py-4 text-center">등록된 면제·선납·휴회·부상 회원이 없습니다</p>
       )}
 
       {activeExemptions.map((ex) => {
         const typeInfo = getTypeInfo(ex.exemption_type);
+        const isPrepaid = ex.exemption_type === "PREPAID";
         return (
           <Card key={ex.id} className="border-white/[0.04] bg-card p-3">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-semibold">{getMemberName(ex.member_id)}</span>
                   <span className={`text-xs font-medium ${typeInfo.color}`}>{typeInfo.label}</span>
+                  {isPrepaid && ex.period_months && (
+                    <span className="text-[10px] text-muted-foreground">({ex.period_months}개월)</span>
+                  )}
                 </div>
-                <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground flex-wrap">
                   <span>{ex.start_date} ~</span>
                   <span>{ex.end_date ?? "무기한"}</span>
-                  {ex.reason && <span className="ml-1">· {ex.reason}</span>}
+                  {isPrepaid && ex.actual_paid_amount != null && (
+                    <span className="text-[hsl(var(--success))] font-medium">· {formatAmount(ex.actual_paid_amount)}</span>
+                  )}
+                  {ex.reason && <span>· {ex.reason}</span>}
                 </div>
               </div>
               <Button type="button" variant="outline" size="sm" className="h-7 text-xs shrink-0" disabled={actionLoading} onClick={() => handleEnd(ex.id)}>
@@ -829,7 +1031,7 @@ function MemberExemptionSection({ members, refetchPaymentStatus }: { members: Ap
         const typeInfo = getTypeInfo(ex.exemption_type);
         return (
           <Card key={ex.id} className="border-white/[0.04] bg-card/50 p-3 opacity-60">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-medium">{getMemberName(ex.member_id)}</span>
               <span className={`text-[10px] ${typeInfo.color}`}>{typeInfo.label}</span>
               <span className="text-[10px] text-muted-foreground">
