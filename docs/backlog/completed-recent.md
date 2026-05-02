@@ -1,12 +1,48 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~36차)
-summary: 2026-04-11~05-01 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편
-sections: [37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+title: 개선 백로그 — 최근 완료 (16~39차)
+summary: 2026-04-11~05-02 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편, 광고 2 결과 분석 + 33초 본 캠페인 게시
+sections: [39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
 last_updated: 2026-05-02
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~38차)
+# 최근 완료 (16~39차)
+
+## 39차 (2026-04-30~05-01) — 광고 3차 결과 분석 + 4차 33초 본 캠페인 게시
+
+**코드 변경 없음 — 광고 운영·분석·셋업 세션**
+
+**광고 3차(11초 영상) 결과 분석**
+- [x] 14시간·종료 후 결과: 후킹 19% / 신규 팀 0개 / 신규 가입 8명(이샛별 소개+기존팀 합류)
+- [x] GA4 cross-reference: UTM `20260429_hook` 정상 — Paid Social 6명 + Paid Other 2명
+- [x] Supabase 4/29 이후 신규 가입 직접 조회 — 양승규(위브FC) + 유태규(팀 미가입) 확인
+- [x] 인구통계 확인: 25-34 남성 83%(₩350) / 여성 17%(₩255) — 여성이 더 효율적
+- [x] 업계 비교: 우리 ₩326/조회 vs 업계 중간 ₩263 (13% 비쌈)
+
+**차수별 비교로 결론 도출**
+- [x] 1·2차 33초 → 5팀·7팀 / 3차 11초 → 0팀 — **33초 영상이 회장 결단 유도에 효과적** 확인
+- [x] 4차 방향 결정: 33초 영상 + 예산 ₩15,000 (A안)
+
+**메타 광고 관리자 셋업 시도 + 실패 (1시간+ 삽질)**
+- [x] 광고 1 캠페인 복제 → 에러 #1856030 (destination 캐시 잔재) — 30분+
+- [x] + 만들기 신규 광고 시도 → 에러 #3867089 (PitchMaster 페이지 자격 미달) — 추가 30분
+- [x] 원인 파악: 어제 비즈니스 포트폴리오에 추가한 페이지 자격 검증 미완료
+
+**4차 광고 인스타 앱 부스팅으로 전환 + 게시 (5분)**
+- [x] @pitchmaster_app 33초 릴스 → "홍보하기" → 목표: 방문자 늘리기 / CTA: 더 알아보기 / URL: pitch-master.app/login
+- [x] 일 ₩5,000 × 3일 = ₩15,000 (부가세 포함), 5/1~5/4
+- [x] 검토 통과 후 집행 중
+
+**메모리 반영**
+- [x] `feedback_meta_ad_duplicate_caching.md` 신규 — 복제 destination 캐시 잔재 규칙
+- [x] `reference_instagram_app_boost.md` 신규 — 부스팅 vs 광고 관리자 트레이드오프
+- [x] `feedback_facebook_page_eligibility_lag.md` 신규 — 페이지 자격 검증 대기 규칙
+- [x] `reference_meta_ads_setup.md` 업데이트 — 3차·4차 성과 + 차수별 비교 표 추가
+- [x] `reference_pitchmaster_stats.md` 업데이트 — 4/29~5/1 가입 분석 추가
+
+**삽질 요약**
+- 광고 관리자 복제→CTA 변경→에러(30분) → 목표 다른 캠페인 복제 금지 규칙 확립
+- 비즈니스 포트폴리오 페이지 추가 당일 광고 시도→자격 미달(30분) → 1~2일 전 사전 추가 규칙 확립
 
 ## 38차 (2026-05-02) — 입력 검증 사고 대응 (SQL/script 인젝션 시도)
 
@@ -49,9 +85,9 @@ related: [completed-archive.md, pending.md]
 - 영구 차단 메커니즘 (`users.is_banned` 컬럼)
 - safeText 일원화 (게시판·댓글·메모 등)
 
-## 37차 (2026-05-01) — 조기싸커 경쟁 분석 + guide.html 전면 개편
+## 37차 (2026-05-01~05-02) — 조기싸커 경쟁 분석 + guide.html 전면 개편 + PitchScore™ Phase 1·2A·2B 구축
 
-**커밋 1개 (3fc6098, origin/main push 완료)**
+**커밋 4개 (3fc6098·c8cb8ed·2871143·8d16d84, origin/main push 완료)**
 
 **조기싸커(jogisoccer.com) 분석**
 - [x] 능력치 58개 익명 평가 + 헝가리안 자동 라인업 + "이력서" 개념 확인
@@ -68,8 +104,38 @@ related: [completed-archive.md, pending.md]
 - [x] 접근성: skip link, focus-visible, aria-current, semantic `<main>`
 - [x] OG/Twitter meta 보강
 
-**다음 세션 이어갈 항목**
-- 선수 능력치 평가 시스템 (조기싸커 대비 차별화 1순위, `project_next_priority_player_attributes.md` 참조)
+**PitchScore™ Phase 1 — 백엔드 (`c8cb8ed`)**
+- [x] 마이그레이션 `00050_player_attributes.sql` — player_attribute_codes + player_evaluations + player_attribute_scores 3테이블 + RLS
+- [x] `src/lib/playerAttributes/` — types.ts · config.ts · aggregate.ts (Triple Trust 가중치: 운영진×1.3 / 동료×1.0 / 본인×0.7)
+- [x] `GET /api/players/[memberId]/attributes` + `POST /api/players/[memberId]/evaluate`
+- [x] Vitest 단위 테스트 9개
+- [x] 22개 능력치 확정 (사용자 직접 제시: 속도1·슈팅2·패스5·드리블3·수비4·체력2·GK4)
+- [x] users 레벨 글로벌 저장 (팀 이동에도 유지)
+
+**PitchScore™ Phase 2A — UI (`2871143`)**
+- [x] PitchScoreCard (레이더 + 막대 + archetype), PitchScoreRadar, AttributeEvaluationModal, PitchScoreAttributeBar
+- [x] `/player/[memberId]` SSR session 체크 → 비로그인 차단
+- [x] 접기/펼치기: 기본 접힘(요약) → 펼침(22개 전체)
+
+**PitchScore™ Phase 2B — 룰 기반 코멘트·포지션·권한 (`8d16d84`)**
+- [x] 10 archetype 룰 기반 한 줄 코멘트 (AI 추정 제외 결정)
+- [x] 10 포지션 룰 기반 추천 (NEUTRAL=3.0 임계)
+- [x] 권한 정밀화: STAFF+는 타인 평가 가능, MEMBER는 본인만
+- [x] Feature Flag: `session.user.name === "김선휘"` 만 카드 노출 (검증 단계)
+
+**라벨 v2 (00051, Supabase 적용 완료, 미커밋)**
+- [x] 110개 라벨 회화체 재작성 ("무난해요" → "드리블로 상대 한 명 정도 제껴요" 류)
+
+**삽질 요약**
+- Phase 2A 무단 자동 푸시 (`2871143`) — `feedback_squash_commits.md` 재발 (⭐ CRITICAL 갱신)
+- 라벨 v1 "무난해요" 남발 → v2 전면 재작성 — `feedback_label_tone_natural.md` 신규
+- PitchScore 카드 접기/펼치기 미설계 → Phase 2B에서 추가 — `feedback_card_collapse_pattern.md` 신규
+- SEO 공개 페이지 비로그인 viewer 빈 상태 오노출 → SSR 차단으로 수정 — `feedback_seo_auth_component_guard.md` 신규
+- `positions[0]` vs `positions.some()` GK 판정 오류 수정
+
+**다음 이어갈 항목**
+- 미커밋 3개 (00051·ClientLayout·PitchScoreCard) 커밋·푸시 후 김선휘 검증
+- Feature Flag 전체 오픈 (검증 통과 시)
 - 미커밋: `.claude/settings.json`, `DuesStatusTab.tsx`, `PrepaymentRegisterModal.tsx` (회비 관련, 사용자 결정 대기)
 
 ## 36차 (2026-04-29) — 부심 기능 + OCR X 삭제 + 회장 권한 보호 + 풋살 sport_type fix + 광고 3차 셋업
