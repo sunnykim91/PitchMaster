@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { RotateCcw, Coffee, Share2, Copy, BarChart3 } from "lucide-react";
+import { RotateCcw, Coffee, Share2, Copy, BarChart3, ChevronDown } from "lucide-react";
 
 type Player = {
   id: string;
@@ -1023,7 +1023,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                   <span className="flex flex-col items-center gap-0.5">
                     {/* 선택 표시 화살표 */}
                     {isActive && (
-                      <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-primary text-lg animate-bounce">▼</span>
+                      <ChevronDown className="absolute -top-5 left-1/2 -translate-x-1/2 h-5 w-5 text-primary animate-bounce" aria-hidden="true" />
                     )}
                     <span className="block h-8 w-8 rounded-sm border border-white/40 shadow-md shadow-black/30 sm:h-10 sm:w-10" style={uniformStyle} />
                     {secondPlayer ? (

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { Play, Pause } from "lucide-react";
 
 const screens = [
   { title: "대시보드", src: "/screenshot/dashboard.png" },
@@ -74,7 +75,7 @@ export default function AppScreenSlider() {
           aria-label={isPaused ? "자동 재생" : "자동 재생 일시정지"}
           className="flex h-8 w-8 items-center justify-center rounded-full text-foreground/40 transition hover:text-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
-          <span className="text-xs" aria-hidden="true">{isPaused ? "▶" : "⏸"}</span>
+          {isPaused ? <Play className="h-3.5 w-3.5" aria-hidden="true" /> : <Pause className="h-3.5 w-3.5" aria-hidden="true" />}
         </button>
         {screens.map((_, i) => (
           <button

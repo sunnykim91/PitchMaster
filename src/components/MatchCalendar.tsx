@@ -217,7 +217,7 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
             const myVote = myVotes?.[m.id];
             return (
               <Card key={m.id} className={cn("rounded-xl overflow-hidden transition-all hover:border-border/80 relative", isCompleted && "opacity-70")}>
-                <span className="absolute top-3 right-3 text-muted-foreground/20 text-lg">›</span>
+                <ChevronRight className="absolute top-3 right-3 h-4 w-4 text-muted-foreground/20" aria-hidden="true" />
                 {/* 투표 현황 (예정 경기만) */}
                 {!isCompleted && (m.attendCount !== undefined) && (
                   <div className="px-3 pt-3 flex items-center gap-3 text-xs">

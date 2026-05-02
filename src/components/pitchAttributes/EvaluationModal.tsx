@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 import { CATEGORY_META } from "@/lib/playerAttributes/config";
 import type {
   AttributeCode,
@@ -146,7 +147,7 @@ export default function EvaluationModal({
             className="rounded-md p-2 hover:bg-white/10"
             aria-label="닫기"
           >
-            ✕
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </header>
 

@@ -19,7 +19,7 @@ import { cn, formatPhone } from "@/lib/utils";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Search } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { Users } from "lucide-react";
+import { Users, ChevronDown } from "lucide-react";
 import { useConfirm } from "@/lib/ConfirmContext";
 
 type Member = {
@@ -702,10 +702,10 @@ export default function MembersClient({
                     <Badge variant="secondary" className="px-2 py-0.5 text-xs">
                       {roleLabels[member.role]}
                     </Badge>
-                    <span className={cn(
-                      "text-muted-foreground transition-transform text-xs",
+                    <ChevronDown className={cn(
+                      "h-4 w-4 text-muted-foreground transition-transform",
                       isExpanded && "rotate-180"
-                    )}>▼</span>
+                    )} aria-hidden="true" />
                   </div>
                 </button>
 

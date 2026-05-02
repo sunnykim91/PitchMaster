@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, MessageSquare, Bell, BookOpen, Settings, ExternalLink, Smartphone, HelpCircle, LogOut } from "lucide-react";
+import { Users, MessageSquare, Bell, BookOpen, Settings, ExternalLink, Share, Smartphone, HelpCircle, LogOut } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -185,7 +185,7 @@ export default function MoreClient({
             <div className="mt-4 space-y-4">
               <div className="flex items-start gap-3">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">1</span>
-                <p className="text-sm text-muted-foreground">Safari 하단 메뉴바에서 <span className="font-semibold text-foreground">공유 아이콘 ⬆︎</span> (네모에서 화살표 나온 모양)을 탭하세요</p>
+                <p className="text-sm text-muted-foreground">Safari 하단 메뉴바에서 <span className="inline-flex items-center gap-1 font-semibold text-foreground">공유 아이콘 <Share className="inline h-3.5 w-3.5" aria-hidden="true" /></span> (네모에서 화살표 나온 모양)을 탭하세요</p>
               </div>
               <div className="flex items-start gap-3">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">2</span>

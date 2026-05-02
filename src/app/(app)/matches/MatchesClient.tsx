@@ -23,7 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { shareVoteLink } from "@/lib/kakaoShare";
 import { EmptyState } from "@/components/EmptyState";
 import { MatchCalendar } from "@/components/MatchCalendar";
-import { Calendar, Loader2, Share2 } from "lucide-react";
+import { Calendar, ChevronDown, ChevronRight, ChevronUp, Loader2, Share2 } from "lucide-react";
 import { getUniformStyle } from "@/lib/uniformUtils";
 
 type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
@@ -635,7 +635,11 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 onClick={() => setShowAdvanced(!showAdvanced)}
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
-                {showAdvanced ? "상세 설정 접기 ▲" : "상세 설정 ▼"}
+                {showAdvanced ? (
+                  <>상세 설정 접기 <ChevronUp className="inline h-3.5 w-3.5" aria-hidden="true" /></>
+                ) : (
+                  <>상세 설정 <ChevronDown className="inline h-3.5 w-3.5" aria-hidden="true" /></>
+                )}
               </button>
               )}
               {showAdvanced && matchType !== "EVENT" && (
@@ -791,7 +795,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         </>
                       );
                     })() : null}
-                    <span className="text-muted-foreground/70 text-xl">›</span>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground/70" aria-hidden="true" />
                   </div>
                 </div>
 
