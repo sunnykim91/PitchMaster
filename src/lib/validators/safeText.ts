@@ -65,6 +65,8 @@ export function sanitizeKakaoNickname(
   if (trimmed.length === 0) return "사용자";
   if (DANGEROUS_PATTERN.test(trimmed)) return "사용자";
   if (CONTROL_CHARS.test(trimmed)) return "사용자";
+  // 의미있는 문자(한글 완성형/영문/숫자) 1자도 없으면 fallback (자모만 닉네임 등)
+  if (!MEANINGFUL_CHAR.test(trimmed)) return "사용자";
   if (trimmed.length > 20) return trimmed.slice(0, 20);
   return trimmed;
 }

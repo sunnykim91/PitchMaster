@@ -23,7 +23,7 @@ export async function completeOnboarding(formData: FormData) {
 
   // 서버 밸리데이션 (이름 + 포지션만 필수, 나머지 선택)
   const errors: string[] = [];
-  const nameCheck = validateSafeName(name, { maxLength: 20 });
+  const nameCheck = validateSafeName(name, { maxLength: 20, requireMeaningful: true });
   if (!nameCheck.ok) errors.push(nameCheck.reason);
   if (birthDate && !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) errors.push("올바른 생년월일 형식이 아닙니다");
   if (phone && (phone.length < 10 || phone.length > 11)) errors.push("올바른 전화번호를 입력해주세요");

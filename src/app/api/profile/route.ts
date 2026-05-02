@@ -34,7 +34,7 @@ export async function PUT(request: NextRequest) {
 
   const updates: Record<string, unknown> = {};
   if (body.name !== undefined) {
-    const nameCheck = validateSafeName(body.name, { maxLength: 20 });
+    const nameCheck = validateSafeName(body.name, { maxLength: 20, requireMeaningful: true });
     if (!nameCheck.ok) return apiError(nameCheck.reason);
     updates.name = nameCheck.value;
   }

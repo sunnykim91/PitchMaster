@@ -172,4 +172,20 @@ describe("sanitizeKakaoNickname", () => {
   it("HTML 태그 닉네임 → 사용자", () => {
     expect(sanitizeKakaoNickname("<b>name</b>")).toBe("사용자");
   });
+
+  it("자모만 닉네임 → 사용자", () => {
+    expect(sanitizeKakaoNickname("ㅁㅁㅁㅁㅁㅁㄴㄹㅁㄴㅇㄹ")).toBe("사용자");
+  });
+
+  it("자음만 닉네임 → 사용자", () => {
+    expect(sanitizeKakaoNickname("ㅋㅋㅋㅋ")).toBe("사용자");
+  });
+
+  it("점만 닉네임 → 사용자", () => {
+    expect(sanitizeKakaoNickname("....")).toBe("사용자");
+  });
+
+  it("자모+한글 통과", () => {
+    expect(sanitizeKakaoNickname("ㅋㅋ왕")).toBe("ㅋㅋ왕");
+  });
 });

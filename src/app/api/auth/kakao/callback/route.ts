@@ -35,11 +35,19 @@ export async function GET(request: NextRequest) {
     });
     const userData = await userRes.json();
 
-    const session = await findOrCreateKakaoUser({
-      id: String(userData.id),
-      nickname: userData.properties?.nickname ?? "사용자",
-      profileImage: userData.properties?.profile_image,
-    });
+    let session;
+    try {
+      session = await findOrCreateKakaoUser({
+        id: String(userData.id),
+        nickname: userData.properties?.nickname ?? "사용자",
+        profileImage: userData.properties?.profile_image,
+      });
+    } catch (e) {
+      if (e instanceof Error && e.message === "ACCOUNT_BLOCKED") {
+        return NextResponse.redirect(new URL("/login?error=blocked", request.url));
+      }
+      throw e;
+    }
 
     await setSession(session);
     const stateRaw = request.nextUrl.searchParams.get("state") ?? "";
