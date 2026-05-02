@@ -4,13 +4,20 @@ import { nanoid } from "nanoid";
 import { redirect } from "next/navigation";
 import { auth, updateSession } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { validateSafeName } from "@/lib/validators/safeText";
 
 export async function createTeam(formData: FormData) {
   const session = await auth();
   if (!session) redirect("/login");
   if (session.user.isDemo) redirect("/team?error=demo_blocked");
 
-  const teamName = String(formData.get("teamName") || "").trim() || "우리 팀";
+  const rawTeamName = String(formData.get("teamName") || "").trim() || "우리 팀";
+  const teamNameCheck = validateSafeName(rawTeamName, { maxLength: 30, minLength: 2, fieldLabel: "팀 이름", requireMeaningful: true });
+  if (!teamNameCheck.ok) {
+    redirect("/team?error=invalid_name");
+    return;
+  }
+  const teamName = teamNameCheck.value;
   const sportType = String(formData.get("sportType") || "SOCCER");
   const inviteCode = nanoid(6).toUpperCase();
 

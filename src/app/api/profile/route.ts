@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, demoGuard, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { updateSession } from "@/lib/auth";
+import { validateSafeName } from "@/lib/validators/safeText";
 
 export async function GET() {
   const ctx = await getApiContext();
@@ -32,7 +33,11 @@ export async function PUT(request: NextRequest) {
   if (!db) return apiError("Database not available", 503);
 
   const updates: Record<string, unknown> = {};
-  if (body.name !== undefined) updates.name = body.name;
+  if (body.name !== undefined) {
+    const nameCheck = validateSafeName(body.name, { maxLength: 20 });
+    if (!nameCheck.ok) return apiError(nameCheck.reason);
+    updates.name = nameCheck.value;
+  }
   if (body.phone !== undefined) updates.phone = body.phone || null;
   if (body.preferredPositions !== undefined) updates.preferred_positions = body.preferredPositions;
   if (body.preferredFoot !== undefined) updates.preferred_foot = body.preferredFoot;

@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import type { Session, SessionUser } from "@/lib/types";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { signSession, verifySession, isSessionSigningConfigured } from "@/lib/sessionSign";
+import { sanitizeKakaoNickname } from "@/lib/validators/safeText";
 
 const SESSION_COOKIE = "pm_session";
 
@@ -210,7 +211,7 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
     .from("users")
     .insert({
       kakao_id: kakaoProfile.id,
-      name: kakaoProfile.nickname || "사용자",
+      name: sanitizeKakaoNickname(kakaoProfile.nickname),
       profile_image_url: kakaoProfile.profileImage,
       is_profile_complete: false,
     })

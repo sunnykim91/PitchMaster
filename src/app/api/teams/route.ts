@@ -8,6 +8,7 @@ import {
 } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
+import { validateSafeName } from "@/lib/validators/safeText";
 
 export async function GET() {
   const ctx = await getApiContext();
@@ -39,10 +40,9 @@ export async function PUT(request: NextRequest) {
 
   const updates: Record<string, unknown> = {};
   if (body.name !== undefined) {
-    const name = String(body.name).trim();
-    if (!name) return apiError("팀 이름을 입력해주세요");
-    if (name.length > 30) return apiError("팀 이름은 30자 이하로 입력해주세요");
-    updates.name = name;
+    const nameCheck = validateSafeName(body.name, { maxLength: 30, minLength: 2, fieldLabel: "팀 이름", requireMeaningful: true });
+    if (!nameCheck.ok) return apiError(nameCheck.reason);
+    updates.name = nameCheck.value;
   }
   if (body.logoUrl !== undefined) {
     // 안전한 URL만 허용 (http/https/빈 값)
