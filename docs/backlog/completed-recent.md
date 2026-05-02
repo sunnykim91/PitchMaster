@@ -1,12 +1,76 @@
 ---
 title: 개선 백로그 — 최근 완료 (16~36차)
-summary: 2026-04-11~29 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증
-sections: [36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-04-29
+summary: 2026-04-11~05-01 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편
+sections: [37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-05-02
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~36차)
+# 최근 완료 (16~38차)
+
+## 38차 (2026-05-02) — 입력 검증 사고 대응 (SQL/script 인젝션 시도)
+
+**커밋 2개** (`ca071e3` 1차, `6e3dfb7` 2차) — 모두 origin/main 푸시 완료
+
+**사고 발견**
+- 외부 사용자(카카오 ID 4875582850)가 가입 닉네임을 `'; DROP TABLE users; --`로 설정. 동일 payload로 1인 팀까지 생성
+- DB는 Supabase 파라미터 바인딩으로 안전했지만 **입력 검증 부재가 노출**
+- 1차 보강 7분 후 같은 카카오 ID로 `ㅁㅁㅁㅁㅁㅁㄴㄹㅁㄴㅇㄹ` 자모 우회 — **재공격 명백**
+
+**1차 대응 (`ca071e3`)**
+- [x] `src/lib/validators/safeText.ts` 신설 — `validateSafeName` + `sanitizeKakaoNickname`
+- [x] 5곳 진입점 적용: 카카오 콜백 / onboarding / profile PUT / team create / team PUT
+- [x] 거부 패턴: SQL/script(`' " ; \ < > -- /* */`) + 제어문자
+- [x] 팀명 추가: `minLength: 2` + `requireMeaningful` (의미문자 강제)
+- [x] 의심 팀 5개 정리: `.`/`안`/`최성진`/`ㅁㄴㅇ`/payload팀
+
+**2차 보강 (`6e3dfb7`) — 재공격 7분 후 추가 패치**
+- [x] `sanitizeKakaoNickname`에 자모 거부 추가
+- [x] onboarding/profile에 `requireMeaningful: true` 추가 (외자 이름은 허용)
+- [x] `findOrCreateKakaoUser`에 `deleted_at NOT NULL` 사전 체크 → `ACCOUNT_BLOCKED` 차단
+- [x] 카카오 콜백에서 catch + `/login?error=blocked` 조용히 redirect
+- [x] 재공격자(34f7cf76) `deleted_at` 마킹 + `테스트` 팀 hard delete
+- [x] 단위 테스트 43 케이스 통과
+
+**메모리 추가**
+- [x] `reference_suspicious_kakao_ids.md` — 카카오 ID 추적 + 차단 처리 기록
+- [x] `feedback_input_validation.md` — 진입점 일괄 적용 규칙
+- [x] `feedback_query_column_verify.md` — Supabase 쿼리 컬럼·error 사전 확인
+- [x] `reference_safe_text_validator.md` — 헬퍼 위치 + 사용 패턴
+
+**반성 / 학습**
+- 1차 보강 시 팀명에만 `requireMeaningful` 적용하고 닉네임 쪽 빠뜨림 → 7분 만에 우회됨. **검증은 모든 진입점 일괄 적용해야 의미 있음** (메모리 `feedback_input_validation.md`)
+- 조사 중 `team_members.created_at` 없는 컬럼 select했다가 null 결과를 "0건"으로 오해 → "사용자가 조사 중에 행동 중!" 호들갑. error도 destructure했어야 함 (메모리 `feedback_query_column_verify.md`)
+- 팀 정리 작업의 자동 안전장치 (`if matchCount > 0 then ABORT`)는 잘 동작했음
+
+**후속 (백로그 HIGH)**
+- AI 프롬프트 인젝션 방어 (5개 AI 함수)
+- 팀 생성 rate limit (카카오 ID당)
+- 영구 차단 메커니즘 (`users.is_banned` 컬럼)
+- safeText 일원화 (게시판·댓글·메모 등)
+
+## 37차 (2026-05-01) — 조기싸커 경쟁 분석 + guide.html 전면 개편
+
+**커밋 1개 (3fc6098, origin/main push 완료)**
+
+**조기싸커(jogisoccer.com) 분석**
+- [x] 능력치 58개 익명 평가 + 헝가리안 자동 라인업 + "이력서" 개념 확인
+- [x] 완전 무료 + 5개국어 + iOS+웹, 법인 정보 없음 → B2B/데이터 매출 모델 추론
+- [x] 결정: 글로벌 X, 한국 깊이 + 가이드 정비 → 능력치 평가 시스템 순 진행
+- [x] 경쟁사 memory 파일 추가: `reference_competitor_jogisoccer.md`
+
+**guide.html 전면 개편 (884줄 → 1300+줄)**
+- [x] 신규 섹션: AI 기능 5종(11), 회비 선납(9), 월별 결산(10)
+- [x] 보강: 부심·주심·촬영 슬롯, 역할 가이드, MVP 70% threshold, "모름" 쿼터
+- [x] 라이트/다크 동시 지원 (lucide SVG 토글, sessionStorage hint, 라이트 기본)
+- [x] PC ≥1024: 좌측 sticky 사이드바 ToC + IntersectionObserver active follow
+- [x] 모바일: sticky-nav 6항목 + 첫 진입 hint 흔들기 + 사파리 padding-right fix
+- [x] 접근성: skip link, focus-visible, aria-current, semantic `<main>`
+- [x] OG/Twitter meta 보강
+
+**다음 세션 이어갈 항목**
+- 선수 능력치 평가 시스템 (조기싸커 대비 차별화 1순위, `project_next_priority_player_attributes.md` 참조)
+- 미커밋: `.claude/settings.json`, `DuesStatusTab.tsx`, `PrepaymentRegisterModal.tsx` (회비 관련, 사용자 결정 대기)
 
 ## 36차 (2026-04-29) — 부심 기능 + OCR X 삭제 + 회장 권한 보호 + 풋살 sport_type fix + 광고 3차 셋업
 

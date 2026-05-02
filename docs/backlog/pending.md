@@ -12,6 +12,38 @@ related: [completed-recent.md, reviews.md]
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
 
+## 🔴 HIGH — 38차 (2026-05-02) 입력 검증 사고 후속 (보안 강화)
+
+**배경**: 2026-05-02 외부 사용자가 가입 닉네임을 SQL injection payload(`'; DROP TABLE users; --`)로 설정하고 동일 이름의 팀까지 생성. 1차 보강(커밋 `ca071e3`) 7분 후 같은 카카오 ID(4875582850)로 자모만(`ㅁㅁㅁㅁㅁㅁㄴㄹㅁㄴㅇㄹ`) 우회 → 2차 보강(커밋 `6e3dfb7`)으로 자모 거부 + `deleted_at` 기반 차단 흐름 추가. 근본 방어 후속:
+
+- [ ] **AI 프롬프트 인젝션 방어** (2~3h, ⭐⭐⭐ 가장 시급)
+  - 5개 AI 함수에 사용자 데이터 격리 마커(`<USER_DATA>...</USER_DATA>`) + 시스템 명령 sandwich + 출력 검증
+  - 위치: `aiTacticsAnalysis` · `aiFullPlan` · `aiSignature` · `aiMatchSummary` · `aiOcrParse`
+  - "이전 지시 무시" 류 명령형 닉네임 출력 오염 방지
+  - 다음 공격자가 노릴 가장 약한 지점
+
+- [ ] **팀 생성 rate limit** (1~2h)
+  - 카카오 ID당 시간당 1팀, 일당 3팀 제한
+  - 이번 사고 직접 방어 (장진영 8초 간격 2팀 / DROP TABLE 30초 후 1팀 / 재공격자 1분 21초 후 팀 생성 패턴)
+  - Supabase `rate_limit_log` 테이블 신설 또는 Vercel KV
+
+- [ ] **safeText 검증 일원화 — 누락 진입점 적용** (1~2h)
+  - 게시판 글·댓글, 일정 메모, 회비 메모, 출석 사유 등 user-text 필드
+  - grep으로 진입점 점검 후 동일 헬퍼 적용
+  - 메모리: `feedback_input_validation.md` 참고
+
+- [ ] **영구 차단 메커니즘** (마이그레이션 필요)
+  - 현재 `deleted_at NOT NULL` 사전 체크로 차단하지만 `cron/hard-delete-withdrawn`이 14일 후 row 삭제 → 차단 풀림
+  - `users.is_banned` 컬럼 신설 + hard-delete cron에서 banned 제외
+  - 신규 마이그레이션 + auth 흐름 일부 수정
+
+- [ ] **의심 가입자 자동 알람** (1~2h)
+  - 매일 1회 cron: 1자 이름·자모만·payload 패턴 스캔
+  - 검출 시 카카오톡/이메일 알람 (관리자 본인)
+
+- [ ] **`/login?error=blocked` UI 안내** (LOW, 30분)
+  - 차단 사용자 재로그인 시 일반적 로그인 실패 메시지 (차단 명시 X — 우회 정보 누설 방지)
+
 ## 🟡 진행 중 — 36차 후반 (2026-04-30) — 회비 선납 셀링 UI
 
 **배경**: Migration 00048(grandfather)·00049(dues_prepayments) 이미 배포됨. 헬퍼(`src/lib/duesPrepayment.ts`)도 작성됨. UI만 만들면 즉시 동작. 결제 인프라 없이 수동(현금) 선납 매출 가능 → **활성 100팀 도달 전 워밍업용 첫 매출 채널**.
