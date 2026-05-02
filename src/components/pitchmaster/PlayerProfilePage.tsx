@@ -4,6 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { PlayerCard, type PlayerCardProps } from "./PlayerCard";
 import { ShareModal } from "./ShareCard";
+import PitchScoreCard from "@/components/pitchAttributes/PitchScoreCard";
 
 // Types
 export type PlayerStats = {
@@ -62,6 +63,8 @@ export type PlayerProfile = {
   recentMatches: RecentMatch[];
   /** 최근 15경기의 출석/결과 — 히트맵 시각화용. date 오름차순 (오래된 → 최신) */
   attendanceHistory: AttendanceCell[];
+  /** PitchScore™ 능력치 평가용 user_id (글로벌 보관) */
+  userId?: string;
 };
 
 // Role Badge Component
@@ -392,7 +395,8 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showImageShareModal, setShowImageShareModal] = useState(false);
   const [shareToast, setShareToast] = useState<string | null>(null);
-  const { name, teamName, teamPrimaryColor, positions, preferredFoot, jerseyNumber, teamRole, seasonName, signature, playerCardProps, stats, bestMoments, recentMatches, attendanceHistory } = profile;
+  const { name, teamName, teamPrimaryColor, positions, preferredFoot, jerseyNumber, teamRole, seasonName, signature, playerCardProps, stats, bestMoments, recentMatches, attendanceHistory, userId } = profile;
+  const isGoalkeeper = positions.some((p) => p?.toUpperCase() === "GK");
 
   function handleBack() {
     if (typeof window === "undefined") return;
@@ -633,6 +637,17 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
           )}
         </div>
       </section>
+
+      {/* PitchScore™ 능력치 평가 */}
+      {userId && (
+        <section className="max-w-4xl mx-auto px-4 py-6">
+          <PitchScoreCard
+            targetUserId={userId}
+            targetUserName={name}
+            isGoalkeeper={isGoalkeeper}
+          />
+        </section>
+      )}
 
       {/* Detailed Stats */}
       {stats && (

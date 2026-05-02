@@ -398,6 +398,7 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
     teamRole: (m.team_role === "CAPTAIN" || m.team_role === "VICE_CAPTAIN" ? m.team_role : null) as PlayerProfile["teamRole"],
     seasonName: season.name, signature: signature ?? "",
     playerCardProps, stats, bestMoments, recentMatches, attendanceHistory,
+    userId: m.user_id ?? undefined,
   };
 }
 
