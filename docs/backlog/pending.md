@@ -1,7 +1,7 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=89팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-05-02 (40차)
+last_updated: 2026-05-03 (42차)
 related: [completed-recent.md, reviews.md]
 ---
 
@@ -12,37 +12,18 @@ related: [completed-recent.md, reviews.md]
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
 
-## 🔴 HIGH — 38차 (2026-05-02) 입력 검증 사고 후속 (보안 강화)
+## ~~🔴 HIGH — 38차 (2026-05-02) 입력 검증 사고 후속 (보안 강화)~~ ✅ 41차에서 대부분 완료
 
-**배경**: 2026-05-02 외부 사용자가 가입 닉네임을 SQL injection payload(`'; DROP TABLE users; --`)로 설정하고 동일 이름의 팀까지 생성. 1차 보강(커밋 `ca071e3`) 7분 후 같은 카카오 ID(4875582850)로 자모만(`ㅁㅁㅁㅁㅁㅁㄴㄹㅁㄴㅇㄹ`) 우회 → 2차 보강(커밋 `6e3dfb7`)으로 자모 거부 + `deleted_at` 기반 차단 흐름 추가. 근본 방어 후속:
+**배경**: 2026-05-02 외부 사용자가 가입 닉네임을 SQL injection payload로 설정 + 자모 우회 시도 (카카오 ID 4875582850). 상세: completed-recent.md 38차 항목 참고.
 
-- [ ] **AI 프롬프트 인젝션 방어** (2~3h, ⭐⭐⭐ 가장 시급)
-  - 5개 AI 함수에 사용자 데이터 격리 마커(`<USER_DATA>...</USER_DATA>`) + 시스템 명령 sandwich + 출력 검증
-  - 위치: `aiTacticsAnalysis` · `aiFullPlan` · `aiSignature` · `aiMatchSummary` · `aiOcrParse`
-  - "이전 지시 무시" 류 명령형 닉네임 출력 오염 방지
-  - 다음 공격자가 노릴 가장 약한 지점
-
-- [ ] **팀 생성 rate limit** (1~2h)
-  - 카카오 ID당 시간당 1팀, 일당 3팀 제한
-  - 이번 사고 직접 방어 (장진영 8초 간격 2팀 / DROP TABLE 30초 후 1팀 / 재공격자 1분 21초 후 팀 생성 패턴)
-  - Supabase `rate_limit_log` 테이블 신설 또는 Vercel KV
-
-- [ ] **safeText 검증 일원화 — 누락 진입점 적용** (1~2h)
-  - 게시판 글·댓글, 일정 메모, 회비 메모, 출석 사유 등 user-text 필드
-  - grep으로 진입점 점검 후 동일 헬퍼 적용
-  - 메모리: `feedback_input_validation.md` 참고
-
-- [ ] **영구 차단 메커니즘** (마이그레이션 필요)
-  - 현재 `deleted_at NOT NULL` 사전 체크로 차단하지만 `cron/hard-delete-withdrawn`이 14일 후 row 삭제 → 차단 풀림
-  - `users.is_banned` 컬럼 신설 + hard-delete cron에서 banned 제외
-  - 신규 마이그레이션 + auth 흐름 일부 수정
-
-- [ ] **의심 가입자 자동 알람** (1~2h)
-  - 매일 1회 cron: 1자 이름·자모만·payload 패턴 스캔
-  - 검출 시 카카오톡/이메일 알람 (관리자 본인)
-
+- [x] **AI 프롬프트 인젝션 방어** — `aiPromptSafety.ts` 공통 헬퍼 + 5개 함수 적용 완료 (`699df36`)
+- [x] **팀 생성 rate limit** — `00054` + `teamCreationRateLimit.ts` 완료 (`699df36`)
+- [x] **safeText 검증 일원화** — posts·comments·match-comments·diary·rules·join-request 6곳 완료 (`699df36`)
+- [x] **영구 차단 메커니즘** — `00055` users.is_banned + cron 제외 완료 (`699df36`)
+- [ ] **의심 가입자 자동 알람** (1~2h) — 미처리 이월
+  - 매일 1회 cron: 1자 이름·자모만·payload 패턴 스캔 → 이메일/카카오 알람
 - [ ] **`/login?error=blocked` UI 안내** (LOW, 30분)
-  - 차단 사용자 재로그인 시 일반적 로그인 실패 메시지 (차단 명시 X — 우회 정보 누설 방지)
+  - 차단 사용자 재로그인 시 일반적 로그인 실패 메시지 (차단 명시 X)
 
 ## ~~🟡 진행 중 — 36차 후반 (2026-04-30) — 회비 선납 셀링 UI~~ ✅ 40차에서 방향 전환·완료
 
@@ -138,6 +119,39 @@ related: [completed-recent.md, reviews.md]
 - [ ] 구글 Search Console — 색인 생성 요청 4개 처리 결과 확인
 - [ ] www 도메인 정적 자산 15개 "크롤링됨·색인 안 됨" 자연 해소 여부 확인 (무시해도 무방)
 
+## 42차 신규 추가 (2026-05-03)
+
+### PitchScore sport_type 분리 라이브 검증 (다음 세션 1순위)
+- [ ] 배포 완료 (`d8409a6`) — 김선휘 본인이 시크릿 모드로 FCMZ 축구·풋살 두 팀 진입
+- [ ] 축구팀: CROSS·FREE_KICK·HEADING·LONG_PASS 평가 모달에 정상 노출 확인
+- [ ] 풋살팀: 위 4개 비활성 확인 (applicable_sports 필터 동작)
+- [ ] 검증 완료 후 Feature Flag 제거 (`/app/(app)/player/[memberId]/page.tsx:436` `enablePitchScore` 조건 삭제)
+
+### 광고 3차 최종 분석 (2026-05-04 종료 후)
+- [ ] 2026-05-04 종료 후 Meta 인사이트 최종 수치 확인 (3초 재생률·방문단가·도달)
+- [ ] Supabase 5/1~5/4 신규 팀 직접 조회 (4/25~5/3 기준 10팀 확인됨)
+- [ ] 1·2·3차 단가 cross-reference: ₩1,517 / ₩1,942 / ~₩2,759 — Ad Fatigue 공식 결론
+- [ ] 다음 소재 결정: 버전 D (단톡방 직접 인용 후킹) 제작 여부
+
+### D 영상 v3 — 클로드 디자인 사용량 풀린 후
+- [ ] 클로드 디자인 사용량 초과로 보류 중 (2026-05-03 기준)
+- [ ] 사용량 초기화 후 "투표좀요" / "납부좀요" 단톡방 직접 인용 패턴으로 의뢰
+- [ ] 참고: pending.md 버전 D 광고 소재 항목 (39차 신규), feedback_ad_fatigue_pattern.md
+
+### 다음카페 4편 발행
+- [ ] 티스토리 #3 발행 완료 후 동일 주제로 카페 게시 (1주일 지연 패턴 고려)
+- [ ] 참고: docs/blog-post-3-final.md (미커밋, 발행 대기)
+
+### 미커밋 파일 정리 (v1.0.4 후보 포함)
+- [ ] `docs/blog-post-3-final.md` — 티스토리 #3 발행 후 커밋
+- [ ] `docs/blog-velog-4.md` — 이미 발행 완료, 백업 커밋
+- [ ] `docs/localhost_3000_login(iPhone SE).png` — untracked 스크린샷, 필요 여부 확인 후 처리
+- [ ] `.claude/settings.json` — 자동 갱신분 커밋
+
+### if (!ctx.teamId) 데드 코드 제거
+- [ ] `src/app/api/player-attributes/evaluate/route.ts` — `if (!ctx.teamId)` 조건 제거 (42차 reviewer 지적)
+- [ ] 이미 body.team_id 명시 구조로 변경됨 — 불필요 가드 잔재
+
 ## 41차 후반 신규 추가 (2026-05-03)
 
 ### 경기 후기 — SSR 룰 베이스 자동 생성 (A안 완성)
@@ -146,6 +160,18 @@ related: [completed-recent.md, reviews.md]
 - 작업: `src/lib/server/getMatchDetailData.ts` 에서 ai_summary null + status=COMPLETED + REGULAR 일 때 `generateRuleBasedSummary` 호출해 채움
 - 입력 데이터(score·result·goals·assists·mom·attendanceCount·weather·playerCount·date)는 이미 SSR fetch됨 — 매핑만 추가
 - `generateRuleBasedSummary` export 추가 필요
+
+## 41차 신규 추가 (2026-05-03) — 풋살 미커버 영역
+
+### 풋살 7·8인제 역할 가이드 (LOW)
+- 현재 5·6인제만 지원. 1팀(FCMZ 풋살)이 8인제 또는 그 변형일 수 있음
+- `isSupported` 조건에 7·8 추가 + `base/futsal.ts`에 역할 추가 필요
+- 우선순위 낮음 — 실 사용 팀 수 1팀 이하
+
+### 풋살 `default_player_count=11` 1팀 — 비표준 데이터 처리
+- DB 조회 결과 풋살인데 `default_player_count=11` 팀 1건 발견
+- `sport_type=FUTSAL`이면 `default_player_count` 범위 3~8로 검증 (현재 3~6)
+- 해당 팀 운영진이 직접 수정하거나 어드민 화면에서 교정 필요
 
 ## 41차 신규 추가 (2026-05-03) — safeText 잔여 적용
 
@@ -164,12 +190,8 @@ related: [completed-recent.md, reviews.md]
 
 ## 40차 신규 추가 (2026-05-02) — 우선순위 검토 필요
 
-### 세션 쿠키 옵션에 domain 명시 (재발 방지)
-- [ ] `src/lib/auth.ts` `SESSION_COOKIE_BASE_OPTIONS`에 `domain: process.env.NODE_ENV === "production" ? ".pitch-master.app" : undefined` 추가
-- 사유: 현재 쿠키가 **host-only** → www·non-www 도메인 정책 변경 시 기존 쿠키가 새 host로 안 따라감 → 모든 사용자 일괄 로그아웃 사고 발생 (2026-05-02 실제 발생, Cloudflare www→non-www 강제 활성화 후 옛날 www 쿠키 가진 사용자들이 한꺼번에 풀림)
-- 적용 후 효과: www·non-www·TWA 앱 모두 같은 쿠키 공유 → 향후 도메인 정책 변경에 면역
-- 단점: 기존 host-only 쿠키와 별도 동작(덮어쓰기 X) → 코드 추가해도 즉시 복구 안 됨. 한 번은 어차피 재로그인 필요
-- 우선순위 결정: 자주 발생 X / 발생 시 전 사용자 영향 큼 → 다음 도메인 정책 변경 전에는 반드시 처리
+### ~~세션 쿠키 옵션에 domain 명시~~ ✅ 41차 완료 (`699df36`)
+- [x] `SESSION_COOKIE_BASE_OPTIONS`에 `domain: ".pitch-master.app"` 추가 완료
 
 ## HIGH — 39차 신규 추가 (2026-05-01)
 

@@ -1,12 +1,154 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~40차)
-summary: 2026-04-11~05-02 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편, 광고 2 결과 분석 + 33초 본 캠페인 게시, 회비 선납→면제 통합 + PitchScore 카드 접힘 + 39차 백로그 반영
-sections: [40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-05-02 (40차)
+title: 개선 백로그 — 최근 완료 (16~42차)
+summary: 2026-04-11~05-03 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편, 광고 2 결과 분석 + 33초 본 캠페인 게시, 회비 선납→면제 통합 + PitchScore 카드 접힘 + 39차 백로그 반영, 보안 풀스윕 + RLS initPlan + 선납 매칭 + 풋살 AI + 역할 가이드 통일, GA4 서버사이드 + 유니코드→SVG + PitchScore 종목 분리 + 거짓 박제 사고 4건 + 벨로그 4편 발행
+sections: [42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-05-03 (42차)
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~40차)
+# 최근 완료 (16~42차)
+
+## 42차 (2026-05-03, KST) — GA4 서버사이드 + 유니코드→SVG + PitchScore 종목 분리 + 블로그 + 거짓 박제 사고 4건
+
+**커밋 3개** (`28c28a7` · `48d740c` · `d8409a6`) — origin/main 푸시 완료
+
+### 1. 서버사이드 GA4 가입 이벤트 (`28c28a7`)
+- [x] `src/lib/server/sendGAEvent.ts` 신규 — Measurement Protocol 헬퍼
+- [x] `findOrCreateKakaoUser` 반환값 `{ session, isNewUser }` 구조로 변경 (`src/lib/auth.ts`)
+- [x] 카카오 OAuth callback 라우트에서 `isNewUser=true` 시 `signup_complete` 이벤트 발화
+- [x] 단위 테스트 6개: silent fail · 쿠키 fallback · 다중 이벤트 패턴 전부 통과
+- [x] `GA4_API_SECRET` 환경변수 — 사용자가 Vercel에 수동 적용 완료
+- **배경**: GA4 가입 퍼널 4단계 분석 결과 카카오 인앱에서 `page_view` 누락 → 실제 가입자의 6.7%만 GA에 잡힘 (2026-05-03 Supabase cross-reference 확인). 서버사이드 발화로 우회.
+
+### 2. 유니코드 글리프 → lucide SVG 교체 (`48d740c`)
+- [x] `MatchesClient.tsx` — `›` → `ChevronRight`, `▲▼` → `ChevronUp/ChevronDown`
+- [x] `MatchCalendar.tsx` — `›`
+- [x] `TacticsBoard.tsx` — `▼ animate-bounce`
+- [x] `MembersClient.tsx` — `▼ rotate-180`
+- [x] `EvaluationModal.tsx` — `✕`
+- [x] `AppScreenSlider.tsx` — `▶/⏸` → `Play/Pause`
+- [x] `PWAInstallPrompt.tsx` + `ClientLayout.tsx` + `MoreClient.tsx` — `⬆︎` → `Share` (iOS 설치 안내)
+- **배경**: 모바일 시스템 폰트에 따라 유니코드 글리프가 과도하게 크게 렌더링되는 사고. 9개 교체.
+
+### 3. PitchScore 종목 분리 (`d8409a6`)
+- [x] 마이그레이션 `00059` — `player_evaluations.sport_type` 컬럼 + `player_attribute_definitions.applicable_sports` + PK 재구성
+- [x] `CROSSING` 코드 오박제 수정 → `CROSS` 1줄 CROSS 보정 SQL 추가
+- [x] 풋살 비활성 4개: `CROSS` · `FREE_KICK` · `HEADING` · `LONG_PASS`
+- [x] 풋살 신규 능력치 없음 — 기존 22개로 커버 (사용자 결정)
+- [x] API: `evaluate POST` body.team_id 명시 + evaluator 가입 검증, `DELETE` 동일 패턴, `attributes GET` `?sport=` 쿼리 + `applicable_sports` 필터
+- [x] UI: `PlayerProfilePage` 가드 강화, `PitchScoreCard` `sport+contextTeamId` prop, `EvaluationModal` `applicable_sports` 필터
+- [x] 단위 테스트 23/23 통과 (reviewer MEDIUM/LOW 수정 포함)
+- [x] Feature Flag (김선휘만) 그대로 유지
+- **미완**: 배포 후 김선휘 본인 시크릿 모드 라이브 검증 미실시 — 다음 세션 1순위
+
+### 4. 광고 3차 중간 분석 (코드 없음, 데이터)
+- 기간: 2026-05-01 11:27 ~ 2026-05-03 (진행 중, 2026-05-04 종료 예정)
+- 채널: 인스타 앱 부스팅, 1차 영상 재집행
+- 신규 팀 10팀, 신규 유저 45명 (4/25~5/3, Supabase 직접 조회)
+- 광고 3차 효율 약 ₩2,759/팀 (1·2차 ₩1,517·₩1,942 대비 +62% 비효율)
+- 광고 피로(Ad Fatigue) 패턴 확인 — 동일 영상 재집행 시 3초 재생률 절반 급감
+
+### 5. 블로그 발행
+- 벨로그 4편 `docs/blog-velog-4.md` — 사고 5건 (푸시폭탄·redirect·WAL·자모우회·useApi fallback) — **2026-05-03 발행 완료** (https://velog.io/@sunnykim91/pitchmaster-4)
+- 티스토리 #3 `docs/blog-post-3-final.md` — 사용자 모은 이야기 — 발행 대기 (미커밋)
+
+### 6. GA4 가입 퍼널 분석 (코드 없음, 인사이트)
+- referrer 분포: Unassigned 66% / Organic Social 21% / Paid Social 1.5%
+- /login 평균 체류 5초·사용자당 조회수 0.55 — 카카오 인앱 page_view 누락 확인
+- GA 가입 카운트 = 실제(Supabase)의 6.7%
+
+### 거짓 박제 사고 4건 — 동일 패턴 재발
+1. **"추적 필요" 답변 누락** — `reference_suspicious_kakao_ids.md`에 이미 기록된 사고를 추적 필요라 답변 → `feedback_grep_memory_before_analysis.md` 박제
+2. **"1년 회고" 거짓 박제** (벨로그 4편 1차) — 실제 운영 3개월인데 1년으로 작성 → `feedback_blog_fact_verify.md` 신규 박제
+3. **AI스러운 글 작성** (벨로그 4편 2차) — 정형 구조·추상어·결론 강요 → 톤 정정, 메모 추가 없음
+4. **새벽 알림·텔레그램 CS·자동 롤백 가공** (벨로그 4편 3차) — 본인이 하지 않은 일 박제 → `feedback_blog_fact_verify.md` 확장 (감정·반응·디테일 추측 금지)
+
+### 마이그레이션 번호 추측 사고 (재발)
+- `feedback_migration_number_check.md` 박제됐음에도 무시 — 00052로 추측 → 실제 00059
+- 능력치 코드 추측: `CROSSING` → 실제 `CROSS` (DB 직접 조회로 발견)
+
+### 메모리 추가 (이번 세션 신규)
+- `feedback_grep_memory_before_analysis.md` — 분석 답변 전 메모 grep 의무
+- `reference_blog_docs.md` — 블로그 발행본 docs/blog-* 위치 + 시리즈 진행 상태
+- `feedback_blog_fact_verify.md` — 운영 기간·누적 수치·감정·반응·자동화 시스템 추측 금지
+- `feedback_existing_items_grep_first.md` — 신규 항목 추가 전 기존 grep 필수 (풋살 포메이션 중복 사례)
+- `feedback_db_distribution_check.md` — 기능 활성화 전 DB 분포 직접 조회 필수 (풋살 27팀 중 6인제 24팀)
+- `feedback_postgrest_or_injection.md` — PostgREST or() 사용자 입력 보간 인젝션 위험
+- `reference_rls_initplan_pattern.md` — RLS initPlan 최적화 정확 패턴
+
+---
+
+## 41차 (2026-05-03, KST 07~22시) — 보안 풀스윕 + RLS initPlan + 선납 매칭 + 풋살 AI + 역할 가이드 통일
+
+**커밋 9개** (`699df36` · `3e28588` · `3f294cd` · `d938fc8` · `4c7d4e1` · `a4aebe3` · `4311bd4` · `cf8e97a` · `174f3e9`) — origin/main 푸시 완료
+
+### 1. 보안 풀스윕 (`699df36`)
+
+**AI 프롬프트 인젝션 방어**
+- [x] `src/lib/ai/aiPromptSafety.ts` 공통 헬퍼 신규 — `sanitizePromptInput`, `sanitizePromptObject`, `safetyHeader`, `<user_data>` 마커 패턴
+- [x] 5개 AI 함수에 일괄 적용: `aiTacticsAnalysis` · `aiFullPlan` · `aiSignature` · `aiMatchSummary` · `aiOcrParse`
+- [x] 스트리밍 경로(`generateAiTacticsAnalysisStream`) sanitize 누락 → 별도 추가 (reviewer 발견)
+
+**팀 생성 rate limit**
+- [x] 마이그레이션 `00054_team_creation_log.sql` (team_creation_log 테이블)
+- [x] `src/lib/teamCreationRateLimit.ts` — 카카오 ID당 1팀/시간·3팀/일 제한
+- [x] `src/app/team/actions.ts createTeam` 진입점 적용
+
+**자유 텍스트 검증 일원화**
+- [x] `validateFreeText` 헬퍼 `safeText.ts` 추가
+- [x] 6곳 적용: `posts` · `comments` · `match-comments` · `diary` · `rules` · `join-request`
+
+**영구 차단 메커니즘**
+- [x] 마이그레이션 `00055_users_is_banned.sql` (`users.is_banned` 컬럼)
+- [x] hard-delete cron에서 `is_banned=true` 제외 처리
+- [x] `findOrCreateKakaoUser` 차단 체크 적용
+
+**세션 쿠키 domain 명시**
+- [x] `SESSION_COOKIE_BASE_OPTIONS`에 `domain: ".pitch-master.app"` 추가 (40차 www/non-www 사고 재발 방지)
+
+### 2. RLS Performance Advisor 최적화 (`3e28588`)
+- [x] 마이그레이션 `00056` — PitchScore 정책 5건 `auth.uid()` → `(SELECT auth.uid())` initPlan 패턴
+- [x] 마이그레이션 `00057` — `auth.jwt() ->> 'sub'` → `((SELECT auth.jwt()) ->> 'sub')` 정확 패턴 (괄호 위치 중요)
+- [x] Performance Advisor 경고 5→3→0건으로 해소
+
+### 3. 선납 ↔ 입금 자동/수동 매칭 (`d938fc8` · `4c7d4e1` · `a4aebe3`)
+- [x] 마이그레이션 `00058` — `member_dues_exemptions.linked_dues_record_id` 컬럼
+- [x] `src/lib/findPrepaymentMatch.ts` — 보수적 매칭 헬퍼 (후보 정확 1건일 때만 자동 매칭)
+- [x] PATCH endpoint — 수동 매칭 처리
+- [x] DuesClient `?tab=` 쿼리 useEffect 동기화 fix (URL Link → tab 미전환 버그)
+- [x] 사용자 의도 변경 수용: 별도 모달 → 폼 안 인라인 라디오 (회원 선택 시 최근 6개월 입금 자동 노출)
+
+### 4. 풋살 AI 활성화 (`4311bd4`)
+- [x] `effectiveEnableAi`에서 `sportType === "SOCCER"` 조건 제거
+- [x] 5인제 풋살 포메이션 4종 추가 (`formations.ts`)
+- [x] API 레벨 풋살 차단 제거: `/api/ai/tactics` · `/api/ai/full-plan`
+
+### 5. AI 후기 룰 통일 + 풋살 역할 가이드 (`cf8e97a` · `174f3e9`)
+- [x] `enableAiSummary=false` 설정 — AI 경로 완전 비활
+- [x] `generateRuleBasedSummary` 단락 풍부화 (시그니처 패턴 차용)
+- [x] `aiSignatureCache.ts:42` — AI 경로 이미 비활 상태였음 확인 (사용자 판단이 옳았음)
+- [x] `src/lib/positionRoles/base/futsal.ts` 신규 — FIXO·ALA·PIVO 3종 역할 정의
+- [x] `src/lib/positionRoles/overrides/futsal.ts` 신규 — 5인제 6포메이션 + 6인제 3포메이션 override
+- [x] `MatchRoleGuide.tsx` isSupported 풋살 5·6인제 허용
+- [x] 기존 풋살 포메이션 15개 슬롯 role FIXO·ALA·PIVO로 일괄 수정 (SOCCER role 잘못 매핑 수정)
+- [x] `futsal-5-1-2-1` 중복 제거 (기존 `futsal-1-2-1`과 동일)
+
+### 6. Reviewer 발견 이슈 3건 fix (cf8e97a 포함)
+- [x] `member-status` `.or()` 인젝션 — 두 쿼리 분리 + Map dedupe
+- [x] 스트리밍 경로 sanitize 누락 → `sanitizePromptObject` + `safetyHeader` + `<user_data>` 태그 추가
+- [x] 시스템 프롬프트 풋살 분기 부재 → 풋살 5인제 4종 가이드 + 톤 강제
+
+### 운영 마이그레이션 (전부 운영 적용 완료)
+- [x] `00054_team_creation_log`
+- [x] `00055_users_is_banned`
+- [x] `00056` PitchScore RLS initPlan
+- [x] `00057` auth.jwt() 정확 패턴
+- [x] `00058_prepayment_link`
+
+### 삽질 요약
+- 기존 풋살 포메이션 15개 존재를 세션 후반에야 발견 — `grep -nE "id: \"futsal-"` 한 줄 미실행
+- 풋살 27팀의 `default_player_count` 분포 미확인으로 5인제만 만들었다가 6인제 24팀 대상 미커버 — 뒤늦게 DB 조회 후 6인제 가이드 추가
+- `((SELECT auth.jwt()) ->> 'sub')` 괄호 위치 — `(SELECT auth.jwt() ->> 'sub')` 와 다름. Performance Advisor 5→3→0 세 번 시도 후 패턴 확정
 
 ## 40차-B (2026-05-02, 회고 세션) — Vercel SEO 사고 복구 + 메모리 오기 정정 + 광고 3차(재집행) 분석
 
