@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { SignatureInput } from "@/lib/playerCardUtils";
 import { generateSignature as generateRuleBasedSignature } from "@/lib/playerCardUtils";
 import { recordAiUsage, extractTokenUsage } from "@/lib/server/aiUsageLog";
+import { sanitizePromptObject } from "@/lib/server/aiPromptSafety";
 
 /**
  * Claude Sonnet으로 선수 시그니처 카피 생성.
@@ -281,7 +282,8 @@ export async function generateAiSignature(input: AiSignatureInput): Promise<AiSi
     return { signature: ruleSig, source: "rule" };
   }
 
-  const userContent = JSON.stringify({
+  // 안전망 — 입력은 거의 모두 숫자/bool이지만 sanitize 한 번 적용 (signatureHint 등 미래 변경 대비)
+  const safeData = sanitizePromptObject({
     positionCategory: input.cat,
     matchCount: input.matchCount,
     goals: input.goals,
@@ -305,11 +307,12 @@ export async function generateAiSignature(input: AiSignatureInput): Promise<AiSi
     ...(input.attendanceStreak != null && { attendanceStreak: input.attendanceStreak }),
     signatureHint: ruleSig,
   });
+  const userContent = JSON.stringify(safeData);
 
   const callOnce = async (temperature: number, feedbackNote?: string) => {
     const userMsg = feedbackNote
-      ? `이전 응답이 ${feedbackNote} 때문에 실패했습니다. 시스템 지침을 엄격히 지켜 다시 작성해 주세요.\n\n응답 형식: 한 줄 카피 본문만.\n\n${userContent}`
-      : `다음 선수의 시즌 스탯입니다. 시스템 지침의 5가지 유형 중 하나를 골라 23자 이내 한 줄만 만들어 주세요.\n\n응답 형식: 한 줄 카피 본문만. 다른 글자 절대 금지.\n\n${userContent}`;
+      ? `이전 응답이 ${feedbackNote} 때문에 실패했습니다. 시스템 지침을 엄격히 지켜 다시 작성해 주세요.\n\n응답 형식: 한 줄 카피 본문만.\n\n<user_data>\n${userContent}\n</user_data>`
+      : `다음 선수의 시즌 스탯입니다. 시스템 지침의 5가지 유형 중 하나를 골라 23자 이내 한 줄만 만들어 주세요.\n\n응답 형식: 한 줄 카피 본문만. 다른 글자 절대 금지.\n\n<user_data>\n${userContent}\n</user_data>`;
 
     return client.messages.create({
       model: MODEL,

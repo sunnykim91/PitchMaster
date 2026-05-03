@@ -13,12 +13,15 @@ const SESSION_COOKIE = "pm_session";
  * - secure: 프로덕션에서만 true — HTTPS 전용 전송 (MITM/스니핑 방어)
  *   localhost 개발은 HTTP라서 true면 쿠키가 아예 저장 안 되므로 NODE_ENV 분기
  * - path=/: 전역
+ * - domain: 프로덕션에서만 .pitch-master.app — www·non-www·서브도메인(TWA 등) 공유
+ *   2026-05-02 사고 대응: host-only 쿠키 + Cloudflare www→non-www 강제로 사용자 일괄 로그아웃 발생
  */
 const SESSION_COOKIE_BASE_OPTIONS = {
   httpOnly: true,
   sameSite: "lax" as const,
   secure: process.env.NODE_ENV === "production",
   path: "/",
+  domain: process.env.NODE_ENV === "production" ? ".pitch-master.app" : undefined,
 };
 
 /**
@@ -155,13 +158,14 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
   const db = getSupabaseAdmin();
   if (!db) throw new Error("Supabase is not configured");
 
-  // 차단/탈퇴 처리된 카카오 ID 사전 체크
-  // deleted_at IS NOT NULL = 자발적 탈퇴 또는 운영진 차단. 새 row 생성 흐름으로 진입하기 전에 거부.
+  // 차단/탈퇴 처리된 카카오 ID 사전 체크 — 새 row 생성 흐름 진입 전 거부.
+  //   deleted_at IS NOT NULL = 자발적 탈퇴 (14일 후 hard-delete → 재가입 가능)
+  //   is_banned = true       = 영구 차단 (hard-delete cron 에서도 제외, 38차 보안 사고 대응)
   const { data: blocked } = await db
     .from("users")
-    .select("id, deleted_at")
+    .select("id, deleted_at, is_banned")
     .eq("kakao_id", kakaoProfile.id)
-    .not("deleted_at", "is", null)
+    .or("deleted_at.not.is.null,is_banned.eq.true")
     .maybeSingle();
   if (blocked) {
     throw new Error("ACCOUNT_BLOCKED");

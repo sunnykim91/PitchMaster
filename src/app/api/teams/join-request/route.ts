@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { apiError, apiSuccess } from "@/lib/api-helpers";
 import { sendTeamPush } from "@/lib/server/sendPush";
+import { validateFreeText } from "@/lib/validators/safeText";
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -31,6 +32,14 @@ export async function POST(request: NextRequest) {
 
   if (!teamId) {
     return apiError("teamId는 필수입니다");
+  }
+
+  // 가입 메시지 검증 (선택 입력)
+  let safeMessage: string | null = null;
+  if (typeof message === "string" && message.trim().length > 0) {
+    const msgCheck = validateFreeText(message, { maxLength: 500, fieldLabel: "메시지" });
+    if (!msgCheck.ok) return apiError(msgCheck.reason);
+    safeMessage = msgCheck.value;
   }
 
   const userId = session.user.id;
@@ -99,7 +108,7 @@ export async function POST(request: NextRequest) {
           name: resolvedName,
           phone: resolvedPhone,
           preferred_position: resolvedPosition,
-          message: message ?? null,
+          message: safeMessage,
           status: "PENDING",
           reviewed_by: null,
           reviewed_at: null,
@@ -124,7 +133,7 @@ export async function POST(request: NextRequest) {
     name: resolvedName,
     phone: resolvedPhone,
     preferred_position: resolvedPosition,
-    message: message ?? null,
+    message: safeMessage,
     status: "PENDING",
   });
 

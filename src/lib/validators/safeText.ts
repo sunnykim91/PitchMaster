@@ -54,6 +54,52 @@ export function validateSafeName(
   return { ok: true, value: trimmed };
 }
 
+// 자유 텍스트(게시판 글·댓글·일지·메모) 검증.
+// validateSafeName 보다 **관대한 정책** — 따옴표·구두점은 일상 문장에서 정상이므로 허용.
+// 차단: 제어문자(LF/CR/Tab 제외) + NULL byte + 길이 초과.
+//
+// 사용처: 다른 사용자에게 노출되는 글·댓글·일지·코멘트·규칙·가입 메시지 등.
+
+const FREE_TEXT_CONTROL_CHARS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
+
+export type FreeTextResult =
+  | { ok: true; value: string }
+  | { ok: false; reason: string };
+
+export type FreeTextOptions = {
+  maxLength: number;
+  minLength?: number;
+  fieldLabel?: string;
+};
+
+export function validateFreeText(
+  input: unknown,
+  options: FreeTextOptions,
+): FreeTextResult {
+  const label = options.fieldLabel ?? "내용";
+  if (typeof input !== "string") {
+    return { ok: false, reason: `${label}은 문자열이어야 합니다` };
+  }
+  const trimmed = input.trim();
+  const min = options.minLength ?? 1;
+  if (trimmed.length < min) {
+    return {
+      ok: false,
+      reason:
+        min > 1
+          ? `${label}은 최소 ${min}자 이상이어야 합니다`
+          : `${label}을 입력해주세요`,
+    };
+  }
+  if (trimmed.length > options.maxLength) {
+    return { ok: false, reason: `${label}은 ${options.maxLength}자 이하로 입력해주세요` };
+  }
+  if (FREE_TEXT_CONTROL_CHARS.test(trimmed)) {
+    return { ok: false, reason: `${label}에 사용할 수 없는 제어 문자가 포함되어 있습니다` };
+  }
+  return { ok: true, value: trimmed };
+}
+
 // 카카오 OAuth 콜백 전용. 카카오 닉네임은 사용자가 외부에서 자유롭게 설정 가능하므로
 // 거부하는 대신 안전하지 않으면 fallback("사용자")으로 치환해 저장한다.
 // 사용자는 이후 온보딩 단계에서 본인 이름을 다시 입력하게 된다.

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess, requireRole } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { validateFreeText } from "@/lib/validators/safeText";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -52,6 +53,14 @@ export async function POST(request: NextRequest) {
     .single();
   if (!matchCheck) return apiError("Match not found", 404);
 
+  // memo는 자유 텍스트 — 검증 (빈 문자열도 허용해야 하므로 falsy 직접 처리)
+  let memoValue: string | null = null;
+  if (typeof body.memo === "string" && body.memo.trim().length > 0) {
+    const memoCheck = validateFreeText(body.memo, { maxLength: 5000, fieldLabel: "메모" });
+    if (!memoCheck.ok) return apiError(memoCheck.reason);
+    memoValue = memoCheck.value;
+  }
+
   const { data, error } = await db
     .from("match_diaries")
     .upsert(
@@ -59,7 +68,7 @@ export async function POST(request: NextRequest) {
         match_id: body.matchId,
         weather: body.weather || null,
         condition: body.condition || null,
-        memo: body.memo || null,
+        memo: memoValue,
         photos: body.photos || [],
         created_by: ctx.userId,
         updated_at: new Date().toISOString(),

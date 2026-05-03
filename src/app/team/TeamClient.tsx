@@ -147,7 +147,11 @@ export default function TeamClient({ hasExistingTeam = false }: { hasExistingTea
               ? "이미 가입 신청한 팀입니다."
               : error === "demo_blocked"
                 ? "데모 모드에서는 팀 생성/가입이 불가합니다. 카카오 로그인 후 이용해주세요."
-                : null;
+                : error === "invalid_name"
+                  ? "팀 이름에 사용할 수 없는 문자가 포함되어 있습니다. 한글·영문·숫자로 2자 이상 입력해주세요."
+                  : error === "rate_limit"
+                    ? "팀 생성 한도(시간 1팀·일 3팀)에 도달했습니다. 잠시 후 다시 시도해주세요."
+                    : null;
 
   const createTeamCard = (
     <Card>

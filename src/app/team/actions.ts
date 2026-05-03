@@ -4,7 +4,8 @@ import { nanoid } from "nanoid";
 import { redirect } from "next/navigation";
 import { auth, updateSession } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { validateSafeName } from "@/lib/validators/safeText";
+import { validateSafeName, validateFreeText } from "@/lib/validators/safeText";
+import { checkTeamCreationRateLimit, logTeamCreation } from "@/lib/server/teamCreationRateLimit";
 
 export async function createTeam(formData: FormData) {
   const session = await auth();
@@ -20,6 +21,13 @@ export async function createTeam(formData: FormData) {
   const teamName = teamNameCheck.value;
   const sportType = String(formData.get("sportType") || "SOCCER");
   const inviteCode = nanoid(6).toUpperCase();
+
+  // Rate limit — 시간 1팀, 일 3팀 (38차 사고 대응)
+  const rateCheck = await checkTeamCreationRateLimit(session.user.id);
+  if (!rateCheck.allowed) {
+    redirect("/team?error=rate_limit");
+    return;
+  }
 
   const db = getSupabaseAdmin();
   if (!db) throw new Error("Database not configured");
@@ -53,6 +61,19 @@ export async function createTeam(formData: FormData) {
     status: "ACTIVE",
   });
 
+  // Rate limit log — 실패해도 사용자 흐름엔 영향 없음
+  try {
+    const { data: userRow } = await db.from("users").select("kakao_id").eq("id", session.user.id).single();
+    await logTeamCreation({
+      userId: session.user.id,
+      kakaoId: userRow?.kakao_id ?? null,
+      teamId: team.id,
+      teamName: team.name,
+    });
+  } catch (err) {
+    console.warn("[createTeam] team_creation_log insert failed (ignored):", err);
+  }
+
   // Create default season (yearly)
   const year = new Date().getFullYear();
   await db.from("seasons").insert({
@@ -78,7 +99,16 @@ export async function requestJoinTeam(formData: FormData) {
   if (session.user.isDemo) redirect("/team?error=demo_blocked");
 
   const teamId = String(formData.get("teamId") || "").trim();
-  const message = String(formData.get("message") || "").trim();
+  const rawMessage = String(formData.get("message") || "").trim();
+  let message = "";
+  if (rawMessage.length > 0) {
+    const msgCheck = validateFreeText(rawMessage, { maxLength: 500, fieldLabel: "메시지" });
+    if (!msgCheck.ok) {
+      redirect("/team?error=invalid_message");
+      return;
+    }
+    message = msgCheck.value;
+  }
 
   if (!teamId) redirect("/team");
 

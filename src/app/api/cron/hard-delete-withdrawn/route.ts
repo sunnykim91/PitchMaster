@@ -24,11 +24,13 @@ export async function GET(request: Request) {
   const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
 
   // 삭제 대상 조회 (감사 로그 업데이트용)
+  // is_banned=true 는 영구 차단 — hard-delete 제외 (kakao_id 보존해 재가입 차단)
   const { data: targets, error: selectErr } = await db
     .from("users")
     .select("id, kakao_id")
     .not("deleted_at", "is", null)
-    .lt("deleted_at", cutoff);
+    .lt("deleted_at", cutoff)
+    .eq("is_banned", false);
 
   if (selectErr) {
     console.error("[hard-delete-withdrawn] 대상 조회 실패:", selectErr);
@@ -41,11 +43,12 @@ export async function GET(request: Request) {
 
   const ids = targets.map((t) => t.id);
 
-  // 물리 삭제 — FK CASCADE 로 연관 row 도 자동 삭제
+  // 물리 삭제 — FK CASCADE 로 연관 row 도 자동 삭제. is_banned=true 는 위 select 단계에서 제외됨.
   const { error: deleteErr } = await db
     .from("users")
     .delete()
-    .in("id", ids);
+    .in("id", ids)
+    .eq("is_banned", false);
 
   if (deleteErr) {
     console.error("[hard-delete-withdrawn] 삭제 실패:", deleteErr);

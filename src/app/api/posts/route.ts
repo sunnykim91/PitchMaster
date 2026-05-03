@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isStaffOrAbove } from "@/lib/permissions";
+import { validateFreeText } from "@/lib/validators/safeText";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -104,19 +105,18 @@ export async function POST(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  const title = typeof body.title === "string" ? body.title.trim() : "";
-  const content = typeof body.content === "string" ? body.content.trim() : "";
-  if (!title) return apiError("제목을 입력해주세요");
-  if (!content) return apiError("내용을 입력해주세요");
-  if (title.length > 200) return apiError("제목은 200자 이하로 입력해주세요");
+  const titleCheck = validateFreeText(body.title, { maxLength: 200, fieldLabel: "제목" });
+  if (!titleCheck.ok) return apiError(titleCheck.reason);
+  const contentCheck = validateFreeText(body.content, { maxLength: 10000, fieldLabel: "내용" });
+  if (!contentCheck.ok) return apiError(contentCheck.reason);
 
   const { data, error } = await db
     .from("posts")
     .insert({
       team_id: ctx.teamId,
       author_id: ctx.userId,
-      title,
-      content,
+      title: titleCheck.value,
+      content: contentCheck.value,
       category: "FREE",
       image_urls: body.imageUrls || [],
     })
@@ -187,8 +187,16 @@ export async function PUT(request: NextRequest) {
   if (!isAuthor && !isStaff) return apiError("Forbidden", 403);
 
   const updateData: Record<string, unknown> = {};
-  if (title !== undefined) updateData.title = title;
-  if (content !== undefined) updateData.content = content;
+  if (title !== undefined) {
+    const c = validateFreeText(title, { maxLength: 200, fieldLabel: "제목" });
+    if (!c.ok) return apiError(c.reason);
+    updateData.title = c.value;
+  }
+  if (content !== undefined) {
+    const c = validateFreeText(content, { maxLength: 10000, fieldLabel: "내용" });
+    if (!c.ok) return apiError(c.reason);
+    updateData.content = c.value;
+  }
   if (imageUrls !== undefined) updateData.image_urls = imageUrls;
   updateData.updated_at = new Date().toISOString();
 

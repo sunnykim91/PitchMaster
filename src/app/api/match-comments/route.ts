@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { validateFreeText } from "@/lib/validators/safeText";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -40,7 +41,9 @@ export async function POST(request: NextRequest) {
   if (!db) return apiError("Database not available", 503);
 
   const { matchId, content } = await request.json();
-  if (!matchId || !content?.trim()) return apiError("matchId and content required");
+  if (!matchId) return apiError("matchId required");
+  const contentCheck = validateFreeText(content, { maxLength: 2000, fieldLabel: "댓글" });
+  if (!contentCheck.ok) return apiError(contentCheck.reason);
 
   const { data: matchCheck } = await db
     .from("matches")
@@ -52,7 +55,7 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await db
     .from("match_comments")
-    .insert({ match_id: matchId, user_id: ctx.userId, content: content.trim() })
+    .insert({ match_id: matchId, user_id: ctx.userId, content: contentCheck.value })
     .select("id, match_id, user_id, content, created_at, users(name)")
     .single();
 

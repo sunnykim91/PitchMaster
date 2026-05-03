@@ -7,6 +7,7 @@ import {
 } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
+import { validateFreeText } from "@/lib/validators/safeText";
 
 export async function GET() {
   const ctx = await getApiContext();
@@ -33,6 +34,11 @@ export async function POST(request: NextRequest) {
   if (roleCheck) return roleCheck;
 
   const body = await request.json();
+  const titleCheck = validateFreeText(body.title, { maxLength: 200, fieldLabel: "제목" });
+  if (!titleCheck.ok) return apiError(titleCheck.reason);
+  const contentCheck = validateFreeText(body.content, { maxLength: 20000, fieldLabel: "내용" });
+  if (!contentCheck.ok) return apiError(contentCheck.reason);
+
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
@@ -41,8 +47,8 @@ export async function POST(request: NextRequest) {
     .from("rules")
     .insert({
       team_id: ctx.teamId,
-      title: body.title,
-      content: body.content,
+      title: titleCheck.value,
+      content: contentCheck.value,
       category: body.category || "일반",
       file_url: body.fileUrl || null,
       file_name: body.fileName || null,
@@ -66,6 +72,10 @@ export async function PUT(request: NextRequest) {
 
   const body = await request.json();
   if (!body.id) return apiError("id required");
+  const titleCheck = validateFreeText(body.title, { maxLength: 200, fieldLabel: "제목" });
+  if (!titleCheck.ok) return apiError(titleCheck.reason);
+  const contentCheck = validateFreeText(body.content, { maxLength: 20000, fieldLabel: "내용" });
+  if (!contentCheck.ok) return apiError(contentCheck.reason);
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
@@ -73,8 +83,8 @@ export async function PUT(request: NextRequest) {
   const { data, error } = await db
     .from("rules")
     .update({
-      title: body.title,
-      content: body.content,
+      title: titleCheck.value,
+      content: contentCheck.value,
       category: body.category,
       file_url: body.fileUrl ?? null,
       file_name: body.fileName ?? null,

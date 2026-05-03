@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isStaffOrAbove } from "@/lib/permissions";
+import { validateFreeText } from "@/lib/validators/safeText";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -31,10 +32,9 @@ export async function POST(request: NextRequest) {
   if (ctx instanceof NextResponse) return ctx;
 
   const body = await request.json();
-  const content = typeof body.content === "string" ? body.content.trim() : "";
   if (!body.postId) return apiError("postId required");
-  if (!content) return apiError("댓글 내용을 입력해주세요");
-  if (content.length > 1000) return apiError("댓글은 1000자 이하로 입력해주세요");
+  const contentCheck = validateFreeText(body.content, { maxLength: 1000, fieldLabel: "댓글" });
+  if (!contentCheck.ok) return apiError(contentCheck.reason);
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     .insert({
       post_id: body.postId,
       author_id: ctx.userId,
-      content,
+      content: contentCheck.value,
     })
     .select("*, author:author_id(name, profile_image_url)")
     .single();
