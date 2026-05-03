@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Plus, X, UserX, Wallet, Link2 } from "lucide-react";
+import { Plus, X, UserX, Link2 } from "lucide-react";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import PrepaymentLinkModal from "./PrepaymentLinkModal";
 import { Button } from "@/components/ui/button";
@@ -720,6 +720,10 @@ function MemberExemptionSection({
   const [startMonth, setStartMonth] = useState(nextMonthFirstISO());
   const [monthlyAmount, setMonthlyAmount] = useState<number>(defaultMonthlyAmount);
   const [actualPaidAmount, setActualPaidAmount] = useState<number>(defaultMonthlyAmount * 6);
+  // 받은 입금 거래 후보 (회원 + PREPAID 선택 시 자동 fetch)
+  const [incomeCandidates, setIncomeCandidates] = useState<{ id: string; amount: number; description: string; recordedAt: string }[]>([]);
+  const [candidatesLoading, setCandidatesLoading] = useState(false);
+  const [selectedRecordId, setSelectedRecordId] = useState<string>("");
 
   function resetForm() {
     setMemberId("");
@@ -731,7 +735,28 @@ function MemberExemptionSection({
     setStartMonth(nextMonthFirstISO());
     setMonthlyAmount(defaultMonthlyAmount);
     setActualPaidAmount(defaultMonthlyAmount * 6);
+    setIncomeCandidates([]);
+    setSelectedRecordId("");
   }
+
+  // 회원 + 상태=선납 시 최근 6개월 입금 거래 fetch
+  React.useEffect(() => {
+    if (exemptionType !== "PREPAID" || !memberId) {
+      setIncomeCandidates([]);
+      setSelectedRecordId("");
+      return;
+    }
+    setCandidatesLoading(true);
+    setSelectedRecordId("");
+    fetch(`/api/dues/member-status?memberCandidates=${memberId}&monthsBack=6`)
+      .then((r) => r.json())
+      .then((res) => {
+        const list = res?.data?.candidates ?? res?.candidates ?? [];
+        setIncomeCandidates(list);
+      })
+      .catch(() => setIncomeCandidates([]))
+      .finally(() => setCandidatesLoading(false));
+  }, [exemptionType, memberId]);
 
   React.useEffect(() => {
     fetch("/api/dues/member-status")
@@ -755,6 +780,7 @@ function MemberExemptionSection({
         monthlyAmount,
         periodMonths,
         actualPaidAmount,
+        linkedDuesRecordId: selectedRecordId || null,
       };
     } else {
       if (!startDate) return;
@@ -932,18 +958,67 @@ function MemberExemptionSection({
                   )}
                 </div>
 
-                {/* 입금 안내 + 버튼 */}
-                <div className="flex flex-col gap-2 rounded-lg bg-muted/50 p-3">
-                  <div className="text-xs text-muted-foreground leading-relaxed">
-                    💡 받은 <b>{formatAmount(actualPaidAmount)}</b>은 회비 기록에 입금 1건으로 남겨주세요. OCR·엑셀·수기 모두 가능합니다.
+                {/* 받은 입금 거래 선택 (최근 6개월 해당 회원) */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[11px] text-muted-foreground">받은 입금 거래 (최근 6개월)</Label>
+                    {memberId && incomeCandidates.length > 0 && (
+                      <span className="text-[10px] text-muted-foreground">{incomeCandidates.length}건</span>
+                    )}
                   </div>
-                  <Link
-                    href="/dues?tab=records"
-                    className="inline-flex items-center justify-center gap-1.5 rounded-md border border-primary/40 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
-                  >
-                    <Wallet className="h-3.5 w-3.5" />
-                    입금 등록하러 가기
-                  </Link>
+                  {!memberId ? (
+                    <p className="text-[11px] text-muted-foreground/70 px-1 py-2">회원을 먼저 선택해주세요.</p>
+                  ) : candidatesLoading ? (
+                    <p className="text-[11px] text-muted-foreground/70 px-1 py-2">불러오는 중...</p>
+                  ) : incomeCandidates.length === 0 ? (
+                    <div className="rounded-lg bg-muted/40 px-3 py-2.5 text-[11px] text-muted-foreground leading-relaxed">
+                      최근 6개월 입금 기록이 없습니다.<br />
+                      <Link href="/dues?tab=records" className="text-primary underline">회비 기록 탭에서 먼저 등록</Link>하시거나, 그냥 등록하시면 선납만 기록됩니다.
+                    </div>
+                  ) : (
+                    <div className="space-y-1 max-h-48 overflow-y-auto rounded-lg border border-border bg-card">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRecordId("")}
+                        className={cn(
+                          "w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-2 border-b border-border/50",
+                          selectedRecordId === ""
+                            ? "bg-primary/5 text-foreground"
+                            : "text-muted-foreground hover:bg-secondary/40",
+                        )}
+                      >
+                        <span className={cn(
+                          "h-3 w-3 rounded-full border-2 shrink-0",
+                          selectedRecordId === "" ? "border-primary bg-primary" : "border-muted-foreground/40",
+                        )} />
+                        선택 안 함 (자동 매칭에 맡김)
+                      </button>
+                      {incomeCandidates.map((c) => {
+                        const selected = selectedRecordId === c.id;
+                        const d = new Date(c.recordedAt);
+                        const dateLabel = `${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => setSelectedRecordId(c.id)}
+                            className={cn(
+                              "w-full text-left px-3 py-2 transition-colors flex items-center gap-2",
+                              selected ? "bg-primary/10" : "hover:bg-secondary/40",
+                            )}
+                          >
+                            <span className={cn(
+                              "h-3 w-3 rounded-full border-2 shrink-0",
+                              selected ? "border-primary bg-primary" : "border-muted-foreground/40",
+                            )} />
+                            <span className="text-xs text-muted-foreground tabular-nums shrink-0">{dateLabel}</span>
+                            <span className="text-xs text-foreground truncate flex-1">{c.description}</span>
+                            <span className="text-xs font-bold text-primary tabular-nums shrink-0">+{formatAmount(c.amount)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
