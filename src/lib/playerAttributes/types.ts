@@ -20,12 +20,18 @@ export type EvaluationContext = 'ROUND' | 'FREE' | 'POST_MATCH';
 
 export type AttributeLevel = 1 | 2 | 3 | 4 | 5;
 
+// 00059 — PitchScore 종목별 분리.
+// 같은 종목 내에선 글로벌(이직 보호), 종목 다르면 분리.
+export type SportType = 'SOCCER' | 'FUTSAL';
+
 export interface AttributeCodeMaster {
   code: AttributeCode;
   name_ko: string;
   category: AttributeCategory;
   display_order: number;
   gk_only: boolean;
+  // 00059 — 풋살에서 비활성: CROSS·FREE_KICK·HEADING·LONG_PASS는 ['SOCCER']
+  applicable_sports: SportType[];
 }
 
 export interface AttributeLabel {
@@ -39,6 +45,7 @@ export interface PlayerEvaluation {
   target_user_id: string;
   evaluator_user_id: string;
   team_id: string | null;
+  sport_type: SportType;
   attribute_code: AttributeCode;
   score: AttributeLevel;
   source: EvaluationSource;
@@ -50,6 +57,7 @@ export interface PlayerEvaluation {
 
 export interface PlayerAttributeScore {
   user_id: string;
+  sport_type: SportType;
   attribute_code: AttributeCode;
   weighted_avg: number;
   sample_count: number;

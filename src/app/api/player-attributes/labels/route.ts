@@ -12,7 +12,7 @@ export async function GET() {
   const [codesRes, labelsRes] = await Promise.all([
     sb
       .from("player_attribute_codes")
-      .select("code, name_ko, category, display_order, gk_only")
+      .select("code, name_ko, category, display_order, gk_only, applicable_sports")
       .order("display_order"),
     sb
       .from("player_attribute_labels")

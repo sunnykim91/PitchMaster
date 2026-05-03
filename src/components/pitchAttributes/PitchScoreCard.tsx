@@ -9,6 +9,7 @@ import { CATEGORY_META } from "@/lib/playerAttributes/config";
 import type {
   AttributeCode,
   AttributeCategory,
+  SportType,
 } from "@/lib/playerAttributes/types";
 
 interface AttributeRow {
@@ -45,6 +46,7 @@ interface PositionRec {
 
 interface AttributesResponse {
   user_id: string;
+  sport_type: SportType;
   is_goalkeeper: boolean;
   attributes: AttributeRow[];
   category_averages: CategoryAvg[];
@@ -65,6 +67,10 @@ interface LabelRow {
 interface Props {
   targetUserId: string;
   targetUserName: string;
+  /** 현재 보고 있는 팀의 sport_type. 종목별 분리 평가 (00059) 후 필수. */
+  sportType: SportType;
+  /** 평가 저장 시 명시적으로 사용할 팀 ID. evaluator의 활성 ctx.teamId와 다를 수 있음 */
+  contextTeamId: string;
   isGoalkeeper?: boolean;
   canEvaluate?: boolean;
 }
@@ -74,6 +80,8 @@ const COMMENT_MIN_SAMPLES = 5;
 export default function PitchScoreCard({
   targetUserId,
   targetUserName,
+  sportType,
+  contextTeamId,
   isGoalkeeper,
   canEvaluate = true,
 }: Props) {
@@ -87,7 +95,7 @@ export default function PitchScoreCard({
     setLoading(true);
     try {
       const [attrRes, labelRes] = await Promise.all([
-        fetch(`/api/players/${targetUserId}/attributes`),
+        fetch(`/api/players/${targetUserId}/attributes?sport=${sportType}`),
         fetch(`/api/player-attributes/labels`),
       ]);
       if (attrRes.ok) {
@@ -103,7 +111,7 @@ export default function PitchScoreCard({
     } finally {
       setLoading(false);
     }
-  }, [targetUserId]);
+  }, [targetUserId, sportType]);
 
   useEffect(() => {
     load();
@@ -283,6 +291,8 @@ export default function PitchScoreCard({
         targetUserId={targetUserId}
         targetUserName={targetUserName}
         isGoalkeeper={effectiveIsGK}
+        sportType={sportType}
+        contextTeamId={contextTeamId}
         onSaved={load}
       />
     </section>

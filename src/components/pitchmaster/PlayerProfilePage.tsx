@@ -63,8 +63,12 @@ export type PlayerProfile = {
   recentMatches: RecentMatch[];
   /** 최근 15경기의 출석/결과 — 히트맵 시각화용. date 오름차순 (오래된 → 최신) */
   attendanceHistory: AttendanceCell[];
-  /** PitchScore™ 능력치 평가용 user_id (글로벌 보관) */
+  /** PitchScore™ 능력치 평가용 user_id (sport_type 단위 분리 보관) */
   userId?: string;
+  /** 현재 보고 있는 팀의 sport_type (00059 — PitchScore 종목별 분리) */
+  sportType?: "SOCCER" | "FUTSAL";
+  /** 현재 페이지가 보여주는 팀 ID — PitchScore 평가 컨텍스트로 사용 */
+  teamId?: string;
 };
 
 // Role Badge Component
@@ -640,11 +644,13 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
       </section>
 
       {/* PitchScore™ 능력치 평가 */}
-      {userId && (
+      {userId && profile.sportType && profile.teamId && (
         <section className="max-w-4xl mx-auto px-4 py-6">
           <PitchScoreCard
             targetUserId={userId}
             targetUserName={name}
+            sportType={profile.sportType}
+            contextTeamId={profile.teamId}
             isGoalkeeper={isGoalkeeper}
           />
         </section>

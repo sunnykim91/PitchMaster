@@ -7,6 +7,7 @@ import type {
   AttributeCode,
   AttributeCategory,
   AttributeLevel,
+  SportType,
 } from "@/lib/playerAttributes/types";
 
 interface CodeMeta {
@@ -15,6 +16,7 @@ interface CodeMeta {
   category: AttributeCategory;
   display_order: number;
   gk_only: boolean;
+  applicable_sports: SportType[];
 }
 
 interface LabelRow {
@@ -34,6 +36,9 @@ interface Props {
   targetUserId: string;
   targetUserName: string;
   isGoalkeeper?: boolean;
+  sportType: SportType;
+  /** 평가가 저장될 팀 ID — 서버가 sport_type 결정 + 같은 팀 검증에 사용 */
+  contextTeamId: string;
   onSaved?: () => void;
 }
 
@@ -43,6 +48,8 @@ export default function EvaluationModal({
   targetUserId,
   targetUserName,
   isGoalkeeper,
+  sportType,
+  contextTeamId,
   onSaved,
 }: Props) {
   const [codes, setCodes] = useState<CodeMeta[]>([]);
@@ -74,10 +81,11 @@ export default function EvaluationModal({
     };
   }, [open]);
 
-  // 카테고리별 그룹화
+  // 카테고리별 그룹화 — 현재 sport_type 에 적용되는 능력치만 노출 (풋살이면 4개 자동 제외)
   const groups = new Map<AttributeCategory, CodeMeta[]>();
   for (const c of codes) {
     if (!isGoalkeeper && c.gk_only) continue;
+    if (!c.applicable_sports?.includes(sportType)) continue;
     const arr = groups.get(c.category) ?? [];
     arr.push(c);
     groups.set(c.category, arr);
@@ -107,6 +115,7 @@ export default function EvaluationModal({
             attribute_code: code,
             score: level,
             context: "FREE",
+            team_id: contextTeamId,
           }),
         });
         if (!res.ok) {

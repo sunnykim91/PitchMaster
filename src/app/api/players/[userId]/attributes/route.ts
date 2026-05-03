@@ -20,6 +20,7 @@ import type {
   AttributeLevel,
   AttributeCategory,
   TripleTrustInput,
+  SportType,
 } from "@/lib/playerAttributes/types";
 
 type EvaluationRow = {
@@ -36,12 +37,42 @@ type CodeRow = {
   category: AttributeCategory;
   display_order: number;
   gk_only: boolean;
+  applicable_sports: SportType[];
 };
 
 const COMMENT_MIN_SAMPLES = 5;
+const VALID_SPORTS: SportType[] = ["SOCCER", "FUTSAL"];
+
+/**
+ * sport_type 결정 우선순위:
+ *   1) ?sport=SOCCER|FUTSAL 쿼리 파라미터
+ *   2) viewer 의 현재 팀 sport_type
+ *   3) SOCCER 디폴트
+ */
+async function resolveSportType(
+  request: NextRequest,
+  ctx: { teamId?: string },
+  sb: ReturnType<typeof getSupabaseAdmin>,
+): Promise<SportType> {
+  const sportParam = request.nextUrl.searchParams.get("sport");
+  if (sportParam && VALID_SPORTS.includes(sportParam as SportType)) {
+    return sportParam as SportType;
+  }
+  if (ctx.teamId && sb) {
+    const { data: team } = await sb
+      .from("teams")
+      .select("sport_type")
+      .eq("id", ctx.teamId)
+      .maybeSingle();
+    if (team?.sport_type && VALID_SPORTS.includes(team.sport_type as SportType)) {
+      return team.sport_type as SportType;
+    }
+  }
+  return "SOCCER";
+}
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ userId: string }> },
 ) {
   const ctx = await getApiContext();
@@ -53,15 +84,18 @@ export async function GET(
   const sb = getSupabaseAdmin();
   if (!sb) return apiError("DB unavailable", 503);
 
+  const sportType = await resolveSportType(request, ctx, sb);
+
   const [codesRes, evalsRes, targetRes] = await Promise.all([
     sb
       .from("player_attribute_codes")
-      .select("code, name_ko, category, display_order, gk_only")
+      .select("code, name_ko, category, display_order, gk_only, applicable_sports")
       .order("display_order"),
     sb
       .from("player_evaluations")
       .select("attribute_code, score, source, context, created_at")
-      .eq("target_user_id", userId),
+      .eq("target_user_id", userId)
+      .eq("sport_type", sportType),
     sb
       .from("users")
       .select("preferred_positions")
@@ -72,13 +106,15 @@ export async function GET(
   if (codesRes.error) return apiError(codesRes.error.message, 500);
   if (evalsRes.error) return apiError(evalsRes.error.message, 500);
 
-  const codes = (codesRes.data ?? []) as CodeRow[];
+  const allCodes = (codesRes.data ?? []) as CodeRow[];
+  // 현재 sport_type 에 적용되는 능력치만 (풋살이면 4개 자동 제외)
+  const codes = allCodes.filter((c) => c.applicable_sports.includes(sportType));
   const evaluations = (evalsRes.data ?? []) as EvaluationRow[];
   const preferredPositions = (targetRes.data?.preferred_positions ?? []) as string[];
   // 1순위 포지션이 GK일 때만 GK로 분류 (보조로 GK 등록한 필드 선수 오분류 방지)
   const isGoalkeeper = preferredPositions[0]?.toUpperCase() === "GK";
 
-  // 22개 능력치 PitchScore 계산
+  // 적용 능력치 PitchScore 계산 (풋살이면 18개, 축구면 22개)
   const attributes = codes.map((code) => {
     const inputs: TripleTrustInput[] = evaluations
       .filter((e) => e.attribute_code === code.code)
@@ -156,6 +192,7 @@ export async function GET(
 
   return apiSuccess({
     user_id: userId,
+    sport_type: sportType,
     is_goalkeeper: isGoalkeeper,
     attributes,
     category_averages,

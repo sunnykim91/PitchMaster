@@ -399,6 +399,8 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
     seasonName: season.name, signature: signature ?? "",
     playerCardProps, stats, bestMoments, recentMatches, attendanceHistory,
     userId: m.user_id ?? undefined,
+    sportType: (team?.sport_type === "FUTSAL" ? "FUTSAL" : "SOCCER") as "SOCCER" | "FUTSAL",
+    teamId: m.team_id,
   };
 }
 
