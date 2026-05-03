@@ -82,7 +82,8 @@ export function recommendFormation(
 ): AIRecommendation | null {
   if (players.length < 2) return null;
 
-  const defaultPlayerCount = sportType === "FUTSAL" ? 5 : 11;
+  // 풋살 한국 아마추어 표준은 6:6 (GK 포함). 5인제는 변형.
+  const defaultPlayerCount = sportType === "FUTSAL" ? 6 : 11;
   const targetCount = fieldPlayerCount ?? Math.min(players.length, defaultPlayerCount);
 
   // 풋살: targetCount에 맞는 포메이션 필터 (없으면 전체 폴백)

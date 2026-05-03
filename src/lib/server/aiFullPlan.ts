@@ -517,13 +517,20 @@ export async function generateAiFullPlan(input: TacticsAnalysisInput): Promise<F
 
   const hasAvailability = input.availableByQuarter && Object.keys(input.availableByQuarter).length > 0;
   const isSingle = input.singleFormation === true;
+  const isFutsal = input.sportType === "FUTSAL";
+  const futsalPrefix = isFutsal
+    ? `🟢 이 경기는 **풋살 ${input.playerCount ?? 6}인제** (한국 아마추어 표준 6:6, GK 포함). ` +
+      `포메이션 카탈로그는 풋살 전용. FIXO·ALA·PIVO 풋살 용어로만 분석. 11인제·축구 용어 절대 금지.\n\n`
+    : "";
+
   const userMessage = [
-    `다음은 formation catalog·팀 통계·이번 경기 정보입니다. quarterCount만큼의 JSON 배열로 쿼터별 포메이션과 배치를 생성하세요.`,
-    `📌 반드시 formationCatalog의 slots 라벨을 그대로 사용 (임의 이름 생성 금지).`,
+    futsalPrefix + `다음은 formation catalog·팀 통계·이번 경기 정보입니다. quarterCount만큼의 JSON 배열로 쿼터별 포메이션과 배치를 생성하세요.`,
+    `📌 반드시 formationCatalog의 slots 라벨을 그대로 사용 (임의 이름 생성 금지). 같은 라벨이 두 슬롯이면 "FIXO 1"·"FIXO 2" 식으로 인덱스가 붙어있음 — 그대로 사용.`,
     isSingle
       ? `📌 singleFormation=true: 모든 쿼터를 defaultFormation(${sanitizePromptText(input.formationName, 60)})으로 통일. 쿼터별 formation 변화 금지. 배치만 쿼터별로 달리하세요.`
-      : `📌 4쿼터 중 최소 2가지 다른 포메이션 사용.`,
+      : `📌 ${input.quarterCount}쿼터 중 최소 2가지 다른 포메이션 사용.`,
     hasAvailability ? `📌 availableByQuarter에 명시된 쿼터별 명단 외의 선수는 해당 쿼터에 절대 배치 금지.` : "",
+    `📌 매 쿼터 placement 배열은 catalog의 slots 수와 정확히 일치. 빈 슬롯 없이 모두 채울 것.`,
     `JSON 배열만 반환.`,
     ``,
     catalogBlock,
@@ -534,12 +541,21 @@ export async function generateAiFullPlan(input: TacticsAnalysisInput): Promise<F
     `</user_data>`,
   ].filter(Boolean).join("\n");
 
+  // 풋살 시스템 강제 — 풋살 톤 강제
+  const futsalSystemOverride = `## 🟢 풋살 코치 모드\n\n현재 입력은 풋살 경기 (한국 아마추어 6:6 기본). 시스템 프롬프트의 축구 가이드는 풋살 맥락으로 재해석. 11인제 가정 X. FIXO·ALA·PIVO 풋살 용어로만 답변. 매 쿼터 placement 배열은 catalog slots 수와 일치 (빈 슬롯 X).`;
+  const systemBlocks = isFutsal
+    ? [
+        { type: "text" as const, text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" as const } },
+        { type: "text" as const, text: futsalSystemOverride },
+      ]
+    : [{ type: "text" as const, text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" as const } }];
+
   try {
     const response = await client.messages.create({
       model: MODEL,
       max_tokens: MAX_OUTPUT_TOKENS,
       temperature: TEMPERATURE,
-      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+      system: systemBlocks,
       messages: [{ role: "user", content: userMessage }],
     });
 

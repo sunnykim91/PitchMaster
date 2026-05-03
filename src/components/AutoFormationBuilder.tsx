@@ -215,6 +215,103 @@ function calculateFairDistribution(
   return { high, low, highCount: fieldCount - lowCount, lowCount };
 }
 
+/* ── Futsal-specific scheduling (slot-distribution-aware) ── */
+
+/**
+ * 풋살 전용 자동편성 — 슬롯 분포 우선 매칭.
+ *
+ * 축구 알고리즘은 시간 분배 → 슬롯 매칭 두 단계인데, 풋살은 슬롯 분포가 비대칭(2 FIXO·2 ALA·1 PIVO)
+ * 이라 시간 분배만 보면 매 쿼터 출전 인원의 선호 분포가 슬롯 분포와 안 맞아 빈 슬롯 발생.
+ *
+ * 이 함수는 매 쿼터마다 슬롯 순서대로 그리디 매칭. 잔여 출전 시간 추적해 균등 분배.
+ * 페어/하프쿼터: 0.5는 풀쿼터로 합쳐 처리(반올림 X, 잔여 0.5는 매 쿼터 한 슬롯에 두 명 공유로).
+ */
+function scheduleQuartersFutsal(
+  players: PlayerAssignment[],
+  quarterCount: number,
+  formation: FormationTemplate,
+): QuarterResult[] {
+  const results: QuarterResult[] = [];
+  const remaining = new Map<string, number>();
+  for (const p of players) remaining.set(p.id, p.quarters);
+
+  // GK 후보 분리
+  const gks = players.filter((p) => p.isGK);
+  const fieldPlayers = players.filter((p) => !p.isGK);
+
+  // 슬롯 정렬: GK 1개 + 필드 슬롯들. 필드는 formation 정의 순서 그대로.
+  const gkSlot = formation.slots.find((s) => s.role === "GK") ?? null;
+  const fieldSlots = formation.slots.filter((s) => s.role !== "GK");
+
+  function getAllPos(p: PlayerAssignment): PreferredPosition[] {
+    const list = p.preferredPositions ?? (p.preferredPosition ? [p.preferredPosition] : []);
+    return list.filter((x): x is PreferredPosition => !!x);
+  }
+
+  for (let q = 1; q <= quarterCount; q++) {
+    const assignments: SlotAssignment[] = [];
+    const usedThisQ = new Set<string>();
+
+    // ── GK ──
+    if (gkSlot) {
+      // GK 잔여 시간 가장 많은 사람
+      const gkPick = gks
+        .filter((p) => (remaining.get(p.id) ?? 0) > 0)
+        .sort((a, b) => (remaining.get(b.id) ?? 0) - (remaining.get(a.id) ?? 0))[0];
+      if (gkPick) {
+        assignments.push({
+          slotId: gkSlot.id, slotLabel: gkSlot.label,
+          playerId: gkPick.id, playerName: gkPick.name, type: "full",
+        });
+        usedThisQ.add(gkPick.id);
+        remaining.set(gkPick.id, (remaining.get(gkPick.id) ?? 0) - 1);
+      }
+    }
+
+    // ── 필드 슬롯: formation 순서 그대로 매칭 ──
+    for (const slot of fieldSlots) {
+      const slotRole = slot.role; // "FIXO" / "ALA" / "PIVO" / 또는 SOCCER role
+      const slotCat = PREF_TO_POSITION[slotRole as PreferredPosition] ?? null;
+
+      // 후보 풀: 잔여 시간 있고 이번 쿼터 미사용
+      const pool = fieldPlayers.filter(
+        (p) => (remaining.get(p.id) ?? 0) > 0 && !usedThisQ.has(p.id),
+      );
+
+      // 1차: 슬롯 role 정확 매칭 (선호에 풋살 코드 그대로 있는 경우)
+      let candidates = pool.filter((p) => getAllPos(p).includes(slotRole as PreferredPosition));
+
+      // 2차: 카테고리 매칭 (DF/MF/FW)
+      if (candidates.length === 0 && slotCat) {
+        candidates = pool.filter((p) =>
+          getAllPos(p).some((pos) => PREF_TO_POSITION[pos] === slotCat),
+        );
+      }
+
+      // 3차: 잔여 시간 있는 아무 선수 (강제 채움)
+      if (candidates.length === 0) candidates = pool;
+
+      if (candidates.length === 0) continue; // 출전 가능한 선수 없음 (희귀 케이스)
+
+      // 균등 분배: 잔여 시간 가장 많은 선수
+      const player = [...candidates].sort(
+        (a, b) => (remaining.get(b.id) ?? 0) - (remaining.get(a.id) ?? 0),
+      )[0];
+
+      assignments.push({
+        slotId: slot.id, slotLabel: slot.label,
+        playerId: player.id, playerName: player.name, type: "full",
+      });
+      usedThisQ.add(player.id);
+      remaining.set(player.id, (remaining.get(player.id) ?? 0) - 1);
+    }
+
+    results.push({ quarter: q, assignments, formationId: formation.id });
+  }
+
+  return results;
+}
+
 /* ── Quarter scheduling algorithm (v2 — capacity-constrained) ── */
 
 function scheduleQuarters(
@@ -222,6 +319,11 @@ function scheduleQuarters(
   quarterCount: number,
   formation: FormationTemplate,
 ): QuarterResult[] {
+  // 풋살 분기 — 슬롯 분포 우선 알고리즘 사용 (축구 알고리즘은 풋살 비대칭 슬롯에 부적합)
+  if (formation.sportType === "FUTSAL") {
+    return scheduleQuartersFutsal(players, quarterCount, formation);
+  }
+
   const slotsPerQ = formation.slots.length - 1; // GK 제외 필드 슬롯
   const gks = players.filter((p) => p.isGK);
   // 필드 선수 셔플 — 같은 조건이면 순서에 따라 결과가 달라지므로 매번 다른 편성 생성
@@ -592,7 +694,8 @@ export default function AutoFormationBuilder({
 }: Props) {
   const confirm = useConfirm();
   // 경기 인원 수에 맞는 포메이션만 필터 (미지정 시 축구 11, 풋살 5 기본)
-  const effectiveFieldCount = playerCount ?? (sportType === "FUTSAL" ? 5 : 11);
+  // 풋살 한국 아마추어 표준 6:6 (GK 포함 6명) — 5인제는 변형
+  const effectiveFieldCount = playerCount ?? (sportType === "FUTSAL" ? 6 : 11);
   const filteredFormations = useMemo(
     () => {
       const filtered = getFormationsForSportAndCount(sportType, effectiveFieldCount);
