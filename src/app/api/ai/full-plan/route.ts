@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { generateAiFullPlan } from "@/lib/server/aiFullPlan";
 import { checkRateLimit } from "@/lib/server/aiUsageLog";
 import type { TacticsAnalysisInput } from "@/lib/server/aiTacticsAnalysis";
@@ -20,23 +19,7 @@ export async function POST(req: NextRequest) {
   if (!session?.user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  // 풋살 팀 AI 차단 (API 레벨)
-  if (session.user.teamId) {
-    const db = getSupabaseAdmin();
-    if (db) {
-      const { data: team, error: teamErr } = await db
-        .from("teams")
-        .select("sport_type")
-        .eq("id", session.user.teamId)
-        .single();
-      if (teamErr || !team) {
-        return NextResponse.json({ error: "team_lookup_failed" }, { status: 503 });
-      }
-      if (team.sport_type === "FUTSAL") {
-        return NextResponse.json({ error: "ai_not_available_for_futsal" }, { status: 403 });
-      }
-    }
-  }
+  // 풋살 차단 해제 (41차) — formations.ts 풋살 포메이션 4종 등록됨, AI Full Plan 풋살 지원.
 
   let body: TacticsAnalysisInput;
   try {

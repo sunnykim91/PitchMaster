@@ -30,6 +30,8 @@ export type AiCoachAnalysisCardProps = {
   opponent?: string | null;
   /** 경기 id (관측성 로깅용) */
   matchId?: string | null;
+  /** 종목 (SOCCER/FUTSAL) — 백엔드 시스템 프롬프트가 풋살 전제 분기 적용 */
+  sportType?: "SOCCER" | "FUTSAL";
   /** 김선휘 Feature Flag — false면 렌더 안 함 */
   enableAi: boolean;
   /**
@@ -60,6 +62,7 @@ export function AiCoachAnalysisCard({
   matchType,
   opponent,
   matchId,
+  sportType,
   enableAi,
   overrideAnalysis,
 }: AiCoachAnalysisCardProps) {
@@ -166,6 +169,7 @@ export function AiCoachAnalysisCard({
         opponent: opponent ?? null,
         warnings: [],
         matchId: matchId ?? null,
+        sportType: sportType ?? "SOCCER",
       };
       const { consumeSseStream } = await import("@/lib/sseStream");
       await consumeSseStream("/api/ai/tactics", payload, {

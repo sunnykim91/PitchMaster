@@ -730,6 +730,7 @@ function MatchTacticsTabInner({
             matchType={(match.matchType ?? "REGULAR") as "REGULAR" | "INTERNAL" | "EVENT"}
             opponent={match.opponent ?? null}
             matchId={matchId}
+            sportType={sportType}
             enableAi={enableAi}
             overrideAnalysis={aiCoachingOverride}
           />

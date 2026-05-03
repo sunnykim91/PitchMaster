@@ -162,8 +162,10 @@ export default function MatchDetailClient({
   );
 
   const sportType: SportType = teamData.team?.sport_type ?? "SOCCER";
-  // AI 기능은 축구(SOCCER)만 오픈. 풋살 팀은 Feature Flag와 무관하게 비활성.
-  const effectiveEnableAi = enableAi && sportType === "SOCCER";
+  // AI 코치 분석 + AI Full Plan: 축구·풋살 모두 활성 (풋살 포메이션 4종 formations.ts 등록 완료).
+  const effectiveEnableAi = enableAi;
+  // 경기 후기 AI 재생성: 룰 베이스 후기가 풋살에서도 충분히 동작하므로 SOCCER 만 유지 (호출 비용 절약).
+  const enableAiSummary = enableAi && sportType === "SOCCER";
   const uniforms = teamData.team?.uniforms;
   // fallback 색을 중립 회색으로 — 기존 hsl(var(--primary))=coral(주황), hsl(var(--muted-foreground))=회색
   // 은 팀 유니폼과 쉽게 혼동됨 (사용자가 주황+회색 본 원인).
@@ -776,7 +778,7 @@ export default function MatchDetailClient({
             voteCounts={voteCounts}
             refetchDiary={refetchDiary}
             aiSummary={initialData?.aiSummary ?? null}
-            canRegenerateAi={effectiveEnableAi}
+            canRegenerateAi={enableAiSummary}
             aiSummaryRegenerateCount={initialData?.aiSummaryRegenerateCount ?? 0}
           />
         </div>

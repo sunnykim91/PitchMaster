@@ -83,7 +83,9 @@ export type DetailedPosition =
   | "GK" | "RB" | "RCB" | "CB" | "LCB" | "LB"
   | "RWB" | "LWB" | "RDM" | "LDM" | "CDM"
   | "RCM" | "CM" | "LCM" | "CAM" | "RAM" | "LAM"
-  | "RM" | "LM" | "RW" | "LW" | "CF" | "ST" | "RS" | "LS";
+  | "RM" | "LM" | "RW" | "LW" | "CF" | "ST" | "RS" | "LS"
+  // 풋살 포지션 — 좌/우 구분은 label·id로, role은 단일
+  | "FIXO" | "ALA" | "PIVO";
 
 export type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
 export type AttendanceVote = "ATTEND" | "ABSENT" | "MAYBE";

@@ -575,6 +575,59 @@ export const formationTemplates: FormationTemplate[] = [
       { id: "pivo-r", role: "RS", label: "PIVO", x: 65, y: 22 },
     ],
   },
+  // ── 5인제 풋살 (GK 포함 5명) — 아마추어 표준 ──
+  {
+    id: "futsal-5-2-2",
+    name: "2-2",
+    sportType: "FUTSAL",
+    fieldCount: 5,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 90 },
+      { id: "fixo-l", role: "LCB", label: "FIXO", x: 28, y: 66 },
+      { id: "fixo-r", role: "RCB", label: "FIXO", x: 72, y: 66 },
+      { id: "pivo-l", role: "LS", label: "PIVO", x: 28, y: 28 },
+      { id: "pivo-r", role: "RS", label: "PIVO", x: 72, y: 28 },
+    ],
+  },
+  {
+    id: "futsal-5-1-2-1",
+    name: "1-2-1",
+    sportType: "FUTSAL",
+    fieldCount: 5,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 90 },
+      { id: "fixo", role: "CDM", label: "FIXO", x: 50, y: 72 },
+      { id: "ala-l", role: "LW", label: "ALA", x: 20, y: 50 },
+      { id: "ala-r", role: "RW", label: "ALA", x: 80, y: 50 },
+      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 22 },
+    ],
+  },
+  {
+    id: "futsal-5-3-1",
+    name: "3-1",
+    sportType: "FUTSAL",
+    fieldCount: 5,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 90 },
+      { id: "fixo-l", role: "LCB", label: "FIXO", x: 22, y: 70 },
+      { id: "fixo-c", role: "CB", label: "FIXO", x: 50, y: 68 },
+      { id: "fixo-r", role: "RCB", label: "FIXO", x: 78, y: 70 },
+      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 26 },
+    ],
+  },
+  {
+    id: "futsal-5-4-0",
+    name: "4-0",
+    sportType: "FUTSAL",
+    fieldCount: 5,
+    slots: [
+      { id: "gk", role: "GK", label: "GK", x: 50, y: 90 },
+      { id: "ala-bl", role: "LB", label: "ALA", x: 25, y: 64 },
+      { id: "ala-br", role: "RB", label: "ALA", x: 75, y: 64 },
+      { id: "ala-fl", role: "LM", label: "ALA", x: 25, y: 36 },
+      { id: "ala-fr", role: "RM", label: "ALA", x: 75, y: 36 },
+    ],
+  },
 ];
 
 export function getFormationsForSport(sportType: SportType): FormationTemplate[] {
