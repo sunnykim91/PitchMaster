@@ -1,7 +1,7 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=89팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-05-02
+last_updated: 2026-05-02 (40차)
 related: [completed-recent.md, reviews.md]
 ---
 
@@ -44,39 +44,14 @@ related: [completed-recent.md, reviews.md]
 - [ ] **`/login?error=blocked` UI 안내** (LOW, 30분)
   - 차단 사용자 재로그인 시 일반적 로그인 실패 메시지 (차단 명시 X — 우회 정보 누설 방지)
 
-## 🟡 진행 중 — 36차 후반 (2026-04-30) — 회비 선납 셀링 UI
+## ~~🟡 진행 중 — 36차 후반 (2026-04-30) — 회비 선납 셀링 UI~~ ✅ 40차에서 방향 전환·완료
 
-**배경**: Migration 00048(grandfather)·00049(dues_prepayments) 이미 배포됨. 헬퍼(`src/lib/duesPrepayment.ts`)도 작성됨. UI만 만들면 즉시 동작. 결제 인프라 없이 수동(현금) 선납 매출 가능 → **활성 100팀 도달 전 워밍업용 첫 매출 채널**.
+**40차(2026-05-02) 결정**: 별도 선납 시스템 불필요. 운영팀이 이미 EXEMPT + reason 메모로 선납을 운영 중이었음. → `dues_prepayments` 테이블 DROP + PREPAID 타입을 `member_dues_exemptions`에 정식 통합. 상세: completed-recent.md 40차 항목 참고.
 
-**완료된 인프라**:
-- [x] `supabase/migrations/00049_dues_prepayments.sql` 배포 완료
-- [x] `src/lib/duesPrepayment.ts` — `computeEndMonth`·`isMonthPrepaid`·`remainingMonthsByMember`·`formatPrepaymentLabel` 4개 헬퍼
-
-**작업 범위 (ToDo, 36차 후반에 시작)**:
-- [ ] `src/app/api/dues/prepayments/route.ts` — GET(목록)·POST(등록)·PATCH(취소) 라우트
-  - POST: dues_prepayments insert + dues_records(INCOME) insert + linked_dues_record_id 연결
-  - PATCH: status='cancelled', cancelled_at·cancelled_by 갱신, linked dues_record 무효화 (deleted_at)
-- [ ] `src/app/(app)/dues/PrepaymentRegisterModal.tsx` — 신규 컴포넌트
-  - 회원 select + 시작월(기본 다음달) + 3/6/12개월 선택 + 금액 입력 + 메모
-  - 미리보기: "2026-05 ~ 2026-10 6개월 (180,000원)" 자동 계산
-  - 취소 시 환불 안내 박스
-- [ ] `src/app/(app)/dues/DuesClient.tsx` 수정
-  - 납부현황 탭 상단에 "선납 등록" 버튼 (PRESIDENT/STAFF만)
-  - 활성 prepayment 목록 카드 + 취소 버튼
-- [ ] `src/app/(app)/dues/DuesStatusTab.tsx` 수정
-  - 월별 셀에 `isMonthPrepaid()` 적용 → 선납 기간엔 "선납" 뱃지로 자동 납부 표시
-  - 회원 행 옆에 `formatPrepaymentLabel()` 라벨
-- [ ] 테스트: `src/__tests__/lib/duesPrepayment.test.ts` (헬퍼 단위 테스트)
-- [ ] 빌드·타입체크·커밋·푸시
-
-**제한 사항** (사용자 결정 필요한 부분):
-- 환불 정책: 현재 마이그레이션은 status='cancelled'만 지원. 부분 환불(N개월만 사용 후 취소)은 코드로 직접 dues_records 추가 작성 권장 — UI에는 단순 "전체 취소"만 노출
-- 면제 기간 자동 연장: 마이그레이션 주석은 "단순 차감 X" 정책 → UI도 일단 단순 모델로 (휴면·부상 들어가도 선납 기간은 유지)
-
-**관련 메모**:
-- 정책: `memory/project_pricing.md` — 활성 100팀 트리거, "먼저 함께한 팀" 보호
-- 마이그레이션: `supabase/migrations/00049_dues_prepayments.sql`
-- 헬퍼: `src/lib/duesPrepayment.ts`
+- [x] `dues_prepayments` 테이블 폐기 (Migration 00053)
+- [x] PREPAID 타입 `member_dues_exemptions`에 추가 (Migration 00052)
+- [x] `MemberExemptionSection` UI에 PREPAID 전용 필드 동적 노출
+- [x] `PrepaymentRegisterModal.tsx` · `/api/dues/prepayments/route.ts` · `duesPrepayment.ts` 폐기
 
 ## 🔴 최우선 — 즉시 처리 (2026-04-28)
 
@@ -117,6 +92,75 @@ related: [completed-recent.md, reviews.md]
 ### 카피·마케팅 톤 통일 (33차 카피 정정 결과 적용 확산)
 - [ ] 카페 글·인스타 광고에서 "휴면·부상 자동 면제"·"AI 전술 감독" 강조 톤을 랜딩과 통일
 - [ ] 아직 v1 카피인 나머지 섹션에 사실 기반 차별화 카피 반영 여부 검토 (특히 BeforeAfter·Comparison)
+
+## HIGH — 40차 이월 (2026-05-02)
+
+### 클로드 디자인 영상 스토리보드 검증 (다음 세션 1순위)
+- [ ] 4~12컷 AI 코칭 노출 범위 확인 — 축구팀 Feature Flag 적용 여부 광고 문구에 반영
+- [ ] 미구현 기능 광고 금지 — 투표 마감 임박 푸시·회비 미납 자동 독촉 구현 여부 코드 확인 필수 (미구현이면 광고 카피 조정 또는 v1.0.4 추가)
+- [ ] 후기 이니셜 처리 명시 필요 (`TestimonialsSection.tsx`)
+- [ ] "1시간 → 5분" 절감 근거 검증 (실제 케이스 기반 수치인지 확인)
+
+### 버전 D 광고 소재 — 단톡방 도배 인용 패턴
+- [ ] 클로드 디자인에 버전 D 추가 요청: "투표좀요" / "납부좀요" 단톡방 직접 인용 후킹
+- [ ] 1초 후킹 오프닝에 페인포인트 직접 인용 — 추상 카피보다 실 사용자 문구 우선
+- [ ] 참고: `feedback_ad_fatigue_pattern.md` 영상 후킹 인사이트 섹션
+
+### 메타 Pixel 데이터세트 생성 (다음 광고 사이클 전 필수)
+- [ ] 5/2 시도 시 "Something went wrong" 에러 재현
+- [ ] 1순위 체크박스(전환 API 게이트웨이) 해제 + 카테고리 선택 후 재시도
+- [ ] Pixel ID 16자리 받으면 layout.tsx Script 삽입 + analytics.ts fbq() 추가
+
+### 인스타 3차 광고 종료 후 최종 분석 (5/4 종료 후)
+- [ ] Meta 인사이트 최종 수치 확인 (3초 재생률·방문단가·도달)
+- [ ] Supabase 5/1~5/4 신규 팀 직접 조회 (핵심 지표)
+- [ ] 결과별 다음 액션: 팀 5개 이상 → ₩30,000 스케일업 / 0~2개 → 버전 D 소재 제작
+
+### v1.0.4 빌드 + Play Console 재신청
+- [ ] 5/6~7 v1.0.4 안정화 빌드 (회비 모달 닫기 픽스 `DuesStatusTab.tsx`·`PrepaymentRegisterModal.tsx` 포함)
+- [ ] TWA AAB 빌드 (versionCode=8, versionName=1.0.4)
+- [ ] Android 적응형 아이콘 #0a0c10 갱신 포함
+- [ ] 5/8 Play Console 프로덕션 재신청 (증빙: 테스터 수·버전 이력·피드백 정성 작성)
+
+### Vercel "DNS Change Recommended" 해소 (급하지 않음)
+- [ ] Manual setup 권장값 확인 (apex 레코드 타입 점검)
+- [ ] Cloudflare DNS apex 레코드 Vercel 권장값으로 정렬
+- [ ] 라이브 영향 가능성 있어 별도 시간 잡고 진행
+
+### 미커밋 변경 이월 — v1.0.4 후보
+- [ ] `src/app/(app)/dues/DuesStatusTab.tsx` — 선납 등록 후 모달 닫기 타이밍 픽스
+- [ ] `src/app/(app)/dues/PrepaymentRegisterModal.tsx` — 동일 후속 보강
+- [ ] `src/components/pitchAttributes/PitchScoreCard.tsx` — 접힘/펼침 + 강점 칩 표시 리팩토링 (Phase 2B 후속)
+- [ ] `src/app/(app)/ClientLayout.tsx` — 14줄 변경 (내용 재확인 후 커밋)
+
+### Vercel Sitemap canonical 정상화 후속 모니터링
+- [ ] 네이버 서치어드바이저 — 2~4주 후 수집 정상화 여부 확인 (4개 URL 수집 요청 접수)
+- [ ] 구글 Search Console — 색인 생성 요청 4개 처리 결과 확인
+- [ ] www 도메인 정적 자산 15개 "크롤링됨·색인 안 됨" 자연 해소 여부 확인 (무시해도 무방)
+
+## 41차 신규 추가 (2026-05-03) — safeText 잔여 적용
+
+### 자유 텍스트 검증 미적용 진입점 (운영진/본인만 노출 영역)
+41차에 6곳(posts·comments·match-comments·diary·rules·join-request)에 `validateFreeText` 적용 완료. 노출 범위 좁고 위험도 낮은 나머지 7곳은 분리 이월:
+
+- [ ] `src/app/api/dues/route.ts` POST/PUT — `description` (회비 입금/지출 설명)
+- [ ] `src/app/api/dues/payment-status/route.ts` POST — `note` (납부 메모)
+- [ ] `src/app/api/dues/penalties/route.ts` POST — `note` (벌금 사유)
+- [ ] `src/app/api/dues-settings/route.ts` POST — `description` (회비 타입 설명)
+- [ ] `src/app/api/guests/route.ts` POST/PUT — `note` (용병 메모)
+- [ ] `src/app/api/matches/route.ts` POST — `opponentName`, `location` (자유 입력 텍스트)
+- [ ] 일정 메모·출석 사유 등 추가 진입점 grep 후 처리
+
+각 진입점에 `validateFreeText({ maxLength, fieldLabel })` 적용. 헬퍼는 `src/lib/validators/safeText.ts:60-95`.
+
+## 40차 신규 추가 (2026-05-02) — 우선순위 검토 필요
+
+### 세션 쿠키 옵션에 domain 명시 (재발 방지)
+- [ ] `src/lib/auth.ts` `SESSION_COOKIE_BASE_OPTIONS`에 `domain: process.env.NODE_ENV === "production" ? ".pitch-master.app" : undefined` 추가
+- 사유: 현재 쿠키가 **host-only** → www·non-www 도메인 정책 변경 시 기존 쿠키가 새 host로 안 따라감 → 모든 사용자 일괄 로그아웃 사고 발생 (2026-05-02 실제 발생, Cloudflare www→non-www 강제 활성화 후 옛날 www 쿠키 가진 사용자들이 한꺼번에 풀림)
+- 적용 후 효과: www·non-www·TWA 앱 모두 같은 쿠키 공유 → 향후 도메인 정책 변경에 면역
+- 단점: 기존 host-only 쿠키와 별도 동작(덮어쓰기 X) → 코드 추가해도 즉시 복구 안 됨. 한 번은 어차피 재로그인 필요
+- 우선순위 결정: 자주 발생 X / 발생 시 전 사용자 영향 큼 → 다음 도메인 정책 변경 전에는 반드시 처리
 
 ## HIGH — 39차 신규 추가 (2026-05-01)
 
@@ -164,10 +208,9 @@ related: [completed-recent.md, reviews.md]
 - [ ] 2차 연속 3초 재생률 22~24% — 30%+ 목표
 - [ ] UTM 적용 필수 (`?utm_source=instagram&utm_medium=paid&utm_campaign=YYYYMMDD`)
 
-### v1.0.3 AAB 재빌드 + Play Console Alpha 업로드 (5/2~3 목표)
-- [ ] TWA AAB 재빌드 (versionCode=7, versionName=1.0.3)
-- [ ] Android 적응형 아이콘 #0a0c10 갱신 포함
-- [ ] Play Console Alpha 트랙 업로드
+### ~~v1.0.3 AAB 재빌드 + Play Console Alpha 업로드~~ ✅ 완료 (2026-04-30, 40차 갱신)
+- [x] TWA AAB 재빌드 versionCode=7, versionName=1.0.3 — 4/30 10:21 Alpha 게시 완료
+- [ ] Android 적응형 아이콘 #0a0c10 갱신 — v1.0.4에서 묶어 처리
 
 ## HIGH — 34차 신규 추가 (2026-04-28)
 
@@ -177,9 +220,10 @@ related: [completed-recent.md, reviews.md]
 - [ ] GeekNews 제출 (1~2차 velog 글 기반)
 - [ ] Threads 스레드 — 랜딩 v2 + velog 연동 게시
 
-### 네이버 서치어드바이저 사이트맵 재제출 (사용자 수동)
-- [ ] https://searchadvisor.naver.com/ 에서 www 제출 삭제 후 non-www(pitch-master.app) 로 재제출
-- [ ] 완료 후 색인 상태 2~4주 후 확인
+### ~~네이버 서치어드바이저 사이트맵 재제출~~ ✅ 완료 (2026-05-02, 40차)
+- [x] robots.txt + 사이트맵 검증, 4개 URL 웹페이지 수집 요청, sitemap.xml 재제출
+- [x] 근본 원인(Vercel Domains non-www → www redirect) 복구 완료
+- [ ] 2~4주 후 색인 정상화 확인
 
 ### CLAUDE.md 통계 수치 outdated 정정
 - [ ] "82개 팀, 647+ 명" 고정 수치 제거 → "실사용자 통계는 Supabase 직접 조회" 안내로 대체
@@ -206,9 +250,8 @@ related: [completed-recent.md, reviews.md]
 ### ~~랜딩 개선 (1순위 A)~~ ✅ 33차에서 Hero·HowItWorks·Features v2 완료 (e4ba64c, f67fb28)
 - 나머지 섹션(BeforeAfter·Faq·Comparison·Testimonials·Footer)은 33차 신규 추가 항목으로 이동
 
-### 네이버 서치어드바이저 사이트맵 재제출 (사용자 수동)
-- [ ] https://searchadvisor.naver.com/ 에서 www 제출 삭제
-- [ ] non-www(pitch-master.app) 도메인으로 사이트맵 재제출
+### ~~네이버 서치어드바이저 사이트맵 재제출~~ ✅ 완료 (2026-05-02, 40차)
+- [x] Vercel Domains primary non-www 변경 + 네이버 sitemap 재제출 완료
 
 ### UTM 파라미터 다음 광고에 적용
 - [ ] 인스타 광고 링크에 `?utm_source=instagram&utm_medium=paid&utm_campaign=YYYYMMDD` 추가
@@ -277,8 +320,8 @@ related: [completed-recent.md, reviews.md]
 
 - [x] v1.0.1 AAB Alpha 업로드 (4/23)
 - [x] v1.0.2 AAB Alpha 업로드 (4/25)
-- [ ] 5/2~3 v1.0.3 릴리스 (코드 완료)
-- [ ] 5/6~7 v1.0.4 최종 안정화
+- [x] v1.0.3 Alpha 게시 완료 (4/30 10:21, versionCode=7)
+- [ ] 5/6~7 v1.0.4 최종 안정화 빌드
 - [ ] 5/8 프로덕션 액세스 재신청 (증빙: 테스터 수·피드백 건수·버전 이력·정성 작성)
 
 ### 홍보 영상 제작 (12컷 스토리보드 기반)
@@ -404,7 +447,7 @@ W1(보안)·W2(운영 안전망) 완료 후 순차 착수.
 - [ ] 중복/테스트 팀 정리 (골드문FC/골드문, fc_libre/FC.LIBRE) **[수동 SQL]**
 - [ ] 활성 팀 CS 대응 — 피드백 수집 **[수동]**
 - [ ] 실제 사용자 후기로 소셜프루프 교체 (실명 + 팀명) **[수동+개발]**
-- [ ] 회비 선납 기능 (6개월/1년치 일괄 납부 처리)
+- [x] ~~회비 선납 기능 (6개월/1년치 일괄 납부 처리)~~ → 40차에서 면제(EXEMPT) 도메인에 PREPAID 타입으로 통합 완료
 
 ### 킬러 기능 v2 UI wiring
 - [ ] 선수 카드 디자인 개선 (FIFA 스타일) — **백엔드 v2 완료** (JSON variant, rarity/signature/rank/streak/isHero). v0 컴포넌트 `v0card/` 에 이식, 실제 페이지 wiring 남음

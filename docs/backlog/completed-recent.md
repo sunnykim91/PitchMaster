@@ -1,12 +1,101 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~39차)
-summary: 2026-04-11~05-02 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편, 광고 2 결과 분석 + 33초 본 캠페인 게시
-sections: [39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-05-02
+title: 개선 백로그 — 최근 완료 (16~40차)
+summary: 2026-04-11~05-02 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편, 광고 2 결과 분석 + 33초 본 캠페인 게시, 회비 선납→면제 통합 + PitchScore 카드 접힘 + 39차 백로그 반영
+sections: [40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-05-02 (40차)
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~39차)
+# 최근 완료 (16~40차)
+
+## 40차-B (2026-05-02, 회고 세션) — Vercel SEO 사고 복구 + 메모리 오기 정정 + 광고 3차(재집행) 분석
+
+**코드 변경 없음 — 인프라 복구·메모리 정정·광고 운영 세션**
+
+**Vercel Domains SEO 사고 진단 및 복구 (핵심 사고, 사용자 직접 수행)**
+- [x] 진단: sitemap canonical은 non-www인데 Vercel Domains primary가 www → non-www URL이 "외부 도메인으로 redirect" 분류 → 네이버 수집제한 6개 / 색인 0 확인
+- [x] Vercel Domains → pitch-master.app을 Production primary로 변경
+- [x] www.pitch-master.app → 308 Permanent Redirect → pitch-master.app 설정 (307로 저장 후 308로 갱신)
+- [x] 카카오 OAuth Redirect URI에 www callback 백업 추가 (NEXTAUTH_URL은 non-www이라 카카오 영향 없었음)
+- [x] 시크릿 모드 카카오 로그인 정상 확인
+- [x] 네이버 서치어드바이저: robots.txt + 사이트맵 검증, 4개 URL 웹페이지 수집 요청, sitemap.xml 재제출
+- [x] 구글 Search Console: 4개 URL 색인 생성 요청 + sitemap 재제출
+- [x] "색인 안 됨 24개" 전수 확인 — 리디렉션 오류 2(자연 해소 예정)·404 2(www 깨진 URL)·정적 자산 15(무시) 전부 액션 불필요 확인
+
+**메모리 오기 정정 (이전 세션 추정 오류 수정)**
+- [x] `reference_twa_build_env.md` — v1.0.3 versionCode=7 4/30 10:21 Alpha 게시 추가 (기존 "5/2~3 빌드 대기" 오기 수정)
+- [x] `project_play_console_v1_0_1.md` — v1.0.3 완료 처리, 5/6~7 v1.0.4 → 5/8 재신청 일정 갱신
+- [x] `feedback_facebook_page_eligibility_lag.md` — 페이지 자격 자체는 정상이었음으로 정정 (#3867089는 파트너 게시물 경로 꼬임 추정)
+- [x] `reference_instagram_app_boost.md` — "1·2·3차 모두 인스타 앱 부스팅" 오기를 "1·2차만, 3차부터 광고 관리자 시도"로 정정 (39차 회고 추정 오류)
+- [x] `reference_cloudflare_redirect_rule.md` — redirect 처리 주체는 Vercel (Cloudflare 헤더 미응답 2026-05-02 확인)
+- [x] `reference_seo_pitchmaster.md` — www→non-www 처리 방침 갱신, 네이버 복구 결과 기록
+- [x] `MEMORY.md` — feedback_facebook_page_eligibility_lag.md 인덱스 한 줄 정정
+
+**광고 3차(인스타 앱 부스팅, 1차 영상 재집행) 1일차 분석**
+- [x] 3차 광고: 2026-05-01 11:27 ~ 5/4, 예산 ₩13,296
+- [x] 1일차 지출 ₩5,517 (41.5%), 1일차 성과: 조회 870 / 도달 746 / 3초 재생률 13.1% / 웹사이트 방문 21 / 방문당 ₩263
+- [x] 재집행 효율 급감 확인: 1차 집행 약 23% → 13.1% — 광고 피로(Ad Fatigue) 패턴, 영상 품질 문제 아님
+- [x] hook test (`20260429_hook_test`, 4/29 19:00~4/30 09:58, ₩3,913)는 별도 캠페인으로 분류 확인
+
+**신규 메모리 작성 (이번 회고 세션)**
+- [x] `reference_vercel_sitemap_canonical.md` 신규 — 색인 0 사고 first-look 진단 흐름 (curl 확인 패턴)
+- [x] `feedback_ad_fatigue_pattern.md` 신규 — 재집행 효율 급감 패턴 + 영상 후킹 인사이트 (단톡방 직접 인용)
+
+**삽질 요약**
+- Vercel Domains primary가 언제 www로 바뀌었는지 특정 불가 — sitemap 등록(4/28) 이후 사고 발생 추정
+- 307 Temporary → 308 Permanent 전환이 Vercel UI에서 한 번에 안 됨 (저장 후 재설정)
+- 빠른 진단법: `curl -I https://pitch-master.app/` 직접 응답 코드 확인이 가장 빠름
+
+## 40차-A (2026-05-02) — 회비 선납→면제 통합 + PitchScore 카드 접힘 + 사이드바 라벨
+
+**커밋 3개** (`d63604a` · `7f7b0a7` · `638c3a2`) — origin/main 푸시 완료
+
+### 회비 선납 → 면제(EXEMPT) 통합 리팩토링 (d63604a)
+
+**배경 조사**
+- [x] Supabase 직접 조회로 운영팀 실 사용 패턴 확인
+  - LINEOUT FC 5명·FCMZ 2명이 EXEMPT + reason에 "1년치 선납"·"6개월 완납" 형태로 이미 운영 중
+  - `dues_prepayments` 테이블 = 0행 → 실 사용자가 별도 선납 시스템은 전혀 안 씀
+- [x] 시한폭탄 1개 발견: `member_dues_exemptions.reason_type` CHECK 제약이 EXEMPT/LEAVE/INJURED만 허용 → UI에 PREPAID 옵션은 노출되나 INSERT 시 DB가 거부. 누가 누르면 토스트 에러 발생 예정이었음
+
+**도메인 합의**
+- EXEMPT = 안 내도 되는 권리 (직책·역할 등). 입금 기록 없음
+- PREPAID = 미리 낸 돈. `dues_records`(INCOME) 1건 + `member_dues_exemptions`(PREPAID) 1건 연계. `end_date` 필수
+- 라벨 톤: "합계/받은 금액/N원 우대" (조축 운영진 어휘 기반)
+
+**마이그레이션 2개 (사용자가 Supabase SQL Editor에서 수동 적용·검증 완료)**
+- [x] `00052_member_dues_exemptions_prepaid.sql`: PREPAID CHECK 추가 + 메타 컬럼 3개(`monthly_amount`, `period_months`, `actual_paid_amount`) + PREPAID 시 메타·end_date 필수 CHECK
+- [x] `00053_drop_dues_prepayments.sql`: `dues_prepayments` 테이블 DROP
+- [x] 검증 4종 모두 통과 (PREPAID INSERT 성공, 메타 누락 거부, EXEMPT 보존, 종료 날짜 계산)
+
+**폐기 (-878라인)**
+- [x] `PrepaymentRegisterModal.tsx` 전체 삭제
+- [x] `/api/dues/prepayments/route.ts` 삭제
+- [x] `src/lib/duesPrepayment.ts` 삭제
+- [x] `DuesClient.tsx`·`DuesStatusTab.tsx` prepayment 관련 코드 제거
+
+**신규 구현**
+- [x] `MemberExemptionSection` 폼 동적화: 드롭다운 상태(EXEMPT/LEAVE/INJURED/PREPAID)에 따라 필드 변환
+  - PREPAID 선택 시: 기간 버튼(3/6/12개월) + 월 회비 입력 + 시작월 + 받은 금액 + 우대 금액 자동 표시 + "입금 등록" 버튼(`/dues?tab=records`)
+- [x] `/api/dues/member-status` POST: PREPAID 검증 로직 + 메타 컬럼 저장 처리
+- [x] `dues/CLAUDE.md` 갱신: "회비 선납 미구현" outdated 섹션 → "면제·선납 통합 도메인" 섹션 교체
+
+### PitchScore 카드 기본 접힘 + 라벨 v2 마이그레이션 반영 (7f7b0a7)
+
+- [x] `PitchScoreCard.tsx`: 22개 능력치 카드 기본 접힘 → ChevronDown으로 펼치기 (10개 이상 항목 패턴 적용)
+- [x] `00051_player_attribute_labels_v2.sql` git에 추가 (37차에서 Supabase 수동 적용했으나 git 누락 상태였음)
+
+### 39차 백로그 반영 + 사이드바 라벨 일관화 (638c3a2)
+
+- [x] `ClientLayout.tsx`: 사이드바 detail 텍스트 슬래시(`/`) → 가운뎃점(`·`) 통일
+- [x] "내 기록" → "기록", "회원관리" → "회원 관리" 라벨 정정
+- [x] `.claude/settings.json` 권한 추가 (회고 작성용)
+
+**삽질 요약**
+- CLAUDE.md `docs/CLAUDE.md`의 "회비 선납 미구현" 항목이 outdated였고, 실제로는 dues_prepayments + PREPAID UI 동시 존재. 항상 코드 grep 먼저
+- DB CHECK 제약과 UI 옵션 불일치로 시한폭탄 발견 — UI에 옵션 노출됐는데 DB가 거부하는 케이스는 신규 enum/타입 추가 시 양쪽 동기화 필수
+- 운영팀의 우회 사용 패턴(EXEMPT+reason에 "선납" 메모)이 설계 방향 힌트 — 별도 시스템 전에 "이미 어떻게 쓰나" 직접 조회 먼저
+- "선납 기능 다시 확인"이라는 요청 → 실은 "선납 시스템 제거 + 면제로 통합" 의도. 도메인 의미 합의 먼저 = 코드 삽질 방지
 
 ## 39차 (2026-04-30~05-01) — 광고 3차 결과 분석 + 4차 33초 본 캠페인 게시
 
