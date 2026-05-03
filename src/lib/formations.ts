@@ -436,10 +436,10 @@ export const formationTemplates: FormationTemplate[] = [
     fieldCount: 5,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
-      { id: "fixo", role: "CB", label: "FIXO", x: 50, y: 68 },
-      { id: "ala-l", role: "LW", label: "ALA", x: 20, y: 45 },
-      { id: "ala-r", role: "RW", label: "ALA", x: 80, y: 45 },
-      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 22 },
+      { id: "fixo", role: "FIXO", label: "FIXO", x: 50, y: 68 },
+      { id: "ala-l", role: "ALA", label: "ALA", x: 20, y: 45 },
+      { id: "ala-r", role: "ALA", label: "ALA", x: 80, y: 45 },
+      { id: "pivo", role: "PIVO", label: "PIVO", x: 50, y: 22 },
     ],
   },
   {
@@ -449,10 +449,10 @@ export const formationTemplates: FormationTemplate[] = [
     fieldCount: 5,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
-      { id: "fixo-l", role: "LCB", label: "FIXO", x: 30, y: 65 },
-      { id: "fixo-r", role: "RCB", label: "FIXO", x: 70, y: 65 },
-      { id: "ala", role: "CAM", label: "ALA", x: 50, y: 42 },
-      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 22 },
+      { id: "fixo-l", role: "FIXO", label: "FIXO", x: 30, y: 65 },
+      { id: "fixo-r", role: "FIXO", label: "FIXO", x: 70, y: 65 },
+      { id: "ala", role: "ALA", label: "ALA", x: 50, y: 42 },
+      { id: "pivo", role: "PIVO", label: "PIVO", x: 50, y: 22 },
     ],
   },
   {
@@ -462,10 +462,10 @@ export const formationTemplates: FormationTemplate[] = [
     fieldCount: 5,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
-      { id: "fixo", role: "CB", label: "FIXO", x: 50, y: 65 },
-      { id: "ala", role: "CAM", label: "ALA", x: 50, y: 42 },
-      { id: "pivo-l", role: "LS", label: "PIVO", x: 30, y: 22 },
-      { id: "pivo-r", role: "RS", label: "PIVO", x: 70, y: 22 },
+      { id: "fixo", role: "FIXO", label: "FIXO", x: 50, y: 65 },
+      { id: "ala", role: "ALA", label: "ALA", x: 50, y: 42 },
+      { id: "pivo-l", role: "PIVO", label: "PIVO", x: 30, y: 22 },
+      { id: "pivo-r", role: "PIVO", label: "PIVO", x: 70, y: 22 },
     ],
   },
   // ── Futsal 6인 (GK + 5 필드) ──
@@ -476,11 +476,11 @@ export const formationTemplates: FormationTemplate[] = [
     fieldCount: 6,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
-      { id: "fixo-l", role: "LCB", label: "FIXO", x: 28, y: 68 },
-      { id: "fixo-r", role: "RCB", label: "FIXO", x: 72, y: 68 },
-      { id: "ala-l", role: "LW", label: "ALA", x: 22, y: 42 },
-      { id: "ala-r", role: "RW", label: "ALA", x: 78, y: 42 },
-      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 22 },
+      { id: "fixo-l", role: "FIXO", label: "FIXO", x: 28, y: 68 },
+      { id: "fixo-r", role: "FIXO", label: "FIXO", x: 72, y: 68 },
+      { id: "ala-l", role: "ALA", label: "ALA", x: 22, y: 42 },
+      { id: "ala-r", role: "ALA", label: "ALA", x: 78, y: 42 },
+      { id: "pivo", role: "PIVO", label: "PIVO", x: 50, y: 22 },
     ],
   },
   {
@@ -490,11 +490,11 @@ export const formationTemplates: FormationTemplate[] = [
     fieldCount: 6,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
-      { id: "fixo", role: "CB", label: "FIXO", x: 50, y: 68 },
-      { id: "ala-l", role: "LW", label: "ALA", x: 20, y: 45 },
-      { id: "ala-c", role: "CAM", label: "ALA", x: 50, y: 42 },
-      { id: "ala-r", role: "RW", label: "ALA", x: 80, y: 45 },
-      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 22 },
+      { id: "fixo", role: "FIXO", label: "FIXO", x: 50, y: 68 },
+      { id: "ala-l", role: "ALA", label: "ALA", x: 20, y: 45 },
+      { id: "ala-c", role: "ALA", label: "ALA", x: 50, y: 42 },
+      { id: "ala-r", role: "ALA", label: "ALA", x: 80, y: 45 },
+      { id: "pivo", role: "PIVO", label: "PIVO", x: 50, y: 22 },
     ],
   },
   {
@@ -504,11 +504,11 @@ export const formationTemplates: FormationTemplate[] = [
     fieldCount: 6,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 88 },
-      { id: "fixo-l", role: "LCB", label: "FIXO", x: 28, y: 68 },
-      { id: "fixo-r", role: "RCB", label: "FIXO", x: 72, y: 68 },
-      { id: "ala", role: "CAM", label: "ALA", x: 50, y: 45 },
-      { id: "pivo-l", role: "LS", label: "PIVO", x: 30, y: 22 },
-      { id: "pivo-r", role: "RS", label: "PIVO", x: 70, y: 22 },
+      { id: "fixo-l", role: "FIXO", label: "FIXO", x: 28, y: 68 },
+      { id: "fixo-r", role: "FIXO", label: "FIXO", x: 72, y: 68 },
+      { id: "ala", role: "ALA", label: "ALA", x: 50, y: 45 },
+      { id: "pivo-l", role: "PIVO", label: "PIVO", x: 30, y: 22 },
+      { id: "pivo-r", role: "PIVO", label: "PIVO", x: 70, y: 22 },
     ],
   },
   // ── Futsal 7인 (GK + 6 필드) ──
@@ -590,19 +590,7 @@ export const formationTemplates: FormationTemplate[] = [
       { id: "pivo-r", role: "PIVO", label: "PIVO", x: 72, y: 28 },
     ],
   },
-  {
-    id: "futsal-5-1-2-1",
-    name: "1-2-1",
-    sportType: "FUTSAL",
-    fieldCount: 5,
-    slots: [
-      { id: "gk", role: "GK", label: "GK", x: 50, y: 90 },
-      { id: "fixo", role: "FIXO", label: "FIXO", x: 50, y: 72 },
-      { id: "ala-l", role: "ALA", label: "ALA", x: 20, y: 50 },
-      { id: "ala-r", role: "ALA", label: "ALA", x: 80, y: 50 },
-      { id: "pivo", role: "PIVO", label: "PIVO", x: 50, y: 22 },
-    ],
-  },
+  // futsal-5-1-2-1 제거됨 — 기존 futsal-1-2-1과 중복 (같은 모양)
   {
     id: "futsal-5-3-1",
     name: "3-1",
