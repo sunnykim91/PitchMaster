@@ -170,6 +170,15 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
     params.set("tab", tab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }, [searchParams, router, pathname]);
+
+  // URL 쿼리(?tab=)가 외부 변경(같은 페이지 Link 이동 등)으로 바뀌면 탭 동기화
+  useEffect(() => {
+    const tab = searchParams.get("tab") as DuesTabKey | null;
+    if (tab && validDuesTabs.includes(tab) && tab !== duesTab) {
+      setDuesTabState(tab);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [searchParams, duesTab]);
   const [monthFilter, setMonthFilter] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
