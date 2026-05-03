@@ -619,6 +619,24 @@ export const formationTemplates: FormationTemplate[] = [
   },
 ];
 
+/**
+ * 슬롯 label 중복(풋살 FIXO·ALA 등) 시 인덱스 자동 부여 — unique 식별자 보장.
+ * AI 풀 플랜 catalog ↔ AI 응답 placement ↔ 실 슬롯 매칭이 동일 unique label로 동작.
+ * 원본 slot.label 은 UI 표시용으로 그대로 유지(같은 라벨 두 슬롯 모두 "FIXO"로 보임).
+ */
+export function getUniqueSlotLabels(slots: FormationSlot[]): string[] {
+  const totalByLabel = new Map<string, number>();
+  slots.forEach((s) => totalByLabel.set(s.label, (totalByLabel.get(s.label) ?? 0) + 1));
+  const counts = new Map<string, number>();
+  return slots.map((s) => {
+    const total = totalByLabel.get(s.label)!;
+    if (total === 1) return s.label;
+    const idx = (counts.get(s.label) ?? 0) + 1;
+    counts.set(s.label, idx);
+    return `${s.label} ${idx}`;
+  });
+}
+
 export function getFormationsForSport(sportType: SportType): FormationTemplate[] {
   return formationTemplates.filter((f) => f.sportType === sportType);
 }

@@ -6,7 +6,7 @@ import {
   generateRuleBasedAnalysis,
 } from "@/lib/server/aiTacticsAnalysis";
 import type { TacticsAnalysisInput } from "@/lib/server/aiTacticsAnalysis";
-import { formationTemplates } from "@/lib/formations";
+import { formationTemplates, getUniqueSlotLabels } from "@/lib/formations";
 import { sanitizePromptObject, sanitizePromptText } from "@/lib/server/aiPromptSafety";
 
 /**
@@ -432,9 +432,10 @@ function buildFormationCatalog(sportType: "SOCCER" | "FUTSAL" | undefined, field
     if (fieldCount && f.fieldCount && f.fieldCount !== fieldCount) return false;
     return true;
   });
+  // getUniqueSlotLabels: 풋살 FIXO·ALA 중복 시 자동 "FIXO 1"·"FIXO 2" 부여 — applyAiPlans 매칭과 일치
   return filtered.map((f) => ({
     name: f.name,
-    slots: f.slots.map((s) => s.label),
+    slots: getUniqueSlotLabels(f.slots),
   }));
 }
 

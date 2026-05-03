@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getFormationsForSportAndCount,
   formationTemplates,
+  getUniqueSlotLabels,
   type FormationSlot,
   type FormationTemplate,
 } from "@/lib/formations";
@@ -538,10 +539,11 @@ function scheduleQuarters(
 
     // 3차: 그래도 남은 요청 → 인접 카테고리 슬롯 우선 배정
     // DF→CDM→CM, FW→CAM→CM, MF→아무 순서로 가까운 슬롯 우선
+    // posProximity: 인접 카테고리 fallback. 풋살(FIXO=DF, ALA=MF, PIVO=FW) 키 포함 — 41차 풋살 활성화 후속.
     const posProximity: Record<string, PreferredPosition[]> = {
-      DF: ["CDM", "CM", "CAM", "LW", "RW", "ST"],
-      MF: ["LW", "RW", "CB", "LB", "RB", "ST"],
-      FW: ["CAM", "CM", "CDM", "LW", "RW", "CB"],
+      DF: ["FIXO", "CDM", "CM", "CAM", "ALA", "LW", "RW", "ST", "PIVO"],
+      MF: ["ALA", "LW", "RW", "CAM", "CM", "CDM", "FIXO", "CB", "LB", "RB", "ST", "PIVO"],
+      FW: ["PIVO", "CAM", "CM", "CDM", "ALA", "LW", "RW", "CB", "FIXO"],
     };
     const finalRemReqs = enrichedReqs.filter((sr) => !assignedReqs.has(sr));
     for (const sr of finalRemReqs) {
@@ -1057,7 +1059,9 @@ export default function AutoFormationBuilder({
     for (const plan of source) {
       const fmt = formationTemplates.find((f) => f.name === plan.formation);
       if (!fmt) { skipped.push(plan.quarter); continue; }
-      const slotByLabel = new Map(fmt.slots.map((s) => [s.label, s]));
+      // catalog 빌드와 동일한 unique label 사용 — AI 응답의 "FIXO 1"·"FIXO 2" 등 매칭 가능
+      const uniqueLabels = getUniqueSlotLabels(fmt.slots);
+      const slotByLabel = new Map(uniqueLabels.map((label, i) => [label, fmt.slots[i]]));
       const assignments: SlotAssignment[] = [];
       let allOk = true;
       for (const p of plan.placement) {
