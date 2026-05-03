@@ -138,6 +138,10 @@ function getSlotSubPosition(slot: FormationSlot): PreferredPosition {
   if (slot.role === "RAM") return "RW";
   if (slot.role === "LW") return "LW";
   if (slot.role === "RW") return "RW";
+  // 풋살 slot — DetailedPosition 풋살 코드 매핑 (41차 풋살 활성화 후속)
+  if (slot.role === "FIXO") return "FIXO";
+  if (slot.role === "ALA") return "ALA";
+  if (slot.role === "PIVO") return "PIVO";
   return "ST"; // ST, CF, LS, RS
 }
 
