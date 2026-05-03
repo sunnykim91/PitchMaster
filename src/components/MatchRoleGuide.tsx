@@ -47,11 +47,15 @@ export interface MatchRoleGuideProps {
   playerCount?: number;
 }
 
-/** 가이드 지원 여부 판단 (축구 11인제만) */
+/** 가이드 지원 여부 판단 — 축구 11인제 + 풋살 5인제 */
 function isSupported(sportType: SportType, playerCount?: number): boolean {
-  if (sportType !== "SOCCER") return false;
-  if (playerCount != null && playerCount !== 11) return false;
-  return true;
+  if (sportType === "SOCCER") {
+    return playerCount == null || playerCount === 11;
+  }
+  if (sportType === "FUTSAL") {
+    return playerCount == null || playerCount === 5;
+  }
+  return false;
 }
 
 export const MatchRoleGuide = memo(function MatchRoleGuide(

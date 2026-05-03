@@ -1,12 +1,11 @@
 /**
  * 포메이션 ID → 오버라이드 맵
  *
- * 지원 포메이션 (축구 11인제 9종):
- * - 4-2-3-1 · 4-4-2 · 4-3-3 · 3-5-2 · 3-4-3
- * - 4-1-4-1 · 4-5-1 · 5-3-2
- * - 3-4-2-1 · 4-3-2-1
+ * 지원 포메이션:
+ * - 축구 11인제 10종: 4-2-3-1 · 4-4-2 · 4-3-3 · 3-5-2 · 3-4-3 · 4-1-4-1 · 4-5-1 · 5-3-2 · 3-4-2-1 · 4-3-2-1
+ * - 풋살 5인제 4종 (41차 추가): futsal-5-2-2 · futsal-5-1-2-1 · futsal-5-3-1 · futsal-5-4-0
  *
- * 축구 8/9/10인제 및 풋살은 미지원 — 오버라이드 없으면 getPositionRole null 반환.
+ * 축구 8/9/10인제는 미지원 — 오버라이드 없으면 getPositionRole null 반환.
  */
 
 import type { FormationOverrideMap } from "../types";
@@ -20,6 +19,7 @@ import { OVERRIDE_451 } from "./4-5-1";
 import { OVERRIDE_532 } from "./5-3-2";
 import { OVERRIDE_3421 } from "./3-4-2-1";
 import { OVERRIDE_4321 } from "./4-3-2-1";
+import { FUTSAL_OVERRIDES } from "./futsal";
 
 export const FORMATION_OVERRIDES: Record<string, FormationOverrideMap> = {
   "4-2-3-1": OVERRIDE_4231,
@@ -32,4 +32,5 @@ export const FORMATION_OVERRIDES: Record<string, FormationOverrideMap> = {
   "5-3-2": OVERRIDE_532,
   "3-4-2-1": OVERRIDE_3421,
   "4-3-2-1": OVERRIDE_4321,
+  ...FUTSAL_OVERRIDES,
 };

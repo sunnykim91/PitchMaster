@@ -138,6 +138,15 @@ related: [completed-recent.md, reviews.md]
 - [ ] 구글 Search Console — 색인 생성 요청 4개 처리 결과 확인
 - [ ] www 도메인 정적 자산 15개 "크롤링됨·색인 안 됨" 자연 해소 여부 확인 (무시해도 무방)
 
+## 41차 후반 신규 추가 (2026-05-03)
+
+### 경기 후기 — SSR 룰 베이스 자동 생성 (A안 완성)
+- 41차에 룰 베이스 단락 풍부화·AI 게이트 OFF는 완료
+- 미완성: 신규 경기에 후기 자동 표시 (현재는 ai_summary 캐시 있는 경기만 표시)
+- 작업: `src/lib/server/getMatchDetailData.ts` 에서 ai_summary null + status=COMPLETED + REGULAR 일 때 `generateRuleBasedSummary` 호출해 채움
+- 입력 데이터(score·result·goals·assists·mom·attendanceCount·weather·playerCount·date)는 이미 SSR fetch됨 — 매핑만 추가
+- `generateRuleBasedSummary` export 추가 필요
+
 ## 41차 신규 추가 (2026-05-03) — safeText 잔여 적용
 
 ### 자유 텍스트 검증 미적용 진입점 (운영진/본인만 노출 영역)

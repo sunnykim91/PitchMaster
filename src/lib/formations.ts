@@ -576,6 +576,7 @@ export const formationTemplates: FormationTemplate[] = [
     ],
   },
   // ── 5인제 풋살 (GK 포함 5명) — 아마추어 표준 ──
+  // role을 풋살 코드(FIXO·ALA·PIVO)로 직접 사용 — 역할 가이드(positionRoles)가 풋살 베이스 매칭.
   {
     id: "futsal-5-2-2",
     name: "2-2",
@@ -583,10 +584,10 @@ export const formationTemplates: FormationTemplate[] = [
     fieldCount: 5,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 90 },
-      { id: "fixo-l", role: "LCB", label: "FIXO", x: 28, y: 66 },
-      { id: "fixo-r", role: "RCB", label: "FIXO", x: 72, y: 66 },
-      { id: "pivo-l", role: "LS", label: "PIVO", x: 28, y: 28 },
-      { id: "pivo-r", role: "RS", label: "PIVO", x: 72, y: 28 },
+      { id: "fixo-l", role: "FIXO", label: "FIXO", x: 28, y: 66 },
+      { id: "fixo-r", role: "FIXO", label: "FIXO", x: 72, y: 66 },
+      { id: "pivo-l", role: "PIVO", label: "PIVO", x: 28, y: 28 },
+      { id: "pivo-r", role: "PIVO", label: "PIVO", x: 72, y: 28 },
     ],
   },
   {
@@ -596,10 +597,10 @@ export const formationTemplates: FormationTemplate[] = [
     fieldCount: 5,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 90 },
-      { id: "fixo", role: "CDM", label: "FIXO", x: 50, y: 72 },
-      { id: "ala-l", role: "LW", label: "ALA", x: 20, y: 50 },
-      { id: "ala-r", role: "RW", label: "ALA", x: 80, y: 50 },
-      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 22 },
+      { id: "fixo", role: "FIXO", label: "FIXO", x: 50, y: 72 },
+      { id: "ala-l", role: "ALA", label: "ALA", x: 20, y: 50 },
+      { id: "ala-r", role: "ALA", label: "ALA", x: 80, y: 50 },
+      { id: "pivo", role: "PIVO", label: "PIVO", x: 50, y: 22 },
     ],
   },
   {
@@ -609,10 +610,10 @@ export const formationTemplates: FormationTemplate[] = [
     fieldCount: 5,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 90 },
-      { id: "fixo-l", role: "LCB", label: "FIXO", x: 22, y: 70 },
-      { id: "fixo-c", role: "CB", label: "FIXO", x: 50, y: 68 },
-      { id: "fixo-r", role: "RCB", label: "FIXO", x: 78, y: 70 },
-      { id: "pivo", role: "ST", label: "PIVO", x: 50, y: 26 },
+      { id: "fixo-l", role: "FIXO", label: "FIXO", x: 22, y: 70 },
+      { id: "fixo-c", role: "FIXO", label: "FIXO", x: 50, y: 68 },
+      { id: "fixo-r", role: "FIXO", label: "FIXO", x: 78, y: 70 },
+      { id: "pivo", role: "PIVO", label: "PIVO", x: 50, y: 26 },
     ],
   },
   {
@@ -622,10 +623,10 @@ export const formationTemplates: FormationTemplate[] = [
     fieldCount: 5,
     slots: [
       { id: "gk", role: "GK", label: "GK", x: 50, y: 90 },
-      { id: "ala-bl", role: "LB", label: "ALA", x: 25, y: 64 },
-      { id: "ala-br", role: "RB", label: "ALA", x: 75, y: 64 },
-      { id: "ala-fl", role: "LM", label: "ALA", x: 25, y: 36 },
-      { id: "ala-fr", role: "RM", label: "ALA", x: 75, y: 36 },
+      { id: "ala-bl", role: "ALA", label: "ALA", x: 25, y: 64 },
+      { id: "ala-br", role: "ALA", label: "ALA", x: 75, y: 64 },
+      { id: "ala-fl", role: "ALA", label: "ALA", x: 25, y: 36 },
+      { id: "ala-fr", role: "ALA", label: "ALA", x: 75, y: 36 },
     ],
   },
 ];

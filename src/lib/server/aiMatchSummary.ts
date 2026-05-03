@@ -325,21 +325,101 @@ const client = process.env.ANTHROPIC_API_KEY
   ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   : null;
 
-/** 룰 기반 fallback — 매우 단순한 포맷 */
+/** 결정론적 시드 해시 — 같은 경기엔 같은 단락 (출력 안정성) */
+function hashSeed(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h;
+}
+function pickFromSeed<T>(arr: readonly T[], seed: number): T {
+  return arr[seed % arr.length];
+}
+
+/**
+ * 룰 기반 경기 후기 — 카톡 단톡 공유용 2~3문장 단락.
+ * 패턴 풀에서 시드 기반 결정론적 선택. AI 호출 없음.
+ *
+ * 입력 조합(결과·득점자·MOM·날씨·인원)에 따라 자연스러운 문장 조합.
+ */
 function generateRuleBasedSummary(input: MatchSummaryInput): string {
-  const { matchType, score, result, opponent, goals, mom, attendanceCount } = input;
+  const { matchType, score, result, opponent, goals, assists, mom, topScorerName, attendanceCount, weather } = input;
+  const seed = hashSeed(`${input.date}|${opponent ?? ""}|${score?.us ?? 0}|${score?.opp ?? 0}|${result ?? ""}|${mom ?? ""}|${goals.map(g => g.scorerName).join(",")}`);
+
   if (matchType === "EVENT") {
-    return `${input.date} 팀 모임이 진행됐습니다. 참석 ${attendanceCount}명.`;
+    return pickFromSeed([
+      `${input.date} 팀 모임이 진행됐습니다. 참석 ${attendanceCount}명.`,
+      `${input.date} 모임 — ${attendanceCount}명이 함께했습니다.`,
+      `${attendanceCount}명이 모인 ${input.date} 일정이 마무리됐습니다.`,
+    ], seed);
   }
-  const scoreText = score ? `${score.us}-${score.opp}` : "기록 미완료";
-  const resultText = result === "W" ? "승리" : result === "L" ? "패배" : result === "D" ? "무승부" : "";
-  const opponentText = opponent ? `${opponent}전` : "자체전";
-  const momText = mom ? ` MOM은 ${mom}.` : "";
-  const goalsText =
-    goals.length > 0
-      ? ` 득점: ${goals.map((g) => g.scorerName).join(", ")}.`
-      : "";
-  return `${opponentText} ${scoreText}${resultText ? ` ${resultText}` : ""}.${goalsText}${momText}`;
+
+  const opponentText = opponent ?? "상대";
+  const scoreText = score ? `${score.us}-${score.opp}` : null;
+
+  // 1문장: 결과 + 스코어
+  let sentence1 = "";
+  if (result === "W" && scoreText) {
+    sentence1 = pickFromSeed([
+      `${opponentText}와의 경기, ${scoreText}로 승리하며 좋은 흐름을 이어갔습니다.`,
+      `${opponentText}전 ${scoreText} 승. 끝까지 집중력을 잃지 않은 한 판이었습니다.`,
+      `${scoreText}로 ${opponentText}를 꺾고 값진 승리를 가져왔습니다.`,
+    ], seed);
+  } else if (result === "L" && scoreText) {
+    sentence1 = pickFromSeed([
+      `${opponentText}와의 경기, ${scoreText}로 아쉽게 패했습니다.`,
+      `${opponentText}전 ${scoreText} 패. 다음 경기에서 다시 다잡겠습니다.`,
+      `${scoreText}로 ${opponentText}에게 졌지만 끝까지 포기하지 않았습니다.`,
+    ], seed);
+  } else if (result === "D" && scoreText) {
+    sentence1 = pickFromSeed([
+      `${opponentText}와의 경기, ${scoreText} 무승부로 마무리됐습니다.`,
+      `${opponentText}전 ${scoreText} 무. 양 팀 모두 끝까지 물러서지 않았습니다.`,
+    ], seed);
+  } else if (opponent === null) {
+    sentence1 = pickFromSeed([
+      `오늘은 자체전으로 컨디션을 끌어올렸습니다.`,
+      `자체전으로 호흡을 맞춘 한 판이었습니다.`,
+    ], seed);
+  } else {
+    sentence1 = `${opponentText}와의 경기가 진행됐습니다.`;
+  }
+
+  // 2문장: 득점·MOM (있을 때만)
+  let sentence2 = "";
+  if (goals.length > 0) {
+    const scorerNames = goals.map((g) => g.scorerName).filter((n) => n && n !== "UNKNOWN");
+    if (mom && topScorerName && mom === topScorerName && goals.filter((g) => g.scorerName === mom).length >= 2) {
+      sentence2 = pickFromSeed([
+        `${mom} 선수가 ${goals.filter((g) => g.scorerName === mom).length}골을 몰아치며 MOM에 선정됐습니다.`,
+        `${mom} 선수가 멀티골을 터뜨리며 경기의 주인공이 됐습니다.`,
+      ], seed);
+    } else if (mom) {
+      const goalText = scorerNames.length > 0 ? `${scorerNames.slice(0, 3).join(", ")}이(가) 득점했고, ` : "";
+      sentence2 = `${goalText}MOM은 ${mom} 선수가 차지했습니다.`;
+    } else if (scorerNames.length > 0) {
+      sentence2 = `득점은 ${scorerNames.slice(0, 3).join(", ")} 선수가 맡았습니다.`;
+    }
+  } else if (mom) {
+    sentence2 = `오늘의 MOM은 ${mom} 선수입니다.`;
+  }
+
+  // 3문장: 어시스트·날씨·참석 (옵션, 둘 중 하나 또는 없음)
+  let sentence3 = "";
+  const assistNames = assists.filter((a) => a && a !== "UNKNOWN");
+  if (assistNames.length > 0 && goals.length > 0) {
+    sentence3 = `도움은 ${assistNames.slice(0, 2).join(", ")} 선수가 기록했습니다.`;
+  } else if (weather === "RAIN") {
+    sentence3 = pickFromSeed([
+      `비 오는 날씨에도 모두 끝까지 뛰어줬습니다.`,
+      `궂은 날씨 속에서도 집중력을 유지했습니다.`,
+    ], seed);
+  } else if (weather === "SNOW") {
+    sentence3 = `눈 내리는 추위 속에서도 모두 수고하셨습니다.`;
+  } else if (attendanceCount && attendanceCount >= 12) {
+    sentence3 = `${attendanceCount}명이 끝까지 자리를 지키며 한 경기를 완성했습니다.`;
+  }
+
+  return [sentence1, sentence2, sentence3].filter(Boolean).join(" ");
 }
 
 const META_PATTERNS = [

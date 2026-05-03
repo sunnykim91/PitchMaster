@@ -290,8 +290,10 @@ async function getMemberRecentIncomes(request: NextRequest) {
 
   const cutoff = new Date(Date.now() - monthsBack * 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  // 회원 매칭: user_id 또는 description 이름 포함
-  let query = db
+  // 회원 매칭: user_id 또는 description 이름 포함.
+  // PostgREST `or(...)` 절은 콤마·괄호로 분리되므로 사용자 이름을 직접 보간하면 쿼리 깨질 위험.
+  // 두 쿼리를 분리해서 dedupe — 안전하고 단순.
+  const baseQuery = () => db
     .from("dues_records")
     .select("id, amount, description, recorded_at, user_id")
     .eq("team_id", ctx.teamId)
@@ -300,16 +302,25 @@ async function getMemberRecentIncomes(request: NextRequest) {
     .order("recorded_at", { ascending: false })
     .limit(50);
 
-  if (targetUserId) {
-    query = query.or(`user_id.eq.${targetUserId},description.ilike.%${targetName}%`);
-  } else if (targetName) {
-    query = query.ilike("description", `%${targetName}%`);
-  } else {
+  if (!targetUserId && !targetName) {
     return apiSuccess({ candidates: [] });
   }
 
-  const { data: rows, error } = await query;
-  if (error) return apiError(error.message);
+  type RecordRow = { id: string; amount: number; description: string; recorded_at: string; user_id: string | null };
+  const collected = new Map<string, RecordRow>();
+
+  if (targetUserId) {
+    const { data, error } = await baseQuery().eq("user_id", targetUserId);
+    if (error) return apiError(error.message);
+    for (const r of (data ?? []) as RecordRow[]) collected.set(r.id, r);
+  }
+  if (targetName) {
+    const { data, error } = await baseQuery().ilike("description", `%${targetName}%`);
+    if (error) return apiError(error.message);
+    for (const r of (data ?? []) as RecordRow[]) collected.set(r.id, r);
+  }
+
+  const rows = [...collected.values()].sort((a, b) => b.recorded_at.localeCompare(a.recorded_at)).slice(0, 50);
 
   // 이미 다른 선납에 연결된 거래 제외
   const ids = (rows ?? []).map((r) => r.id);

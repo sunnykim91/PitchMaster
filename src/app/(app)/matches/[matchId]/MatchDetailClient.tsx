@@ -164,8 +164,8 @@ export default function MatchDetailClient({
   const sportType: SportType = teamData.team?.sport_type ?? "SOCCER";
   // AI 코치 분석 + AI Full Plan: 축구·풋살 모두 활성 (풋살 포메이션 4종 formations.ts 등록 완료).
   const effectiveEnableAi = enableAi;
-  // 경기 후기 AI 재생성: 룰 베이스 후기가 풋살에서도 충분히 동작하므로 SOCCER 만 유지 (호출 비용 절약).
-  const enableAiSummary = enableAi && sportType === "SOCCER";
+  // 경기 후기: 룰 베이스 단락 풍부화로 통일 — AI 호출 비활성 (시그니처와 일관, 비용 0). (41차)
+  const enableAiSummary = false;
   const uniforms = teamData.team?.uniforms;
   // fallback 색을 중립 회색으로 — 기존 hsl(var(--primary))=coral(주황), hsl(var(--muted-foreground))=회색
   // 은 팀 유니폼과 쉽게 혼동됨 (사용자가 주황+회색 본 원인).

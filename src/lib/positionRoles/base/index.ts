@@ -9,11 +9,13 @@ import type { PositionBaseRole } from "../types";
 import { DEFENDERS_BASE } from "./defenders";
 import { MIDFIELDERS_BASE } from "./midfielders";
 import { FORWARDS_BASE } from "./forwards";
+import { FUTSAL_BASE } from "./futsal";
 
 export const POSITION_BASE_ROLES: Record<string, PositionBaseRole> = {
   ...DEFENDERS_BASE,
   ...MIDFIELDERS_BASE,
   ...FORWARDS_BASE,
+  ...FUTSAL_BASE,
 };
 
-export { DEFENDERS_BASE, MIDFIELDERS_BASE, FORWARDS_BASE };
+export { DEFENDERS_BASE, MIDFIELDERS_BASE, FORWARDS_BASE, FUTSAL_BASE };
