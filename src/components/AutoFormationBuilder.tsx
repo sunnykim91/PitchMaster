@@ -401,7 +401,7 @@ function scheduleQuarters(
     };
     const slotReqs: SlotReq[] = [];
 
-    const validPositions = new Set<string>(["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"]);
+    const validPositions = new Set<string>(["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST", "FIXO", "ALA", "PIVO"]);
 
     /** 선수의 유효한 선호 포지션 목록 반환 */
     const getAllPos = (id: string): PreferredPosition[] => {
