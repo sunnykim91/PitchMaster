@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { findOrCreateKakaoUser, setSession } from "@/lib/auth";
+import { sendServerGAEvent } from "@/lib/server/sendGAEvent";
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
@@ -36,12 +37,15 @@ export async function GET(request: NextRequest) {
     const userData = await userRes.json();
 
     let session;
+    let isNewUser = false;
     try {
-      session = await findOrCreateKakaoUser({
+      const result = await findOrCreateKakaoUser({
         id: String(userData.id),
         nickname: userData.properties?.nickname ?? "사용자",
         profileImage: userData.properties?.profile_image,
       });
+      session = result.session;
+      isNewUser = result.isNewUser;
     } catch (e) {
       if (e instanceof Error && e.message === "ACCOUNT_BLOCKED") {
         return NextResponse.redirect(new URL("/login?error=blocked", request.url));
@@ -50,6 +54,14 @@ export async function GET(request: NextRequest) {
     }
 
     await setSession(session);
+
+    // 신규 가입자 — 카카오 인앱 WebView에서 클라이언트 GA가 누락되는 사고 보정용
+    // 서버사이드 Measurement Protocol 발화로 가입 측정 정확도 향상.
+    if (isNewUser) {
+      await sendServerGAEvent(request, [
+        { name: "signup_complete", params: { method: "kakao" } },
+      ]);
+    }
     const stateRaw = request.nextUrl.searchParams.get("state") ?? "";
     const stateDecoded = stateRaw ? decodeURIComponent(stateRaw) : "";
 

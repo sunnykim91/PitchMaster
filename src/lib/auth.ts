@@ -154,7 +154,7 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
   id: string;
   nickname: string;
   profileImage?: string;
-}): Promise<Session> {
+}): Promise<{ session: Session; isNewUser: boolean }> {
   const db = getSupabaseAdmin();
   if (!db) throw new Error("Supabase is not configured");
 
@@ -203,21 +203,24 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
     const team = firstMembership?.teams as { id: string; name: string; invite_code: string; logo_url: string | null } | undefined;
 
     return {
-      user: {
-        id: existing.id,
-        name: existing.name,
-        birthDate: existing.birth_date,
-        phone: existing.phone,
-        preferredPositions: existing.preferred_positions,
-        preferredFoot: existing.preferred_foot,
-        profileImageUrl,
-        isProfileComplete: existing.is_profile_complete,
-        teamId: team?.id,
-        teamName: team?.name,
-        teamRole: firstMembership?.role,
-        inviteCode: team?.invite_code,
-        teamLogoUrl: team?.logo_url ?? null,
+      session: {
+        user: {
+          id: existing.id,
+          name: existing.name,
+          birthDate: existing.birth_date,
+          phone: existing.phone,
+          preferredPositions: existing.preferred_positions,
+          preferredFoot: existing.preferred_foot,
+          profileImageUrl,
+          isProfileComplete: existing.is_profile_complete,
+          teamId: team?.id,
+          teamName: team?.name,
+          teamRole: firstMembership?.role,
+          inviteCode: team?.invite_code,
+          teamLogoUrl: team?.logo_url ?? null,
+        },
       },
+      isNewUser: false,
     };
   }
 
@@ -236,11 +239,14 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
   if (error || !newUser) throw new Error("Failed to create user");
 
   return {
-    user: {
-      id: newUser.id,
-      name: newUser.name,
-      profileImageUrl: newUser.profile_image_url,
-      isProfileComplete: false,
+    session: {
+      user: {
+        id: newUser.id,
+        name: newUser.name,
+        profileImageUrl: newUser.profile_image_url,
+        isProfileComplete: false,
+      },
     },
+    isNewUser: true,
   };
 }

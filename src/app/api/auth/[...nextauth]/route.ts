@@ -18,7 +18,7 @@ const handler = NextAuth({
     async signIn({ user, account, profile }) {
       if (account?.provider === "kakao" && profile) {
         const kakaoProfile = profile as { id?: number; properties?: { nickname?: string; profile_image?: string } };
-        const session = await findOrCreateKakaoUser({
+        const { session } = await findOrCreateKakaoUser({
           id: String(kakaoProfile.id ?? user.id),
           nickname: kakaoProfile.properties?.nickname ?? user.name ?? "사용자",
           profileImage: kakaoProfile.properties?.profile_image ?? user.image ?? undefined,
