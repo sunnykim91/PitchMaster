@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Plus, X, UserX, Wallet } from "lucide-react";
+import { Plus, X, UserX, Wallet, Link2 } from "lucide-react";
 import { useAsyncAction } from "@/lib/useAsyncAction";
+import PrepaymentLinkModal from "./PrepaymentLinkModal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { isStaffOrAbove } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import { apiMutate } from "@/lib/useApi";
 import { useConfirm } from "@/lib/ConfirmContext";
+import { useToast } from "@/lib/ToastContext";
 import { formatAmount } from "@/lib/formatters";
 import type { Role } from "@/lib/types";
 
@@ -665,6 +667,7 @@ type Exemption = {
   monthly_amount: number | null;
   period_months: number | null;
   actual_paid_amount: number | null;
+  linked_dues_record_id: string | null;
 };
 
 function nextMonthFirstISO(): string {
@@ -700,6 +703,10 @@ function MemberExemptionSection({
   const [adding, setAdding] = useState(false);
   const [runAction, actionLoading] = useAsyncAction();
   const confirm = useConfirm();
+
+  // 매칭 모달 상태
+  const [linkModalExemptionId, setLinkModalExemptionId] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   // 폼 상태
   const defaultMonthlyAmount = settings[0]?.monthlyAmount ?? 30000;
@@ -989,9 +996,10 @@ function MemberExemptionSection({
       {activeExemptions.map((ex) => {
         const typeInfo = getTypeInfo(ex.exemption_type);
         const isPrepaid = ex.exemption_type === "PREPAID";
+        const isLinked = isPrepaid && ex.linked_dues_record_id != null;
         return (
           <Card key={ex.id} className="border-white/[0.04] bg-card p-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-semibold">{getMemberName(ex.member_id)}</span>
@@ -1008,6 +1016,21 @@ function MemberExemptionSection({
                   )}
                   {ex.reason && <span>· {ex.reason}</span>}
                 </div>
+                {isPrepaid && (
+                  <button
+                    type="button"
+                    onClick={() => setLinkModalExemptionId(ex.id)}
+                    className={cn(
+                      "mt-1.5 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors",
+                      isLinked
+                        ? "text-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/10"
+                        : "text-primary hover:bg-primary/10 border border-primary/30"
+                    )}
+                  >
+                    <Link2 className="h-3 w-3" />
+                    {isLinked ? "입금 연결됨" : "입금 연결 필요"}
+                  </button>
+                )}
               </div>
               <Button type="button" variant="outline" size="sm" className="h-7 text-xs shrink-0" disabled={actionLoading} onClick={() => handleEnd(ex.id)}>
                 종료
@@ -1042,6 +1065,29 @@ function MemberExemptionSection({
           </Card>
         );
       })}
+
+      {/* 선납 ↔ 입금 거래 수동 매칭 모달 */}
+      {(() => {
+        const target = activeExemptions.find((e) => e.id === linkModalExemptionId) ?? null;
+        return (
+          <PrepaymentLinkModal
+            open={!!target}
+            exemptionId={target?.id ?? null}
+            memberName={target ? getMemberName(target.member_id) : ""}
+            currentLinkedId={target?.linked_dues_record_id ?? null}
+            onClose={() => setLinkModalExemptionId(null)}
+            onSuccess={(msg) => {
+              showToast(msg, "success");
+              // 활성 목록 갱신 — 다시 fetch
+              fetch("/api/dues/member-status")
+                .then((r) => r.json())
+                .then((data) => { if (data.exemptions) setExemptions(data.exemptions); })
+                .catch(() => {});
+            }}
+            onError={(msg) => showToast(msg, "error")}
+          />
+        );
+      })()}
     </div>
   );
 }
