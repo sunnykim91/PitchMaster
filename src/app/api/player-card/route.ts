@@ -256,7 +256,7 @@ export async function GET(request: NextRequest) {
   }
 
   // MVP — 경기별 winner가 본인인 경기만 카운트 (투표율 70% 통과 또는 운영진 지정)
-  const { resolveValidMvp, pickStaffDecision } = await import("@/lib/mvpThreshold");
+  const { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
   const { data: staffMembersData } = await db
     .from("team_members")
     .select("user_id")
@@ -279,9 +279,18 @@ export async function GET(request: NextRequest) {
     agg.rows.push(v);
     mvpAggByMatch.set(v.match_id, agg);
   }
+  // 새 MVP 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04)
+  const { data: teamSettingsForMvp } = await db.from("teams").select("mvp_vote_staff_only").eq("id", ctx.teamId).maybeSingle();
+  const mvpVoteStaffOnly = (teamSettingsForMvp as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
+  const matchDateById = new Map<string, string>();
+  for (const m of matches ?? []) matchDateById.set(m.id, m.match_date);
+
   let mvp = 0;
   for (const [mid, agg] of mvpAggByMatch) {
-    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds);
+    const newPolicy = shouldApplyNewMvpPolicy(matchDateById.get(mid), mvpVoteStaffOnly);
+    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
+      applyBackfillHealing: !newPolicy,
+    });
     const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
     if (winner && lookupIds.includes(winner)) mvp++;
   }

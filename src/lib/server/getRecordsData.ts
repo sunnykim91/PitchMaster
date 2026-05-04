@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { resolveValidMvp, pickStaffDecision } from "@/lib/mvpThreshold";
+import { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
 
 type SeasonRow = { id: string; is_active: boolean; start_date: string; end_date: string; [key: string]: unknown };
 type MemberRow = {
@@ -142,9 +142,18 @@ export async function getRecordsData(teamId: string) {
     agg.rows.push({ voter_id: row.voter_id, candidate_id: row.candidate_id, is_staff_decision: row.is_staff_decision });
     votesByMatch.set(row.match_id, agg);
   }
+  // 새 MVP 정책 적용 판정 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04)
+  const { data: teamSettings } = await db.from("teams").select("mvp_vote_staff_only").eq("id", teamId).maybeSingle();
+  const mvpVoteStaffOnly = teamSettings?.mvp_vote_staff_only ?? false;
+  const matchDateById = new Map<string, string>();
+  for (const m of matches ?? []) matchDateById.set(m.id, m.match_date);
+
   const mvpMap = new Map<string, number>();
   for (const [mid, agg] of votesByMatch) {
-    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds);
+    const newPolicy = shouldApplyNewMvpPolicy(matchDateById.get(mid), mvpVoteStaffOnly);
+    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
+      applyBackfillHealing: !newPolicy,
+    });
     const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
     if (winner) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
   }

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { calculateOVR, classifyPosition } from "@/lib/playerCardUtils";
-import { resolveValidMvp, pickStaffDecision } from "@/lib/mvpThreshold";
+import { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
 
 /**
  * 단일 팀·시즌 기준으로 여러 선수의 OVR 을 한 번에 계산.
@@ -34,7 +34,7 @@ export async function computeTeamSeasonOvrs(
   // 시즌 내 COMPLETED 경기 (stats_included 반영)
   const { data: matches } = await db
     .from("matches")
-    .select("id")
+    .select("id, match_date")
     .eq("team_id", teamId)
     .eq("status", "COMPLETED")
     .neq("stats_included", false)
@@ -42,6 +42,8 @@ export async function computeTeamSeasonOvrs(
     .lte("match_date", season.end_date);
   const matchIds = (matches ?? []).map((m: { id: string }) => m.id);
   if (matchIds.length === 0) return result;
+  const matchDateById = new Map<string, string>();
+  for (const m of matches ?? []) matchDateById.set(m.id, (m as { id: string; match_date: string }).match_date);
 
   // 팀 멤버 + 포지션
   const { data: membersData } = await db
@@ -105,9 +107,16 @@ export async function computeTeamSeasonOvrs(
     agg.rows.push(v);
     mvpVotesByMatch.set(v.match_id, agg);
   }
+  // 새 MVP 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04)
+  const { data: teamSettings } = await db.from("teams").select("mvp_vote_staff_only").eq("id", teamId).maybeSingle();
+  const mvpVoteStaffOnly = (teamSettings as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
+
   const mvpWinnerByMatch = new Map<string, string>();
   for (const [mid, agg] of mvpVotesByMatch) {
-    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds);
+    const newPolicy = shouldApplyNewMvpPolicy(matchDateById.get(mid), mvpVoteStaffOnly);
+    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
+      applyBackfillHealing: !newPolicy,
+    });
     const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
     if (winner) mvpWinnerByMatch.set(mid, winner);
   }

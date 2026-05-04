@@ -8,6 +8,26 @@
 export const MVP_VOTE_THRESHOLD = 0.7;
 
 /**
+ * 새 정책(운영진 즉시 확정 권한을 mvp_vote_staff_only 토글에 종속) 적용 시작 날짜.
+ * 이 날짜 이후 경기에선:
+ *  - mvp_vote_staff_only=OFF 팀의 STAFF 투표는 일반 표로 처리 (70% 룰만 적용)
+ *  - mvp_vote_staff_only=ON 팀에선 기존 동작 유지 (즉시 확정)
+ * 이 날짜 이전 경기는 백필 치유 포함 옛 정책 그대로 (과거 MVP 결과 보존).
+ */
+export const STAFF_DECISION_POLICY_CUTOFF = "2026-05-04";
+
+export interface PickStaffDecisionOptions {
+  /**
+   * 백필 치유 분기 활성 여부.
+   * - true (기본): is_staff_decision=true OR 현재 STAFF voter 모두 staff decision
+   * - false: is_staff_decision=true row 만 staff decision (백필 치유 비활성)
+   *
+   * 새 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04) 에서는 false.
+   */
+  applyBackfillHealing?: boolean;
+}
+
+/**
  * match_mvp_votes 원시 row에서 "확정 지정"(is_staff_decision)을 판정.
  *
  * 왜 동적 판정이 필요한가:
@@ -17,18 +37,39 @@ export const MVP_VOTE_THRESHOLD = 0.7;
  *    그 투표를 `staff_decision`으로 간주해 누락을 치유.
  *  - 미래에 STAFF로 승격된 사람의 과거 투표도 자연스럽게 확정 처리됨.
  *
+ * 새 정책 (2026-05-04 이후 + mvp_vote_staff_only=OFF):
+ *  - applyBackfillHealing=false 로 호출하여 백필 치유 분기 비활성
+ *  - is_staff_decision=true row만 staff decision (POST 시 mvpVoteStaffOnly && isStaff 일 때만 true 저장)
+ *
  * @param votes match_mvp_votes 원시 행들 (voter_id, candidate_id, is_staff_decision 필요)
  * @param staffVoterIds 해당 팀에서 현재 STAFF 이상인 사용자의 user_id 집합
+ * @param options applyBackfillHealing — 새 정책 케이스에선 false 전달
  * @returns 첫 번째로 발견된 "staff 지정" candidate_id, 없으면 null
  */
 export function pickStaffDecision(
   votes: Array<{ voter_id: string; candidate_id: string; is_staff_decision: boolean | null }>,
-  staffVoterIds: Set<string>
+  staffVoterIds: Set<string>,
+  options: PickStaffDecisionOptions = {}
 ): string | null {
+  const applyBackfillHealing = options.applyBackfillHealing ?? true;
   for (const v of votes) {
-    if (v.is_staff_decision || staffVoterIds.has(v.voter_id)) return v.candidate_id;
+    if (v.is_staff_decision) return v.candidate_id;
+    if (applyBackfillHealing && staffVoterIds.has(v.voter_id)) return v.candidate_id;
   }
   return null;
+}
+
+/**
+ * 새 정책(STAFF_DECISION_POLICY_CUTOFF 이후 + mvp_vote_staff_only=OFF) 적용 여부 판정.
+ * 호출처에서 pickStaffDecision options 결정에 사용.
+ */
+export function shouldApplyNewMvpPolicy(
+  matchDate: string | null | undefined,
+  mvpVoteStaffOnly: boolean
+): boolean {
+  if (mvpVoteStaffOnly) return false; // 토글 ON이면 옛 정책 그대로 (운영진 즉시 확정)
+  if (!matchDate) return false;
+  return matchDate >= STAFF_DECISION_POLICY_CUTOFF;
 }
 
 /**

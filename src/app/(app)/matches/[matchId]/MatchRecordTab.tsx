@@ -55,9 +55,12 @@ export interface MatchRecordTabProps {
   canVoteMvp: boolean;
   /** 현재 사용자가 운영진 이상인지 (직접 지정 여부) */
   isStaffVoter: boolean;
-  /** 참석자 수 (투표율 계산용) */
+  /** 참석자 수 — 실제 참석(PRESENT/LATE) 기준. 투표율 계산용 */
   attendeeCount: number;
+  /** 참석 투표(vote=ATTEND) 멤버 — 출석 체크 UI 용 (vote 시점 기준이라 안 온 사람도 포함) */
   attendingMembers: RosterPlayer[];
+  /** MVP 후보 — 실제 참석(PRESENT/LATE) 멤버만. 미지정 시 attendingMembers 폴백 (구버전 호환) */
+  mvpCandidates?: RosterPlayer[];
   fullRoster: SimpleRosterPlayer[];
   /** 골 데이터 refetch */
   refetchGoals: () => Promise<unknown>;
@@ -79,6 +82,7 @@ function MatchRecordTabInner({
   isStaffVoter,
   attendeeCount,
   attendingMembers,
+  mvpCandidates,
   fullRoster,
   refetchGoals,
   refetchMvp,
@@ -662,9 +666,10 @@ function MatchRecordTabInner({
                 );
               })()}
 
-              {/* 현재 1위 */}
+              {/* 현재 1위 — MVP 후보(실제 참석자) 기준 */}
               {(() => {
-                const topPlayer = attendingMembers.reduce<{ id: string; name: string; count: number } | null>((top, p) => {
+                const candidates = mvpCandidates ?? attendingMembers;
+                const topPlayer = candidates.reduce<{ id: string; name: string; count: number } | null>((top, p) => {
                   const count = voteCounts[p.id] ?? 0;
                   if (count > 0 && (!top || count > top.count)) return { id: p.id, name: p.name, count };
                   return top;
@@ -699,15 +704,17 @@ function MatchRecordTabInner({
                     </div>
                   )}
                   <div className="grid grid-cols-3 gap-2">
-                    {attendingMembers.map((player) => {
+                    {(mvpCandidates ?? attendingMembers).map((player) => {
+                      const isSelf = player.id === userId;
                       const isVoted = votes[userId] === player.id;
                       const count = voteCounts[player.id] ?? 0;
                       return (
                         <button
                           key={player.id}
                           type="button"
-                          disabled={!!mvpVotingId}
-                          onClick={() => runMvpVote(player.id, () => handleVote(player.id))}
+                          disabled={!!mvpVotingId || isSelf}
+                          title={isSelf ? "본인에게는 투표할 수 없습니다" : undefined}
+                          onClick={() => !isSelf && runMvpVote(player.id, () => handleVote(player.id))}
                           className={cn(
                             "relative rounded-xl p-3 text-sm font-medium transition-all",
                             isVoted ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
@@ -728,7 +735,7 @@ function MatchRecordTabInner({
               ) : (
                 // 일반 팀원 — 읽기 전용 결과 표시
                 <div className="grid grid-cols-3 gap-2">
-                  {attendingMembers.map((player) => {
+                  {(mvpCandidates ?? attendingMembers).map((player) => {
                     const count = voteCounts[player.id] ?? 0;
                     return (
                       <div

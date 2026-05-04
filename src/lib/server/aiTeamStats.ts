@@ -382,7 +382,7 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
   // MVP 수상 횟수 집계 — 기록 페이지와 동일 정책으로 통일:
   //   1) 운영진 지정(is_staff_decision 또는 현재 STAFF+ voter) → 즉시 확정
   //   2) 그 외엔 참석자 70% 이상 투표 통과 + 최다득표자
-  const { resolveValidMvp: resolveValidMvpForAi, pickStaffDecision: pickStaffDecisionForAi } = await import("@/lib/mvpThreshold");
+  const { resolveValidMvp: resolveValidMvpForAi, pickStaffDecision: pickStaffDecisionForAi, shouldApplyNewMvpPolicy: shouldApplyNewMvpPolicyForAi } = await import("@/lib/mvpThreshold");
   type MvpRow = { match_id: string; voter_id: string; candidate_id: string; is_staff_decision: boolean | null };
   const mvpAggByMatch = new Map<string, { votes: string[]; rows: MvpRow[] }>();
   for (const v of (mvpVotes ?? []) as MvpRow[]) {
@@ -392,9 +392,18 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
     agg.rows.push(v);
     mvpAggByMatch.set(v.match_id, agg);
   }
+  // 새 MVP 정책 적용 — match_date 매핑 + 팀 토글 조회
+  const matchDateById = new Map<string, string>();
+  for (const m of matches) matchDateById.set(m.id, m.match_date);
+  const { data: teamSettings } = await db.from("teams").select("mvp_vote_staff_only").eq("id", teamId).maybeSingle();
+  const mvpVoteStaffOnly = (teamSettings as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
+
   const memberMvpCount = new Map<string, number>();
   for (const [mid, agg] of mvpAggByMatch) {
-    const staffDecision = pickStaffDecisionForAi(agg.rows, staffVoterIds);
+    const newPolicy = shouldApplyNewMvpPolicyForAi(matchDateById.get(mid), mvpVoteStaffOnly);
+    const staffDecision = pickStaffDecisionForAi(agg.rows, staffVoterIds, {
+      applyBackfillHealing: !newPolicy,
+    });
     const winnerUserId = resolveValidMvpForAi(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
     if (!winnerUserId) continue;
     const memberId = memberIdByUserId.get(winnerUserId);

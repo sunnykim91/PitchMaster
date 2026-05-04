@@ -19,7 +19,7 @@ import { PlayerProfilePage, PlayerProfileEmpty } from "@/components/pitchmaster/
 import type { PlayerProfile, PlayerStats } from "@/components/pitchmaster/PlayerProfilePage";
 import type { PlayerCardProps, StatWithContext } from "@/components/pitchmaster/PlayerCard";
 import { firstOf, type JoinedRow } from "@/lib/supabaseJoins";
-import { resolveValidMvp, pickStaffDecision } from "@/lib/mvpThreshold";
+import { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
 
 type Props = {
   params: Promise<{ memberId: string }>;
@@ -158,9 +158,18 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
     agg.rows.push(v);
     mvpVotesByMatch.set(v.match_id, agg);
   }
+  // 새 MVP 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04)
+  const { data: teamSettingsForMvp } = await db.from("teams").select("mvp_vote_staff_only").eq("id", m.team_id).maybeSingle();
+  const mvpVoteStaffOnly = (teamSettingsForMvp as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
+  const matchDateById = new Map<string, string>();
+  for (const mm of matches ?? []) matchDateById.set(mm.id, mm.match_date);
+
   const mvpWinnerByMatch = new Map<string, string>();
   for (const [mid, agg] of mvpVotesByMatch) {
-    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds);
+    const newPolicy = shouldApplyNewMvpPolicy(matchDateById.get(mid), mvpVoteStaffOnly);
+    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
+      applyBackfillHealing: !newPolicy,
+    });
     const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
     if (winner) mvpWinnerByMatch.set(mid, winner);
   }

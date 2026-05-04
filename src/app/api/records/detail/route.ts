@@ -137,9 +137,16 @@ export async function GET(request: NextRequest) {
       agg.rows.push(v);
       aggByMatch.set(v.match_id, agg);
     }
-    const { resolveValidMvp, pickStaffDecision } = await import("@/lib/mvpThreshold");
+    const { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
+    // 새 MVP 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04)
+    const { data: teamSettingsForMvp } = await db.from("teams").select("mvp_vote_staff_only").eq("id", ctx.teamId).maybeSingle();
+    const mvpVoteStaffOnlyForMvp = (teamSettingsForMvp as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
     for (const [matchId, agg] of aggByMatch) {
-      const staffDecision = pickStaffDecision(agg.rows, staffVoterIds);
+      const matchDate = matchMap.get(matchId)?.match_date;
+      const newPolicy = shouldApplyNewMvpPolicy(matchDate, mvpVoteStaffOnlyForMvp);
+      const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
+        applyBackfillHealing: !newPolicy,
+      });
       const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(matchId) ?? 0, staffDecision);
       if (!winner || !lookupIds.includes(winner)) continue;
       const m = matchMap.get(matchId);

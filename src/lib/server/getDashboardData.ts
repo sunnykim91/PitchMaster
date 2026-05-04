@@ -169,8 +169,14 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
       (staffRes.data ?? []).map((m) => (m as { user_id: string | null }).user_id).filter((id): id is string => !!id)
     );
 
-    const { resolveValidMvp, pickStaffDecision } = await import("@/lib/mvpThreshold");
-    const staffDecision = pickStaffDecision(voteRows, staffVoterIds);
+    const { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
+    // 새 MVP 정책(2026-05-04 cutoff + mvp_vote_staff_only=OFF) 케이스에선 백필 치유 비활성
+    const { data: teamSettings } = await db.from("teams").select("mvp_vote_staff_only").eq("id", teamId).maybeSingle();
+    const mvpVoteStaffOnly = teamSettings?.mvp_vote_staff_only ?? false;
+    const newPolicy = shouldApplyNewMvpPolicy(recentMatch.match_date, mvpVoteStaffOnly);
+    const staffDecision = pickStaffDecision(voteRows, staffVoterIds, {
+      applyBackfillHealing: !newPolicy,
+    });
     const winnerId = resolveValidMvp(
       voteRows.map((v) => v.candidate_id).filter(Boolean),
       attendedCount,

@@ -78,10 +78,16 @@ export async function GET(request: NextRequest) {
         (staffResp.data ?? []).map((m) => m.user_id).filter((id): id is string => !!id)
       );
 
-      const { resolveValidMvp, pickStaffDecision } = await import("@/lib/mvpThreshold");
+      const { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
+      // 새 MVP 정책 — match_date + mvp_vote_staff_only 토글
+      const { data: teamSettingsForMvp } = await db.from("teams").select("mvp_vote_staff_only").eq("id", ctx.teamId).maybeSingle();
+      const mvpVoteStaffOnlyForMvp = (teamSettingsForMvp as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
+      const newPolicy = shouldApplyNewMvpPolicy(matchDate, mvpVoteStaffOnlyForMvp);
       type MvpRow = { voter_id: string; candidate_id: string; is_staff_decision: boolean | null };
       const rows = (mvpVotes as MvpRow[]).filter((v) => !!v.candidate_id);
-      const staffPick = pickStaffDecision(rows, staffVoterIds);
+      const staffPick = pickStaffDecision(rows, staffVoterIds, {
+        applyBackfillHealing: !newPolicy,
+      });
       const votes = rows.map((v) => v.candidate_id);
 
       const winner = resolveValidMvp(votes, attendedCount, staffPick);

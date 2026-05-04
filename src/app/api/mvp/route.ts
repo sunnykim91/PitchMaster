@@ -40,6 +40,11 @@ export async function POST(request: NextRequest) {
   if (!matchId || !candidateId)
     return apiError("matchId and candidateId required");
 
+  // 본인 본인 투표 차단
+  if (candidateId === ctx.userId) {
+    return apiError("본인에게는 MVP 투표할 수 없습니다", 400);
+  }
+
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
@@ -84,8 +89,9 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // 운영진 투표는 is_staff_decision = true → 즉시 MVP 확정
-  const isStaffDecision = isStaff;
+  // 운영진 즉시 확정 권한은 mvp_vote_staff_only=ON 일 때만 작동.
+  // OFF 팀에선 운영진도 일반 회원처럼 1인 1표 (70% 룰 적용).
+  const isStaffDecision = mvpVoteStaffOnly && isStaff;
 
   const { data, error } = await db
     .from("match_mvp_votes")

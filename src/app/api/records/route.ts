@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
   if (!members) return apiSuccess({ records: [] });
 
   // Get matches: 시즌 날짜 범위 또는 직접 날짜로 필터 (stats_included=false 제외)
-  let matchQuery = db.from("matches").select("id").eq("team_id", ctx.teamId).eq("status", "COMPLETED").neq("stats_included", false);
+  let matchQuery = db.from("matches").select("id, match_date").eq("team_id", ctx.teamId).eq("status", "COMPLETED").neq("stats_included", false);
   if (startDate && endDate) {
     // 직접 날짜 범위 지정 (기간 필터)
     matchQuery = matchQuery.gte("match_date", startDate).lte("match_date", endDate);
@@ -220,7 +220,12 @@ export async function GET(request: NextRequest) {
   }
 
   // 경기별 MVP winner만 집계 — 참석자 70% 이상 투표 통과 시 최다득표자, 또는 운영진 직접 지정.
-  const { resolveValidMvp, pickStaffDecision } = await import("@/lib/mvpThreshold");
+  const { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
+  // 새 MVP 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04)
+  const { data: teamSettingsForMvp } = await db.from("teams").select("mvp_vote_staff_only").eq("id", ctx.teamId).maybeSingle();
+  const mvpVoteStaffOnlyForMvp = (teamSettingsForMvp as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
+  const matchDateById = new Map<string, string>();
+  for (const m of (matches ?? []) as Array<{ id: string; match_date: string }>) matchDateById.set(m.id, m.match_date);
   const attendedPerMatch = new Map<string, number>();
   for (const a of actualAttendRes.data ?? []) {
     attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
@@ -239,7 +244,10 @@ export async function GET(request: NextRequest) {
   }
   const mvpMap = new Map<string, number>();
   for (const [mid, agg] of mvpAggByMatch) {
-    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds);
+    const newPolicy = shouldApplyNewMvpPolicy(matchDateById.get(mid), mvpVoteStaffOnlyForMvp);
+    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
+      applyBackfillHealing: !newPolicy,
+    });
     const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
     if (winner) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
   }

@@ -319,7 +319,9 @@ export default function MatchDetailClient({
   const canRecord = statsRecordingStaffOnly ? isStaffOrAbove(role) : true;
   // MVP 투표 권한: mvp_vote_staff_only 켜져 있으면 STAFF 이상만 가능
   const canVoteMvp = mvpVoteStaffOnly ? isStaffOrAbove(role) : true;
-  const isStaffVoter = isStaffOrAbove(role); // 운영진 투표 = 즉시 확정
+  // 운영진 즉시 확정 권한은 mvp_vote_staff_only=ON 일 때만 작동.
+  // OFF 면 운영진도 일반 회원처럼 1인 1표 (70% 룰 적용).
+  const isStaffVoter = mvpVoteStaffOnly && isStaffOrAbove(role);
   const confirm = useConfirm();
   const { showToast } = useToast();
   const [loadingAllPresent, setLoadingAllPresent] = useState(false);
@@ -386,10 +388,35 @@ export default function MatchDetailClient({
     return ids;
   }, [voteData.attendance, membersData.members, dormantIds]);
 
-  /** 참석 멤버만 (용병 제외) — MVP 투표, 출석 체크용 */
+  /** 참석 투표(vote=ATTEND) 멤버 — 출석 체크 UI / 전술판 roster 용 */
   const attendingMembers = useMemo(
     () => baseRoster.filter((m) => attendingIds.has(m.id)),
     [baseRoster, attendingIds]
+  );
+
+  /** 실제 참석 멤버 — attendance_status=PRESENT/LATE — MVP 후보용. */
+  const presentMemberIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const a of voteData.attendance) {
+      if (a.attendance_status !== "PRESENT" && a.attendance_status !== "LATE") continue;
+      if (a.member_id) {
+        if (dormantIds.has(a.member_id)) continue;
+        ids.add(a.member_id);
+        continue;
+      }
+      if (a.user_id) {
+        if (dormantIds.has(a.user_id)) continue;
+        const member = membersData.members.find((m) => m.user_id === a.user_id);
+        if (member) ids.add(member.id);
+        else ids.add(a.user_id);
+      }
+    }
+    return ids;
+  }, [voteData.attendance, membersData.members, dormantIds]);
+
+  const presentMembers = useMemo(
+    () => baseRoster.filter((m) => presentMemberIds.has(m.id)),
+    [baseRoster, presentMemberIds]
   );
 
   /** 전술판 roster: 참석 멤버 + 용병 */
@@ -755,8 +782,9 @@ export default function MatchDetailClient({
             canRecord={canRecord}
             canVoteMvp={canVoteMvp}
             isStaffVoter={isStaffVoter}
-            attendeeCount={attendingMembers.length}
+            attendeeCount={presentMembers.length}
             attendingMembers={attendingMembers}
+            mvpCandidates={presentMembers}
             fullRoster={fullRoster}
             refetchGoals={refetchGoals}
             refetchMvp={refetchMvp}
