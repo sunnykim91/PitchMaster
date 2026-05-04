@@ -215,95 +215,206 @@ function calculateFairDistribution(
   return { high, low, highCount: fieldCount - lowCount, lowCount };
 }
 
-/* ── Futsal-specific scheduling (slot-distribution-aware) ── */
+/* ── Futsal-specific scheduling (pre-allocation + slot matching) ── */
 
 /**
- * 풋살 전용 자동편성 — 슬롯 분포 우선 매칭.
+ * 풋살 전용 자동편성 v3 — capacity-aware 사전 분배 + 슬롯 매칭.
  *
- * 축구 알고리즘은 시간 분배 → 슬롯 매칭 두 단계인데, 풋살은 슬롯 분포가 비대칭(2 FIXO·2 ALA·1 PIVO)
- * 이라 시간 분배만 보면 매 쿼터 출전 인원의 선호 분포가 슬롯 분포와 안 맞아 빈 슬롯 발생.
+ * v1: 잔여 시간 우선 → 카테고리 매칭 선수가 영원히 밀려 7·8쿼터 빈 슬롯
+ * v2: ideal index 균등 분산 → capacity 충돌 시 음수까지 진행해 같은 쿼터에 6,7명 매칭 + 다른 쿼터 빈 자리
+ * v3 (이번): 매 쿼터 capacity 정확 추적, 1슬롯씩 채워가며 후보 우선순위는 (잔여/남은쿼터) 비율 + 출전 횟수
  *
- * 이 함수는 매 쿼터마다 슬롯 순서대로 그리디 매칭. 잔여 출전 시간 추적해 균등 분배.
- * 페어/하프쿼터: 0.5는 풀쿼터로 합쳐 처리(반올림 X, 잔여 0.5는 매 쿼터 한 슬롯에 두 명 공유로).
+ * 시뮬 검증: 8명 풋살(GK 8Q + ALA·ALA·PIVO 6Q + FIXO·FIXO·PIVO·SUNHWI 5.5Q) + 6인제 2-2-1 + 8쿼터
+ *   → 매 쿼터 정확히 5 필드 슬롯 채움, 각 선수 needed 정확 매칭, 빈 슬롯 0
  */
 function scheduleQuartersFutsal(
   players: PlayerAssignment[],
   quarterCount: number,
   formation: FormationTemplate,
 ): QuarterResult[] {
-  const results: QuarterResult[] = [];
-  const remaining = new Map<string, number>();
-  for (const p of players) remaining.set(p.id, p.quarters);
-
-  // GK 후보 분리
-  const gks = players.filter((p) => p.isGK);
-  const fieldPlayers = players.filter((p) => !p.isGK);
-
-  // 슬롯 정렬: GK 1개 + 필드 슬롯들. 필드는 formation 정의 순서 그대로.
   const gkSlot = formation.slots.find((s) => s.role === "GK") ?? null;
   const fieldSlots = formation.slots.filter((s) => s.role !== "GK");
+  const slotsPerQ = fieldSlots.length;
+
+  const gks = players.filter((p) => p.isGK);
+  const fieldPlayers = players.filter((p) => !p.isGK);
 
   function getAllPos(p: PlayerAssignment): PreferredPosition[] {
     const list = p.preferredPositions ?? (p.preferredPosition ? [p.preferredPosition] : []);
     return list.filter((x): x is PreferredPosition => !!x);
   }
 
+  // ── Step 1: 페어 — 0.5 잔여 있는 선수 2명씩 ──
+  const halfQPlayers = fieldPlayers.filter((p) => p.quarters % 1 !== 0);
+  const pairs: Array<[PlayerAssignment, PlayerAssignment]> = [];
+  for (let i = 0; i + 1 < halfQPlayers.length; i += 2) {
+    pairs.push([halfQPlayers[i], halfQPlayers[i + 1]]);
+  }
+  const orphanHalf = halfQPlayers.length % 2 === 1 ? halfQPlayers[halfQPlayers.length - 1] : null;
+  // 페어 출전 쿼터: 균등 분산. 페어 N개를 quarterCount에 균등 배치.
+  const pairQuarters: number[] = [];
+  if (pairs.length > 0) {
+    const gap = Math.max(1, Math.floor(quarterCount / pairs.length));
+    for (let i = 0; i < pairs.length; i++) {
+      pairQuarters.push(Math.min(quarterCount, 1 + i * gap));
+    }
+  }
+
+  // ── Step 2: 매 쿼터 capacity-aware 라운드로빈 사전 분배 ──
+  // 각 선수 풀쿼터 needed:
+  //   - 페어 선수: floor(quarters)
+  //   - 외톨이 0.5: floor (0.5 손실 — 페어 짝수 권장)
+  //   - 그 외: quarters 그대로
+  const remaining = new Map<string, number>();
+  const playerPairQ = new Map<string, number>();
+  for (let i = 0; i < pairs.length; i++) {
+    const [p1, p2] = pairs[i];
+    playerPairQ.set(p1.id, pairQuarters[i]);
+    playerPairQ.set(p2.id, pairQuarters[i]);
+  }
+  for (const p of fieldPlayers) {
+    const isInPair = playerPairQ.has(p.id);
+    const isOrphan = orphanHalf?.id === p.id;
+    remaining.set(p.id, isInPair || isOrphan ? Math.floor(p.quarters) : p.quarters);
+  }
+
+  // playerQuarters: 선수별 출전 쿼터 (페어/풀쿼터)
+  const playerQuarters = new Map<string, Array<{ quarter: number; type: "full" | "first_half" | "second_half" }>>();
+  for (const p of fieldPlayers) playerQuarters.set(p.id, []);
+
+  // 페어 먼저 등록
+  for (let i = 0; i < pairs.length; i++) {
+    const [p1, p2] = pairs[i];
+    const q = pairQuarters[i];
+    playerQuarters.get(p1.id)!.push({ quarter: q, type: "first_half" });
+    playerQuarters.get(p2.id)!.push({ quarter: q, type: "second_half" });
+  }
+
+  // 매 쿼터 capacity = slotsPerQ. 페어 슬롯 차감.
+  const capacityRemaining = new Array(quarterCount).fill(slotsPerQ);
+  for (const q of pairQuarters) capacityRemaining[q - 1] -= 1;
+
+  // 매 쿼터 1슬롯씩 채우며 capacity 정확 추적.
+  // 우선순위: (잔여 / 남은 쿼터) 비율 높은 선수 → 균등 분배. 동률 시 출전 횟수 적은 선수.
+  for (let q = 1; q <= quarterCount; q++) {
+    const remainingQuarters = quarterCount - q + 1;
+    while (capacityRemaining[q - 1] > 0) {
+      // 이번 쿼터 이미 사용한 선수
+      const usedThisQ = new Set<string>();
+      for (const [id, arr] of playerQuarters.entries()) {
+        if (arr.some((x) => x.quarter === q)) usedThisQ.add(id);
+      }
+
+      const candidates = fieldPlayers.filter((p) => {
+        if ((remaining.get(p.id) ?? 0) <= 0) return false;
+        if (usedThisQ.has(p.id)) return false;
+        if (playerPairQ.get(p.id) === q) return false; // 페어 쿼터엔 풀쿼터 불가
+        return true;
+      });
+
+      if (candidates.length === 0) break;
+
+      candidates.sort((a, b) => {
+        const aRatio = (remaining.get(a.id) ?? 0) / remainingQuarters;
+        const bRatio = (remaining.get(b.id) ?? 0) / remainingQuarters;
+        if (Math.abs(aRatio - bRatio) > 0.001) return bRatio - aRatio;
+        const aCount = playerQuarters.get(a.id)?.length ?? 0;
+        const bCount = playerQuarters.get(b.id)?.length ?? 0;
+        return aCount - bCount;
+      });
+
+      const player = candidates[0];
+      playerQuarters.get(player.id)!.push({ quarter: q, type: "full" });
+      remaining.set(player.id, (remaining.get(player.id) ?? 0) - 1);
+      capacityRemaining[q - 1] -= 1;
+    }
+  }
+
+  // ── Step 3: 쿼터별 슬롯 매칭 ──
+  const results: QuarterResult[] = [];
   for (let q = 1; q <= quarterCount; q++) {
     const assignments: SlotAssignment[] = [];
-    const usedThisQ = new Set<string>();
 
-    // ── GK ──
+    // GK 슬롯
     if (gkSlot) {
-      // GK 잔여 시간 가장 많은 사람
-      const gkPick = gks
-        .filter((p) => (remaining.get(p.id) ?? 0) > 0)
-        .sort((a, b) => (remaining.get(b.id) ?? 0) - (remaining.get(a.id) ?? 0))[0];
+      const gkPick = gks[(q - 1) % Math.max(1, gks.length)] ?? null;
       if (gkPick) {
         assignments.push({
           slotId: gkSlot.id, slotLabel: gkSlot.label,
           playerId: gkPick.id, playerName: gkPick.name, type: "full",
         });
-        usedThisQ.add(gkPick.id);
-        remaining.set(gkPick.id, (remaining.get(gkPick.id) ?? 0) - 1);
       }
     }
 
-    // ── 필드 슬롯: formation 순서 그대로 매칭 ──
-    for (const slot of fieldSlots) {
-      const slotRole = slot.role; // "FIXO" / "ALA" / "PIVO" / 또는 SOCCER role
-      const slotCat = PREF_TO_POSITION[slotRole as PreferredPosition] ?? null;
+    // 이 쿼터에 출전한 필드 선수 분류
+    const qFull: PlayerAssignment[] = [];
+    const qFirstHalf: PlayerAssignment[] = [];
+    const qSecondHalf: PlayerAssignment[] = [];
+    for (const p of fieldPlayers) {
+      const entry = playerQuarters.get(p.id)!.find((x) => x.quarter === q);
+      if (!entry) continue;
+      if (entry.type === "full") qFull.push(p);
+      else if (entry.type === "first_half") qFirstHalf.push(p);
+      else qSecondHalf.push(p);
+    }
 
-      // 후보 풀: 잔여 시간 있고 이번 쿼터 미사용
-      const pool = fieldPlayers.filter(
-        (p) => (remaining.get(p.id) ?? 0) > 0 && !usedThisQ.has(p.id),
-      );
-
-      // 1차: 슬롯 role 정확 매칭 (선호에 풋살 코드 그대로 있는 경우)
-      let candidates = pool.filter((p) => getAllPos(p).includes(slotRole as PreferredPosition));
-
-      // 2차: 카테고리 매칭 (DF/MF/FW)
-      if (candidates.length === 0 && slotCat) {
-        candidates = pool.filter((p) =>
-          getAllPos(p).some((pos) => PREF_TO_POSITION[pos] === slotCat),
-        );
-      }
-
-      // 3차: 잔여 시간 있는 아무 선수 (강제 채움)
-      if (candidates.length === 0) candidates = pool;
-
-      if (candidates.length === 0) continue; // 출전 가능한 선수 없음 (희귀 케이스)
-
-      // 균등 분배: 잔여 시간 가장 많은 선수
-      const player = [...candidates].sort(
-        (a, b) => (remaining.get(b.id) ?? 0) - (remaining.get(a.id) ?? 0),
-      )[0];
-
-      assignments.push({
-        slotId: slot.id, slotLabel: slot.label,
-        playerId: player.id, playerName: player.name, type: "full",
+    // 슬롯 매칭 요청 만들기
+    type SlotReq = { ids: string[]; type: "full" | "first_half" | "second_half"; player: PlayerAssignment };
+    const slotReqs: SlotReq[] = [];
+    for (const p of qFull) slotReqs.push({ ids: [p.id], type: "full", player: p });
+    // 페어: first/second 같은 슬롯
+    const pairCount = Math.min(qFirstHalf.length, qSecondHalf.length);
+    for (let i = 0; i < pairCount; i++) {
+      slotReqs.push({
+        ids: [qFirstHalf[i].id, qSecondHalf[i].id],
+        type: "first_half",
+        player: qFirstHalf[i],
       });
-      usedThisQ.add(player.id);
-      remaining.set(player.id, (remaining.get(player.id) ?? 0) - 1);
+    }
+    // 미페어 half — 풀로 처리
+    for (let i = pairCount; i < qFirstHalf.length; i++) {
+      slotReqs.push({ ids: [qFirstHalf[i].id], type: "full", player: qFirstHalf[i] });
+    }
+    for (let i = pairCount; i < qSecondHalf.length; i++) {
+      slotReqs.push({ ids: [qSecondHalf[i].id], type: "full", player: qSecondHalf[i] });
+    }
+
+    // 슬롯 매칭 (1차 정확 → 2차 카테고리 → 3차 강제)
+    const usedSlots = new Set<string>();
+    const usedReqs = new Set<SlotReq>();
+
+    function assignReq(slot: FormationSlot, req: SlotReq) {
+      if (req.ids.length === 2) {
+        const p1 = fieldPlayers.find((p) => p.id === req.ids[0])!;
+        const p2 = fieldPlayers.find((p) => p.id === req.ids[1])!;
+        assignments.push({ slotId: slot.id, slotLabel: slot.label, playerId: p1.id, playerName: p1.name, type: "first_half" });
+        assignments.push({ slotId: slot.id, slotLabel: slot.label, playerId: p2.id, playerName: p2.name, type: "second_half" });
+      } else {
+        const p = fieldPlayers.find((pl) => pl.id === req.ids[0])!;
+        assignments.push({ slotId: slot.id, slotLabel: slot.label, playerId: p.id, playerName: p.name, type: req.type });
+      }
+      usedSlots.add(slot.id);
+      usedReqs.add(req);
+    }
+
+    // 1차: 정확 매칭 (req의 player 선호에 슬롯 role 포함)
+    for (const slot of fieldSlots) {
+      if (usedSlots.has(slot.id)) continue;
+      const req = slotReqs.find((r) => !usedReqs.has(r) && getAllPos(r.player).includes(slot.role as PreferredPosition));
+      if (req) assignReq(slot, req);
+    }
+    // 2차: 카테고리 매칭
+    for (const slot of fieldSlots) {
+      if (usedSlots.has(slot.id)) continue;
+      const slotCat = PREF_TO_POSITION[slot.role as PreferredPosition] ?? null;
+      const req = slotReqs.find((r) => !usedReqs.has(r) && getAllPos(r.player).some((pos) => PREF_TO_POSITION[pos] === slotCat));
+      if (req) assignReq(slot, req);
+    }
+    // 3차: 강제 채움 (남은 req 어디든)
+    for (const slot of fieldSlots) {
+      if (usedSlots.has(slot.id)) continue;
+      const req = slotReqs.find((r) => !usedReqs.has(r));
+      if (req) assignReq(slot, req);
     }
 
     results.push({ quarter: q, assignments, formationId: formation.id });
