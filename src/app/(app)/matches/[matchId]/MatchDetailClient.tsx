@@ -394,21 +394,21 @@ export default function MatchDetailClient({
     [baseRoster, attendingIds]
   );
 
-  /** 실제 참석 멤버 — attendance_status=PRESENT/LATE — MVP 후보용. */
+  /**
+   * 실제 참석 멤버 — attendance_status=PRESENT/LATE — MVP 후보용.
+   * baseRoster.id 가 user_id 우선이라 attendingIds 와 동일하게 user_id 변환 필수.
+   */
   const presentMemberIds = useMemo(() => {
     const ids = new Set<string>();
     for (const a of voteData.attendance) {
       if (a.attendance_status !== "PRESENT" && a.attendance_status !== "LATE") continue;
       if (a.member_id) {
         if (dormantIds.has(a.member_id)) continue;
-        ids.add(a.member_id);
-        continue;
-      }
-      if (a.user_id) {
+        const member = membersData.members.find((m) => m.id === a.member_id);
+        if (member) ids.add(member.users?.id ?? member.id);
+      } else if (a.user_id) {
         if (dormantIds.has(a.user_id)) continue;
-        const member = membersData.members.find((m) => m.user_id === a.user_id);
-        if (member) ids.add(member.id);
-        else ids.add(a.user_id);
+        ids.add(a.user_id);
       }
     }
     return ids;
