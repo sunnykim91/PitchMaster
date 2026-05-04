@@ -324,7 +324,7 @@ describe("PUT /api/members", () => {
     const res = await PUT(makeRequest({ memberId: "mem-1", role: "STAFF" }));
     expect(res.status).toBe(400);
     const json = await res.json();
-    expect(json.error).toContain("자신의 역할");
+    expect(json.error).toContain("본인 권한");
   });
 
   it("400: 유효하지 않은 역할 값 거부", async () => {
@@ -558,7 +558,10 @@ describe("DELETE /api/members", () => {
 
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(presidentSession);
-    const db = createMockDb(["team_members", null, { message: "delete failed" }]);
+    const db = createMockDb(
+      ["team_members", { user_id: "other-user", role: "MEMBER" }], // target lookup (회장 보호 통과)
+      ["team_members", null, { message: "delete failed" }],         // BAN update 에러
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await DELETE(makeRequest("mem-1"));

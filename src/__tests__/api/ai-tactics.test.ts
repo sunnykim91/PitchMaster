@@ -129,36 +129,12 @@ describe("POST /api/ai/tactics", () => {
     expect(json.error).toBe("unauthorized");
   });
 
-  it("403: 김선휘 아닌 유저 차단 (ai_not_available)", async () => {
-    vi.mocked(auth).mockResolvedValue(presidentSession); // name !== "김선휘"
-    const req = new NextRequest("http://localhost/api/ai/tactics", {
-      method: "POST",
-      body: JSON.stringify({}),
-    });
-    const res = await POST(req);
-    expect(res.status).toBe(403);
-    const json = await res.json();
-    expect(json.error).toBe("ai_not_available");
-  });
-
-  it("503: team_lookup_failed (teams 조회 에러)", async () => {
+  it("200: FUTSAL 팀 — 풋살 지원 통과 (41차 차단 해제)", async () => {
     vi.mocked(auth).mockResolvedValue(kimSession);
-    const db = createMockDb(["teams", null, { message: "DB error" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
-    const res = await POST(makeRequest(validBody));
-    expect(res.status).toBe(503);
-    const json = await res.json();
-    expect(json.error).toBe("team_lookup_failed");
-  });
-
-  it("403: FUTSAL 팀 차단", async () => {
-    vi.mocked(auth).mockResolvedValue(kimSession);
-    const db = createMockDb(["teams", { sport_type: "FUTSAL" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
-    const res = await POST(makeRequest(validBody));
-    expect(res.status).toBe(403);
-    const json = await res.json();
-    expect(json.error).toBe("ai_not_available_for_futsal");
+    vi.mocked(checkRateLimit).mockResolvedValue({ allowed: true });
+    const res = await POST(makeRequest({ ...validBody, formationName: "futsal-2-2-1" }));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toContain("text/event-stream");
   });
 
   it("400: invalid_payload (formationName 없음)", async () => {

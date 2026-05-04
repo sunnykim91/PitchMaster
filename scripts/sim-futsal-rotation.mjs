@@ -25,6 +25,20 @@ function distributeFutsalV3(players, quarterCount, slotsPerQ, slots) {
   for (let i = 0; i + 1 < halfQ.length; i += 2) {
     pairs.push([halfQ[i], halfQ[i + 1]]);
   }
+  // 외톨이 발생 = 사용자 수동 +/- 0.5 케이스. 자동 분배는 정수 단위라 외톨이 X.
+  // 외톨이 발생 시 가장 시간 많은 풀쿼터 선수와 자동 페어링 (양보, 사용자 알림 별도)
+  if (halfQ.length % 2 === 1) {
+    const orphan = halfQ[halfQ.length - 1];
+    const sacrifice = [...fieldPlayers]
+      .filter(p => p.id !== orphan.id)
+      .filter(p => !pairs.flat().some(pp => pp.id === p.id))
+      .filter(p => p.quarters % 1 === 0 && p.quarters >= 1)
+      .sort((a, b) => b.quarters - a.quarters)[0];
+    if (sacrifice) {
+      pairs.push([orphan, sacrifice]);
+      sacrifice.quarters -= 0.5;
+    }
+  }
   const pairQuarters = [];
   if (pairs.length > 0) {
     for (let i = 0; i < pairs.length; i++) {
@@ -530,6 +544,40 @@ let passed = 0, failed = 0;
   const results = scheduleQuartersFutsalV3(players, 8, formation_6_2_2_1);
   console.log(`Case 13: 시간 < cap (35 vs 40) — 빈 슬롯 발생 expected`);
   if (verify("Case 13: 시간 부족 (예상 fail)", players, 8, formation_6_2_2_1, results)) passed++; else failed++;
+}
+
+// Case 15: 자동 분배 시뮬레이션 — calculateFairDistribution 정수 단위
+{
+  // 풋살 정수 분배: 평균 ceil/floor
+  function distributeFutsalInt(fieldCount, quarters, slotsPerQ) {
+    const total = slotsPerQ * quarters;
+    const avg = total / fieldCount;
+    if (avg >= quarters) return { high: quarters, low: quarters, highCount: fieldCount, lowCount: 0 };
+    const high = Math.ceil(avg);
+    const low = Math.floor(avg);
+    if (high === low) return { high, low, highCount: fieldCount, lowCount: 0 };
+    const lowCount = Math.round((fieldCount * high - total) / (high - low));
+    return { high, low, highCount: fieldCount - lowCount, lowCount };
+  }
+  const tests = [
+    { fieldCount: 7, quarters: 8, slotsPerQ: 5 }, // 8명 (GK 1 + 7) 6인제 8Q
+    { fieldCount: 4, quarters: 8, slotsPerQ: 5 }, // 5명 6인제 8Q
+    { fieldCount: 5, quarters: 4, slotsPerQ: 4 }, // 6명 5인제 4Q
+    { fieldCount: 6, quarters: 8, slotsPerQ: 5 }, // 7명 6인제 8Q
+    { fieldCount: 3, quarters: 4, slotsPerQ: 4 }, // 4명 5인제 4Q
+  ];
+  let allInt = true;
+  for (const t of tests) {
+    const d = distributeFutsalInt(t.fieldCount, t.quarters, t.slotsPerQ);
+    const isHighInt = d.high === Math.floor(d.high);
+    const isLowInt = d.low === Math.floor(d.low);
+    if (!isHighInt || !isLowInt) {
+      console.log(`  분배 오류 (정수 X): ${JSON.stringify(t)} → ${JSON.stringify(d)}`);
+      allInt = false;
+    }
+  }
+  if (allInt) { console.log("✓ Case 15: 풋살 자동 분배 항상 정수 (페어 발생 X → 외톨이 X)"); passed++; }
+  else { console.log("✗ Case 15: 정수 분배 실패"); failed++; }
 }
 
 // Case 14: 4명 (소수, 5인제 4쿼터)

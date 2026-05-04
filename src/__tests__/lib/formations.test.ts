@@ -111,9 +111,9 @@ describe("formationTemplates", () => {
 });
 
 describe("getFormationsForSportAndCount", () => {
-  it("풋살 5인제 포메이션 3개", () => {
+  it("풋살 5인제 포메이션 6개", () => {
     const formations = getFormationsForSportAndCount("FUTSAL", 5);
-    expect(formations).toHaveLength(3);
+    expect(formations).toHaveLength(6);
     formations.forEach((f) => expect(f.fieldCount).toBe(5));
   });
 

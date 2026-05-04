@@ -188,6 +188,7 @@ function calculateFairDistribution(
   fieldCount: number,
   quarters: number,
   slotsPerQ: number = 10,
+  sportType: SportType = "SOCCER",
 ) {
   if (fieldCount === 0)
     return { high: 0, low: 0, highCount: 0, lowCount: 0 };
@@ -203,8 +204,12 @@ function calculateFairDistribution(
       lowCount: 0,
     };
 
-  const high = Math.ceil(avg * 2) / 2;
-  const low = Math.floor(avg * 2) / 2;
+  // 풋살은 정수 단위 분배 — 0.5 단위 자동 분배 시 외톨이(페어 홀수) 발생 위험.
+  // 정수 분배: high = ceil(avg), low = floor(avg). 페어 자체가 발생 안 함.
+  // 사용자가 수동 +/- 0.5 클릭 시 페어 발생은 그대로 처리.
+  const isFutsal = sportType === "FUTSAL";
+  const high = isFutsal ? Math.ceil(avg) : Math.ceil(avg * 2) / 2;
+  const low = isFutsal ? Math.floor(avg) : Math.floor(avg * 2) / 2;
 
   if (high === low)
     return { high, low, highCount: fieldCount, lowCount: 0 };
@@ -999,6 +1004,7 @@ export default function AutoFormationBuilder({
       fieldCount,
       quarterCount,
       slotsPerQuarter,
+      sportType,
     );
 
     let highAssigned = 0;

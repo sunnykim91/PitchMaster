@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { GET, POST } from "@/app/api/diary/route";
 import { createMockDb } from "../helpers/db";
-import { memberSession, noTeamSession } from "../helpers/auth";
+import { memberSession, noTeamSession, staffSession } from "../helpers/auth";
 
 vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/supabase/admin", () => ({ getSupabaseAdmin: vi.fn() }));
@@ -139,15 +139,21 @@ describe("POST /api/diary", () => {
     expect(res.status).toBe(403);
   });
 
-  it("503: DB 없는 경우", async () => {
+  it("403: MEMBER 권한 거부 (STAFF 이상만 작성 가능)", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
+    const res = await POST(makeRequest(diaryBody));
+    expect(res.status).toBe(403);
+  });
+
+  it("503: DB 없는 경우", async () => {
+    vi.mocked(auth).mockResolvedValue(staffSession);
     vi.mocked(getSupabaseAdmin).mockReturnValue(null);
     const res = await POST(makeRequest(diaryBody));
     expect(res.status).toBe(503);
   });
 
   it("201: 다이어리 upsert 성공", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb(
       ["matches", { id: "m1" }],
       ["match_diaries", mockDiary],
@@ -162,7 +168,7 @@ describe("POST /api/diary", () => {
   });
 
   it("201: 선택적 필드 없이도 저장 가능", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     const minimalDiary = { id: "d2", match_id: "m1", weather: null, condition: null, memo: null, photos: [] };
     const db = createMockDb(
       ["matches", { id: "m1" }],
@@ -177,7 +183,7 @@ describe("POST /api/diary", () => {
   });
 
   it("400: DB 에러 시 에러 반환", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb(
       ["matches", { id: "m1" }],
       ["match_diaries", null, { message: "upsert failed" }],

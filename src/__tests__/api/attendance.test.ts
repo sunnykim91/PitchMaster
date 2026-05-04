@@ -196,9 +196,14 @@ describe("POST /api/attendance", () => {
   it("403: 대리 투표 — MEMBER 권한 거부", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
 
+    const futureDeadline = new Date(Date.now() + 86400000).toISOString();
+    const matchData = { vote_deadline: futureDeadline, team_id: "team-test-001" };
     // 운영진 권한 확인 쿼리 → MEMBER 반환
     const callerMember = { role: "MEMBER" };
-    const db = createMockDb(["team_members", callerMember]);
+    const db = createMockDb(
+      ["matches", matchData],
+      ["team_members", callerMember],
+    );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     // targetUserId가 자신과 다름 → 대리 투표
@@ -213,6 +218,8 @@ describe("POST /api/attendance", () => {
   it("200: 대리 투표 — STAFF 권한 성공", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
 
+    const futureDeadline = new Date(Date.now() + 86400000).toISOString();
+    const matchData = { vote_deadline: futureDeadline, team_id: "team-test-001" };
     const callerMember = { role: "STAFF" };
     const targetMember = { id: "mem-target" };
     const existingRecord = null;
@@ -224,10 +231,11 @@ describe("POST /api/attendance", () => {
     };
 
     const db = createMockDb(
-      ["team_members", callerMember],  // 대리 투표 권한 확인
-      ["team_members", targetMember],  // target user의 member_id 조회
-      ["match_attendance", existingRecord], // 기존 기록 없음
-      ["match_attendance", insertResult]    // insert
+      ["matches", matchData],          // 1) 경기 존재 체크
+      ["team_members", callerMember],  // 2) 대리 투표 권한 확인
+      ["team_members", targetMember],  // 3) target user의 member_id 조회
+      ["match_attendance", existingRecord], // 4) 기존 기록 없음
+      ["match_attendance", insertResult]    // 5) insert
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
