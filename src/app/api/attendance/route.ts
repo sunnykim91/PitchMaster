@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
   let query = db
     .from("match_attendance")
-    .select("*, users(id, name, preferred_positions), member:member_id(id, pre_name, pre_phone, user_id, coach_positions, users(id, name, preferred_positions))");
+    .select("id, match_id, user_id, member_id, vote, attendance_status, voted_at, users(id, name, preferred_positions), member:member_id(id, pre_name, pre_phone, user_id, coach_positions, users(id, name, preferred_positions))");
 
   if (matchId) {
     // Verify match belongs to team

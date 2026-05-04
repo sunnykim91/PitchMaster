@@ -25,7 +25,7 @@ export async function getMatchDetailData(matchId: string, teamId: string, _enabl
     // select * 로 안전하게 — 마이그레이션 미적용 컬럼(예: mvp_vote_staff_only) 때문에
     // 전체 쿼리가 실패해 fallback UI(회색 유니폼 등)가 나오는 사태 방지
     db.from("teams").select("*").eq("id", teamId).single(),
-    db.from("match_attendance").select("id, match_id, user_id, member_id, vote, voted_at, users(id, name, preferred_positions), member:team_members(id, pre_name, user_id, coach_positions, users(id, name, preferred_positions))").eq("match_id", matchId),
+    db.from("match_attendance").select("id, match_id, user_id, member_id, vote, attendance_status, voted_at, users(id, name, preferred_positions), member:team_members(id, pre_name, user_id, coach_positions, users(id, name, preferred_positions))").eq("match_id", matchId),
     db.from("match_comments").select("id, user_id, content, created_at, users(name)").eq("match_id", matchId).order("created_at", { ascending: true }),
   ]);
 
