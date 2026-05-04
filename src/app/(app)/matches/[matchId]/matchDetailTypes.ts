@@ -75,6 +75,8 @@ export type AttendanceVoteRow = {
   user_id: string | null;
   member_id: string | null;
   vote: "ATTEND" | "ABSENT" | "MAYBE";
+  /** 실제 출석 체크 상태 — 경기 후 운영진이 입력 (PRESENT/LATE/ABSENT). MVP 후보 PRESENT/LATE 기준 필터링에 사용. */
+  attendance_status?: "PRESENT" | "LATE" | "ABSENT" | null;
   voted_at?: string | null;
   users: { id: string; name: string; preferred_positions?: string[] } | null;
   member: { id: string; pre_name: string | null; user_id: string | null; coach_positions?: string[] | null; users: { id: string; name: string; preferred_positions?: string[] } | null } | null;
