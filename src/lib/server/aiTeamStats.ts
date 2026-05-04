@@ -153,6 +153,7 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
 
   // 완료 경기 (REGULAR — 자체전·이벤트 제외) 최근 30경기.
   // REGULAR 경기도 stats_included=false로 수동 제외된 경우가 있어 방어적으로 함께 필터링.
+  // opponent_name이 null/"미정"/"미상"이면 외부 상대 경기로 볼 수 없으므로 stats에서 제외 (AI 가상 전적 hallucination 방지).
   const { data: matches } = await db
     .from("matches")
     .select("id, match_date, opponent_name, match_type")
@@ -160,6 +161,8 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
     .eq("status", "COMPLETED")
     .eq("match_type", "REGULAR")
     .neq("stats_included", false)
+    .not("opponent_name", "is", null)
+    .not("opponent_name", "in", '("미정","미상","내부")')
     .order("match_date", { ascending: false })
     .limit(30);
 

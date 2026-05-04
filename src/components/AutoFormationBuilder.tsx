@@ -24,6 +24,52 @@ import { cn } from "@/lib/utils";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { Zap, Sparkles, Loader2, Palette } from "lucide-react";
 
+/* ── Fuzzy player matching (AI 한글 hallucination 폴백) ── */
+// AI가 "테스트피벗1" → "테스트피벳1" 같이 받침/자모 1글자 변형해서 응답하는 케이스 자동 복구
+function levenshtein(a: string, b: string): number {
+  if (a === b) return 0;
+  const al = a.length, bl = b.length;
+  if (al === 0) return bl;
+  if (bl === 0) return al;
+  const prev = new Array(bl + 1);
+  const curr = new Array(bl + 1);
+  for (let j = 0; j <= bl; j++) prev[j] = j;
+  for (let i = 1; i <= al; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= bl; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
+    }
+    for (let j = 0; j <= bl; j++) prev[j] = curr[j];
+  }
+  return prev[bl];
+}
+
+function fuzzyMatchPlayer<T extends { id: string; name: string }>(
+  target: string,
+  candidates: T[],
+  used: Set<string>,
+): T | null {
+  // 짧은 이름(3자 이하)은 fuzzy 미적용 — "김선휘" vs "김선화" 오매칭 위험
+  if (target.length < 4) return null;
+  let bestDist = Infinity;
+  let bestList: T[] = [];
+  for (const c of candidates) {
+    if (used.has(c.id)) continue;
+    if (Math.abs(c.name.length - target.length) > 1) continue;
+    const dist = levenshtein(c.name, target);
+    if (dist > 1) continue;
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestList = [c];
+    } else if (dist === bestDist) {
+      bestList.push(c);
+    }
+  }
+  // 후보 1명일 때만 허용 (모호하면 거부)
+  return bestList.length === 1 ? bestList[0] : null;
+}
+
 /* ── Types ── */
 
 export type AttendingPlayer = {
@@ -1232,6 +1278,15 @@ export default function AutoFormationBuilder({
         return;
       }
       const data = await res.json();
+      // dev 디버깅용 — source/error/plansCount 만 가볍게 (raw response·player 이름 prod 노출 X)
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[AI풀플랜]", {
+          source: data.source,
+          error: data.error,
+          plansCount: Array.isArray(data.plans) ? data.plans.length : 0,
+          coachingLen: typeof data.coaching === "string" ? data.coaching.length : 0,
+        });
+      }
       setAiPlans(data.plans);
       setAiPlanSource(data.source ?? null);
       // 서버에서 이미 rule fallback 적용된 상태 — validation 원문은 노출 안 하고 친절한 문구로 대체
@@ -1276,18 +1331,39 @@ export default function AutoFormationBuilder({
     const newResults: QuarterResult[] = [];
     const skipped: number[] = [];
 
+    const isDev = process.env.NODE_ENV !== "production";
     for (const plan of source) {
       const fmt = formationTemplates.find((f) => f.name === plan.formation);
-      if (!fmt) { skipped.push(plan.quarter); continue; }
+      if (!fmt) {
+        if (isDev) console.warn(`[AI풀플랜→변환] Q${plan.quarter} formation 매칭 실패 — plan.formation="${plan.formation}"`);
+        skipped.push(plan.quarter); continue;
+      }
       // catalog 빌드와 동일한 unique label 사용 — AI 응답의 "FIXO 1"·"FIXO 2" 등 매칭 가능
       const uniqueLabels = getUniqueSlotLabels(fmt.slots);
       const slotByLabel = new Map(uniqueLabels.map((label, i) => [label, fmt.slots[i]]));
       const assignments: SlotAssignment[] = [];
+      const usedThisQuarter = new Set<string>();
       let allOk = true;
+      let failReason: string | null = null;
       for (const p of plan.placement) {
         const slot = slotByLabel.get(p.slot);
-        const player = playerByName.get(p.playerName);
-        if (!slot || !player) { allOk = false; break; }
+        let player = playerByName.get(p.playerName);
+        // exact 매칭 실패 시 fuzzy 폴백 — AI 한글 변형 hallucination ("피벗"→"피벳") 자동 복구
+        if (slot && !player) {
+          const fuzzy = fuzzyMatchPlayer(p.playerName, attendingPlayers, usedThisQuarter);
+          if (fuzzy) {
+            if (isDev) console.log(`[AI풀플랜→변환] Q${plan.quarter} fuzzy "${p.playerName}" → "${fuzzy.name}"`);
+            player = fuzzy;
+          }
+        }
+        if (!slot || !player) {
+          allOk = false;
+          failReason = !slot
+            ? `slot 매칭 실패 — p.slot="${p.slot}"`
+            : `player 매칭 실패 — p.playerName="${p.playerName}"`;
+          break;
+        }
+        usedThisQuarter.add(player.id);
         assignments.push({
           slotId: slot.id,
           slotLabel: slot.label,
@@ -1296,12 +1372,19 @@ export default function AutoFormationBuilder({
           type: "full",
         });
       }
-      if (!allOk) { skipped.push(plan.quarter); continue; }
+      if (!allOk) {
+        if (isDev) console.warn(`[AI풀플랜→변환] Q${plan.quarter} ${failReason}`);
+        skipped.push(plan.quarter); continue;
+      }
       // AI가 placement: [] 반환 시 allOk=true이지만 배치 없음 → 빈 positions → 전술판 초기화 버그
       // assignments가 비어있으면 fallback(currentResults)으로 처리
-      if (assignments.length === 0) { skipped.push(plan.quarter); continue; }
+      if (assignments.length === 0) {
+        if (isDev) console.warn(`[AI풀플랜→변환] Q${plan.quarter} placement 비어있음`);
+        skipped.push(plan.quarter); continue;
+      }
       newResults.push({ quarter: plan.quarter, assignments, formationId: fmt.id });
     }
+    if (isDev) console.log(`[AI풀플랜→변환] 성공 ${newResults.length}쿼터, 실패 ${skipped.length}쿼터${skipped.length ? `(${skipped.join(",")})` : ""}`);
 
     if (newResults.length === 0) {
       setAiPlanError("AI 플랜을 전술판 형식으로 변환하지 못했습니다.");
