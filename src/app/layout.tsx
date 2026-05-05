@@ -11,13 +11,14 @@ export const dynamic = "force-dynamic";
 
 const GA_ID = "G-XWRB861513";
 
-// 대시보드/기록 페이지의 숫자 디스플레이에만 사용. display: swap으로 render-blocking 회피.
+// 대시보드/기록 페이지의 숫자 디스플레이에 사용. display: swap 으로 render-blocking 회피.
+// preload: true — latin subset 1개라 비용 작고, stat 숫자 카드 폰트 swap 깜빡임 줄어듦.
 const bebasNeue = Bebas_Neue({
   weight: "400",
   subsets: ["latin"],
   display: "swap",
   variable: "--font-display-bebas",
-  preload: false,
+  preload: true,
 });
 
 export const metadata: Metadata = {
