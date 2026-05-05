@@ -18,6 +18,7 @@ import { EmptyState } from "@/components/EmptyState";
 import dynamic from "next/dynamic";
 import PitchScoreCard from "@/components/pitchAttributes/PitchScoreCard";
 import PeerEvaluationDialog from "@/components/pitchAttributes/PeerEvaluationDialog";
+import TeamPositionRankings from "@/components/pitchAttributes/TeamPositionRankings";
 import type { SportType } from "@/lib/playerAttributes/types";
 
 // 차트 로딩 인디케이터
@@ -547,6 +548,11 @@ export default function RecordsClient({
       {/* 시즌 어워드 — TODO: 디자인 개선 후 활성화
       {!isAllTime && <SeasonAwardsCard seasonId={seasonId} />}
       */}
+
+      {/* ── PitchScore 포지션별 TOP 3 (Phase 3 1차) ── */}
+      {showPitchScoreEntry && teamId && sportType && (
+        <TeamPositionRankings teamId={teamId} sportType={sportType} />
+      )}
 
       {/* ── Row 2: 팀 랭킹 (PC: 3열 가로 배치) ── */}
       <Card>
