@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn, formatPhone } from "@/lib/utils";
+import { cn, formatPhone, compactKakaoImage } from "@/lib/utils";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Search } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
@@ -692,7 +692,16 @@ export default function MembersClient({
                       <p className="text-sm font-semibold truncate flex items-center gap-1.5">
                         <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-1 ring-border">
                           {member.profileImageUrl ? (
-                            <img src={member.profileImageUrl} alt="" className="h-full w-full object-cover" />
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={compactKakaoImage(member.profileImageUrl, 110)}
+                              alt=""
+                              width={28}
+                              height={28}
+                              loading="lazy"
+                              decoding="async"
+                              className="h-full w-full object-cover"
+                            />
                           ) : (
                             <span className="text-[10px] font-bold text-muted-foreground">{member.name.charAt(0)}</span>
                           )}
@@ -737,7 +746,16 @@ export default function MembersClient({
                       <p className="text-sm font-semibold truncate flex items-center gap-1.5">
                         <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-1 ring-border">
                           {member.profileImageUrl ? (
-                            <img src={member.profileImageUrl} alt="" className="h-full w-full object-cover" />
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={compactKakaoImage(member.profileImageUrl, 110)}
+                              alt=""
+                              width={28}
+                              height={28}
+                              loading="lazy"
+                              decoding="async"
+                              className="h-full w-full object-cover"
+                            />
                           ) : (
                             <span className="text-[10px] font-bold text-muted-foreground">{member.name.charAt(0)}</span>
                           )}

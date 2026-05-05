@@ -75,6 +75,21 @@ export function formatDateDot(dateStr: string): string {
   return `${y}.${m}.${d}`;
 }
 
+/**
+ * 카카오 프로필 이미지 URL 사이즈 축소.
+ *
+ * 카카오 CDN 패턴: `.../img_640x640.jpg` → `.../img_110x110.jpg`
+ * 표시 사이즈 작은 곳(아바타 28~64px)에 640px 원본 로드 방지.
+ *
+ * 카카오 CDN 지원 사이즈(보통): 110·160·640·1024. 110 이 가장 작음.
+ * URL 패턴 안 맞으면 원본 반환 (안전).
+ */
+export function compactKakaoImage(url: string | null | undefined, size: number = 110): string {
+  if (!url) return "";
+  if (!/kakaocdn|kakao\.com|kakaousercontent/i.test(url)) return url;
+  return url.replace(/\/img(_\d+x\d+)?(\.[a-z]+)/i, `/img_${size}x${size}$2`);
+}
+
 /** Relative time display in Korean */
 export function relativeTime(dateStr: string): string {
   const now = new Date();

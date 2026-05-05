@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, SkipForward, RefreshCw, CheckCircle2 } from "lucide-react";
 import EvaluationModal from "./EvaluationModal";
+import { compactKakaoImage } from "@/lib/utils";
 import type { SportType } from "@/lib/playerAttributes/types";
 
 interface Recommendation {
@@ -242,8 +243,12 @@ export default function PeerEvaluationDialog({ open, onClose, teamId, sportType 
                         {rec.profile_image_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src={rec.profile_image_url}
+                            src={compactKakaoImage(rec.profile_image_url, 110)}
                             alt={rec.name}
+                            width={44}
+                            height={44}
+                            loading="lazy"
+                            decoding="async"
                             className="h-full w-full object-cover"
                           />
                         ) : (

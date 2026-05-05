@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { Check, Copy, Link2, Menu, ChevronDown, ChevronRight, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Share, Sun, Moon, LogOut } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
-import { cn } from "@/lib/utils";
+import { cn, compactKakaoImage } from "@/lib/utils";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import TeamLogo from "@/components/TeamLogo";
 import { initInstallPromptCapture, triggerInstall, getInstallPrompt, detectInstallMode, onPromptChange, type InstallMode } from "@/lib/pwaInstall";
@@ -295,7 +295,16 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       >
         <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-border">
           {session.user.profileImageUrl ? (
-            <img src={session.user.profileImageUrl} alt="" className="h-full w-full object-cover" />
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={compactKakaoImage(session.user.profileImageUrl, 110)}
+              alt=""
+              width={48}
+              height={48}
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
           ) : (
             <span className="text-lg font-black text-muted-foreground">{(session.user.name ?? "?").charAt(0)}</span>
           )}
