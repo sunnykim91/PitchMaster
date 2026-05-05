@@ -614,7 +614,7 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
           {/* Key Stats */}
           {stats && (
             <div className="flex-1 w-full">
-              <h2 className="text-lg font-bold text-white mb-4 text-center lg:text-left">시즌 다이제스트</h2>
+              <h2 className="text-lg font-bold text-white mb-4 text-center lg:text-left">시즌 요약</h2>
 
               {/* Big Numbers Grid */}
               <div className="grid grid-cols-2 gap-3 mb-6">
