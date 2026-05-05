@@ -39,4 +39,6 @@ export type ApiMemberRow = {
 export type MembersInitialData = {
   members: ApiMemberRow[];
   isStaff: boolean;
+  /** 팀 sport_type — PitchScore 평가 모달 호출용 (SOCCER/FUTSAL). 미지원 종목은 null */
+  sportType: "SOCCER" | "FUTSAL" | null;
 };

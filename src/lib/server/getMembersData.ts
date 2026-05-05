@@ -8,19 +8,26 @@ export async function getMembersData(
   teamRole?: Role,
 ): Promise<MembersInitialData> {
   const db = getSupabaseAdmin();
-  if (!db) return { members: [], isStaff: false };
+  if (!db) return { members: [], isStaff: false, sportType: null };
 
   const isStaff = hasMinRole(teamRole, "STAFF");
   const select = isStaff
     ? "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, coach_positions, jersey_number, team_role, dormant_type, dormant_until, dormant_reason, users(id, name, birth_date, phone, preferred_positions, preferred_foot, profile_image_url)"
     : "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, coach_positions, jersey_number, team_role, dormant_type, dormant_until, dormant_reason, users(id, name, preferred_positions)";
 
-  const { data } = await db
-    .from("team_members")
-    .select(select)
-    .eq("team_id", teamId)
-    .in("status", ["ACTIVE", "DORMANT"])
-    .returns<ApiMemberRow[]>();
+  const [membersRes, teamRes] = await Promise.all([
+    db
+      .from("team_members")
+      .select(select)
+      .eq("team_id", teamId)
+      .in("status", ["ACTIVE", "DORMANT"])
+      .returns<ApiMemberRow[]>(),
+    db.from("teams").select("sport_type").eq("id", teamId).maybeSingle(),
+  ]);
 
-  return { members: data ?? [], isStaff };
+  const rawSport = teamRes.data?.sport_type;
+  const sportType: MembersInitialData["sportType"] =
+    rawSport === "SOCCER" || rawSport === "FUTSAL" ? rawSport : null;
+
+  return { members: membersRes.data ?? [], isStaff, sportType };
 }
