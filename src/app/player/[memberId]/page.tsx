@@ -460,5 +460,16 @@ export default async function PlayerProfilePageRoute({ params, searchParams }: P
     return <PlayerProfileEmpty name={data.name} teamName={data.teamName} positions={data.positions} />;
   }
 
-  return <PlayerProfilePage profile={data} />;
+  // 평가 이력 토글 권한 — 본인 또는 STAFF+ (PRESIDENT/STAFF) 만 노출. 나머지는 토글 자체 숨김.
+  const viewerUserId = session?.user?.id;
+  const viewerRole = session?.user?.teamRole;
+  const viewerIsStaff = viewerRole === "PRESIDENT" || viewerRole === "STAFF";
+
+  return (
+    <PlayerProfilePage
+      profile={data}
+      viewerUserId={viewerUserId}
+      viewerIsStaff={viewerIsStaff}
+    />
+  );
 }

@@ -395,7 +395,16 @@ function StickyShareButton({ onClick }: { onClick: () => void }) {
 }
 
 // Main Player Profile Page Component
-export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
+export function PlayerProfilePage({
+  profile,
+  viewerUserId,
+  viewerIsStaff = false,
+}: {
+  profile: PlayerProfile;
+  /** 평가 이력 토글 노출 권한 계산용. 미지정 시 토글 숨김 */
+  viewerUserId?: string;
+  viewerIsStaff?: boolean;
+}) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showImageShareModal, setShowImageShareModal] = useState(false);
   const [shareToast, setShareToast] = useState<string | null>(null);
@@ -652,6 +661,7 @@ export function PlayerProfilePage({ profile }: { profile: PlayerProfile }) {
             sportType={profile.sportType}
             contextTeamId={profile.teamId}
             isGoalkeeper={isGoalkeeper}
+            canViewHistory={Boolean(viewerUserId === userId || viewerIsStaff)}
           />
         </section>
       )}

@@ -523,6 +523,7 @@ export default function RecordsClient({
           targetUserName={userName ?? "나"}
           sportType={sportType!}
           contextTeamId={teamId!}
+          canViewHistory={true}
         />
       )}
 

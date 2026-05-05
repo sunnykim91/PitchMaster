@@ -74,6 +74,12 @@ interface Props {
   contextTeamId: string;
   isGoalkeeper?: boolean;
   canEvaluate?: boolean;
+  /**
+   * 평가 이력 토글 노출 권한 — 일반회원이 타인 페이지 보는 케이스 차단용.
+   * 부모에서 (viewer === target || isStaffOrAbove(viewerRole)) 로 계산해 내려줌.
+   * 미지정 시 false (기본 닫힘) — 보수적으로 안 보이는 쪽이 안전.
+   */
+  canViewHistory?: boolean;
 }
 
 const COMMENT_MIN_SAMPLES = 5;
@@ -85,6 +91,7 @@ export default function PitchScoreCard({
   contextTeamId,
   isGoalkeeper,
   canEvaluate = true,
+  canViewHistory = false,
 }: Props) {
   const [data, setData] = useState<AttributesResponse | null>(null);
   const [labels, setLabels] = useState<Map<string, string>>(new Map());
@@ -285,8 +292,8 @@ export default function PitchScoreCard({
             )}
           </button>
 
-          {/* 평가 이력 토글 — 평가가 1건이라도 있을 때만 노출 */}
-          {totalSamples > 0 && (
+          {/* 평가 이력 토글 — 평가 1건+ AND viewer 자격 OK (본인 또는 운영진) */}
+          {totalSamples > 0 && canViewHistory && (
             <>
               <button
                 type="button"
