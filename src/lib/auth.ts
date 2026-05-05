@@ -6,6 +6,14 @@ import { sanitizeKakaoNickname } from "@/lib/validators/safeText";
 
 const SESSION_COOKIE = "pm_session";
 
+// 카카오가 보내는 프로필 이미지 URL은 http://k.kakaocdn.net/... 형태.
+// HTML src에 http://가 그대로 박히면 mixed-content 경고 + Lighthouse Best Practices 깎임.
+// next/image가 자동 https 업그레이드하긴 하지만 src 자체를 https로 정규화해 저장.
+function normalizeKakaoImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url.replace(/^http:\/\//i, "https://");
+}
+
 /**
  * 세션 쿠키 기본 옵션.
  * - httpOnly: JS 접근 차단 (XSS 쿠키 탈취 방지)
@@ -186,9 +194,10 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
     // 카카오 이미지(kakaocdn)와 구분 가능 — 커스텀 사진이 없을 때만 카카오 이미지 적용
     let profileImageUrl = existing.profile_image_url;
     const isCustomUpload = existing.profile_image_url && existing.profile_image_url.includes("/uploads/profiles/");
-    if (kakaoProfile.profileImage && !isCustomUpload) {
-      await db.from("users").update({ profile_image_url: kakaoProfile.profileImage }).eq("id", existing.id);
-      profileImageUrl = kakaoProfile.profileImage;
+    const normalizedKakaoImage = normalizeKakaoImageUrl(kakaoProfile.profileImage);
+    if (normalizedKakaoImage && !isCustomUpload) {
+      await db.from("users").update({ profile_image_url: normalizedKakaoImage }).eq("id", existing.id);
+      profileImageUrl = normalizedKakaoImage;
     }
 
     // Load team memberships (여러 팀 가능 — 첫 번째를 활성 팀으로)
@@ -230,7 +239,7 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
     .insert({
       kakao_id: kakaoProfile.id,
       name: sanitizeKakaoNickname(kakaoProfile.nickname),
-      profile_image_url: kakaoProfile.profileImage,
+      profile_image_url: normalizeKakaoImageUrl(kakaoProfile.profileImage),
       is_profile_complete: false,
     })
     .select()

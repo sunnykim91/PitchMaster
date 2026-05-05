@@ -474,10 +474,10 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                 <ThemeToggleButton />
                 <Sheet open={notiOpen} onOpenChange={(open) => { setNotiOpen(open); if (open) fetchNotifications(); }}>
                   <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" aria-label="알림" className="relative">
+                    <Button variant="ghost" size="icon" aria-label={unreadCount > 0 ? `알림 ${unreadCount > 9 ? "9건 이상" : `${unreadCount}건`}` : "알림"} className="relative">
                       <Bell className="h-4 w-4" />
                       {unreadCount > 0 && (
-                        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[hsl(var(--loss))] px-1 text-xs font-bold text-white">
+                        <span aria-hidden="true" className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[hsl(var(--loss))] px-1 text-xs font-bold text-white">
                           {unreadCount > 9 ? "9+" : unreadCount}
                         </span>
                       )}
@@ -581,9 +581,9 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
           {/* Footer */}
           <footer className="mt-12 border-t border-border/20 pb-6 pt-4 text-center">
-            <div className="flex justify-center gap-3 text-xs text-muted-foreground/50">
+            <div className="flex justify-center gap-3 text-xs text-muted-foreground">
               <Link href="/privacy" className="transition hover:text-foreground">개인정보처리방침</Link>
-              <span>·</span>
+              <span aria-hidden="true">·</span>
               <Link href="/terms" className="transition hover:text-foreground">이용약관</Link>
             </div>
           </footer>

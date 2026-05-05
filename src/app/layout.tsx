@@ -75,8 +75,6 @@ export const viewport: Viewport = {
   themeColor: "#e8613a",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export default function RootLayout({
@@ -134,10 +132,13 @@ export default function RootLayout({
         <Script id="chunk-error-handler" strategy="beforeInteractive">
           {`function _cr(e){var m=e&&(e.message||e.reason&&e.reason.message||'');if(m.includes('ChunkLoadError')||m.includes('Loading chunk')||m.includes('Failed to fetch')){window.location.reload();}}window.addEventListener('error',_cr,true);window.addEventListener('unhandledrejection',function(e){_cr(e.reason);});`}
         </Script>
-        <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
+        {/* gtag-init은 afterInteractive로 빨리 로드해 dataLayer/gtag stub을 정의.
+            외부 gtag.js 본체는 lazyOnload로 미루어 LCP 메인스레드 점유를 줄이되,
+            그 사이 page_view는 dataLayer 큐에 쌓였다가 본체 로드 후 발화된다 (GA 표준 동작). */}
         <Script id="gtag-init" strategy="afterInteractive">
-          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}',{send_page_view:false});`}
+          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('js',new Date());gtag('config','${GA_ID}',{send_page_view:false});`}
         </Script>
+        <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="lazyOnload" />
       </body>
     </html>
   );

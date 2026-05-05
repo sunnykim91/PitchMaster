@@ -326,6 +326,7 @@ function TeamSettingsComponent({
                   type="button"
                   role="switch"
                   aria-checked={team.isSearchable}
+                  aria-label="팀 검색 허용"
                   disabled={!canEditTeam || searchableLoading}
                   onClick={handleToggleSearchable}
                   className={`
@@ -362,6 +363,7 @@ function TeamSettingsComponent({
                   type="button"
                   role="switch"
                   aria-checked={team.joinMode === "MANUAL"}
+                  aria-label="가입 승인 필요"
                   disabled={!canEditTeam || joinModeLoading}
                   onClick={handleToggleJoinMode}
                   className={`
@@ -398,6 +400,7 @@ function TeamSettingsComponent({
                   type="button"
                   role="switch"
                   aria-checked={team.mvpVoteStaffOnly}
+                  aria-label="MVP 투표는 운영진만"
                   disabled={!canEditTeam || mvpVoteLoading}
                   onClick={handleToggleMvpVoteStaffOnly}
                   className={`
@@ -434,6 +437,7 @@ function TeamSettingsComponent({
                   type="button"
                   role="switch"
                   aria-checked={team.statsRecordingStaffOnly}
+                  aria-label="경기 기록은 운영진만"
                   disabled={!canEditTeam || statsRecordingLoading}
                   onClick={handleToggleStatsRecordingStaffOnly}
                   className={`

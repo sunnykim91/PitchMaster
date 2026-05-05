@@ -469,6 +469,7 @@ function PersonalSettingsComponent({
                 type="button"
                 role="switch"
                 aria-checked={pushEnabled}
+                aria-label="푸시 알림"
                 onClick={handlePushToggle}
                 disabled={pushLoading}
                 className={cn(

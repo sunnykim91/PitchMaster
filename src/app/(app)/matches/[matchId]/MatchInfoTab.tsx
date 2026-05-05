@@ -479,7 +479,7 @@ function MatchInfoTabInner({
                   {match.statsIncluded ? "시즌 전적·개인 통계에 반영됩니다" : "시즌 전적·개인 통계에서 제외됩니다"}
                 </p>
               </div>
-              <button type="button" role="switch" aria-checked={match.statsIncluded}
+              <button type="button" role="switch" aria-checked={match.statsIncluded} aria-label="전적 반영"
                 onClick={async () => {
                   const next = !match.statsIncluded;
                   const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, statsIncluded: next });

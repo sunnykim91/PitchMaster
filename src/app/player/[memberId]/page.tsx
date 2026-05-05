@@ -417,12 +417,19 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const { memberId } = await params;
   const { team } = await searchParams;
   const data = await getPlayerData(memberId, team);
-  if (!data) return { title: "선수 프로필 | PitchMaster" };
+  const canonical = `https://pitch-master.app/player/${memberId}${team ? `?team=${team}` : ""}`;
+  if (!data) {
+    return {
+      title: "선수 프로필 | PitchMaster",
+      alternates: { canonical },
+    };
+  }
   return {
     title: `${data.name} — ${data.teamName} | PitchMaster`,
     description: data.stats
       ? `${data.stats.goals}골 ${data.stats.assists}어시 · 출석률 ${Math.round(data.stats.attendanceRate * 100)}% · ${data.seasonName} 시즌`
       : `${data.teamName} 소속 선수`,
+    alternates: { canonical },
   };
 }
 
