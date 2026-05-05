@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import type { DetailedPosition, Role } from "@/lib/types";
@@ -871,6 +872,19 @@ export default function MembersClient({
                           >
                             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
                             평가
+                          </Button>
+                        )}
+                        {/* PitchScore 결과 페이지 진입 — 평가 워크플로 직후 결과 확인 */}
+                        {canEvaluate && member.userIdRaw && (
+                          <Button
+                            asChild
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs"
+                          >
+                            <Link href={`/player/${member.userIdRaw}`}>
+                              능력치 보기
+                            </Link>
                           </Button>
                         )}
                         {(isStaffOrAbove(role) || member.userIdRaw === userId) && editingJerseyId !== member.id && (
