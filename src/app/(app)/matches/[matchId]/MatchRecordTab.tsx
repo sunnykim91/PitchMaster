@@ -842,13 +842,21 @@ function SortableGoalItem({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "card-list-item flex items-center justify-between gap-2 touch-none",
+        "card-list-item flex items-center justify-between gap-2",
         isDragging && "scale-[1.02] shadow-xl ring-2 ring-primary/40",
       )}
     >
-      {/* 드래그 핸들 영역: 카드 본문 전체 (long-press 후 드래그) */}
-      <div className="flex items-center gap-2 min-w-0 flex-1 cursor-grab active:cursor-grabbing select-none" {...attributes} {...listeners}>
-        <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground/40" />
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        {/* 드래그 핸들: 이 영역만 long-press 시 드래그 시작. 카드 본문은 스크롤 자유 통과 */}
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          aria-label="순서 변경 (길게 누르고 드래그)"
+          className="shrink-0 -ml-1 px-2 py-3 cursor-grab active:cursor-grabbing select-none touch-none text-muted-foreground/50 hover:text-muted-foreground/80 transition-colors"
+        >
+          <GripVertical className="h-5 w-5" />
+        </button>
         <GoalCardContent goal={goal} isInternal={isInternal} resolvePlayerName={resolvePlayerName} />
       </div>
       {canRecord && (
