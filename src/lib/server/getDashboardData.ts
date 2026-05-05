@@ -429,10 +429,19 @@ export async function getDashboardData(
   // tasks 조립
   const tasks: DashboardTask[] = [];
 
-  // PitchScore 동료 평가 — 누적 3건 미만이면 노출 (Feature Flag 일 때만)
+  // PitchScore 동료 평가 task (Feature Flag 일 때만)
+  // - 운영진: 항시 노출 (모든 팀원 평가가 운영 책임). 라벨은 누적 카운트 표시
+  // - 일반 회원: 누적 3건 미만에만 노출. 잔여 인원으로 라벨 동적 변경
   if (enablePitchScore) {
     const peerEvalCount = peerEvalCountRes.count ?? 0;
-    if (peerEvalCount < 3) {
+    if (isStaff) {
+      tasks.push({
+        label: peerEvalCount > 0
+          ? `팀원 평가하기 (${peerEvalCount}명 평가함)`
+          : "팀원 평가하기",
+        action: "open-peer-evaluation",
+      });
+    } else if (peerEvalCount < 3) {
       const remaining = 3 - peerEvalCount;
       tasks.push({
         label: peerEvalCount === 0
