@@ -652,12 +652,10 @@ export default function MembersClient({
               const isExpanded = expandedId === member.id;
               const isEditing = editingCoachPos === member.id || editingJerseyId === member.id;
               // 일반 회원에게는 아코디언 노출 안 함 — 펼쳐도 운영진 전용 정보(연락처·생일)·관리 버튼이라 빈 컨텐츠.
-              // 본인 등번호 편집은 /settings 페이지에 이미 있음. 감독 지정 포지션은 행 inline 으로 이동.
+              // 본인 등번호 편집은 /settings 페이지에 이미 있음.
+              // 감독 지정 포지션은 운영 정보라 일반 회원에게 표시 안 함 (375px 좁은 화면 넘침 방지).
               const isStaffViewer = isStaffOrAbove(role);
               const positionLine = member.preferredPositions.join(" · ") || "포지션 미설정";
-              const coachInline = !isStaffViewer && member.coachPositions.length > 0
-                ? `${positionLine} · 감독 지정 ${member.coachPositions.join("·")}`
-                : positionLine;
               return (
               <div
                 key={member.id}
