@@ -21,6 +21,8 @@ import { Search } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { Users, ChevronDown } from "lucide-react";
 import { useConfirm } from "@/lib/ConfirmContext";
+import PeerEvaluationCard from "@/components/pitchAttributes/PeerEvaluationCard";
+import type { SportType } from "@/lib/playerAttributes/types";
 
 type Member = {
   id: string;
@@ -82,10 +84,16 @@ export default function MembersClient({
   userRole,
   userId,
   initialData,
+  teamId,
+  sportType,
+  enablePitchScore,
 }: {
   userRole?: Role;
   userId: string;
   initialData?: MembersInitialData;
+  teamId?: string | null;
+  sportType?: SportType | null;
+  enablePitchScore?: boolean;
 }) {
   const { data: membersData, loading, error, refetch } = useApi<MembersInitialData>(
     "/api/members",
@@ -384,6 +392,11 @@ export default function MembersClient({
 
   return (
     <div className="grid gap-5 stagger-children">
+      {/* ── PitchScore 동료 평가 카드 (점진 출시 — 김선휘만, FCMZ 풋살 등 본인 가입 팀에서 노출) ── */}
+      {enablePitchScore && teamId && sportType && (
+        <PeerEvaluationCard teamId={teamId} sportType={sportType} />
+      )}
+
       {/* ── Section 1: 회원 관리 ── */}
       <Card>
         <CardHeader>
