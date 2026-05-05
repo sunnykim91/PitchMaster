@@ -33,13 +33,14 @@ export async function sendTeamPush(
 
   if (targetUserIds.length === 0) return { sent: 0, failed: 0 };
 
-  // 인앱 알림 생성
+  // 인앱 알림 생성 (url 도 같이 저장 — 알림 카드 클릭 시 라우팅)
   const notifications = targetUserIds.map((uid) => ({
     user_id: uid,
     type: "PUSH",
     title: opts.title,
     message: opts.body,
     is_read: false,
+    url: opts.url ?? "/dashboard",
   }));
   await db.from("notifications").insert(notifications);
 

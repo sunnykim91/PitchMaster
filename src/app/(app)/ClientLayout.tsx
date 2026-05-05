@@ -72,7 +72,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [sheetClosing, setSheetClosing] = useState(false);
   const [notiOpen, setNotiOpen] = useState(false);
-  const [notifications, setNotifications] = useState<{ id: string; title: string; message: string; is_read: boolean; created_at: string }[]>([]);
+  const [notifications, setNotifications] = useState<{ id: string; title: string; message: string; is_read: boolean; created_at: string; url?: string | null }[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [installMode, setInstallMode] = useState<InstallMode>("none");
   const [hasPrompt, setHasPrompt] = useState(false);
@@ -150,6 +150,30 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
     );
     fetchNotifications();
   };
+
+  // url 컬럼이 비어 있는 legacy 알림용 fallback. 새 알림은 sendPush 가 url 채워서 저장.
+  function notificationHref(n: { url?: string | null; title: string }): string {
+    if (n.url) return n.url;
+    const t = n.title;
+    if (t.includes("가입") || t.includes("신청")) return "/members";
+    if (t.includes("MVP") || t.includes("경기") || t.includes("출석") || t.includes("투표") || t.includes("역할")) return "/matches";
+    if (t.includes("회비") || t.includes("납부")) return "/dues";
+    return "/dashboard";
+  }
+
+  async function handleNotiClick(n: { id: string; is_read: boolean; url?: string | null; title: string }) {
+    setNotiOpen(false);
+    const href = notificationHref(n);
+    if (!n.is_read) {
+      // 읽음 처리는 background — 라우팅을 막지 않음
+      fetch("/api/notifications", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: n.id, isRead: true }),
+      }).then(() => fetchNotifications()).catch(() => {});
+    }
+    router.push(href);
+  }
 
   function closeSheet() {
     setSheetClosing(true);
@@ -496,28 +520,27 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                         <p className="py-8 text-center text-sm text-muted-foreground">알림이 없습니다</p>
                       ) : (
                         notifications.map((n) => (
-                          <div
+                          <button
                             key={n.id}
+                            type="button"
+                            onClick={() => handleNotiClick(n)}
                             className={cn(
-                              "rounded-lg p-3 text-sm transition-colors",
+                              "block w-full text-left rounded-lg p-3 text-sm transition-colors hover:bg-secondary active:scale-[0.99]",
                               n.is_read ? "bg-secondary/50" : "bg-primary/5 border border-primary/20"
                             )}
+                            aria-label={`${n.title} — 알림 열기`}
                           >
-                            <p className="font-semibold">{n.title}</p>
+                            <p className="font-semibold flex items-center gap-1.5">
+                              {!n.is_read && (
+                                <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                              )}
+                              <span className="flex-1">{n.title}</span>
+                            </p>
                             <p className="mt-0.5 text-xs text-muted-foreground">{n.message}</p>
-                            {n.title.includes("가입") && (
-                              <Link
-                                href="/settings"
-                                onClick={() => setNotiOpen(false)}
-                                className="mt-1 inline-block text-xs text-primary hover:underline"
-                              >
-                                설정에서 확인
-                              </Link>
-                            )}
                             <p className="mt-1 text-xs text-muted-foreground/50">
                               {new Date(n.created_at).toLocaleDateString("ko-KR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                             </p>
-                          </div>
+                          </button>
                         ))
                       )}
                     </div>
