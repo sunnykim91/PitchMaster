@@ -17,9 +17,16 @@ const SOURCE = "public/icons/icon-192.png";
 const OUTPUT = "src/app/favicon.ico";
 const SIZES = [16, 32, 48];
 
+// ensureAlpha() — source PNG 가 RGB 면 RGBA 로 강제 변환.
+// Next.js Turbopack 의 favicon 처리는 ICO 안의 PNG payload 가 RGBA 여야 디코딩 성공.
+// 누락 시 "Format error decoding Ico: The PNG is not in RGBA format!" 빌드 실패.
 const pngs = await Promise.all(
   SIZES.map((size) =>
-    sharp(SOURCE).resize(size, size, { fit: "contain" }).png().toBuffer(),
+    sharp(SOURCE)
+      .resize(size, size, { fit: "contain" })
+      .ensureAlpha()
+      .png()
+      .toBuffer(),
   ),
 );
 
