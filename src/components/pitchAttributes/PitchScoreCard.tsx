@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, History } from "lucide-react";
 import PitchScoreRadar from "./PitchScoreRadar";
 import PitchScoreBarList from "./PitchScoreBarList";
 import EvaluationModal from "./EvaluationModal";
+import PitchScoreHistory from "./PitchScoreHistory";
 import { CATEGORY_META } from "@/lib/playerAttributes/config";
 import type {
   AttributeCode,
@@ -90,6 +91,7 @@ export default function PitchScoreCard({
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -282,6 +284,31 @@ export default function PitchScoreCard({
               </>
             )}
           </button>
+
+          {/* 평가 이력 토글 — 평가가 1건이라도 있을 때만 노출 */}
+          {totalSamples > 0 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setHistoryOpen((v) => !v)}
+                className="flex w-full items-center justify-center gap-1 rounded-md border border-border bg-background/40 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-[hsl(var(--primary))]/40 transition-colors"
+              >
+                <History className="h-3.5 w-3.5" aria-hidden="true" />
+                {historyOpen ? (
+                  <>
+                    평가 이력 접기 <ChevronUp className="h-3.5 w-3.5" />
+                  </>
+                ) : (
+                  <>
+                    평가 이력 보기 <ChevronDown className="h-3.5 w-3.5" />
+                  </>
+                )}
+              </button>
+              {historyOpen && (
+                <PitchScoreHistory targetUserId={targetUserId} sportType={sportType} />
+              )}
+            </>
+          )}
         </div>
       )}
 
