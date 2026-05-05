@@ -325,7 +325,7 @@ export default function RecordsClient({
       {/* ── PitchScore 동료 평가 진입 카드 (옵션 C — 모든 탭 공통, 페이지 상단) ── */}
       {showPitchScoreEntry && (
         <section className="rounded-xl border border-[hsl(var(--primary))]/30 bg-gradient-to-br from-[hsl(var(--primary))]/8 to-[hsl(var(--primary))]/3 p-4 sm:p-5">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-[hsl(var(--primary))]" />

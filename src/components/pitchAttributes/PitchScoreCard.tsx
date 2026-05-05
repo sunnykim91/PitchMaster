@@ -129,7 +129,7 @@ export default function PitchScoreCard({
 
   return (
     <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
-      <header className="mb-3 flex items-start justify-between gap-3">
+      <header className="mb-3 flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline gap-2 flex-wrap">
             <h2 className="text-lg font-bold">
