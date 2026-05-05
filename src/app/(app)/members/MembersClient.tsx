@@ -929,7 +929,7 @@ export default function MembersClient({
                         )}
                         {canChangeRole && member.userIdRaw !== userId && (
                           <Select value={member.role} onValueChange={(value) => handleRoleChange(member.id, value as Role)} disabled={changingRoleId === member.id}>
-                            <SelectTrigger className="w-auto min-w-[88px] text-xs h-10">
+                            <SelectTrigger className="w-auto min-w-[88px] text-xs h-8">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
