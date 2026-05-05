@@ -9,6 +9,36 @@ vi.mock("@/lib/supabase/admin", () => ({ getSupabaseAdmin: vi.fn() }));
 import { auth } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
+/**
+ * 대시보드 SSR 데이터 fetch 호출 순서 (2026-05-05 재구성):
+ *
+ * Stage 1 Promise.all (모두 병렬):
+ *   matches × 5 (autoComplete past + autoComplete today + upcoming + recent + activeVotes)
+ *   teams × 1 (uniform + mvp_vote_staff_only)
+ *   team_members × 1 (통합 roster)
+ *   seasons × 1
+ *   matches × 1 (totalMatchesCount, count head)
+ *   users × 1 (profile)
+ *   dues_settings × 1 (count head)
+ *
+ * Stage 2 Promise.all (조건부):
+ *   match_attendance (vote rollup, upcoming + activeVotes match_ids)
+ *   match_guests (upcoming)
+ *   match_goals (recent)
+ *   match_mvp_votes (recent)
+ *   match_attendance (recent actual attendance)
+ *   match_attendance (my upcoming vote check)
+ *   match_mvp_votes (my recent MVP check)
+ *   dues_payment_status (my payment, if myTeamMemberId)
+ *   member_dues_exemptions (my exemptions, if myTeamMemberId)
+ *   dues_records (month record count, if isStaff)
+ *   dues_payment_status (paid count, if isStaff)
+ *   team_join_requests (pending count, if isStaff)
+ *   matches × 1 (completedMatches)
+ *
+ * Stage 3 (조건부):
+ *   match_goals (allGoals for completedIds, if non-empty)
+ */
 describe("GET /api/dashboard", () => {
   beforeEach(() => vi.clearAllMocks());
 
@@ -27,7 +57,6 @@ describe("GET /api/dashboard", () => {
   });
 
   it("200: DB 없는 경우 빈 대시보드 fallback", async () => {
-    // getDashboardData는 db null일 때 의도적으로 빈 데이터를 반환 (데모/SSR fallback)
     vi.mocked(auth).mockResolvedValue(memberSession);
     vi.mocked(getSupabaseAdmin).mockReturnValue(null);
     const res = await GET();
@@ -40,22 +69,22 @@ describe("GET /api/dashboard", () => {
 
   it("200: 경기 없는 경우 — 빈 대시보드 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    // New API order:
-    // 1. matches.update x2 (auto-complete: past dates + today's end_time passed)
-    // 2. matches(upcoming), matches(recent), matches(activeVotes) — Promise.all
-    // 3. match_attendance(user vote) + match_mvp_votes(user mvp) — tasks
-    // 4. matches(completed) — teamRecord
     const db = createMockDb(
-      ["matches", null],   // auto-complete update #1 (past dates)
-      ["matches", null],   // auto-complete update #2 (today + end_time)
-      ["matches", null],   // upcoming match → null
-      ["matches", null],   // recent match → null
-      ["matches", []],     // active votes → []
-      // No upcoming → skip vote queries
-      // No recent → skip goal/mvp queries
-      ["match_attendance", null], // user attendance → null
-      ["match_mvp_votes", null],  // user mvp → null
-      ["matches", []],     // completed matches for teamRecord
+      // Stage 1 — matches 6 calls (autoComplete×2 + upcoming + recent + activeVotes + totalMatches)
+      ["matches", null],
+      ["matches", null],
+      ["matches", null],
+      ["matches", null],
+      ["matches", []],
+      ["matches", null],
+      // Stage 1 — 나머지 단일 fetch
+      ["teams", null],
+      ["team_members", []],
+      ["seasons", []],
+      ["users", null],
+      ["dues_settings", null],
+      // Stage 2 — completedMatches (다른 쿼리는 upcoming/recent null 이라 spinned but 결과 무시)
+      ["matches", []],
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
@@ -80,21 +109,50 @@ describe("GET /api/dashboard", () => {
       status: "SCHEDULED",
       location: "운동장",
       vote_deadline: new Date(Date.now() + 86400000).toISOString(),
+      match_type: "REGULAR",
     };
 
+    // 통합 roster: 본인 + 다른 멤버 1명. 본인 user_id 가 memberSession.user.id 와 매치돼야 myTeamMemberId 결정됨
+    const roster = [
+      {
+        id: "mem-1",
+        user_id: memberSession.user.id,
+        status: "ACTIVE",
+        role: "MEMBER",
+        users: { name: "일반 멤버", birth_date: null, profile_image_url: null },
+      },
+      {
+        id: "mem-other",
+        user_id: "other",
+        status: "ACTIVE",
+        role: "MEMBER",
+        users: { name: "다른 멤버", birth_date: null, profile_image_url: null },
+      },
+    ];
+
     const db = createMockDb(
-      ["matches", null],           // auto-complete #1
-      ["matches", null],           // auto-complete #2
-      ["matches", upcomingMatch],  // upcoming match
-      ["matches", null],           // recent match → null
-      ["matches", []],             // active votes
-      ["match_attendance", [{ vote: "ATTEND", user_id: "other", member_id: null }]], // vote list
-      ["team_members", { id: "mem-1" }], // myMember (maybeSingle)
-      ["match_guests", []],        // guests
-      ["team_members", [{ id: "mem-other", user_id: "other", status: "ACTIVE" }]], // active member roster (정규화용)
-      ["match_attendance", null],  // user vote check (tasks)
-      ["match_mvp_votes", null],   // user mvp check (tasks)
-      ["matches", []],             // completed matches
+      // Stage 1
+      ["matches", null],            // autoComplete past
+      ["matches", null],            // autoComplete today
+      ["matches", upcomingMatch],   // upcoming
+      ["matches", null],            // recent
+      ["matches", []],              // activeVotes
+      ["matches", null],            // totalMatchesCount
+      ["teams", null],
+      ["team_members", roster],
+      ["seasons", []],
+      ["users", null],
+      ["dues_settings", null],
+      // Stage 2
+      ["match_attendance", [{ match_id: "m-upcoming", vote: "ATTEND", user_id: "other", member_id: null }]], // vote rollup
+      ["match_guests", []],
+      // recent 없음 → match_goals/match_mvp_votes/recent attendance 스킵
+      ["match_attendance", null],   // my upcoming vote check (tasks)
+      // recent 없음 → my mvp check 스킵
+      ["dues_payment_status", null], // my payment
+      ["member_dues_exemptions", []], // my exemptions
+      // isStaff false → dues_records, paid count, team_join_requests 스킵
+      ["matches", []],              // completedMatches
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
@@ -130,20 +188,40 @@ describe("GET /api/dashboard", () => {
       { candidate_id: "u1", users: { name: "김선수" } },
     ];
 
+    const roster = [
+      {
+        id: "mem-1",
+        user_id: memberSession.user.id,
+        status: "ACTIVE",
+        role: "MEMBER",
+        users: { name: "일반 멤버", birth_date: null, profile_image_url: null },
+      },
+    ];
+
     const db = createMockDb(
-      ["matches", null],             // auto-complete #1
-      ["matches", null],             // auto-complete #2
-      ["matches", null],             // upcoming → null
-      ["matches", recentMatch],      // recent match
-      ["matches", []],               // active votes
-      // No upcoming → skip vote queries
-      ["match_goals", goals],        // goals for recent
-      ["match_mvp_votes", mvpVotes], // mvp votes for recent
-      ["match_attendance", [{ id: "a1" }, { id: "a2" }]], // actual attendance PRESENT/LATE (2명 참석 → 2/2 = 100%, MVP 유효)
-      ["match_attendance", null],    // user vote (tasks)
-      ["match_mvp_votes", { id: "v1" }], // user mvp voted
-      ["matches", [recentMatch]],    // completed matches for teamRecord
-      ["match_goals", goals],        // goals for teamRecord
+      // Stage 1
+      ["matches", null],            // autoComplete past
+      ["matches", null],            // autoComplete today
+      ["matches", null],            // upcoming → null
+      ["matches", recentMatch],     // recent
+      ["matches", []],              // activeVotes
+      ["matches", null],            // totalMatchesCount
+      ["teams", null],
+      ["team_members", roster],
+      ["seasons", []],
+      ["users", null],
+      ["dues_settings", null],
+      // Stage 2 (upcoming 없음 → vote rollup/guests/my upcoming vote 스킵)
+      ["match_goals", goals],       // recent goals
+      ["match_mvp_votes", mvpVotes],// recent MVP votes
+      ["match_attendance", [{ id: "a1" }, { id: "a2" }]], // recent actual attendance
+      ["match_mvp_votes", { id: "v1" }], // my MVP vote check
+      ["dues_payment_status", null],
+      ["member_dues_exemptions", []],
+      // Stage 2 completedMatches
+      ["matches", [recentMatch]],
+      // Stage 3
+      ["match_goals", goals],
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
@@ -166,17 +244,27 @@ describe("GET /api/dashboard", () => {
       match_date: "2099-12-31",
       vote_deadline: voteDeadline,
       opponent_name: "투표상대",
+      match_type: "REGULAR",
     };
 
     const db = createMockDb(
-      ["matches", null],               // auto-complete #1
-      ["matches", null],               // auto-complete #2
+      // Stage 1
+      ["matches", null],               // autoComplete past
+      ["matches", null],               // autoComplete today
       ["matches", null],               // upcoming → null
       ["matches", null],               // recent → null
-      ["matches", [activeVoteMatch]],  // active votes
-      ["match_attendance", null],      // user vote (tasks)
-      ["match_mvp_votes", null],       // user mvp (tasks)
-      ["matches", []],                 // completed matches
+      ["matches", [activeVoteMatch]],  // activeVotes
+      ["matches", null],               // totalMatchesCount
+      ["teams", null],
+      ["team_members", []],
+      ["seasons", []],
+      ["users", null],
+      ["dues_settings", null],
+      // Stage 2 — activeVote 있어 vote rollup 발생
+      ["match_attendance", []],        // vote rollup (no votes)
+      // No upcoming/recent → guests/goals/mvp/recent attendance 스킵
+      // myTeamMemberId 없음 (roster 비어있음) → payment/exemption 스킵
+      ["matches", []],                 // completedMatches
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 

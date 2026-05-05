@@ -11,25 +11,38 @@ type MemberRow = {
   users: { id: string; name: string; preferred_positions: string[] } | { id: string; name: string; preferred_positions: string[] }[] | null;
 };
 
+/**
+ * 기록 페이지 SSR 데이터 fetch — 2단계 병렬화 (2026-05-05).
+ *
+ * 변경:
+ *   - match_goals 중복 fetch 제거 (이전 scorer_id only + match_id+scorer_id+is_own_goal 두 번 → 한 번)
+ *   - matches/members/teamSettings 병렬 (이전 직렬 3단)
+ *   - 시즌 정보 의존 쿼리만 시즌 fetch 후 분리
+ */
 export async function getRecordsData(teamId: string) {
   const db = getSupabaseAdmin();
   if (!db) return { seasons: [], activeSeasonId: null, records: [] };
 
-  const { data: seasons } = await db
-    .from("seasons")
-    .select("*")
-    .eq("team_id", teamId)
-    .order("start_date", { ascending: false });
+  // ── Stage 1: 시즌 + 팀 설정 병렬 ──
+  const [seasonsRes, teamSettingsRes] = await Promise.all([
+    db.from("seasons")
+      .select("*")
+      .eq("team_id", teamId)
+      .order("start_date", { ascending: false }),
+    db.from("teams")
+      .select("mvp_vote_staff_only")
+      .eq("id", teamId)
+      .maybeSingle(),
+  ]);
 
-  const seasonList = (seasons ?? []) as SeasonRow[];
+  const seasonList = (seasonsRes.data ?? []) as SeasonRow[];
   const activeSeason = seasonList.find((s) => s.is_active) ?? seasonList[0];
   const activeSeasonId: string | null = activeSeason?.id ?? null;
+  const mvpVoteStaffOnly = teamSettingsRes.data?.mvp_vote_staff_only ?? false;
 
-  // Records도 SSR에서 한번에 가져옴
   if (!activeSeasonId) return { seasons: seasonList, activeSeasonId: null, records: [] };
 
-  // 시즌 날짜 범위로 경기 필터 (season_id FK 의존 안 함)
-  // 자체전 중 "전적 반영 안 함"(stats_included=false)은 스탯/전적에서 제외 — /api/records와 일관성 유지
+  // ── Stage 2: matches + members 병렬 ──
   let matchQuery = db
     .from("matches")
     .select("id, match_date")
@@ -40,18 +53,29 @@ export async function getRecordsData(teamId: string) {
     matchQuery = matchQuery.gte("match_date", activeSeason.start_date).lte("match_date", activeSeason.end_date);
   }
   matchQuery = matchQuery.order("match_date", { ascending: false });
-  const { data: matches } = await matchQuery;
-  const matchIds = (matches ?? []).map((m) => m.id);
 
-  const { data: members } = await db
-    .from("team_members")
-    .select("id, user_id, pre_name, jersey_number, team_role, users(id, name, preferred_positions)")
-    .eq("team_id", teamId)
-    .in("status", ["ACTIVE", "DORMANT"]);
+  const [matchesRes, membersRes] = await Promise.all([
+    matchQuery,
+    db.from("team_members")
+      .select("id, user_id, pre_name, jersey_number, team_role, role, users(id, name, preferred_positions)")
+      .eq("team_id", teamId)
+      .in("status", ["ACTIVE", "DORMANT"]),
+  ]);
+
+  const matches = matchesRes.data ?? [];
+  const matchIds = matches.map((m) => m.id);
+  const members = membersRes.data;
 
   if (!members) return { seasons: seasonList, activeSeasonId, records: [] };
-
   const typedMembers = members as MemberRow[];
+
+  // STAFF voter 셋 — members 한 번 fetch 한 결과에서 추출 (이전: 별도 staffMembersRes 쿼리)
+  const staffVoterIds = new Set<string>(
+    (members as Array<{ user_id: string | null; role: string }>)
+      .filter((m) => m.role === "STAFF" || m.role === "PRESIDENT")
+      .map((m) => m.user_id)
+      .filter((id): id is string => !!id)
+  );
 
   if (matchIds.length === 0) {
     // 레거시 통계 확인
@@ -102,22 +126,29 @@ export async function getRecordsData(teamId: string) {
     };
   }
 
-  const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes, staffMembersRes] = await Promise.all([
-    db.from("match_goals").select("scorer_id").in("match_id", matchIds).eq("is_own_goal", false),
+  // ── Stage 3: 통계 raw 데이터 일괄 (이전 6개 + allGoals 별도 → 5개로 통합) ──
+  // match_goals 한 번에 가져와 goalMap·matchScores 양쪽 사용 (이전 중복 fetch 제거)
+  const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes] = await Promise.all([
+    db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", matchIds),
     db.from("match_goals").select("assist_id").in("match_id", matchIds).not("assist_id", "is", null),
-    // voter_id도 가져와서 is_staff_decision=false지만 voter가 현재 STAFF+인 과거 row도 확정 처리.
     db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision").in("match_id", matchIds),
     db.from("match_attendance").select("user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
-    // MVP 투표율 70% 검증용 — 실제 체크인 기준 (용병 제외). /api/records와 기준 통일.
     db.from("match_attendance").select("match_id").in("match_id", matchIds).in("attendance_status", ["PRESENT", "LATE"]),
-    // 현재 팀 STAFF 이상 user_id — is_staff_decision 백필 누락 치유용
-    db.from("team_members").select("user_id").eq("team_id", teamId).in("role", ["STAFF", "PRESIDENT"]).not("user_id", "is", null),
   ]);
 
+  type GoalRow = { match_id: string; scorer_id: string; is_own_goal: boolean };
+  const goalRows = (goalsRes.data ?? []) as GoalRow[];
+
   const goalMap = new Map<string, number>();
-  for (const row of goalsRes.data ?? []) { if (row.scorer_id) goalMap.set(row.scorer_id, (goalMap.get(row.scorer_id) ?? 0) + 1); }
+  for (const row of goalRows) {
+    if (row.scorer_id && row.scorer_id !== "OPPONENT" && !row.is_own_goal) {
+      goalMap.set(row.scorer_id, (goalMap.get(row.scorer_id) ?? 0) + 1);
+    }
+  }
   const assistMap = new Map<string, number>();
-  for (const row of assistsRes.data ?? []) { if (row.assist_id) assistMap.set(row.assist_id, (assistMap.get(row.assist_id) ?? 0) + 1); }
+  for (const row of assistsRes.data ?? []) {
+    if (row.assist_id) assistMap.set(row.assist_id, (assistMap.get(row.assist_id) ?? 0) + 1);
+  }
   const attendByUser = new Map<string, number>();
   const attendByMember = new Map<string, number>();
   for (const row of attendanceRes.data ?? []) {
@@ -125,15 +156,11 @@ export async function getRecordsData(teamId: string) {
     if (row.member_id) attendByMember.set(row.member_id, (attendByMember.get(row.member_id) ?? 0) + 1);
   }
 
-  // 경기별 MVP winner 집계 — 정책: 참석자 70% 이상 투표 통과 시 최다득표자, 또는 운영진 직접 지정.
-  // threshold 미달 경기는 "MVP 확정 안 됨"으로 처리 (운영진이 직접 지정해야 확정).
+  // 경기별 MVP winner
   const attendedPerMatch = new Map<string, number>();
   for (const a of actualAttendRes.data ?? []) {
     attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
   }
-  const staffVoterIds = new Set<string>(
-    (staffMembersRes.data ?? []).map((m) => m.user_id).filter((id): id is string => !!id)
-  );
   const votesByMatch = new Map<string, { votes: string[]; rows: Array<{ voter_id: string; candidate_id: string; is_staff_decision: boolean | null }> }>();
   for (const row of mvpRes.data ?? []) {
     if (!row.candidate_id) continue;
@@ -142,11 +169,8 @@ export async function getRecordsData(teamId: string) {
     agg.rows.push({ voter_id: row.voter_id, candidate_id: row.candidate_id, is_staff_decision: row.is_staff_decision });
     votesByMatch.set(row.match_id, agg);
   }
-  // 새 MVP 정책 적용 판정 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04)
-  const { data: teamSettings } = await db.from("teams").select("mvp_vote_staff_only").eq("id", teamId).maybeSingle();
-  const mvpVoteStaffOnly = teamSettings?.mvp_vote_staff_only ?? false;
   const matchDateById = new Map<string, string>();
-  for (const m of matches ?? []) matchDateById.set(m.id, m.match_date);
+  for (const m of matches) matchDateById.set(m.id, m.match_date);
 
   const mvpMap = new Map<string, number>();
   for (const [mid, agg] of votesByMatch) {
@@ -180,13 +204,11 @@ export async function getRecordsData(teamId: string) {
     };
   });
 
-  // 팀 전적 계산 (시즌 기간 내 경기)
+  // 팀 전적 — 위에서 받은 goalRows 재활용 (이전: allGoals 별도 fetch)
   let wins = 0, draws = 0, losses = 0, gf = 0, ga = 0;
   const recent5: ("W" | "D" | "L")[] = [];
-  // matchIds는 이미 시즌 기간 내 완료 경기
-  const { data: allGoals } = await db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", matchIds);
   const matchScores = new Map<string, { our: number; opp: number }>();
-  for (const g of allGoals ?? []) {
+  for (const g of goalRows) {
     if (!matchScores.has(g.match_id)) matchScores.set(g.match_id, { our: 0, opp: 0 });
     const s = matchScores.get(g.match_id)!;
     if (g.scorer_id === "OPPONENT" || g.is_own_goal) s.opp++;

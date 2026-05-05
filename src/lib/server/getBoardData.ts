@@ -1,9 +1,18 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
+/**
+ * 게시판 SSR 데이터 fetch — 2단계 병렬화 (2026-05-05).
+ *
+ * 변경:
+ *   posts → polls → poll_options → votes 4단 직렬 → 2단으로 축소.
+ *   - Stage 1: posts (post_id 셋 결정)
+ *   - Stage 2: polls(+options nested) + votes 동시. votes 는 post_id 셋만 알면 polls 없이도 한 번에 가능
+ */
 export async function getBoardData(teamId: string, userId?: string) {
   const db = getSupabaseAdmin();
   if (!db) return { posts: [] };
 
+  // ── Stage 1: posts (likes/comments count 포함) ──
   const { data } = await db
     .from("posts")
     .select("*, author:author_id(name, profile_image_url), post_likes(count), post_comments(count)")
@@ -24,51 +33,50 @@ export async function getBoardData(teamId: string, userId?: string) {
     comments_count: row.post_comments?.[0]?.count ?? 0,
   }));
 
-  // Fetch polls
+  if (postIds.length === 0) {
+    return { posts };
+  }
+
+  // ── Stage 2: polls + options + votes 한 쿼리에 nested ──
+  // 이전: posts → polls → poll_options → votes 4단 직렬
+  // 이제: post_polls 한 번에 options + votes 까지 nested fetch (1 DB round-trip)
+  const { data: pollData } = await db
+    .from("post_polls")
+    .select("*, post_poll_options(id, label, sort_order), post_poll_votes(poll_id, option_id, user_id)")
+    .in("post_id", postIds);
+
   const pollByPostId: Record<string, Record<string, unknown>> = {};
-  if (postIds.length > 0) {
-    const { data: pollData } = await db
-      .from("post_polls")
-      .select("*, post_poll_options(id, label, sort_order)")
-      .in("post_id", postIds);
-
-    const pollIds = (pollData ?? []).map((p) => (p as { id: string }).id);
-
+  for (const p of pollData ?? []) {
+    const poll = p as {
+      id: string;
+      post_id: string;
+      question: string;
+      ends_at: string | null;
+      post_poll_options: { id: string; label: string; sort_order: number }[];
+      post_poll_votes: { poll_id: string; option_id: string; user_id: string }[];
+    };
     const voteCounts: Record<string, number> = {};
-    const userVotes: Record<string, string> = {}; // pollId → optionId
-    if (pollIds.length > 0) {
-      const { data: voteData } = await db
-        .from("post_poll_votes")
-        .select("poll_id, option_id, user_id")
-        .in("poll_id", pollIds);
-      for (const v of voteData ?? []) {
-        const optId = (v as { option_id: string }).option_id;
-        voteCounts[optId] = (voteCounts[optId] ?? 0) + 1;
-        if (userId && (v as { user_id: string }).user_id === userId) {
-          userVotes[(v as { poll_id: string }).poll_id] = optId;
-        }
-      }
+    let myVote: string | null = null;
+    for (const v of poll.post_poll_votes ?? []) {
+      voteCounts[v.option_id] = (voteCounts[v.option_id] ?? 0) + 1;
+      if (userId && v.user_id === userId) myVote = v.option_id;
     }
-
-    for (const p of pollData ?? []) {
-      const poll = p as { id: string; post_id: string; question: string; ends_at: string | null; post_poll_options: { id: string; label: string; sort_order: number }[] };
-      const options = (poll.post_poll_options ?? [])
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .map((o) => ({
-          id: o.id,
-          label: o.label,
-          votes: voteCounts[o.id] ?? 0,
-        }));
-      const totalVotes = options.reduce((sum, o) => sum + o.votes, 0);
-      pollByPostId[poll.post_id] = {
-        id: poll.id,
-        question: poll.question,
-        endsAt: poll.ends_at,
-        options,
-        totalVotes,
-        myVote: userVotes[poll.id] ?? null,
-      };
-    }
+    const options = (poll.post_poll_options ?? [])
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((o) => ({
+        id: o.id,
+        label: o.label,
+        votes: voteCounts[o.id] ?? 0,
+      }));
+    const totalVotes = options.reduce((sum, o) => sum + o.votes, 0);
+    pollByPostId[poll.post_id] = {
+      id: poll.id,
+      question: poll.question,
+      endsAt: poll.ends_at,
+      options,
+      totalVotes,
+      myVote,
+    };
   }
 
   const enrichedPosts = posts.map((post) => ({

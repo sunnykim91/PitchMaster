@@ -83,26 +83,26 @@ export async function autoCompleteTeamMatches(
   const nowTime = getKstTimeOfDay(nowMs);
   const completedIds: string[] = [];
 
-  // 1) 날짜 지난 경기 일괄 완료 (returning으로 ID 수집)
-  const past = await db
-    .from("matches")
-    .update({ status: "COMPLETED" })
-    .eq("team_id", teamId)
-    .eq("status", "SCHEDULED")
-    .lt("match_date", today)
-    .select("id");
+  // 1·2) 두 UPDATE 는 독립적이라 병렬 실행 (이전 직렬 → ~30ms 절감)
+  const [past, todayEnded] = await Promise.all([
+    db
+      .from("matches")
+      .update({ status: "COMPLETED" })
+      .eq("team_id", teamId)
+      .eq("status", "SCHEDULED")
+      .lt("match_date", today)
+      .select("id"),
+    db
+      .from("matches")
+      .update({ status: "COMPLETED" })
+      .eq("team_id", teamId)
+      .eq("status", "SCHEDULED")
+      .eq("match_date", today)
+      .not("match_end_time", "is", null)
+      .lte("match_end_time", nowTime)
+      .select("id"),
+  ]);
   if (Array.isArray(past.data)) completedIds.push(...past.data.map((m) => m.id));
-
-  // 2) 당일 경기 중 종료 시각이 지난 것
-  const todayEnded = await db
-    .from("matches")
-    .update({ status: "COMPLETED" })
-    .eq("team_id", teamId)
-    .eq("status", "SCHEDULED")
-    .eq("match_date", today)
-    .not("match_end_time", "is", null)
-    .lte("match_end_time", nowTime)
-    .select("id");
   if (Array.isArray(todayEnded.data)) completedIds.push(...todayEnded.data.map((m) => m.id));
 
   // 3) 완료된 경기들의 참석자 시그니처 stale 처리 (신 스탯 반영, 백그라운드)
