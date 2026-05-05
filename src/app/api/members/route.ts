@@ -22,15 +22,23 @@ export async function GET() {
     ? "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, coach_positions, jersey_number, team_role, dormant_type, dormant_until, dormant_reason, users(id, name, birth_date, phone, preferred_positions, preferred_foot, profile_image_url)"
     : "id, user_id, role, status, joined_at, pre_name, pre_phone, dues_type, coach_positions, jersey_number, team_role, dormant_type, dormant_until, dormant_reason, users(id, name, preferred_positions)";
 
-  // ACTIVE + DORMANT 멤버 모두 조회
-  const { data, error } = await db
-    .from("team_members")
-    .select(select)
-    .eq("team_id", ctx.teamId)
-    .in("status", ["ACTIVE", "DORMANT"]);
+  // ACTIVE + DORMANT 멤버 + 팀 sport_type (평가 모달용) 동시 fetch
+  const [membersRes, teamRes] = await Promise.all([
+    db
+      .from("team_members")
+      .select(select)
+      .eq("team_id", ctx.teamId)
+      .in("status", ["ACTIVE", "DORMANT"]),
+    db.from("teams").select("sport_type").eq("id", ctx.teamId).maybeSingle(),
+  ]);
 
-  if (error) return apiError(error.message);
-  return apiSuccess({ members: data, isStaff });
+  if (membersRes.error) return apiError(membersRes.error.message);
+
+  const rawSport = teamRes.data?.sport_type;
+  const sportType: "SOCCER" | "FUTSAL" | null =
+    rawSport === "SOCCER" || rawSport === "FUTSAL" ? rawSport : null;
+
+  return apiSuccess({ members: membersRes.data, isStaff, sportType });
 }
 
 export async function POST(request: NextRequest) {

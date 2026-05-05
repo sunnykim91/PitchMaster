@@ -90,6 +90,20 @@ export async function GET(request: NextRequest) {
   const teamId = teamIdParam ?? ctx.teamId;
   if (!teamId) return apiError("팀 정보가 없습니다", 400);
 
+  // 다른 팀 ID 요청 시 evaluator 가 그 팀의 ACTIVE 멤버인지 검증 — 임의 팀 랭킹 노출 차단
+  if (teamIdParam && teamIdParam !== ctx.teamId) {
+    const { data: membership } = await sb
+      .from("team_members")
+      .select("id")
+      .eq("user_id", ctx.userId)
+      .eq("team_id", teamIdParam)
+      .eq("status", "ACTIVE")
+      .limit(1);
+    if (!membership || membership.length === 0) {
+      return apiError("해당 팀의 활성 멤버가 아닙니다", 403);
+    }
+  }
+
   // sport_type 결정
   const sportParam = request.nextUrl.searchParams.get("sport");
   let sportType: SportType;
