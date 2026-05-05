@@ -56,7 +56,7 @@ export type DashboardData = {
     matchType: "REGULAR" | "INTERNAL" | "EVENT";
     voteCounts: { attend: number; absent: number; undecided: number };
   }[];
-  tasks: { label: string; href: string }[];
+  tasks: DashboardTask[];
   teamRecord: TeamRecord;
   teamUniform: TeamUniformInfo | null;
   birthdayMembers: BirthdayMember[];
@@ -64,6 +64,15 @@ export type DashboardData = {
   totalMatches: number;
   registeredMemberCount: number;
 };
+
+/**
+ * 대시보드 미완료 항목.
+ * - 일반 task 는 href 로 이동
+ * - action="open-peer-evaluation" 은 모달 직접 열기 (PitchScore 동료 평가)
+ */
+export type DashboardTask =
+  | { label: string; href: string; action?: undefined }
+  | { label: string; action: "open-peer-evaluation"; href?: undefined };
 
 const DUES_CUTOFF_DAY = 10;
 
@@ -83,23 +92,18 @@ type ActiveMemberRow = {
  * 대시보드 SSR 데이터 fetch — 3단계 병렬화 (2026-05-05).
  *
  * Stage 1: 자동 완료 + 독립 쿼리 일괄 (Promise.all)
- *   - upcoming · recent · activeVotes (matches 3종)
- *   - teams (uniform + mvp_vote_staff_only 한 번에)
- *   - team_members + users join (id, user_id, status, role + birth_date 등) — 이전 7번 fetch 통합
- *   - seasons · totalMatches · profile · dues_settings count
- *
- * Stage 2: stage1 결과에 의존하는 쿼리 일괄 (Promise.all)
- *   - upcoming sub: votes · guests
- *   - recent sub: goals · mvp · attendance
- *   - activeVotes sub: 다중 match attendance
- *   - taskChecks: 본인 투표/MVP 완료 여부 · 회비 납부 · 면제 · 영수증 카운트 · 가입 대기
- *   - completedMatches (seasons 의존)
- *
+ * Stage 2: stage1 결과 의존 쿼리 일괄 (Promise.all)
  * Stage 3: completedMatches → allGoals (완료된 경기 수만큼)
  *
- * 이전 직렬 8단 await → 3단으로 축소. 대시보드 SSR 평균 ~400ms 절감 예상.
+ * 이전 직렬 8단 await → 3단으로 축소. 대시보드 SSR 평균 ~400ms 절감.
+ *
+ * @param enablePitchScore Phase 2C 동료 평가 task 노출 여부 (현재 김선휘만)
  */
-export async function getDashboardData(teamId: string, userId: string): Promise<DashboardData> {
+export async function getDashboardData(
+  teamId: string,
+  userId: string,
+  enablePitchScore: boolean = false,
+): Promise<DashboardData> {
   const db = getSupabaseAdmin();
   if (!db) return {
     upcomingMatch: null, recentResult: null, activeVotes: [], tasks: [],
@@ -129,6 +133,7 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
     totalMatchesRes,
     profileRes,
     duesSettingsRes,
+    peerEvalCountRes,
   ] = await Promise.all([
     autoCompleteTeamMatches(db, teamId),
     db.from("matches")
@@ -185,6 +190,15 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
       .select("id", { count: "exact", head: true })
       .eq("team_id", teamId)
       .neq("member_type", "__PERIOD__"),
+    // PitchScore 동료 평가 누적 — 본인이 evaluator 로 한 평가 (자기평가 SELF 제외).
+    // Feature Flag 일 때만 fetch. 3건 미만이면 dashboard task 노출.
+    enablePitchScore
+      ? db.from("player_evaluations")
+          .select("id", { count: "exact", head: true })
+          .eq("evaluator_user_id", userId)
+          .eq("team_id", teamId)
+          .neq("source", "SELF")
+      : Promise.resolve({ count: 0 }),
   ]);
 
   const upcomingRaw = upcomingRes.data ?? null;
@@ -413,7 +427,22 @@ export async function getDashboardData(teamId: string, userId: string): Promise<
   }));
 
   // tasks 조립
-  const tasks: { label: string; href: string }[] = [];
+  const tasks: DashboardTask[] = [];
+
+  // PitchScore 동료 평가 — 누적 3건 미만이면 노출 (Feature Flag 일 때만)
+  if (enablePitchScore) {
+    const peerEvalCount = peerEvalCountRes.count ?? 0;
+    if (peerEvalCount < 3) {
+      const remaining = 3 - peerEvalCount;
+      tasks.push({
+        label: peerEvalCount === 0
+          ? "팀원 평가하기 (3명 권장)"
+          : `팀원 평가 ${remaining}명 더 하기`,
+        action: "open-peer-evaluation",
+      });
+    }
+  }
+
   if (upcomingMatch && !myUpcomingVoteRes.data) {
     tasks.push({ label: "다음 경기 참석 투표 완료하기", href: `/matches/${upcomingMatch.id}?tab=vote` });
   }

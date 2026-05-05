@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { CATEGORY_META } from "@/lib/playerAttributes/config";
 import type {
@@ -58,6 +59,22 @@ export default function EvaluationModal({
   const [openCategories, setOpenCategories] = useState<Set<AttributeCategory>>(new Set());
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 모달 열릴 때 body scroll lock — 페이지가 모달 뒤로 스크롤되는 현상 방지.
+  // 부모 모달(PeerEvaluationCard) 안에서 떠도 viewport 기준 위치 유지하도록.
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -133,9 +150,12 @@ export default function EvaluationModal({
     }
   }
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
+  // createPortal 로 document.body 에 직접 렌더 — 부모(예: PeerEvaluationCard 모달)에
+  // backdrop-filter 같은 containing block 생성 속성이 있어도 fixed 가 viewport 기준으로
+  // 정상 위치되도록 함. 이중 모달 시 inner 모달이 outer 영역에 갇혀 스크롤해야 보이는 사고 방지.
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center"
       onClick={onClose}
@@ -265,6 +285,7 @@ export default function EvaluationModal({
           </div>
         </footer>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
