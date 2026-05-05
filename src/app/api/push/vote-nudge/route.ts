@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
   const result = await sendTeamPush(ctx.teamId!, {
     title: "참석 투표를 완료해주세요!",
     body: `${match.match_date} vs ${opponent} — 아직 투표하지 않으셨습니다`,
-    url: `/matches/${matchId}`,
+    url: `/matches/${matchId}?tab=vote`,
     userIds: unvotedIds,
   });
 

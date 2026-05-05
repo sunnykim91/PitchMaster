@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
   sendTeamPush(ctx.teamId!, {
     title: pushTitle,
     body: pushBody,
-    url: `/matches/${data.id}`,
+    url: `/matches/${data.id}?tab=info`,
   }).catch(() => {});
 
   return apiSuccess(data, 201);

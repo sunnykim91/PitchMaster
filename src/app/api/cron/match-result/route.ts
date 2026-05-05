@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
     const pushResult = await sendTeamPush(match.team_id, {
       title,
       body,
-      url: `/matches/${match.id}`,
+      url: `/matches/${match.id}?tab=diary`,
     });
 
     totalSent += pushResult.sent;

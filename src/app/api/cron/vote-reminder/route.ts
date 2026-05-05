@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
     const result = await sendTeamPush(match.team_id, {
       title: isEvent ? "일정 참석 투표 마감이 내일입니다!" : "투표 마감이 내일입니다!",
       body: isEvent ? `${match.match_date} ${opponent} — 참석 여부를 투표해주세요` : `${match.match_date} vs ${opponent} — 참석 여부를 투표해주세요`,
-      url: `/matches/${match.id}`,
+      url: `/matches/${match.id}?tab=vote`,
       userIds: unvotedIds,
     });
 
