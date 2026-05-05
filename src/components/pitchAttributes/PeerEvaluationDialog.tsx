@@ -37,7 +37,7 @@ const SUGGESTED_TARGET = 3;
  * 동료 평가 다이얼로그 (Phase 2C, B3 출석 빈도 기반).
  *
  * - 같이 뛴 경기 많은 순 → 평가 적게 받은 사람 → 랜덤 동률 셔플
- * - 한 라운드 = 3명 권장 (강제 아님). 평가/스킵 후 즉시 새 사람 교체
+ * - 한 번에 3명 권장 (강제 아님). 평가/스킵 후 즉시 새 사람 교체
  * - 사용자가 X 닫기 누를 때까지 무한 평가 가능
  *
  * 진입점은 외부에서 제어 (open prop). 대시보드 할 일 목록 등 어디서든 호출 가능.
@@ -215,7 +215,7 @@ export default function PeerEvaluationDialog({ open, onClose, teamId, sportType 
               <div className="py-8 text-center">
                 <p className="text-sm text-muted-foreground">
                   {evaluatedCount + skippedCount > 0
-                    ? "이 라운드에 추천할 팀원이 더 없어요"
+                    ? "이번엔 추천할 팀원이 더 없어요"
                     : "평가할 수 있는 팀원이 없어요"}
                 </p>
                 {poolSize > 0 && (
