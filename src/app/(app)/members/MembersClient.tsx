@@ -651,6 +651,13 @@ export default function MembersClient({
             {filteredLinkedMembers.map((member) => {
               const isExpanded = expandedId === member.id;
               const isEditing = editingCoachPos === member.id || editingJerseyId === member.id;
+              // 일반 회원에게는 아코디언 노출 안 함 — 펼쳐도 운영진 전용 정보(연락처·생일)·관리 버튼이라 빈 컨텐츠.
+              // 본인 등번호 편집은 /settings 페이지에 이미 있음. 감독 지정 포지션은 행 inline 으로 이동.
+              const isStaffViewer = isStaffOrAbove(role);
+              const positionLine = member.preferredPositions.join(" · ") || "포지션 미설정";
+              const coachInline = !isStaffViewer && member.coachPositions.length > 0
+                ? `${positionLine} · 감독 지정 ${member.coachPositions.join("·")}`
+                : positionLine;
               return (
               <div
                 key={member.id}
@@ -660,57 +667,97 @@ export default function MembersClient({
                 )}
               >
                 {/* ── 기본 행: 항상 표시 ── */}
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-                  onClick={() => { if (!isEditing) setExpandedId(isExpanded ? null : member.id); }}
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold truncate flex items-center gap-1.5">
-                      {/* 프로필 아바타 */}
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-1 ring-border">
-                        {member.profileImageUrl ? (
-                          <img src={member.profileImageUrl} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <span className="text-[10px] font-bold text-muted-foreground">{member.name.charAt(0)}</span>
-                        )}
-                      </span>
-                      {member.jerseyNumber !== null && (
-                        <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">#{member.jerseyNumber}</span>
-                      )}
-                      <span className="truncate">{member.name}</span>
-                      {member.teamRole === "CAPTAIN" && (
-                        <Badge variant="warning" className="text-xs px-1.5 py-0 shrink-0">주장</Badge>
-                      )}
-                      {member.teamRole === "VICE_CAPTAIN" && (
-                        <Badge variant="secondary" className="text-xs px-1.5 py-0 shrink-0">부주장</Badge>
-                      )}
-                      {member.status === "DORMANT" && member.dormantType && (
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0 bg-muted-foreground/15 text-muted-foreground">
-                          {DORMANT_ICONS[member.dormantType]} {DORMANT_LABELS[member.dormantType] ?? "휴면"}
-                          {member.dormantUntil && (
-                            <span className="ml-0.5">~{member.dormantUntil.slice(5)}</span>
+                {isStaffViewer ? (
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+                    onClick={() => { if (!isEditing) setExpandedId(isExpanded ? null : member.id); }}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate flex items-center gap-1.5">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-1 ring-border">
+                          {member.profileImageUrl ? (
+                            <img src={member.profileImageUrl} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <span className="text-[10px] font-bold text-muted-foreground">{member.name.charAt(0)}</span>
                           )}
-                        </Badge>
-                      )}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground truncate">
-                      {member.preferredPositions.join(" · ") || "포지션 미설정"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant="secondary" className="px-2 py-0.5 text-xs">
+                        </span>
+                        {member.jerseyNumber !== null && (
+                          <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">#{member.jerseyNumber}</span>
+                        )}
+                        <span className="truncate">{member.name}</span>
+                        {member.teamRole === "CAPTAIN" && (
+                          <Badge variant="warning" className="text-xs px-1.5 py-0 shrink-0">주장</Badge>
+                        )}
+                        {member.teamRole === "VICE_CAPTAIN" && (
+                          <Badge variant="secondary" className="text-xs px-1.5 py-0 shrink-0">부주장</Badge>
+                        )}
+                        {member.status === "DORMANT" && member.dormantType && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0 bg-muted-foreground/15 text-muted-foreground">
+                            {DORMANT_ICONS[member.dormantType]} {DORMANT_LABELS[member.dormantType] ?? "휴면"}
+                            {member.dormantUntil && (
+                              <span className="ml-0.5">~{member.dormantUntil.slice(5)}</span>
+                            )}
+                          </Badge>
+                        )}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground truncate">
+                        {positionLine}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant="secondary" className="px-2 py-0.5 text-xs">
+                        {roleLabels[member.role]}
+                      </Badge>
+                      <ChevronDown className={cn(
+                        "h-4 w-4 text-muted-foreground transition-transform",
+                        isExpanded && "rotate-180"
+                      )} aria-hidden="true" />
+                    </div>
+                  </button>
+                ) : (
+                  // 일반 회원: 단순 정보 행 (펼침 없음)
+                  <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate flex items-center gap-1.5">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-1 ring-border">
+                          {member.profileImageUrl ? (
+                            <img src={member.profileImageUrl} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <span className="text-[10px] font-bold text-muted-foreground">{member.name.charAt(0)}</span>
+                          )}
+                        </span>
+                        {member.jerseyNumber !== null && (
+                          <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">#{member.jerseyNumber}</span>
+                        )}
+                        <span className="truncate">{member.name}</span>
+                        {member.teamRole === "CAPTAIN" && (
+                          <Badge variant="warning" className="text-xs px-1.5 py-0 shrink-0">주장</Badge>
+                        )}
+                        {member.teamRole === "VICE_CAPTAIN" && (
+                          <Badge variant="secondary" className="text-xs px-1.5 py-0 shrink-0">부주장</Badge>
+                        )}
+                        {member.status === "DORMANT" && member.dormantType && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0 bg-muted-foreground/15 text-muted-foreground">
+                            {DORMANT_ICONS[member.dormantType]} {DORMANT_LABELS[member.dormantType] ?? "휴면"}
+                            {member.dormantUntil && (
+                              <span className="ml-0.5">~{member.dormantUntil.slice(5)}</span>
+                            )}
+                          </Badge>
+                        )}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground truncate">
+                        {coachInline}
+                      </p>
+                    </div>
+                    <Badge variant="secondary" className="px-2 py-0.5 text-xs shrink-0">
                       {roleLabels[member.role]}
                     </Badge>
-                    <ChevronDown className={cn(
-                      "h-4 w-4 text-muted-foreground transition-transform",
-                      isExpanded && "rotate-180"
-                    )} aria-hidden="true" />
                   </div>
-                </button>
+                )}
 
-                {/* ── 확장 영역: 탭 시 표시 ── */}
-                {isExpanded && (
+                {/* ── 확장 영역: 운영진 + 펼침 시에만 ── */}
+                {isStaffViewer && isExpanded && (
                   <div className="border-t border-border/20 px-4 py-3 space-y-3">
                     {/* 상세 정보 */}
                     {canViewAll && (
