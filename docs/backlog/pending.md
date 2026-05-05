@@ -1,7 +1,7 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=89팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-05-03 (42차)
+last_updated: 2026-05-05 (44차)
 related: [completed-recent.md, reviews.md]
 ---
 
@@ -118,6 +118,61 @@ related: [completed-recent.md, reviews.md]
 - [ ] 네이버 서치어드바이저 — 2~4주 후 수집 정상화 여부 확인 (4개 URL 수집 요청 접수)
 - [ ] 구글 Search Console — 색인 생성 요청 4개 처리 결과 확인
 - [ ] www 도메인 정적 자산 15개 "크롤링됨·색인 안 됨" 자연 해소 여부 확인 (무시해도 무방)
+
+## 44차 신규 추가 (2026-05-05) — PitchScore 2차 통합 디자인
+
+### `/records?tab=my` 종합 재설계 (2차)
+- **배경**: 1차 통합 (`my` 탭에 PitchScoreCard 단순 추가) 완료. 2차는 시각적·구조적 통합 디자인.
+- [ ] 헤더 영역: 본인 정보 요약 (이름, 주포지션, 시즌 출석률 한 줄)
+- [ ] 섹션 레이아웃 통일: "경기 활약 (이번 시즌)" / "PitchScore 능력치" / "최근 활약" / "시즌 수상" 일관 카드 디자인
+- [ ] 두 레이더 차트(경기 스탯 / 능력치) 비교 레이아웃 — 가능하면 한 화면에 나란히
+- [ ] 스코어 요약 카드 (예: 종합 PitchScore 점수 vs 시즌 평균 활약)
+- [ ] 모바일 우선 — 카드 길이 길어지지 않도록 정보 우선순위 정리
+- 트리거: Phase 2C 라이브 검증 + Feature Flag 전체 오픈 후 진행
+
+## 44차 신규 추가 (2026-05-05) — SEO 후속 확인
+
+### favicon.ico 배포 검증
+- [ ] 사용자 푸시 완료 후 `curl -I https://pitch-master.app/favicon.ico` 200 확인
+- [ ] 네이버 서치어드바이저 "접근 불가" 항목 재진단 → 0건 확인
+- [ ] 네이버 사이트맵 "수집 다시 요청" 제출
+
+### 네이버 수집제한 4개 URL 확인
+- [ ] 네이버 서치어드바이저 진단 화면 "유형별 진단 정보" 섹션에서 수집제한 4개 URL 목록 확인
+- [ ] URL 확인 후 원인 분석 (robots.txt 차단인지, 서버 오류인지, canonical 문제인지)
+
+### GSC "리디렉션 오류 2 / 404 2" 확인
+- [ ] GSC 해당 행 클릭 → URL 목록 확인
+- [ ] 각 URL 원인 분석 + 필요 시 redirect 추가 또는 sitemap 제외
+- 참고: "크롤링됨-색인안됨 15개"는 정상 상태 (무시) — `reference_naver_gsc_seo_diagnosis.md` 참조
+
+## 42차 보강 (2026-05-04) — MVP 정책 변경 후속
+
+### MVP 정책 5/4 cutoff 라이브 검증 (HIGH)
+- **배경**: `241b394` 커밋으로 `mvp_vote_staff_only=OFF` 시 운영진도 일반 회원처럼 1인 1표로 전환. 5/4 이전 경기는 옛 정책 보존.
+- [ ] FCMZ (`mvp_vote_staff_only=false`) 팀: 운영진 투표 시 즉시 확정 안 되고 70% 룰 적용되는지 확인
+- [ ] FCMZ (`mvp_vote_staff_only=true`) 팀: 운영진 투표 시 즉시 확정 동작 확인
+- [ ] 본인 본인 투표 차단: MVP 투표 UI에서 본인 이름 후보 선택 후 제출 시 400 반환 또는 UI 차단 확인
+- [ ] 5/4 이전 경기: 기록 페이지에서 옛 정책 기반 MVP 결과 동일 유지 확인
+- [ ] FCMZ 경기(`d2641733`) DB 갱신 후 MVP 집계 화면 정상 반영 확인
+
+### MVP Feature Flag 제거 결정 (FCMZ 검증 완료 후)
+- [ ] 검증 완료 후 `shouldApplyNewMvpPolicy` 분기 유지 여부 결정 — 5/4 이전 경기 보호 기간 정책 영구 유지할지 판단
+- [ ] 참고: `domain_mvp_policy.md` (5/4 cutoff 정책 상세)
+
+## 43차 신규 추가 (2026-05-04)
+
+### ai_team_stats_cache 자동 무효화 (MEDIUM)
+- **배경**: 경기 점수·골 기록 변경 시 24h TTL 캐시가 stale 상태로 남아 AI가 과거 점수를 인용. 사용자가 직접 `ai_team_stats_cache` row 삭제해야만 해소 (43차 가상 전적 hallucination 사고 root cause).
+- [ ] `match_goals` INSERT/UPDATE/DELETE 트리거 → 해당 팀 `ai_team_stats_cache` row 삭제
+- [ ] 또는 API `/api/goals/route.ts` mutation 후 cache invalidation 로직 추가
+- [ ] 참고: `feedback_ai_cache_invalidation.md` (43차 신규 memory)
+
+### AI 풀플랜 받은 경기 — 코칭 카드·배치 표시 이상 재현 (HIGH)
+- **배경**: 사용자 보고 "이미 풀플랜 받은 경기 → 기록이 잘 안 보임". 정확한 재현 시나리오 미확인.
+- [ ] 코칭 카드(AiCoachAnalysisCard) 표시 이상인지 vs placement 자체 렌더링 이상인지 구분
+- [ ] 재현 조건: 풀플랜 받은 경기 재진입 → 전술 탭 확인 → 코칭 카드 표시 여부 + AutoFormationBuilder 슬롯 확인
+- [ ] 필요 시 콘솔 로그로 `effectiveAiCoachContext` 갈래 추적
 
 ## 42차 신규 추가 (2026-05-03)
 

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { BarChart3, ArrowUpDown, ArrowDown, Download, Share2, Trophy } from "lucide-react";
+import { BarChart3, ArrowUpDown, ArrowDown, Download, Share2, Trophy, Sparkles } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role } from "@/lib/types";
@@ -16,6 +16,9 @@ import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/EmptyState";
 import dynamic from "next/dynamic";
+import PitchScoreCard from "@/components/pitchAttributes/PitchScoreCard";
+import PeerEvaluationDialog from "@/components/pitchAttributes/PeerEvaluationDialog";
+import type { SportType } from "@/lib/playerAttributes/types";
 
 // 차트 로딩 인디케이터
 const ChartSpinner = () => (
@@ -101,16 +104,26 @@ type InitialData = {
 
 export default function RecordsClient({
   userId,
+  userName,
   userRole,
   initialData,
+  teamId,
+  sportType,
+  enablePitchScore,
 }: {
   userId: string;
+  userName?: string;
   userRole?: Role;
   initialData?: InitialData;
+  teamId?: string | null;
+  sportType?: SportType | null;
+  enablePitchScore?: boolean;
 }) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
   const searchParams = useSearchParams();
+  const [peerEvalOpen, setPeerEvalOpen] = useState(false);
+  const showPitchScoreEntry = !!(enablePitchScore && teamId && sportType);
 
   // ── Tab state ──
   type RecordsTab = "my" | "ranking" | "all" | "awards";
@@ -309,6 +322,30 @@ export default function RecordsClient({
 
   return (
     <div className="grid gap-5 stagger-children min-w-0">
+      {/* ── PitchScore 동료 평가 진입 카드 (옵션 C — 모든 탭 공통, 페이지 상단) ── */}
+      {showPitchScoreEntry && (
+        <section className="rounded-xl border border-[hsl(var(--primary))]/30 bg-gradient-to-br from-[hsl(var(--primary))]/8 to-[hsl(var(--primary))]/3 p-4 sm:p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-[hsl(var(--primary))]" />
+                <h2 className="text-sm font-bold">팀원 능력치 평가</h2>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                같이 뛰어본 팀원을 평가하면 본인 PitchScore™도 정확해져요.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPeerEvalOpen(true)}
+              className="shrink-0 rounded-md bg-[hsl(var(--primary))] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
+            >
+              평가하기
+            </button>
+          </div>
+        </section>
+      )}
+
       {/* ── Tab Bar ── */}
       <div className="sticky top-0 z-10 -mx-1 px-1 bg-background/95 backdrop-blur-sm border-b border-border">
         <div role="tablist" aria-label="기록 탭" className="flex">
@@ -477,6 +514,30 @@ export default function RecordsClient({
           </CardContent>
         </Card>
       </div>
+
+      {/* ── PitchScore 본인 능력치 통합 (1차 통합 — 경기 스탯과 같은 화면에 표시) ── */}
+      {showPitchScoreEntry && (
+        <PitchScoreCard
+          targetUserId={userId}
+          targetUserName={userName ?? "나"}
+          sportType={sportType!}
+          contextTeamId={teamId!}
+        />
+      )}
+
+      {/* ── PitchScore 보조 CTA (옵션 A — reciprocity 동기) ── */}
+      {showPitchScoreEntry && (
+        <div className="rounded-lg border border-border bg-background/40 p-3 text-[12px] leading-relaxed text-muted-foreground">
+          더 많은 동료가 평가해줘야 본인 PitchScore™ 정확도가 올라가요.{" "}
+          <button
+            type="button"
+            onClick={() => setPeerEvalOpen(true)}
+            className="font-semibold text-[hsl(var(--primary))] hover:underline"
+          >
+            팀원 평가하러 가기 →
+          </button>
+        </div>
+      )}
 
       </div>
 
@@ -811,6 +872,16 @@ export default function RecordsClient({
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* PitchScore 동료 평가 모달 — 페이지 상단 카드 또는 my 탭 보조 CTA 트리거 */}
+      {showPitchScoreEntry && (
+        <PeerEvaluationDialog
+          open={peerEvalOpen}
+          onClose={() => setPeerEvalOpen(false)}
+          teamId={teamId!}
+          sportType={sportType!}
+        />
+      )}
     </div>
   );
 }
