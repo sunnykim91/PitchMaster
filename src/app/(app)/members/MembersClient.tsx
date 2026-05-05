@@ -745,7 +745,7 @@ export default function MembersClient({
                         )}
                       </p>
                       <p className="mt-0.5 text-xs text-muted-foreground truncate">
-                        {coachInline}
+                        {positionLine}
                       </p>
                     </div>
                     <Badge variant="secondary" className="px-2 py-0.5 text-xs shrink-0">
