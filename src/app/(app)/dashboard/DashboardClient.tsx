@@ -19,7 +19,6 @@ import { useToast } from "@/lib/ToastContext";
 import { EmptyState } from "@/components/EmptyState";
 import { shareTeamInvite } from "@/lib/kakaoShare";
 import { getUniformStyle } from "@/lib/uniformUtils";
-import PeerEvaluationDialog from "@/components/pitchAttributes/PeerEvaluationDialog";
 import type { SportType } from "@/lib/playerAttributes/types";
 
 type UpcomingMatch = {
@@ -78,9 +77,7 @@ type BirthdayMember = {
   profileImageUrl: string | null;
 };
 
-type DashboardTask =
-  | { label: string; href: string; action?: undefined }
-  | { label: string; action: "open-peer-evaluation"; href?: undefined };
+type DashboardTask = { label: string; href: string };
 
 type DashboardData = {
   upcomingMatch: UpcomingMatch | null;
@@ -170,7 +167,6 @@ function CardSkeleton() {
 }
 
 export default function DashboardClient({ userId, userRole, initialData, inviteCode, teamName, teamId, sportType }: { userId: string; userRole?: Role; initialData?: DashboardData; inviteCode?: string; teamName?: string; teamId?: string; sportType?: SportType | null }) {
-  const [peerEvalOpen, setPeerEvalOpen] = useState(false);
   const { data, loading, error, refetch } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
   const { showToast } = useToast();
   const searchParams = useSearchParams();
@@ -735,55 +731,26 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
             <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">미완료 항목</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {(() => {
-              // ViewAsRole 시뮬레이션 일관성 — SSR 은 실제 권한 기준이라 회장이
-              // viewAsRole=MEMBER 토글해도 평가 task 가 그대로 보임. 클라 시점에서
-              // effectiveRole 기반으로 한번 더 필터해 시뮬레이션 정확도 ↑.
-              // (진짜 평회원 계정은 SSR 단계에서 이미 task 빠지므로 영향 없음.)
-              const isStaffViewer = role === "PRESIDENT" || role === "STAFF";
-              const visibleTasks = isStaffViewer
-                ? tasks
-                : tasks.filter((t) => t.action !== "open-peer-evaluation");
-              return visibleTasks.length > 0 ? (
-              visibleTasks.map((task) => {
-                // 모달 트리거 task — Link 가 아니라 button 으로 onClick (예: 동료 평가)
-                if (task.action === "open-peer-evaluation") {
-                  return (
-                    <button
-                      key={task.label}
-                      type="button"
-                      onClick={() => setPeerEvalOpen(true)}
-                      className="block w-full text-left rounded-lg border border-[hsl(var(--warning)/0.2)] bg-[hsl(var(--warning)/0.05)] p-3 transition-colors hover:bg-[hsl(var(--warning)/0.1)]"
-                    >
-                      <div className="flex items-center gap-3 text-sm font-medium text-foreground">
-                        <span className="h-2 w-2 shrink-0 rounded-full bg-[hsl(var(--warning))]" />
-                        <span className="flex-1">{task.label}</span>
-                        <span className="text-xs text-muted-foreground">→</span>
-                      </div>
-                    </button>
-                  );
-                }
-                return (
-                  <Link
-                    key={task.label}
-                    href={task.href}
-                    className="block rounded-lg border border-[hsl(var(--warning)/0.2)] bg-[hsl(var(--warning)/0.05)] p-3 transition-colors hover:bg-[hsl(var(--warning)/0.1)]"
-                  >
-                    <div className="flex items-center gap-3 text-sm font-medium text-foreground">
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-[hsl(var(--warning))]" />
-                      <span className="flex-1">{task.label}</span>
-                      <span className="text-xs text-muted-foreground">→</span>
-                    </div>
-                  </Link>
-                );
-              })
+            {tasks.length > 0 ? (
+              tasks.map((task) => (
+                <Link
+                  key={task.label}
+                  href={task.href}
+                  className="block rounded-lg border border-[hsl(var(--warning)/0.2)] bg-[hsl(var(--warning)/0.05)] p-3 transition-colors hover:bg-[hsl(var(--warning)/0.1)]"
+                >
+                  <div className="flex items-center gap-3 text-sm font-medium text-foreground">
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-[hsl(var(--warning))]" />
+                    <span className="flex-1">{task.label}</span>
+                    <span className="text-xs text-muted-foreground">→</span>
+                  </div>
+                </Link>
+              ))
             ) : (
               <div className="flex items-center gap-3 rounded-lg bg-[hsl(var(--success)/0.1)] px-4 py-3">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--success))]" />
                 <p className="text-sm text-[hsl(var(--success))]">모든 할 일을 완료했습니다!</p>
               </div>
-            );
-            })()}
+            )}
           </CardContent>
         </Card>
 
@@ -906,16 +873,6 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
         ))}
       </div>
 
-      {/* PitchScore 동료 평가 모달 — task 클릭 또는 외부 트리거로 노출.
-          teamId + sportType 모두 있을 때만 활성 (Feature Flag 일 때 SSR 에서 전달) */}
-      {teamId && sportType && (
-        <PeerEvaluationDialog
-          open={peerEvalOpen}
-          onClose={() => setPeerEvalOpen(false)}
-          teamId={teamId}
-          sportType={sportType}
-        />
-      )}
     </div>
   );
 }

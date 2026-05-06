@@ -68,11 +68,9 @@ export type DashboardData = {
 /**
  * 대시보드 미완료 항목.
  * - 일반 task 는 href 로 이동
- * - action="open-peer-evaluation" 은 모달 직접 열기 (PitchScore 동료 평가)
+ * - 모든 task 는 단순 Link 형태 (45차 동료평가 UI 비활성화 후속)
  */
-export type DashboardTask =
-  | { label: string; href: string; action?: undefined }
-  | { label: string; action: "open-peer-evaluation"; href?: undefined };
+export type DashboardTask = { label: string; href: string };
 
 const DUES_CUTOFF_DAY = 10;
 
@@ -431,21 +429,8 @@ export async function getDashboardData(
   // tasks 조립
   const tasks: DashboardTask[] = [];
 
-  // PitchScore 동료 평가 task (Feature Flag 일 때만)
-  // - 운영진: 항시 노출 (모든 팀원 평가가 운영 책임). 라벨은 누적 카운트 표시
-  // - 일반 회원: 누적 3건 미만에만 노출. 잔여 인원으로 라벨 동적 변경
-  // PitchScore "감독 노트" 정체성으로 전환 (45차 후속) — 운영진만 평가 책임.
-  // 일반 회원에게는 동료 평가 task 노출하지 않음 (조기축구 정서상 동료 평가 부담·친목 깨기 위험).
-  if (enablePitchScore && isStaff) {
-    const peerEvalRows = (peerEvalCountRes.data ?? []) as Array<{ target_user_id: string }>;
-    const peerEvalCount = new Set(peerEvalRows.map((r) => r.target_user_id)).size;
-    tasks.push({
-      label: peerEvalCount > 0
-        ? `팀원 평가하기 (${peerEvalCount}명 평가함)`
-        : "팀원 평가하기",
-      action: "open-peer-evaluation",
-    });
-  }
+  // (45차 후속) PitchScore 동료평가 task 제거 — 운영진은 회원 메뉴에서 직접 평가
+  // peerEvalCountRes 도 미사용이지만 Promise.all 인덱스 깨지지 않게 fetch 자체는 유지
 
   if (upcomingMatch && !myUpcomingVoteRes.data) {
     tasks.push({ label: "다음 경기 참석 투표 완료하기", href: `/matches/${upcomingMatch.id}?tab=vote` });

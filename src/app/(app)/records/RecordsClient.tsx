@@ -17,7 +17,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { EmptyState } from "@/components/EmptyState";
 import dynamic from "next/dynamic";
 import PitchScoreCard, { type AttributesResponse as PitchAttributesResponse } from "@/components/pitchAttributes/PitchScoreCard";
-import PeerEvaluationDialog from "@/components/pitchAttributes/PeerEvaluationDialog";
 import TeamPositionRankings from "@/components/pitchAttributes/TeamPositionRankings";
 import MyOverviewCard from "@/components/pitchAttributes/MyOverviewCard";
 import type { SportType } from "@/lib/playerAttributes/types";
@@ -125,7 +124,6 @@ export default function RecordsClient({
   const role = effectiveRole(userRole);
   const isStaffViewer = role === "PRESIDENT" || role === "STAFF";
   const searchParams = useSearchParams();
-  const [peerEvalOpen, setPeerEvalOpen] = useState(false);
   const showPitchScoreEntry = !!(enablePitchScore && teamId && sportType);
   // 운영진 전용 노출 — 일반회원은 평가 진입점·팀 랭킹 보지 않음 (45차 후속 "감독 노트" 정체성).
   // 본인 PitchScoreCard 는 모두 노출 (자가 평가 + 본인 점수 보기는 유지).
@@ -353,30 +351,6 @@ export default function RecordsClient({
 
   return (
     <div className="grid gap-5 stagger-children min-w-0">
-      {/* ── PitchScore 평가 진입 카드 — 운영진 전용 ("감독 노트") ── */}
-      {showStaffOnlyEntry && (
-        <section className="rounded-xl border border-[hsl(var(--primary))]/30 bg-gradient-to-br from-[hsl(var(--primary))]/8 to-[hsl(var(--primary))]/3 p-4 sm:p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-[hsl(var(--primary))]" />
-                <h2 className="text-sm font-bold">팀원 능력치 평가</h2>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                운영진이 라인업·포지션 결정에 참고할 능력치를 기록해주세요.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setPeerEvalOpen(true)}
-              className="shrink-0 rounded-md bg-[hsl(var(--primary))] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
-            >
-              평가하기
-            </button>
-          </div>
-        </section>
-      )}
-
       {/* ── Tab Bar ── */}
       <div className="sticky top-0 z-10 -mx-1 px-1 bg-background/95 backdrop-blur-sm border-b border-border">
         <div role="tablist" aria-label="기록 탭" className="flex">
@@ -573,19 +547,6 @@ export default function RecordsClient({
         />
       )}
 
-      {/* ── PitchScore 보조 CTA (reciprocity) ── */}
-      {showStaffOnlyEntry &&(
-        <div className="rounded-lg border border-border bg-background/40 p-3 text-[12px] leading-relaxed text-muted-foreground">
-          더 많은 동료가 평가해줘야 본인 PitchScore™ 정확도가 올라가요.{" "}
-          <button
-            type="button"
-            onClick={() => setPeerEvalOpen(true)}
-            className="font-semibold text-[hsl(var(--primary))] hover:underline"
-          >
-            팀원 평가하러 가기 →
-          </button>
-        </div>
-      )}
 
       </div>
 
@@ -926,15 +887,6 @@ export default function RecordsClient({
         </SheetContent>
       </Sheet>
 
-      {/* PitchScore 동료 평가 모달 — 페이지 상단 카드 또는 my 탭 보조 CTA 트리거 */}
-      {showStaffOnlyEntry &&(
-        <PeerEvaluationDialog
-          open={peerEvalOpen}
-          onClose={() => setPeerEvalOpen(false)}
-          teamId={teamId!}
-          sportType={sportType!}
-        />
-      )}
     </div>
   );
 }
