@@ -299,27 +299,28 @@
     <a href="#vote" class="sidebar-link" data-target="vote">4. 참석 투표</a>
     <a href="#attendance" class="sidebar-link" data-target="attendance">5. 출석 체크</a>
     <a href="#lineup" class="sidebar-link" data-target="lineup">6. 전술 편성</a>
-    <a href="#record" class="sidebar-link" data-target="record">7. 경기 기록 · 통계</a>
+    <a href="#tactics-video" class="sidebar-link" data-target="tactics-video">7. 전술 영상</a>
+    <a href="#record" class="sidebar-link" data-target="record">8. 경기 기록 · 통계</a>
   </div>
 
   <div class="sidebar-group">
     <div class="sidebar-group-title">회비</div>
-    <a href="#dues" class="sidebar-link" data-target="dues">8. 회비 관리</a>
-    <a href="#prepay" class="sidebar-link" data-target="prepay">9. 회비 선납</a>
-    <a href="#monthly" class="sidebar-link" data-target="monthly">10. 월별 결산</a>
+    <a href="#dues" class="sidebar-link" data-target="dues">9. 회비 관리</a>
+    <a href="#prepay" class="sidebar-link" data-target="prepay">10. 회비 선납</a>
+    <a href="#monthly" class="sidebar-link" data-target="monthly">11. 월별 결산</a>
   </div>
 
   <div class="sidebar-group">
     <div class="sidebar-group-title">AI</div>
-    <a href="#ai" class="sidebar-link" data-target="ai">11. AI 기능 5종</a>
+    <a href="#ai" class="sidebar-link" data-target="ai">12. AI 기능 5종</a>
   </div>
 
   <div class="sidebar-group">
     <div class="sidebar-group-title">더보기</div>
-    <a href="#more" class="sidebar-link" data-target="more">12. 게시판 · 멤버 외</a>
-    <a href="#pwa" class="sidebar-link" data-target="pwa">13. 홈 화면 추가</a>
-    <a href="#faq" class="sidebar-link" data-target="faq">14. FAQ</a>
-    <a href="#contact" class="sidebar-link" data-target="contact">15. 문의</a>
+    <a href="#more" class="sidebar-link" data-target="more">13. 게시판 · 멤버 외</a>
+    <a href="#pwa" class="sidebar-link" data-target="pwa">14. 홈 화면 추가</a>
+    <a href="#faq" class="sidebar-link" data-target="faq">15. FAQ</a>
+    <a href="#contact" class="sidebar-link" data-target="contact">16. 문의</a>
   </div>
 </aside>
 
@@ -328,6 +329,7 @@
   <div class="sticky-nav-inner" id="navInner">
     <a href="#start" class="nav-pill active" data-section="start">시작하기</a>
     <a href="#match-flow" class="nav-pill" data-section="match-flow">경기 운영</a>
+    <a href="#tactics-video" class="nav-pill" data-section="tactics-video">전술 영상</a>
     <a href="#dues" class="nav-pill" data-section="dues">회비</a>
     <a href="#ai" class="nav-pill" data-section="ai">AI</a>
     <a href="#more" class="nav-pill" data-section="more">더보기</a>
@@ -369,7 +371,7 @@
     </div>
     <div class="role-row">
       <span class="role-label"><span class="badge badge-staff">운영진</span></span>
-      <span class="role-path"><a href="#vote">투표</a> · <a href="#attendance">출석</a> · <a href="#lineup">전술</a> · <a href="#record">기록</a> · <a href="#dues">회비</a> · <a href="#ai">AI</a></span>
+      <span class="role-path"><a href="#vote">투표</a> · <a href="#attendance">출석</a> · <a href="#lineup">전술</a> · <a href="#tactics-video">전술 영상</a> · <a href="#record">기록</a> · <a href="#dues">회비</a> · <a href="#ai">AI</a></span>
     </div>
     <div class="role-row">
       <span class="role-label"><span class="badge badge-member">회원</span></span>
@@ -382,55 +384,60 @@
 
   <section id="start">
     <h2><span class="num">1</span>가입하기</h2>
-    <p>별도 회원가입 없이, 카카오 로그인 한 번이면 됩니다.</p>
+    <p>별도 회원가입·앱 설치 없이 <strong>카카오톡 계정</strong>만 있으면 시작할 수 있어요. 실제로 처음부터 끝까지 30초쯤 걸립니다.</p>
+
+    <h3>가입 순서</h3>
     <ol>
-      <li><a href="https://www.pitch-master.app">pitch-master.app</a> 접속</li>
-      <li><strong>카카오 로그인</strong> 클릭</li>
-      <li>이름과 선호 포지션 입력 (연락처·생년월일은 나중에 해도 됩니다)</li>
-      <li><strong>새 팀 만들기</strong> 또는 <strong>초대 링크</strong>로 기존 팀에 가입</li>
+      <li>주소창에 <a href="https://www.pitch-master.app">pitch-master.app</a> 을 직접 치거나, 회장·총무가 단톡방에 던진 <strong>초대 링크</strong>를 누르면 시작 화면이 떠요.</li>
+      <li>화면에 보이는 <strong>[무료로 시작하기]</strong> 버튼을 누르면 카카오 로그인 창으로 넘어갑니다 — 평소 카카오톡 쓰는 계정 그대로 들어가시면 돼요.</li>
+      <li>로그인이 끝나면 <strong>[기본 정보를 입력해주세요]</strong> 화면이 뜹니다. <strong>이름</strong>만 채워도 다음 단계로 넘어갈 수 있고, <strong>생년월일 · 주발(자주 쓰는 발) · 선호 포지션</strong> 같은 건 빈 칸으로 두고 나중에 설정에서 채워도 됩니다.</li>
+      <li>마지막으로 <strong>[팀 만들기]</strong> 또는 <strong>[팀 검색해서 가입]</strong> 둘 중 하나를 고르면 가입 끝. 단톡방에서 받은 초대 링크를 누르고 들어왔다면 이 단계가 자동으로 건너뛰어지고 그 팀에 바로 합류돼요.</li>
     </ol>
-    <div class="tip">가입 전에 둘러보고 싶다면 메인 페이지의 <strong>"30초 만에 데모 체험하기"</strong> 버튼을 눌러보세요.</div>
+
+    <div class="tip">가입하기 전에 한 번 둘러보고 싶다면 메인 화면의 <strong>[30초 만에 데모 체험하기]</strong> 버튼을 눌러보세요. 가짜 팀(FC DEMO)의 회장으로 들어가 모든 기능을 만져볼 수 있고, 가입은 안 해도 됩니다.</div>
   </section>
 
   <section id="team">
     <h2><span class="num">2</span>팀 만들기 · 팀원 초대</h2>
+    <p>팀을 만든 사람은 자동으로 그 팀의 <strong>회장</strong>이 됩니다. 단톡방으로 팀원에게 링크를 던지기만 하면, 받은 사람은 카카오 로그인 한 번에 우리 팀에 들어와요.</p>
+
+    <h3>회장: 새 팀 만들기 <span class="badge badge-president">회장</span></h3>
+    <p>가입 직후 화면에서 <strong>[새 팀 만들기]</strong> 카드를 누르거나, 햄버거 메뉴(좌측 상단 ☰) → <strong>팀 만들기</strong> 화면에서 새 팀을 만들 수 있어요.</p>
     <ol>
-      <li>팀명 입력 + 축구/풋살 선택 → <strong>팀 생성</strong></li>
-      <li>대시보드에서 <strong>"카카오톡으로 초대"</strong> 버튼을 눌러 팀원에게 공유</li>
-      <li>팀원이 링크를 눌러 카카오 로그인하면 자동으로 팀에 합류됩니다</li>
+      <li><strong>팀명</strong> — 단톡방에서 부르는 이름 그대로 쓰는 게 팀원들이 알아보기 좋아요 (예: <em>FCMZ</em>, <em>FK Rebirth</em>).</li>
+      <li><strong>스포츠 유형</strong> — <strong>축구</strong>(11명) 또는 <strong>풋살</strong>(보통 5~8명) 중 우리 팀이 평소에 뛰는 종목 선택. 종목에 따라 포메이션·역할 가이드가 달라지니 정확히 골라주세요.</li>
+      <li><strong>[팀 생성하기]</strong> 버튼을 누르면 팀이 만들어지고, 본인은 자동으로 그 팀의 <strong>회장</strong>이 됩니다.</li>
     </ol>
 
+    <h3>회장·운영진: 팀원 초대하기</h3>
+    <p>팀이 만들어지면 대시보드(홈 화면) 위쪽에 <strong>초대 코드 카드</strong>가 떠요. 그 카드의 <strong>[카카오톡으로 초대]</strong> 버튼을 누르면 단톡방에 안내문이 자동으로 채워지고, 그대로 보내기만 하면 됩니다.</p>
+
     <div class="card">
-      <strong>팀원에게 보낼 초대 안내 (복사해서 카톡에 붙여넣기)</strong>
+      <strong>단톡방에 던질 안내 예시 (자동으로 채워져요. 직접 쓸 거면 복사해서 사용)</strong>
       <div class="card-desc invite-snippet">
-        우리 팀 참석투표/회비관리 앱이에요!<br>
-        아래 링크 눌러서 카카오 로그인하면 바로 가입돼요<br><br>
+        우리 팀 참석투표·회비관리 앱이에요!<br>
+        아래 링크 누르고 카카오 로그인하면 바로 가입돼요<br><br>
         https://www.pitch-master.app/team?code=<strong>[초대코드]</strong><br><br>
-        ※ 초대코드는 대시보드에서 확인할 수 있어요
+        ※ 초대 코드는 대시보드 위쪽 [초대 코드 카드]에서 확인할 수 있어요
       </div>
     </div>
 
+    <h3>팀원: 초대 링크로 가입</h3>
+    <p>회장·총무가 단톡방에 던진 링크를 누르면, 카카오 로그인 → 이름·포지션 입력 한 번에 그 팀으로 자동 합류됩니다. 따로 신청·승인 절차 없이 바로 끝나요.</p>
+
     <details>
-      <summary>팀원은 어떻게 가입하나요?</summary>
+      <summary>초대 링크를 못 받았어요. 팀 이름으로 찾을 수 있나요?</summary>
       <div>
-        <ol>
-          <li>회장/총무가 보낸 <strong>초대 링크</strong> 클릭</li>
-          <li><strong>카카오 로그인</strong> (3초)</li>
-          <li>이름·선호 포지션 입력하면 자동 가입</li>
-        </ol>
-        링크 하나면 바로 가입 — 앱 설치나 별도 회원가입 불필요.
+        가입 후 <strong>[팀 검색해서 가입]</strong>을 누르고 팀 이름을 검색 → <strong>[가입 신청]</strong> 버튼을 누르면 회장·운영진에게 신청이 가요. 승인되면 자동으로 합류됩니다.
+        <br><br>
+        ※ 단, 회장이 설정 → 팀 설정에서 <strong>[팀 검색 허용]</strong>을 켜놨을 때만 검색에 떠요. 안 떠 있으면 회장한테 연락해서 켜달라고 부탁하시면 됩니다.
       </div>
     </details>
 
     <details>
-      <summary>초대 코드 없이 팀 찾기</summary>
+      <summary>한 사람이 여러 팀에 들어가도 되나요?</summary>
       <div>
-        <ol>
-          <li>가입 후 <strong>팀 검색해서 가입</strong> 선택</li>
-          <li>팀 이름 검색 → <strong>가입 신청</strong></li>
-          <li>운영진이 승인하면 자동 합류</li>
-        </ol>
-        ※ 회장이 설정 → 팀 설정에서 "팀 검색 허용"을 켜야 검색에 노출됩니다.
+        됩니다. 같은 카카오 계정으로 여러 팀에 가입하거나 새 팀을 만들 수 있고, 햄버거 메뉴 위쪽의 <strong>팀 전환 버튼</strong>으로 팀을 오갈 수 있어요. 평일 풋살팀 + 주말 축구팀 따로 운영하는 분들이 자주 쓰는 방식입니다.
       </div>
     </details>
   </section>
@@ -440,44 +447,56 @@
 
   <section id="match-flow">
     <h2><span class="num">3</span>경기 운영 흐름</h2>
-    <p>이 순서만 기억하면 됩니다.</p>
+    <p>한 경기는 보통 이 순서로 굴러갑니다 — 회장·운영진이 1·5번을, 회원은 2·4번을 주로 합니다.</p>
 
     <div class="step-flow">
       <span class="step">일정 등록</span><span class="arrow">→</span>
       <span class="step">투표</span><span class="arrow">→</span>
-      <span class="step">라인업</span><span class="arrow">→</span>
+      <span class="step">전술 편성</span><span class="arrow">→</span>
       <span class="step">출석</span><span class="arrow">→</span>
       <span class="step">기록</span><span class="arrow">→</span>
       <span class="step">공유</span>
     </div>
 
-    <h3>경기 등록</h3>
-    <p>하단 메뉴 <strong>"일정"</strong> → 우측 상단 <strong>[+]</strong> 버튼</p>
-    <ol>
-      <li><strong>날짜·시간</strong>: 경기 날짜, 시작~종료 시간</li>
-      <li><strong>장소</strong>: 구장 이름</li>
-      <li><strong>상대팀</strong>: 상대팀 이름 (자체전이면 토글)</li>
-      <li><strong>경기 유형</strong>: 일반 경기 · 자체전 · 팀 일정(회식 등)</li>
-      <li><strong>투표 마감</strong>: 자동으로 전날 오후 5시 (수정 가능)</li>
-      <li>등록하면 팀원에게 자동 푸시 알림 발송</li>
-    </ol>
-    <div class="tip">팀 일정(EVENT)을 선택하면 회식·워크샵 같은 비경기 일정도 등록하고 투표받을 수 있습니다.</div>
-
-    <h3>경기 수정 · 삭제</h3>
-    <p>경기 상세 → <strong>정보 탭</strong> → 우측 상단 연필 아이콘. <span class="badge badge-staff">운영진</span></p>
+    <h3>1. 경기 등록 <span class="badge badge-staff">운영진</span></h3>
+    <p>하단 탭바의 <strong>[경기 일정]</strong> 메뉴 → 우측 상단 <strong>[+]</strong> 버튼을 누르면 경기 등록 폼이 떠요. 채울 내용은:</p>
     <ul>
-      <li>날짜·시간·장소·상대팀·투표 마감일 수정</li>
-      <li>하단 <strong>"경기 삭제"</strong> 버튼 — 모든 기록 함께 삭제, 복구 불가</li>
-      <li><strong>전적 반영 토글</strong>: 시즌 통계 포함 여부 ON/OFF</li>
+      <li><strong>날짜·시간</strong> — 경기 날짜와 시작·종료 시간 (보통 90분 또는 100분 단위로 잡아요).</li>
+      <li><strong>장소</strong> — 구장 이름. 팀원들이 위치 찾기 쉽게 구체적으로 적어주세요 (예: "동탄 풋살 경기장 A코트").</li>
+      <li><strong>상대팀</strong> — 상대팀 이름. 우리끼리 두 팀으로 나눠서 하는 자체전이면 <strong>[자체전 토글]</strong>을 켜고 상대팀 칸은 비워둡니다.</li>
+      <li><strong>경기 유형</strong> — 보통은 <strong>[일반 경기]</strong>. 우리끼리 나눠서 하는 <strong>[자체전]</strong>, 회식·워크샵 같은 비경기 일정인 <strong>[팀 일정]</strong>도 같은 경로로 등록할 수 있어요.</li>
+      <li><strong>투표 마감</strong> — 기본값은 경기 전날 저녁 5시. 일찍 마감하고 싶으면 더 앞당겨 두세요.</li>
+    </ul>
+    <p><strong>[등록하기]</strong> 버튼을 누르면 팀원 모두에게 <strong>푸시 알림</strong>(폰 잠금화면에 뜨는 알림)이 가고, 단톡방에 던질 수 있는 투표 링크도 같이 만들어집니다.</p>
+
+    <div class="tip"><strong>"팀 일정"</strong>이 따로 있는 이유 — 풋살·축구 경기는 아니지만 회식·워크샵·시즌 회의처럼 "올 사람 미리 알고 싶은 일정"도 똑같이 투표받고 출석 체크할 수 있어요. 일반 경기 통계엔 안 들어가게 자동으로 분리됩니다.</div>
+
+    <h3>2. 경기 수정 · 삭제 <span class="badge badge-staff">운영진</span></h3>
+    <p>경기 상세 화면 → <strong>[정보] 탭</strong> → 우측 상단의 연필 아이콘을 누르면 수정 폼이 떠요.</p>
+    <ul>
+      <li>날짜·시간·장소·상대팀·투표 마감일을 다시 고칠 수 있습니다.</li>
+      <li>아래쪽의 <strong>[경기 삭제]</strong> 버튼은 그 경기에 달린 모든 기록(투표·출석·골·MVP)이 같이 사라지고 <strong>되돌릴 수 없어요</strong>. 잘못 만들어서 지우는 거면 OK, 이미 진행한 경기를 지우는 건 신중하게.</li>
+      <li><strong>[전적 반영 토글]</strong> — 켜면 이 경기 결과가 시즌 통계(승·무·패, 득점왕 등)에 들어가고, 끄면 통계에서 빠져요. 친선전이라 통계를 망가뜨리고 싶지 않을 때 끕니다.</li>
     </ul>
 
-    <h3>권한 체계</h3>
+    <h3>3. 누가 뭘 할 수 있는지 — 권한 체계</h3>
+    <p>역할은 <strong>회장 → 운영진 → 회원</strong> 3단계로 나뉩니다. 회장이 설정 → 회원 관리에서 회원을 운영진으로 올리거나 내릴 수 있어요.</p>
     <table>
       <tr><th>역할</th><th>할 수 있는 것</th></tr>
-      <tr><td><span class="badge badge-president">회장</span></td><td>모든 기능 + 팀 삭제 + 역할 변경 + 시즌 관리</td></tr>
-      <tr><td><span class="badge badge-staff">운영진</span></td><td>경기 등록·수정 · 회비 관리 · 멤버 관리 · 가입 승인</td></tr>
-      <tr><td><span class="badge badge-member">회원</span></td><td>투표 · 기록 조회 · 게시판 · 개인 설정</td></tr>
+      <tr>
+        <td><span class="badge badge-president">회장</span></td>
+        <td>다 할 수 있어요. 팀 삭제 · 회원 역할 변경 · 시즌 만들기·종료까지. <strong>한 팀에 한 명만</strong> 가능.</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-staff">운영진</span></td>
+        <td>경기 등록·수정, 회비 등록·면제, 회원 강퇴, 가입 신청 승인 — 회장이 평소 하던 운영 업무 거의 다. <strong>여러 명</strong> 둘 수 있어요.</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-member">회원</span></td>
+        <td>참석 투표 · 기록 조회 · 게시판 · 본인 프로필 수정. 가장 흔한 역할.</td>
+      </tr>
     </table>
+    <div class="tip">회장 자리는 다른 사람에게 <strong>이임</strong>(권한 넘기기)할 수 있고, 이임하면 본인은 자동으로 운영진으로 내려갑니다 — 한 팀에 회장 0명이 되지 않도록 막혀 있어요.</div>
   </section>
 
   <section id="vote">
@@ -491,26 +510,27 @@
       <span class="step">실시간 집계</span>
     </div>
 
-    <h3>회원이 투표하는 법</h3>
+    <h3>회원: 투표하는 법</h3>
+    <p>경기가 등록되면 폰에 <strong>푸시 알림</strong>(폰 잠금화면에 뜨는 알림)이 뜨거나, 단톡방에 <strong>카카오톡 공유 링크</strong>가 올라와요. 둘 중 하나를 누르면 바로 그 경기의 투표 화면으로 들어갑니다.</p>
     <ol>
-      <li>푸시 알림 또는 카톡 공유 링크 클릭</li>
-      <li>경기 상세 → <strong>투표 탭</strong></li>
-      <li><strong>[참석] [미정] [불참]</strong> 버튼 클릭</li>
+      <li>푸시 알림 또는 단톡방 공유 링크를 누르면 경기 상세 화면으로 들어가요.</li>
+      <li>위쪽 탭 중 <strong>[투표]</strong> 탭을 누릅니다 (보통은 들어가면 자동으로 펼쳐져 있어요).</li>
+      <li><strong>[참석] / [미정] / [불참]</strong> 셋 중 하나를 누르면 그 자리에서 저장됩니다. 마음이 바뀌면 마감 전까지 다시 누르면 돼요.</li>
     </ol>
+    <div class="tip">경기 목록 화면에서 카드 하단에 있는 <strong>[참석] [미정] [불참]</strong> 버튼으로도 바로 투표할 수 있어요. 상세 화면 들어갈 필요 없이 한 번에 끝납니다.</div>
 
-    <h3>운영진 기능 <span class="badge badge-staff">운영진</span></h3>
+    <h3>운영진이 추가로 쓸 수 있는 기능 <span class="badge badge-staff">운영진</span></h3>
     <ul>
-      <li><strong>대리 투표</strong>: 카톡으로 의사 전달받은 회원 대신 투표</li>
-      <li><strong>미투표자 확인</strong>: 투표 안 한 회원을 한눈에</li>
-      <li><strong>투표 마감</strong>: 마감 시간 설정 → 전날 리마인더 자동 발송</li>
-      <li><strong>투표 링크 공유</strong>: 카카오톡으로 투표 링크 바로 전송</li>
+      <li><strong>대리 투표</strong> — 단톡방에서만 "나 갈게" 답한 회원 대신 운영진이 눌러줄 수 있어요. 앱 안 쓰는 어르신·신입 회원 케이스에 유용.</li>
+      <li><strong>미투표자 확인</strong> — 투표 안 한 회원이 누구인지 한눈에 보여요. 단톡방에서 골라서 멘션하기 좋습니다.</li>
+      <li><strong>투표 마감 시간 설정</strong> — 경기 등록할 때 정한 마감 시간 외에도 나중에 변경할 수 있고, 마감 하루 전에 안 한 사람한테 자동으로 리마인더 알림이 가요.</li>
+      <li><strong>카카오톡 링크 공유</strong> — 투표 링크를 단톡방에 바로 던질 수 있는 버튼.</li>
     </ul>
-    <div class="tip">경기 목록에서도 카드 하단의 [참석] [미정] [불참] 버튼으로 바로 투표할 수 있습니다.</div>
   </section>
 
   <section id="attendance">
-    <h2><span class="num">5</span>출석 체크</h2>
-    <p>경기별로 참석·지각·불참을 기록합니다. <span class="badge badge-staff">운영진</span></p>
+    <h2><span class="num">5</span>출석 체크 <span class="badge badge-staff">운영진</span></h2>
+    <p>참석 투표는 "올 예정"이고, 출석 체크는 "실제로 왔는지" 기록입니다. 경기 끝나고 5분만 투자하면 끝나요. 출석 기록은 회비 벌금 자동 계산과 시즌 출석률 통계에 그대로 쓰입니다.</p>
 
     <div class="step-flow">
       <span class="step">경기 등록</span><span class="arrow">→</span>
@@ -519,145 +539,233 @@
       <span class="step">벌금 자동 부과</span>
     </div>
 
+    <h3>출석 체크하는 법</h3>
     <ol>
-      <li>경기 상세 → <strong>출석 탭</strong></li>
-      <li>참석 투표한 회원 목록이 표시됨</li>
-      <li>각 회원의 <strong>[참석] [지각] [불참]</strong> 버튼 클릭</li>
-      <li><strong>[전원 참석 처리]</strong> 버튼으로 일괄 처리 가능</li>
+      <li>경기 상세 화면 → 위쪽 탭 중 <strong>[출석] 탭</strong>으로 이동.</li>
+      <li>참석 투표를 한 회원 목록이 자동으로 표시됩니다.</li>
+      <li>회원별로 <strong>[참석] / [지각] / [불참]</strong> 버튼 중 하나를 눌러주세요.</li>
+      <li>거의 다 왔으면 위쪽의 <strong>[전원 참석 처리]</strong> 버튼으로 한 번에 처리하고, 안 온 회원만 따로 [불참]으로 바꾸는 게 빠릅니다.</li>
     </ol>
-    <div class="tip">벌금 규칙에 "지각" 또는 "불참"이 설정되어 있으면 경기 완료 시 자동 부과됩니다.</div>
+
+    <div class="tip">팀 설정 → 회비 메뉴에서 <strong>벌금 규칙</strong>(지각·불참 시 얼마)을 등록해놨다면, 출석 체크가 끝나는 순간 그 회원의 벌금이 자동으로 회비 항목에 추가됩니다 — 따로 입력할 일이 없어요.</div>
   </section>
 
   <section id="lineup">
     <h2><span class="num">6</span>전술 편성</h2>
-    <p>두 가지 편성 모드 · 부심·주심·촬영 슬롯 · 본인 역할 가이드까지 한 화면에서.</p>
+    <p>참석자가 정해지면 누가 어디에 설지 정해야겠죠. 한 명씩 손으로 끌어 배치할 수도 있고, 우리 팀이 평소 쓰는 포메이션에 자동으로 채워주는 기능도 있고, AI가 우리 팀 데이터까지 보고 쿼터(경기를 4등분한 시간 단위)마다 다른 포메이션까지 짜주는 풀 플랜도 있어요.</p>
 
     <h3>편성 방식 두 가지</h3>
     <ol>
-      <li><strong>규칙 기반으로 빠르게</strong> — 팀 기본 포메이션에 감독지정·선호 포지션 우선 즉시 배치. 비용 0·지연 0.</li>
-      <li><strong>AI 풀 플랜</strong> — 우리 팀 승률 높은 포메이션·참석자 실력·상대 이력을 종합해 쿼터별 다른 포메이션까지 설계. 편성 후 <strong>감독 작전 브리핑</strong>(공격 루트·수비 원칙·고비 쿼터)이 함께 생성됩니다. <a href="#ai">AI 섹션</a> 참고.</li>
+      <li><strong>규칙 기반 자동 편성</strong> — 우리 팀 기본 포메이션 위에 회원의 <strong>감독지정 포지션</strong>(회장이 미리 "이 사람은 RCB"로 못박은 자리)·선호 포지션을 우선해서 즉시 배치. 무료·즉시.</li>
+      <li><strong>AI 풀 플랜</strong> — 우리 팀이 승률 높은 포메이션, 참석자 실력, 상대팀 과거 이력까지 종합해서 <strong>쿼터마다 다른 포메이션</strong>까지 설계해줍니다. 편성과 함께 <strong>감독 작전 브리핑</strong>(공격 루트·수비 원칙·체력 부담 큰 선수 등)이 같이 생성돼요. 자세한 한도·사용량은 <a href="#ai">AI 섹션</a> 참고.</li>
     </ol>
 
-    <h3>사용 흐름</h3>
+    <h3>편성 흐름</h3>
     <ol>
-      <li>경기 상세 → <strong>전술 탭</strong></li>
-      <li><strong>[자동 편성 실행]</strong> 또는 <strong>[AI 풀 플랜 받기]</strong> 클릭</li>
-      <li>쿼터별 탭(1Q · 2Q · 3Q · 4Q)으로 전환하며 확인</li>
-      <li>선수를 드래그하여 위치 수정</li>
-      <li>우측 상단 공유 아이콘으로 전술판 이미지 저장·카톡 공유</li>
+      <li>경기 상세 → 위쪽 탭 중 <strong>[전술] 탭</strong>으로 이동.</li>
+      <li>위쪽의 <strong>[자동 편성]</strong> 또는 <strong>[AI 풀 플랜]</strong> 버튼 중 하나를 누르면 1쿼터부터 자동으로 채워집니다.</li>
+      <li>쿼터별 탭(<strong>1쿼터 · 2쿼터 · 3쿼터 · 4쿼터</strong>)을 눌러가며 각 쿼터의 배치를 확인하세요.</li>
+      <li>마음에 안 드는 자리가 있으면 선수 점을 <strong>드래그해서 다른 자리로</strong> 옮기면 됩니다 — 같은 쿼터 안의 다른 자리, 또는 벤치에서 필드로도.</li>
+      <li>다 됐으면 우측 상단 공유 아이콘 → 전술판을 <strong>이미지로 저장</strong>하거나 <strong>카카오톡으로 공유</strong>할 수 있어요. 단톡방에 던지면 회원들이 미리 보고 옵니다.</li>
     </ol>
 
-    <h3>쿼터 분배 원칙</h3>
+    <h3>쿼터 분배할 때 어떤 원칙을 따르나요</h3>
     <ul>
-      <li>감독지정 포지션 우선 → 없으면 선호 포지션</li>
-      <li>모든 참석자 간 <strong>공정 분배</strong> (출전 쿼터 수 균등)</li>
-      <li>GK는 1명이면 풀 출전, 여럿이면 로테이션</li>
-      <li>용병은 정규 슬롯이 다 채워진 뒤 자동 보조 배치</li>
+      <li><strong>감독지정 포지션 우선</strong> — 회장·운영진이 "이 사람은 항상 RCB"로 정해놓은 자리에 먼저 채워요.</li>
+      <li>감독지정이 없으면 회원이 본인 프로필에 적은 <strong>선호 포지션</strong>을 살펴봅니다.</li>
+      <li>모든 참석자가 <strong>비슷한 쿼터 수</strong>를 뛰도록 공정 분배해요. 한 사람만 4쿼터 다 뛰고 누군 1쿼터만 뛰는 일이 없도록.</li>
+      <li><strong>GK</strong>(골키퍼)는 1명이면 풀 출전, 여럿이면 쿼터별로 로테이션.</li>
+      <li><strong>용병</strong>(정식 회원이 아닌 임시 인원)은 정규 슬롯이 다 채워진 뒤 자동으로 빈 자리에 들어갑니다.</li>
     </ul>
 
-    <h3>주심 · 부심 · 촬영 슬롯</h3>
-    <p>쿼터별 정규 슬롯 외에도 <strong>경기 운영 인력</strong>을 슬롯으로 배치할 수 있습니다.</p>
+    <h3>주심·부심·촬영 자리도 같이 정해요</h3>
+    <p>경기 뛰는 정규 자리 외에도 <strong>경기 운영 인력</strong>을 같은 화면에서 같이 배치할 수 있어요. 경기 중에 누가 뭘 맡는지 한눈에.</p>
     <ul>
-      <li><strong>주심 1명</strong> · sky 색상</li>
-      <li><strong>부심 2명</strong> · emerald 색상</li>
-      <li><strong>촬영 1명</strong> · violet 색상</li>
+      <li><strong>주심 1명</strong> — 하늘색(sky) 점</li>
+      <li><strong>부심 2명</strong> — 초록색(emerald) 점</li>
+      <li><strong>촬영 1명</strong> — 보라색(violet) 점</li>
     </ul>
-    <p>전술판 하단 카드에서 드래그하여 배치합니다. <strong>편성 완료 판단은 정규 슬롯 기준</strong> — 메타 슬롯은 영향 없음.</p>
+    <p>전술판 아래쪽의 회원 카드에서 끌어다 빈 슬롯에 놓으면 끝. <strong>"편성 완료" 판단은 정규 슬롯 기준</strong>이라 주심·부심·촬영은 비워둬도 다음 단계로 넘어갈 수 있어요.</p>
 
-    <h3>역할 가이드 (쿼터별 본인 포지션)</h3>
-    <p>편성이 완료되면 전술판 하단에 <strong>"내 역할 가이드"</strong> 카드가 자동 표시됩니다.</p>
+    <h3>역할 가이드 — "내 자리에서 뭘 해야 되지?" 자동 정리</h3>
+    <p>편성이 끝나면 전술판 아래쪽에 <strong>"내 역할 가이드"</strong> 카드가 자동으로 떠요. 회원이 본인 쿼터별 자리에서 어떤 움직임을 가져가야 하는지, 무슨 점을 조심해야 하는지를 미리 정리해서 보여줍니다.</p>
     <ul>
-      <li>쿼터별 본인 포지션의 <strong>주요 역할 · 주의점 · 연계 포지션</strong></li>
-      <li>같은 (포메이션, 역할)이면 비연속 쿼터도 한 카드 ("2·4쿼터 RCB")</li>
-      <li>포메이션이 바뀌면 별도 카드로 분리</li>
-      <li>운영진은 드롭다운으로 다른 선수 시점도 확인 가능 (용병 제외)</li>
+      <li>쿼터별로 <strong>본인 자리의 핵심 역할 · 주의점 · 연계 플레이</strong>가 정리됩니다.</li>
+      <li>같은 포메이션·같은 자리면 떨어진 쿼터도 한 카드로 묶어요 (예: "2·4쿼터 RCB" — 두 쿼터 합쳐서 하나).</li>
+      <li>쿼터마다 포메이션이 바뀌면 카드가 따로 분리됩니다.</li>
+      <li>회장·운영진은 <strong>드롭다운</strong>(접혔다 펴지는 메뉴)으로 다른 회원 시점도 확인할 수 있어요 (용병 제외). 회원에게 "당신 자리는 이렇게 뛰면 돼요"를 미리 보여주기 좋습니다.</li>
     </ul>
-    <div class="tip">지원 범위: 축구 11인제 10개 포메이션. 풋살·8/9/10인제는 미지원.</div>
+    <div class="tip">역할 가이드 지원 범위: <strong>축구 11인제 10개 포메이션</strong> + <strong>풋살 5·6인제</strong>. 그 외(축구 8·9·10인제 등 변형 인원수)는 아직 가이드가 안 나옵니다.</div>
 
-    <div class="tip">전술판은 <strong>PC 브라우저</strong>에서도 똑같이 동작합니다. 경기 전날 밤엔 큰 화면으로 차분히, 현장에선 폰으로 즉시 수정하세요.</div>
+    <div class="tip">전술판은 <strong>PC 브라우저</strong>에서도 똑같이 동작합니다. 경기 전날 밤엔 큰 화면으로 차분히 짜고, 경기장 가서는 폰으로 즉석 수정하는 운영진이 많아요.</div>
+  </section>
 
-    <h3>전술 영상 — 우리 팀만의 빌드업·수비 만들기 <span class="badge badge-staff">운영진</span></h3>
-    <p>역할 가이드 카드에 "팀 움직임 보기" 토글을 켜면 11명이 시퀀스로 움직이는 영상이 재생됩니다. 표준 영상이 자동 노출되지만, 운영진이 직접 우리 팀만의 영상을 만들 수도 있어요.</p>
+  <!-- ════════════════ 전술 영상 ════════════════ -->
+  <div class="section-divider"><span>전술 영상 — 메인 기능</span></div>
+
+  <section id="tactics-video">
+    <h2><span class="num">7</span>전술 영상 — 우리 팀만의 빌드업·수비 영상 <span class="badge badge-staff">운영진</span></h2>
+    <p>전술판이 <strong>한 장짜리 정지 화면</strong>이라면, 전술 영상은 그 위에서 <strong>선수들이 어떻게 움직이는지</strong>까지 보여주는 동영상이에요. 회장·운영진이 직접 선수 점을 끌어 빌드업(공 잡고 전진하는 흐름)·수비 흐름을 만들면, 회원들은 경기 전에 그 영상을 보며 "아 우리 팀은 이렇게 움직이는구나" 익힐 수 있습니다.</p>
+
     <div class="card">
-      <strong>만드는 동선</strong>
+      <strong>왜 영상까지 만들어야 하나요</strong>
       <div class="card-desc">
-        햄버거 메뉴 → <a href="https://www.pitch-master.app/settings"><strong>설정</strong></a> →
-        <strong>팀 설정</strong> 탭 → <strong>"감독의 전술노트 — 공격·수비 영상 만들기"</strong> 카드 →
-        포메이션 선택 후 <strong>새 영상 만들기</strong>
+        조기축구·풋살에서 가장 어려운 부분이 <strong>"공이 좌측으로 갈 때 반대편 선수는 어디로 가야 하나?"</strong> 같은 여러 명이 동시에 움직이는 흐름이에요. 전술판은 한 시점만 보여주니까 이걸 다 못 표현합니다. 시퀀스(여러 컷이 이어지는 영상)로 보면 회원이 한 번만 보고 "아 반대편 윙은 안쪽으로 좁혀서 빈 자리 메우는구나" 한눈에 이해돼요.
       </div>
     </div>
+
+    <h3>만드는 동선 <span class="badge badge-staff">운영진</span></h3>
+    <ol>
+      <li>햄버거 메뉴(좌측 상단 ☰) → <a href="https://www.pitch-master.app/settings"><strong>설정</strong></a> 메뉴 → <strong>[팀 설정]</strong> 탭으로 이동.</li>
+      <li>화면 위쪽의 <strong>"감독의 전술노트 — 공격·수비 영상 만들기"</strong> 카드를 누르면 영상 목록 화면으로 들어갑니다.</li>
+      <li>포메이션을 고르고(축구 11인제 10종 + 풋살 5~8인제 전부 지원) <strong>[새 영상 만들기]</strong> 버튼을 누르면 빈 영상이 만들어지고 편집기로 이동해요.</li>
+      <li>편집기에서 <strong>선수 점·공을 직접 끌어</strong> 위치를 정하고 <strong>[저장]</strong>하면 끝.</li>
+    </ol>
+
+    <h3>편집기 사용법 — 영상이 만들어지는 원리부터</h3>
+    <p><strong>"영상"이라고 부르지만 실제로는 여러 컷을 이어 붙인 슬라이드쇼</strong>예요. 한 컷마다 선수 11명(또는 5~8명)을 지금 어디 있는지 한 번 그려놓으면, 컷이 바뀔 때마다 그 위치 사이를 부드럽게 보간해서 움직이는 영상처럼 재생됩니다. 그래서 만들 땐 <strong>"한 컷씩 멈춘 그림"을 여러 장 그린다는 느낌</strong>으로 작업해야 영상이 자연스러워요.</p>
+    <p>편집기 화면 구성을 위에서부터 차례대로 풀면:</p>
+
+    <h4>① 모드 토글 (공격 시 ↔ 수비 시)</h4>
+    <p>화면 맨 위에서 <strong>[공격 시]</strong> / <strong>[수비 시]</strong>를 눌러 모드를 바꿉니다. 두 모드는 따로 저장되니까, 공격 시퀀스를 만들었으면 [수비 시]로 한 번 더 눌러서 수비 시퀀스도 따로 그려주세요. 우리 팀 영상 한 편에 공격·수비가 같이 들어 있는 형태입니다.</p>
+
+    <h4>② 장면 (큰 분류)</h4>
+    <p>한 모드 안에서도 상황이 여러 가지죠. 예를 들어 공격 모드에는:</p>
     <ul>
-      <li><strong>11명 점·공 직접 드래그</strong>로 위치 조정. <strong>장면</strong>(공격/수비) 안에 <strong>컷</strong>을 여러 개 두면 이어 재생되며 영상이 됩니다.</li>
-      <li>컷마다 <strong>설명</strong> 한 줄(예: "GK → 좌측 센터백") 입력 가능</li>
-      <li><strong>대표 영상</strong>으로 지정하면 그 포메이션의 경기 역할 가이드 "팀 움직임 보기"에 우리 팀 영상이 자동 노출 (기본 4-2-3-1, 풋살 5인제 등 모두 가능)</li>
-      <li><strong>복제</strong>: 4-2-3-1 영상을 4-3-3 같은 다른 포메이션으로 복사해 시작점으로 사용 가능</li>
-      <li>버전 관리: 같은 포메이션에 v1/v2/v3 여러 영상 보관 후 대표로 전환 가능</li>
+      <li><strong>기본 진형</strong> — 공이 아직 안 움직이는 시작 모양</li>
+      <li><strong>좌측 빌드업 시</strong> — 골키퍼가 공 잡고 왼쪽으로 풀어나가는 흐름</li>
+      <li><strong>우측 빌드업 시</strong> — 오른쪽으로 풀어나가는 흐름</li>
     </ul>
-    <div class="tip">처음엔 4-2-3-1 표준 풀 시퀀스(GK → 센터백 → 미드 → 윙백 → 크로스 → ST 마무리)가 7컷 영상으로 들어있어요. 그대로 써도 되고, 우리 팀 스타일로 수정해도 OK.</div>
+    <p>이렇게 같은 모드 안에서도 흐름이 다른 것들을 <strong>"장면"</strong>으로 분리합니다. <strong>[장면 추가]</strong> 버튼으로 새 장면을 만들 수 있고, 장면별로 이름은 자유롭게 (예: "전방 압박", "코너킥 공격", "역습 시" 등).</p>
+
+    <h4>③ 컷 (장면 안의 시간 흐름)</h4>
+    <p>여기가 영상의 핵심이에요. <strong>한 장면 안에 컷을 여러 개 만들어야 영상이 됩니다.</strong> 컷 1개만 있으면 정지 화면이고, 컷 7개를 만들면 7장이 차례대로 재생되며 움직임이 보이는 영상이 돼요. 예를 들어 "좌측 빌드업 시" 장면을 7컷으로 짜면:</p>
+    <ol>
+      <li>1컷 — GK가 공을 잡고 시작 자세</li>
+      <li>2컷 — GK가 좌측 센터백에게 짧게 패스, 라인업 살짝 움직임</li>
+      <li>3컷 — 좌측 센터백 → 좌측 미드, 풀백 전진 시작</li>
+      <li>4컷 — 미드 → 좌측 풀백, 풀백 본격 오버랩</li>
+      <li>...</li>
+      <li>7컷 — 크로스 → 스트라이커 마무리</li>
+    </ol>
+    <p>이런 식으로 <strong>한 컷씩 다음 동작을 그려놓으면, 재생할 때 컷 사이를 자동으로 이어붙여서 영상처럼 움직입니다</strong>. 각 컷마다:</p>
+    <ul>
+      <li><strong>선수 점</strong>을 끌어서 다음 위치로 옮기고</li>
+      <li><strong>공 점</strong>도 다음 위치로 옮기고 (공이 패스되는 방향 그대로)</li>
+      <li><strong>컷 설명</strong>(한 줄, 예: "GK → 좌측 센터백 짧은 패스")을 적어두면 영상 재생 중에 자막처럼 같이 표시돼요. 회원이 영상만 보고도 "지금 뭐가 일어나는지" 이해하는 데 큰 도움이 됩니다.</li>
+    </ul>
+    <p><strong>[컷 추가]</strong> 버튼을 누르면 현재 컷의 위치를 그대로 복사해서 다음 컷이 만들어지니까, 거기서 살짝씩 위치만 조정하면 자연스러운 흐름이 빠르게 그려져요. 한 장면당 <strong>5~8컷</strong> 정도가 보기 좋습니다 (너무 적으면 휙휙 지나가고, 너무 많으면 만드는 데 지쳐요).</p>
+
+    <h4>④ 미리보기 — 만드는 중에 자주 눌러주세요</h4>
+    <p>위쪽의 <strong>[미리보기]</strong> 버튼을 누르면 지금 편집 중인 장면이 컷부터 마지막 컷까지 자동으로 재생됩니다. <strong>한 컷 만들 때마다, 또는 두세 컷마다 한 번씩 눌러서 흐름이 자연스러운지 확인하세요.</strong> 다 만들고 나서 보면 어디부터 어색했는지 찾기가 어려우니까요.</p>
+    <p>미리보기 중에 어색한 컷이 보이면 그 컷으로 돌아가서 선수 위치를 살짝 조정하고 다시 미리보기 — 이 반복이 영상 만들기의 대부분이에요.</p>
+
+    <h4>⑤ 공 표시 토글</h4>
+    <p>각 컷 위쪽에 <strong>[공 표시]</strong> 토글이 있어요. 기본은 켜져 있고(컷 안에 공이 보임), <strong>"기본 진형"</strong>처럼 공이 움직이기 전 정지 형태에서는 OFF로 끄면 공 없이 선수 위치만 보여줍니다.</p>
+
+    <h4>⑥ 저장 — 자주 누르세요</h4>
+    <p>편집기 위쪽의 <strong>[저장]</strong> 버튼을 누를 때마다 그 시점까지의 작업이 보관됩니다. 새로고침해도 안 사라지니, <strong>장면 하나 끝낼 때마다 한 번씩 저장하는 습관</strong>을 들이면 안전해요.</p>
+
+    <h3>대표 영상으로 지정 — 회원에게 보여주는 단계</h3>
+    <p>영상을 다 만들었어도 그냥 두면 편집기 안에만 있어요. 회원들이 경기 화면에서 볼 수 있게 하려면 <strong>"대표 영상"</strong>으로 지정해야 합니다. 한 포메이션(예: 4-2-3-1)당 대표 영상 <strong>한 편</strong>만 지정할 수 있어요.</p>
+    <ul>
+      <li>편집기 위쪽의 <strong>[우리 팀 대표로 설정]</strong> 토글을 켜면 끝.</li>
+      <li>그 포메이션으로 짠 경기에서, 회원이 역할 가이드 카드를 펼치면 자동으로 <strong>"팀 움직임 보기"</strong> 토글이 나오고, 누르면 우리 팀 영상이 재생돼요. <strong>"우리 팀"</strong> 표시도 붙습니다.</li>
+      <li>한 포메이션에 여러 버전(v1·v2·v3...)을 만들어두고 대표만 바꿔가며 운영해도 됩니다. 시즌 초반엔 v1, 후반엔 발전시킨 v2 같은 식으로.</li>
+      <li>대표 영상이 지정 안 돼 있으면 PitchMaster가 기본 제공하는 <strong>표준 영상</strong>이 대신 노출됩니다 (아래 항목 참고).</li>
+    </ul>
+
+    <h3>복제 — 다른 포메이션으로 시작점 활용</h3>
+    <p>4-2-3-1 영상을 잘 만들어놨는데 가끔 4-3-3로 뛸 일이 생기면, 처음부터 다시 안 만들고 <strong>복제 기능</strong>으로 4-2-3-1 영상을 4-3-3로 복사해서 거기부터 손볼 수 있어요. 선수 좌표는 그대로 가져오고, 슬롯 이름만 새 포메이션에 맞춰 자동 매핑됩니다. 거기서 살짝 조정하면 4-3-3 전용 영상으로 빨리 발전시킬 수 있어요.</p>
+    <p>※ 단, <strong>풋살은 풋살끼리, 축구는 축구끼리</strong>만 복제됩니다 (인원 수가 달라서요).</p>
+
+    <h3>표준 영상 (기본 제공)</h3>
+    <p>대표 영상을 안 만들었거나 만들기 전이라도, PitchMaster가 미리 만들어둔 <strong>표준 영상</strong>이 자동으로 노출돼요.</p>
+    <ul>
+      <li><strong>축구 4-2-3-1</strong> — 풀 시퀀스. 공격 7컷(GK → 센터백 → 미드 → 풀백 → 사이드 컷인 → 크로스 → 스트라이커 마무리) + 수비 5장면(기본 진형 / 상대 좌·중·우 전개 / 전방 압박).</li>
+      <li><strong>그 외 축구 포메이션</strong>(4-3-3 · 4-4-2 등 9종) — 기본 베이스만. 기본 전형 + 공격 1컷 + 수비 1컷.</li>
+      <li><strong>풋살 전체</strong>(5~8인제) — 기본 베이스. 우리 팀 인원수에 맞춰 기본 전형 + 공격 1컷 + 수비 1컷.</li>
+    </ul>
+    <p>표준 영상은 어디까지나 시작점이고, 우리 팀이 실제로 어떻게 움직이는지는 운영진이 편집기에서 살을 붙여 만드는 게 진짜 가치 있어요.</p>
+
+    <details class="callout">
+      <summary>경기 역할 가이드와 어떻게 연결되나요?</summary>
+      <div class="callout-body">
+        경기 상세 → <strong>[전술] 탭</strong> → 화면 아래쪽의 역할 가이드 카드를 펼치면, 그 포메이션의 영상이 들어 있는 <strong>"팀 움직임 보기"</strong> 토글이 자동으로 나와요. 누르면 영상이 재생되고, 본인 자리는 코랄색(분홍-주황 톤)으로 강조됩니다 — 영상 안에서 "내가 어디에 있어야 하는지" 한눈에 보입니다.
+      </div>
+    </details>
+
+    <details class="callout">
+      <summary>회원도 영상을 만들 수 있나요?</summary>
+      <div class="callout-body">
+        만드는 건 <strong>회장·운영진만</strong>입니다. 회원은 경기 역할 가이드에서 만들어진 영상을 <strong>볼 수만</strong> 있어요. 전술 의사결정 권한을 운영진에 모아둔 설계라서요. 회원이 의견이 있으면 운영진에게 전달 → 운영진이 영상에 반영하는 흐름이 됩니다.
+      </div>
+    </details>
   </section>
 
   <section id="record">
-    <h2><span class="num">7</span>경기 기록 · 통계</h2>
-    <p>골·어시스트·MVP를 경기 중에 바로 기록하고, 시즌 통계를 자동 집계합니다.</p>
+    <h2><span class="num">8</span>경기 기록 · 통계</h2>
+    <p>경기 중·후에 골·어시스트(도움)·MVP를 그 자리에서 기록하면, 시즌 통계가 자동으로 쌓입니다. 경기 끝나고 누가 골 넣었더라 단톡방에서 다시 묻거나 엑셀에 따로 적을 일이 없어요.</p>
 
-    <h3>골 · 어시스트 기록</h3>
-    <p>경기 상세 → <strong>기록 탭</strong></p>
+    <h3>골·어시스트 기록</h3>
+    <p>경기 상세 → 위쪽 탭 중 <strong>[기록] 탭</strong>에서 진행합니다.</p>
     <ol>
-      <li><strong>[+ 득점]</strong> 버튼 → 즉시 등록 (득점자·쿼터·어시스트 나중에 수정 가능)</li>
-      <li><strong>[+ 실점]</strong> 버튼 → 상대팀 득점 즉시 기록</li>
-      <li>등록된 골 카드 터치 → <strong>득점자 · 어시스트 · 쿼터 · 골 유형</strong> 수정
+      <li>골이 들어갔으면 그 자리에서 <strong>[+ 득점]</strong> 버튼 한 번 누르세요. 득점자·쿼터·어시스트는 일단 비워둬도 등록되니까 <strong>"일단 누르고 디테일은 나중에 채우는"</strong> 방식이 가장 빠릅니다.</li>
+      <li>상대팀이 골 넣으면 <strong>[+ 실점]</strong> 버튼. 마찬가지로 즉시 등록되고 스코어보드에 실시간 반영돼요.</li>
+      <li>등록한 골 카드를 한 번 더 누르면 디테일 수정 폼이 펼쳐집니다:
         <ul>
-          <li>쿼터: 1Q~4Q 또는 <strong>"모름"</strong> 선택 가능</li>
-          <li>골 유형: 일반 · PK · FK · 헤딩 · 자책골</li>
+          <li><strong>득점자 · 어시스트</strong> — 회원 목록에서 선택. 어시스트(도움)는 비울 수 있어요.</li>
+          <li><strong>쿼터</strong>(경기를 4등분한 시간 단위) — <strong>1쿼터 ~ 4쿼터</strong> 또는 <strong>"모름"</strong> 중 선택. 쿼터 표시가 없는 경기면 "모름"으로 두면 됩니다.</li>
+          <li><strong>골 유형</strong> — <strong>일반 · PK(페널티킥) · FK(프리킥) · 헤딩 · 자책골</strong>.</li>
         </ul>
       </li>
-      <li>스코어보드에 실시간 반영, 수정·삭제 가능</li>
+      <li>잘못 등록했으면 같은 폼에서 수정·삭제할 수 있어요. 스코어보드는 자동으로 다시 계산됩니다.</li>
     </ol>
-    <div class="tip">기본은 모든 회원이 기록 가능. 팀 설정에서 운영진 전용으로 변경할 수 있습니다.</div>
+    <div class="tip">기본은 <strong>모든 회원이 기록 가능</strong>이에요 — 운영진이 폰을 못 잡고 있을 때 옆에 있는 회원이 빨리 누를 수 있게 한 설계입니다. "운영진만 기록 가능"으로 막고 싶으면 설정 → 팀 설정에서 <strong>[경기 기록은 운영진만]</strong> 토글을 켜주세요.</div>
 
-    <h3>MVP 투표 · 확정 정책</h3>
-    <p>경기 상세 → 기록 탭 하단. 1인 1표, 변경 가능. 가장 많은 표를 받은 선수가 MVP 뱃지를 획득하고 시즌 통계에 자동 집계됩니다.</p>
+    <h3>MVP 투표 — 누가 그날 제일 잘했나</h3>
+    <p>경기 상세 → <strong>[기록] 탭</strong> 아래쪽에 MVP 투표 카드가 있어요. 회원·운영진이 그날 제일 잘한 선수에게 한 표씩 던지고, 가장 많은 표를 받은 선수가 MVP 뱃지를 받고 시즌 통계에도 자동으로 들어갑니다. 표는 마감 전까지 다시 바꿀 수 있어요.</p>
 
     <div class="card">
-      <strong>공식 확정 조건 (둘 중 하나)</strong>
+      <strong>MVP가 공식으로 확정되는 두 가지 경로</strong>
       <div class="card-desc" style="margin-top:8px;">
-        ① <strong>운영진 1명 이상 투표</strong> → 즉시 확정 (투표율 무관)<br>
-        ② <strong>일반 팀원 투표가 실제 참석자의 70% 이상</strong> → 최다득표자 자동 확정<br><br>
-        70% 미달이면 투표 카드 하단에 안내 문구가 자동 노출되며, 운영진이 직접 MVP를 지정할 수 있습니다. 운영진이 직접 지정한 경우도 즉시 확정.<br><br>
-        팀 설정에서 <strong>"운영진만 MVP 투표"</strong>를 켜면 일반 팀원 투표가 막힙니다.
+        ① <strong>운영진(회장·총무) 1명 이상이 투표</strong>하면 그 즉시 확정 — 회원이 한 명도 안 했어도 됩니다.<br><br>
+        ② <strong>일반 회원 투표가 실제 참석자의 70% 이상</strong> 모이면, 최다 득표자가 자동 확정.<br><br>
+        70%가 안 모이면 카드 아래쪽에 "운영진이 직접 지정할 수 있어요" 안내가 뜨고, 운영진이 [MVP 직접 지정] 버튼으로 한 명을 골라 즉시 확정시킬 수 있어요.
       </div>
     </div>
-    <div class="tip">왜 70%? 한두 명만 투표한 결과로 MVP가 정해지면 공정성이 떨어지기 때문입니다.</div>
+    <div class="tip">왜 70%인가요? — 두세 명만 투표한 결과로 MVP가 결정되면 공정성이 떨어져서요. 마음 가는 한두 명만 표 줘서 결정되는 걸 막는 안전장치입니다.</div>
+    <div class="tip">설정 → 팀 설정 → <strong>[MVP 투표는 운영진만]</strong> 토글을 켜면 일반 회원 투표가 막히고 운영진만 정할 수 있어요. 회원 투표 자체를 안 하는 팀에서 사용합니다.</div>
 
-    <h3>경기 일지 · 자동 경기 후기</h3>
-    <p>경기 상세 → <strong>일지 탭</strong></p>
+    <h3>경기 일지 — 후기·메모·사진</h3>
+    <p>경기가 끝나고 후기를 남기고 싶으면 경기 상세 → <strong>[일지] 탭</strong>으로 가세요. 적을 수 있는 항목은:</p>
     <ul>
-      <li><strong>자동 경기 후기</strong>: 경기 COMPLETED 시 득점·MVP·참석 데이터로 한 문장 후기 자동 생성. 재생성은 경기당 1회. <a href="#ai">AI 섹션</a> 참고.</li>
-      <li><strong>날씨</strong>: 맑음·흐림·비·눈·바람</li>
-      <li><strong>컨디션</strong>: 1~5단계</li>
-      <li><strong>메모</strong>: 경기 후기·특이사항 자유 입력</li>
-      <li><strong>사진</strong>: 경기 사진 업로드 (3열 그리드)</li>
-      <li><strong>공유</strong>: 결과 카드를 카카오톡 공유 또는 클립보드 복사</li>
+      <li><strong>자동 경기 후기</strong> — 경기 상태가 "끝남"으로 바뀌는 순간, 그날의 득점·MVP·참석 정보로 한 줄 짜리 후기가 자동으로 만들어집니다. AI 후기 재생성은 경기당 1회. 자세한 한도는 <a href="#ai">AI 섹션</a> 참고.</li>
+      <li><strong>날씨</strong> — 맑음 · 흐림 · 비 · 눈 · 바람 중 선택.</li>
+      <li><strong>컨디션</strong> — 1~5단계. 그날 팀 분위기·체력 상태 같은 걸 한 번에 기록하기 좋아요.</li>
+      <li><strong>메모</strong> — 자유 입력. 후기·특이사항·다음 경기에서 보완할 점 등.</li>
+      <li><strong>사진</strong> — 경기 사진 여러 장 업로드. 3장 그리드로 갤러리에 자동 정렬.</li>
+      <li><strong>공유</strong> — 경기 결과 카드를 카카오톡으로 보내거나 클립보드에 복사할 수 있어요. 단톡방에 한 번에 던지기 편합니다.</li>
     </ul>
 
-    <h3>시즌 통계</h3>
-    <p>하단 메뉴 <strong>"기록"</strong></p>
+    <h3>시즌 통계 — 한 시즌 누적 보기</h3>
+    <p>하단 탭바의 <strong>[기록]</strong> 메뉴에서 시즌 단위로 누적된 통계를 볼 수 있어요.</p>
     <ul>
-      <li>시즌별 골·어시스트·MVP·출석률 자동 집계</li>
-      <li>선수별 레이더 차트로 강점·약점 확인</li>
-      <li>시즌 랭킹: 득점왕·어시스트왕·MVP왕·출석왕</li>
-      <li>개인 프로필에서 본인의 시즌별 상세 기록 확인</li>
+      <li>시즌별 <strong>골 · 어시스트 · MVP · 출석률</strong>이 자동으로 집계됩니다.</li>
+      <li>선수별 <strong>레이더 차트</strong>(별 모양 그래프)로 강점·약점을 한눈에. 본인 카드만 봐도 "나는 어시가 약하니까 이번엔 늘려야지" 같은 게 보여요.</li>
+      <li><strong>시즌 랭킹</strong> — 득점왕 · 어시스트왕 · MVP왕 · 출석왕. 시즌 끝날 때 시상하기 좋습니다.</li>
+      <li>회원이 본인 프로필에 들어가면 본인의 시즌별 상세 기록을 따로 볼 수 있어요.</li>
     </ul>
 
     <details>
-      <summary>자체전 (A팀 vs B팀)</summary>
+      <summary>자체전(우리끼리 A팀 vs B팀)은 어떻게 기록하나요?</summary>
       <div>
         <ul>
-          <li>경기 등록 시 "자체전" 토글을 켜면 활성화</li>
-          <li>랜덤 배정 또는 수동으로 A/B팀을 나눌 수 있음</li>
-          <li>A팀 vs B팀 별도 스코어보드와 팀별 기록</li>
-          <li>전술판에서 A/B팀 탭 분리</li>
-          <li>"통계 반영"을 체크하면 시즌 통계에 포함</li>
+          <li>경기 등록할 때 <strong>[자체전] 토글</strong>을 켜면 자체전으로 등록됩니다.</li>
+          <li>참석자를 <strong>랜덤으로 두 팀에 자동 배정</strong>하거나, 손으로 직접 A/B 팀을 나눌 수 있어요.</li>
+          <li>스코어보드와 골 기록이 A팀 vs B팀으로 분리되어 따로 표시됩니다.</li>
+          <li>전술판도 A/B 두 탭으로 나뉘어서 각각 따로 편성할 수 있어요.</li>
+          <li>등록할 때 <strong>[전적 반영 토글]</strong>을 끄면 시즌 통계에서 자체전이 빠집니다 (자체전은 통계 안 넣는 팀이 많아요).</li>
         </ul>
       </div>
     </details>
@@ -668,224 +776,234 @@
   <div class="section-divider"><span>회비</span></div>
 
   <section id="dues">
-    <h2><span class="num">8</span>회비 관리</h2>
-    <p>통장 내역을 올리면 자동으로 정리됩니다. 5개 탭으로 회비를 완벽하게 관리하세요.</p>
+    <h2><span class="num">9</span>회비 관리</h2>
+    <p>풋살팀·축구팀에서 가장 골치 아픈 일이 회비 정산이죠. PitchMaster에선 통장 캡쳐 한 장만 올리면 누가 얼마 냈는지 자동으로 정리되고, 미납자 알림까지 한 번에 보낼 수 있어요. 손으로 엑셀 정리할 일이 거의 없어집니다.</p>
 
     <div class="step-flow">
-      <span class="step">회비 설정</span><span class="arrow">→</span>
-      <span class="step">통장 내역 올리기</span><span class="arrow">→</span>
-      <span class="step">자동 인식</span><span class="arrow">→</span>
+      <span class="step">회비 규칙 설정</span><span class="arrow">→</span>
+      <span class="step">통장 내역 업로드</span><span class="arrow">→</span>
+      <span class="step">자동 인식·매칭</span><span class="arrow">→</span>
       <span class="step">납부 현황 확인</span>
     </div>
 
-    <h3>입출금 탭</h3>
+    <p>하단 탭바의 <strong>[회비]</strong> 메뉴를 누르면 안에 5개 탭이 있어요. 평소 가장 많이 쓰는 건 <strong>[납부현황]</strong>(운영진)·<strong>[입출금]</strong> 두 개입니다.</p>
+
+    <h3>입출금 탭 — 월별 통장 내역</h3>
+    <p>월별로 통장 입출금 내역을 한 화면에서 봅니다. 누구나 볼 수 있어요(회원도 우리 팀 통장 사정을 투명하게 확인 가능).</p>
     <ul>
-      <li>월별 입출금 내역을 한눈에 확인</li>
-      <li><strong>수기 입력</strong>: 유형·금액·날짜·시간·결제수단 직접 등록</li>
-      <li>내용에 팀원 이름이 포함되면 납부 기록 자동 연결</li>
-      <li>잔고 반영 여부 선택 (체크박스)</li>
+      <li>한 달 단위로 입금·출금이 모두 정리됩니다.</li>
+      <li>운영진은 <strong>[수기 입력]</strong>으로 통장 외 거래(현금 받음, 회식비 사용 등)를 직접 추가할 수 있어요. 유형·금액·날짜·시간·결제수단을 입력합니다.</li>
+      <li>입금 내역의 <strong>"보낸이/메모" 칸에 회원 이름이 들어 있으면</strong> 자동으로 그 회원의 회비 납부 기록과 연결됩니다 (이름이 정확히 일치할 때).</li>
+      <li>각 거래는 <strong>[잔고 반영]</strong> 체크박스가 있어서, 통장 실제 잔고에 영향을 줄지 말지 운영진이 정할 수 있어요.</li>
     </ul>
 
-    <h3>납부현황 탭 <span class="badge badge-staff">운영진</span></h3>
+    <h3>납부현황 탭 — 누가 냈고 누가 안 냈는지 <span class="badge badge-staff">운영진</span></h3>
+    <p>이 탭이 회비 관리의 핵심이에요. 이번 달 회비를 누가 냈는지, 누가 미납인지 한 화면에 정리됩니다.</p>
     <ul>
-      <li>미납 · 면제 · 납부 완료 그룹별 접기/펼치기</li>
-      <li><strong>납부 자동 확인</strong>: 입금 내역에서 회비 금액·이름 매칭</li>
-      <li>미납 알림 일괄 전송, 장기 미납자 자동 감지(2개월 이상)</li>
-      <li>회원별 납부 상태 수동 변경 가능 (납부·미납·면제)</li>
-      <li><strong>[선납 등록]</strong> 버튼 → <a href="#prepay">9. 회비 선납</a></li>
+      <li>회원이 <strong>"미납 · 면제 · 납부 완료"</strong> 세 그룹으로 나뉘어 표시됩니다. 그룹별로 접기·펼치기 가능.</li>
+      <li><strong>자동 매칭</strong> — 통장 입금 내역의 금액·이름이 회비 금액·회원 이름과 맞으면 알아서 "납부 완료"로 처리됩니다.</li>
+      <li><strong>미납 알림 일괄 전송</strong> — 미납자 전체에게 한 번에 푸시 알림을 보낼 수 있어요. <strong>2개월 이상 미납자는 자동으로 따로 표시</strong>됩니다.</li>
+      <li>자동 매칭이 안 된 회원은 운영진이 손으로 <strong>"납부 / 미납 / 면제"</strong> 상태를 바꿀 수 있어요.</li>
+      <li>화면 우측 상단의 <strong>[선납 등록]</strong> 버튼은 <a href="#prepay">10번 회비 선납</a> 섹션 참고.</li>
     </ul>
 
-    <h3>업로드 탭 <span class="badge badge-staff">운영진</span></h3>
+    <h3>업로드 탭 — 통장 캡쳐 한 장으로 정리 <span class="badge badge-staff">운영진</span></h3>
+    <p>매달 회비 정리할 때 가장 많이 쓰는 기능. 통장 입금 내역 화면을 캡쳐해서 올리면 AI가 알아서 읽어 정리해줍니다.</p>
     <ul>
-      <li><strong>AI OCR</strong>: 통장 캡쳐 → 이름·금액·날짜·시간·메모 자동 인식. <a href="#ai">AI 섹션</a> 참고.</li>
-      <li><strong>엑셀 업로드</strong>: 은행 앱에서 다운로드한 파일 그대로 업로드</li>
-      <li>중복 내역 자동 감지·제외, 인식 결과 편집 후 일괄 저장</li>
-      <li>잔고 자동 반영 (기존 잔고보다 최신일 때만)</li>
+      <li><strong>AI OCR</strong>(이미지 안의 글자를 읽어내는 AI 기능) — 통장 화면 캡쳐를 올리면 <strong>이름·금액·날짜·시간·메모</strong>를 자동으로 인식해서 표로 만들어줍니다. 인식이 잘 안 된 행만 운영진이 손으로 고치면 끝. 자세한 사용량은 <a href="#ai">AI 섹션</a> 참고.</li>
+      <li><strong>엑셀 업로드</strong> — 은행 앱에서 받은 거래내역 엑셀 파일을 그대로 올려도 됩니다. 캡쳐보다 정확도가 높아요.</li>
+      <li><strong>중복 자동 제거</strong> — 이미 등록된 거래와 같은 게 들어 있으면 자동으로 빼줍니다. 이번 달 캡쳐를 두 번 올려도 같은 거래가 두 번 들어가지 않아요.</li>
+      <li>인식된 내역을 한 번 검토하고 <strong>[일괄 저장]</strong>을 누르면 그 자리에서 입출금 탭과 납부현황에 반영됩니다.</li>
+      <li>업로드한 캡쳐의 잔고가 기존 잔고보다 최신일 때만 통장 잔고가 자동 갱신돼요.</li>
     </ul>
-    <div class="tip">지원 은행: 카카오뱅크 · 토스뱅크 · 국민 · 신한 · 우리 · 하나 · 농협</div>
+    <div class="tip">지원 은행: <strong>카카오뱅크 · 토스뱅크 · 국민 · 신한 · 우리 · 하나 · 농협</strong>. 다른 은행도 일반적인 캡쳐는 인식하지만 정확도가 다소 떨어질 수 있어요.</div>
 
     <details>
-      <summary>잔고가 안 맞아요</summary>
+      <summary>잔고가 실제 통장과 안 맞아요</summary>
       <div>
-        통장 잔고는 <strong>스크린샷·엑셀 업로드 시에만 갱신</strong>됩니다. 수기 입력·삭제는 앱 기록 정리일 뿐 실제 통장에서 돈이 움직인 게 아니기 때문에 잔고에 반영하지 않습니다. 잔고가 안 맞으면 <strong>최신 통장 내역 캡쳐를 다시 올려주세요.</strong>
+        통장 잔고는 <strong>스크린샷·엑셀 업로드를 했을 때만 갱신</strong>됩니다. 수기 입력·삭제는 앱 안에서만 정리하는 거라 실제 통장에서 돈이 움직인 건 아니라서 잔고에는 반영하지 않아요. 잔고가 안 맞으면 <strong>최신 통장 내역 캡쳐를 다시 한 번 올리면</strong> 정확한 값으로 갱신됩니다.
       </div>
     </details>
 
-    <h3>설정 탭 <span class="badge badge-staff">운영진</span></h3>
+    <h3>설정 탭 — 회비 규칙 정하기 <span class="badge badge-staff">운영진</span></h3>
+    <p>회비를 어떻게 받을지(금액·기준일·예외 등) 미리 정해두는 곳이에요. 한 번만 잘 정해두면 매달 자동으로 굴러갑니다.</p>
     <ul>
-      <li><strong>납부 기준일</strong>: 매월 N일 기준으로 회비 기간 자동 계산</li>
-      <li><strong>회비 유형</strong>: 일반·학생·신입 등 유형별 금액 인라인 편집</li>
-      <li><strong>벌금 규칙</strong>: 지각·불참·미투표 시 자동 부과 규칙</li>
-      <li><strong>회원 회비 상태</strong>: 면제·휴회·부상 기간 설정</li>
+      <li><strong>납부 기준일</strong> — 매월 며칠을 회비 마감일로 볼지 정합니다. 예: "매월 5일" 설정하면 5일까지 안 낸 회원은 자동으로 미납으로 표시.</li>
+      <li><strong>회비 유형</strong> — 일반 / 학생 / 신입 같이 회원 유형별로 다른 금액을 받을 수 있어요. 한 줄에서 바로 금액 수정 가능.</li>
+      <li><strong>벌금 규칙</strong> — 지각·불참·미투표 시 얼마씩 부과할지 정합니다. 정해두면 경기 끝나는 순간 자동 부과돼요 (다음 항목 참고).</li>
+      <li><strong>회원 회비 상태</strong> — 운영진 면제, 부상 휴회 같은 장기 면제를 등록하는 칸. 다음 항목에서 자세히.</li>
     </ul>
 
-    <h3>회원 회비 상태 (면제·휴회·부상)</h3>
-    <p>장기 면제가 필요한 회원을 등록하면 <strong>매월 자동으로 면제 처리</strong>됩니다.</p>
+    <h3>회원 회비 상태 — 면제·휴회·부상 처리</h3>
+    <p>일시적·장기적으로 회비를 안 받아야 하는 회원이 있을 때 쓰는 기능이에요. 한 번 등록해두면 등록한 기간 동안은 매월 자동으로 면제 처리됩니다 — 매달 손으로 "면제"로 바꿀 일이 없어요.</p>
     <ul>
-      <li><strong>면제</strong>: 운영진·특별 면제 (예: "운영진 면제")</li>
-      <li><strong>휴회</strong>: 장기 휴식 (예: "해외 출장 3개월")</li>
-      <li><strong>부상</strong>: 부상으로 인한 면제</li>
+      <li><strong>면제</strong> — 운영진 무료, 특별 공로 면제 등 (예: "운영진 면제").</li>
+      <li><strong>휴회</strong> — 장기 휴식 (예: "해외 출장 3개월").</li>
+      <li><strong>부상</strong> — 부상 회복 기간 면제.</li>
     </ul>
-    <p>설정 탭 → 하단 "회원 회비 상태" → [추가] → 회원·상태·사유·시작일~종료일 입력. 종료일이 지나면 자동으로 일반 상태 복귀, [종료] 버튼으로 조기 종료 가능 (이력 보존).</p>
-    <div class="tip">이미 "납부 완료"로 처리된 회원은 면제로 덮어쓰지 않습니다.</div>
+    <p>등록 동선: 회비 → <strong>[설정] 탭</strong> → 아래쪽 <strong>[회원 회비 상태]</strong> → <strong>[추가]</strong> → 회원·상태·사유·시작일~종료일을 입력. 종료일이 지나면 자동으로 일반 상태로 돌아오고, 그전에 끝내려면 <strong>[종료]</strong> 버튼을 누르면 됩니다 (이력은 그대로 남아요).</p>
+    <div class="tip">이미 "납부 완료"로 처리된 달은 면제로 덮어쓰지 않아요. 이미 받은 돈을 안 받은 걸로 만들지 않습니다.</div>
 
-    <h3>벌금 탭</h3>
-    <p>경기 완료 시 설정된 규칙에 따라 자동 부과됩니다.</p>
+    <h3>벌금 탭 — 지각·불참 자동 차감</h3>
+    <p>매번 "지각비 누가 냈더라" 묻지 않아도, 출석 체크 결과에 따라 자동으로 벌금이 부과되는 기능이에요. 한 번 규칙을 정해두면 그 다음부터는 손 놓고 있어도 굴러갑니다.</p>
     <ol>
-      <li>회비 → 설정 탭 → 하단 "벌금 규칙" → [추가]</li>
-      <li>규칙 이름(예: "지각비") · 트리거 · 금액 입력</li>
-      <li>경기 완료 → 지각·불참 회원에게 자동 부과</li>
-      <li>회비 → 벌금 탭에서 회원별 벌금 현황 확인·납부 처리</li>
+      <li>회비 → <strong>[설정] 탭</strong> → 아래쪽 <strong>[벌금 규칙]</strong> → <strong>[추가]</strong> 버튼.</li>
+      <li>규칙 이름(예: "지각비")·발동 조건(<strong>지각 / 불참 / 미투표</strong> 중 선택)·금액을 입력하고 저장.</li>
+      <li>이후 경기가 끝나는 순간, 그 경기에서 지각·불참한 회원에게 자동으로 그 금액이 부과됩니다.</li>
+      <li>회비 → <strong>[벌금] 탭</strong>에서 회원별 누적 벌금을 보고, 받았으면 <strong>[납부 처리]</strong>로 정리할 수 있어요.</li>
     </ol>
   </section>
 
   <section id="prepay">
-    <h2><span class="num">9</span>회비 선납</h2>
-    <p>6개월·1년치 회비를 미리 받고, 자동으로 매월 납부 처리합니다.</p>
+    <h2><span class="num">10</span>회비 선납 <span class="badge badge-staff">운영진</span></h2>
+    <p>"이번 분기 회비 한 번에 받자" 또는 "1년치 미리 받고 신경 쓰지 말자" 같은 패턴이 많은 팀이 있죠. 그럴 때 회원에게 카톡으로 한 번에 송금받고, 받은 금액을 운영진이 등록만 해두면 등록한 기간 동안 매월이 자동으로 "납부 완료"로 처리됩니다.</p>
 
-    <p>회비 → <strong>납부현황 탭</strong> → 우측 상단 <strong>[선납 등록]</strong> <span class="badge badge-staff">운영진</span></p>
+    <h3>등록 동선</h3>
+    <p>회비 → <strong>[납부현황] 탭</strong> → 화면 우측 상단의 <strong>[선납 등록]</strong> 버튼.</p>
     <ol>
-      <li>회원 선택</li>
-      <li>선납 기간 선택 (3개월 · 6개월 · 12개월)</li>
-      <li>시작 월 선택</li>
-      <li>등록 완료 → 해당 기간의 매월이 자동으로 "납부 완료"로 표시</li>
+      <li>선납받을 <strong>회원 선택</strong>.</li>
+      <li>선납 기간 선택 — <strong>3개월 / 6개월 / 12개월</strong>.</li>
+      <li>선납이 시작될 <strong>시작 월</strong> 선택 (예: 2026년 5월부터 12개월).</li>
+      <li><strong>[등록]</strong> 버튼을 누르면 그 기간의 매월이 한 번에 "납부 완료"로 자동 표시됩니다.</li>
     </ol>
+
+    <h3>선납을 쓰면 좋은 점</h3>
     <ul>
-      <li>매달 송금 부탁 안 해도 됨</li>
-      <li>통장 입출금은 한 번에 처리</li>
-      <li>휴회·면제와 충돌 시 자동 정합성 체크 (이미 납부된 월은 덮어쓰지 않음)</li>
+      <li>매달 회원에게 송금 부탁할 일이 사라져요. 한 번에 받고 등록만 해두면 끝.</li>
+      <li>통장에 들어온 큰 금액 한 건만 입출금에 기록하면 되니까 정리가 깔끔해집니다.</li>
+      <li>등록한 회원이 중간에 휴회·면제로 바뀌어도 자동으로 정합성을 맞춰요 — 이미 "납부 완료"로 처리된 월은 면제로 덮어쓰지 않습니다.</li>
     </ul>
-    <div class="tip">선납은 결제 인프라 없이 동작합니다 — "이번 분기 회비 한 번에 받기" 같은 카톡 송금 후 운영진이 등록하는 흐름입니다.</div>
+    <div class="tip">PitchMaster 자체에는 결제·송금 기능이 없어요. 카톡 송금이나 계좌 이체로 회원이 운영진에게 돈을 보내고, 받은 운영진이 앱에 선납 등록을 해주는 흐름입니다. 결제 시스템을 따로 둘 필요가 없어 수수료가 0원이라는 게 장점이에요.</div>
   </section>
 
   <section id="monthly">
-    <h2><span class="num">10</span>월별 결산</h2>
-    <p>매월 경기 결과·득점왕·MVP·회비 흐름을 한 페이지에서 확인합니다.</p>
+    <h2><span class="num">11</span>월별 결산</h2>
+    <p>"이번 달 우리 팀 어땠지?"를 매달 단톡방에서 손으로 정리하던 총무를 위한 기능이에요. 한 달 동안의 경기 결과·득점왕·회비 흐름이 한 카드로 정리되고, 카카오톡으로 단톡방에 한 번에 던질 수 있어요.</p>
 
-    <p>회비 → 우측 상단 <strong>"월별 결산"</strong> 버튼</p>
+    <h3>보는 동선</h3>
+    <p>하단 탭바의 <strong>[회비]</strong> 메뉴 → 화면 우측 상단의 <strong>[월별 결산]</strong> 버튼을 누르면 그 달의 결산 카드가 떠요. 월을 바꿔가며 지난 달도 볼 수 있습니다.</p>
+
+    <h3>한 카드에 들어 있는 것</h3>
     <ul>
-      <li>그 달 치른 <strong>경기 수 · 승무패</strong></li>
-      <li><strong>득점왕 · 도움왕 · MVP왕</strong> 자동 집계</li>
-      <li>그 달의 <strong>회비 입금/지출 합계</strong> · 미납 회원 목록</li>
-      <li>출석률 상위 회원</li>
-      <li>카드 하나로 카카오톡 공유 — 매달 1일 단톡방에 깔끔히 전달</li>
+      <li>그 달에 치른 <strong>경기 수 · 승 · 무 · 패</strong>.</li>
+      <li><strong>득점왕 · 도움왕(어시스트왕) · MVP왕</strong>이 자동으로 뽑혀요.</li>
+      <li>그 달의 <strong>회비 입금 합계 · 지출 합계</strong>와 <strong>미납 회원 목록</strong>.</li>
+      <li>출석률 상위 회원 (꾸준히 나오는 회원 칭찬용).</li>
+      <li>카드 하단의 <strong>[카카오톡 공유]</strong> 버튼으로 단톡방에 한 번에 던질 수 있습니다 — 매달 1일에 운영진이 한 번 누르고 끝낼 수 있어요.</li>
     </ul>
-    <div class="tip">"이번 달 우리 팀 어땠지?"를 카톡에서 정리하던 총무를 위해 만들었습니다.</div>
   </section>
 
   <!-- ════════════════ AI ════════════════ -->
   <div class="section-divider"><span>AI 기능</span></div>
 
   <section id="ai">
-    <h2><span class="num">11</span>AI 기능 5종</h2>
-    <p>경기 운영을 도와주는 한국어 AI 다섯 가지. Anthropic Claude 기반, 한국 풋살·축구 동호회 실 데이터로 튜닝되었습니다.</p>
+    <h2><span class="num">12</span>AI 기능 5종</h2>
+    <p>운영진이 평소에 손으로 정리하던 일을 대신 해주는 한국어 AI 다섯 가지가 들어 있어요. Anthropic의 Claude 모델을 쓰고, 한국 풋살·축구 동호회 실제 데이터로 톤을 다듬었습니다 — "외국 번역체"가 아니라 우리가 단톡방에서 쓰는 말투에 가까워요.</p>
 
+    <h3>한눈에 보는 다섯 가지</h3>
     <table>
-      <tr><th>#</th><th>기능</th><th>위치</th><th>한도</th></tr>
-      <tr><td>1</td><td><strong>AI 풀 플랜</strong><br>편성 + 작전 브리핑</td><td>경기 → 전술 탭<br>[AI 풀 플랜 받기]</td><td>경기당 2회<br>+ 팀당 월 10회</td></tr>
-      <tr><td>2</td><td><strong>AI 코치 분석</strong><br>빠른 편성 후 독립 호출</td><td>경기 → 전술 탭<br>빠른 편성 → [AI 코치 분석]</td><td>경기당 3회</td></tr>
-      <tr><td>3</td><td><strong>자동 경기 후기</strong><br>한 문장 요약</td><td>경기 → 일지 탭<br>(COMPLETED 시 자동)</td><td>경기당 1회<br>재생성</td></tr>
-      <tr><td>4</td><td><strong>선수 시그니처</strong><br>선수별 한 줄 별명</td><td>선수 프로필 카드</td><td>운영진 재생성<br>전체 공개</td></tr>
-      <tr><td>5</td><td><strong>회비 OCR</strong><br>통장 캡쳐 자동 인식</td><td>회비 → 업로드 탭</td><td>제한 없음</td></tr>
+      <tr><th>#</th><th>기능</th><th>어디서 쓰나요</th><th>사용 한도</th></tr>
+      <tr><td>1</td><td><strong>AI 풀 플랜</strong><br>편성 + 작전 브리핑 한 번에</td><td>경기 → [전술] 탭<br>→ <strong>[AI 풀 플랜]</strong> 버튼</td><td>경기당 2회<br>+ 팀 월 10회</td></tr>
+      <tr><td>2</td><td><strong>AI 코치 분석</strong><br>편성 후 분석만 따로</td><td>경기 → [전술] 탭<br>자동 편성 후 <strong>[AI 코치 분석]</strong></td><td>경기당 3회</td></tr>
+      <tr><td>3</td><td><strong>자동 경기 후기</strong><br>한 줄 자동 요약</td><td>경기 → [일지] 탭<br>(경기 끝나면 자동 생성)</td><td>경기당 1회<br>재생성 가능</td></tr>
+      <tr><td>4</td><td><strong>선수 시그니처</strong><br>선수별 한 줄 별명</td><td>회원 프로필 카드</td><td>운영진이 재생성<br>(누구나 볼 수 있음)</td></tr>
+      <tr><td>5</td><td><strong>회비 OCR</strong><br>통장 캡쳐 자동 인식</td><td>회비 → [업로드] 탭</td><td>제한 없음</td></tr>
     </table>
 
     <h3>각 기능 자세히</h3>
 
-    <p><strong>1. AI 풀 플랜</strong> — 우리 팀 승률 높은 포메이션·참석자 실력·상대팀 이력을 종합해 쿼터별 다른 포메이션까지 설계합니다. 편성 직후 감독 작전 브리핑(공격 루트·수비 원칙·고비 쿼터·체력 부담 선수)이 함께 생성됩니다.</p>
+    <h4>1. AI 풀 플랜 — 편성·작전 브리핑을 한 번에</h4>
+    <p>우리 팀이 승률 높은 포메이션, 그날 참석자의 실력·평소 자리, 상대팀과의 과거 전적까지 종합해서 <strong>쿼터마다 다른 포메이션</strong>까지 설계해줍니다. 편성과 동시에 <strong>감독 작전 브리핑</strong>이 같이 만들어져요 — 공격 루트, 수비 원칙, 체력 부담 큰 선수, 고비가 될 쿼터까지 짚어주는 한 페이지짜리 메모입니다.</p>
 
-    <p><strong>2. AI 코치 분석</strong> — 규칙 기반으로 빠르게 편성한 뒤, 별도로 코치 분석만 받고 싶을 때. 풀 플랜과 동일 품질의 작전 브리핑 + 선수 로테이션 분석.</p>
+    <h4>2. AI 코치 분석 — 편성은 직접 하고 분석만 받고 싶을 때</h4>
+    <p>"편성은 자동 편성으로 빠르게 끝냈는데, 작전 브리핑은 받고 싶다" 할 때 따로 부르는 기능. 풀 플랜과 같은 수준의 작전 브리핑 + 선수 로테이션(쿼터별 자리 변경) 분석을 해줍니다.</p>
 
-    <p><strong>3. 자동 경기 후기</strong> — 득점·MVP·참석 데이터로 한 문장 후기가 자동 생성돼 공유 카드 상단에 표시됩니다. 카톡으로 결과 공유할 때 깔끔한 한 줄.</p>
+    <h4>3. 자동 경기 후기 — 단톡방 공유용 한 줄</h4>
+    <p>경기가 "끝남" 상태로 바뀌는 순간, 그날의 득점·MVP·참석 정보로 한 줄짜리 후기가 자동으로 만들어집니다. 경기 결과 공유 카드 위에 같이 들어가서 카톡으로 던질 때 깔끔해요.</p>
 
-    <p><strong>4. 선수 시그니처</strong> — 선수의 시즌 누적 통계(골·어시·MVP·주포지션)를 바탕으로 AI가 한 줄 별명을 지어줍니다 (예: "우리 팀 황소", "왼발의 마술사"). 캐시되어 팀원 모두에게 노출.</p>
+    <h4>4. 선수 시그니처 — 선수별 한 줄 별명</h4>
+    <p>회원의 시즌 누적 기록(골 · 어시스트 · MVP · 주로 뛴 자리)을 바탕으로 AI가 한 줄짜리 별명을 만들어줍니다 (예: "우리 팀 황소", "왼발의 마술사"). 한 번 만들어진 별명은 그 회원의 프로필 카드에 표시되어 팀원 모두가 볼 수 있어요.</p>
 
-    <p><strong>5. 회비 OCR</strong> — Claude Vision이 통장 캡쳐를 분석해 이름·금액·날짜·시간·메모를 자동 추출합니다. 결과를 편집한 후 일괄 저장. 지원 은행: 카카오뱅크·토스뱅크·국민·신한·우리·하나·농협.</p>
+    <h4>5. 회비 OCR — 통장 캡쳐 한 장 분석</h4>
+    <p>회비 → [업로드] 탭에서 통장 캡쳐를 올리면 Claude가 그 이미지를 보고 <strong>이름·금액·날짜·시간·메모</strong>를 자동으로 표로 만들어줍니다. 결과를 살짝 검토·수정하고 [일괄 저장]만 누르면 끝. 지원 은행: 카카오뱅크 · 토스뱅크 · 국민 · 신한 · 우리 · 하나 · 농협.</p>
 
-    <div class="tip">실패한 호출이나 룰 폴백은 한도에서 차감되지 않습니다.</div>
+    <div class="tip">실패한 호출(서버 오류·이미지 인식 실패 등)이나 자동 규칙으로 폴백된 경우는 한도에서 차감되지 않아요. 한도는 "AI가 정상 동작한 횟수"만 셉니다.</div>
   </section>
 
   <!-- ════════════════ 더보기 ════════════════ -->
   <div class="section-divider"><span>더보기</span></div>
 
   <section id="more">
-    <h2><span class="num">12</span>게시판 · 멤버 · 유니폼 · 알림 · 시즌</h2>
+    <h2><span class="num">13</span>게시판 · 멤버 · 유니폼 · 알림 · 시즌</h2>
+    <p>경기 운영·회비 외에 평소에 자주 쓰는 보조 기능들입니다. 한 번씩 들여다보면 우리 팀 운영이 훨씬 매끄러워져요.</p>
 
-    <h3 id="board">게시판</h3>
-    <p>하단 메뉴 <strong>"더보기"</strong> → <strong>"게시판"</strong></p>
+    <h3 id="board">게시판 — 단톡방에 묻히지 않는 공지</h3>
+    <p>햄버거 메뉴 → <strong>[게시판 · 앨범]</strong> 메뉴.</p>
     <ul>
-      <li>카테고리: 공지사항·자유·건의·투표</li>
-      <li>글 작성: 제목·내용·카테고리 → 등록</li>
-      <li>댓글·좋아요, 공지사항 상단 고정</li>
+      <li>카테고리는 <strong>공지사항 · 자유 · 건의 · 투표</strong> 4가지. 글 쓸 때 카테고리만 고르면 분류는 알아서.</li>
+      <li><strong>공지사항</strong>은 자동으로 목록 맨 위에 고정돼요. 단톡방에서 한 시간이면 묻혀버리는 공지를 안 묻히게 보관할 수 있어요.</li>
+      <li>댓글·좋아요 가능. 회식 일정 같은 가벼운 의견 모으기에 좋습니다.</li>
     </ul>
 
-    <h3 id="members">멤버 관리</h3>
-    <p>하단 메뉴 <strong>"더보기"</strong> → <strong>"멤버 관리"</strong></p>
+    <h3 id="members">회원 관리 <span class="badge badge-president">회장</span> <span class="badge badge-staff">운영진</span></h3>
+    <p>햄버거 메뉴 → <strong>[회원 관리]</strong> 메뉴. 회원 목록과 함께 다음을 할 수 있어요:</p>
     <ul>
-      <li><strong>역할 변경</strong>: 회원 → 운영진 → 회장 (회장만 가능)</li>
-      <li><strong>등번호 지정</strong>: 선수별 등번호 (중복 불가)</li>
-      <li><strong>주장·부주장</strong>: 온필드 주장 지정, 뱃지 표시</li>
-      <li><strong>사전 등록</strong>: 미가입 회원 이름·연락처 미리 등록</li>
-      <li><strong>휴면 처리</strong>: 장기 미활동 회원을 휴면으로</li>
-      <li><strong>제명</strong>: 팀에서 내보내기 (회장·운영진만)</li>
+      <li><strong>역할 변경</strong> — 회원 ↔ 운영진 ↔ 회장 사이 권한 변경. 회장은 1명만 가능하고, 회장 권한 이임은 회장 본인만 할 수 있어요.</li>
+      <li><strong>등번호 지정</strong> — 회원별 등번호. 한 팀에 같은 번호는 두 명 못 갖습니다.</li>
+      <li><strong>주장 · 부주장</strong> — 온필드 주장(C 뱃지)·부주장(VC 뱃지) 지정. 전술판·회원 카드에 자동 표시.</li>
+      <li><strong>사전 등록</strong> — 아직 PitchMaster에 가입 안 한 회원의 이름·연락처를 미리 등록. 출석·통계는 들어가지만, 본인이 직접 가입하면 자동으로 연결됩니다.</li>
+      <li><strong>휴면 처리</strong> — 장기간 안 나오는 회원을 "휴면" 상태로. 통계·회비 대상에서 자동 제외돼요.</li>
+      <li><strong>강퇴</strong> — 팀에서 내보내기. 강퇴된 회원의 과거 기록은 그대로 보관됩니다.</li>
     </ul>
-    <div class="tip"><strong>회장 0명 방지:</strong> 회장은 본인을 강등·강퇴·탈퇴할 수 없습니다. <strong>"회장 이임"</strong>으로 권한을 다른 회원에게 넘긴 후에만 일반 회원이 될 수 있습니다.</div>
+    <div class="tip"><strong>회장이 0명이 되는 일은 시스템이 막아요.</strong> 회장은 본인을 강등·강퇴·탈퇴할 수 없고, <strong>[회장 이임]</strong>으로 다른 회원에게 권한을 먼저 넘긴 후에만 일반 회원으로 내려갈 수 있습니다 — 회장 자리가 비는 일이 생기지 않게 한 안전장치예요.</div>
 
-    <h3 id="guests">용병 관리</h3>
-    <p>경기 상세 → <strong>정보 탭</strong> → 하단 <strong>"용병 추가"</strong></p>
+    <h3 id="guests">용병 관리 — 그날만 부르는 외부 인원</h3>
+    <p>그날 인원이 부족할 때 부르는 외부 용병을 따로 등록할 수 있어요. 정식 회원으로는 안 들이지만 그 경기에서는 정상적으로 뛰는 사람들입니다.</p>
+    <p>등록 동선: 경기 상세 → <strong>[정보] 탭</strong> → 아래쪽 <strong>[용병 추가]</strong> 버튼.</p>
     <ul>
-      <li>이름·포지션·연락처·메모 입력</li>
-      <li>등록된 용병은 전술판에 자동 포함</li>
-      <li>경기별로 별도 관리 (다른 경기에 영향 없음)</li>
-      <li>AI 분석에서 용병에는 단정적 평가를 하지 않음</li>
+      <li>이름·포지션·연락처·메모만 입력하면 등록 완료.</li>
+      <li>등록된 용병은 그 경기의 전술판에 자동으로 들어가서 정규 회원과 똑같이 배치할 수 있어요.</li>
+      <li><strong>경기마다 따로 관리</strong>됩니다 — 한 경기에 등록한 용병이 다음 경기에 자동으로 또 등록되진 않아요.</li>
+      <li>AI 분석은 용병의 평소 기록이 없으니 단정적인 평가(예: "이 선수는 약합니다")를 하지 않도록 톤이 조정돼 있습니다.</li>
     </ul>
 
-    <h3 id="uniform">유니폼 관리</h3>
-    <p>설정 → 팀 설정 → 하단 "유니폼" 섹션</p>
+    <h3 id="uniform">유니폼 — 우리 팀 색깔</h3>
+    <p>햄버거 메뉴 → <strong>[설정]</strong> → <strong>[팀 설정]</strong> → 아래쪽 <strong>[유니폼]</strong> 섹션.</p>
     <ul>
-      <li>홈·원정·써드 탭에서 메인 색상·서브 색상·패턴 선택</li>
-      <li>패턴: 단색·세로 스트라이프·가로 스트라이프·대각 스트라이프</li>
-      <li>저장하면 대시보드·경기 목록·전술판에 미니 져지로 표시</li>
-      <li>경기 상세 → 정보 탭 → [홈/원정/써드] 버튼으로 경기별 유니폼 선택</li>
+      <li><strong>홈 · 원정 · 써드</strong>(특수 경기용) 세 종류로 따로 등록할 수 있어요.</li>
+      <li>각각 메인 색상 · 서브 색상 · 패턴(<strong>단색 / 세로 줄 / 가로 줄 / 대각선 줄</strong>)을 선택.</li>
+      <li>저장하면 대시보드·경기 목록·전술판에 작은 유니폼 그림으로 자동 표시돼요. 경기 상세 → [정보] 탭에서 그날 어떤 유니폼을 입을지 [홈/원정/써드] 버튼으로 골라두면 단톡방 공유 카드에도 그대로 들어갑니다.</li>
     </ul>
 
     <h3 id="notif">알림 설정</h3>
-    <p>"더보기" → <strong>"알림 설정"</strong></p>
+    <p>햄버거 메뉴 → <strong>[설정]</strong> → 개인 설정 안의 <strong>[알림]</strong> 섹션에서 끄고 켤 수 있어요.</p>
     <ul>
-      <li>자동 발송: 경기 등록·투표 마감 리마인더·가입 승인·MVP 확정</li>
-      <li>홈 화면에 추가(PWA)해야 푸시 알림을 받을 수 있음</li>
-      <li>브라우저 알림 허용 필요</li>
-      <li>경기 7일 이내 일정만 푸시 발송 (오래된 경기 잘못된 알림 차단)</li>
+      <li>자동으로 가는 알림: <strong>경기 등록 · 투표 마감 리마인더 · 가입 승인 · MVP 확정 안내</strong>.</li>
+      <li>알림은 PWA(다음 섹션 참고)로 <strong>홈 화면에 추가</strong>해야 받을 수 있어요. 브라우저에서만 보던 상태에선 푸시가 안 옵니다.</li>
+      <li>처음 받을 땐 브라우저가 "알림을 허용할까요?" 물어봐요. 허용해주셔야 동작합니다.</li>
+      <li>오래된 경기에 대한 잘못된 알림이 가지 않도록, <strong>경기 7일 이내 일정만</strong> 푸시가 가게 되어 있어요.</li>
     </ul>
 
     <h3 id="season">시즌 관리 <span class="badge badge-president">회장</span></h3>
-    <p>"더보기" → 설정 → "시즌 관리" 탭</p>
+    <p>햄버거 메뉴 → <strong>[설정]</strong> → <strong>[시즌 관리]</strong> 탭.</p>
     <ul>
-      <li>시즌 이름·시작일~종료일 설정</li>
-      <li>시즌별로 통계가 분리되어 집계</li>
-      <li>현재 시즌 변경 가능 (이전 시즌 기록 유지)</li>
+      <li>시즌 이름과 시작일~종료일을 정해 새 시즌을 만듭니다 (예: "2026 정규 시즌", 2026-03-01 ~ 2026-11-30).</li>
+      <li>시즌이 다르면 통계도 자동으로 분리돼서 집계돼요. 시즌 끝날 때 시상하기 좋습니다.</li>
+      <li>"현재 시즌"을 바꾸면 그 시점부터의 경기가 새 시즌에 들어갑니다. 이전 시즌의 기록은 그대로 보관돼요.</li>
     </ul>
 
     <details style="margin-top: 20px;">
-      <summary>그 외 알아두면 좋은 기능</summary>
+      <summary>그 외 알아두면 좋은 보조 기능</summary>
       <div>
         <ul>
-          <li><strong>풋살 전용</strong>: 3~6인제, 풋살 포지션(피소·아라·피벗), 풋살 코트</li>
-          <li><strong>회칙</strong>: 팀 규정 등록, 모든 회원 열람 가능</li>
-          <li><strong>경기별 댓글</strong>: "늦어요" "용병 가능?" 경기마다 소통</li>
-          <li><strong>회장 이임 · 가입 승인제</strong>: 권한 이양, 가입 승인 모드 선택</li>
-          <li><strong>주장 · 부주장 뱃지</strong>: 온필드 주장·부주장 지정</li>
-          <li><strong>전적 반영 토글</strong>: 경기별 통계 반영 ON/OFF</li>
-          <li><strong>기록 상세 보기</strong>: 골·어시·MVP 숫자 탭 → 경기 목록 확인</li>
-          <li><strong>투표 마감 리마인더</strong>: 마감 전날 미투표자에게 자동 푸시</li>
-          <li><strong>경기일 날씨 예보</strong>: 경기 5일 전부터 자동 표시</li>
-          <li><strong>라이트 / 다크 모드</strong>: 헤더 토글 또는 설정에서 전환</li>
-          <li><strong>게시판 글 공유</strong>: 게시글·투표를 카톡·링크로 공유</li>
-          <li><strong>투표 현황 보기</strong>: 누가 어디에 투표했는지·미투표자 한눈에</li>
-          <li><strong>PK · FK 골 유형</strong>: 일반·PK·FK·헤딩·자책골 분류</li>
-          <li><strong>팀 기본 포메이션</strong>: 팀 설정에서 지정, 전술판 자동 적용</li>
-          <li><strong>경기 결과 공유 카드</strong>: 일지에서 이미지 카드로 공유</li>
-          <li><strong>팀 일정 등록</strong>: 회식·MT·번개 등 경기 외 일정</li>
-          <li><strong>팀 로고 업로드</strong>: 이미지 크롭으로 등록, 헤더에 자동 표시</li>
+          <li><strong>회칙</strong> — 팀 규칙·운영 원칙 한 페이지로 정리. 모든 회원이 열람 가능.</li>
+          <li><strong>경기별 댓글</strong> — "늦어요", "용병 한 명 가능해요?" 같은 경기별 짧은 소통용.</li>
+          <li><strong>투표 마감 리마인더</strong> — 마감 전날 자동으로 미투표자에게 알림.</li>
+          <li><strong>경기일 날씨 예보</strong> — 경기 5일 전부터 자동으로 표시. 비 오면 미리 단톡방에 공유.</li>
+          <li><strong>라이트 / 다크 모드</strong> — 화면 우측 상단 토글 또는 설정에서 전환.</li>
+          <li><strong>경기 결과 공유 카드</strong> — 일지 탭에서 깔끔한 이미지 카드로 단톡방·SNS 공유.</li>
+          <li><strong>팀 로고 업로드</strong> — 이미지 크롭(잘라내기)까지 안에서 처리, 등록하면 헤더·공유 카드에 자동 표시.</li>
+          <li><strong>풋살 전용</strong> — 5~8인제, 풋살 포지션(피소 · 아라 · 피벗), 풋살 코트 비율 별도 지원.</li>
         </ul>
       </div>
     </details>
@@ -897,17 +1015,17 @@
   <div class="section-divider"><span>설치</span></div>
 
   <section id="pwa">
-    <h2><span class="num">13</span>홈 화면에 추가</h2>
-    <p>홈 화면에 추가하면 앱처럼 바로 접속할 수 있습니다.</p>
+    <h2><span class="num">14</span>홈 화면에 추가하기</h2>
+    <p>PitchMaster는 일반 앱이 아니라 <strong>웹앱(PWA, Progressive Web App)</strong>이에요. 한 번 홈 화면에 추가해두면 다음부터는 일반 앱처럼 아이콘 한 번 누르면 바로 열리고, 푸시 알림도 받을 수 있어요. 앱스토어 / 플레이 스토어 따로 가지 않아도 됩니다.</p>
 
     <details open>
-      <summary>아이폰 (Safari)</summary>
+      <summary>아이폰 (Safari 사용)</summary>
       <div>
         <ol>
-          <li>Safari로 <a href="https://www.pitch-master.app">pitch-master.app</a> 접속</li>
-          <li>하단 메뉴바에서 공유 아이콘 탭</li>
-          <li>"홈 화면에 추가" 선택</li>
-          <li>우측 상단 "추가" 탭</li>
+          <li>Safari 앱으로 <a href="https://www.pitch-master.app">pitch-master.app</a>에 접속하세요. 카톡 안 브라우저나 다른 브라우저로 들어오면 안 돼요 — 꼭 Safari여야 합니다.</li>
+          <li>화면 하단 가운데의 <strong>공유 아이콘</strong>(위쪽 화살표가 있는 네모) 탭.</li>
+          <li>아래로 스크롤해서 <strong>[홈 화면에 추가]</strong>를 누릅니다.</li>
+          <li>우측 상단의 <strong>[추가]</strong>를 누르면 끝. 홈 화면에 PitchMaster 아이콘이 생겨요.</li>
         </ol>
       </div>
     </details>
@@ -916,97 +1034,97 @@
       <summary>안드로이드 (Chrome · 삼성 인터넷 등)</summary>
       <div>
         <ol>
-          <li>브라우저로 <a href="https://www.pitch-master.app">pitch-master.app</a> 접속</li>
-          <li>하단에 뜨는 "홈 화면에 추가" 배너를 탭</li>
-          <li>또는 앱 안의 더보기 → 홈 화면에 추가 버튼 탭</li>
+          <li>평소 쓰는 브라우저로 <a href="https://www.pitch-master.app">pitch-master.app</a>에 접속하세요.</li>
+          <li>화면 아래쪽에 <strong>"홈 화면에 추가하시겠습니까?"</strong> 배너가 자동으로 떠요. 그 배너를 누르면 끝.</li>
+          <li>배너가 안 뜨면 브라우저 우측 상단 메뉴(점 세 개) → <strong>[홈 화면에 추가]</strong> 항목을 직접 눌러도 됩니다.</li>
         </ol>
       </div>
     </details>
 
-    <div class="tip">홈 화면에 추가하면 알림(푸시)도 받을 수 있습니다. 설정 → 알림에서 켜주세요.</div>
+    <div class="tip">홈 화면에 추가하면 그 아이콘으로 들어왔을 때만 <strong>푸시 알림</strong>을 받을 수 있어요. 일반 브라우저 탭으로 보던 상태에선 알림이 안 옵니다. 추가한 후 햄버거 메뉴 → 설정 → 개인 설정의 알림 항목에서 알림 켜주세요.</div>
   </section>
 
   <!-- ════════════════ FAQ ════════════════ -->
   <div class="section-divider"><span>FAQ</span></div>
 
   <section id="faq">
-    <h2><span class="num">14</span>자주 묻는 질문</h2>
+    <h2><span class="num">15</span>자주 묻는 질문</h2>
 
     <details>
-      <summary>앱 설치가 필요한가요?</summary>
-      <div>아닙니다. 링크만 누르면 바로 사용할 수 있습니다. 홈 화면에 추가하면 일반 앱과 똑같이 사용할 수 있고, 알림도 받을 수 있습니다.</div>
+      <summary>앱 설치가 꼭 필요한가요?</summary>
+      <div>아니에요. 링크만 누르면 바로 쓸 수 있어요. 다만 일반 앱처럼 쓰고 싶거나 푸시 알림을 받고 싶다면 <a href="#pwa">14번 홈 화면에 추가하기</a> 한 번만 해두시면 그 다음부턴 아이콘으로 바로 들어가고 알림도 받을 수 있습니다.</div>
     </details>
 
     <details>
-      <summary>팀원이 앱을 깔아야 하나요?</summary>
-      <div>아니요. 초대 링크를 누르면 바로 카카오 로그인 → 가입 완료입니다. 앱 설치를 부탁할 필요가 없어서 팀원 가입률이 높습니다.</div>
+      <summary>팀원도 앱을 깔아야 하나요?</summary>
+      <div>아니에요. 단톡방에 던진 초대 링크만 누르면 카카오 로그인 → 가입 완료입니다. 앱 설치를 부탁할 필요가 없어서 PitchMaster는 평균적으로 팀원 가입률이 높은 편이에요.</div>
     </details>
 
     <details>
-      <summary>여러 팀에 가입할 수 있나요?</summary>
-      <div>네, 한 계정으로 여러 팀에 소속될 수 있습니다. 좌측 메뉴에서 팀을 전환하면 됩니다.</div>
+      <summary>한 계정으로 여러 팀에 들어갈 수 있나요?</summary>
+      <div>됩니다. 같은 카카오 계정으로 여러 팀에 가입하거나 새 팀을 만들 수 있고, 햄버거 메뉴 위쪽의 <strong>팀 전환 버튼</strong>으로 팀을 오갈 수 있어요. 평일 풋살팀 + 주말 축구팀 따로 운영하는 분들이 자주 쓰는 방식입니다.</div>
     </details>
 
     <details>
-      <summary>카카오 인앱 브라우저에서 안 되는 게 있나요?</summary>
-      <div>카카오톡 안에서 링크를 열면 알림·홈 화면 추가가 제한됩니다. 우측 상단 ··· → "외부 브라우저에서 열기"를 누르면 모든 기능을 사용할 수 있습니다.</div>
+      <summary>카카오톡 안에서 링크를 열면 안 되는 게 있나요?</summary>
+      <div>네. 카카오톡 안 브라우저(인앱 브라우저)에선 <strong>푸시 알림</strong>·<strong>홈 화면에 추가</strong>가 막혀 있어요 (카카오 정책). 카카오 안에서 링크를 열었을 때 우측 상단의 <strong>···</strong> 메뉴 → <strong>[다른 브라우저로 열기]</strong>(또는 [Safari로 열기])를 누르면 외부 브라우저로 넘어가서 모든 기능을 쓸 수 있어요.</div>
     </details>
 
     <details>
-      <summary>이전 시즌 데이터를 옮길 수 있나요?</summary>
-      <div>네. 엑셀이나 스프레드시트로 기존 데이터(경기 결과·회비 내역·멤버 목록)를 보내주시면 일괄 등록 도와드립니다. 오픈채팅방에서 말씀해주세요.</div>
+      <summary>이전 시즌 데이터를 PitchMaster로 옮길 수 있나요?</summary>
+      <div>됩니다. 엑셀·스프레드시트로 정리된 경기 결과·회비 내역·회원 목록을 보내주시면 운영팀이 일괄 등록을 도와드려요. 오픈채팅방(아래 16번 문의 섹션)에서 편하게 말씀해주세요.</div>
     </details>
 
     <details>
-      <summary>회비 납부 기준일을 변경할 수 있나요?</summary>
-      <div>네. 회비 → 설정 탭에서 납부 기준일을 변경할 수 있습니다. 기준일을 25일로 설정하면 매월 25일부터 다음달 24일까지를 한 달로 계산합니다.</div>
+      <summary>회비 납부 기준일을 바꿀 수 있나요?</summary>
+      <div>됩니다. 하단 탭바 [회비] → <strong>[설정] 탭</strong>에서 납부 기준일을 바꿀 수 있어요. 예를 들어 매월 25일로 설정하면 그 달의 25일부터 다음 달 24일까지를 한 회비 기간으로 계산합니다.</div>
     </details>
 
     <details>
-      <summary>회비 선납은 어떻게 등록하나요?</summary>
-      <div>회비 → 납부현황 탭 → 우측 상단 [선납 등록] 버튼을 누르면 회원·기간(3·6·12개월)·시작 월을 골라 등록할 수 있습니다. 등록 즉시 해당 기간의 매월이 자동으로 "납부 완료"로 표시됩니다. 자세한 내용은 <a href="#prepay">9. 회비 선납</a> 참고.</div>
+      <summary>회비를 6개월·1년치 한 번에 받고 싶은데요?</summary>
+      <div>회비 → <strong>[납부현황] 탭</strong> → 화면 우측 상단 <strong>[선납 등록]</strong> 버튼을 누르고 회원·기간(3·6·12개월)·시작 월을 고르면 등록 끝. 등록한 그 기간의 매월이 자동으로 "납부 완료"로 표시돼요. 자세한 건 <a href="#prepay">10번 회비 선납</a> 참고.</div>
     </details>
 
     <details>
-      <summary>완료된 경기의 참석자를 수정할 수 있나요?</summary>
-      <div>네, 운영진 이상은 완료된 경기에서도 투표 탭에서 참석자를 추가·수정할 수 있습니다.</div>
+      <summary>이미 끝난 경기의 참석자를 수정할 수 있나요?</summary>
+      <div>네. 회장·운영진은 끝난 경기에서도 [투표] 탭에서 참석자를 추가·삭제·변경할 수 있어요. 갑자기 빠진 회원이 있어 출석 기록을 정정해야 할 때 사용합니다.</div>
     </details>
 
     <details>
-      <summary>회원을 장기 면제·휴회 처리하려면?</summary>
-      <div>회비 → 설정 탭 → 하단 "회원 회비 상태"에서 [추가]를 눌러 면제·휴회·부상 상태를 등록하세요. 시작일~종료일을 설정하면 해당 기간 동안 매월 자동으로 면제 처리됩니다. 종료일을 비워두면 무기한입니다.</div>
+      <summary>회원을 장기 면제·휴회로 처리하려면?</summary>
+      <div>회비 → <strong>[설정] 탭</strong> → 아래쪽의 <strong>[회원 회비 상태]</strong>에서 [추가] 버튼 → <strong>면제 / 휴회 / 부상</strong> 중 골라서 시작일~종료일과 함께 등록하세요. 등록한 기간 동안은 매월 자동으로 면제 처리되고, 종료일을 비워두면 무기한이 됩니다.</div>
     </details>
 
     <details>
-      <summary>벌금 규칙은 어떻게 설정하나요?</summary>
-      <div>회비 → 설정 탭 → "벌금 규칙"에서 [추가]를 눌러 규칙 이름·트리거(지각·불참·미투표·기타)·금액을 설정합니다. 경기가 완료되면 해당 규칙에 따라 자동으로 벌금이 부과됩니다.</div>
+      <summary>벌금 규칙은 어떻게 만드나요?</summary>
+      <div>회비 → <strong>[설정] 탭</strong> → 아래쪽의 <strong>[벌금 규칙]</strong>에서 [추가] 버튼 → 규칙 이름(예: "지각비")·발동 조건(<strong>지각 / 불참 / 미투표</strong>)·금액을 입력하면 끝. 그 다음부터는 경기가 끝나는 순간 그 규칙에 맞춰 자동으로 벌금이 부과됩니다.</div>
     </details>
 
     <details>
-      <summary>유니폼은 어떻게 설정하나요?</summary>
-      <div>설정 → 팀 설정 → 유니폼에서 홈·원정·써드 유니폼의 메인 색상·서브 색상·패턴을 설정합니다. 경기 정보 탭에서 어떤 유니폼을 입을지 선택할 수 있습니다.</div>
+      <summary>유니폼 색깔·패턴은 어떻게 등록하나요?</summary>
+      <div>햄버거 메뉴 → [설정] → [팀 설정] 아래쪽의 <strong>[유니폼]</strong> 섹션에서 홈·원정·써드 각각의 메인 색상·서브 색상·패턴(단색/세로 줄/가로 줄/대각선 줄)을 고르면 됩니다. 경기마다 어떤 유니폼을 입을지는 그 경기의 [정보] 탭에서 [홈/원정/써드] 버튼으로 정해요.</div>
     </details>
 
     <details>
-      <summary>MVP는 어떻게 확정되나요?</summary>
-      <div>두 가지 경로가 있습니다. ① 운영진 1명 이상이 투표하면 즉시 확정 (투표율 무관), ② 일반 팀원이 실제 참석자의 70% 이상 투표하면 최다득표자 자동 확정. 70% 미달이면 운영진이 직접 지정할 수 있습니다. 자세한 내용은 <a href="#record">7. 경기 기록</a>의 MVP 섹션 참고.</div>
+      <summary>MVP는 어떻게 결정되나요?</summary>
+      <div>두 가지 경로가 있어요. ① <strong>회장·운영진 1명 이상이 투표</strong>하면 그 즉시 확정(회원이 한 명도 안 했어도 됨). ② <strong>일반 회원 투표가 실제 참석자의 70% 이상</strong>이면 최다 득표자 자동 확정. 70%가 안 모이면 운영진이 직접 지정할 수 있어요. 자세한 건 <a href="#record">8번 경기 기록</a>의 MVP 섹션 참고.</div>
     </details>
 
     <details>
       <summary>AI 기능 사용 한도가 있나요?</summary>
-      <div>기능별로 다릅니다. AI 풀 플랜은 경기당 2회 + 월 10회, AI 코치 분석은 경기당 3회, 자동 경기 후기는 경기당 1회 재생성, 회비 OCR은 무제한. 실패한 호출이나 룰 폴백은 한도에서 차감되지 않습니다. 자세한 내용은 <a href="#ai">11. AI 기능</a> 참고.</div>
+      <div>기능별로 다릅니다. <strong>AI 풀 플랜</strong>은 경기당 2회 + 팀 월 10회, <strong>AI 코치 분석</strong>은 경기당 3회, <strong>자동 경기 후기</strong>는 경기당 1회 재생성, <strong>회비 OCR</strong>은 한도 없음. 실패한 호출이나 자동 규칙으로 폴백된 경우는 한도에서 차감되지 않아요. 자세한 건 <a href="#ai">12번 AI 기능</a> 참고.</div>
     </details>
 
     <details>
       <summary>무료인가요?</summary>
-      <div>현재 모든 기능을 무료로 사용할 수 있습니다. 추후 운영 정책에 따라 유료 요금제가 도입될 수 있으며, 변경 시 사전에 안내드립니다. <strong>먼저 함께한 팀</strong>에는 보호 정책이 적용됩니다.</div>
+      <div>현재 모든 기능을 무료로 쓸 수 있어요. 운영 비용을 충당하기 위해 앞으로 유료 요금제가 도입될 수 있고, 변경되는 시점이 오면 사전에 충분히 안내드릴 예정입니다. <strong>먼저 함께해주신 팀</strong>에는 별도 보호 정책이 있어요 (가격이 올라도 일정 기간 기존 가격 유지 등).</div>
     </details>
   </section>
 
   <!-- ════════════════ 문의 ════════════════ -->
   <section id="contact" style="margin-top: 56px;">
-    <h2><span class="num">15</span>문의 · 피드백</h2>
-    <p>사용 중 궁금한 점이나 개선 아이디어가 있으시면 편하게 말씀해주세요.</p>
+    <h2><span class="num">16</span>문의 · 피드백</h2>
+    <p>사용하다가 궁금한 점·헷갈리는 부분, 또는 "이런 기능 있으면 좋겠다" 하는 아이디어가 있으면 편하게 던져주세요. 작은 의견 하나가 다음 업데이트에 그대로 들어갑니다 — 실제로 PitchMaster의 많은 기능이 회장·총무 분들이 단톡방에서 던진 한 줄에서 시작됐어요.</p>
     <a href="https://open.kakao.com/o/gbhRaXmi" class="cta" style="background:#fee500; color:#191919;">카카오 오픈채팅 참여하기</a>
     <p style="text-align:center; font-size:13px; color:var(--muted); margin-top: -4px;">버그 제보·기능 제안·사용법 질문 모두 환영합니다</p>
 
