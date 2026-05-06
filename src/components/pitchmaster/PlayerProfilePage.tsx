@@ -662,7 +662,8 @@ export function PlayerProfilePage({
             sportType={profile.sportType}
             contextTeamId={profile.teamId}
             isGoalkeeper={isGoalkeeper}
-            canViewHistory={Boolean(viewerUserId === userId || viewerIsStaff)}
+            canEvaluate={false}
+            canViewHistory={false}
           />
         </section>
       )}

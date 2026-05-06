@@ -20,9 +20,8 @@ import { cn, formatPhone, compactKakaoImage } from "@/lib/utils";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Search } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { Users, ChevronDown, Sparkles, History } from "lucide-react";
+import { Users, ChevronDown } from "lucide-react";
 import { useConfirm } from "@/lib/ConfirmContext";
-import EvaluationModal from "@/components/pitchAttributes/EvaluationModal";
 import type { SportType } from "@/lib/playerAttributes/types";
 
 type Member = {
@@ -148,13 +147,6 @@ export default function MembersClient({
   const [dormantType, setDormantType] = useState<string>("INJURED");
   const [dormantUntil, setDormantUntil] = useState("");
   const [dormantReason, setDormantReason] = useState("");
-
-  // PitchScore 평가 모달 (운영진 전용)
-  const [evaluatingTarget, setEvaluatingTarget] = useState<{
-    userId: string;
-    name: string;
-    isGoalkeeper: boolean;
-  } | null>(null);
 
   const DORMANT_LABELS: Record<string, string> = { INJURED: "부상", PERSONAL: "개인사정" };
   const DORMANT_ICONS: Record<string, string> = { INJURED: "🏥", PERSONAL: "✈️" };
@@ -876,23 +868,7 @@ export default function MembersClient({
                     {/* 관리 버튼들 */}
                     {(isStaffOrAbove(role) || canChangeRole || member.userIdRaw === userId) && (
                       <div className="flex flex-wrap gap-2 pt-1">
-                        {/* PitchScore 평가 — 운영진 + Feature Flag + sport_type 지원 + 본인 제외 + 사전등록 제외 */}
-                        {canEvaluate && member.userIdRaw && member.userIdRaw !== userId && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 text-xs gap-1 border-[hsl(var(--primary))]/40 text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/10"
-                            onClick={() => setEvaluatingTarget({
-                              userId: member.userIdRaw!,
-                              name: member.name,
-                              isGoalkeeper: member.preferredPositions[0]?.toUpperCase() === "GK",
-                            })}
-                          >
-                            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                            평가
-                          </Button>
-                        )}
-                        {/* PitchScore 결과 페이지 진입 — 평가 워크플로 직후 결과 확인 */}
+                        {/* 평가/이력 UI 제거 (45차 후속). 능력치 보기는 그대로 유지 — 누적된 데이터 조회용. */}
                         {canEvaluate && member.userIdRaw && (
                           <Button
                             asChild
@@ -902,20 +878,6 @@ export default function MembersClient({
                           >
                             <Link href={`/player/${member.userIdRaw}`}>
                               능력치 보기
-                            </Link>
-                          </Button>
-                        )}
-                        {/* 평가 이력 페이지 진입 — 운영진 전용, 본인 행은 기본 진입 (본인 이력은 /records 에서) */}
-                        {canEvaluate && member.userIdRaw && member.userIdRaw !== userId && (
-                          <Button
-                            asChild
-                            size="sm"
-                            variant="outline"
-                            className="h-8 text-xs gap-1"
-                          >
-                            <Link href={`/player/${member.userIdRaw}/evaluations?sport=${sportType}`}>
-                              <History className="h-3.5 w-3.5" aria-hidden="true" />
-                              이력
                             </Link>
                           </Button>
                         )}
@@ -1075,19 +1037,6 @@ export default function MembersClient({
         </Card>
       )}
 
-      {/* PitchScore 평가 모달 (운영진 전용) — createPortal 로 document.body 에 직접 렌더 */}
-      {evaluatingTarget && sportType && (
-        <EvaluationModal
-          open={Boolean(evaluatingTarget)}
-          onClose={() => setEvaluatingTarget(null)}
-          targetUserId={evaluatingTarget.userId}
-          targetUserName={evaluatingTarget.name}
-          isGoalkeeper={evaluatingTarget.isGoalkeeper}
-          sportType={sportType}
-          contextTeamId={teamId}
-          onSaved={() => setEvaluatingTarget(null)}
-        />
-      )}
     </div>
   );
 }
