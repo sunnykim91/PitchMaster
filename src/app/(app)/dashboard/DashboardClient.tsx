@@ -735,8 +735,17 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
             <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">미완료 항목</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {tasks.length > 0 ? (
-              tasks.map((task) => {
+            {(() => {
+              // ViewAsRole 시뮬레이션 일관성 — SSR 은 실제 권한 기준이라 회장이
+              // viewAsRole=MEMBER 토글해도 평가 task 가 그대로 보임. 클라 시점에서
+              // effectiveRole 기반으로 한번 더 필터해 시뮬레이션 정확도 ↑.
+              // (진짜 평회원 계정은 SSR 단계에서 이미 task 빠지므로 영향 없음.)
+              const isStaffViewer = role === "PRESIDENT" || role === "STAFF";
+              const visibleTasks = isStaffViewer
+                ? tasks
+                : tasks.filter((t) => t.action !== "open-peer-evaluation");
+              return visibleTasks.length > 0 ? (
+              visibleTasks.map((task) => {
                 // 모달 트리거 task — Link 가 아니라 button 으로 onClick (예: 동료 평가)
                 if (task.action === "open-peer-evaluation") {
                   return (
@@ -773,7 +782,8 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--success))]" />
                 <p className="text-sm text-[hsl(var(--success))]">모든 할 일을 완료했습니다!</p>
               </div>
-            )}
+            );
+            })()}
           </CardContent>
         </Card>
 
