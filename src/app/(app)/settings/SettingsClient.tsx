@@ -343,8 +343,7 @@ export default function SettingsClient({
       {/* ── 팀 설정 (운영진 이상) ── */}
       {isStaff && (
         <div className={activeTab === "team" ? "space-y-5" : "hidden"}>
-          {/* 전술 영상 진입 카드 — 베타: FCMZ 팀만 노출 */}
-          {sessionTeam.teamName === "FCMZ" && (
+          {/* 전술 영상 진입 카드 — 모든 팀 운영진 노출 */}
           <Link
             href="/settings/animations"
             className="block rounded-xl border border-[hsl(var(--primary))]/30 bg-gradient-to-br from-[hsl(var(--primary))]/8 to-[hsl(var(--primary))]/3 p-4 transition-colors hover:border-[hsl(var(--primary))]/50"
@@ -363,7 +362,6 @@ export default function SettingsClient({
               <span className="shrink-0 text-xl text-muted-foreground">→</span>
             </div>
           </Link>
-          )}
 
           <TeamSettings
             team={team}

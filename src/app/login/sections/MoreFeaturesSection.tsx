@@ -20,6 +20,7 @@ import {
   Swords,
   PieChart,
   Goal,
+  Film,
 } from "lucide-react";
 
 type Tone = "primary" | "info" | "accent" | "warning";
@@ -30,16 +31,17 @@ const FEATURES: Array<{
   desc: string;
   tone: Tone;
 }> = [
-  { Icon: Megaphone,    label: "게시판 / 공지",    desc: "고정 공지 + 댓글, 단톡방에 묻히지 않음",   tone: "primary" },
-  { Icon: BarChart3,    label: "경기 기록",         desc: "골/어시/MVP 자동 집계, 시즌 누적 통계",     tone: "info" },
-  { Icon: FileText,     label: "회칙 페이지",       desc: "팀 규정·운영 원칙 한 페이지에 명문화",      tone: "accent" },
-  { Icon: AlertCircle,  label: "자동 벌금 부과",    desc: "지각·불참 자동 차감, 매번 묻기 X",          tone: "warning" },
-  { Icon: Users,        label: "멀티팀",            desc: "한 카카오 계정으로 여러 팀 관리",           tone: "primary" },
-  { Icon: Eye,          label: "데모 체험",         desc: "가입 없이 30초 만에 둘러보기",              tone: "info" },
-  { Icon: Activity,     label: "출석 히트맵",       desc: "선수별 출석 패턴 한눈에",                   tone: "accent" },
-  { Icon: Swords,       label: "상대팀 전적 카드",  desc: "맞대결 이력·최근 5경기 자동 표시",          tone: "warning" },
-  { Icon: PieChart,     label: "월별 결산 리포트",  desc: "회비 수입·지출 자동 집계, PDF 내보내기",    tone: "primary" },
-  { Icon: Goal,         label: "풋살 3~8인제",       desc: "포지션·전술판 별도 지원",                   tone: "info" },
+  { Icon: Megaphone,    label: "게시판 / 공지",       desc: "고정 공지 + 댓글, 단톡방에 묻히지 않음",       tone: "primary" },
+  { Icon: BarChart3,    label: "경기 기록",            desc: "골/어시/MVP 자동 집계, 시즌 누적 통계",         tone: "info" },
+  { Icon: Film,         label: "전술 영상 편집",       desc: "11명 위치 직접 그려 우리 팀 빌드업·수비 영상",   tone: "accent" },
+  { Icon: FileText,     label: "회칙 페이지",          desc: "팀 규정·운영 원칙 한 페이지에 명문화",          tone: "warning" },
+  { Icon: AlertCircle,  label: "자동 벌금 부과",       desc: "지각·불참 자동 차감, 매번 묻기 X",              tone: "primary" },
+  { Icon: Users,        label: "멀티팀",               desc: "한 카카오 계정으로 여러 팀 관리",                tone: "info" },
+  { Icon: Eye,          label: "데모 체험",            desc: "가입 없이 30초 만에 둘러보기",                  tone: "accent" },
+  { Icon: Activity,     label: "출석 히트맵",          desc: "선수별 출석 패턴 한눈에",                       tone: "warning" },
+  { Icon: Swords,       label: "상대팀 전적 카드",     desc: "맞대결 이력·최근 5경기 자동 표시",              tone: "primary" },
+  { Icon: PieChart,     label: "월별 결산 리포트",     desc: "회비 수입·지출 자동 집계, PDF 내보내기",        tone: "info" },
+  { Icon: Goal,         label: "풋살 3~8인제",          desc: "포지션·전술판 별도 지원",                       tone: "accent" },
 ];
 
 const TONE_FG: Record<Tone, string> = {

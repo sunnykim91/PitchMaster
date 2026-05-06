@@ -13,8 +13,6 @@ export default async function AnimationsListPage() {
   if (!session) return null;
 
   if (!isStaffOrAbove(session.user.teamRole)) return notFound();
-  // 베타 — FCMZ 팀만 진입. 검증 후 전체 오픈.
-  if (session.user.teamName !== "FCMZ") return notFound();
 
   return (
     <AnimationsListClient

@@ -16,8 +16,6 @@ export default async function AnimationEditorPage({ params }: Props) {
   const session = await auth();
   if (!session) return null;
   if (!isStaffOrAbove(session.user.teamRole)) return notFound();
-  // 베타 — FCMZ 팀만 진입
-  if (session.user.teamName !== "FCMZ") return notFound();
 
   const { id } = await params;
   const sb = getSupabaseAdmin();
