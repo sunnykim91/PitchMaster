@@ -654,26 +654,26 @@
   <div class="section-divider"><span>PitchScore™ — 감독 노트</span></div>
 
   <section id="pitchscore">
-    <h2><span class="num">8</span>PitchScore™ — 감독 노트 <span class="badge badge-staff">운영진</span></h2>
-    <p>운영진(회장·운영진)이 라인업·포지션 결정에 참고할 객관 능력치를 기록하는 도구입니다. 일반 회원에게는 노출되지 않고, 운영진만 평가하고 결과를 봅니다.</p>
+    <h2><span class="num">8</span>PitchScore™ — 감독의 전술노트 <span class="badge badge-staff">운영진</span></h2>
+    <p>감독님(회장·운영진)이 직접 팀원을 평가해 데이터로 기록하고, 라인업·포지션 결정에 참고하는 도구입니다. 회원 사이의 상호 평가는 일부러 막아뒀어요 — 점수가 공개되면 사소한 오해가 생기기 쉽거든요. 오로지 감독이 평가하고, 데이터는 라인업 짤 때만 참고합니다.</p>
 
     <div class="card">
-      <strong>왜 운영진 전용인가요?</strong>
+      <strong>왜 감독만 평가하나요?</strong>
       <div class="card-desc">
-        본인이 자기 점수를 보면 갈등이 생기기 쉬워요. PitchScore는 감독이 라인업·포지션을 결정할 때 참고하는 사적 노트로 설계됐습니다. 회원은 평가받기만 하고, 운영진이 데이터 기반으로 더 공정하게 출전 기회를 분배하는 구조예요.
+        회원끼리 점수를 매기면 "왜 나한테 낮게 줬어?" 같은 갈등이 생기기 쉬워요. PitchScore는 그래서 처음부터 <strong>감독 전용 전술노트</strong>로 설계됐습니다. 감독님이 같이 뛰며 본 객관적 인상을 데이터로 남기고, 그 데이터를 본인만 보면서 라인업·포지션을 결정해요. 회원은 평가받는 사실만 알 수 있고, 점수는 공개되지 않습니다.
       </div>
     </div>
 
     <h3>1) PitchScore™가 뭔가요</h3>
     <ul>
-      <li><strong>능력치 평가 시스템</strong> — 축구 19개 / 풋살 17개 능력치를 1~5점으로 평가</li>
+      <li><strong>능력치 평가 시스템</strong> — 축구 19개 / 풋살 17개 능력치를 1~5점 슬라이더로 기록</li>
       <li><strong>8 카테고리</strong>: 속도 · 슈팅 · 패스 · 드리블 · 수비 · 체력 · 공중볼(축구만) · GK</li>
-      <li><strong>Triple Trust 알고리즘</strong> — 누가(Authority) × 언제(Recency) × 어떻게(Formality) 평가했는지 가중 평균
+      <li><strong>Triple Trust 가중치</strong> — 누가(Authority) × 언제(Recency) × 어떻게(Formality)
         <ul>
-          <li>운영진 평가 = ×1.3 (가장 큰 영향)</li>
-          <li>동료 평가 = ×1.0</li>
-          <li>본인(자가) 평가 = ×0.7 (객관성 보정)</li>
+          <li>감독(운영진) 평가 = ×1.3 — 실제 평가의 거의 전부</li>
+          <li>본인 자가 평가 = ×0.7 — 자기 평가 후한 경향 살짝 보정 (감독이 본인 점수도 자가 평가 가능)</li>
           <li>최근 90일 평가는 ×1.0, 그 이상 점진 감소 (180일 0.85 / 365일 0.7 / 그 외 0.5)</li>
+          <li>같은 사람이 같은 능력치를 다시 평가하면 update 만 되고 누적 안 됨 (한 evaluator 당 1번)</li>
         </ul>
       </li>
       <li><strong>비활성 능력치</strong>: 크로스 · 프리킥 · 태클은 사용자 피드백으로 비활성화 (legacy 평가는 보존, 새 평가만 차단)</li>
@@ -681,63 +681,64 @@
     </ul>
 
     <h3>2) 평가하는 법 <span class="badge badge-staff">운영진</span></h3>
-    <p>3가지 진입 동선이 있어요. 상황에 맞춰 골라 쓰세요.</p>
+    <p>감독님이 팀원을 평가하는 진입 동선 3가지. 상황에 맞춰 골라 쓰세요.</p>
 
     <div class="card">
       <strong>① 회원 목록에서 직접 평가 (가장 빠름)</strong>
       <div class="card-desc">
-        <a href="https://www.pitch-master.app/members">/members</a> → 회원 행에서 <strong>"평가"</strong> 버튼 클릭 → 슬라이더 모달 (능력치 1~5점)
+        <a href="https://www.pitch-master.app/members">/members</a> → 회원 행에서 <strong>"평가"</strong> 버튼 → 슬라이더 모달에서 19개 능력치 1~5점 입력
       </div>
     </div>
 
     <div class="card">
-      <strong>② 추천 3명 모달 (빈도 기반)</strong>
+      <strong>② 함께 뛴 빈도 높은 3명 자동 추천</strong>
       <div class="card-desc">
-        <a href="https://www.pitch-master.app/records?tab=my">/records?tab=my</a> 상단 <strong>"팀원 능력치 평가"</strong> 카드 → "평가하기" 클릭 → 같이 뛴 빈도가 높은 3명 추천 (B3 알고리즘: co-attendance DESC → sample_count ASC → random)
+        <a href="https://www.pitch-master.app/records?tab=my">/records?tab=my</a> 상단 <strong>"팀원 능력치 평가"</strong> 카드 → "평가하기" → 감독님이 자주 같이 출전한 회원 3명을 자동 추천 (출석 기록 기반)
       </div>
     </div>
 
     <div class="card">
-      <strong>③ 대시보드 task</strong>
+      <strong>③ 대시보드 미완료 항목</strong>
       <div class="card-desc">
-        <a href="https://www.pitch-master.app/dashboard">/dashboard</a> "미완료 항목"에 <strong>"팀원 평가하기 (n명 평가함)"</strong> task가 항시 노출 (n = 본인이 평가한 distinct 인원 수)
+        <a href="https://www.pitch-master.app/dashboard">/dashboard</a> "미완료 항목"에 <strong>"팀원 평가하기 (n명 평가함)"</strong> 항시 노출 (n = 감독님이 지금까지 평가한 회원 수)
       </div>
     </div>
 
-    <div class="tip">평가 source는 자동 결정됩니다. 본인이 본인을 평가하면 SELF, 운영진이 다른 팀원을 평가하면 STAFF, 그 외는 PEER. 사용자가 수동 선택 X.</div>
+    <div class="tip">평가 종류는 자동 결정됩니다. 감독님이 본인을 평가하면 자가 평가, 다른 팀원을 평가하면 감독 평가. 사용자가 수동으로 고르지 않아요.</div>
 
     <h3>3) 결과 보는 법 <span class="badge badge-staff">운영진</span></h3>
-    <p>운영진은 본인 점수와 자기 팀 모든 멤버의 점수를 볼 수 있어요.</p>
+    <p>감독님은 본인 점수 + 자기 팀 모든 회원의 점수를 볼 수 있어요. 회원 본인은 자기 점수도 못 봅니다.</p>
 
     <ul>
       <li><strong>본인 종합</strong> — <a href="https://www.pitch-master.app/records?tab=my">/records?tab=my</a> "내 종합" 카드: 종합 PitchScore + 두 레이더 비교(경기 스탯 / 능력치)</li>
-      <li><strong>본인 능력치 상세</strong> — 같은 페이지 PitchScoreCard "능력치 자세히 보기" 토글: 19개 능력치 막대 + archetype + 추천 포지션</li>
-      <li><strong>타팀원 능력치</strong> — <a href="https://www.pitch-master.app/members">/members</a> 행 <strong>"능력치 보기"</strong> → 프로필 페이지 PitchScoreCard</li>
+      <li><strong>본인 능력치 상세</strong> — 같은 페이지 PitchScoreCard "능력치 자세히 보기" 토글: 19개 능력치 막대 + 별명 + 추천 포지션</li>
+      <li><strong>회원 능력치</strong> — <a href="https://www.pitch-master.app/members">/members</a> 행 <strong>"능력치 보기"</strong> → 프로필 페이지 PitchScoreCard</li>
     </ul>
 
     <div class="card">
-      <strong>5명 이상 평가 누적 시 자동 분석</strong>
+      <strong>3명 이상 평가 누적 시 자동 정리</strong>
       <div class="card-desc">
-        한 선수에게 distinct evaluator 5명 이상이 평가하면 자동으로 표시됩니다:
+        한 회원에게 감독·자가 합쳐 3명 이상이 평가하면 다음 정보가 자동으로 표시됩니다 (한 팀 운영진이 보통 2~4명이라 이 정도가 현실 임계값):
         <ul>
-          <li><strong>archetype (별명)</strong>: 강점 패턴 매칭으로 10개 중 하나 — <em>안정적인 골키퍼 · 폭발적인 공격수 · 전천후 미드필더 · 믿음직한 수비수 · 공격적인 윙어 · 플레이메이커 · 현대적인 수비수 · 타깃형 공격수 · 철벽 디펜더 · 박스투박스</em></li>
+          <li><strong>참고용 별명</strong>: 강점 패턴 매칭으로 10개 중 하나 — <em>안정적인 골키퍼 · 폭발적인 공격수 · 전천후 미드필더 · 믿음직한 수비수 · 공격적인 윙어 · 플레이메이커 · 현대적인 수비수 · 타깃형 공격수 · 철벽 디펜더 · 박스투박스</em></li>
           <li><strong>한 줄 코멘트</strong>: 강점 2개 + 약점 1개 조합 (예: "전천후 미드필더 — 패스 정확해요 · 드리블 좋아요 · 결정력 보강 필요해요")</li>
           <li><strong>추천 포지션 Top 3</strong>: 9개 필드 포지션(ST·LW·RW·CAM·CM·CDM·CB·LB·RB) 중 능력치 평균이 높은 순. GK는 GK 전용</li>
+          <li>※ 별명·추천 포지션은 어디까지나 <strong>참고 자료</strong>예요. 라인업 결정은 감독님 권한.</li>
         </ul>
       </div>
     </div>
 
     <h3>4) 평가 이력 보는 법 <span class="badge badge-staff">운영진</span></h3>
-    <p>누가 언제 평가했는지 evaluator 단위로 모든 세션이 기록됩니다.</p>
+    <p>언제 누가 평가했는지 evaluator 단위로 세션이 기록됩니다.</p>
 
     <ul>
       <li><strong>본인 이력</strong> — <a href="https://www.pitch-master.app/records?tab=my">/records?tab=my</a> 본인 PitchScoreCard 안 <strong>"평가 이력 보기"</strong> 버튼</li>
-      <li><strong>타팀원 이력</strong> — <a href="https://www.pitch-master.app/members">/members</a> 행 <strong>"이력"</strong> 버튼</li>
+      <li><strong>회원 이력</strong> — <a href="https://www.pitch-master.app/members">/members</a> 행 <strong>"이력"</strong> 버튼</li>
     </ul>
 
     <p>이력 페이지에서 보이는 정보:</p>
     <ul>
-      <li>평가자별 세션 카드 (한 사람당 1개) — evaluator 실명 + source 라벨(본인/운영진/동료) + 평가 시점</li>
+      <li>평가자별 세션 카드 (한 evaluator 당 1개) — 평가자 실명 + 종류 라벨(감독 / 본인 자가) + 평가 시점</li>
       <li>각 세션의 평균 점수 + 카테고리별 평균</li>
       <li>최신 평가 순 정렬</li>
     </ul>
@@ -746,9 +747,9 @@
       <summary>평가 이력 권한 정책</summary>
       <div class="callout-body">
         <ul>
-          <li>평가 이력은 <strong>운영진만</strong> 봅니다 (본인이 일반 회원이라면 본인 이력도 못 봐요)</li>
-          <li>운영진이라도 <strong>자기 팀 멤버</strong>의 이력만 볼 수 있어요 (다른 팀 멤버 user_id 알아도 차단)</li>
-          <li>차단·삭제된 사용자는 이력 노출 안 됨</li>
+          <li>평가 이력은 <strong>감독(운영진)만</strong> 봅니다 (회원은 자기 이력도 못 봐요)</li>
+          <li>감독이라도 <strong>자기 팀 회원</strong>의 이력만 볼 수 있어요 (다른 팀 회원 user_id 알아도 차단)</li>
+          <li>차단·삭제된 회원의 이력은 노출 안 됨</li>
         </ul>
       </div>
     </details>
@@ -756,21 +757,28 @@
     <h3>5) 자주 묻는 질문</h3>
 
     <details class="callout">
-      <summary>일반 회원도 자기 점수를 볼 수 있나요?</summary>
+      <summary>회원이 자기 점수를 볼 수 있나요?</summary>
       <div class="callout-body">
-        <strong>운영진만 볼 수 있습니다.</strong> PitchScore는 감독이 라인업·포지션 결정에 참고하는 사적 노트로 설계됐어요. 본인 점수가 공개되면 운영 갈등이 커지기 쉬워서 일부러 운영진 전용으로 막았습니다. 일반 회원은 평가받기만 하고, 운영진이 객관 데이터로 더 공정한 출전 기회를 분배해요.
+        <strong>볼 수 없습니다.</strong> 점수가 공개되면 "왜 나한테 낮게 줬냐" 같은 사소한 오해가 생기기 쉬워서, 처음부터 감독 전용 전술노트로 설계했어요. 회원은 평가받는다는 사실만 알 수 있고, 결과는 감독님이 라인업·포지션 결정에 참고할 때만 봅니다.
       </div>
     </details>
 
     <details class="callout">
-      <summary>평가가 객관적인가요? 한 명이 일부러 낮게 주면?</summary>
+      <summary>회원끼리 서로 점수를 매길 수 있나요?</summary>
       <div class="callout-body">
-        Triple Trust 알고리즘이 객관성을 보정합니다:
+        <strong>아니요.</strong> 회원 사이 상호 평가는 일부러 막아뒀어요. 같은 이유로 점수 공개도 안 합니다. 평가는 오로지 감독님이 하고, 데이터는 라인업 결정 참고용으로만 씁니다.
+      </div>
+    </details>
+
+    <details class="callout">
+      <summary>평가가 정확한가요? 감독 한 명이 일부러 낮게 주면?</summary>
+      <div class="callout-body">
+        Triple Trust 가중 평균으로 일부 보정은 되지만, 감독 2~4명의 작은 표본이라 진짜 객관이라 보긴 어렵습니다. 라인업 결정의 <strong>참고 자료</strong>로만 보세요.
         <ul>
-          <li>5명 이상 distinct evaluator 누적 시에만 archetype·추천 포지션 노출</li>
-          <li>본인 자가 평가는 가중치 0.7로 낮춤 (자기 평가 후하게 주는 경향 보정)</li>
+          <li>3명 이상 누적 시에만 별명·추천 포지션 노출</li>
+          <li>본인 자가 평가는 가중치 0.7로 낮춤 (자기 평가 후한 경향 보정)</li>
           <li>오래된 평가는 점진 감쇠 (90일 1.0 → 180일 0.85 → 365일 0.7 → 그 외 0.5)</li>
-          <li>한 명이 일부러 낮게 줘도 다수 평가의 가중 평균에 묻힙니다</li>
+          <li>감독 한 명이 일부러 낮게 주면 영향이 큽니다 (3명 중 1명 = 33%). 한 사람이 모든 평가를 도맡지 말고 회장·운영진이 분담하는 게 안전.</li>
         </ul>
       </div>
     </details>
@@ -778,28 +786,28 @@
     <details class="callout">
       <summary>다른 팀에서도 내 점수가 보이나요?</summary>
       <div class="callout-body">
-        <strong>아니요.</strong> 자기 팀 운영진만 자기 팀 멤버 능력치를 봐요. 같은 종목(축구·풋살) 다른 팀 운영진이 user_id를 알아도 API에서 차단됩니다 (자기 팀 ACTIVE/DORMANT 멤버 검증).
+        <strong>아니요.</strong> 자기 팀 감독만 자기 팀 회원 능력치를 봐요. 같은 종목(축구·풋살) 다른 팀 감독이 user_id를 알아도 API에서 차단됩니다 (자기 팀 ACTIVE/DORMANT 회원 검증).
       </div>
     </details>
 
     <details class="callout">
       <summary>축구·풋살 두 팀 소속이면 점수가 어떻게 되나요?</summary>
       <div class="callout-body">
-        <strong>종목별로 분리 저장됩니다</strong> (마이그레이션 00059). 축구 팀에서 평가받은 점수와 풋살 팀에서 평가받은 점수가 별도로 기록돼요. 운영진은 각 팀 컨텍스트에서 그 종목 점수만 봅니다.
+        <strong>종목별로 분리 저장됩니다.</strong> 축구 팀에서 평가받은 점수와 풋살 팀에서 평가받은 점수가 별도로 기록돼요. 감독은 각 팀 컨텍스트에서 그 종목 점수만 봅니다.
       </div>
     </details>
 
     <details class="callout">
       <summary>비활성 능력치(크로스·프리킥·태클)는 왜 빠졌나요?</summary>
       <div class="callout-body">
-        사용자 피드백 — "코너킥·프리킥은 차는 사람이 정해져있어 평가 의미가 작다", "태클은 다른 수비 능력치와 의미 중복". 이 3개는 새 평가/UI에서 제외됐지만 기존에 받은 평가는 그대로 보존돼 archetype 계산에 포함됩니다.
+        사용자 피드백 — "코너킥·프리킥은 차는 사람이 정해져있어 평가 의미가 작다", "태클은 다른 수비 능력치와 의미 중복". 이 3개는 새 평가에서 제외됐지만 기존에 받은 평가는 그대로 보존돼 별명 계산에 포함됩니다.
       </div>
     </details>
 
     <details class="callout">
-      <summary>"61명 평가함"이라고 떠요. 저는 그 정도 안 했는데요?</summary>
+      <summary>"n명 평가함" 숫자가 부풀려져 보여요</summary>
       <div class="callout-body">
-        45차 라벨 버그 수정 전엔 row 수(능력치 행 합계)를 그대로 보여줘서 부풀려졌어요. 한 사람을 평가하면 19~22개 능력치 row가 동시에 INSERT 됩니다. 지금은 distinct 인원 수로 정확히 표시됩니다.
+        45차 라벨 버그 수정 전엔 row 수(능력치 행 합계)를 그대로 보여줘서 부풀려졌어요. 한 사람을 평가하면 19~22개 능력치 row가 동시에 INSERT 됩니다. 지금은 distinct 평가자 수로 정확히 표시됩니다.
       </div>
     </details>
   </section>

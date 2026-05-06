@@ -89,7 +89,7 @@ interface Props {
   onDataChange?: (data: AttributesResponse) => void;
 }
 
-const COMMENT_MIN_SAMPLES = 5;
+const COMMENT_MIN_SAMPLES = 3;
 
 export default function PitchScoreCard({
   targetUserId,

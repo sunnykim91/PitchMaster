@@ -41,7 +41,9 @@ type CodeRow = {
   applicable_sports: SportType[];
 };
 
-const COMMENT_MIN_SAMPLES = 5;
+// 운영진 감독 노트 정체성 — 일반 회원 평가 진입 차단으로 evaluator 가 거의 운영진+자가만 발생.
+// 한 팀 운영진이 보통 2~4명이라 5명 임계값은 비현실적 → 3명으로 하향 조정 (45차 후속).
+const COMMENT_MIN_SAMPLES = 3;
 const VALID_SPORTS: SportType[] = ["SOCCER", "FUTSAL"];
 
 /**

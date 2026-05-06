@@ -21,7 +21,7 @@ const SAMPLE = {
   name: "민수",
   position: "CM",
   overall: 4.1,
-  totalSamples: 7,
+  totalSamples: 3,
   archetype: "전천후 미드필더",
   comment: "패스 정확해요 · 드리블 좋아요 · 결정력 보강 필요해요",
   // 카테고리별 평균 (1~5)
@@ -156,12 +156,12 @@ export default function PitchScoreSection() {
             PitchScore<sup>™</sup>
           </div>
           <h2 className="text-2xl font-bold leading-tight sm:text-3xl">
-            감독 직감만으로 결정하나요?
+            감독님의 전술노트, 이제 디지털로
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-            <strong className="text-foreground">Triple Trust 알고리즘</strong>이 19개 능력치를 객관 점수로.
+            오직 <strong className="text-foreground">감독(운영진)</strong>이 직접 평가하고, 본인만 봅니다.
             <br className="hidden sm:block" />
-            라인업·포지션 결정을 데이터가 보조해요.
+            라인업·포지션 결정에 참고하는 사적 노트예요.
           </p>
         </motion.div>
 
@@ -240,8 +240,8 @@ export default function PitchScoreSection() {
 
             {/* 캡션 */}
             <p className="mt-5 text-[11px] leading-relaxed text-muted-foreground">
-              5명 이상 평가가 누적되면 archetype·추천 포지션이 자동으로 분석돼요. 본인 평가는 가중치
-              0.7로 보정해서 자기 평가 후하게 주는 경향을 잡아줍니다.
+              감독님 화면에만 보입니다. 회원은 자기 점수도 볼 수 없어요 — 점수 공개로 인한 사소한
+              오해를 막기 위한 설계예요. 3명 이상 평가가 쌓이면 별명·추천 포지션이 자동 정리됩니다.
             </p>
           </div>
         </motion.div>
@@ -256,20 +256,20 @@ export default function PitchScoreSection() {
           {[
             {
               step: "1",
-              title: "운영진이 평가",
-              desc: "회원 목록·추천 3명·대시보드 task 3가지 진입. 19개 능력치 슬라이더 1~5점.",
+              title: "감독이 직접 평가",
+              desc: "회원 목록·추천 3명·대시보드 task 3가지 진입. 19개 능력치 1~5점 슬라이더. 회원끼리 상호 평가는 막혀있어요.",
               color: "var(--info)",
             },
             {
               step: "2",
-              title: "Triple Trust 가중평균",
-              desc: "운영진 ×1.3 / 본인 ×0.7. 최근 평가 가중. 한 명이 후하게 줘도 다수에 묻힘.",
+              title: "데이터로 누적",
+              desc: "감독 평가 ×1.3 / 본인 자가 ×0.7. 최근 평가 우선. 점수는 감독만 보는 사적 노트.",
               color: "var(--primary)",
             },
             {
               step: "3",
-              title: "라인업에 활용",
-              desc: "5명+ 누적 시 archetype·추천 포지션 자동. 자기팀 운영진만 조회.",
+              title: "라인업에 참고",
+              desc: "3명 이상 평가 누적 시 별명·추천 포지션 자동 정리. 결정은 감독님 권한, 데이터는 참고만.",
               color: "var(--success)",
             },
           ].map((s) => (
