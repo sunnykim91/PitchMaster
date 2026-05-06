@@ -12,8 +12,12 @@
  */
 
 import { memo, useEffect, useMemo, useState } from "react";
-import { ChevronDown, UserRound, AlertTriangle, Sparkles } from "lucide-react";
+import { ChevronDown, UserRound, AlertTriangle, Sparkles, Film } from "lucide-react";
 import { cn } from "@/lib/utils";
+import FormationMotionViewer from "@/components/FormationMotionViewer";
+import { getFormationMotion, hasFormationMotion } from "@/lib/formationMotions";
+import type { FormationMotion } from "@/lib/formationMotions";
+import type { TeamTacticalAnimation } from "@/lib/formationMotions/dbTypes";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -338,7 +342,94 @@ function RoleCard({ group }: { group: AssignmentGroup }) {
       }
     >
       <RoleDetail role={mergedRole} />
+      <FormationMotionBlock
+        formationId={group.formationId}
+        role={group.role}
+        roleTitle={mergedRole.title}
+      />
     </AccordionCard>
+  );
+}
+
+/* ────────────────────────────── 팀 움직임 (공/수 SVG 애니메이션) ────────────────────────────── */
+
+function FormationMotionBlock({
+  formationId,
+  role,
+  roleTitle,
+}: {
+  formationId: string;
+  role: string;
+  roleTitle: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [teamMotion, setTeamMotion] = useState<FormationMotion | null>(null);
+  const [loadedTeam, setLoadedTeam] = useState(false);
+
+  // 팀 default 애니메이션 fetch — 있으면 표준 대신 팀 전용 데이터 사용 (한 번만)
+  useEffect(() => {
+    if (loadedTeam) return;
+    let cancelled = false;
+    fetch("/api/team/tactical-animations")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { animations: TeamTacticalAnimation[] } | null) => {
+        if (cancelled) return;
+        if (!j) {
+          setLoadedTeam(true);
+          return;
+        }
+        const def = j.animations.find(
+          (a) => a.formation_id === formationId && a.is_default,
+        );
+        if (def) {
+          setTeamMotion({
+            formationId,
+            attack: def.animation_data.attack,
+            defense: def.animation_data.defense,
+          });
+        }
+        setLoadedTeam(true);
+      })
+      .catch(() => setLoadedTeam(true));
+    return () => {
+      cancelled = true;
+    };
+  }, [formationId, loadedTeam]);
+
+  // 우선순위: 팀 default → 표준 템플릿
+  const data = teamMotion ?? getFormationMotion(formationId);
+  if (!data) return null;
+  const isTeamCustom = !!teamMotion;
+
+  return (
+    <div className="mt-5 border-t border-border/20 pt-4">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-2 rounded-md border border-border bg-background/40 px-3 py-2 text-left text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-[hsl(var(--primary))]/40"
+        aria-expanded={open}
+      >
+        <span className="inline-flex items-center gap-1.5">
+          <Film className="h-3.5 w-3.5" />
+          팀 움직임 보기 ({formationId})
+          {isTeamCustom && (
+            <span className="rounded-full bg-[hsl(var(--primary))]/15 px-1.5 py-0.5 text-[9px] font-bold text-[hsl(var(--primary))]">
+              우리 팀
+            </span>
+          )}
+        </span>
+        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div className="mt-3">
+          <FormationMotionViewer
+            motion={data}
+            highlightSlot={role.toLowerCase()}
+            highlightLabel={roleTitle}
+          />
+        </div>
+      )}
+    </div>
   );
 }
 
