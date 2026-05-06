@@ -380,7 +380,7 @@ export default function HeroSection({
               custom={0.7}
               initial="hidden"
               animate="show"
-              className="text-muted-foreground text-[15.5px] lg:text-[18.5px] leading-[1.55] m-0 mb-[22px] max-w-[520px] text-pretty"
+              className="text-muted-foreground text-[15.5px] lg:text-[18.5px] leading-[1.55] m-0 mb-[14px] max-w-[520px] text-pretty"
               style={{ wordBreak: "keep-all" }}
             >
               투표·회비·라인업·기록까지 자동화.{" "}
@@ -389,6 +389,25 @@ export default function HeroSection({
               </b>
               이 매주 카톡 대신 PitchMaster를 켭니다.
             </motion.p>
+
+            {/* 무료 트러스트 라인 — 카드 등록·결제 진입장벽 사전 해소 */}
+            <motion.div
+              variants={fadeUp}
+              custom={0.78}
+              initial="hidden"
+              animate="show"
+              className="inline-flex items-center gap-2 mb-[22px] px-3 py-1.5 rounded-full text-[12.5px] font-semibold"
+              style={{
+                background: "hsl(var(--success) / 0.10)",
+                border: "1px solid hsl(var(--success) / 0.32)",
+                color: "hsl(var(--success))",
+              }}
+            >
+              <span aria-hidden className="text-[14px]">✓</span>
+              <span>
+                <b className="font-extrabold">₩0</b> · 광고·결제 없이 시작 — 먼저 함께한 팀 보호 약속
+              </span>
+            </motion.div>
 
             {/* CTAs */}
             <motion.div

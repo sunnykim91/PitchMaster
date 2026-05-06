@@ -3,9 +3,11 @@
 /**
  * ComparisonSection — "왜 PitchMaster인가요?"
  *
- * 카카오톡/밴드/타 운영 앱 대비 명확한 차별점 8행을
- * "PM(코랄/체크) vs 타 앱(회색/X)" 단일 컬럼 비교로.
- * 모바일은 PM 우선 + 타 앱은 작은 sub-line.
+ * 카카오톡/밴드/다른 동호회 앱 대비 명확한 차별점 9행을
+ * "PM(코랄/체크) vs 다른 앱·카톡(회색/X)" 단일 컬럼 비교로.
+ * 모바일은 PM 우선 + 다른 앱은 작은 sub-line.
+ *
+ * 경쟁사 직접 명시 회피 — "다른 앱"으로 일반화 (45차 후속 결정).
  */
 
 import { motion, useInView, useReducedMotion } from "framer-motion";
@@ -63,6 +65,11 @@ const ROWS: Row[] = [
     pm: "브라우저로 어디서나, 설치 없이",
     other: "앱 전용",
   },
+  {
+    feature: "가격·광고",
+    pm: "₩0 — 광고·결제 없이 시작, 먼저 함께한 팀 보호 약속",
+    other: "앱별 다름 (유료 플랜 또는 광고)",
+  },
 ];
 
 export default function ComparisonSection() {
@@ -118,7 +125,7 @@ export default function ComparisonSection() {
         >
           <div>FEATURE</div>
           <div style={{ color: "hsl(var(--primary))" }}>PITCHMASTER</div>
-          <div>다른 운영 / 카톡</div>
+          <div>다른 앱 · 카톡</div>
         </div>
 
         <div className="mt-4 md:mt-2 flex flex-col gap-2">
