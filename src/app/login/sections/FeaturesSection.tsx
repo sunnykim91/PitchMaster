@@ -27,7 +27,8 @@
  *       Internal: @/components/pitchmaster/PlayerCard
  */
 
-import { motion, MotionConfig, useInView } from "framer-motion";
+import { motion, MotionConfig, useInView, useReducedMotion } from "framer-motion";
+import { FORMATION_4231_MOTION } from "@/lib/formationMotions/4-2-3-1";
 import {
   Award,
   Bell,
@@ -84,14 +85,14 @@ const ROLES = [
     ],
   },
   {
-    quarter: "전 쿼터 · 3-5-2",
-    formation: "3-5-2",
-    pos: "LWB",
-    title: "체력 분배 잊지 말기",
+    quarter: "Q2 · 풋살 1-2-1",
+    formation: "풋살 1-2-1",
+    pos: "ALA",
+    title: "측면 엔진 — 공수 다 한다",
     bullets: [
-      "오버래핑 후 빠른 복귀",
-      "얼리 크로스 우선",
-      "전반엔 70% 출력만 유지",
+      "측면 1대1 후 컷인 마무리",
+      "공 잃자마자 사람 마크 압박",
+      "교체 자주 — 짧고 강하게",
     ],
   },
 ];
@@ -1004,7 +1005,8 @@ function RoleGuide() {
         custom={2}
         className="text-muted-foreground text-[15.5px] lg:text-[17px] leading-[1.55] max-w-[620px] text-pretty m-0"
       >
-        24 포지션 × 10 포메이션. 쿼터별 내 역할과 연결 플레이까지 한 카드로 정리됩니다.
+        축구 24 포지션 × 10 포메이션 + 풋살 5·6인제 지원. 쿼터별 내 역할 · 연결 플레이, 그리고{" "}
+        <b className="text-foreground">선수 전체가 어떻게 움직이는지 영상까지</b> 한 카드로 정리됩니다.
       </motion.p>
 
       <motion.div
@@ -1096,7 +1098,186 @@ function RoleGuide() {
           투표 마감되면 <b className="font-bold">당신의 예상 역할이 푸시로 도착</b>합니다.
         </span>
       </motion.div>
+
+      {/* FCMZ 좌측 빌드업 라이브 데모 */}
+      <FCMZBuildupDemo inView={inView} />
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* FCMZ 좌측 빌드업 라이브 데모 — 실제 4-2-3-1 시퀀스 7컷 자동 재생       */
+/* ------------------------------------------------------------------ */
+
+const BUILDUP_PHASE = FORMATION_4231_MOTION.attack.find((p) => p.label === "좌측 빌드업 시")!;
+const BUILDUP_STEPS = BUILDUP_PHASE.steps;
+const STEP_MS = 1500;
+
+function FCMZBuildupDemo({ inView }: { inView: boolean }) {
+  const reduced = useReducedMotion();
+  const [stepIdx, setStepIdx] = useState(0);
+
+  useEffect(() => {
+    if (!inView || reduced) return;
+    const t = setTimeout(() => {
+      setStepIdx((i) => (i + 1) % BUILDUP_STEPS.length);
+    }, STEP_MS);
+    return () => clearTimeout(t);
+  }, [stepIdx, inView, reduced]);
+
+  const step = BUILDUP_STEPS[stepIdx];
+  const positionMap = new Map(step.positions.map((p) => [p.slot, p]));
+
+  return (
+    <motion.div
+      initial="hidden"
+      animate={inView ? "show" : "hidden"}
+      variants={fadeUp}
+      custom={5}
+      className="mt-5 rounded-[18px] overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--accent) / 0.06))",
+        border: "1px solid hsl(var(--primary) / 0.30)",
+      }}
+    >
+      {/* 헤더 — 라이브 뱃지 + 타이틀 */}
+      <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <span
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-[0.18em] uppercase mb-2"
+            style={{
+              background: "hsl(var(--primary) / 0.15)",
+              border: "1px solid hsl(var(--primary) / 0.35)",
+              color: "hsl(var(--primary))",
+            }}
+          >
+            <motion.span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: "hsl(var(--primary))" }}
+              animate={reduced ? undefined : { opacity: [1, 0.3, 1] }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+            />
+            실제 영상 미리보기
+          </span>
+          <h4 className="text-[16px] lg:text-[17px] font-bold leading-tight m-0">
+            🎬 FCMZ 4-2-3-1 좌측 빌드업
+          </h4>
+          <p className="text-[12.5px] text-muted-foreground mt-1 mb-0">
+            감독이 직접 그린 7컷 시퀀스 — 실제 우리 팀이 쓰고 있는 영상
+          </p>
+        </div>
+        <span
+          className="text-[10px] tabular-nums font-bold px-2 py-1 rounded-md shrink-0"
+          style={{
+            background: "hsl(var(--primary) / 0.13)",
+            color: "hsl(var(--primary))",
+            border: "1px solid hsl(var(--primary) / 0.30)",
+          }}
+        >
+          {stepIdx + 1} / {BUILDUP_STEPS.length}
+        </span>
+      </div>
+
+      {/* 피치 SVG */}
+      <div className="px-5">
+        <div className="relative w-full max-w-[420px] mx-auto rounded-lg overflow-hidden" style={{ aspectRatio: "1 / 1" }}>
+          <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" className="absolute inset-0 w-full h-full">
+            {/* 피치 배경 */}
+            <rect x="0" y="0" width="100" height="100" fill="hsl(140 25% 18%)" />
+            <g stroke="hsl(140 18% 45%)" strokeWidth="0.6" fill="none">
+              <rect x="2" y="2" width="96" height="96" />
+              <line x1="2" y1="50" x2="98" y2="50" />
+              <circle cx="50" cy="50" r="9" />
+              <circle cx="50" cy="50" r="0.7" fill="hsl(140 18% 45%)" />
+              <rect x="22" y="82" width="56" height="16" />
+              <rect x="36" y="93" width="28" height="5" />
+              <rect x="22" y="2" width="56" height="16" />
+              <rect x="36" y="2" width="28" height="5" />
+            </g>
+
+            {/* 선수 점 */}
+            {Array.from(positionMap.values()).map((pos) => {
+              const isLeftSide = pos.slot === "lb" || pos.slot === "lcb" || pos.slot === "ldm" || pos.slot === "lam";
+              return (
+                <motion.g
+                  key={pos.slot}
+                  animate={{ x: pos.x, y: pos.y }}
+                  transition={{ type: "spring", stiffness: 90, damping: 15, mass: 0.8 }}
+                  initial={false}
+                >
+                  <circle
+                    cx={0}
+                    cy={0}
+                    r={isLeftSide ? 3.2 : 2.6}
+                    fill={isLeftSide ? "hsl(var(--primary))" : "hsl(0 0% 92%)"}
+                    stroke={isLeftSide ? "hsl(var(--primary))" : "hsl(140 25% 18%)"}
+                    strokeWidth="0.5"
+                  />
+                  <text
+                    x={0}
+                    y={0.6}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fontSize="2.4"
+                    fontWeight="700"
+                    fill={isLeftSide ? "white" : "hsl(140 30% 18%)"}
+                  >
+                    {pos.slot.toUpperCase()}
+                  </text>
+                </motion.g>
+              );
+            })}
+
+            {/* 공 */}
+            {step.ball && (
+              <motion.g
+                animate={{ x: step.ball.x, y: step.ball.y + 2.4, scale: [0.7, 1.15, 1] }}
+                transition={{
+                  x: { type: "spring", stiffness: 120, damping: 16 },
+                  y: { type: "spring", stiffness: 120, damping: 16 },
+                  scale: { duration: 0.5, ease: "easeOut" },
+                }}
+                initial={false}
+              >
+                <circle cx={0} cy={0} r={1.6} fill="white" stroke="#0f0f0f" strokeWidth={0.35} />
+                <polygon points="0,-0.78 0.74,-0.24 0.46,0.63 -0.46,0.63 -0.74,-0.24" fill="#0f0f0f" />
+                <motion.circle
+                  cx={0}
+                  cy={0}
+                  r={1.6}
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="0.3"
+                  animate={reduced ? undefined : { r: [1.6, 3.2, 1.6], opacity: [0.7, 0, 0.7] }}
+                  transition={{ duration: 0.9, repeat: Infinity, ease: "easeOut" }}
+                />
+              </motion.g>
+            )}
+          </svg>
+        </div>
+      </div>
+
+      {/* 캡션 */}
+      <div
+        className="mx-5 mt-3 mb-5 rounded-md px-3 py-2.5 text-[12.5px] leading-[1.5]"
+        style={{ background: "hsl(var(--background) / 0.6)", border: "1px solid hsl(var(--border))" }}
+      >
+        <span className="text-muted-foreground">{step.caption}</span>
+      </div>
+
+      {/* 풋노트 */}
+      <div
+        className="px-5 py-3 text-[12px] leading-[1.55] flex items-start gap-2"
+        style={{ borderTop: "1px solid hsl(var(--primary) / 0.20)", background: "hsl(var(--primary) / 0.04)" }}
+      >
+        <span className="text-[14px] shrink-0 leading-none mt-0.5">✏️</span>
+        <span className="text-muted-foreground">
+          이 시퀀스는 <b className="text-foreground font-bold">FCMZ 운영진이 편집기에서 직접 만든 영상</b>이에요. 우리 팀도
+          포메이션 골라서 점·공 드래그만 하면 끝 — <b className="text-foreground font-bold">축구 11명·풋살 5~8명 자동 적용</b>.
+        </span>
+      </div>
+    </motion.div>
   );
 }
 

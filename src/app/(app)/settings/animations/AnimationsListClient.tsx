@@ -225,8 +225,8 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
         </p>
         <h1 className="mt-1 text-2xl font-bold">감독의 전술노트 — 우리 팀 공격·수비 영상</h1>
         <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-          11명 위치를 직접 그려 우리 팀 빌드업·수비 흐름을 영상처럼 만들어요. <strong>대표 영상</strong>으로
-          지정하면 경기 화면에서 선수들이 자동으로 볼 수 있어요.
+          선수 위치를 직접 그려 우리 팀 빌드업·수비 흐름을 영상처럼 만들어요 (축구 11명·풋살 5~8명, 포메이션별로 자동 적용).
+          <strong>대표 영상</strong>으로 지정하면 경기 화면에서 선수들이 자동으로 볼 수 있어요.
         </p>
       </header>
 

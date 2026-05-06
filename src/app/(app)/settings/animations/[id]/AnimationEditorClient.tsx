@@ -7,7 +7,7 @@
  *  - 모드 토글 (공격 / 수비)
  *  - phase 추가·삭제·이름 변경
  *  - step 추가·삭제·이전 step 복사 시작·캡션 편집
- *  - 편집 SVG 피치 — 11명 점 + ball 드래그·드롭으로 좌표 조정
+ *  - 편집 SVG 피치 — 이 포메이션의 선수 점(축구 11명·풋살 5~8명) + ball 드래그·드롭으로 좌표 조정
  *  - 미리보기 모드 (별도 토글) — 현재 phase 자동 재생
  *  - 저장 (PUT)
  *
@@ -18,6 +18,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { formationTemplates } from "@/lib/formations";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -52,8 +53,8 @@ interface Props {
 
 type Mode = "attack" | "defense";
 
-/** 4-2-3-1 표준 배치 — 신규 phase/step 추가 시 시작 좌표 (formations.ts 와 동일) */
-const BASE_4231_POSITIONS: PhasePosition[] = [
+/** 4-2-3-1 폴백 (formationTemplates에 못 찾을 때만 — 일반적이지 않음). */
+const FALLBACK_4231_POSITIONS: PhasePosition[] = [
   { slot: "gk",  x: 50, y: 90 },
   { slot: "lb",  x: 8,  y: 70 },
   { slot: "lcb", x: 34, y: 80 },
@@ -89,6 +90,13 @@ export default function AnimationEditorClient({ initial }: Props) {
   const steps = phase?.steps ?? [];
   const step = steps[stepIdx] ?? steps[0];
 
+  // 이 애니메이션의 포메이션 기반 시작 좌표 — 풋살(5~8명)이면 5~8 슬롯, 축구면 11 슬롯.
+  const basePositions = useMemo<PhasePosition[]>(() => {
+    const tpl = formationTemplates.find((f) => f.id === initial.formation_id);
+    if (!tpl) return FALLBACK_4231_POSITIONS;
+    return tpl.slots.map((s) => ({ slot: s.id, x: s.x, y: s.y }));
+  }, [initial.formation_id]);
+
   // 모드 변경 시 phase/step 처음으로
   useEffect(() => {
     setPhaseIdx(0);
@@ -122,14 +130,14 @@ export default function AnimationEditorClient({ initial }: Props) {
 
   // ── Phase 관리 ──
   function addPhase() {
-    // 새 phase 는 항상 4-2-3-1 표준 배치 + 공 표시(중앙)로 시작.
+    // 새 phase 는 이 애니메이션의 포메이션 기본 배치 + 공 표시(중앙)로 시작.
     const newPhase: MotionPhase = {
       label: "새 단계",
       steps: [
         {
           caption: "",
-          ball: { x: 50, y: 50 }, // 기본 표시 (필요 없으면 사용자가 제거)
-          positions: BASE_4231_POSITIONS.map((p) => ({ ...p })),
+          ball: { x: 50, y: 50 },
+          positions: basePositions.map((p) => ({ ...p })),
         },
       ],
     };
@@ -173,7 +181,7 @@ export default function AnimationEditorClient({ initial }: Props) {
       : {
           caption: "",
           ball: { x: 50, y: 50 },
-          positions: BASE_4231_POSITIONS.map((p) => ({ ...p })),
+          positions: basePositions.map((p) => ({ ...p })),
         };
     patchPhase((p) => ({ ...p, steps: [...p.steps, newStep] }));
     setStepIdx(steps.length);

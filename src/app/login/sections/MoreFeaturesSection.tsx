@@ -33,7 +33,7 @@ const FEATURES: Array<{
 }> = [
   { Icon: Megaphone,    label: "게시판 / 공지",       desc: "고정 공지 + 댓글, 단톡방에 묻히지 않음",       tone: "primary" },
   { Icon: BarChart3,    label: "경기 기록",            desc: "골/어시/MVP 자동 집계, 시즌 누적 통계",         tone: "info" },
-  { Icon: Film,         label: "전술 영상 편집",       desc: "11명 위치 직접 그려 우리 팀 빌드업·수비 영상",   tone: "accent" },
+  { Icon: Film,         label: "전술 영상 편집",       desc: "선수 위치 직접 그려 우리 팀 빌드업·수비 영상 (축구·풋살)",   tone: "accent" },
   { Icon: FileText,     label: "회칙 페이지",          desc: "팀 규정·운영 원칙 한 페이지에 명문화",          tone: "warning" },
   { Icon: AlertCircle,  label: "자동 벌금 부과",       desc: "지각·불참 자동 차감, 매번 묻기 X",              tone: "primary" },
   { Icon: Users,        label: "멀티팀",               desc: "한 카카오 계정으로 여러 팀 관리",                tone: "info" },
