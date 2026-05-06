@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApi } from "@/lib/useApi";
 import type { PreferredPosition, PreferredFoot, Role } from "@/lib/types";
@@ -341,7 +342,29 @@ export default function SettingsClient({
 
       {/* ── 팀 설정 (운영진 이상) ── */}
       {isStaff && (
-        <div className={activeTab === "team" ? "" : "hidden"}>
+        <div className={activeTab === "team" ? "space-y-5" : "hidden"}>
+          {/* 전술 영상 진입 카드 — 베타: FCMZ 팀만 노출 */}
+          {sessionTeam.teamName === "FCMZ" && (
+          <Link
+            href="/settings/animations"
+            className="block rounded-xl border border-[hsl(var(--primary))]/30 bg-gradient-to-br from-[hsl(var(--primary))]/8 to-[hsl(var(--primary))]/3 p-4 transition-colors hover:border-[hsl(var(--primary))]/50"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🎬</span>
+                  <h3 className="text-sm font-bold">감독의 전술노트 — 공격·수비 영상 만들기</h3>
+                </div>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  11 명 위치를 직접 그려 우리 팀만의 빌드업·수비 흐름을 영상처럼 만들어요.
+                  대표 영상으로 지정하면 경기 화면에서 선수들이 자동으로 볼 수 있어요.
+                </p>
+              </div>
+              <span className="shrink-0 text-xl text-muted-foreground">→</span>
+            </div>
+          </Link>
+          )}
+
           <TeamSettings
             team={team}
             setTeam={setTeam}
