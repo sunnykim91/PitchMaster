@@ -1,16 +1,50 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=89팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-05-05 (44차)
+last_updated: 2026-05-06 (45차)
 related: [completed-recent.md, reviews.md]
 ---
 
 # 미완료 백로그
 
 우선순위 기준:
-- **HIGH**: 현재 89팀 운영에 직접 영향
+- **HIGH**: 현재 89팀+ 운영에 직접 영향
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
+
+## 45차 신규 추가 (2026-05-06)
+
+### 경기 후기 자동 복구 검증 (HIGH, 다음 세션 1순위)
+- **배경**: `4d40c57`·`68aac19` 배포 완료. FCMZ 5/4 경기 후기가 자동 생성되는지 확인 필요.
+- [ ] 배포 후 FCMZ 5/4 경기 일지 탭 진입 → 후기 자동 생성 완료 여부 확인
+- [ ] `ai_summary` 컬럼 length > 0 + `ai_summary_generated_at` 존재 여부 직접 조회
+
+### PitchScore cron 발송 대상 확장 정책 (MEDIUM)
+- **배경**: 현재 정기 라운드 알림 cron이 김선휘 1명에게만 발송.
+- [ ] Feature Flag 전체 오픈 + 데이터 누적 추이 확인 후 전체 발송 정책 결정
+- [ ] cron 발송 대상 조건: `enablePitchScore=true` 팀의 모든 활성 회원
+
+### 포지션 TOP 임계값 5건 조정 결정 (MEDIUM)
+- **배경**: `3a86d1e` TOP 3에서 임계 5건 설정. 초기 데이터 적을 때 공란이 많을 수 있음.
+- [ ] 평가 누적 추이 1~2주 모니터링 후 임계 조정 여부 결정 (4건 또는 3건)
+
+### 사용자 직접 진행 5파일 별도 푸시 (HIGH)
+- [ ] `src/app/(app)/members/page.tsx` — enablePitchScore=true Feature Flag 전체 오픈
+- [ ] `src/app/player/[memberId]/page.tsx` — 사용자 직접 수정분
+- [ ] `src/app/(app)/records/RecordsClient.tsx` — MyOverviewCard import 추가
+- [ ] `src/components/pitchAttributes/PitchScoreCard.tsx` — Link, ArrowRight import + 추가 변경
+- [ ] `src/components/pitchAttributes/PitchScoreHistory.tsx` — 부모 fetch + dumb 컴포넌트 분리
+
+### PitchScore Phase 3 — 다수 평가 누적 후 착수 (MEDIUM)
+- [ ] A2A 비교 레이더 (선수 vs 선수) — `/player/[id]` 또는 별도 비교 뷰
+- [ ] 마케팅용 "내 PitchScore 공유" 카드 — 레이더 스크린샷 + 슬로건
+- [ ] 운영 모니터링 dashboard — 운영진이 전체 평가 활동 보는 뷰 (Phase 4 후보)
+- 트리거: 전체 팀에서 평가 누적 데이터 유의미한 분포 형성 후 착수
+
+### 경기 후 평가 알림 트리거 (MEDIUM, 보류)
+- **배경**: 45차에는 월 1회 정기 알림만 구현. 경기 직후 알림은 보류.
+- [ ] match status=COMPLETED 전환 시 해당 경기 참석자에게 동료 평가 알림 발송
+- [ ] 트리거: 정기 알림 반응률 확인 후 결정
 
 ## ~~🔴 HIGH — 38차 (2026-05-02) 입력 검증 사고 후속 (보안 강화)~~ ✅ 41차에서 대부분 완료
 
@@ -119,16 +153,46 @@ related: [completed-recent.md, reviews.md]
 - [ ] 구글 Search Console — 색인 생성 요청 4개 처리 결과 확인
 - [ ] www 도메인 정적 자산 15개 "크롤링됨·색인 안 됨" 자연 해소 여부 확인 (무시해도 무방)
 
-## 44차 신규 추가 (2026-05-05) — PitchScore 2차 통합 디자인
+## 45차 신규 추가 (2026-05-06) — PitchScore 전체 오픈 후속
 
-### `/records?tab=my` 종합 재설계 (2차)
-- **배경**: 1차 통합 (`my` 탭에 PitchScoreCard 단순 추가) 완료. 2차는 시각적·구조적 통합 디자인.
-- [ ] 헤더 영역: 본인 정보 요약 (이름, 주포지션, 시즌 출석률 한 줄)
-- [ ] 섹션 레이아웃 통일: "경기 활약 (이번 시즌)" / "PitchScore 능력치" / "최근 활약" / "시즌 수상" 일관 카드 디자인
-- [ ] 두 레이더 차트(경기 스탯 / 능력치) 비교 레이아웃 — 가능하면 한 화면에 나란히
-- [ ] 스코어 요약 카드 (예: 종합 PitchScore 점수 vs 시즌 평균 활약)
-- [ ] 모바일 우선 — 카드 길이 길어지지 않도록 정보 우선순위 정리
-- 트리거: Phase 2C 라이브 검증 + Feature Flag 전체 오픈 후 진행
+### peer-eval-monthly cron 재활성화 (정책 결정 후)
+- **배경**: 45차 PitchScore Feature Flag 전체 오픈 시점에 cron 일단 비활성화 (vercel.json 항목 제거). 코드는 `src/app/api/cron/peer-eval-monthly/route.ts` 에 유지. 700+ 명 일괄 알림 폭격 위험 회피.
+- [ ] 알림 대상 정책 확정 (옵션):
+  - F2-a: 활성 사용자 중 distinct evaluator 평가 < 3명만
+  - F2-b: 일반은 < 3명 / 운영진은 항시 (대시보드 task 와 일치)
+- [ ] cron route.ts 의 `.eq("name", "김선휘")` 게이트 제거 + 정책 적용
+- [ ] vercel.json 에 cron 항목 재추가: `{ path: "/api/cron/peer-eval-monthly", schedule: "0 1 1 * *" }`
+- 트리거: PitchScore 사용 활성화 추적 후 평가 누적 분포 확인 → 폭격 위험 vs 활성화 효과 trade-off 판단
+
+### Phase 2C 잔여 후속
+- [ ] 정기 라운드 / 경기 후 알림 트리거 (위 cron 재활성화 + match-completed-push 와 통합)
+- [ ] Phase 3 — A2A 비교 레이더, 팀 포지션별 TOP 리스트, 마케팅 공유 카드
+
+## ~~44차 신규 추가 (2026-05-05) — PitchScore Phase 2C 라이브 검증~~ ✅ 45차에서 완료
+
+### ~~Phase 2C 라이브 검증 + Feature Flag 제거 결정~~ ✅ 45차 완료
+- [x] 라이브 검증 완료 + Feature Flag 전체 오픈 결정 (45차)
+- 상세: completed-recent.md 45차 항목 참고
+
+### ~~`/records?tab=my` 종합 재설계 (2차)~~ ✅ 45차 완료
+- [x] 헤더 영역: 본인 정보 요약 (이름·주포지션·시즌메타·종합 PitchScore 한 줄)
+- [x] 두 레이더 차트(경기 스탯 / 능력치) 비교 레이아웃 — sm:grid-cols-2 나란히 배치 (MyOverviewCard)
+- [x] 스코어 요약 카드 — 헤더 우상단 종합 PitchScore + 시즌 평균 활약(G/A/MVP)
+- [x] 모바일 우선 — 카드 길이 길어지지 않도록 정보 우선순위 정리
+- 상세: completed-recent.md 45차 항목 참고
+
+## 44차 보강 (2026-05-05) — perf 추가 후보
+
+### Lighthouse 추가 최적화 후보 (LOW, Phase 2C 검증 후)
+- [ ] **Pretendard subset 추가 축소** — 현재 subset 범위 재검토, 사용 안 하는 글리프 제거
+- [ ] **gtag interaction 트리거** — GA4 스크립트 `strategy="afterInteractive"` 재확인, 불필요한 blocking 제거
+- [ ] **recharts 추가 code split** — records 탭 Bootup 2222ms 중 recharts 영향 확인 → dynamic import 적용 여부 검토
+- 참고: `reference_lighthouse_baseline_2026_05_05.md` (현재 baseline. dashboard 89 / matches 79 / records 92)
+
+### 카카오 이미지 추가 적용 대상 점검
+- [ ] `compactKakaoImage()` 헬퍼 적용 현황 재확인 — ClientLayout·MembersClient×2·PeerEvaluationDialog 4곳 완료
+- [ ] 다른 프로필 이미지 렌더 지점 grep → 누락분 적용 (`/player/[id]`, `/records`, 댓글 아바타 등)
+- 참고: `reference_kakao_image_optimization.md`
 
 ## 44차 신규 추가 (2026-05-05) — SEO 후속 확인
 

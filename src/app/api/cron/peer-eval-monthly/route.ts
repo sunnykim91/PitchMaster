@@ -8,9 +8,14 @@ const NOTIFICATION_BODY = "팀원들의 능력치를 평가해주세요. 우리 
 /**
  * Phase 2C 정기 라운드 평가 알림 (매월 1일 KST 오전 10시).
  *
- * 적용 범위 (검증 단계):
- *   - Feature Flag 통과 사용자 (name = "김선휘") 본인만
- *   - 검증 완료 후 enable_pitchscore 컬럼 또는 팀 단위 토글로 확장 예정
+ * ⚠️ 현재 비활성화 — 45차(2026-05-06) PitchScore 전체 오픈 시 알림 폭격 위험으로
+ *    vercel.json cron 항목 제거. 코드는 유지(추후 정책 확정 시 재활성화).
+ *
+ * 재활성화 절차:
+ *   1) `.eq("name", "김선휘")` 게이트 제거 → 정책 적용 (옵션 후보):
+ *      - F2-a: 활성 사용자 중 distinct evaluator 평가 < 3명만
+ *      - F2-b: 일반은 < 3명 / 운영진은 항시 (dashboard task 와 일치)
+ *   2) vercel.json cron 항목 추가: { path, schedule: "0 1 1 * *" }
  *
  * 중복 방지:
  *   - 이번 달 1일 이후 같은 title 알림이 있으면 skip

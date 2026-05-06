@@ -49,10 +49,6 @@
     {
       "path": "/api/cron/hard-delete-withdrawn",
       "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/cron/peer-eval-monthly",
-      "schedule": "0 1 1 * *"
     }
   ]
 }
