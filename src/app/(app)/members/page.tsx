@@ -6,8 +6,8 @@ export default async function MembersPage() {
   const session = await auth();
   if (!session) return null;
   const initialData = await getMembersData(session.user.teamId!, session.user.teamRole);
-  // PitchScore Feature Flag — 검증 단계 (37차 메모 기준 김선휘 한정)
-  const enablePitchScore = session.user.name === "김선휘";
+  // PitchScore Feature Flag — 44차 검증 후 전체 오픈 (45차, 2026-05-06).
+  const enablePitchScore = true;
   return (
     <MembersClient
       userRole={session.user.teamRole}

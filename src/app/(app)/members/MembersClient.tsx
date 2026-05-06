@@ -20,7 +20,7 @@ import { cn, formatPhone, compactKakaoImage } from "@/lib/utils";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Search } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { Users, ChevronDown, Sparkles } from "lucide-react";
+import { Users, ChevronDown, Sparkles, History } from "lucide-react";
 import { useConfirm } from "@/lib/ConfirmContext";
 import EvaluationModal from "@/components/pitchAttributes/EvaluationModal";
 import type { SportType } from "@/lib/playerAttributes/types";
@@ -902,6 +902,20 @@ export default function MembersClient({
                           >
                             <Link href={`/player/${member.userIdRaw}`}>
                               능력치 보기
+                            </Link>
+                          </Button>
+                        )}
+                        {/* 평가 이력 페이지 진입 — 운영진 전용, 본인 행은 기본 진입 (본인 이력은 /records 에서) */}
+                        {canEvaluate && member.userIdRaw && member.userIdRaw !== userId && (
+                          <Button
+                            asChild
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs gap-1"
+                          >
+                            <Link href={`/player/${member.userIdRaw}/evaluations?sport=${sportType}`}>
+                              <History className="h-3.5 w-3.5" aria-hidden="true" />
+                              이력
                             </Link>
                           </Button>
                         )}

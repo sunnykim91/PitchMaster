@@ -1,16 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { CATEGORY_META } from "@/lib/playerAttributes/config";
 import type {
   AttributeCategory,
   EvaluationContext,
   EvaluationSource,
-  SportType,
 } from "@/lib/playerAttributes/types";
 
-interface SessionView {
+export interface SessionView {
   evaluator: { id: string; name: string } | null;
   source: EvaluationSource;
   context: EvaluationContext;
@@ -20,17 +18,9 @@ interface SessionView {
   category_avgs: Array<{ category: AttributeCategory; avg: number; count: number }>;
 }
 
-interface HistoryResponse {
-  sessions: SessionView[];
-  sport_type: SportType;
-  viewer_is_staff: boolean;
-}
-
 interface Props {
-  /** 이력 조회 대상 user_id */
-  targetUserId: string;
-  /** 팀 sport_type (PitchScoreCard 와 일치) */
-  sportType: SportType;
+  sessions: SessionView[];
+  viewerIsStaff: boolean;
 }
 
 const SOURCE_LABELS: Record<EvaluationSource, string> = {
@@ -61,65 +51,12 @@ function formatRelativeTime(iso: string): string {
 }
 
 /**
- * Phase 2C 평가 이력 뷰.
+ * 평가자별 세션 카드 리스트 — dumb 컴포넌트.
+ * 데이터 fetch는 부모(EvaluationHistoryView)에서 처리.
  *
- * 익명성 정책 B: 운영진 viewer 는 evaluator 실명, 일반 viewer 는 source 라벨로만 노출.
- * PitchScoreCard 안에서 toggle 로 lazy mount → 첫 펼침 시 fetch.
+ * 익명성 정책 B: 운영진은 evaluator 실명, 일반 viewer는 source 라벨로만.
  */
-export default function PitchScoreHistory({ targetUserId, sportType }: Props) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [sessions, setSessions] = useState<SessionView[]>([]);
-  const [viewerIsStaff, setViewerIsStaff] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const params = new URLSearchParams({ sport: sportType });
-        const res = await fetch(
-          `/api/players/${targetUserId}/evaluations/history?${params.toString()}`,
-        );
-        if (!res.ok) {
-          const j = await res.json().catch(() => ({}));
-          throw new Error(j.error || "이력 로딩 실패");
-        }
-        const json: HistoryResponse = await res.json();
-        if (cancelled) return;
-        setSessions(json.sessions);
-        setViewerIsStaff(json.viewer_is_staff);
-      } catch (err) {
-        if (cancelled) return;
-        setError(err instanceof Error ? err.message : "오류");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [targetUserId, sportType]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        평가 이력 불러오는 중…
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-md border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-400">
-        {error}
-      </div>
-    );
-  }
-
+export default function PitchScoreHistory({ sessions, viewerIsStaff }: Props) {
   if (sessions.length === 0) {
     return (
       <div className="py-6 text-center text-sm text-muted-foreground">

@@ -8,8 +8,8 @@ export default async function RecordsPage() {
   const session = await auth();
   if (!session) return null;
 
-  // PitchScore Phase 2C — 김선휘만 라이브 검증 단계. 검증 완료 후 전체 오픈.
-  const enablePitchScore = session.user.name === "김선휘";
+  // PitchScore Phase 2C — 44차 검증 후 전체 오픈 (45차, 2026-05-06).
+  const enablePitchScore = true;
 
   let sportType: SportType | null = null;
   if (enablePitchScore && session.user.teamId) {

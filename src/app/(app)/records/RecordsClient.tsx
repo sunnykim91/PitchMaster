@@ -16,9 +16,10 @@ import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/EmptyState";
 import dynamic from "next/dynamic";
-import PitchScoreCard from "@/components/pitchAttributes/PitchScoreCard";
+import PitchScoreCard, { type AttributesResponse as PitchAttributesResponse } from "@/components/pitchAttributes/PitchScoreCard";
 import PeerEvaluationDialog from "@/components/pitchAttributes/PeerEvaluationDialog";
 import TeamPositionRankings from "@/components/pitchAttributes/TeamPositionRankings";
+import MyOverviewCard from "@/components/pitchAttributes/MyOverviewCard";
 import type { SportType } from "@/lib/playerAttributes/types";
 
 // 차트 로딩 인디케이터
@@ -125,6 +126,31 @@ export default function RecordsClient({
   const searchParams = useSearchParams();
   const [peerEvalOpen, setPeerEvalOpen] = useState(false);
   const showPitchScoreEntry = !!(enablePitchScore && teamId && sportType);
+
+  // PitchScore attributes 단일 fetch (MyOverviewCard + PitchScoreCard 중복 round trip 회피).
+  // PitchScoreCard 자체 fetch 가 더 풍부한 응답(attributes 배열·comment·recommendations)을 반환하므로
+  // RecordsClient 에서는 부분 응답(MyAttrsResponse) 으로 받아 MyOverviewCard 에만 직접 props 전달.
+  // PitchScoreCard 는 initialData 로 받아 첫 mount fetch skip 후 평가 시 자체 reload + onDataChange 로 동기화.
+  const [pitchAttrs, setPitchAttrs] = useState<PitchAttributesResponse | null>(null);
+  const [pitchAttrsLoading, setPitchAttrsLoading] = useState(false);
+  useEffect(() => {
+    if (!showPitchScoreEntry || !sportType) return;
+    let cancelled = false;
+    setPitchAttrsLoading(true);
+    fetch(`/api/players/${userId}/attributes?sport=${sportType}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: PitchAttributesResponse | null) => {
+        if (cancelled) return;
+        if (j) setPitchAttrs(j);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setPitchAttrsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, sportType, showPitchScoreEntry]);
 
   // ── Tab state ──
   type RecordsTab = "my" | "ranking" | "all" | "awards";
@@ -437,56 +463,30 @@ export default function RecordsClient({
         );
       })()}
 
-      {/* ── Row 1: 내 기록 + 시즌 요약 (PC: 2단) ── */}
-      <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-        {/* 내 기록 */}
-        <Card>
-          <CardHeader className="px-4 sm:px-6">
-            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
-              내 기록
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loadingRecords ? (
-              <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <Card key={i} className="border-0 p-4">
-                    <Skeleton className="h-3 w-16 mb-2" />
-                    <Skeleton className="h-8 w-12" />
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-                {[
-                  { label: "득점", value: myStats.goals, color: "text-[hsl(var(--success))]", bg: "bg-[hsl(var(--success)/0.1)]" },
-                  { label: "어시스트", value: myStats.assists, color: "text-[hsl(var(--info))]", bg: "bg-[hsl(var(--info)/0.1)]" },
-                  { label: "MVP", value: myStats.mvp, color: "text-[hsl(var(--warning))]", bg: "bg-[hsl(var(--warning)/0.1)]" },
-                  { label: "출석률", value: `${Math.round(myStats.attendanceRate * 100)}%`, color: "text-[hsl(var(--accent))]", bg: "bg-[hsl(var(--accent)/0.1)]" },
-                ].map((item) => {
-                  const isEmpty = item.value === 0 || item.value === "0%";
-                  return (
-                    <div key={item.label} className={cn("card-stat", isEmpty ? "" : item.bg)}>
-                      <p className="type-overline">{item.label}</p>
-                      <p className={cn("mt-1 type-stat", isEmpty ? "text-muted-foreground/40" : item.color)}>
-                        {isEmpty ? "-" : item.value}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-          {/* 선수 카드 버튼 — TODO: 디자인 개선 후 활성화
-          {!loadingRecords && !isAllTime && (
-            <div className="px-4 sm:px-6 pb-4">
-              <PlayerCardButton userId={userId} seasonId={seasonId} />
-            </div>
-          )}
-          */}
-        </Card>
-
-        {/* 시즌 요약 + 레이더 차트 */}
+      {/* ── 내 종합 (45차 2차 통합 — 헤더 + 두 레이더 비교) ── */}
+      {showPitchScoreEntry ? (
+        <MyOverviewCard
+          userName={userName ?? "나"}
+          sportType={sportType!}
+          preferredPositions={myStats.preferredPositions}
+          myStats={{
+            goals: myStats.goals,
+            assists: myStats.assists,
+            mvp: myStats.mvp,
+            attendanceRate: myStats.attendanceRate,
+          }}
+          maxGoals={Math.max(...stats.map((s) => s.goals), 1)}
+          maxAssists={Math.max(...stats.map((s) => s.assists), 1)}
+          maxMvp={Math.max(...stats.map((s) => s.mvp), 1)}
+          isAllTime={isAllTime}
+          seasonName={season?.name}
+          participantCount={stats.length}
+          teamAttendanceRate={teamAttendance}
+          pitchAttrs={pitchAttrs}
+          pitchAttrsLoading={pitchAttrsLoading}
+        />
+      ) : (
+        /* PitchScore 미지원(sport_type 누락 등) — 기존 시즌 요약 + 레이더 폴백 */
         <Card>
           <CardHeader>
             <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
@@ -514,9 +514,49 @@ export default function RecordsClient({
             )}
           </CardContent>
         </Card>
-      </div>
+      )}
 
-      {/* ── PitchScore 본인 능력치 통합 (1차 통합 — 경기 스탯과 같은 화면에 표시) ── */}
+      {/* ── 내 기록 4개 스탯 (단독 카드) ── */}
+      <Card>
+        <CardHeader className="px-4 sm:px-6">
+          <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
+            내 기록
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loadingRecords ? (
+            <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Card key={i} className="border-0 p-4">
+                  <Skeleton className="h-3 w-16 mb-2" />
+                  <Skeleton className="h-8 w-12" />
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+              {[
+                { label: "득점", value: myStats.goals, color: "text-[hsl(var(--success))]", bg: "bg-[hsl(var(--success)/0.1)]" },
+                { label: "어시스트", value: myStats.assists, color: "text-[hsl(var(--info))]", bg: "bg-[hsl(var(--info)/0.1)]" },
+                { label: "MVP", value: myStats.mvp, color: "text-[hsl(var(--warning))]", bg: "bg-[hsl(var(--warning)/0.1)]" },
+                { label: "출석률", value: `${Math.round(myStats.attendanceRate * 100)}%`, color: "text-[hsl(var(--accent))]", bg: "bg-[hsl(var(--accent)/0.1)]" },
+              ].map((item) => {
+                const isEmpty = item.value === 0 || item.value === "0%";
+                return (
+                  <div key={item.label} className={cn("card-stat", isEmpty ? "" : item.bg)}>
+                    <p className="type-overline">{item.label}</p>
+                    <p className={cn("mt-1 type-stat", isEmpty ? "text-muted-foreground/40" : item.color)}>
+                      {isEmpty ? "-" : item.value}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── PitchScore 능력치 자세히 (접힘 기본) ── */}
       {showPitchScoreEntry && (
         <PitchScoreCard
           targetUserId={userId}
@@ -524,10 +564,12 @@ export default function RecordsClient({
           sportType={sportType!}
           contextTeamId={teamId!}
           canViewHistory={true}
+          initialData={pitchAttrs}
+          onDataChange={(d) => setPitchAttrs(d)}
         />
       )}
 
-      {/* ── PitchScore 보조 CTA (옵션 A — reciprocity 동기) ── */}
+      {/* ── PitchScore 보조 CTA (reciprocity) ── */}
       {showPitchScoreEntry && (
         <div className="rounded-lg border border-border bg-background/40 p-3 text-[12px] leading-relaxed text-muted-foreground">
           더 많은 동료가 평가해줘야 본인 PitchScore™ 정확도가 올라가요.{" "}

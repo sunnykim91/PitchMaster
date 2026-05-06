@@ -191,14 +191,16 @@ export async function getDashboardData(
       .eq("team_id", teamId)
       .neq("member_type", "__PERIOD__"),
     // PitchScore 동료 평가 누적 — 본인이 evaluator 로 한 평가 (자기평가 SELF 제외).
-    // Feature Flag 일 때만 fetch. 3건 미만이면 dashboard task 노출.
+    // 한 사람 평가 시 22개 능력치 row 가 INSERT 되므로 row count 가 아닌
+    // distinct target_user_id 로 "평가한 사람 수" 를 계산해야 함.
+    // Feature Flag 일 때만 fetch. 3명 미만이면 dashboard task 노출.
     enablePitchScore
       ? db.from("player_evaluations")
-          .select("id", { count: "exact", head: true })
+          .select("target_user_id")
           .eq("evaluator_user_id", userId)
           .eq("team_id", teamId)
           .neq("source", "SELF")
-      : Promise.resolve({ count: 0 }),
+      : Promise.resolve({ data: [] as Array<{ target_user_id: string }> }),
   ]);
 
   const upcomingRaw = upcomingRes.data ?? null;
@@ -433,7 +435,8 @@ export async function getDashboardData(
   // - 운영진: 항시 노출 (모든 팀원 평가가 운영 책임). 라벨은 누적 카운트 표시
   // - 일반 회원: 누적 3건 미만에만 노출. 잔여 인원으로 라벨 동적 변경
   if (enablePitchScore) {
-    const peerEvalCount = peerEvalCountRes.count ?? 0;
+    const peerEvalRows = (peerEvalCountRes.data ?? []) as Array<{ target_user_id: string }>;
+    const peerEvalCount = new Set(peerEvalRows.map((r) => r.target_user_id)).size;
     if (isStaff) {
       tasks.push({
         label: peerEvalCount > 0

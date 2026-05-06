@@ -79,6 +79,20 @@ export async function GET(
     return apiError("타인의 평가 이력은 운영진만 볼 수 있어요", 403);
   }
 
+  // 자기팀 멤버 한정 — 다른 팀 STAFF 가 임의 user_id 조회 차단
+  if (!isSelf) {
+    const { data: memberCheck } = await sb
+      .from("team_members")
+      .select("id")
+      .eq("team_id", ctx.teamId)
+      .eq("user_id", targetUserId)
+      .in("status", ["ACTIVE", "DORMANT"])
+      .maybeSingle();
+    if (!memberCheck) {
+      return apiError("같은 팀 소속이 아닙니다", 403);
+    }
+  }
+
   // sport_type 결정 — viewer 활성 팀 기준 (단일 종목 평가만 노출)
   const sportParam = request.nextUrl.searchParams.get("sport");
   let sportType: SportType;

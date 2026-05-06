@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { ChevronDown, ChevronUp, History } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, ChevronUp, History, ArrowRight } from "lucide-react";
 import PitchScoreRadar from "./PitchScoreRadar";
 import PitchScoreBarList from "./PitchScoreBarList";
 import EvaluationModal from "./EvaluationModal";
-import PitchScoreHistory from "./PitchScoreHistory";
 import { CATEGORY_META } from "@/lib/playerAttributes/config";
 import type {
   AttributeCode,
@@ -45,7 +45,7 @@ interface PositionRec {
   top_attributes: { code: AttributeCode; name_ko: string; score: number }[];
 }
 
-interface AttributesResponse {
+export interface AttributesResponse {
   user_id: string;
   sport_type: SportType;
   is_goalkeeper: boolean;
@@ -80,6 +80,13 @@ interface Props {
    * 미지정 시 false (기본 닫힘) — 보수적으로 안 보이는 쪽이 안전.
    */
   canViewHistory?: boolean;
+  /**
+   * 부모가 미리 fetch 한 attributes 데이터. 있으면 첫 mount 시 자체 fetch skip.
+   * 평가 후 자동 reload 는 그대로 작동(EvaluationModal onSaved → load).
+   */
+  initialData?: AttributesResponse | null;
+  /** 평가 후 reload 된 attributes 를 부모에 propagate (RecordsClient → MyOverviewCard 동기화) */
+  onDataChange?: (data: AttributesResponse) => void;
 }
 
 const COMMENT_MIN_SAMPLES = 5;
@@ -92,13 +99,15 @@ export default function PitchScoreCard({
   isGoalkeeper,
   canEvaluate = true,
   canViewHistory = false,
+  initialData = null,
+  onDataChange,
 }: Props) {
-  const [data, setData] = useState<AttributesResponse | null>(null);
+  const [data, setData] = useState<AttributesResponse | null>(initialData);
   const [labels, setLabels] = useState<Map<string, string>>(new Map());
+  // initialData 가 있어도 labels 는 별도 fetch 가 필요해 첫 mount 에서 한번 호출.
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -110,6 +119,7 @@ export default function PitchScoreCard({
       if (attrRes.ok) {
         const j: AttributesResponse = await attrRes.json();
         setData(j);
+        onDataChange?.(j);
       }
       if (labelRes.ok) {
         const j: { labels: LabelRow[] } = await labelRes.json();
@@ -120,11 +130,33 @@ export default function PitchScoreCard({
     } finally {
       setLoading(false);
     }
-  }, [targetUserId, sportType]);
+  }, [targetUserId, sportType, onDataChange]);
+
+  // initialData 있으면 attributes fetch skip (labels 만 별도 fetch)
+  const loadLabelsOnly = useCallback(async () => {
+    setLoading(true);
+    try {
+      const labelRes = await fetch(`/api/player-attributes/labels`);
+      if (labelRes.ok) {
+        const j: { labels: LabelRow[] } = await labelRes.json();
+        const m = new Map<string, string>();
+        for (const l of j.labels) m.set(`${l.attribute_code}_${l.level}`, l.label_ko);
+        setLabels(m);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (initialData) {
+      setData(initialData);
+      loadLabelsOnly();
+    } else {
+      load();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetUserId, sportType]);
 
   const effectiveIsGK = isGoalkeeper ?? data?.is_goalkeeper ?? false;
   const attributes = (data?.attributes ?? []).filter((a) => effectiveIsGK || !a.gk_only);
@@ -213,9 +245,9 @@ export default function PitchScoreCard({
             </div>
           ) : (
             <div className="text-xs text-muted-foreground">
-              평가 누적 {totalSamples}건
+              {totalSamples}명이 평가함
               {totalSamples < COMMENT_MIN_SAMPLES && (
-                <span> · {COMMENT_MIN_SAMPLES}건 이상이면 한 줄 요약·추천 포지션이 노출돼요</span>
+                <span> · {COMMENT_MIN_SAMPLES}명 이상 평가하면 한 줄 요약·추천 포지션이 노출돼요</span>
               )}
             </div>
           )}
@@ -292,29 +324,16 @@ export default function PitchScoreCard({
             )}
           </button>
 
-          {/* 평가 이력 토글 — 평가 1건+ AND viewer 자격 OK (본인 또는 운영진) */}
+          {/* 평가 이력 페이지 링크 — 평가 1건+ AND viewer 자격 OK (본인 또는 운영진) */}
           {totalSamples > 0 && canViewHistory && (
-            <>
-              <button
-                type="button"
-                onClick={() => setHistoryOpen((v) => !v)}
-                className="flex w-full items-center justify-center gap-1 rounded-md border border-border bg-background/40 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-[hsl(var(--primary))]/40 transition-colors"
-              >
-                <History className="h-3.5 w-3.5" aria-hidden="true" />
-                {historyOpen ? (
-                  <>
-                    평가 이력 접기 <ChevronUp className="h-3.5 w-3.5" />
-                  </>
-                ) : (
-                  <>
-                    평가 이력 보기 <ChevronDown className="h-3.5 w-3.5" />
-                  </>
-                )}
-              </button>
-              {historyOpen && (
-                <PitchScoreHistory targetUserId={targetUserId} sportType={sportType} />
-              )}
-            </>
+            <Link
+              href={`/player/${targetUserId}/evaluations?sport=${sportType}`}
+              className="flex w-full items-center justify-center gap-1 rounded-md border border-border bg-background/40 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-[hsl(var(--primary))]/40 transition-colors"
+            >
+              <History className="h-3.5 w-3.5" aria-hidden="true" />
+              평가 이력 보기
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           )}
         </div>
       )}

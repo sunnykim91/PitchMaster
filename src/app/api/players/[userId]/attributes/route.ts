@@ -29,6 +29,7 @@ type EvaluationRow = {
   source: EvaluationSource;
   context: EvaluationContext;
   created_at: string;
+  evaluator_user_id: string;
 };
 
 type CodeRow = {
@@ -84,6 +85,19 @@ export async function GET(
   const sb = getSupabaseAdmin();
   if (!sb) return apiError("DB unavailable", 503);
 
+  // 권한: 본인 OR target 이 viewer 활성팀의 ACTIVE/DORMANT 멤버
+  // (다른 팀 STAFF 가 임의 user_id 로 능력치 조회 차단)
+  if (ctx.userId !== userId) {
+    const { data: memberCheck } = await sb
+      .from("team_members")
+      .select("id")
+      .eq("team_id", ctx.teamId)
+      .eq("user_id", userId)
+      .in("status", ["ACTIVE", "DORMANT"])
+      .maybeSingle();
+    if (!memberCheck) return apiError("권한이 없습니다", 403);
+  }
+
   const sportType = await resolveSportType(request, ctx, sb);
 
   const [codesRes, evalsRes, targetRes] = await Promise.all([
@@ -93,7 +107,7 @@ export async function GET(
       .order("display_order"),
     sb
       .from("player_evaluations")
-      .select("attribute_code, score, source, context, created_at")
+      .select("attribute_code, score, source, context, created_at, evaluator_user_id")
       .eq("target_user_id", userId)
       .eq("sport_type", sportType),
     sb
@@ -141,7 +155,17 @@ export async function GET(
 
   // 가시 attributes (필드 선수면 GK 전용 제외)
   const visible = attributes.filter((a) => isGoalkeeper || !a.gk_only);
-  const totalSamples = visible.reduce((sum, a) => sum + a.sample_count, 0);
+  // total_samples = "이 선수를 평가한 사람 수" (distinct evaluator).
+  // attr.sample_count 의 합은 22배 부풀려진 row 수라 부적절 — 한 사람이 22 능력치 평가.
+  // visible 코드에 한 번이라도 평가한 evaluator 만 집계.
+  const visibleCodeSet = new Set(visible.map((v) => v.attribute_code));
+  const visibleEvaluators = new Set<string>();
+  for (const ev of evaluations) {
+    if (visibleCodeSet.has(ev.attribute_code)) {
+      visibleEvaluators.add(ev.evaluator_user_id);
+    }
+  }
+  const totalSamples = visibleEvaluators.size;
 
   // 카테고리별 평균
   const byCategory = new Map<AttributeCategory, { sum: number; count: number }>();
@@ -160,13 +184,13 @@ export async function GET(
     }),
   );
 
-  // 룰 기반 한 줄 코멘트 (5명 이상 평가 누적 시)
+  // 룰 기반 한 줄 코멘트 (5명 이상 평가자 누적 시)
   const comment =
     totalSamples >= COMMENT_MIN_SAMPLES
       ? generatePitchComment(category_averages)
       : null;
 
-  // 룰 기반 포지션 추천 (5명 이상 평가 누적 시)
+  // 룰 기반 포지션 추천 (5명 이상 평가자 누적 시)
   let recommended_positions: ReturnType<typeof recommendPositions> = [];
   if (totalSamples >= COMMENT_MIN_SAMPLES) {
     const scoreMap = new Map<AttributeCode, AttributeScoreLookup>();
