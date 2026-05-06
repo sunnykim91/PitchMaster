@@ -42,6 +42,10 @@ const nextConfig: NextConfig = {
   // 동일 룰 추가 시 두 시스템이 핑퐁 → ERR_TOO_MANY_REDIRECTS. 절대 다시 추가 금지.
   // canonical 통일 필요 시 Vercel 도메인 설정 또는 Cloudflare Page Rule 에서만 변경.
   async headers() {
+    // dev 모드에서는 Cache-Control 적용 안 함 — Turbopack HMR 과 hydration 깨짐 방지.
+    // (Next.js 16 가 경고: "Custom Cache-Control headers can break dev behavior")
+    // stale HTML 이 60초 캐시되어 코드 변경 후에도 옛 SSR 결과로 hydration mismatch 발생.
+    if (process.env.NODE_ENV !== "production") return [];
     return [
       {
         // 정적 에셋 (JS/CSS/폰트/이미지) - 해시가 포함되어 있으므로 장기 캐시
