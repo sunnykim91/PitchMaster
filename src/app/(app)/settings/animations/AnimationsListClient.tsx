@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Plus, Trash2, Star, Pencil, Loader2 } from "lucide-react";
+import { ChevronLeft, Plus, Trash2, Star, Pencil, Loader2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/lib/ToastContext";
 import { useConfirm } from "@/lib/ConfirmContext";
-import { FORMATION_4231_MOTION } from "@/lib/formationMotions/4-2-3-1";
-import type { TeamTacticalAnimation } from "@/lib/formationMotions/dbTypes";
+import { getFormationMotion } from "@/lib/formationMotions";
+import { formationTemplates } from "@/lib/formations";
+import type { TeamTacticalAnimation, TacticalAnimationData } from "@/lib/formationMotions/dbTypes";
+import type { PhasePosition } from "@/lib/formationMotions/types";
 
 interface Props {
   teamId: string;
@@ -23,6 +26,9 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
   const [animations, setAnimations] = useState<TeamTacticalAnimation[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [createFormation, setCreateFormation] = useState("4-2-3-1");
+  const [copyingId, setCopyingId] = useState<string | null>(null);
+  const [copyTargetFormation, setCopyTargetFormation] = useState<string>("");
 
   useEffect(() => {
     let cancelled = false;
@@ -43,19 +49,26 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
   async function handleCreate() {
     setCreating(true);
     try {
-      // 같은 포메이션 기존 개수 + 1 = 다음 버전 (v1, v2, v3 ...)
-      const sameFormation = animations.filter((a) => a.formation_id === "4-2-3-1");
+      // 표준 motion (4-2-3-1 풀 시퀀스 또는 builder 자동 생성) 가져옴
+      const motion = getFormationMotion(createFormation);
+      if (!motion) {
+        showToast("지원하지 않는 포메이션이에요", "error");
+        setCreating(false);
+        return;
+      }
+      // 같은 포메이션 기존 개수 + 1 = 다음 버전
+      const sameFormation = animations.filter((a) => a.formation_id === createFormation);
       const nextVersion = sameFormation.length + 1;
       const res = await fetch("/api/team/tactical-animations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          formation_id: "4-2-3-1",
-          name: `${teamName} 4-2-3-1 v${nextVersion}`,
+          formation_id: createFormation,
+          name: `${teamName} ${createFormation} v${nextVersion}`,
           description: null,
           animation_data: {
-            attack: FORMATION_4231_MOTION.attack,
-            defense: FORMATION_4231_MOTION.defense,
+            attack: motion.attack,
+            defense: motion.defense,
           },
           is_default: sameFormation.length === 0,
         }),
@@ -69,6 +82,78 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
     } catch (err) {
       showToast(err instanceof Error ? err.message : "생성 실패", "error");
       setCreating(false);
+    }
+  }
+
+  /** 영상 복제 — 같은 포메이션이면 v{N+1}, 다른 포메이션이면 슬롯 인덱스 1:1 매핑 */
+  async function handleCopy(source: TeamTacticalAnimation, targetFormationId: string) {
+    setCopyingId(source.id);
+    try {
+      const sourceTemplate = formationTemplates.find((f) => f.id === source.formation_id);
+      const targetTemplate = formationTemplates.find((f) => f.id === targetFormationId);
+      if (!sourceTemplate || !targetTemplate) {
+        showToast("포메이션 정보를 찾을 수 없어요", "error");
+        return;
+      }
+
+      // 슬롯 인덱스 1:1 매핑 (sourceSlot → targetSlot)
+      const slotMap = new Map<string, string>();
+      const len = Math.min(sourceTemplate.slots.length, targetTemplate.slots.length);
+      for (let i = 0; i < len; i++) {
+        slotMap.set(sourceTemplate.slots[i].id, targetTemplate.slots[i].id);
+      }
+
+      function mapPositions(positions: PhasePosition[]): PhasePosition[] {
+        return positions
+          .map((p) => {
+            const newSlot = slotMap.get(p.slot);
+            return newSlot ? { ...p, slot: newSlot } : null;
+          })
+          .filter((p): p is PhasePosition => p !== null);
+      }
+
+      const newData: TacticalAnimationData = {
+        attack: source.animation_data.attack.map((phase) => ({
+          ...phase,
+          steps: phase.steps.map((step) => ({
+            ...step,
+            positions: mapPositions(step.positions),
+          })),
+        })),
+        defense: source.animation_data.defense.map((phase) => ({
+          ...phase,
+          steps: phase.steps.map((step) => ({
+            ...step,
+            positions: mapPositions(step.positions),
+          })),
+        })),
+      };
+
+      const sameFormation = animations.filter((a) => a.formation_id === targetFormationId);
+      const nextVersion = sameFormation.length + 1;
+      const samePoseLabel = source.formation_id === targetFormationId ? "복사본" : `${source.formation_id} 기반`;
+
+      const res = await fetch("/api/team/tactical-animations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          formation_id: targetFormationId,
+          name: `${teamName} ${targetFormationId} v${nextVersion}`,
+          description: `${source.name} ${samePoseLabel}`,
+          animation_data: newData,
+          is_default: sameFormation.length === 0,
+        }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || "복제 실패");
+      }
+      const j: { animation: TeamTacticalAnimation } = await res.json();
+      router.push(`/settings/animations/${j.animation.id}`);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "복제 실패", "error");
+    } finally {
+      setCopyingId(null);
     }
   }
 
@@ -145,20 +230,40 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
         </p>
       </header>
 
-      {/* 신규 생성 버튼 */}
-      <Button
-        type="button"
-        onClick={handleCreate}
-        disabled={creating}
-        className="mb-5 w-full sm:w-auto"
-      >
-        {creating ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <Plus className="mr-2 h-4 w-4" />
-        )}
-        새 영상 만들기 (4-2-3-1 기본 형태에서 시작)
-      </Button>
+      {/* 신규 생성 — 포메이션 선택 + 만들기 */}
+      <div className="mb-5 flex flex-col sm:flex-row gap-2">
+        <Select value={createFormation} onValueChange={setCreateFormation}>
+          <SelectTrigger className="sm:w-[220px]">
+            <SelectValue placeholder="포메이션 선택" />
+          </SelectTrigger>
+          <SelectContent>
+            <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">축구</div>
+            {formationTemplates.filter((f) => f.sportType === "SOCCER").map((f) => (
+              <SelectItem key={f.id} value={f.id}>
+                {f.name}
+              </SelectItem>
+            ))}
+            <div className="mt-1 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">풋살</div>
+            {formationTemplates.filter((f) => f.sportType === "FUTSAL").map((f) => (
+              <SelectItem key={f.id} value={f.id}>
+                {f.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          onClick={handleCreate}
+          disabled={creating}
+        >
+          {creating ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Plus className="mr-2 h-4 w-4" />
+          )}
+          새 영상 만들기 ({createFormation} 기본 형태)
+        </Button>
+      </div>
 
       {/* 목록 */}
       {loading ? (
@@ -228,6 +333,36 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
                     대표로
                   </Button>
                 )}
+                {/* 복제 — 대상 포메이션 선택해서 복사 */}
+                <div className="inline-flex items-center gap-1 rounded-md border border-border h-8 pr-1">
+                  <Copy className="h-3.5 w-3.5 ml-2 text-muted-foreground" aria-hidden="true" />
+                  <Select
+                    value=""
+                    onValueChange={(targetFid) => {
+                      if (!targetFid) return;
+                      handleCopy(animation, targetFid);
+                    }}
+                  >
+                    <SelectTrigger className="h-7 border-0 bg-transparent px-1 text-xs">
+                      <span className="text-muted-foreground">
+                        {copyingId === animation.id ? "복제 중…" : "복제"}
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">대상 포메이션</div>
+                      {formationTemplates
+                        .filter((f) => f.sportType === (formationTemplates.find((t) => t.id === animation.formation_id)?.sportType))
+                        .map((f) => (
+                          <SelectItem key={f.id} value={f.id}>
+                            {f.name}
+                            {f.id === animation.formation_id && " (같은 포메이션 v"}
+                            {f.id === animation.formation_id && (animations.filter((a) => a.formation_id === f.id).length + 1)}
+                            {f.id === animation.formation_id && ")"}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Button
                   type="button"
                   size="sm"

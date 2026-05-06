@@ -217,6 +217,7 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
             <RoleCard
               key={`${g.formationId}-${g.role}-${g.quarters.join(",")}-${i}`}
               group={g}
+              canManage={canManage}
             />
           ))}
         </div>
@@ -306,7 +307,7 @@ function findSelectedName(
 
 /* ────────────────────────────── 역할 카드 (쿼터 기반) ────────────────────────────── */
 
-function RoleCard({ group }: { group: AssignmentGroup }) {
+function RoleCard({ group, canManage }: { group: AssignmentGroup; canManage: boolean }) {
   const [open, setOpen] = useState(false);
   const { mergedRole } = group;
   const quarterLabel = formatQuarterRangeLabel(group.quarters);
@@ -346,6 +347,7 @@ function RoleCard({ group }: { group: AssignmentGroup }) {
         formationId={group.formationId}
         role={group.role}
         roleTitle={mergedRole.title}
+        canManage={canManage}
       />
     </AccordionCard>
   );
@@ -357,10 +359,12 @@ function FormationMotionBlock({
   formationId,
   role,
   roleTitle,
+  canManage,
 }: {
   formationId: string;
   role: string;
   roleTitle: string;
+  canManage: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [teamMotion, setTeamMotion] = useState<FormationMotion | null>(null);
@@ -421,12 +425,21 @@ function FormationMotionBlock({
         <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="mt-3">
+        <div className="mt-3 space-y-3">
           <FormationMotionViewer
             motion={data}
             highlightSlot={role.toLowerCase()}
             highlightLabel={roleTitle}
           />
+          {/* 팀 default 없을 때 운영진에게 만들기 CTA */}
+          {!isTeamCustom && canManage && (
+            <a
+              href="/settings/animations"
+              className="block rounded-md border border-dashed border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary))]/5 p-3 text-center text-xs hover:bg-[hsl(var(--primary))]/10"
+            >
+              🎬 우리 팀 <strong>{formationId}</strong> 영상 직접 만들어보기 →
+            </a>
+          )}
         </div>
       )}
     </div>
