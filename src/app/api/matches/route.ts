@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
 import { sendTeamPush } from "@/lib/server/sendPush";
 import { autoCompleteTeamMatches } from "@/lib/server/autoCompleteMatches";
+import { invalidateTeamStats } from "@/lib/server/aiTeamStats";
 
 /** datetime-local 값("2026-04-02T17:00")에 KST 오프셋이 없으면 붙여줌 */
 function toKSTTimestamp(v: string): string {
@@ -235,6 +236,9 @@ export async function PUT(request: NextRequest) {
     const { invalidateSignaturesForMatch } = await import("@/lib/server/aiSignatureInvalidate");
     invalidateSignaturesForMatch(db, body.id).catch(() => {});
   }
+
+  // AI 팀스탯 캐시 무효화 (over-invalidation 허용 — 다음 AI 호출 시 재계산)
+  invalidateTeamStats(ctx.teamId).catch(() => {});
 
   return apiSuccess(data);
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isStaffOrAbove } from "@/lib/permissions";
+import { invalidateTeamStats } from "@/lib/server/aiTeamStats";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // 팀 설정에서 stats_recording_staff_only 가 true 면 STAFF 이상만 골 기록 가능
@@ -95,6 +96,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) return apiError(error.message);
+  invalidateTeamStats(ctx.teamId).catch(() => {});
   return apiSuccess(data, 201);
 }
 
@@ -143,6 +145,7 @@ export async function PUT(request: NextRequest) {
     .single();
 
   if (error) return apiError(error.message);
+  invalidateTeamStats(ctx.teamId).catch(() => {});
   return apiSuccess(data);
 }
 
@@ -171,5 +174,6 @@ export async function DELETE(request: NextRequest) {
 
   const { error } = await db.from("match_goals").delete().eq("id", id);
   if (error) return apiError(error.message);
+  invalidateTeamStats(ctx.teamId).catch(() => {});
   return apiSuccess({ ok: true });
 }
