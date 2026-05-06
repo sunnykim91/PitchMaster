@@ -164,8 +164,10 @@ export default function MatchDetailClient({
   const sportType: SportType = teamData.team?.sport_type ?? "SOCCER";
   // AI 코치 분석 + AI Full Plan: 축구·풋살 모두 활성 (풋살 포메이션 4종 formations.ts 등록 완료).
   const effectiveEnableAi = enableAi;
-  // 경기 후기: 룰 베이스 단락 풍부화로 통일 — AI 호출 비활성 (시그니처와 일관, 비용 0). (41차)
-  const enableAiSummary = false;
+  // 경기 후기 자동 생성 — 25차에 LLM 제거되고 템플릿(generateMatchSummaryFromTemplate)으로 전환됨.
+  // 41차에 enableAiSummary=false 로 막혔으나 템플릿은 비용·지연 0 이라 막을 이유 없음.
+  // false 일 땐 MatchDiaryTab 의 자동 트리거 useEffect 가 즉시 return → 후기 영역 자체가 안 뜸 (45차 사고).
+  const enableAiSummary = true;
   const uniforms = teamData.team?.uniforms;
   // fallback 색을 중립 회색으로 — 기존 hsl(var(--primary))=coral(주황), hsl(var(--muted-foreground))=회색
   // 은 팀 유니폼과 쉽게 혼동됨 (사용자가 주황+회색 본 원인).
