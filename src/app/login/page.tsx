@@ -17,7 +17,6 @@ import HeroSection from "./sections/HeroSection";
 import SiteHeader from "./sections/SiteHeader";
 import BeforeAfterSection from "./sections/BeforeAfterSection";
 import FeaturesSection from "./sections/FeaturesSection";
-import PitchScoreSection from "./sections/PitchScoreSection";
 import MoreFeaturesSection from "./sections/MoreFeaturesSection";
 import ComparisonSection from "./sections/ComparisonSection";
 import TestimonialsSection from "./sections/TestimonialsSection";
@@ -92,7 +91,6 @@ export default async function LoginPage({
       <BeforeAfterSection />
       <HowItWorksSection />
       <FeaturesSection />
-      <PitchScoreSection />
       <MoreFeaturesSection />
       <ComparisonSection />
       <TestimonialsSection teamCount={teamCount} memberCount={memberCount} />
