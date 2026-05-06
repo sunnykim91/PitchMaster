@@ -652,17 +652,17 @@ export function PlayerProfilePage({
         </div>
       </section>
 
-      {/* PitchScore™ 능력치 평가 */}
-      {userId && profile.sportType && profile.teamId && (
+      {/* PitchScore™ — 운영진 전용 ("감독 노트" 정체성, 45차 후속 정책).
+          일반회원은 본인 페이지에서도 카드 자체 비노출. */}
+      {userId && profile.sportType && profile.teamId && viewerIsStaff && (
         <section className="max-w-4xl mx-auto px-4 py-6">
-          {/* canViewHistory 미지정 → 프로필에서는 이력 진입 안 노출.
-              본인 이력은 /records?tab=my, 타인 이력(운영진)은 /members 행 "이력" 버튼에서. */}
           <PitchScoreCard
             targetUserId={userId}
             targetUserName={name}
             sportType={profile.sportType}
             contextTeamId={profile.teamId}
             isGoalkeeper={isGoalkeeper}
+            canViewHistory={Boolean(viewerUserId === userId || viewerIsStaff)}
           />
         </section>
       )}

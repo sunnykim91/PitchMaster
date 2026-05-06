@@ -72,15 +72,14 @@ export async function GET(
   const sb = getSupabaseAdmin();
   if (!sb) return apiError("DB unavailable", 503);
 
+  // 45차 후속 "감독 노트" 정책: 운영진만 평가 이력 조회 가능. 본인 시점도 거부.
   const isStaffViewer = isStaffOrAbove(ctx.teamRole);
-  const isSelf = ctx.userId === targetUserId;
-
-  if (!isStaffViewer && !isSelf) {
-    return apiError("타인의 평가 이력은 운영진만 볼 수 있어요", 403);
+  if (!isStaffViewer) {
+    return apiError("평가 이력은 운영진만 볼 수 있어요", 403);
   }
 
   // 자기팀 멤버 한정 — 다른 팀 STAFF 가 임의 user_id 조회 차단
-  if (!isSelf) {
+  if (ctx.userId !== targetUserId) {
     const { data: memberCheck } = await sb
       .from("team_members")
       .select("id")

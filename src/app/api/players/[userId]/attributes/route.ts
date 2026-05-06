@@ -85,18 +85,21 @@ export async function GET(
   const sb = getSupabaseAdmin();
   if (!sb) return apiError("DB unavailable", 503);
 
-  // 권한: 본인 OR target 이 viewer 활성팀의 ACTIVE/DORMANT 멤버
-  // (다른 팀 STAFF 가 임의 user_id 로 능력치 조회 차단)
-  if (ctx.userId !== userId) {
-    const { data: memberCheck } = await sb
-      .from("team_members")
-      .select("id")
-      .eq("team_id", ctx.teamId)
-      .eq("user_id", userId)
-      .in("status", ["ACTIVE", "DORMANT"])
-      .maybeSingle();
-    if (!memberCheck) return apiError("권한이 없습니다", 403);
+  // 권한 (45차 후속 "감독 노트" 정책): 운영진(STAFF+) 만 능력치 조회 가능.
+  // 일반 회원은 본인 시점도 거부 — PitchScore 는 운영 도구라 일반회원에게 노출 안 함.
+  const isStaffViewer = ctx.teamRole === "PRESIDENT" || ctx.teamRole === "STAFF";
+  if (!isStaffViewer) {
+    return apiError("능력치는 운영진만 조회할 수 있습니다", 403);
   }
+  // target 이 viewer 활성팀의 ACTIVE/DORMANT 멤버인지 검증 (다른 팀 데이터 차단)
+  const { data: memberCheck } = await sb
+    .from("team_members")
+    .select("id")
+    .eq("team_id", ctx.teamId)
+    .eq("user_id", userId)
+    .in("status", ["ACTIVE", "DORMANT"])
+    .maybeSingle();
+  if (!memberCheck) return apiError("권한이 없습니다", 403);
 
   const sportType = await resolveSportType(request, ctx, sb);
 

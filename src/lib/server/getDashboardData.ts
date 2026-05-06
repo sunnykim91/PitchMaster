@@ -434,25 +434,17 @@ export async function getDashboardData(
   // PitchScore 동료 평가 task (Feature Flag 일 때만)
   // - 운영진: 항시 노출 (모든 팀원 평가가 운영 책임). 라벨은 누적 카운트 표시
   // - 일반 회원: 누적 3건 미만에만 노출. 잔여 인원으로 라벨 동적 변경
-  if (enablePitchScore) {
+  // PitchScore "감독 노트" 정체성으로 전환 (45차 후속) — 운영진만 평가 책임.
+  // 일반 회원에게는 동료 평가 task 노출하지 않음 (조기축구 정서상 동료 평가 부담·친목 깨기 위험).
+  if (enablePitchScore && isStaff) {
     const peerEvalRows = (peerEvalCountRes.data ?? []) as Array<{ target_user_id: string }>;
     const peerEvalCount = new Set(peerEvalRows.map((r) => r.target_user_id)).size;
-    if (isStaff) {
-      tasks.push({
-        label: peerEvalCount > 0
-          ? `팀원 평가하기 (${peerEvalCount}명 평가함)`
-          : "팀원 평가하기",
-        action: "open-peer-evaluation",
-      });
-    } else if (peerEvalCount < 3) {
-      const remaining = 3 - peerEvalCount;
-      tasks.push({
-        label: peerEvalCount === 0
-          ? "팀원 평가하기 (3명 권장)"
-          : `팀원 평가 ${remaining}명 더 하기`,
-        action: "open-peer-evaluation",
-      });
-    }
+    tasks.push({
+      label: peerEvalCount > 0
+        ? `팀원 평가하기 (${peerEvalCount}명 평가함)`
+        : "팀원 평가하기",
+      action: "open-peer-evaluation",
+    });
   }
 
   if (upcomingMatch && !myUpcomingVoteRes.data) {

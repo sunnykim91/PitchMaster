@@ -86,6 +86,11 @@ export async function GET(request: NextRequest) {
   const sb = getSupabaseAdmin();
   if (!sb) return apiError("DB unavailable", 503);
 
+  // 45차 후속 "감독 노트" 정책: 포지션별 PitchScore TOP 도 운영진만 조회 가능.
+  if (ctx.teamRole !== "PRESIDENT" && ctx.teamRole !== "STAFF") {
+    return apiError("팀 랭킹은 운영진만 볼 수 있어요", 403);
+  }
+
   const teamIdParam = request.nextUrl.searchParams.get("team_id");
   const teamId = teamIdParam ?? ctx.teamId;
   if (!teamId) return apiError("팀 정보가 없습니다", 400);

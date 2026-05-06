@@ -30,6 +30,11 @@ export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
 
+  // 45차 후속 "감독 노트" 정책: 평가 추천도 운영진만.
+  if (ctx.teamRole !== "PRESIDENT" && ctx.teamRole !== "STAFF") {
+    return apiError("평가는 운영진만 가능합니다", 403);
+  }
+
   const teamIdParam = request.nextUrl.searchParams.get("team_id");
   const teamId = teamIdParam ?? ctx.teamId;
   if (!teamId) return apiError("팀 정보가 없습니다", 400);

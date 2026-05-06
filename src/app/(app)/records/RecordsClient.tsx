@@ -123,9 +123,13 @@ export default function RecordsClient({
 }) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
+  const isStaffViewer = role === "PRESIDENT" || role === "STAFF";
   const searchParams = useSearchParams();
   const [peerEvalOpen, setPeerEvalOpen] = useState(false);
   const showPitchScoreEntry = !!(enablePitchScore && teamId && sportType);
+  // 운영진 전용 노출 — 일반회원은 평가 진입점·팀 랭킹 보지 않음 (45차 후속 "감독 노트" 정체성).
+  // 본인 PitchScoreCard 는 모두 노출 (자가 평가 + 본인 점수 보기는 유지).
+  const showStaffOnlyEntry = showPitchScoreEntry && isStaffViewer;
 
   // PitchScore attributes 단일 fetch (MyOverviewCard + PitchScoreCard 중복 round trip 회피).
   // PitchScoreCard 자체 fetch 가 더 풍부한 응답(attributes 배열·comment·recommendations)을 반환하므로
@@ -349,8 +353,8 @@ export default function RecordsClient({
 
   return (
     <div className="grid gap-5 stagger-children min-w-0">
-      {/* ── PitchScore 동료 평가 진입 카드 (옵션 C — 모든 탭 공통, 페이지 상단) ── */}
-      {showPitchScoreEntry && (
+      {/* ── PitchScore 평가 진입 카드 — 운영진 전용 ("감독 노트") ── */}
+      {showStaffOnlyEntry && (
         <section className="rounded-xl border border-[hsl(var(--primary))]/30 bg-gradient-to-br from-[hsl(var(--primary))]/8 to-[hsl(var(--primary))]/3 p-4 sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
@@ -359,7 +363,7 @@ export default function RecordsClient({
                 <h2 className="text-sm font-bold">팀원 능력치 평가</h2>
               </div>
               <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                같이 뛰어본 팀원을 평가하면 본인 PitchScore™도 정확해져요.
+                운영진이 라인업·포지션 결정에 참고할 능력치를 기록해주세요.
               </p>
             </div>
             <button
@@ -464,7 +468,7 @@ export default function RecordsClient({
       })()}
 
       {/* ── 내 종합 (45차 2차 통합 — 헤더 + 두 레이더 비교) ── */}
-      {showPitchScoreEntry ? (
+      {showStaffOnlyEntry ? (
         <MyOverviewCard
           userName={userName ?? "나"}
           sportType={sportType!}
@@ -557,7 +561,7 @@ export default function RecordsClient({
       </Card>
 
       {/* ── PitchScore 능력치 자세히 (접힘 기본) ── */}
-      {showPitchScoreEntry && (
+      {showStaffOnlyEntry &&(
         <PitchScoreCard
           targetUserId={userId}
           targetUserName={userName ?? "나"}
@@ -570,7 +574,7 @@ export default function RecordsClient({
       )}
 
       {/* ── PitchScore 보조 CTA (reciprocity) ── */}
-      {showPitchScoreEntry && (
+      {showStaffOnlyEntry &&(
         <div className="rounded-lg border border-border bg-background/40 p-3 text-[12px] leading-relaxed text-muted-foreground">
           더 많은 동료가 평가해줘야 본인 PitchScore™ 정확도가 올라가요.{" "}
           <button
@@ -593,7 +597,7 @@ export default function RecordsClient({
       */}
 
       {/* ── PitchScore 포지션별 TOP 3 (Phase 3 1차) ── */}
-      {showPitchScoreEntry && teamId && sportType && (
+      {showStaffOnlyEntry &&teamId && sportType && (
         <TeamPositionRankings teamId={teamId} sportType={sportType} />
       )}
 
@@ -923,7 +927,7 @@ export default function RecordsClient({
       </Sheet>
 
       {/* PitchScore 동료 평가 모달 — 페이지 상단 카드 또는 my 탭 보조 CTA 트리거 */}
-      {showPitchScoreEntry && (
+      {showStaffOnlyEntry &&(
         <PeerEvaluationDialog
           open={peerEvalOpen}
           onClose={() => setPeerEvalOpen(false)}

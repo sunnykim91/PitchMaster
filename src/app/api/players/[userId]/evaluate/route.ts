@@ -58,6 +58,13 @@ export async function POST(
   const sb = getSupabaseAdmin();
   if (!sb) return apiError("DB unavailable", 503);
 
+  // 권한 (45차 후속 "감독 노트" 정책): 운영진(STAFF+) 만 평가 가능.
+  // 일반회원의 자가 평가도 비활성 — PitchScore 는 운영진 전용 도구.
+  const isStaffEvaluator = ctx.teamRole === "PRESIDENT" || ctx.teamRole === "STAFF";
+  if (!isStaffEvaluator) {
+    return apiError("능력치 평가는 운영진만 가능합니다", 403);
+  }
+
   // 평가 컨텍스트 팀 결정 — 클라이언트가 team_id 명시했으면 그 팀 (단 evaluator 가입 검증),
   // 없으면 ctx.teamId 폴백. 위변조 방지: evaluator가 그 팀에 ACTIVE 멤버여야 함.
   const requestedTeamId = team_id ?? ctx.teamId;
