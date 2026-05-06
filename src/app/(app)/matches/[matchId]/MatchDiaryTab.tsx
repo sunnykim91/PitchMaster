@@ -57,6 +57,8 @@ function MatchDiaryTabInner({
   const [regenerating, setRegenerating] = useState(false);
   const [regenerateError, setRegenerateError] = useState<string | null>(null);
   const [regenerateUsed, setRegenerateUsed] = useState(aiSummaryRegenerateCount >= 1);
+  const [autoGenStatus, setAutoGenStatus] = useState<"idle" | "loading" | "error" | "blocked">("idle");
+  const [autoGenError, setAutoGenError] = useState<string | null>(null);
 
   /**
    * 첫 생성 자동 트리거 — SSR 에서 제거된 후기 생성을 클라이언트에서 대체.
@@ -71,19 +73,67 @@ function MatchDiaryTabInner({
     if (match.status !== "COMPLETED") return;
     if ((match.matchType ?? "REGULAR") !== "REGULAR") return;
     autoGenTriedRef.current = true;
+    setAutoGenStatus("loading");
     (async () => {
+      let received = false;
       try {
         const { consumeSseStream } = await import("@/lib/sseStream");
         await consumeSseStream(`/api/ai/match-summary/${matchId}`, { regenerate: false }, {
           // eslint-disable-next-line react-hooks/set-state-in-effect
-          onChunk: (text) => setCurrentAiSummary((prev) => (prev ?? "") + text),
+          onChunk: (text) => { received = true; setCurrentAiSummary((prev) => (prev ?? "") + text); },
           // eslint-disable-next-line react-hooks/set-state-in-effect
-          onReplace: (text) => setCurrentAiSummary(text),
-          onError: () => { /* 조용히 실패 — 재생성 버튼으로 재시도 가능 */ },
+          onReplace: (text) => { received = true; setCurrentAiSummary(text); },
+          onError: (msg) => {
+            // insufficient_data 등 가드 메시지 노출. 빈 메시지면 일반 실패 안내.
+            const isInsufficient = msg?.includes?.("기록") || msg?.includes?.("insufficient");
+            setAutoGenStatus(isInsufficient ? "blocked" : "error");
+            setAutoGenError(msg ?? "후기 생성에 실패했어요");
+          },
+          onDone: () => {
+            if (received) setAutoGenStatus("idle");
+            else {
+              // 서버가 done만 보내고 본문이 없는 비정상 케이스
+              setAutoGenStatus("error");
+              setAutoGenError("서버 응답이 비어있어요. 잠시 후 재시도해 주세요");
+            }
+          },
         });
-      } catch { /* 네트워크 오류 무시 */ }
+      } catch (err) {
+        setAutoGenStatus("error");
+        setAutoGenError(err instanceof Error ? err.message : "네트워크 오류로 자동 생성에 실패했어요");
+      }
     })();
   }, [canRegenerateAi, currentAiSummary, match.status, match.matchType, matchId]);
+
+  // 수동 재시도 — 자동 트리거 실패 후 사용자가 다시 누를 수 있게.
+  async function handleAutoRetry() {
+    autoGenTriedRef.current = false;
+    setAutoGenError(null);
+    setAutoGenStatus("loading");
+    try {
+      const { consumeSseStream } = await import("@/lib/sseStream");
+      let received = false;
+      await consumeSseStream(`/api/ai/match-summary/${matchId}`, { regenerate: false }, {
+        onChunk: (text) => { received = true; setCurrentAiSummary((prev) => (prev ?? "") + text); },
+        onReplace: (text) => { received = true; setCurrentAiSummary(text); },
+        onError: (msg) => {
+          const isInsufficient = msg?.includes?.("기록") || msg?.includes?.("insufficient");
+          setAutoGenStatus(isInsufficient ? "blocked" : "error");
+          setAutoGenError(msg ?? "후기 생성에 실패했어요");
+        },
+        onDone: () => {
+          if (received) setAutoGenStatus("idle");
+          else {
+            setAutoGenStatus("error");
+            setAutoGenError("서버 응답이 비어있어요. 잠시 후 재시도해 주세요");
+          }
+        },
+      });
+    } catch (err) {
+      setAutoGenStatus("error");
+      setAutoGenError(err instanceof Error ? err.message : "네트워크 오류로 자동 생성에 실패했어요");
+    }
+  }
 
   async function handleRegenerateAi() {
     setRegenerating(true);
@@ -347,6 +397,75 @@ function MatchDiaryTabInner({
       </Card>
 
       {/* ══ AI가 정리한 경기 (수동 작성 일지와 구분 위해 스코어·사진 아래에 배치) ══ */}
+      {/* 빈 상태에서도 카드 노출 — canRegenerateAi + COMPLETED + REGULAR 이면 가이드/로딩/에러 표시 */}
+      {!currentAiSummary &&
+        canRegenerateAi &&
+        match.status === "COMPLETED" &&
+        (match.matchType ?? "REGULAR") === "REGULAR" && (
+          <Card className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm font-bold">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">AI</span>
+                AI가 정리한 경기
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {autoGenStatus === "loading" ? (
+                <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
+                  <span className="inline-block h-3 w-1.5 animate-pulse bg-primary/60 align-middle" />
+                  경기 기록을 정리하는 중…
+                </div>
+              ) : autoGenStatus === "blocked" ? (
+                <div className="space-y-2 py-1">
+                  <p className="text-sm text-muted-foreground">
+                    {autoGenError ?? "기록(득점·MVP·참석) 중 하나라도 입력돼야 후기를 만들 수 있어요."}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground/80">
+                    기록 탭에서 득점을 추가하거나, 출석 탭에서 참석 체크를 마친 뒤 다시 시도해 주세요.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 text-xs"
+                    onClick={handleAutoRetry}
+                  >
+                    다시 시도
+                  </Button>
+                </div>
+              ) : autoGenStatus === "error" ? (
+                <div className="space-y-2 py-1">
+                  <p className="text-sm text-[hsl(var(--loss))]">
+                    {autoGenError ?? "후기 생성에 실패했어요."}
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 text-xs"
+                    onClick={handleAutoRetry}
+                  >
+                    다시 시도
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2 py-1">
+                  <p className="text-sm text-muted-foreground">
+                    경기 기록을 분석해서 후기를 자동으로 만들어드려요.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="gap-1.5 text-xs"
+                    onClick={handleAutoRetry}
+                  >
+                    후기 만들기
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       {currentAiSummary && (
         <Card className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background">
           <CardHeader className="pb-2">
