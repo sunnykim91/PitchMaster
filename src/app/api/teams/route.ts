@@ -9,6 +9,7 @@ import {
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
 import { validateSafeName } from "@/lib/validators/safeText";
+import { invalidateTeamStats } from "@/lib/server/aiTeamStats";
 
 export async function GET() {
   const ctx = await getApiContext();
@@ -108,6 +109,12 @@ export async function PUT(request: NextRequest) {
 
   const { error } = await db.from("teams").update(updates).eq("id", ctx.teamId);
   if (error) return apiError(error.message);
+
+  // mvp_vote_staff_only 토글은 MVP 정책 분기에 영향 → 캐시 무효화
+  if (updates.mvp_vote_staff_only !== undefined) {
+    invalidateTeamStats(ctx.teamId).catch(() => {});
+  }
+
   return apiSuccess({ ok: true });
 }
 

@@ -6,6 +6,7 @@ import {
   apiSuccess,
 } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { invalidateTeamStats } from "@/lib/server/aiTeamStats";
 
 export async function POST(request: NextRequest) {
   const ctx = await getApiContext();
@@ -78,6 +79,9 @@ export async function POST(request: NextRequest) {
       await generatePenalty(db, ctx.teamId, matchId, targetUserId, attendanceStatus);
     }
   }
+
+  // attendance_status 변경은 MVP 70% threshold 결정에 영향 → 캐시 무효화
+  invalidateTeamStats(ctx.teamId).catch(() => {});
 
   return apiSuccess({ ok: true });
 }

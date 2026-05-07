@@ -7,6 +7,7 @@ import {
 } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
+import { invalidateTeamStats } from "@/lib/server/aiTeamStats";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -96,5 +97,6 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) return apiError(error.message);
+  invalidateTeamStats(ctx.teamId).catch(() => {});
   return apiSuccess(data);
 }

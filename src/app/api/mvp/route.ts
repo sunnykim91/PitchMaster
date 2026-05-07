@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { hasMinRole } from "@/lib/permissions";
+import { invalidateTeamStats } from "@/lib/server/aiTeamStats";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -108,6 +109,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) return apiError(error.message);
+  invalidateTeamStats(ctx.teamId).catch(() => {});
   return apiSuccess(data);
 }
 
@@ -150,5 +152,6 @@ export async function DELETE(request: NextRequest) {
     .eq("voter_id", ctx.userId);
 
   if (error) return apiError(error.message);
+  invalidateTeamStats(ctx.teamId).catch(() => {});
   return apiSuccess({ ok: true });
 }

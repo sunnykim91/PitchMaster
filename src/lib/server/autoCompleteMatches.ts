@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { invalidateSignaturesForMatches } from "@/lib/server/aiSignatureInvalidate";
 import { processMatchCompletedPush } from "@/lib/server/processMatchCompletedPush";
+import { invalidateTeamStats } from "@/lib/server/aiTeamStats";
 
 /**
  * KST 기준 현재 시각 계산.
@@ -112,5 +113,8 @@ export async function autoCompleteTeamMatches(
     // 4) MVP 투표 시작 + OVR 변동 푸시 (fire-and-forget — 페이지 로드 즉시 반응)
     //    crons 도 안전망으로 돌지만, 경기 종료 직후 누군가 페이지 열면 여기서 먼저 나감.
     processMatchCompletedPush(db, completedIds).catch(() => {});
+
+    // 5) AI 팀 스탯 캐시 무효화 — COMPLETED 전환은 통계 집계에 직접 영향
+    invalidateTeamStats(teamId).catch(() => {});
   }
 }
