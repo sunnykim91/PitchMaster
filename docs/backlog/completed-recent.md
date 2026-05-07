@@ -1,12 +1,368 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~42차)
-summary: 2026-04-11~05-03 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편, 광고 2 결과 분석 + 33초 본 캠페인 게시, 회비 선납→면제 통합 + PitchScore 카드 접힘 + 39차 백로그 반영, 보안 풀스윕 + RLS initPlan + 선납 매칭 + 풋살 AI + 역할 가이드 통일, GA4 서버사이드 + 유니코드→SVG + PitchScore 종목 분리 + 거짓 박제 사고 4건 + 벨로그 4편 발행
-sections: [42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-05-03 (42차)
+title: 개선 백로그 — 최근 완료 (16~48차)
+summary: 2026-04-11~05-07 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편, 광고 2 결과 분석 + 33초 본 캠페인 게시, 회비 선납→면제 통합 + PitchScore 카드 접힘 + 39차 백로그 반영, 보안 풀스윕 + RLS initPlan + 선납 매칭 + 풋살 AI + 역할 가이드 통일, GA4 서버사이드 + 유니코드→SVG + PitchScore 종목 분리 + 거짓 박제 사고 4건 + 벨로그 4편 발행 + MVP 정책 변경(5/4 cutoff) + 사고 4건, 풋살 자동편성 외톨이 root cause + vitest 21건 갱신 + AI 풀플랜·코치 분석 풋살 동호회 톤 + 가상 전적 hallucination 차단, PitchScore Phase 2C 동료 평가 + SSR 병렬화 + 진입점 이동 + UI 통일 + favicon.ico + SEO 진단, PitchScore Phase 2C 완료·Feature Flag 전체 오픈 + 경기 후기 silent fail fix + 알림 탭 라우팅 + 평가 이력 페이지 + distinct count fix + cron 비활성화, PitchScore Sunset + 평가 UI 전면 제거 + 조기싸커 경쟁사 분석 + 랜딩 Phase 1 (무료 트러스트 라인 + 가격 비교 행) + 5/4 경기 후기 자동 복구 검증, AI 캐시 자동 무효화 + FCMZ 빌드업 데모 + 가이드 친절 톤 전면 재작성 + 편집기 하드코딩 버그 수정 + 카피 단정 표현 일괄 정리, 휴면팀 회장 카톡 1:1 캠페인 11명 발송 + iOS Capacitor 전략 상담 + 도달 채널 한계 발견
+sections: [48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-05-07 (48차)
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~42차)
+# 최근 완료 (16~48차)
+
+## 48차 (2026-05-07, KST) — 휴면팀 회장 카톡 캠페인 + iOS 전략 상담
+
+**코드 커밋 없음** — 운영 캠페인 + 전략 상담 세션
+
+### 1. 휴면·미사용 팀 회장 목록 추출 (DB 직접 조회)
+
+- 기준: `domain_admin_team_status.md`의 active/dormant/unused 분류 (14일 윈도우 + 5종 활동)
+- Supabase service role 직접 쿼리로 **17팀 추출** (휴면 13 + 미사용 4)
+- 회장 user_id, name, kakao_id, phone 포함
+
+### 2. 카톡 1:1 메시지 초안 4번 조정 후 확정
+
+- 톤 조정 흐름: 정중·장문 → 너무 가벼움 → 예의있는 존댓말 → 최근 기능 어필 추가
+- 최종 B안: 어필 6개(AI 자동편성/AI 코치/역할 가이드/전술 영상/회비 자동매칭/벌금) 두 묶음으로 자연스럽게 나열
+- **카톡 1:1 11명 발송 완료** (사용자 직접 발송)
+- Bavvy Brown FC: 친구 안 됨으로 패스 / FK Rebirth: 지인팀이라 별도 판단
+
+### 3. 앱내 푸시 대안 검토 → 스킵
+
+- 6팀(전화번호 없음) 대상 앱내 push 검토
+- dry-run 결과: **6명 모두 push_subscribed=false** → 앱 열기 전엔 도달 불가
+- users 테이블에 email 컬럼 자체 없음 확인 (카카오 OAuth 이메일 동의 미수집)
+- 결론: 도달 채널 없음. 사용자 결정으로 스킵
+
+### 4. iOS 정식 앱 출시 전략 상담
+
+- 현재: Android TWA v1.0.1 빌드 완료, Play Console 2차 반려, 5/8 재신청 예정
+- iOS TWA 동등 솔루션 없음 → **Capacitor 래핑 권고** (연 $99, Apple Developer Program)
+- Flutter/RN 풀 리라이트: 1인 개발자 매몰비용으로 비추
+- Apple 가이드라인 4.2.2 거부 리스크 1~3회 각오
+- 착수 여부 미결 — 별도 세션에서 결정
+
+### 주요 발견 (코드 외)
+
+- **1인 운영 도달 채널 한계 발견**: push_subscribed=false인 휴면 회장은 앱·이메일 모두 도달 불가. 온보딩 시 알림 권한 유도가 실질 개선 경로 (백로그 추가)
+- **user_profile.md 오류 정정**: FK Rebirth를 "본인 운영팀"으로 잘못 기재됐던 것 수정 (지인팀, 회장=백승관)
+- **iOS 출시 방향 정립**: Capacitor > 리라이트. 당장 착수 아님
+
+## 47차 (2026-05-06, KST) — AI 캐시 자동 무효화 + FCMZ 데모 + 가이드 친절 톤 전면 재작성
+
+**커밋 3개** (`2649558` · `8096a8d` · `5d6de4a`) — origin/main 푸시 완료
+
+### 1. AI team_stats 캐시 자동 무효화 (`2649558`)
+
+- 배경: 경기 점수·골 수정 후 `ai_team_stats_cache` 24h TTL 캐시가 stale → AI가 과거 점수 인용 (43차 가상 전적 hallucination root cause)
+- `api/goals/route.ts` + `api/matches/route.ts` mutation 후 해당 팀 캐시 row 삭제 로직 추가
+- pending.md 43차 항목 완료 처리
+
+### 2. FCMZ 좌측 빌드업 라이브 데모 + 축구·풋살 구분 정리 (`8096a8d`)
+
+- **AnimationEditorClient 하드코딩 버그 수정**: `addPhase`/`addStep`이 모든 포메이션에서 4-2-3-1 좌표(11개 점)를 기본값으로 사용하던 진짜 버그. `useMemo` + `formationTemplates.find(formation_id)` 동적 계산으로 교체. `FALLBACK_4231_POSITIONS` 로 이름 변경해 폴백 의도 명시.
+- **카피·주석 단정 표현 5곳 수정**: `FeaturesSection`, `MoreFeaturesSection`, `AnimationsListClient`, `MatchRoleGuide` 주석, `guide.html` 의 "11명" 단정 표현 → "축구 11명·풋살 5~8명" 또는 "선수"로 일괄 교체
+- **FCMZ 좌측 빌드업 SVG 인라인 데모**: 랜딩 전술 영상 강조 영역을 텍스트 박스에서 실제 `FORMATION_4231_MOTION` 7컷 자동 재생 SVG 컴포넌트로 교체. inView 트리거 + `useReducedMotion` 가드 + 코랄 강조
+- **랜딩 역할 가이드 카드**: 3번째 카드 3-5-2 LWB → 풋살 1-2-1 ALA 로 교체. `domain_ai_futsal_tone.md` 풋살 코치 톤(발바닥·1-2 패스·사람 마크) 반영
+
+### 3. 가이드 16개 섹션 친절 톤 전면 재작성 + 전술 영상 섹션 신설 (`5d6de4a`)
+
+- 배경: 사용자 지적 "너무 딱딱하다" — A/B 비교 샘플 보여주고 OK 받은 후 진행
+- 실제 UI 한국어 라벨 100+곳 Explore 에이전트로 일괄 확보 → 가이드 본문에 정확 인용
+- **섹션 7 신설 (전술 영상)**: "한 컷씩 멈춘 그림 여러 장" 비유 + 7컷 시나리오 예시 + 미리보기 안내
+- 섹션 8~16 번호 시프트 + 사이드바·sticky-nav 내부 링크 일괄 갱신
+- 1214 → 1283줄(+6%), 어려운 단어 괄호 풀이 + 화면 경로 정확 인용
+
+### 삽질 기록 (47차)
+
+1. **"11명" 단정 표현 전수 점검 누락**: 도메인 확장(풋살 활성화) 후 카피 전수 grep을 한 번에 안 해서 5개 파일에 흩어진 단정 표현을 사용자 지적으로 발견. → `feedback_domain_expansion_copy_grep.md` 신규
+2. **BASE_4231_POSITIONS 폴백 vs 기본값 혼동**: "폴백"이라 이름 붙인 상수가 실제로는 풋살 편집 시에도 고정 기본값으로 동작. 사용자가 화면 보고 발견 → `feedback_hardcoded_fallback_vs_default.md` 신규
+3. **다른 에이전트 미커밋 변경 분리 커밋**: git status 점검에서 ai-cache 무효화 패치 발견. `feedback_multi_agent_check.md` 가이드 따라 별도 커밋 분리 후 푸시
+
+## 46차 (2026-05-06, KST) — PitchScore Sunset + 평가 UI 전면 제거 + 조기싸커 경쟁사 분석 + 랜딩 Phase 1
+
+**커밋 5개** (`03e3b57` · `562d2a6` · `15a18f7` · `ccfa26c` · `c89bf39` · `3b0445c`) — origin/main 푸시 완료
+
+### 1. PitchScore 운영진 전용 정책 적용 (`03e3b57`)
+
+- 46차 초반 사용자 우려: "일반회원이 동료 평가하는 게 부담"
+- 옵션 B (운영진만) 결정 → PitchScore 감독 노트 정체성 강화
+- 임계값 3 → 실 적용 반영 + 운영진 노출 조건 조정
+
+### 2. DashboardClient ViewAsRole 시뮬레이션 일관성 fix (`562d2a6`)
+
+- 운영진이 ViewAsRole=MEMBER 토글 시 평가 task가 그대로 노출되는 시뮬레이션 갭 발견
+- 클라이언트 필터 추가 — 일반회원 뷰로 전환 시 운영진 전용 task 비노출
+
+### 3. 조기싸커(jogisoccer.com) 경쟁사 분석
+
+- 사용자 분석 요청 + 메모리 기록 (`reference_competitor_jogisoccer.md` 신규)
+- 발견: 58개 능력치 / 3중 가중치 / 완전 익명 / Hungarian Algorithm / 10초/선수 빠른 입력
+- PitchMaster 평가 영역 6:2 열세 확인
+
+### 4. 평가 시스템 정체성 재정립 — 시나리오 D 결정
+
+- 조기싸커 비교 후 "경기 평점" 도입 논의
+- **최종 결정: 시나리오 D — 경기 평점 도입 안 함**
+- 근거: MVP와 중복 + 운영진 부담 + 평가 영역은 PitchMaster 차별점 아님
+- `project_evaluation_systems_decision.md` 갱신 완료
+
+### 5. PitchScore Sunset — 동료 평가 UI 전면 제거 (`ccfa26c` · `c89bf39` · `3b0445c`)
+
+- `ccfa26c` — 운영진 평가/이력 UI 모두 제거. 능력치 레이더 보기(`/player/[id]`)만 유지
+- `c89bf39` — 동료 평가 진입 모두 제거 + 랜딩/가이드 노출 제거
+- `3b0445c` — PitchScoreSection 랜딩 제거 → MoreFeatures 한 항목 + 가이드 톤 정정
+
+### 6. 랜딩 Phase 1 — 무료 트러스트 라인 + 가격·광고 비교 행 (`15a18f7`)
+
+- HeroSection: "✓ ₩0 · 광고·결제 없이 시작 — 먼저 함께한 팀 보호 약속" 트러스트 라인 추가
+- ComparisonSection: 가격·광고 행 추가 + 컬럼 라벨 "다른 운영 / 카톡" → "다른 앱 · 카톡"
+- 사고 2건 수정 포함:
+  - "평생 무료" → "먼저 함께한 팀 보호 약속" (`project_pricing.md` 준수)
+  - 타앱 광고 단정 → "앱별 다름 (유료 플랜 또는 광고)" 일반화 (`feedback_blog_fact_verify` 준수)
+
+### 7. 5/4 경기 후기 자동 복구 검증
+
+- 45차 fix (`4d40c57`·`68aac19`) 배포 후 FCMZ 5/4 경기 일지 탭 자동 생성 확인
+- `ai_summary` length 0 → 130 / `ai_summary_generated_at` null → 2026-05-06 00:42:42 확인
+- 자동 트리거 정상 동작 확인 — pending.md 항목 완료 처리
+
+### 삽질 기록 (46차)
+
+1. **메모리 기록 누락**: 45차에서 사용자가 조기싸커 메모리 기록 요청 → 누락. 46차에서 재요청 후 작성. 사용자 짜증 발생 — "기록해줘" 명시 시 즉시 처리 의무 (`feedback_grep_memory_before_analysis.md` 참조)
+2. **플랜 사전 점검 부족**: 조기싸커 차용 권장 항목 나열 시 구현 상태 미확인 → 이미 다 구현된 항목들. 재확인 지시 후 수정 (`feedback_plan_verify_before_recommend.md` 신규)
+3. **랜딩 카피 사실 위반 2건**: "평생 무료" 약관 위반 + 타앱 광고 단정. 두 번 사용자 정정 후 수정 (`feedback_landing_copy_fact_check.md` 신규)
+
+## 45차 (2026-05-06, KST) — PitchScore Phase 2C 완료 + Feature Flag 전체 오픈 + 평가 이력 페이지 + distinct count fix + cron 비활성화
+
+**커밋 16개** (`47a2de5` ~ `9e8778e`) — origin/main 푸시 완료
+
+### 0. [2차 작업] Feature Flag 전체 오픈 + 평가 이력 페이지 + 권한 강화 + distinct count fix (`40ebd71`)
+
+- **Feature Flag 전체 오픈**: `dashboard/page.tsx`, `members/page.tsx`, `records/page.tsx`, `player/[memberId]/page.tsx` 4파일의 `session.user.name === "김선휘"` 게이트 제거 → `enablePitchScore = true`
+- **`/records?tab=my` 2차 통합 디자인**: `MyOverviewCard.tsx` 신규 — 헤더(이름·주포지션·시즌메타·종합 PitchScore) + 두 레이더 비교(경기 스탯 vs 능력치) sm:grid-cols-2
+- **평가 이력 페이지 신설**: `/player/[memberId]/evaluations/page.tsx` + `EvaluationHistoryView.tsx` 신규. `PitchScoreHistory.tsx` dumb 컴포넌트로 리팩토링(props 받음). PitchScoreCard 토글 제거 → 페이지 링크로 변경.
+- **이력 진입 동선 결정**: 본인=/records?tab=my 내 카드, 운영진=/members 행 "이력" 버튼, 프로필=/player/[id]에서 미노출
+- **distinct count fix**: 한 사람 평가 = 22 row INSERT → row count 그대로 표시되던 라벨 수정. `getDashboardData.ts` peerEvalCount + `attributes/route.ts` total_samples 를 distinct evaluator/target_user_id 기준으로 변경. 라벨 "n건" → "n명"
+- **자기팀 멤버 한정 권한 강화**: `attributes/history` API + 평가 이력 페이지에 자기 팀 멤버인지 검증 추가. 다른 팀 STAFF가 임의 user_id 조회 불가.
+- **SSR 병렬화**: evaluations 페이지 SSR에서 직렬 await 3개 → Promise.all 병렬화
+- **BackButton 패턴**: `router.back()` + history 길이 기반 fallback (Link 푸시 시 뒤로가기 무한 루프 방지)
+- TypeScript 0 에러 / Vitest 51 files 797 tests pass / clean build 통과
+
+### 0-b. [2차 작업] peer-eval-monthly cron 비활성화 (`9e8778e`)
+
+- Feature Flag 전체 오픈 후 vercel.json에서 `peer-eval-monthly` cron 항목 제거 → 700+명 폭격 회피
+- cron 코드(`src/app/api/cron/peer-eval-monthly/route.ts`)는 보존, docstring에 재활성화 절차 주석 기록
+- pending.md에 cron 정책 결정 백로그 추가
+
+**이전 45차 커밋 14개** (`47a2de5` ~ `656a046`) — origin/main 푸시 완료 (사용자 직접 진행 5파일 별도 푸시 예정)
+
+### 1. 알림 탭 라우팅 + 인앱 알림 클릭 이동 (`47a2de5` · `33650ae`)
+
+- 인앱 알림 카드 클릭 시 해당 페이지로 이동 (`47a2de5`)
+- 알림 유형별 정확한 탭 라우팅 매핑 (`33650ae`) — MVP 알림 → 투표 탭, 역할 알림 → 전술 탭 등
+
+### 2. PitchScore Phase 2C — 운영진 진입점·이력뷰·TOP 3·정기 cron (`baf2c8f` · `f5dadf3` · `3a86d1e` · `25a8740` · `752bc92` · `c63dd86`)
+
+- **`baf2c8f`**: 회원 관리에서 PitchScore 평가 진입점 — 운영진 전용
+- **`f5dadf3`**: 평가 이력 뷰 — 익명성 정책 B (운영진만 evaluator 실명 노출)
+- **`3a86d1e`**: 팀 포지션별 PitchScore TOP 3 — records 팀 랭킹 탭 (4그룹 GK/DEF/MID/FWD, 임계 5건)
+- **`25a8740`**: 정기 라운드 평가 알림 cron — 월 1회 KST 1일 10시 (현재 김선휘 1명 발송)
+- **`752bc92`**: 보안 fix (position-rankings team_id 검증 누락) + /api/members sportType 누락 안정성 fix
+- **`c63dd86`**: 회원 카드 "능력치 보기" Link 진입점 (작업 5A)
+
+**v3 폴리시 마이그레이션 (Supabase Dashboard 직접 적용)**:
+- `00063` — FREE_KICK·TACKLING 비활성 + "슛팅력"→"슈팅력" 오타 수정 + 라벨 톤 15개 개선
+- `00064` — CROSS 비활성
+
+### 3. PitchScore v3 폴리시 코드 반영 (`080fba8` · `e2b0931`)
+
+- **`080fba8`**: FREE_KICK·TACKLING 비활성화 코드 반영 + 라벨 톤 15개 개선
+- **`e2b0931`**: CROSS 비활성화 + 회원 카드 역할 변경 Select h-10 → h-8 통일
+
+### 4. 평가 이력 토글 권한 분기 fix (`656a046`)
+
+**사고**: 일반 회원이 타인 `/player/[memberId]` 페이지에서 평가 이력 토글 펼치면 403 발생.
+
+- `PitchScoreCard`에 `canViewHistory` prop 추가 (기본 `false` 보수)
+- `PlayerProfilePage`에 `viewerUserId` / `viewerIsStaff` prop 추가
+- `/records?tab=my` 본인 카드는 항상 `canViewHistory=true`
+
+### 5. Feature Flag 전체 오픈 (사용자 직접, 45차 결정)
+
+- `members/page.tsx` `enablePitchScore=true`
+- `player/[memberId]/page.tsx` 사용자 직접 수정
+- 45차 기준 전체 팀 노출로 전환
+
+**미커밋 (별도 푸시 예정)**:
+- `src/app/(app)/members/page.tsx` — enablePitchScore=true
+- `src/app/player/[memberId]/page.tsx` — 사용자 직접 수정
+- `src/app/(app)/records/RecordsClient.tsx` — MyOverviewCard import 추가
+- `src/components/pitchAttributes/PitchScoreCard.tsx` — Link, ArrowRight import + 추가 변경
+- `src/components/pitchAttributes/PitchScoreHistory.tsx` — 부모 fetch + dumb 컴포넌트 분리 리팩토링
+
+### 6. 경기 후기 silent fail 사고 + fix (`68aac19` · `4d40c57`)
+
+**사고 경위 (3중 원인)**:
+1. **1차 (root cause)**: 41차 `cf8e97a`에서 `enableAiSummary=false` 하드코딩. 25차에 LLM 제거 후 템플릿 기반으로 전환됐으나, 변수명이 템플릿 트리거까지 제어하는 범위임을 인지 못함. 41차에 "AI 비활성" 의도로 껐는데 룰 기반 후기 생성 전체를 막음.
+2. **2차**: `MatchDiaryTab` 자동 트리거 `useEffect`의 `onError: () => {}` — silent fail.
+3. **3차**: `currentAiSummary` 있을 때만 AI 후기 영역 노출 → 빈 상태 가이드 0.
+
+**fix**:
+- **`68aac19`**: `autoGenStatus` state + 4개 분기(생성 중/완료/실패/미생성) + 빈 상태 가이드 카드
+- **`4d40c57`**: `enableAiSummary=true` 복원
+
+**학습**: 변수명이 코드 흐름을 반영하지 않으면 다음 세션에 재발. rename 또는 주석 의무.
+
+### 7. 기타 UX (`38f0015` · `8182ed8` · `29f92d3` · `58e8acb`)
+
+- 골 기록 카드 스크롤 막힘 — drag handle 분리 (`38f0015`)
+- members coachInline 미정의 에러 — positionLine 교체 (`8182ed8`)
+- 카카오 프로필 이미지 사이즈 축소 + lazy 로딩 (`29f92d3`)
+- Bebas Neue preload 활성화 (`58e8acb`)
+
+---
+
+
+## 44차 (2026-05-05, KST) — PitchScore Phase 2C 동료 평가 + SSR 병렬화 + UI 통일 + favicon + SEO 진단 + perf 최적화
+
+**커밋 20개** (`f2e62fc` ~ `29f92d3`) — origin/main 푸시 완료
+
+### 1. PitchScore Phase 2C — 동료 평가 시스템 (`f2e62fc` · `be2d78c` · `a09e291` · `11f78c1`)
+
+**핫픽스 (`f2e62fc`)**: `00060_pitchscore_drop_legacy_unique.sql`
+- 마이그레이션 00059에서 옛 unique 제약 DROP 시 이름 미스매치 (`..._attribute_c` vs 실제 `..._attribu_key`) → silent fail로 옛 제약 살아있어 FCMZ 풋살 평가 시 23505 duplicate key
+- DO 루프로 pg_constraint 조회 후 동적 DROP — 이름 불확실할 때 안전 패턴
+
+**신규 컴포넌트 (`be2d78c`)**:
+- [x] `PeerEvaluationDialog.tsx` — createPortal + body scroll lock 모달
+- [x] `/api/peer-evaluation/recommendations/route.ts` — 출석 빈도 기반 B3 추천 알고리즘 (1차 co_attendance DESC → 2차 sample_count ASC → 3차 random)
+- [x] 옛 `PeerEvaluationCard.tsx` 삭제
+
+**진입점 이동 + scroll lock (`a09e291`)**:
+- /members 상단 카드 → 대시보드 task 이동 (사용자 피드백: "회원관리는 운영진만 들어감")
+- createPortal로 document.body 직접 렌더 → backdrop-filter containing block 문제 해소
+- body overflow:hidden scroll lock
+
+**운영진 분기 (`11f78c1`)**:
+- 일반 회원: 누적 3건 미만 시 task 노출
+- 운영진: 항시 노출 (라벨에 누적 카운트 표시)
+
+### 2. records 페이지 통합 (`e10cc26`)
+
+- [x] `my` 탭에 PitchScoreCard 추가 (1차 통합)
+- [x] reciprocity CTA 추가
+- [x] 페이지 상단 동료 평가 진입 카드 추가
+- 트리거: Feature Flag 전체 오픈 후 2차 통합 디자인 진행 예정
+
+### 3. SSR 병렬화 — 직렬 await 8단 → 3단 (`0667792`)
+
+**getDashboardData** (예상 -300~400ms):
+- team_members 7번 fetch → 1번 통합
+- teams 2번 → 1번 통합
+- autoComplete 두 UPDATE 직렬 → Promise.all 병렬
+
+**getRecordsData** (예상 -50~80ms):
+- match_goals 중복 fetch 제거 (2회 → 1회)
+- seasons/matches/members 의존성 그래프 재배치
+
+**getBoardData** (예상 -30~50ms):
+- posts → polls → options → votes 4단 직렬 → 1 round-trip nested select
+
+- [x] `dashboard.test.ts` mock 순서 갱신 → 797/797 통과
+
+### 4. favicon.ico + SEO (`a0bbdbd` · `3a2f3e0`)
+
+- [x] `scripts/generate-favicon.mjs` — sharp만으로 ICO 헤더 직접 합성 (16/32/48px, 패키지 추가 0)
+- [x] `src/app/favicon.ico` 추가 — Next.js App Router 자동 라우팅
+- [x] RGBA 변환 누락 fix (`3a2f3e0`) — Turbopack 빌드 오류 해소
+- 네이버 서치어드바이저 "접근 불가 1개" 해소
+
+### 5. UI 통일 (`84522fb` · `585405f` · `9eda863` · `e809f37` · `5dede40`)
+
+- [x] 일반 회원 /members 아코디언 제거 — 빈 컨텐츠 펼치기 제거
+- [x] 일반 회원 행 감독 지정 inline 제거 — 375px 화면 넘침 fix (`585405f`)
+- [x] 카드 우측 버튼 `items-start` → `items-center` — 작은 화면 위쪽 떠보임 fix (`9eda863`)
+- [x] "시즌 다이제스트" → "시즌 요약" (`e809f37`)
+- [x] "라운드" → "한 번에" / "MOM" → "MVP" 4곳 통일 (`5dede40`)
+- [x] FeaturesSection "MOM 어워드" → "경기 MVP" 등 랜딩 워딩 통일
+
+### 6. GSC 진단 분석 (코드 없음)
+
+- "크롤링됨-색인안됨 15개" — 인증 게이트 앱의 자연 부산물 (정상, 조치 불필요)
+- "리디렉션 오류 2 / 404 2" — 다음 세션 URL 목록 확인 필요
+
+### 7. perf 최적화 — 폰트 preload + 카카오 이미지 축소 (`58e8acb` · `29f92d3`)
+
+**Bebas Neue preload 활성화 (`58e8acb`)**:
+- stat 숫자 폰트 FOUT(swap 깜빡임) 감소
+- `<link rel="preload">` critical font 경로 추가
+
+**카카오 프로필 이미지 critical path 제거 (`29f92d3`)**:
+- `compactKakaoImage()` 헬퍼 신규 (`src/lib/utils.ts`) — CDN URL `img_640x640.jpg` → `img_110x110.jpg` 변환
+- 48px 자리에 640px 원본 로드(~140kb) → ~10kb (93% 절감)
+- 적용 4파일: `ClientLayout`, `MembersClient`(×2), `PeerEvaluationDialog`
+- `loading="lazy"` + `decoding="async"` + width/height 명시 병행 (CLS 방지)
+- **패턴 메모**: 햄버거 Sheet 안에 있어도 DOM 렌더 시 브라우저 fetch 시작 — hidden 여부와 무관
+
+### 8. Lighthouse perf baseline 확립 (2026-05-05 22:35~23:33, 사용자 안드로이드 + WiFi)
+
+5회 측정 후 최종 baseline:
+
+| 페이지 | Perf | simulated LCP | observed LCP | 특이점 |
+|---|---|---|---|---|
+| /dashboard | 89 | 3694ms | 7272ms (이상치) | 카카오 이미지 critical path 제거 후 |
+| /matches/[id] | 79 | 5265ms | 1407ms | 거의 모든 지표 개선 |
+| /records?tab=my | 92 | 2563ms | 987ms | Bootup 2222ms (recharts 영향) |
+
+- simulated = throttled 4G + slow CPU 시뮬레이션 (perf score 산출 근거, 일관성 있음)
+- observed = 실측, 변동 큼 (outlier 가능) — dashboard 7272ms는 이상치로 판단
+- 사용자 체감 "OK" 확인
+- 잔여 perf 후보: Pretendard subset 추가 축소 / gtag interaction 트리거 / recharts 추가 split
+
+---
+
+## 43차 (2026-05-04, KST) — 풋살 자동편성 외톨이 fix + vitest 21건 갱신 + AI 풋살 동호회 톤 + 가상 전적 hallucination 차단
+
+**커밋 2개** (`97c4eca` · `ebe22bb`) — origin/main 푸시 완료
+
+### 1. 풋살 자동편성 외톨이 root cause fix + outdated vitest 21건 일괄 갱신 (`97c4eca`)
+
+**외톨이 발생 root cause**:
+- `calculateFairDistribution`에 `sportType` 매개변수 추가 — 풋살은 정수 단위(`Math.ceil(avg)` / `Math.floor(avg)`) 분배.
+- 0.5 단위(하프쿼터) 분배가 5.5Q × 홀수 인원 조합 시 페어 못 맞춰 외톨이(0.5쿼 손실) 발생하던 원인 차단.
+- `scripts/sim-futsal-rotation.mjs` Case 15 추가, 15/15 통과.
+
+**outdated vitest 21건 일괄 갱신** (41차 누적 변경 반영):
+- [x] `formations.test.ts` — 풋살 5인제 3→6개
+- [x] `ai-full-plan` / `ai-tactics` — 41차 풋살 차단·김선휘 게이트 해제 반영, outdated 케이스 삭제 + 풋살 통과 케이스 추가
+- [x] `attendance` — 대리 투표 흐름에 matches mock 추가 (라우트가 matches 먼저 select)
+- [x] `diary` — STAFF 권한 추가됨 → staffSession 사용
+- [x] `members` — 자기 역할 차단 메시지 변경, DELETE BAN update mock 추가
+- [x] `mvp` — status COMPLETED 체크 + mvp_vote_staff_only teams mock 추가
+- [x] vitest 797/797 통과
+
+### 2. AI 풀플랜·코치 분석 풋살 동호회 톤 + 가상 전적 hallucination 차단 (`ebe22bb`)
+
+**진짜 root cause**: `ai_team_stats_cache` (24h TTL)에 stale 데이터 박힘. 사용자가 임시로 1-1 점수 기록 → 0-0으로 수정 → 캐시는 살아있어 AI가 "지난 경기 1-1 무승부" 인용. **AI hallucinate가 아니라 캐시 stale 데이터**.
+
+**삽질 과정** (prompt 강화로 헛삽질 5번):
+1. 시스템 프롬프트 톤 강화 → 효과 약함
+2. AI 응답 단독 array — userMessage 첫 줄 "JSON 배열로 생성하세요" 명시로 AI가 따라간 것 (모순)
+3. AI 한글 이름 hallucinate ("피벗"→"피벳", "테스트피벗1") — 가짜 이름 환경에서 자주 발현
+4. 축구 클리셰 반복 ("측면 ALA로 들어가고", "라인 유지", "중원")
+5. 사용자 "임시로 1-1 기록했었는데" 한 마디로 캐시 의심 → 즉시 root cause 확인
+
+**최종 fix 8건**:
+- [x] `aiTeamStats.ts` SQL — `opponent_name` null/"미정"/"미상"/"내부" 필터 (가상 전적 원천 차단)
+- [x] `buildHistoryBlock` — recentMatchSummaries 안전망 + score hallucinate 금지 경고
+- [x] `aiFullPlan.ts extractJsonObject` — array 응답 폴백 wrap
+- [x] SYSTEM_PROMPT + userMessage — 객체 응답 강제, playerName 정확 복사, temperature 0.5→0.2
+- [x] 풋살 override (두 곳) — 한국 조기 풋살 동호회 코치 톤 + few-shot 예시 + 금지 8종 (포지션 약어 호명·"라인"·"중원"·5초 룰·4초 킥인·30초 풀스피드·풀코트·비롤라/데 헐커·자의 능력 비교)
+- [x] `aiTacticsAnalysis.ts` SYSTEM_PROMPT — quarterCount 2~4→2~10 (8쿼 풋살 재생성 시 4쿼만 나오던 fix)
+- [x] `AutoFormationBuilder` fuzzy 매칭 (Levenshtein 1, 길이≥4, 후보 1명일 때만)
+
+**미완**: `ai_team_stats_cache` 자동 무효화 없음 — 경기 점수 변경 시 캐시 stale 상태 지속. 수동 삭제만 가능. `match_goals` 변경 트리거 → 캐시 자동 삭제 백로그 추가.
+
+---
 
 ## 42차 (2026-05-03, KST) — GA4 서버사이드 + 유니코드→SVG + PitchScore 종목 분리 + 블로그 + 거짓 박제 사고 4건
 
@@ -122,6 +478,59 @@ related: [completed-archive.md, pending.md]
 - `feedback_db_distribution_check.md` — 기능 활성화 전 DB 분포 직접 조회 필수 (풋살 27팀 중 6인제 24팀)
 - `feedback_postgrest_or_injection.md` — PostgREST or() 사용자 입력 보간 인젝션 위험
 - `reference_rls_initplan_pattern.md` — RLS initPlan 최적화 정확 패턴
+
+---
+
+### 7. MVP 정책 변경 (커밋 `241b394` · `924344e` · `33e6372` · `c2b50fd`) — 42차 보강 (2026-05-04)
+
+**5/4 cutoff 기준 정책 전환** (`STAFF_DECISION_POLICY_CUTOFF = "2026-05-04"`):
+
+| 토글 | 운영진 투표 | 일반 회원 투표 |
+|------|------------|----------------|
+| ON | 즉시 확정 (기존 동일) | 차단 |
+| OFF | **일반 회원처럼 1인 1표** (70% 룰만 적용) | 허용 |
+
+- 2026-05-04 이전 경기는 옛 정책 보존 (`applyBackfillHealing` + `shouldApplyNewMvpPolicy` cutoff 분기)
+- MVP 후보 = `attendance_status PRESENT/LATE` 기준 (`vote=ATTEND` 아님)
+- 본인 본인 투표 차단 (`candidate_id === voter_id` → 400)
+- 11곳 일괄 적용: `mvpThreshold.ts` + `/api/mvp/route.ts` + UI 2곳 + 집계 경로 9곳
+- DB 직접 갱신 (사용자 수행): 5/4 FCMZ 경기(`d2641733`) 3건 `is_staff_decision = false` 처리
+
+### 사고 4건 — 42차 보강 (2026-05-04)
+
+#### 사고 1 — 클린 빌드 미실행 (커밋 `c2b50fd`)
+- `.next` 캐시 때문에 로컬 `npm run build` 통과 → Vercel 클린 빌드에서 `AttendanceVoteRow` 타입 에러 발각
+- 사용자 명시 항의: "니때문에 또 푸시하고 돈나가고"
+- 박제: 푸시 전 `rm -rf .next && npm run build` + `npx tsc --noEmit` 두 가지 모두 의무
+- 메모: `feedback_clean_build_before_push.md` 신규 박제
+
+#### 사고 2 — useApi fallback completeness 재발 (커밋 `33e6372`)
+- `feedback_useapi_fallback_completeness.md` ⭐ CRITICAL 박제됐음에도 재발
+- `getMatchDetailData.ts:28` SSR select에 `attendance_status` 컬럼 누락
+- `useApi({ skip: !!initialData?.vote })` 패턴이라 client fetch 자체 X → SSR 누락 = 클라이언트까지 영영 전달 안 됨
+- 기존 사고(26c57ad, 35차)와 정확히 동일한 패턴으로 재현
+- 메모: `feedback_useapi_fallback_completeness.md` 보강
+
+#### 사고 3 — presentMemberIds ID 매핑 버그 (커밋 `924344e`)
+- `baseRoster.id` = `m.users?.id ?? m.id` (user_id 우선) — `attendance.member_id` 는 `team_members.id`
+- 기존 `attendingIds` 변수는 `member_id → user_id` 변환 패턴 사용 중
+- 새로 작성한 `presentMemberIds` 는 변환 없이 `member_id` 그대로 담음 → `baseRoster.filter` 매칭 0건
+- 화면 "후보 0명" 보고 시 코드 grep 전에 SSR 캐시·CDN 추측 답변을 길게 늘어놓음
+- 사용자 명시 지적: "코드나 잘확인해봐 여긴 문제없을거같으니까"
+- 메모: `feedback_id_mapping_pattern.md` 신규 박제
+
+#### 사고 4 — 캐시 추측 길게 (연속 지적)
+- 화면 미반영 증상 → 코드 검증보다 캐시·CDN·Service Worker 추측을 우선 답변
+- 사용자 명시 지적: "ssr누락인지 뭐 버그인지 코드에서 확인을 할생각을해 캐시같은 이상한소리하지말고"
+- 교훈: 화면 미반영 진단 순서 = 코드 grep → Read → 로직 확인 → 그 이후에 캐시 고려
+- 메모: `feedback_grep_memory_before_analysis.md` 보강 (5번·6번 규칙 추가)
+
+### 메모리 추가 (42차 보강 신규)
+- `feedback_id_mapping_pattern.md` — ID 매핑 변수 추가 전 기존 패턴 grep 의무 + baseRoster.id user_id 우선 패턴
+- `feedback_clean_build_before_push.md` — 푸시 전 클린 빌드 + tsc --noEmit 의무 (c2b50fd 사고)
+- `feedback_useapi_fallback_completeness.md` 보강 — 33e6372 재발 사례 추가
+- `feedback_grep_memory_before_analysis.md` 보강 — 캐시 추측 금지 원칙 추가 (규칙 5·6)
+- `domain_mvp_policy.md` 보강 — 5/4 cutoff 정책 변경 + 11곳 적용 + 본인 투표 차단
 
 ---
 

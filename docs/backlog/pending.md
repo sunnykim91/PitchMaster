@@ -1,7 +1,7 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=89팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-05-06 (45차)
+last_updated: 2026-05-07 (48차)
 related: [completed-recent.md, reviews.md]
 ---
 
@@ -12,12 +12,66 @@ related: [completed-recent.md, reviews.md]
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
 
-## 45차 신규 추가 (2026-05-06)
+## 48차 신규 추가 (2026-05-07)
 
-### 경기 후기 자동 복구 검증 (HIGH, 다음 세션 1순위)
-- **배경**: `4d40c57`·`68aac19` 배포 완료. FCMZ 5/4 경기 후기가 자동 생성되는지 확인 필요.
-- [ ] 배포 후 FCMZ 5/4 경기 일지 탭 진입 → 후기 자동 생성 완료 여부 확인
-- [ ] `ai_summary` 컬럼 length > 0 + `ai_summary_generated_at` 존재 여부 직접 조회
+### iOS Capacitor 출시 의사결정 (MEDIUM, 별도 세션)
+- **배경**: 48차에 전략 상담 완료. Android TWA 재신청 마무리 후 결정.
+- [ ] TWA Play Store 재신청 결과 확인 후 iOS 착수 여부 결정
+- [ ] Mac 환경 여부 확인 (없으면 EAS Build 클라우드 검토)
+- [ ] Capacitor 프로젝트 초기화 + Next.js 연동 테스트 (착수 결정 후)
+- [ ] Apple Developer Program 가입 ($99/년) — 착수 결정 후
+- 참고: `reference_ios_capacitor_strategy.md`
+
+### 온보딩 Push 알림 권한 유도 강화 (MEDIUM)
+- **배경**: 48차 dry-run 결과 휴면팀 회장 6명 push_subscribed=false. 도달 채널 근본 개선 필요.
+- [ ] 온보딩 완료 직후 또는 팀 생성 직후 "알림 받기" 허용 유도 UI 추가
+- [ ] 현재 push 권한 요청 위치 및 타이밍 확인 (코드 grep 필요)
+- 목표: 신규 가입자 push_subscribed=true 비율 향상
+
+### users.email 컬럼 추가 검토 (LOW, 캠페인 도달률 개선용)
+- **배경**: 카카오 OAuth 이메일 동의 미수집 → 앱 외부 이메일 캠페인 불가
+- [ ] 카카오 비즈앱 이메일 동의항목 추가 심사 신청 (카카오 검수 수일 소요)
+- [ ] 심사 통과 시 마이그레이션 + 온보딩 이메일 선택 수집 UI
+- [ ] 기존 사용자 대상 이메일 수집 캠페인 (선택 동의)
+- 참고: `reference_kakao_oauth_reach_limit.md`
+
+### 휴면팀 카톡 캠페인 회신 추적 (운영, 1~2주 내)
+- **배경**: 48차에 11명 발송 완료. 응답률·피드백 내용 추적 필요.
+- [ ] 1주 후 회신 수·내용 정리
+- [ ] 피드백 내용 중 앱 개선 힌트 있으면 백로그 추가
+
+## 47차 신규 추가 (2026-05-06)
+
+### vitest / TypeScript 에러 누적 정리 (MEDIUM, 별도 세션)
+- **배경**: `npx tsc --noEmit` 292건 에러가 이번 세션 전부터 main 에 존재. teams.test.ts·api-helpers.test.ts 류 모킹 타입 오류 다수. 도메인 변경(풋살 활성화·STAFF 권한·MVP 흐름)마다 테스트 갱신 지연으로 누적.
+- [ ] `npx tsc --noEmit` 실행 후 에러 목록 분류 (실제 타입 버그 vs outdated 모킹)
+- [ ] outdated 테스트 일괄 갱신 (43차 21건 전례 참고)
+- [ ] 정리 후 `npx vitest run` + clean build 통과 확인
+- 참고: `feedback_outdated_tests_accumulate.md`
+
+### `.claude/settings.json` 권한 캐시 누적 정리 (LOW)
+- **배경**: 38라인 자동 누적. 커밋에는 제외 중.
+- [ ] 다음 세션에서 내용 확인 후 의도치 않은 권한 항목 있으면 정리
+
+## 46차 신규 추가 (2026-05-06)
+
+### 랜딩 Phase 2 — Claude Design 추가 섹션 (HIGH, 사용 한도 초기화 후)
+- **배경**: Phase 1(`15a18f7`) 완료. Phase 2는 Claude Design 결과물 수령 후 착수.
+- [ ] HeroSection 비주얼 강화 (Claude Design 결과물)
+- [ ] ComparisonSection 비주얼 강화 (Claude Design 결과물)
+- [ ] 미확인 항목 사전 grep 후 진행 — BeforeAfterSection·FinalCtaSection 이미 존재 여부 확인
+- 참고: pending.md "33차 신규 추가 (2026-04-28) 랜딩 추가 디자인" 항목 + `feedback_plan_verify_before_recommend.md`
+
+### PitchScore Sunset 후속 확인
+- **배경**: `ccfa26c`·`c89bf39`·`3b0445c` 배포 완료. 능력치 레이더 보기만 유지.
+- [ ] `/player/[memberId]` 진입 시 PitchScoreCard 레이더만 보이고 평가 진입·이력 완전 제거 확인
+- [ ] 랜딩에서 PitchScore 언급 완전 제거 확인 (MoreFeatures 한 항목만 잔류 허용)
+- [ ] 가이드(`public/guide.html`)에 평가 섹션 제거 확인
+
+## ~~45차 신규 추가 (2026-05-06) — 경기 후기 자동 복구 검증~~ ✅ 46차 완료
+
+### ~~경기 후기 자동 복구 검증 (HIGH, 다음 세션 1순위)~~ ✅ 완료
+- [x] FCMZ 5/4 경기 일지 탭 자동 생성 확인 — `ai_summary` length 0→130, `ai_summary_generated_at` null→2026-05-06 00:42:42 확인 완료
 
 ### PitchScore cron 발송 대상 확장 정책 (MEDIUM)
 - **배경**: 현재 정기 라운드 알림 cron이 김선휘 1명에게만 발송.
@@ -28,12 +82,8 @@ related: [completed-recent.md, reviews.md]
 - **배경**: `3a86d1e` TOP 3에서 임계 5건 설정. 초기 데이터 적을 때 공란이 많을 수 있음.
 - [ ] 평가 누적 추이 1~2주 모니터링 후 임계 조정 여부 결정 (4건 또는 3건)
 
-### 사용자 직접 진행 5파일 별도 푸시 (HIGH)
-- [ ] `src/app/(app)/members/page.tsx` — enablePitchScore=true Feature Flag 전체 오픈
-- [ ] `src/app/player/[memberId]/page.tsx` — 사용자 직접 수정분
-- [ ] `src/app/(app)/records/RecordsClient.tsx` — MyOverviewCard import 추가
-- [ ] `src/components/pitchAttributes/PitchScoreCard.tsx` — Link, ArrowRight import + 추가 변경
-- [ ] `src/components/pitchAttributes/PitchScoreHistory.tsx` — 부모 fetch + dumb 컴포넌트 분리
+### ~~사용자 직접 진행 5파일 별도 푸시~~ ✅ 완료 (`40ebd71`, 45차 2차)
+- [x] Feature Flag 전체 오픈 + 평가 이력 페이지 + distinct count fix + 권한 강화 일괄 커밋
 
 ### PitchScore Phase 3 — 다수 평가 누적 후 착수 (MEDIUM)
 - [ ] A2A 비교 레이더 (선수 vs 선수) — `/player/[id]` 또는 별도 비교 뷰
@@ -226,11 +276,8 @@ related: [completed-recent.md, reviews.md]
 
 ## 43차 신규 추가 (2026-05-04)
 
-### ai_team_stats_cache 자동 무효화 (MEDIUM)
-- **배경**: 경기 점수·골 기록 변경 시 24h TTL 캐시가 stale 상태로 남아 AI가 과거 점수를 인용. 사용자가 직접 `ai_team_stats_cache` row 삭제해야만 해소 (43차 가상 전적 hallucination 사고 root cause).
-- [ ] `match_goals` INSERT/UPDATE/DELETE 트리거 → 해당 팀 `ai_team_stats_cache` row 삭제
-- [ ] 또는 API `/api/goals/route.ts` mutation 후 cache invalidation 로직 추가
-- [ ] 참고: `feedback_ai_cache_invalidation.md` (43차 신규 memory)
+### ~~ai_team_stats_cache 자동 무효화~~ ✅ 완료 (2649558, 47차)
+- [x] `api/goals/route.ts` + `api/matches/route.ts` mutation 후 캐시 row 삭제 로직 추가 완료
 
 ### AI 풀플랜 받은 경기 — 코칭 카드·배치 표시 이상 재현 (HIGH)
 - **배경**: 사용자 보고 "이미 풀플랜 받은 경기 → 기록이 잘 안 보임". 정확한 재현 시나리오 미확인.
