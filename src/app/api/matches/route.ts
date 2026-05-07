@@ -91,6 +91,27 @@ export async function POST(request: NextRequest) {
     resolvedPlayerCount = team?.default_player_count ?? 11;
   }
 
+  // sport_type 검증 + player_count 일치
+  // EVENT는 sport_type 없음, REGULAR/INTERNAL은 SOCCER 또는 FUTSAL
+  let resolvedSportType: "SOCCER" | "FUTSAL" | null = null;
+  if (body.matchType !== "EVENT") {
+    if (body.sportType && !["SOCCER", "FUTSAL"].includes(body.sportType)) {
+      return apiError("종목은 SOCCER 또는 FUTSAL만 가능합니다");
+    }
+    resolvedSportType = body.sportType ?? null; // null이면 팀 sport_type 따라감
+    if (resolvedSportType) {
+      const validRange =
+        resolvedSportType === "FUTSAL"
+          ? resolvedPlayerCount >= 3 && resolvedPlayerCount <= 6
+          : resolvedPlayerCount >= 8 && resolvedPlayerCount <= 11;
+      if (!validRange) {
+        const range = resolvedSportType === "FUTSAL" ? "3~6" : "8~11";
+        const sportLabel = resolvedSportType === "FUTSAL" ? "풋살" : "축구";
+        return apiError(`${sportLabel} 경기의 참가 인원은 ${range}명만 가능합니다`);
+      }
+    }
+  }
+
   // 날짜·시간 형식 검증
   if (!body.date || !/^\d{4}-\d{2}-\d{2}$/.test(body.date)) {
     return apiError("경기 날짜 형식이 올바르지 않습니다");
@@ -134,6 +155,7 @@ export async function POST(request: NextRequest) {
       player_count: resolvedPlayerCount,
       uniform_type: body.uniformType ?? "HOME",
       match_type: body.matchType ?? "REGULAR",
+      sport_type: resolvedSportType,
       stats_included: body.matchType === "EVENT" ? false : (body.statsIncluded ?? true),
       status: "SCHEDULED",
       vote_deadline: body.voteDeadline ? toKSTTimestamp(body.voteDeadline) : null,
@@ -148,9 +170,13 @@ export async function POST(request: NextRequest) {
   const matchDate = body.date;
   const isEvent = body.matchType === "EVENT";
   const isInternal = body.matchType === "INTERNAL";
-  const pushTitle = isEvent ? "📅 새 팀 일정이 등록되었습니다" : "새 경기 일정이 등록되었습니다";
+  const isFutsalMatch = resolvedSportType === "FUTSAL";
+  const sportLabel = isFutsalMatch ? "풋살 " : "";
+  const pushTitle = isEvent
+    ? "📅 새 팀 일정이 등록되었습니다"
+    : `새 ${sportLabel}경기 일정이 등록되었습니다`;
   const pushBody = isEvent ? `${matchDate} ${body.opponent || "팀 일정"}`
-    : isInternal ? `${matchDate} 자체전`
+    : isInternal ? `${matchDate} ${sportLabel}자체전`
     : `${matchDate} vs ${body.opponent || "상대 미정"}`;
   sendTeamPush(ctx.teamId!, {
     title: pushTitle,
@@ -215,6 +241,12 @@ export async function PUT(request: NextRequest) {
   if (body.uniformType !== undefined) updates.uniform_type = body.uniformType;
   if (body.matchType !== undefined) updates.match_type = body.matchType;
   if (body.statsIncluded !== undefined) updates.stats_included = body.statsIncluded;
+  if (body.sportType !== undefined) {
+    if (body.sportType !== null && !["SOCCER", "FUTSAL"].includes(body.sportType)) {
+      return apiError("종목은 SOCCER 또는 FUTSAL만 가능합니다");
+    }
+    updates.sport_type = body.sportType;
+  }
 
   // 상태 전환 직전 조회 (SCHEDULED → COMPLETED 감지용)
   const prevStatus = body.status !== undefined
@@ -264,5 +296,6 @@ export async function DELETE(request: NextRequest) {
     .eq("team_id", ctx.teamId);
 
   if (error) return apiError(error.message);
+  invalidateTeamStats(ctx.teamId).catch(() => {});
   return apiSuccess({ ok: true });
 }

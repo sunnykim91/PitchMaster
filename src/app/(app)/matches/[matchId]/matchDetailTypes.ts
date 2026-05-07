@@ -20,6 +20,7 @@ export type MatchRow = {
   status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
   uniform_type?: "HOME" | "AWAY";
   match_type?: "REGULAR" | "INTERNAL" | "EVENT";
+  sport_type?: "SOCCER" | "FUTSAL" | null;
   stats_included?: boolean;
   vote_deadline?: string | null;
 };
@@ -126,6 +127,7 @@ export type Match = {
   status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
   uniformType: "HOME" | "AWAY" | "THIRD";
   matchType: MatchType;
+  sportType?: "SOCCER" | "FUTSAL" | null;
   statsIncluded: boolean;
   voteDeadline?: string | null;
 };
@@ -233,6 +235,7 @@ export function mapMatch(row: MatchRow): Match {
     status: row.status,
     uniformType: row.uniform_type ?? "HOME",
     matchType: row.match_type ?? "REGULAR",
+    sportType: row.sport_type ?? null,
     statsIncluded: row.stats_included ?? true,
     voteDeadline: row.vote_deadline ?? null,
   };

@@ -161,7 +161,10 @@ export default function MatchDetailClient({
     { skip: !!initialData?.team?.team?.sport_type },
   );
 
-  const sportType: SportType = teamData.team?.sport_type ?? "SOCCER";
+  // 경기 sport_type 우선 → 팀 sport_type fallback (기존 경기 호환)
+  const matchRow = matchesData.matches.find((m) => m.id === matchId);
+  const matchSportType = (matchRow?.sport_type as SportType | null | undefined) ?? null;
+  const sportType: SportType = matchSportType ?? teamData.team?.sport_type ?? "SOCCER";
   // AI 코치 분석 + AI Full Plan: 축구·풋살 모두 활성 (풋살 포메이션 4종 formations.ts 등록 완료).
   const effectiveEnableAi = enableAi;
   // 경기 후기 자동 생성 — 25차에 LLM 제거되고 템플릿(generateMatchSummaryFromTemplate)으로 전환됨.

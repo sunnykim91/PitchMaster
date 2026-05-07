@@ -45,6 +45,8 @@ type Match = {
   score?: string | null;
   uniformType: "HOME" | "AWAY" | "THIRD";
   matchType: "REGULAR" | "INTERNAL" | "EVENT";
+  sportType?: "SOCCER" | "FUTSAL" | null;
+  playerCount?: number;
   statsIncluded: boolean;
 };
 
@@ -65,6 +67,8 @@ type DbMatch = {
   score?: string | null;
   uniform_type?: string | null;
   match_type?: string | null;
+  sport_type?: string | null;
+  player_count?: number | null;
   stats_included?: boolean | null;
   created_by: string;
   created_at: string;
@@ -98,6 +102,8 @@ function mapDbMatchToMatch(db: DbMatch): Match {
     score: db.score ?? null,
     uniformType: (db.uniform_type === "THIRD" ? "THIRD" : db.uniform_type === "AWAY" ? "AWAY" : "HOME") as "HOME" | "AWAY" | "THIRD",
     matchType: (db.match_type === "INTERNAL" ? "INTERNAL" : db.match_type === "EVENT" ? "EVENT" : "REGULAR") as "REGULAR" | "INTERNAL" | "EVENT",
+    sportType: (db.sport_type === "FUTSAL" ? "FUTSAL" : db.sport_type === "SOCCER" ? "SOCCER" : null) as "SOCCER" | "FUTSAL" | null,
+    playerCount: db.player_count ?? undefined,
     statsIncluded: db.stats_included ?? true,
   };
 }
@@ -125,8 +131,10 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     refetch: refetchAttendance,
   } = useApi<{ attendance: DbAttendance[] }>("/api/attendance", { attendance: [] });
 
-  const defaults = SPORT_DEFAULTS[sportType];
-  const isFutsal = sportType === "FUTSAL";
+  // 경기별 종목 — 팀 sport_type 기본값으로 시작, 폼 안에서 변경 가능
+  const [matchSportType, setMatchSportType] = useState<SportType>(sportType);
+  const defaults = SPORT_DEFAULTS[matchSportType];
+  const isFutsal = matchSportType === "FUTSAL";
 
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [isOpen, setIsOpen] = useState(searchParams.get("create") === "true");
@@ -271,6 +279,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
       playerCount,
       voteDeadline: String(formData.get("voteDeadline") || "") || undefined,
       matchType,
+      sportType: matchType === "EVENT" ? undefined : matchSportType,
       statsIncluded: matchType === "EVENT" ? false : statsIncluded,
       endDate: matchType === "EVENT" ? (String(formData.get("endDate") || "") || undefined) : undefined,
     };
@@ -473,6 +482,37 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 </div>
               </div>
 
+              {/* 종목 선택 — 팀 일정(EVENT) 제외 */}
+              {matchType !== "EVENT" && (
+                <div className="space-y-2">
+                  <Label>종목</Label>
+                  <div className="flex gap-2">
+                    {([
+                      { type: "SOCCER" as const, label: "⚽ 축구", color: "primary" },
+                      { type: "FUTSAL" as const, label: "⚽ 풋살", color: "info" },
+                    ]).map((item) => (
+                      <button
+                        key={item.type}
+                        type="button"
+                        onClick={() => {
+                          setMatchSportType(item.type);
+                          // 종목 변경 시 인원 디폴트 즉시 적용
+                          setPlayerCount(SPORT_DEFAULTS[item.type].playerCount);
+                        }}
+                        className={cn(
+                          "flex-1 min-h-[44px] rounded-xl border-2 px-2 text-sm font-bold transition-all sm:px-3",
+                          matchSportType === item.type
+                            ? `border-[hsl(var(--${item.color}))] bg-[hsl(var(--${item.color}))]/15 text-[hsl(var(--${item.color}))] shadow-sm`
+                            : "border-border bg-secondary/40 text-muted-foreground hover:border-foreground/30"
+                        )}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="date">날짜 <span className="text-destructive">*</span></Label>
@@ -643,7 +683,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
               </button>
               )}
               {showAdvanced && matchType !== "EVENT" && (
-                <div className="grid gap-3 animate-slide-down">
+                <div key={matchSportType} className="grid gap-3 animate-slide-down">
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="space-y-2">
                       <Label htmlFor="quarterCount">쿼터 수</Label>
@@ -799,14 +839,21 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   </div>
                 </div>
 
-                {/* 2줄: 장소 · 상대 | 유니폼 dot (우측) */}
+                {/* 2줄: 장소 · 상대 · 종목 뱃지 | 유니폼 dot (우측) */}
                 <div className="mt-1 flex items-center justify-between gap-2">
-                  <p className="text-sm text-muted-foreground truncate min-w-0">
-                    <span className="mr-1">📍</span>
-                    {match.location}
-                    {match.matchType === "EVENT" ? (match.opponent ? `  ·  ${match.opponent}` : "")
-                      : match.matchType === "INTERNAL" ? "  ·  자체전"
-                      : match.opponent ? `  ·  vs ${match.opponent}` : ""}
+                  <p className="text-sm text-muted-foreground truncate min-w-0 flex items-center gap-1.5">
+                    <span>📍</span>
+                    <span className="truncate">
+                      {match.location}
+                      {match.matchType === "EVENT" ? (match.opponent ? `  ·  ${match.opponent}` : "")
+                        : match.matchType === "INTERNAL" ? "  ·  자체전"
+                        : match.opponent ? `  ·  vs ${match.opponent}` : ""}
+                    </span>
+                    {match.matchType !== "EVENT" && match.sportType === "FUTSAL" && (
+                      <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-tight bg-[hsl(var(--info))]/15 text-[hsl(var(--info))] border border-[hsl(var(--info))]/30">
+                        풋살
+                      </span>
+                    )}
                   </p>
                   {match.matchType !== "EVENT" && (() => {
                     const u = teamUniform?.uniforms;

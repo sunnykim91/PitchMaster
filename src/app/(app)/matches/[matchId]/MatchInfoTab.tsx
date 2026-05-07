@@ -192,6 +192,12 @@ function MatchInfoTabInner({
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // 편집 폼 안 종목 선택 (저장 시 sportType 변경 가능)
+  const [editingSportType, setEditingSportType] = useState<"SOCCER" | "FUTSAL">(
+    (match.sportType as "SOCCER" | "FUTSAL" | null) ?? sportType
+  );
+  const editingIsFutsal = editingSportType === "FUTSAL";
+
   async function handleSaveEdit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaving(true);
@@ -206,6 +212,7 @@ function MatchInfoTabInner({
       opponent: fd.get("opponent"),
       voteDeadline: fd.get("voteDeadline") || null,
       playerCount: playerCountVal ? Number(playerCountVal) : undefined,
+      sportType: match.matchType === "EVENT" ? null : editingSportType,
     });
     setSaving(false);
     if (!error) {
@@ -412,11 +419,37 @@ function MatchInfoTabInner({
                   <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">장소</p>
                   <input name="location" defaultValue={match.location} required className="h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
                 </div>
+                {/* 종목 선택 — 변경 시 인원 옵션 동적 변경 */}
+                {match.matchType !== "EVENT" && (
+                  <div>
+                    <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">종목</p>
+                    <div className="flex gap-2">
+                      {([
+                        { type: "SOCCER" as const, label: "⚽ 축구", color: "primary" },
+                        { type: "FUTSAL" as const, label: "⚽ 풋살", color: "info" },
+                      ]).map((item) => (
+                        <button
+                          key={item.type}
+                          type="button"
+                          onClick={() => setEditingSportType(item.type)}
+                          className={cn(
+                            "flex-1 min-h-[44px] rounded-xl border-2 px-2 text-sm font-bold transition-all",
+                            editingSportType === item.type
+                              ? `border-[hsl(var(--${item.color}))] bg-[hsl(var(--${item.color}))]/15 text-[hsl(var(--${item.color}))] shadow-sm`
+                              : "border-border bg-secondary/40 text-muted-foreground hover:border-foreground/30"
+                          )}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">참가 인원</p>
-                    <select name="playerCount" defaultValue={String(match.playerCount ?? (isFutsal ? 6 : 11))} className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
-                      {(isFutsal ? [3, 4, 5, 6] : [8, 9, 10, 11]).map((n) => (
+                    <select key={editingSportType} name="playerCount" defaultValue={String(match.playerCount ?? (editingIsFutsal ? 6 : 11))} className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+                      {(editingIsFutsal ? [3, 4, 5, 6] : [8, 9, 10, 11]).map((n) => (
                         <option key={n} value={n}>{n}:{n} ({n}명)</option>
                       ))}
                     </select>
@@ -441,6 +474,12 @@ function MatchInfoTabInner({
                   {match.time && <div className="flex items-center gap-2"><span className="w-14 shrink-0 text-muted-foreground">시간</span><span className="font-medium">{formatTime(match.time)}{match.endTime && <span className="text-muted-foreground"> ~ {formatTime(match.endTime)}</span>}</span></div>}
                   {match.location && <div className="flex items-center gap-2"><span className="w-14 shrink-0 text-muted-foreground">장소</span><span className="font-medium">{match.location}</span></div>}
                   {match.opponent && <div className="flex items-center gap-2"><span className="w-14 shrink-0 text-muted-foreground">{match.matchType === "EVENT" ? "제목" : "상대팀"}</span><span className="font-medium">{match.opponent}</span></div>}
+                  {match.matchType !== "EVENT" && match.sportType && (
+                    <div className="flex items-center gap-2">
+                      <span className="w-14 shrink-0 text-muted-foreground">종목</span>
+                      <span className="font-medium">{match.sportType === "FUTSAL" ? "⚽ 풋살" : "⚽ 축구"}{match.playerCount ? <span className="text-muted-foreground"> · {match.playerCount}:{match.playerCount}</span> : null}</span>
+                    </div>
+                  )}
                 </>
               )}
               {match.endDate && <div className="flex items-center gap-2"><span className="w-14 shrink-0 text-muted-foreground">종료일</span><span className="font-medium">{formatDateKo(match.endDate)}</span></div>}
