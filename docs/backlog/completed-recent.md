@@ -1,12 +1,97 @@
 ---
 title: 개선 백로그 — 최근 완료 (16~48차)
-summary: 2026-04-11~05-07 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편, 광고 2 결과 분석 + 33초 본 캠페인 게시, 회비 선납→면제 통합 + PitchScore 카드 접힘 + 39차 백로그 반영, 보안 풀스윕 + RLS initPlan + 선납 매칭 + 풋살 AI + 역할 가이드 통일, GA4 서버사이드 + 유니코드→SVG + PitchScore 종목 분리 + 거짓 박제 사고 4건 + 벨로그 4편 발행 + MVP 정책 변경(5/4 cutoff) + 사고 4건, 풋살 자동편성 외톨이 root cause + vitest 21건 갱신 + AI 풀플랜·코치 분석 풋살 동호회 톤 + 가상 전적 hallucination 차단, PitchScore Phase 2C 동료 평가 + SSR 병렬화 + 진입점 이동 + UI 통일 + favicon.ico + SEO 진단, PitchScore Phase 2C 완료·Feature Flag 전체 오픈 + 경기 후기 silent fail fix + 알림 탭 라우팅 + 평가 이력 페이지 + distinct count fix + cron 비활성화, PitchScore Sunset + 평가 UI 전면 제거 + 조기싸커 경쟁사 분석 + 랜딩 Phase 1 (무료 트러스트 라인 + 가격 비교 행) + 5/4 경기 후기 자동 복구 검증, AI 캐시 자동 무효화 + FCMZ 빌드업 데모 + 가이드 친절 톤 전면 재작성 + 편집기 하드코딩 버그 수정 + 카피 단정 표현 일괄 정리, 휴면팀 회장 카톡 1:1 캠페인 11명 발송 + iOS Capacitor 전략 상담 + 도달 채널 한계 발견
-sections: [48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-05-07 (48차)
+summary: 2026-04-11~05-07 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편, 광고 2 결과 분석 + 33초 본 캠페인 게시, 회비 선납→면제 통합 + PitchScore 카드 접힘 + 39차 백로그 반영, 보안 풀스윕 + RLS initPlan + 선납 매칭 + 풋살 AI + 역할 가이드 통일, GA4 서버사이드 + 유니코드→SVG + PitchScore 종목 분리 + 거짓 박제 사고 4건 + 벨로그 4편 발행 + MVP 정책 변경(5/4 cutoff) + 사고 4건, 풋살 자동편성 외톨이 root cause + vitest 21건 갱신 + AI 풀플랜·코치 분석 풋살 동호회 톤 + 가상 전적 hallucination 차단, PitchScore Phase 2C 동료 평가 + SSR 병렬화 + 진입점 이동 + UI 통일 + favicon.ico + SEO 진단, PitchScore Phase 2C 완료·Feature Flag 전체 오픈 + 경기 후기 silent fail fix + 알림 탭 라우팅 + 평가 이력 페이지 + distinct count fix + cron 비활성화, PitchScore Sunset + 평가 UI 전면 제거 + 조기싸커 경쟁사 분석 + 랜딩 Phase 1 (무료 트러스트 라인 + 가격 비교 행) + 5/4 경기 후기 자동 복구 검증, AI 캐시 자동 무효화 + FCMZ 빌드업 데모 + 가이드 친절 톤 전면 재작성 + 편집기 하드코딩 버그 수정 + 카피 단정 표현 일괄 정리, 랜딩 톤 보강 + AboutSection 신설 + 경기별 종목 분리(Phase 1~4) + AI 캐시 무효화 11곳 완성, 휴면팀 회장 카톡 1:1 캠페인 11명 발송 + iOS Capacitor 전략 상담 + 도달 채널 한계 발견
+sections: [48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-05-07 (49차)
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~48차)
+# 최근 완료 (16~49차)
+
+## 49차 (2026-05-07, KST) — GA4 트래픽 채널 오염 fix (`source` 매개변수 키 충돌)
+
+**커밋 1개** — `src/lib/analytics.ts` 2줄 수정 (loginClick·voteComplete 매개변수 키 변경)
+
+### 배경
+GA4 트래픽 획득 보고서 "세션 소스/매체"에 비정상 source 7개 잡힘:
+- `sticky_mobile / (not set)` 130세션
+- `hero / (not set)` 127세션
+- `match_detail / (not set)` 53세션
+- `match_list / (not set)` 38세션
+- `header / (not set)` 22세션
+- `dashboard / (not set)` 21세션
+- `final_cta / (not set)` (소량)
+
+전체 620 세션 중 약 391세션(63%)이 내부 클릭이 외부 유입처럼 둔갑 → 광고 효과·SEO 효과 측정 완전 불가능 상태.
+
+### 원인
+GA4 이벤트 매개변수 키 `source`가 GA4 예약어와 충돌. 이벤트에 `source`가 들어가면 GA4가 자동으로 트래픽 채널 분류에 사용 (utm_source처럼 취급).
+
+`analytics.ts` 두 함수 영향:
+- `loginClick(source: string)` — `KakaoLoginLink`에서 `header`/`hero`/`final_cta`/`sticky_mobile` 전달
+- `voteComplete(vote, source)` — 투표 완료 시 `dashboard`/`match_list`/`match_detail` 전달
+
+### 조치
+매개변수 키만 변경 (호출 시그니처 그대로):
+- `source` → `cta_source` (loginClick)
+- `source` → `vote_source` (voteComplete)
+
+호출처 7곳(KakaoLoginLink·SiteHeader·HeroSection·login/page.tsx ×2·DashboardClient·MatchesClient·MatchVoteTab)은 무수정. 함수 시그니처 호환.
+
+### 검증
+- `npx tsc --noEmit`: analytics 관련 에러 0건 (기존 main 누적 292건 outdated 테스트 에러는 무관 — 47차 백로그 항목)
+- 클린 빌드(`rm -rf .next && npm run build`): 통과
+
+### 영향
+- ✅ GA4 트래픽 채널 분류 정상화 — 적용 시점 이후 데이터부터 깨끗
+- ✅ 광고/SEO/Organic Social 효과 측정 가능
+- ⚠️ 과거 데이터는 그대로 — 비교 시 cutoff 인지 필요
+
+### 메모
+신규 메모 `feedback_ga4_reserved_param_names.md` 추가 — GA4 이벤트 매개변수에 `source`/`medium`/`campaign`/`term`/`content` 단독 사용 금지 룰.
+
+## 47차-2 (2026-05-07, KST) — 랜딩 톤 보강 + AboutSection 신설 + 경기별 종목 분리 + AI 캐시 무효화 완성
+
+**커밋 4개** (`38ea6d5` · `036c074` · `9a9a048` · `4f160c8`) — origin/main 푸시 완료 (+1,842 / -101 라인, 18 파일 + 신규 2)
+
+### 1. 랜딩 톤 전면 보강 (`036c074`)
+
+- **AboutSection 신설** — BeforeAfterSection 폐기 (CoreFeatures와 정보 중복). 대체 구조: Bento Grid (col-span-8 main pull-quote + col-span-4 stack TIME·PROMISE). 7 사이클 끝에 Apple/Linear Bento + Editorial typography 톤으로 전환해 production-ready 도달
+- KPI: "1시간 20분 → 1분 34초" 가로 비례 시각화 (회색 막대 vs 코랄 점)
+- 카피 정통성 톤: "5년 동안 매주 직접 손으로 하던 모든 운영 노동"
+- **FAQ** 15→19개: 풋살 톤("주로 5·6인제") + 전술 영상·역할 가이드·경기 후기·정통성 항목 신규
+- **Comparison** 서브라인 강화: "다른 앱은 어정쩡 / 우린 조기축구·풋살에만 5년치 페인 갈아넣었습니다"
+- **FinalCta** — `teamCount` props 받아 "이미 N팀이 단톡방 노동에서 해방됐습니다" 사회적 증명
+- **Hero** 트러스트 라인 단축("✓ ₩0 · 광고·결제 없이 시작") + 정통성 라인 1줄
+- **MoreFeatures** PDF→"카드 이미지 공유" / 풋살 톤 완화
+
+### 2. 경기별 종목(축구/풋살) 분리 Phase 1~4 (`38ea6d5`)
+
+- **DB**: `supabase/migrations/00066_match_sport_type.sql` — `matches.sport_type` 컬럼, NULL 허용(팀 fallback), CHECK(SOCCER|FUTSAL)
+- **생성 UI**: 축구=primary(코랄) / 풋살=info(파랑) / 비활성=muted. 종목 변경 시 인원·쿼터 디폴트 즉시 적용. `key={matchSportType}`로 advanced 옵션 동적 갱신
+- **상세 흐름**: 경기 sport_type 우선 → NULL 이면 팀 sport_type fallback. AutoFormation·RoleGuide·TacticsBoard·AICoach 모두 자동 따라감 (`MatchDetailClient.tsx:164`)
+- **수정 폼**: 종목 라디오 + `key={editingSportType}` 인원 select 동적 갱신 + 정보 표시 "⚽ 풋살 · 6:6"
+- **목록 카드**: 풋살 경기에만 info 톤 "풋살" 뱃지 (축구 디폴트 미표시)
+- **푸시 카피**: "새 풋살 경기 일정이 등록되었습니다" / "풋살 자체전" 차별화
+- Phase 5(통계·기록·AI 분리)는 트리거 발생 후 착수
+
+### 3. AI team_stats 캐시 자동 무효화 11곳 완성 (`9a9a048`)
+
+- 47차 초 4곳(`2649558`)에 이어 7곳 추가로 총 11곳 완성
+- matches DELETE / attendance-check POST / mvp POST·DELETE(2) / squads POST / autoCompleteMatches / teams PUT(mvp_vote_staff_only)
+- 모두 fire-and-forget — 응답 latency 영향 0. 43차 가상 전적 hallucination 재발 완전 차단
+
+### 4. 기타 (`4f160c8`)
+
+- temp/ 통째 삭제 (AboutSection·BeforeAfterSection 초안 · preview.html)
+- `docs/blog-post-3-final.md` · `docs/blog-velog-4.md` · `docs/localhost_3000_login(iPhone SE).png` 커밋
+- `.claude/settings.json` 자동 갱신분 커밋
+
+### 삽질 기록 (47차-2)
+
+1. **AboutSection 7 사이클**: v1~v6는 코랄+chip+인용박스 틀 안에서 디테일만 수정 → 진척 없음. v7에서 Bento Grid + Editorial typography로 톤 자체 교체 → 한 번에 해결. 비슷한 결과물 3회 이상 반복 = 베이스 시스템 교체 신호 (`feedback_design_tone_reset.md`)
+2. **종목 라디오 색 동일 사고**: 처음 축구·풋살 둘 다 primary(코랄) → 시각 구분 불가. 기존 matchType 라디오 grep 없이 구현. 수정: 축구=primary / 풋살=info / 비활성=muted (`feedback_radio_color_consistency.md`)
+3. **풋살 🥎 이모지 사고**: 야구공 이모지를 풋살에 사용 → 사용자 지적. 둘 다 ⚽ + 라벨로만 구분으로 수정 (`domain_match_sport_type.md`에 기록)
 
 ## 48차 (2026-05-07, KST) — 휴면팀 회장 카톡 캠페인 + iOS 전략 상담
 

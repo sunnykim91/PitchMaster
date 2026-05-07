@@ -12,8 +12,8 @@ export const GA = {
   landingView: () => trackEvent("landing_view"),
   /** 데모 모드 시작 */
   demoStart: () => trackEvent("demo_start"),
-  /** 카카오 로그인 클릭 */
-  loginClick: (source: string) => trackEvent("login_click", { method: "kakao", source }),
+  /** 카카오 로그인 클릭. cta_source 키 — GA4 예약어 `source` 충돌 회피 (트래픽 채널 오분류 방지). */
+  loginClick: (source: string) => trackEvent("login_click", { method: "kakao", cta_source: source }),
   /** 온보딩 완료 */
   onboardingComplete: () => trackEvent("onboarding_complete"),
   /** 팀 생성 */
@@ -24,8 +24,8 @@ export const GA = {
   // ── 핵심 기능 사용 ──
   /** 경기 생성 */
   matchCreate: (matchType: string) => trackEvent("match_create", { match_type: matchType }),
-  /** 투표 완료 */
-  voteComplete: (vote: string, source: string) => trackEvent("vote_complete", { vote_type: vote, source }),
+  /** 투표 완료. vote_source 키 — GA4 예약어 `source` 충돌 회피 (트래픽 채널 오분류 방지). */
+  voteComplete: (vote: string, source: string) => trackEvent("vote_complete", { vote_type: vote, vote_source: source }),
   /** 팀원 초대 */
   inviteSent: (method: string) => trackEvent("invite_sent", { method }),
   /** 회원 사전등록 */
