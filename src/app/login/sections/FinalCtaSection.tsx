@@ -18,6 +18,7 @@ import { Link2 } from "lucide-react";
 export type FinalCtaSectionProps = {
   kakaoButton: ReactNode;
   demoButton: ReactNode;
+  teamCount?: number;
 };
 
 const TEAM_WORDMARKS = [
@@ -29,6 +30,7 @@ const TEAM_WORDMARKS = [
 export default function FinalCtaSection({
   kakaoButton,
   demoButton,
+  teamCount,
 }: FinalCtaSectionProps) {
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: "-10% 0px" });
@@ -148,12 +150,25 @@ export default function FinalCtaSection({
           <span className="opacity-70">조기축구 5년차 회장이 직접 만들어 쓰는 앱 · 현재 무료</span>
         </p>
 
+        {/* 사회적 증명 — 이미 N팀이 단톡방 노동에서 해방됐습니다 */}
+        {teamCount != null && teamCount > 0 && (
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={reduced ? { duration: 0 } : { duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-7 text-[14px] lg:text-[15px]"
+            style={{ color: "hsl(var(--muted-foreground))" }}
+          >
+            이미 <b className="text-foreground font-bold">{teamCount}팀</b>이 단톡방 노동에서 해방됐습니다.
+          </motion.p>
+        )}
+
         {/* CTAs */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={reduced ? { duration: 0 } : { duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-9 flex flex-wrap items-center justify-center gap-3"
+          className="mt-7 flex flex-wrap items-center justify-center gap-3"
         >
           <CtaShell primary>{kakaoButton}</CtaShell>
           <CtaShell>{demoButton}</CtaShell>

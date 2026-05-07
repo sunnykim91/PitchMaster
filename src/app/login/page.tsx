@@ -15,7 +15,7 @@ import { KakaoLoginLink } from "@/components/KakaoLoginLink";
 import DemoButton from "./DemoButton";
 import HeroSection from "./sections/HeroSection";
 import SiteHeader from "./sections/SiteHeader";
-import BeforeAfterSection from "./sections/BeforeAfterSection";
+import AboutSection from "./sections/AboutSection";
 import FeaturesSection from "./sections/FeaturesSection";
 import MoreFeaturesSection from "./sections/MoreFeaturesSection";
 import ComparisonSection from "./sections/ComparisonSection";
@@ -88,7 +88,7 @@ export default async function LoginPage({
         kakaoEnabled={kakaoEnabled}
         kakaoHref={kakaoHref}
       />
-      <BeforeAfterSection />
+      <AboutSection />
       <HowItWorksSection />
       <FeaturesSection />
       <MoreFeaturesSection />
@@ -98,6 +98,7 @@ export default async function LoginPage({
       <FinalCtaSection
         kakaoButton={kakaoButtonFinal}
         demoButton={<Suspense fallback={<div className="h-10" />}><DemoButton /></Suspense>}
+        teamCount={teamCount}
       />
       <FooterSection />
 

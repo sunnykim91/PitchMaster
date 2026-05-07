@@ -396,7 +396,7 @@ export default function HeroSection({
               custom={0.78}
               initial="hidden"
               animate="show"
-              className="inline-flex items-center gap-2 mb-[22px] px-3 py-1.5 rounded-full text-[12.5px] font-semibold"
+              className="inline-flex items-center gap-2 mb-[10px] px-3 py-1.5 rounded-full text-[12.5px] font-semibold"
               style={{
                 background: "hsl(var(--success) / 0.10)",
                 border: "1px solid hsl(var(--success) / 0.32)",
@@ -408,6 +408,20 @@ export default function HeroSection({
                 <b className="font-extrabold">₩0</b> · 광고·결제 없이 시작 — 먼저 함께한 팀 보호 약속
               </span>
             </motion.div>
+
+            {/* 정통성 라인 — 5년 회장 직접 운영 강조 */}
+            <motion.p
+              variants={fadeUp}
+              custom={0.82}
+              initial="hidden"
+              animate="show"
+              className="mb-[22px] text-[13px] lg:text-[13.5px] leading-[1.5]"
+              style={{ color: "hsl(var(--muted-foreground))" }}
+            >
+              <span aria-hidden className="mr-1.5">🏟️</span>
+              <b className="text-foreground font-semibold">조기축구 5년차 회장</b>이 직접 운영하다 만든,{" "}
+              <b className="text-foreground font-semibold">불필요한 기능 하나 없는</b> 진짜 운영 도구
+            </motion.p>
 
             {/* CTAs */}
             <motion.div

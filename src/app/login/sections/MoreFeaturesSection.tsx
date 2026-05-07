@@ -40,8 +40,8 @@ const FEATURES: Array<{
   { Icon: Eye,          label: "데모 체험",            desc: "가입 없이 30초 만에 둘러보기",                  tone: "accent" },
   { Icon: Activity,     label: "출석 히트맵",          desc: "선수별 출석 패턴 한눈에",                       tone: "warning" },
   { Icon: Swords,       label: "상대팀 전적 카드",     desc: "맞대결 이력·최근 5경기 자동 표시",              tone: "primary" },
-  { Icon: PieChart,     label: "월별 결산 리포트",     desc: "회비 수입·지출 자동 집계, PDF 내보내기",        tone: "info" },
-  { Icon: Goal,         label: "풋살 3~8인제",          desc: "포지션·전술판 별도 지원",                       tone: "accent" },
+  { Icon: PieChart,     label: "월별 결산 리포트",     desc: "회비 수입·지출 자동 집계, 카드 이미지 공유",     tone: "info" },
+  { Icon: Goal,         label: "풋살 지원",            desc: "주로 5·6인제 — 포지션·전술판·역할 가이드 별도",  tone: "accent" },
 ];
 
 const TONE_FG: Record<Tone, string> = {
@@ -106,7 +106,7 @@ export default function MoreFeaturesSection() {
           className="text-[15.5px] lg:text-[17px] leading-[1.55] max-w-[680px]"
           style={{ color: "hsl(var(--muted-foreground))", textWrap: "pretty" }}
         >
-          운영하다 부딪히는 작은 일들도 알아서 처리됩니다.
+          이게 다 같은 앱 안에 있습니다 — <b className="text-foreground font-semibold">회장 5년 운영하며 "이거 있었으면" 했던 것 전부.</b>
         </p>
 
         <div className="mt-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">

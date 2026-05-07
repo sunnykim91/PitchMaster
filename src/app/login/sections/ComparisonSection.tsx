@@ -115,7 +115,9 @@ export default function ComparisonSection() {
           className="text-[15.5px] lg:text-[17px] leading-[1.55] max-w-[680px]"
           style={{ color: "hsl(var(--muted-foreground))", textWrap: "pretty" }}
         >
-          조기축구 5년차 회장이 직접 만든, 운영에 진짜 필요한 기능들.
+          다른 앱은 다양한 스포츠 다 노리느라 어정쩡합니다.
+          <br className="hidden sm:block" />
+          우린 <b className="text-foreground font-semibold">조기축구·풋살에만 5년치 페인을 다 갈아넣었습니다.</b>
         </p>
 
         {/* Header row (desktop only) */}
