@@ -12,6 +12,55 @@ related: [completed-recent.md, reviews.md]
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
 
+## 50차 신규 추가 (2026-05-08)
+
+### xlsx → exceljs 마이그레이션 재시도 (MEDIUM, 별도 세션)
+- **배경**: `4b01d8c` 시도 → 라이브 500. `a265cf5`로 revert. 빌드·vitest 통과해도 Vercel lambda에서 실패.
+- [ ] Vercel Function Log에서 실제 에러 stack trace 확인 (배포 후 /api/dues/export 호출)
+- [ ] exceljs Buffer.from() / stream 패턴 변경 후 재시도
+- [ ] .xls 레거시 포맷 지원 필요 여부 확인 (exceljs는 .xlsx만 지원)
+- [ ] 또는 xlsx@0.19.x CVE 패치 버전 존재 여부 확인 후 마이너 업그레이드
+- 참고: `feedback_backend_migration_runtime_diff.md`
+
+### TypeScript 292건 에러 누적 정리 (MEDIUM, 별도 세션 — 47차 이월)
+- **배경**: `npx tsc --noEmit` 292건 에러 main에 잔존. 50차 이후도 해소 미완. outdated 테스트 모킹 타입 오류 다수.
+- [ ] `npx tsc --noEmit` 실행 후 에러 목록 분류 (실제 타입 버그 vs outdated 모킹)
+- [ ] outdated 테스트 일괄 갱신 (43차 21건 전례 참고)
+- [ ] 정리 후 vitest run + clean build 통과 확인
+- 참고: `feedback_outdated_tests_accumulate.md`
+
+### PitchScore Sunset 후속 — 가이드·랜딩 잔류 언급 제거 (MEDIUM)
+- **배경**: 50차에 코드 전면 제거 완료. 하지만 외부 노출 문서에 PitchScore 언급 잔류 가능성.
+- [ ] `public/guide.html` 내 평가/능력치 섹션 제거 확인
+- [ ] 랜딩 MoreFeatures 섹션 PitchScore 항목 제거 (사용자 수정 중)
+- 참고: `project_pitchscore_phase3_status.md`
+
+### 거대 파일 분리 (LOW, 코드 품질)
+- **배경**: 50차 병렬 에이전트 점검에서 발견. K 묶음 미착수.
+- 대상 (900줄+): `TacticsBoard.tsx`, `AutoFormationBuilder.tsx`, `DuesBulkTab.tsx` + 6개
+- [ ] 각 파일 분리 계획 수립 후 사용자 승인 → 파일당 별도 커밋
+- 참고: 협업 규칙 "600줄 넘으면 분리 신호"
+
+### 카드 5종 → Card variant 통합 (LOW, 코드 품질)
+- **배경**: 50차 점검 L 묶음 미착수.
+- `card-featured`·`card-stat`·`card-list-item`·`<Card>`·`<div className="rounded-xl...">` 5종 혼재
+- [ ] 통합 방안 설계 (variant prop vs CSS utility 유지) + 사용자 승인 후 진행
+
+### text-white/black 라이트모드 격리 (LOW, 코드 품질)
+- **배경**: 50차 점검 M 묶음 미착수. 236건 grep으로 확인.
+- [ ] `text-white`→`text-foreground` / `text-black`→`text-foreground` 일괄 점검
+- [ ] 라이트 모드에서 실제 깨지는 곳만 우선 수정
+
+### eslint-disable set-state-in-effect 근본 리팩토링 (LOW, 코드 품질)
+- **배경**: 50차 점검 N 묶음 미착수. 11곳 확인.
+- [ ] 각 케이스 분류 (실제 useEffect 의존성 버그 vs 의도된 패턴)
+- [ ] 근본 리팩토링 가능한 곳부터 처리
+- 참고: `feedback_eslint_disable_minimization.md`
+
+### aiTeamStats.test.ts SQL mock 패턴 (LOW)
+- **배경**: 50차 점검 E 묶음 미착수. SQL mock 패턴 복잡도로 유보.
+- [ ] Supabase 쿼리 체이닝 mock 패턴 설계 후 단위 테스트 추가
+
 ## 47차 후반 신규 추가 (2026-05-07)
 
 ### 광고 D 소재 영상 BGM + 인스타 4차 게시 (HIGH, 사용자 직접 진행)
@@ -126,12 +175,8 @@ related: [completed-recent.md, reviews.md]
 
 ## 47차 신규 추가 (2026-05-06)
 
-### vitest / TypeScript 에러 누적 정리 (MEDIUM, 별도 세션)
-- **배경**: `npx tsc --noEmit` 292건 에러가 이번 세션 전부터 main 에 존재. teams.test.ts·api-helpers.test.ts 류 모킹 타입 오류 다수. 도메인 변경(풋살 활성화·STAFF 권한·MVP 흐름)마다 테스트 갱신 지연으로 누적.
-- [ ] `npx tsc --noEmit` 실행 후 에러 목록 분류 (실제 타입 버그 vs outdated 모킹)
-- [ ] outdated 테스트 일괄 갱신 (43차 21건 전례 참고)
-- [ ] 정리 후 `npx vitest run` + clean build 통과 확인
-- 참고: `feedback_outdated_tests_accumulate.md`
+### ~~vitest / TypeScript 에러 누적 정리~~ → 50차 신규 항목으로 이월
+- 50차에서도 292건 잔존 확인. 상단 "50차 신규 추가" 섹션 "TypeScript 292건 에러 누적 정리" 참조.
 
 ### `.claude/settings.json` 권한 캐시 누적 정리 (LOW)
 - **배경**: 38라인 자동 누적. 커밋에는 제외 중.

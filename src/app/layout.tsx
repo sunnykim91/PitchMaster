@@ -23,7 +23,7 @@ const bebasNeue = Bebas_Neue({
 
 export const metadata: Metadata = {
   title: "PitchMaster — 조기축구 · 풋살 팀 관리 플랫폼",
-  description: "실시간 참석투표, AI 라인업, 통장 캡쳐 회비 자동정리, 기록 분석, 카카오톡 공유까지. 조기축구 · 풋살 팀 운영을 한 곳에서.",
+  description: "실시간 참석투표, AI 라인업 자동 배치, 전술판·전술 영상 편집, 통장 캡쳐 회비 자동정리, 기록 분석, 카카오톡 공유까지. 조기축구·풋살 팀 운영을 한 곳에서.",
   manifest: "/manifest.json",
   metadataBase: new URL("https://pitch-master.app"),
   verification: {
@@ -42,7 +42,10 @@ export const metadata: Metadata = {
     "축구팀 관리", "축구팀 매니저", "축구 회비",
     "풋살 팀관리", "풋살 매니저", "풋살 회비",
     "참석 투표", "회비 관리", "회비 OCR", "통장 캡처",
-    "전술판", "AI 라인업", "AI 전술", "축구 기록", "MVP 투표",
+    "전술판", "전술 보드", "전술판 앱", "풋살 전술판", "풋살 전술판앱", "축구 전술판",
+    "전술 영상", "전술 애니메이션", "축구 전술 영상", "풋살 전술 영상", "전술 영상 편집",
+    "AI 라인업", "AI 전술", "AI 코치", "AI 자동 편성",
+    "축구 기록", "MVP 투표",
     "조기축구회 운영", "팀관리 웹앱", "무료 팀 관리",
   ],
   appleWebApp: {
@@ -52,7 +55,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "PitchMaster — 조기축구 · 풋살 팀 관리 플랫폼",
-    description: "실시간 참석투표, AI 라인업, 통장 캡쳐 회비 자동정리, 기록 분석까지. 조기축구 팀 운영을 한 곳에서.",
+    description: "실시간 참석투표, AI 라인업 자동 배치, 전술판·전술 영상 편집, 회비 자동정리, 기록 분석까지. 조기축구·풋살 팀 운영을 한 곳에서.",
     url: "https://pitch-master.app",
     siteName: "PitchMaster",
     locale: "ko_KR",
@@ -61,7 +64,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "PitchMaster — 조기축구 · 풋살 팀 관리 플랫폼",
-    description: "실시간 참석투표, AI 라인업, 회비 자동정리, 기록 분석까지.",
+    description: "AI 라인업, 전술판·전술 영상, 회비 자동정리, 기록 분석까지.",
   },
   robots: {
     index: true,

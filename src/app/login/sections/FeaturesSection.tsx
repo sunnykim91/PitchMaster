@@ -643,7 +643,7 @@ function CoreFeatures() {
         className="font-extrabold leading-[1.12] tracking-[-0.03em] text-balance mt-[18px] mb-3.5"
         style={{ fontSize: "clamp(30px, 5.4vw, 52px)" }}
       >
-        총무가 매주 하는 일,{" "}
+        운영진이 매주 하는 일,{" "}
         <span
           className="bg-clip-text text-transparent"
           style={{ backgroundImage: "linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)))" }}
@@ -722,7 +722,7 @@ function SmartLineup() {
                     "linear-gradient(90deg, hsl(var(--accent)), hsl(var(--warning)))",
                 }}
               >
-                전술 보드
+                전술 보드 + 전술 영상
               </span>
             </motion.h2>
             <motion.p
@@ -732,11 +732,13 @@ function SmartLineup() {
               custom={2}
               className="text-muted-foreground text-[15px] lg:text-[16.5px] leading-[1.6] text-pretty m-0 mb-6"
             >
-              AI가 우리 팀 기록·상대팀 이력·참석자를 분석해 포메이션 추천 + 11명 자동 배치.
-              드래그로 재조정도 한 번이면 충분.
+              AI가 우리 팀 기록·상대팀 이력·참석자를 분석해 포메이션 추천 + 자동 배치.
+              드래그로 재조정도 한 번이면 충분. 운영진은 <b className="font-semibold text-foreground">전술 영상(전술 애니메이션)</b>으로
+              빌드업·수비 흐름까지 직접 그려 회원에게 공유할 수 있어요.
+              <span className="sr-only"> 축구 전술판, 풋살 전술판, 전술판 앱, 전술 보드 앱, 풋살 전술 영상, 축구 전술 영상.</span>
             </motion.p>
 
-            {/* 핵심 포인트 3가지 */}
+            {/* 핵심 포인트 4가지 */}
             <motion.ul
               initial="hidden"
               animate={inView ? "show" : "hidden"}
@@ -747,6 +749,7 @@ function SmartLineup() {
                 { fg: "hsl(var(--success))", text: "🟢 표시 = 선호 포지션 자동 매칭" },
                 { fg: "hsl(var(--accent))", text: "공정 쿼터 로테이션 (벤치 편중 X)" },
                 { fg: "hsl(var(--info))", text: "상대팀 맞대결 이력 반영" },
+                { fg: "hsl(var(--warning))", text: "🎬 전술 영상으로 빌드업·수비 흐름 시각화" },
               ].map((it) => (
                 <motion.li
                   key={it.text}
@@ -1141,47 +1144,37 @@ function FCMZBuildupDemo({ inView }: { inView: boolean }) {
         border: "1px solid hsl(var(--primary) / 0.30)",
       }}
     >
-      {/* 헤더 — 라이브 뱃지 + 타이틀 */}
-      <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <span
-            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-[0.18em] uppercase mb-2"
-            style={{
-              background: "hsl(var(--primary) / 0.15)",
-              border: "1px solid hsl(var(--primary) / 0.35)",
-              color: "hsl(var(--primary))",
-            }}
-          >
-            <motion.span
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ background: "hsl(var(--primary))" }}
-              animate={reduced ? undefined : { opacity: [1, 0.3, 1] }}
-              transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-            />
-            실제 영상 미리보기
-          </span>
-          <h4 className="text-[16px] lg:text-[17px] font-bold leading-tight m-0">
-            🎬 FCMZ 4-2-3-1 좌측 빌드업
-          </h4>
-          <p className="text-[12.5px] text-muted-foreground mt-1 mb-0">
-            감독이 직접 그린 7컷 시퀀스 — 실제 우리 팀이 쓰고 있는 영상
-          </p>
-        </div>
+      {/* 통합 grid — PC: 헤더+박스(좌) / SVG(우, row span 2) / 모바일: stack */}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] lg:grid-cols-[1fr_360px] md:items-start md:gap-x-7 md:gap-y-4 md:px-7 md:pt-6 md:pb-3">
+      {/* 헤더 — PC: row1 col1 / 모바일: 첫 row */}
+      <div className="px-5 pt-5 md:p-0 md:row-start-1 md:col-start-1">
         <span
-          className="text-[10px] tabular-nums font-bold px-2 py-1 rounded-md shrink-0"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-bold tracking-[0.18em] uppercase mb-2.5"
           style={{
-            background: "hsl(var(--primary) / 0.13)",
+            background: "hsl(var(--primary) / 0.15)",
+            border: "1px solid hsl(var(--primary) / 0.35)",
             color: "hsl(var(--primary))",
-            border: "1px solid hsl(var(--primary) / 0.30)",
           }}
         >
-          {stepIdx + 1} / {BUILDUP_STEPS.length}
+          <motion.span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ background: "hsl(var(--primary))" }}
+            animate={reduced ? undefined : { opacity: [1, 0.3, 1] }}
+            transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+          />
+          실제 영상 미리보기
         </span>
+        <h4 className="text-[18px] lg:text-[22px] font-bold leading-[1.25] tracking-[-0.01em] m-0">
+          🎬 FCMZ 4-2-3-1 좌측 빌드업
+        </h4>
+        <p className="text-[13.5px] lg:text-[15px] text-muted-foreground mt-1.5 mb-0 leading-[1.5]">
+          감독이 직접 그린 7컷 시퀀스 — 실제 우리 팀이 쓰고 있는 영상
+        </p>
       </div>
 
-      {/* 피치 SVG */}
-      <div className="px-5">
-        <div className="relative w-full max-w-[420px] mx-auto rounded-lg overflow-hidden" style={{ aspectRatio: "1 / 1" }}>
+      {/* 피치 SVG + STEP 인디케이터 — PC: row1~2 col2 / 모바일: 헤더 다음 row */}
+      <div className="px-5 mt-3 md:mt-0 md:px-0 md:row-start-1 md:row-span-2 md:col-start-2 flex flex-col gap-3">
+        <div className="relative w-full max-w-[420px] md:max-w-[320px] lg:max-w-[360px] mx-auto rounded-lg overflow-hidden" style={{ aspectRatio: "1 / 1" }}>
           <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" className="absolute inset-0 w-full h-full">
             {/* 피치 배경 */}
             <rect x="0" y="0" width="100" height="100" fill="hsl(140 25% 18%)" />
@@ -1256,14 +1249,91 @@ function FCMZBuildupDemo({ inView }: { inView: boolean }) {
             )}
           </svg>
         </div>
+
+        {/* STEP 진행 인디케이터 — 전술판 바로 아래 */}
+        <div className="flex items-center justify-center gap-2.5 max-w-[420px] md:max-w-[320px] lg:max-w-[360px] mx-auto w-full">
+          <span
+            className="text-[11px] font-bold tracking-[0.18em] uppercase tabular-nums"
+            style={{ color: "hsl(var(--primary))" }}
+          >
+            STEP {stepIdx + 1} / {BUILDUP_STEPS.length}
+          </span>
+          <div className="flex items-center gap-1.5">
+            {BUILDUP_STEPS.map((_, i) => (
+              <span
+                key={i}
+                className="h-1.5 rounded-full transition-all duration-300"
+                style={{
+                  width: i === stepIdx ? "22px" : "8px",
+                  background: i === stepIdx ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.25)",
+                }}
+              />
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* 캡션 */}
-      <div
-        className="mx-5 mt-3 mb-5 rounded-md px-3 py-2.5 text-[12.5px] leading-[1.5]"
-        style={{ background: "hsl(var(--background) / 0.6)", border: "1px solid hsl(var(--border))" }}
-      >
-        <span className="text-muted-foreground">{step.caption}</span>
+      {/* 좌측 박스들 — PC: row2 col1 / 모바일: SVG 다음 row */}
+      <div className="mx-5 md:mx-0 mt-3 md:mt-0 mb-5 md:mb-0 md:row-start-2 md:col-start-1 flex flex-col gap-3 md:gap-3.5">
+        {/* 캡션 박스 — 글씨 키움 */}
+        <div
+          className="rounded-lg px-4 py-3.5 text-[14.5px] lg:text-[16px] leading-[1.55]"
+          style={{
+            background: "hsl(var(--background) / 0.7)",
+            border: "1px solid hsl(var(--border))",
+          }}
+        >
+          <span className="text-foreground font-medium">{step.caption}</span>
+        </div>
+
+        {/* 인사이트 박스 — 왜 영상이 필요한가 */}
+        <div
+          className="rounded-lg px-4 py-3 text-[12.5px] lg:text-[14px] leading-[1.55] flex items-start gap-2.5"
+          style={{
+            background: "hsl(var(--accent) / 0.06)",
+            border: "1px solid hsl(var(--accent) / 0.20)",
+          }}
+        >
+          <span className="text-[15px] shrink-0 leading-none mt-0.5">💡</span>
+          <span className="text-muted-foreground">
+            정지된 그림이 아니라 <b className="text-foreground font-semibold">시퀀스로 흐름</b>이 보여서 회원이 한 번만 봐도 본인 동선을 이해해요.
+          </span>
+        </div>
+
+        {/* 사용 흐름 3단계 */}
+        <div className="mt-1 md:mt-2">
+          <span
+            className="block text-[10.5px] font-bold tracking-[0.20em] uppercase mb-2.5"
+            style={{ color: "hsl(var(--muted-foreground))" }}
+          >
+            How it works
+          </span>
+          <ul className="flex flex-col gap-2.5 list-none p-0 m-0">
+            {[
+              { num: "1", text: "포메이션 선택 (4-3-3 · 4-2-3-1 · 풋살 1-2-1 등)" },
+              { num: "2", text: "선수 점·공 드래그로 시퀀스 만들기" },
+              { num: "3", text: "카카오톡으로 공유 → 회원이 미리 학습" },
+            ].map((it) => (
+              <li
+                key={it.num}
+                className="flex items-start gap-2.5 text-[13px] lg:text-[14.5px] leading-[1.5]"
+              >
+                <span
+                  className="w-5 h-5 shrink-0 rounded-full flex items-center justify-center text-[11px] font-bold tabular-nums mt-[1px]"
+                  style={{
+                    background: "hsl(var(--primary) / 0.15)",
+                    color: "hsl(var(--primary))",
+                    border: "1px solid hsl(var(--primary) / 0.30)",
+                  }}
+                >
+                  {it.num}
+                </span>
+                <span className="text-foreground/85">{it.text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
       </div>
 
       {/* 풋노트 */}

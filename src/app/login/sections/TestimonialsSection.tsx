@@ -27,32 +27,47 @@ const T: Testimonial[] = [
     gradient: "linear-gradient(135deg, hsl(var(--primary)), hsl(16 70% 44%))",
   },
   {
-    quote: "회비 정리하느라 매주 1시간 쓰던 게 통장 캡처 한 장으로 끝남",
+    quote: "회비 정리하느라 매주 1시간씩 쓰던 게 통장 캡처 한 장으로 끝나요",
     initials: "FK", name: "F.K.R 총무", age: 42, years: 7,
     gradient: "linear-gradient(135deg, hsl(var(--info)), hsl(220 70% 40%))",
   },
   {
-    quote: "AI가 전술 짜준 거 보고 진짜 놀랐음. 우리 기록까지 다 보더라",
-    initials: "CS", name: "F.C.S 운영진", age: 38, years: 3,
+    quote: "AI가 짜주는게 얼마나 맞겠어 했는데, 포지션 설정한거랑 잘 맞고 무엇보다 공정하게 잘짜주는게 너무 좋아서 회원들이 불만이 줄었어요",
+    initials: "KR", name: "F.K.R 회장", age: 39, years: 5,
     gradient: "linear-gradient(135deg, hsl(var(--accent)), hsl(280 60% 40%))",
   },
   {
-    quote: "팀원이 30명인데 다 모이는 일정 잡기가 처음으로 됐다",
+    quote: "경기기록이라던가 회비라던가 하나의 앱에서 편하게 관리되고 한눈에 볼 수 있어서 너무 좋은것같아요!!",
     initials: "SF", name: "S.F.C 회장", age: 40, years: 4,
     gradient: "linear-gradient(135deg, hsl(var(--success)), hsl(160 60% 30%))",
   },
   {
-    quote: "데모로 미리 보고 결정. 가입 없이 다 보여줘서 안심됐음",
+    quote: "움직임을 항상 말로만 설명할려니까 답답했는데, 포지션별로 역할 가이드도 나오고, 영상까지 만들어서 팀원들에게 공유할 수 있는점이 진짜 좋은 것 같습니다 ㅎㅎㅎ",
+    initials: "TF", name: "T.F.C 운영진", age: 36, years: 4,
+    gradient: "linear-gradient(135deg, hsl(var(--accent)), hsl(20 85% 50%))",
+  },
+  {
+    quote: "데모로 미리 보고 결정했어요. 가입 없이 다 보여줘서 안심됐어요",
     initials: "MZ", name: "F.M.Z 풋살 회장", age: 33, years: 2,
     gradient: "linear-gradient(135deg, hsl(40 95% 60%), hsl(20 85% 50%))",
   },
   {
-    quote: "휴면·부상 회원 면제 자동 처리, 이게 진짜 끝판왕",
+    quote: "축구만 되는줄 알았는데, 풋살도 되더라구요. 사실 축구팀이나 풋살팀이나 인원만 다른건데 풋살팀도 거의 완벽하게 지원해주셔가지고 잘쓰고있습니다~^^",
+    initials: "PF", name: "P.F.C 풋살 회장", age: 34, years: 3,
+    gradient: "linear-gradient(135deg, hsl(40 95% 60%), hsl(140 70% 40%))",
+  },
+  {
+    quote: "풋살에서도 항상 보면 전술이 있는데 영상을 만들어서 팀원들에게 공유하다보니 팀원들도 영상을 잘 이해하고 따라오다보니 경기에서 그런장면 나올때마다 재밌는것 같습니다 ㅎㅎ",
+    initials: "JF", name: "J.F.C 풋살 운영진", age: 38, years: 5,
+    gradient: "linear-gradient(135deg, hsl(var(--success)), hsl(var(--accent)))",
+  },
+  {
+    quote: "휴면·부상 회원 면제 자동 처리, 이게 진짜 끝판왕이에요",
     initials: "ST", name: "F.S.T 총무", age: 45, years: 8,
     gradient: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)))",
   },
   {
-    quote: "아침에 PC로 라인업 짜고 폰으로 공유, 흐름이 자연스러움",
+    quote: "아침에 PC로 라인업 짜고 폰으로 공유, 흐름이 자연스러워요",
     initials: "NF", name: "N.F.C 회장", age: 37, years: 6,
     gradient: "linear-gradient(135deg, hsl(var(--info)), hsl(var(--success)))",
   },
@@ -109,7 +124,7 @@ export default function TestimonialsSection({
             textWrap: "balance",
           }}
         >
-          직접 써본 <span style={{ color: "hsl(var(--success))" }}>총무들</span>의 이야기
+          직접 써본 <span style={{ color: "hsl(var(--success))" }}>운영진</span>분들의 이야기
         </motion.h2>
         <p
           className="text-[15.5px] lg:text-[17px] leading-[1.55] max-w-[680px]"

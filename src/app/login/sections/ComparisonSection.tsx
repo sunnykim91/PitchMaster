@@ -117,7 +117,7 @@ export default function ComparisonSection() {
         >
           다른 앱은 다양한 스포츠 다 노리느라 어정쩡합니다.
           <br className="hidden sm:block" />
-          우린 <b className="text-foreground font-semibold">조기축구·풋살에만 5년치 페인을 다 갈아넣었습니다.</b>
+          우린 <b className="text-foreground font-semibold">조기축구·풋살 한 곳만 보고, 회장이 매주 직접 쓰면서 다듬었습니다.</b>
         </p>
 
         {/* Header row (desktop only) */}
