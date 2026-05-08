@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { isValidUuid } from "@/lib/validators/uuid";
 import {
   classifyPosition,
   getRarity,
@@ -105,6 +106,8 @@ export async function GET(request: NextRequest) {
 
   const memberId = request.nextUrl.searchParams.get("memberId");
   if (!memberId) return apiError("memberId required");
+  // .or() 보간 방어
+  if (!isValidUuid(memberId)) return apiError("invalid memberId");
   const seasonId = request.nextUrl.searchParams.get("seasonId");
   const format = request.nextUrl.searchParams.get("format"); // "json" | null
   const isJson = format === "json";

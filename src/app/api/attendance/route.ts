@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { isValidUuid } from "@/lib/validators/uuid";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -44,6 +45,14 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const { matchId, vote, targetUserId, memberId } = body;
   if (!matchId || !vote) return apiError("matchId and vote required");
+  // .or() 절에 보간되는 ID는 UUID 형식 검증 필수 — PostgREST or-clause 인젝션 방어
+  if (!isValidUuid(matchId)) return apiError("invalid matchId");
+  if (memberId !== undefined && memberId !== null && !isValidUuid(memberId)) {
+    return apiError("invalid memberId");
+  }
+  if (targetUserId !== undefined && targetUserId !== null && !isValidUuid(targetUserId)) {
+    return apiError("invalid targetUserId");
+  }
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { isValidUuid } from "@/lib/validators/uuid";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -13,6 +14,8 @@ export async function GET(request: NextRequest) {
   const endDate = request.nextUrl.searchParams.get("endDate");
 
   if (!memberId || !type) return apiError("memberId and type required");
+  // .or() 보간 방어
+  if (!isValidUuid(memberId)) return apiError("invalid memberId");
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);

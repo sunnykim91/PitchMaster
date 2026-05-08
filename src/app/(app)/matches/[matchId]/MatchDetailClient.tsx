@@ -571,7 +571,7 @@ export default function MatchDetailClient({
             >
               {tab.label}
               {activeTab === tab.key && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-1 rounded-full" style={{ backgroundColor: "hsl(16, 85%, 58%)" }} />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-1 rounded-full" style={{ backgroundColor: "hsl(var(--primary))" }} />
               )}
             </button>
           ))}

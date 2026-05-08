@@ -58,31 +58,36 @@ export async function POST(
   const sb = getSupabaseAdmin();
   if (!sb) return apiError("DB unavailable", 503);
 
-  // 권한 (45차 후속 "감독 노트" 정책): 운영진(STAFF+) 만 평가 가능.
-  // 일반회원의 자가 평가도 비활성 — PitchScore 는 운영진 전용 도구.
-  const isStaffEvaluator = ctx.teamRole === "PRESIDENT" || ctx.teamRole === "STAFF";
-  if (!isStaffEvaluator) {
-    return apiError("능력치 평가는 운영진만 가능합니다", 403);
-  }
-
-  // 평가 컨텍스트 팀 결정 — 클라이언트가 team_id 명시했으면 그 팀 (단 evaluator 가입 검증),
-  // 없으면 ctx.teamId 폴백. 위변조 방지: evaluator가 그 팀에 ACTIVE 멤버여야 함.
+  // 평가 컨텍스트 팀 결정 — 클라이언트가 team_id 명시했으면 그 팀, 없으면 ctx.teamId 폴백.
   const requestedTeamId = team_id ?? ctx.teamId;
   if (!requestedTeamId) return apiError("팀 정보가 없습니다", 400);
 
-  if (team_id && team_id !== ctx.teamId) {
-    // 다른 팀 컨텍스트 요청 시 evaluator 가입 검증
+  // 권한 검증 (45차 후속 "감독 노트" 정책): 평가 컨텍스트 팀에서 STAFF+ 여야 평가 가능.
+  // ctx.teamRole 은 사용자의 active team role 이라 다른 팀 평가 시 신뢰 금지 → 그 팀의 role 직접 조회.
+  // (이전 코드는 ctx.teamRole 만 검증해서 A팀 회장이 B팀 멤버로 가입했을 때 STAFF source 로 평가 INSERT 가능했음.)
+  let evaluatorRoleInContext: string | null;
+  if (requestedTeamId === ctx.teamId) {
+    evaluatorRoleInContext = ctx.teamRole;
+  } else {
     const { data: evaluatorMembership, error: membershipErr } = await sb
       .from("team_members")
-      .select("id")
+      .select("role")
       .eq("user_id", ctx.userId)
-      .eq("team_id", team_id)
+      .eq("team_id", requestedTeamId)
       .in("status", ["ACTIVE", "DORMANT"])
-      .limit(1);
+      .limit(1)
+      .maybeSingle();
     if (membershipErr) return apiError(membershipErr.message, 500);
-    if (!evaluatorMembership || evaluatorMembership.length === 0) {
+    if (!evaluatorMembership) {
       return apiError("해당 팀의 멤버가 아닙니다", 403);
     }
+    evaluatorRoleInContext = (evaluatorMembership.role as string | null) ?? null;
+  }
+
+  const isStaffEvaluator =
+    evaluatorRoleInContext === "PRESIDENT" || evaluatorRoleInContext === "STAFF";
+  if (!isStaffEvaluator) {
+    return apiError("능력치 평가는 운영진만 가능합니다", 403);
   }
 
   // 평가 컨텍스트 팀의 sport_type 조회
@@ -139,14 +144,8 @@ export async function POST(
     }
   }
 
-  // source 자동 결정 — 같은 팀 검증 후라 ctx.teamRole 신뢰 가능
-  const isStaffOrPresident =
-    ctx.teamRole === "PRESIDENT" || ctx.teamRole === "STAFF";
-  const source: EvaluationSource = isSelf
-    ? "SELF"
-    : isStaffOrPresident
-      ? "STAFF"
-      : "PEER";
+  // source 자동 결정 — 평가 컨텍스트 팀 role 기반 (위 권한 검증 통과 시 사실상 STAFF/PRESIDENT 확정)
+  const source: EvaluationSource = isSelf ? "SELF" : "STAFF";
 
   const now = new Date().toISOString();
 

@@ -15,8 +15,8 @@ describe("GET /api/attendance", () => {
   beforeEach(() => vi.clearAllMocks());
 
   const attendanceData = [
-    { match_id: "m1", user_id: "u1", vote: "ATTEND" },
-    { match_id: "m1", user_id: "u2", vote: "ABSENT" },
+    { match_id: "11111111-1111-4111-8111-111111111111", user_id: "u1", vote: "ATTEND" },
+    { match_id: "11111111-1111-4111-8111-111111111111", user_id: "u2", vote: "ABSENT" },
   ];
 
   function makeRequest(params?: Record<string, string>) {
@@ -41,10 +41,10 @@ describe("GET /api/attendance", () => {
 
   it("200: matchId로 특정 경기 출석 조회", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["matches", { id: "m1" }], ["match_attendance", attendanceData]);
+    const db = createMockDb(["matches", { id: "11111111-1111-4111-8111-111111111111" }], ["match_attendance", attendanceData]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
-    const res = await GET(makeRequest({ matchId: "m1" }));
+    const res = await GET(makeRequest({ matchId: "11111111-1111-4111-8111-111111111111" }));
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.attendance).toEqual(attendanceData);
@@ -53,7 +53,7 @@ describe("GET /api/attendance", () => {
   it("200: matchId 없으면 팀 전체 경기 출석 조회", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(
-      ["matches", [{ id: "m1" }, { id: "m2" }]],
+      ["matches", [{ id: "11111111-1111-4111-8111-111111111111" }, { id: "22222222-2222-4222-8222-222222222222" }]],
       ["match_attendance", attendanceData]
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
@@ -90,7 +90,7 @@ describe("POST /api/attendance", () => {
 
   it("401: 비로그인", async () => {
     vi.mocked(auth).mockResolvedValue(null);
-    const res = await POST(makeRequest({ matchId: "m1", vote: "ATTEND" }));
+    const res = await POST(makeRequest({ matchId: "11111111-1111-4111-8111-111111111111", vote: "ATTEND" }));
     expect(res.status).toBe(401);
   });
 
@@ -110,7 +110,7 @@ describe("POST /api/attendance", () => {
     const db = createMockDb();
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
-    const res = await POST(makeRequest({ matchId: "m1" }));
+    const res = await POST(makeRequest({ matchId: "11111111-1111-4111-8111-111111111111" }));
     expect(res.status).toBe(400);
   });
 
@@ -127,7 +127,7 @@ describe("POST /api/attendance", () => {
     // 최종 insert 결과
     const insertedAttendance = {
       id: "att-001",
-      match_id: "m1",
+      match_id: "11111111-1111-4111-8111-111111111111",
       user_id: "user-member-001",
       vote: "ATTEND",
     };
@@ -140,7 +140,7 @@ describe("POST /api/attendance", () => {
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
-    const res = await POST(makeRequest({ matchId: "m1", vote: "ATTEND" }));
+    const res = await POST(makeRequest({ matchId: "11111111-1111-4111-8111-111111111111", vote: "ATTEND" }));
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.vote).toBe("ATTEND");
@@ -159,7 +159,7 @@ describe("POST /api/attendance", () => {
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
-    const res = await POST(makeRequest({ matchId: "m1", vote: "ATTEND" }));
+    const res = await POST(makeRequest({ matchId: "11111111-1111-4111-8111-111111111111", vote: "ATTEND" }));
     expect(res.status).toBe(400);
     const json = await res.json();
     expect(json.error).toContain("마감");
@@ -174,7 +174,7 @@ describe("POST /api/attendance", () => {
     const existingAttendance = { id: "att-existing" };
     const updatedAttendance = {
       id: "att-existing",
-      match_id: "m1",
+      match_id: "11111111-1111-4111-8111-111111111111",
       user_id: "user-member-001",
       vote: "ABSENT",
     };
@@ -187,7 +187,7 @@ describe("POST /api/attendance", () => {
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
-    const res = await POST(makeRequest({ matchId: "m1", vote: "ABSENT" }));
+    const res = await POST(makeRequest({ matchId: "11111111-1111-4111-8111-111111111111", vote: "ABSENT" }));
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.vote).toBe("ABSENT");
@@ -208,7 +208,7 @@ describe("POST /api/attendance", () => {
 
     // targetUserId가 자신과 다름 → 대리 투표
     const res = await POST(
-      makeRequest({ matchId: "m1", vote: "ATTEND", targetUserId: "other-user-id" })
+      makeRequest({ matchId: "11111111-1111-4111-8111-111111111111", vote: "ATTEND", targetUserId: "44444444-4444-4444-8444-444444444444" })
     );
     expect(res.status).toBe(403);
     const json = await res.json();
@@ -225,8 +225,8 @@ describe("POST /api/attendance", () => {
     const existingRecord = null;
     const insertResult = {
       id: "att-proxy",
-      match_id: "m1",
-      user_id: "target-user",
+      match_id: "11111111-1111-4111-8111-111111111111",
+      user_id: "55555555-5555-4555-8555-555555555555",
       vote: "ATTEND",
     };
 
@@ -240,7 +240,7 @@ describe("POST /api/attendance", () => {
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(
-      makeRequest({ matchId: "m1", vote: "ATTEND", targetUserId: "target-user" })
+      makeRequest({ matchId: "11111111-1111-4111-8111-111111111111", vote: "ATTEND", targetUserId: "55555555-5555-4555-8555-555555555555" })
     );
     expect(res.status).toBe(200);
   });

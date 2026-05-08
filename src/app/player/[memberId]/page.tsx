@@ -20,6 +20,7 @@ import type { PlayerProfile, PlayerStats } from "@/components/pitchmaster/Player
 import type { PlayerCardProps, StatWithContext } from "@/components/pitchmaster/PlayerCard";
 import { firstOf, type JoinedRow } from "@/lib/supabaseJoins";
 import { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
+import { isValidUuid } from "@/lib/validators/uuid";
 
 type Props = {
   params: Promise<{ memberId: string }>;
@@ -42,6 +43,9 @@ type MemberRow = {
 async function getPlayerData(memberId: string, teamId?: string, enableAi: boolean = false, callerUserId: string | null = null, callerTeamId: string | null = null): Promise<PlayerProfile | null> {
   const db = getSupabaseAdmin();
   if (!db) return null;
+  // .or() 보간 가드 — URL 파라미터 직접 들어오는 자리. 비-UUID면 즉시 not-found.
+  if (!isValidUuid(memberId)) return null;
+  if (teamId !== undefined && !isValidUuid(teamId)) return null;
 
   // 여러 팀 소속일 때 team 쿼리로 지정 가능. 없으면 첫 번째 팀 fallback.
   // ACTIVE + DORMANT 모두 허용 (휴면 회원도 프로필 열람 가능, BANNED만 제외)
