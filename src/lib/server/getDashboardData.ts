@@ -94,13 +94,10 @@ type ActiveMemberRow = {
  * Stage 3: completedMatches → allGoals (완료된 경기 수만큼)
  *
  * 이전 직렬 8단 await → 3단으로 축소. 대시보드 SSR 평균 ~400ms 절감.
- *
- * @param enablePitchScore Phase 2C 동료 평가 task 노출 여부 (현재 김선휘만)
  */
 export async function getDashboardData(
   teamId: string,
   userId: string,
-  enablePitchScore: boolean = false,
 ): Promise<DashboardData> {
   const db = getSupabaseAdmin();
   if (!db) return {
@@ -131,7 +128,6 @@ export async function getDashboardData(
     totalMatchesRes,
     profileRes,
     duesSettingsRes,
-    peerEvalCountRes,
   ] = await Promise.all([
     autoCompleteTeamMatches(db, teamId),
     db.from("matches")
@@ -188,17 +184,6 @@ export async function getDashboardData(
       .select("id", { count: "exact", head: true })
       .eq("team_id", teamId)
       .neq("member_type", "__PERIOD__"),
-    // PitchScore 동료 평가 누적 — 본인이 evaluator 로 한 평가 (자기평가 SELF 제외).
-    // 한 사람 평가 시 22개 능력치 row 가 INSERT 되므로 row count 가 아닌
-    // distinct target_user_id 로 "평가한 사람 수" 를 계산해야 함.
-    // Feature Flag 일 때만 fetch. 3명 미만이면 dashboard task 노출.
-    enablePitchScore
-      ? db.from("player_evaluations")
-          .select("target_user_id")
-          .eq("evaluator_user_id", userId)
-          .eq("team_id", teamId)
-          .neq("source", "SELF")
-      : Promise.resolve({ data: [] as Array<{ target_user_id: string }> }),
   ]);
 
   const upcomingRaw = upcomingRes.data ?? null;
@@ -428,9 +413,6 @@ export async function getDashboardData(
 
   // tasks 조립
   const tasks: DashboardTask[] = [];
-
-  // (45차 후속) PitchScore 동료평가 task 제거 — 운영진은 회원 메뉴에서 직접 평가
-  // peerEvalCountRes 도 미사용이지만 Promise.all 인덱스 깨지지 않게 fetch 자체는 유지
 
   if (upcomingMatch && !myUpcomingVoteRes.data) {
     tasks.push({ label: "다음 경기 참석 투표 완료하기", href: `/matches/${upcomingMatch.id}?tab=vote` });

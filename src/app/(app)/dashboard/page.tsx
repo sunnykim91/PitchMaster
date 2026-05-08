@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import DashboardClient from "@/app/(app)/dashboard/DashboardClient";
 import { getDashboardData } from "@/lib/server/getDashboardData";
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import type { SportType } from "@/lib/playerAttributes/types";
 
 export const metadata: Metadata = {
   title: "대시보드 — PitchMaster",
@@ -14,24 +12,7 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session) return null;
 
-  // PitchScore Phase 2C 동료 평가 — 44차 검증 후 전체 오픈 (45차, 2026-05-06).
-  const enablePitchScore = true;
-
-  let sportType: SportType | null = null;
-  if (enablePitchScore && session.user.teamId) {
-    const sb = getSupabaseAdmin();
-    if (sb) {
-      const { data } = await sb
-        .from("teams")
-        .select("sport_type")
-        .eq("id", session.user.teamId)
-        .maybeSingle();
-      const raw = data?.sport_type;
-      if (raw === "SOCCER" || raw === "FUTSAL") sportType = raw;
-    }
-  }
-
-  const initialData = await getDashboardData(session.user.teamId!, session.user.id, enablePitchScore);
+  const initialData = await getDashboardData(session.user.teamId!, session.user.id);
 
   return (
     <DashboardClient
@@ -41,7 +22,6 @@ export default async function DashboardPage() {
       teamName={session.user.teamName ?? ""}
       teamId={session.user.teamId ?? ""}
       initialData={initialData}
-      sportType={sportType}
     />
   );
 }

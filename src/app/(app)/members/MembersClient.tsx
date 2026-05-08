@@ -22,7 +22,6 @@ import { Search } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { Users, ChevronDown } from "lucide-react";
 import { useConfirm } from "@/lib/ConfirmContext";
-import type { SportType } from "@/lib/playerAttributes/types";
 
 type Member = {
   id: string;
@@ -85,22 +84,17 @@ export default function MembersClient({
   userId,
   initialData,
   teamId,
-  enablePitchScore = false,
 }: {
   userRole?: Role;
   userId: string;
   initialData?: MembersInitialData;
   teamId: string;
-  enablePitchScore?: boolean;
 }) {
   const { data: membersData, loading, error, refetch } = useApi<MembersInitialData>(
     "/api/members",
     initialData ?? { members: [], isStaff: false, sportType: null },
     { skip: !!initialData },
   );
-  // sportType: page → initialData 로 SSR 주입. /api/members 가 sport_type 안 채우면 SSR 값 fallback.
-  const sportType: SportType | null = membersData.sportType ?? initialData?.sportType ?? null;
-  const canEvaluate = enablePitchScore && isStaffOrAbove(userRole) && Boolean(sportType);
   const members = useMemo(() => mapApiMembers(membersData.members), [membersData.members]);
   const confirm = useConfirm();
   const { effectiveRole } = useViewAsRole();
@@ -868,19 +862,6 @@ export default function MembersClient({
                     {/* 관리 버튼들 */}
                     {(isStaffOrAbove(role) || canChangeRole || member.userIdRaw === userId) && (
                       <div className="flex flex-wrap gap-2 pt-1">
-                        {/* 평가/이력 UI 제거 (45차 후속). 능력치 보기는 그대로 유지 — 누적된 데이터 조회용. */}
-                        {canEvaluate && member.userIdRaw && (
-                          <Button
-                            asChild
-                            size="sm"
-                            variant="outline"
-                            className="h-8 text-xs"
-                          >
-                            <Link href={`/player/${member.userIdRaw}`}>
-                              능력치 보기
-                            </Link>
-                          </Button>
-                        )}
                         {(isStaffOrAbove(role) || member.userIdRaw === userId) && editingJerseyId !== member.id && (
                           <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setEditingJerseyId(member.id); setTempJersey(member.jerseyNumber !== null ? String(member.jerseyNumber) : ""); }}>
                             등번호

@@ -1,7 +1,7 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=89팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-05-07 (48차)
+last_updated: 2026-05-07 (47차-2)
 related: [completed-recent.md, reviews.md]
 ---
 
@@ -11,6 +11,90 @@ related: [completed-recent.md, reviews.md]
 - **HIGH**: 현재 89팀+ 운영에 직접 영향
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
+
+## 47차 후반 신규 추가 (2026-05-07)
+
+### 광고 D 소재 영상 BGM + 인스타 4차 게시 (HIGH, 사용자 직접 진행)
+- **배경**: 22.5s 9컷 영상 OBS 녹화 완료. BGM 추가 + 편집 후 게시 예정.
+- [ ] BGM 선택: Suno AI 또는 YouTube Audio Library (라이선스 확인)
+- [ ] CapCut으로 카운트다운 3초 잘라내기 + BGM 합치기
+- [ ] 인스타 4차 광고 게시 (메타 광고 관리자, 22.5s 영상)
+- [ ] 광고 효율 측정: 3초 재생률, 신규 팀 수 (1차 ₩1,517 / 3차 ₩3,290 대비)
+- 참고: `reference_ad_video_session_2026_05_07.md`
+
+### Play Console 프로덕션 검토 결과 대기 (HIGH, 2~7일)
+- **배경**: 47차 후반에 프로덕션 액세스 신청서 4섹션 정성 작성 후 제출.
+- [ ] 검토 통과 시: v1.0.4 AAB 빌드 + 프로덕션 트랙 승격
+- [ ] 검토 반려 시: 사유 확인 후 보완 (테스터 수·기간·피드백 근거 추가)
+- [ ] 검토 완료 후 `project_play_console_v1_0_1.md` 갱신
+- 참고: `project_play_console_v1_0_1.md`
+
+### 15초 컷다운 광고 영상 제작 (MEDIUM, 효율 확인 후)
+- **배경**: 현재 22.5s 버전 완성. 인스타 피드 권장 15s 버전 별도 필요.
+- [ ] app.jsx Timeline 재배분: 22.5s → 15s (Cut 우선순위 재정렬)
+- [ ] 15초 특성상 페인 2컷 + 솔루션 3컷 + CTA 2컷 구조 검토
+- 트리거: 4차 광고 효율 수치 확인 후 결정
+
+## 49차 신규 추가 (2026-05-07)
+
+### 운영 비용 정리 문서 작성 — 1차 완료, 월별 갱신 (LOW)
+- **1차 작성 완료** (2026-05-08, 49차): `docs/cost-actual-spend.md` — 4/1~5/6 카드 명세 기반 카테고리별 누적 정리
+- **확인된 누적 (~5/6)**: 운영비 ₩244,042 (Vercel ₩166k + Play Console ₩38k + 메타 광고 ₩20k + AI API ₩18k) + Claude Max 본업공용 ₩396,753 = 총 ₩640,795
+- **월별 갱신 예정**:
+  - [ ] 5월 메타 광고 3차·4차 청구 도착 후 추가
+  - [ ] 5월 Anthropic API 청구 추가
+  - [ ] 5월 말 Claude 구독 일반 Max 5x 환원 확인
+  - [ ] 매월 카드 명세 도착 시 누적 합 갱신
+- 참고: `docs/cost-actual-spend.md`, 메모리 `reference_infra.md` (5/8 정정 완료)
+
+### GA4 트래픽 채널 fix 효과 검증 (1~2일 후, HIGH)
+- **배경**: `0f2b820` — analytics.ts `source` → `cta_source`/`vote_source` 변경 배포 완료.
+- [ ] 1~2일 후 GA4 트래픽 획득 보고서 "세션 소스/매체" 확인
+  - `sticky_mobile`, `hero`, `match_detail` 등 7개 비정상 source 사라졌는지 확인
+  - Unassigned 비율 63% → 정상 수준으로 감소했는지 확인
+- [ ] 정상화 확인 후 reference_ga4_app_router.md 갱신
+
+### D3 광고 영상 — 클로드 디자인 결과물 검토 (MEDIUM)
+- **배경**: 49차에 1080×1920 자동재생 React 프롬프트 작성 완료. 클로드 디자인에서 결과물 수령 대기.
+- [ ] 클로드 디자인 결과물 수령 후 9컷/15초 흐름 검토
+- [ ] OBS/QuickTime으로 화면 녹화 후 영상 완성
+
+## 47차-2 신규 추가 (2026-05-07)
+
+### 라이브 동작 검증 — 경기별 종목 분리 (HIGH, 다음 세션 1순위)
+- **배경**: `38ea6d5` 배포 완료. 실제 풋살 경기 등록·수정·상세 흐름 검증 필요.
+- [ ] 풋살 경기 등록 → 자동편성 풋살 모드 정상 진입 확인
+- [ ] 풋살 경기 등록 → 역할 가이드 풋살 포지션 노출 확인
+- [ ] 풋살 경기 등록 → 푸시 알림 카피 "새 풋살 경기 일정" 확인
+- [ ] 기존 경기(sport_type NULL) → 팀 sport_type fallback 정상 동작 확인
+- [ ] 목록 카드 — 풋살 경기에만 info 뱃지 노출, 축구 경기는 미표시 확인
+- 참고: `domain_match_sport_type.md`
+
+### v1.0.4 AAB 빌드 + Play Console 5/8 재신청 (HIGH, D-1 이하)
+- **배경**: 5/8 재신청 목표. 47차-2 세션 완료 시점 D-1 이하.
+- [ ] `C:\dev\pitchmaster-twa` 에서 versionCode=8, versionName=1.0.4 AAB 빌드
+- [ ] Android 적응형 아이콘 #0a0c10 갱신 포함
+- [ ] Play Console 프로덕션 재신청 (증빙: 테스터 수·버전 이력·피드백 정성 작성)
+- 참고: `reference_twa_build_env.md`, `project_play_console_v1_0_1.md`
+
+### AboutSection 라이브 시각 검증 (MEDIUM)
+- [ ] 모바일 기준 Bento Grid 레이아웃 정상 렌더 확인
+- [ ] KPI 가로 비례 막대 비율 ("1시간 20분 vs 1분 34초") 시각적으로 올바른지 확인
+- [ ] FinalCta teamCount 실수치 동적 반영 확인
+
+### 랜딩 Phase 2 후속 (MEDIUM, Claude Design 사용량 초기화 후)
+- **배경**: About(v7 완성)·FAQ(19개)·Comparison·FinalCta 보강 완료. Phase 2는 HeroSection·ComparisonSection 비주얼 강화.
+- [ ] HeroSection 비주얼 강화 (Claude Design 결과물 수령 후)
+- [ ] TestimonialsSection — 실 사용자 후기 이니셜 처리 명시
+- [ ] guide.html에 축구·풋살 동시 운영 안내 추가
+
+### 경기 목록 종목별 필터 (LOW, 트리거 발생 후)
+- 풋살 경기가 충분히 쌓인 후 탭 또는 드롭다운 필터 추가
+
+### Phase 5 — 통계·AI 분리 종목별 (LOW, 트리거 발생 후)
+- 경기 기록·통계 페이지 종목별 필터·분리 집계
+- AI 팀 스탯 종목별 분리
+- 트리거: 다수 팀이 실제로 축구·풋살 혼용 운영 시작 후
 
 ## 48차 신규 추가 (2026-05-07)
 
@@ -55,17 +139,20 @@ related: [completed-recent.md, reviews.md]
 
 ## 46차 신규 추가 (2026-05-06)
 
-### 랜딩 Phase 2 — Claude Design 추가 섹션 (HIGH, 사용 한도 초기화 후)
-- **배경**: Phase 1(`15a18f7`) 완료. Phase 2는 Claude Design 결과물 수령 후 착수.
-- [ ] HeroSection 비주얼 강화 (Claude Design 결과물)
-- [ ] ComparisonSection 비주얼 강화 (Claude Design 결과물)
-- [ ] 미확인 항목 사전 grep 후 진행 — BeforeAfterSection·FinalCtaSection 이미 존재 여부 확인
-- 참고: pending.md "33차 신규 추가 (2026-04-28) 랜딩 추가 디자인" 항목 + `feedback_plan_verify_before_recommend.md`
+### 랜딩 Phase 2 — 비주얼 강화 (MEDIUM, Claude Design 사용량 초기화 후)
+- **배경**: Phase 1 완료 + 47차-2에서 About 신설·FAQ 확장·Hero·Comparison·FinalCta 텍스트 보강 완료. Phase 2는 비주얼 강화만 남음.
+- [x] AboutSection 신설 (47차-2 `036c074`)
+- [x] FAQ 확장 15→19개 (47차-2)
+- [x] Hero·Comparison·FinalCta 톤 보강 (47차-2)
+- [x] BeforeAfterSection → 폐기 (CoreFeatures 중복, 47차-2)
+- [ ] HeroSection 비주얼 강화 (Claude Design 결과물 수령 후)
+- [ ] TestimonialsSection — 실 사용자 후기 이니셜 처리 명시
+- 참고: `feedback_plan_verify_before_recommend.md`
 
-### PitchScore Sunset 후속 확인
-- **배경**: `ccfa26c`·`c89bf39`·`3b0445c` 배포 완료. 능력치 레이더 보기만 유지.
-- [ ] `/player/[memberId]` 진입 시 PitchScoreCard 레이더만 보이고 평가 진입·이력 완전 제거 확인
-- [ ] 랜딩에서 PitchScore 언급 완전 제거 확인 (MoreFeatures 한 항목만 잔류 허용)
+### ~~PitchScore Sunset 후속 확인~~ ✅ 50차에서 전면 제거 완료
+- [x] 50차에 능력치 보기까지 전면 제거 (컴포넌트 9 + lib 5 + API 6 + cron 1 + page 1 일괄 삭제)
+- [x] `/records` `/player/[memberId]` `/members` 모두 PitchScore UI 0
+- [ ] 랜딩에서 PitchScore 언급 완전 제거 확인 (MoreFeatures 한 항목만 잔류 — 사용자가 수정 중)
 - [ ] 가이드(`public/guide.html`)에 평가 섹션 제거 확인
 
 ## ~~45차 신규 추가 (2026-05-06) — 경기 후기 자동 복구 검증~~ ✅ 46차 완료
@@ -73,28 +160,10 @@ related: [completed-recent.md, reviews.md]
 ### ~~경기 후기 자동 복구 검증 (HIGH, 다음 세션 1순위)~~ ✅ 완료
 - [x] FCMZ 5/4 경기 일지 탭 자동 생성 확인 — `ai_summary` length 0→130, `ai_summary_generated_at` null→2026-05-06 00:42:42 확인 완료
 
-### PitchScore cron 발송 대상 확장 정책 (MEDIUM)
-- **배경**: 현재 정기 라운드 알림 cron이 김선휘 1명에게만 발송.
-- [ ] Feature Flag 전체 오픈 + 데이터 누적 추이 확인 후 전체 발송 정책 결정
-- [ ] cron 발송 대상 조건: `enablePitchScore=true` 팀의 모든 활성 회원
-
-### 포지션 TOP 임계값 5건 조정 결정 (MEDIUM)
-- **배경**: `3a86d1e` TOP 3에서 임계 5건 설정. 초기 데이터 적을 때 공란이 많을 수 있음.
-- [ ] 평가 누적 추이 1~2주 모니터링 후 임계 조정 여부 결정 (4건 또는 3건)
-
-### ~~사용자 직접 진행 5파일 별도 푸시~~ ✅ 완료 (`40ebd71`, 45차 2차)
-- [x] Feature Flag 전체 오픈 + 평가 이력 페이지 + distinct count fix + 권한 강화 일괄 커밋
-
-### PitchScore Phase 3 — 다수 평가 누적 후 착수 (MEDIUM)
-- [ ] A2A 비교 레이더 (선수 vs 선수) — `/player/[id]` 또는 별도 비교 뷰
-- [ ] 마케팅용 "내 PitchScore 공유" 카드 — 레이더 스크린샷 + 슬로건
-- [ ] 운영 모니터링 dashboard — 운영진이 전체 평가 활동 보는 뷰 (Phase 4 후보)
-- 트리거: 전체 팀에서 평가 누적 데이터 유의미한 분포 형성 후 착수
-
-### 경기 후 평가 알림 트리거 (MEDIUM, 보류)
-- **배경**: 45차에는 월 1회 정기 알림만 구현. 경기 직후 알림은 보류.
-- [ ] match status=COMPLETED 전환 시 해당 경기 참석자에게 동료 평가 알림 발송
-- [ ] 트리거: 정기 알림 반응률 확인 후 결정
+### ~~PitchScore cron 발송 대상 / 임계값 / Phase 3 / 경기 후 알림~~ ❌ 50차 전면 제거로 폐기
+- 능력치 보기 자체를 50차에 전면 제거. 관련 후속 작업 모두 무의미.
+- DB 테이블(`player_evaluations` 등)은 유지하지만 코드 참조 0.
+- 향후 부활 시 git history 복원으로 가능 (50차 sunset 이전).
 
 ## ~~🔴 HIGH — 38차 (2026-05-02) 입력 검증 사고 후속 (보안 강화)~~ ✅ 41차에서 대부분 완료
 
@@ -140,12 +209,14 @@ related: [completed-recent.md, reviews.md]
 
 ## HIGH — 33차 신규 추가 (2026-04-28) — 랜딩 추가 디자인
 
-### Claude Design 추가 섹션 적용 (사용자가 한도 초기화 후 받아올 예정)
+### Claude Design 추가 섹션 적용
 
-- [ ] **BeforeAfterSection** — Claude Design 결과물 수령 후 적용 (프롬프트 이미 제공, 차별점 강조 포함)
-- [ ] **FinalCtaSection** — Claude Design 결과물 수령 후 적용
-- [ ] **FaqSection** — 비주얼 업그레이드 (현재 텍스트 기반, 클로드 디자인 레이아웃으로 교체)
-- [ ] **ComparisonSection** — 비주얼 강화
+- [x] **BeforeAfterSection** → 폐기 (47차-2 결정: CoreFeatures와 중복. AboutSection으로 대체)
+- [x] **AboutSection 신설** (47차-2 `036c074` — Bento Grid + Editorial typography)
+- [x] **FinalCtaSection** 텍스트 보강 — teamCount 사회적 증명 (47차-2)
+- [x] **FaqSection** 15→19개 확장 (47차-2)
+- [x] **ComparisonSection** 서브라인 강화 (47차-2)
+- [ ] **FaqSection** 비주얼 업그레이드 (텍스트 완료, 레이아웃 강화 후속)
 - [ ] **TestimonialsSection** — 실 사용자 후기로 교체 포함
 - [ ] **MoreFeaturesSection** — 추가 기능 섹션 신설
 - [ ] **FooterSection** — 리뉴얼
@@ -181,11 +252,8 @@ related: [completed-recent.md, reviews.md]
 - [ ] Supabase 5/1~5/4 신규 팀 직접 조회 (핵심 지표)
 - [ ] 결과별 다음 액션: 팀 5개 이상 → ₩30,000 스케일업 / 0~2개 → 버전 D 소재 제작
 
-### v1.0.4 빌드 + Play Console 재신청
-- [ ] 5/6~7 v1.0.4 안정화 빌드 (회비 모달 닫기 픽스 `DuesStatusTab.tsx`·`PrepaymentRegisterModal.tsx` 포함)
-- [ ] TWA AAB 빌드 (versionCode=8, versionName=1.0.4)
-- [ ] Android 적응형 아이콘 #0a0c10 갱신 포함
-- [ ] 5/8 Play Console 프로덕션 재신청 (증빙: 테스터 수·버전 이력·피드백 정성 작성)
+### ~~v1.0.4 빌드 + Play Console 재신청~~ → 47차-2 신규 추가로 이동
+- 상세: pending.md "47차-2 신규 추가" 섹션 참고
 
 ### Vercel "DNS Change Recommended" 해소 (급하지 않음)
 - [ ] Manual setup 권장값 확인 (apex 레코드 타입 점검)
@@ -195,7 +263,6 @@ related: [completed-recent.md, reviews.md]
 ### 미커밋 변경 이월 — v1.0.4 후보
 - [ ] `src/app/(app)/dues/DuesStatusTab.tsx` — 선납 등록 후 모달 닫기 타이밍 픽스
 - [ ] `src/app/(app)/dues/PrepaymentRegisterModal.tsx` — 동일 후속 보강
-- [ ] `src/components/pitchAttributes/PitchScoreCard.tsx` — 접힘/펼침 + 강점 칩 표시 리팩토링 (Phase 2B 후속)
 - [ ] `src/app/(app)/ClientLayout.tsx` — 14줄 변경 (내용 재확인 후 커밋)
 
 ### Vercel Sitemap canonical 정상화 후속 모니터링
@@ -203,20 +270,9 @@ related: [completed-recent.md, reviews.md]
 - [ ] 구글 Search Console — 색인 생성 요청 4개 처리 결과 확인
 - [ ] www 도메인 정적 자산 15개 "크롤링됨·색인 안 됨" 자연 해소 여부 확인 (무시해도 무방)
 
-## 45차 신규 추가 (2026-05-06) — PitchScore 전체 오픈 후속
+## ~~45차 신규 추가 (2026-05-06) — PitchScore 전체 오픈 후속~~ ❌ 50차 전면 제거로 폐기
 
-### peer-eval-monthly cron 재활성화 (정책 결정 후)
-- **배경**: 45차 PitchScore Feature Flag 전체 오픈 시점에 cron 일단 비활성화 (vercel.json 항목 제거). 코드는 `src/app/api/cron/peer-eval-monthly/route.ts` 에 유지. 700+ 명 일괄 알림 폭격 위험 회피.
-- [ ] 알림 대상 정책 확정 (옵션):
-  - F2-a: 활성 사용자 중 distinct evaluator 평가 < 3명만
-  - F2-b: 일반은 < 3명 / 운영진은 항시 (대시보드 task 와 일치)
-- [ ] cron route.ts 의 `.eq("name", "김선휘")` 게이트 제거 + 정책 적용
-- [ ] vercel.json 에 cron 항목 재추가: `{ path: "/api/cron/peer-eval-monthly", schedule: "0 1 1 * *" }`
-- 트리거: PitchScore 사용 활성화 추적 후 평가 누적 분포 확인 → 폭격 위험 vs 활성화 효과 trade-off 판단
-
-### Phase 2C 잔여 후속
-- [ ] 정기 라운드 / 경기 후 알림 트리거 (위 cron 재활성화 + match-completed-push 와 통합)
-- [ ] Phase 3 — A2A 비교 레이더, 팀 포지션별 TOP 리스트, 마케팅 공유 카드
+PitchScore 기능 자체를 50차에 전면 제거. cron·Phase 2C·Phase 3 모두 무의미. 부활 시 git history 복원.
 
 ## ~~44차 신규 추가 (2026-05-05) — PitchScore Phase 2C 라이브 검증~~ ✅ 45차에서 완료
 
@@ -276,8 +332,8 @@ related: [completed-recent.md, reviews.md]
 
 ## 43차 신규 추가 (2026-05-04)
 
-### ~~ai_team_stats_cache 자동 무효화~~ ✅ 완료 (2649558, 47차)
-- [x] `api/goals/route.ts` + `api/matches/route.ts` mutation 후 캐시 row 삭제 로직 추가 완료
+### ~~ai_team_stats_cache 자동 무효화~~ ✅ 완전 완료 (47차-2, 9a9a048)
+- [x] goals POST/PUT/DELETE(3) + matches PUT/DELETE + attendance-check POST + mvp POST·DELETE(2) + squads POST + autoCompleteMatches + teams PUT = 총 11곳 완성
 
 ### AI 풀플랜 받은 경기 — 코칭 카드·배치 표시 이상 재현 (HIGH)
 - **배경**: 사용자 보고 "이미 풀플랜 받은 경기 → 기록이 잘 안 보임". 정확한 재현 시나리오 미확인.

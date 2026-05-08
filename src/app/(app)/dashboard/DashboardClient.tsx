@@ -19,7 +19,6 @@ import { useToast } from "@/lib/ToastContext";
 import { EmptyState } from "@/components/EmptyState";
 import { shareTeamInvite } from "@/lib/kakaoShare";
 import { getUniformStyle } from "@/lib/uniformUtils";
-import type { SportType } from "@/lib/playerAttributes/types";
 
 type UpcomingMatch = {
   id: string;
@@ -166,7 +165,7 @@ function CardSkeleton() {
   );
 }
 
-export default function DashboardClient({ userId, userRole, initialData, inviteCode, teamName, teamId, sportType }: { userId: string; userRole?: Role; initialData?: DashboardData; inviteCode?: string; teamName?: string; teamId?: string; sportType?: SportType | null }) {
+export default function DashboardClient({ userId, userRole, initialData, inviteCode, teamName, teamId }: { userId: string; userRole?: Role; initialData?: DashboardData; inviteCode?: string; teamName?: string; teamId?: string }) {
   const { data, loading, error, refetch } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
   const { showToast } = useToast();
   const searchParams = useSearchParams();

@@ -16,10 +16,6 @@ import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/EmptyState";
 import dynamic from "next/dynamic";
-import PitchScoreCard, { type AttributesResponse as PitchAttributesResponse } from "@/components/pitchAttributes/PitchScoreCard";
-import TeamPositionRankings from "@/components/pitchAttributes/TeamPositionRankings";
-import MyOverviewCard from "@/components/pitchAttributes/MyOverviewCard";
-import type { SportType } from "@/lib/playerAttributes/types";
 
 // 차트 로딩 인디케이터
 const ChartSpinner = () => (
@@ -108,51 +104,15 @@ export default function RecordsClient({
   userName,
   userRole,
   initialData,
-  teamId,
-  sportType,
-  enablePitchScore,
 }: {
   userId: string;
   userName?: string;
   userRole?: Role;
   initialData?: InitialData;
-  teamId?: string | null;
-  sportType?: SportType | null;
-  enablePitchScore?: boolean;
 }) {
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
-  const isStaffViewer = role === "PRESIDENT" || role === "STAFF";
   const searchParams = useSearchParams();
-  const showPitchScoreEntry = !!(enablePitchScore && teamId && sportType);
-  // 운영진 전용 노출 — 일반회원은 평가 진입점·팀 랭킹 보지 않음 (45차 후속 "감독 노트" 정체성).
-  // 본인 PitchScoreCard 는 모두 노출 (자가 평가 + 본인 점수 보기는 유지).
-  const showStaffOnlyEntry = showPitchScoreEntry && isStaffViewer;
-
-  // PitchScore attributes 단일 fetch (MyOverviewCard + PitchScoreCard 중복 round trip 회피).
-  // PitchScoreCard 자체 fetch 가 더 풍부한 응답(attributes 배열·comment·recommendations)을 반환하므로
-  // RecordsClient 에서는 부분 응답(MyAttrsResponse) 으로 받아 MyOverviewCard 에만 직접 props 전달.
-  // PitchScoreCard 는 initialData 로 받아 첫 mount fetch skip 후 평가 시 자체 reload + onDataChange 로 동기화.
-  const [pitchAttrs, setPitchAttrs] = useState<PitchAttributesResponse | null>(null);
-  const [pitchAttrsLoading, setPitchAttrsLoading] = useState(false);
-  useEffect(() => {
-    if (!showPitchScoreEntry || !sportType) return;
-    let cancelled = false;
-    setPitchAttrsLoading(true);
-    fetch(`/api/players/${userId}/attributes?sport=${sportType}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j: PitchAttributesResponse | null) => {
-        if (cancelled) return;
-        if (j) setPitchAttrs(j);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setPitchAttrsLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [userId, sportType, showPitchScoreEntry]);
 
   // ── Tab state ──
   type RecordsTab = "my" | "ranking" | "all" | "awards";
@@ -441,58 +401,34 @@ export default function RecordsClient({
         );
       })()}
 
-      {/* ── 내 종합 (45차 2차 통합 — 헤더 + 두 레이더 비교) ── */}
-      {showStaffOnlyEntry ? (
-        <MyOverviewCard
-          userName={userName ?? "나"}
-          sportType={sportType!}
-          preferredPositions={myStats.preferredPositions}
-          myStats={{
-            goals: myStats.goals,
-            assists: myStats.assists,
-            mvp: myStats.mvp,
-            attendanceRate: myStats.attendanceRate,
-          }}
-          maxGoals={Math.max(...stats.map((s) => s.goals), 1)}
-          maxAssists={Math.max(...stats.map((s) => s.assists), 1)}
-          maxMvp={Math.max(...stats.map((s) => s.mvp), 1)}
-          isAllTime={isAllTime}
-          seasonName={season?.name}
-          participantCount={stats.length}
-          teamAttendanceRate={teamAttendance}
-          pitchAttrs={pitchAttrs}
-          pitchAttrsLoading={pitchAttrsLoading}
-        />
-      ) : (
-        /* PitchScore 미지원(sport_type 누락 등) — 기존 시즌 요약 + 레이더 폴백 */
-        <Card>
-          <CardHeader>
-            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
-              {isAllTime ? "통합 기록" : "시즌 요약"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>기간: {isAllTime ? "전체 시즌 통합" : season ? `${season.startDate} ~ ${season.endDate}` : ""}</p>
-              <p>참여 인원: {stats.length}명</p>
-              <p>평균 출석률: {Math.round(teamAttendance * 100)}%</p>
+      {/* ── 시즌 요약 + 레이더 ── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
+            {isAllTime ? "통합 기록" : "시즌 요약"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>기간: {isAllTime ? "전체 시즌 통합" : season ? `${season.startDate} ~ ${season.endDate}` : ""}</p>
+            <p>참여 인원: {stats.length}명</p>
+            <p>평균 출석률: {Math.round(teamAttendance * 100)}%</p>
+          </div>
+          {!loadingRecords && (myStats.goals > 0 || myStats.assists > 0 || myStats.mvp > 0) && (
+            <div className="mt-2">
+              <PlayerRadarChart
+                goals={myStats.goals}
+                assists={myStats.assists}
+                mvp={myStats.mvp}
+                attendanceRate={myStats.attendanceRate}
+                maxGoals={Math.max(...stats.map((s) => s.goals), 1)}
+                maxAssists={Math.max(...stats.map((s) => s.assists), 1)}
+                maxMvp={Math.max(...stats.map((s) => s.mvp), 1)}
+              />
             </div>
-            {!loadingRecords && (myStats.goals > 0 || myStats.assists > 0 || myStats.mvp > 0) && (
-              <div className="mt-2">
-                <PlayerRadarChart
-                  goals={myStats.goals}
-                  assists={myStats.assists}
-                  mvp={myStats.mvp}
-                  attendanceRate={myStats.attendanceRate}
-                  maxGoals={Math.max(...stats.map((s) => s.goals), 1)}
-                  maxAssists={Math.max(...stats.map((s) => s.assists), 1)}
-                  maxMvp={Math.max(...stats.map((s) => s.mvp), 1)}
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* ── 내 기록 4개 스탯 (단독 카드) ── */}
       <Card>
@@ -534,21 +470,6 @@ export default function RecordsClient({
         </CardContent>
       </Card>
 
-      {/* ── PitchScore 능력치 자세히 (접힘 기본) ── */}
-      {showStaffOnlyEntry &&(
-        <PitchScoreCard
-          targetUserId={userId}
-          targetUserName={userName ?? "나"}
-          sportType={sportType!}
-          contextTeamId={teamId!}
-          canEvaluate={false}
-          canViewHistory={false}
-          initialData={pitchAttrs}
-          onDataChange={(d) => setPitchAttrs(d)}
-        />
-      )}
-
-
       </div>
 
       {/* ── Tab: 팀 랭킹 ── */}
@@ -557,11 +478,6 @@ export default function RecordsClient({
       {/* 시즌 어워드 — TODO: 디자인 개선 후 활성화
       {!isAllTime && <SeasonAwardsCard seasonId={seasonId} />}
       */}
-
-      {/* ── PitchScore 포지션별 TOP 3 (Phase 3 1차) ── */}
-      {showStaffOnlyEntry &&teamId && sportType && (
-        <TeamPositionRankings teamId={teamId} sportType={sportType} />
-      )}
 
       {/* ── Row 2: 팀 랭킹 (PC: 3열 가로 배치) ── */}
       <Card>

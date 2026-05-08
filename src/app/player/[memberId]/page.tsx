@@ -411,9 +411,6 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
     teamRole: (m.team_role === "CAPTAIN" || m.team_role === "VICE_CAPTAIN" ? m.team_role : null) as PlayerProfile["teamRole"],
     seasonName: season.name, signature: signature ?? "",
     playerCardProps, stats, bestMoments, recentMatches, attendanceHistory,
-    userId: m.user_id ?? undefined,
-    sportType: (team?.sport_type === "FUTSAL" ? "FUTSAL" : "SOCCER") as "SOCCER" | "FUTSAL",
-    teamId: m.team_id,
   };
 }
 
@@ -452,25 +449,9 @@ export default async function PlayerProfilePageRoute({ params, searchParams }: P
   const data = await getPlayerData(memberId, team, enableAi, session?.user?.id ?? null, session?.user?.teamId ?? null);
   if (!data) return notFound();
 
-  // PitchScore™ — 44차 검증 후 전체 오픈 (45차, 2026-05-06). 비로그인 viewer는 userId 제거로 카드 비활성.
-  if (!session?.user?.id) {
-    data.userId = undefined;
-  }
-
   if (!data.stats) {
     return <PlayerProfileEmpty name={data.name} teamName={data.teamName} positions={data.positions} />;
   }
 
-  // 평가 이력 토글 권한 — 본인 또는 STAFF+ (PRESIDENT/STAFF) 만 노출. 나머지는 토글 자체 숨김.
-  const viewerUserId = session?.user?.id;
-  const viewerRole = session?.user?.teamRole;
-  const viewerIsStaff = viewerRole === "PRESIDENT" || viewerRole === "STAFF";
-
-  return (
-    <PlayerProfilePage
-      profile={data}
-      viewerUserId={viewerUserId}
-      viewerIsStaff={viewerIsStaff}
-    />
-  );
+  return <PlayerProfilePage profile={data} />;
 }

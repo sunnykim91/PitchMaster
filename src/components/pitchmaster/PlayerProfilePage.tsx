@@ -4,7 +4,6 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { PlayerCard, type PlayerCardProps } from "./PlayerCard";
 import { ShareModal } from "./ShareCard";
-import PitchScoreCard from "@/components/pitchAttributes/PitchScoreCard";
 
 // Types
 export type PlayerStats = {
@@ -63,12 +62,6 @@ export type PlayerProfile = {
   recentMatches: RecentMatch[];
   /** 최근 15경기의 출석/결과 — 히트맵 시각화용. date 오름차순 (오래된 → 최신) */
   attendanceHistory: AttendanceCell[];
-  /** PitchScore™ 능력치 평가용 user_id (sport_type 단위 분리 보관) */
-  userId?: string;
-  /** 현재 보고 있는 팀의 sport_type (00059 — PitchScore 종목별 분리) */
-  sportType?: "SOCCER" | "FUTSAL";
-  /** 현재 페이지가 보여주는 팀 ID — PitchScore 평가 컨텍스트로 사용 */
-  teamId?: string;
 };
 
 // Role Badge Component
@@ -397,20 +390,13 @@ function StickyShareButton({ onClick }: { onClick: () => void }) {
 // Main Player Profile Page Component
 export function PlayerProfilePage({
   profile,
-  viewerUserId,
-  viewerIsStaff = false,
 }: {
   profile: PlayerProfile;
-  /** 평가 이력 토글 노출 권한 계산용. 미지정 시 토글 숨김 */
-  viewerUserId?: string;
-  viewerIsStaff?: boolean;
 }) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showImageShareModal, setShowImageShareModal] = useState(false);
   const [shareToast, setShareToast] = useState<string | null>(null);
-  const { name, teamName, teamPrimaryColor, positions, preferredFoot, jerseyNumber, teamRole, seasonName, signature, playerCardProps, stats, bestMoments, recentMatches, attendanceHistory, userId } = profile;
-  // 1순위 포지션이 GK일 때만 GK로 분류 — API의 isGoalkeeper 판정 룰과 일치
-  const isGoalkeeper = positions[0]?.toUpperCase() === "GK";
+  const { name, teamName, teamPrimaryColor, positions, preferredFoot, jerseyNumber, teamRole, seasonName, signature, playerCardProps, stats, bestMoments, recentMatches, attendanceHistory } = profile;
 
   function handleBack() {
     if (typeof window === "undefined") return;
@@ -651,22 +637,6 @@ export function PlayerProfilePage({
           )}
         </div>
       </section>
-
-      {/* PitchScore™ — 운영진 전용 ("감독 노트" 정체성, 45차 후속 정책).
-          일반회원은 본인 페이지에서도 카드 자체 비노출. */}
-      {userId && profile.sportType && profile.teamId && viewerIsStaff && (
-        <section className="max-w-4xl mx-auto px-4 py-6">
-          <PitchScoreCard
-            targetUserId={userId}
-            targetUserName={name}
-            sportType={profile.sportType}
-            contextTeamId={profile.teamId}
-            isGoalkeeper={isGoalkeeper}
-            canEvaluate={false}
-            canViewHistory={false}
-          />
-        </section>
-      )}
 
       {/* Detailed Stats */}
       {stats && (
