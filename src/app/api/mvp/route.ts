@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { hasMinRole } from "@/lib/permissions";
 import { invalidateTeamStats } from "@/lib/server/aiTeamStats";
+
+// ISR /player/[memberId] 즉시 갱신용 — vitest 등 next context 없는 환경 대응 try/catch.
+function safeRevalidatePlayer(id: string | null | undefined) {
+  if (!id) return;
+  try {
+    revalidatePath(`/player/${id}`);
+  } catch (err) {
+    console.warn("[revalidatePath] skip:", err instanceof Error ? err.message : err);
+  }
+}
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -110,6 +121,8 @@ export async function POST(request: NextRequest) {
 
   if (error) return apiError(error.message);
   invalidateTeamStats(ctx.teamId).catch(() => {});
+  // /player/[memberId] ISR(30분) 즉시 갱신 — MVP 카운트 영향
+  safeRevalidatePlayer(candidateId);
   return apiSuccess(data);
 }
 
@@ -144,7 +157,14 @@ export async function DELETE(request: NextRequest) {
     return apiError("MVP 투표는 운영진 이상만 가능합니다", 403);
   }
 
-  // 본인이 이 경기에 남긴 표 삭제. 없으면 조용히 성공 처리.
+  // 본인이 이 경기에 남긴 표의 candidate_id 캡처 후 삭제 — revalidatePath 용
+  const { data: existingVote } = await db
+    .from("match_mvp_votes")
+    .select("candidate_id")
+    .eq("match_id", matchId)
+    .eq("voter_id", ctx.userId)
+    .maybeSingle();
+
   const { error } = await db
     .from("match_mvp_votes")
     .delete()
@@ -153,5 +173,6 @@ export async function DELETE(request: NextRequest) {
 
   if (error) return apiError(error.message);
   invalidateTeamStats(ctx.teamId).catch(() => {});
+  safeRevalidatePlayer(existingVote?.candidate_id ?? null);
   return apiSuccess({ ok: true });
 }

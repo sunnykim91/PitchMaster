@@ -1,9 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { invalidateTeamStats } from "@/lib/server/aiTeamStats";
 import type { SupabaseClient } from "@supabase/supabase-js";
+
+// /player/[memberId] 는 30분 ISR. 골 기록 변경 시 영향받는 선수 카드 즉시 갱신.
+// page route 의 .or(`user_id.eq,id.eq`) 매칭 덕에 어느 쪽 ID 로 path 만들어도 hit.
+// 사용자가 반대 ID 로 진입한 경우(드뭄)는 30분 자연 갱신에 의존.
+// try/catch — vitest 등 next runtime context 없는 환경에서 invariant 실패 시 mutation 자체는 영향 없게.
+function revalidatePlayers(ids: (string | null | undefined)[]) {
+  for (const id of ids) {
+    if (!id) continue;
+    try {
+      revalidatePath(`/player/${id}`);
+    } catch (err) {
+      console.warn("[revalidatePath] skip:", err instanceof Error ? err.message : err);
+    }
+  }
+}
 
 // 팀 설정에서 stats_recording_staff_only 가 true 면 STAFF 이상만 골 기록 가능
 async function checkStatsRecordingPermission(
@@ -97,6 +113,7 @@ export async function POST(request: NextRequest) {
 
   if (error) return apiError(error.message);
   invalidateTeamStats(ctx.teamId).catch(() => {});
+  revalidatePlayers([body.scorerId, body.assistId]);
   return apiSuccess(data, 201);
 }
 
@@ -146,6 +163,7 @@ export async function PUT(request: NextRequest) {
 
   if (error) return apiError(error.message);
   invalidateTeamStats(ctx.teamId).catch(() => {});
+  revalidatePlayers([body.scorerId, body.assistId]);
   return apiSuccess(data);
 }
 
@@ -163,10 +181,10 @@ export async function DELETE(request: NextRequest) {
   const permErr = await checkStatsRecordingPermission(db, ctx.teamId, ctx.teamRole);
   if (permErr) return permErr;
 
-  // Verify goal belongs to a match that belongs to this team
+  // Verify goal belongs to a match that belongs to this team + scorer/assist 캡처 (revalidate 용)
   const { data: goalCheck } = await db
     .from("match_goals")
-    .select("id, matches!inner(team_id)")
+    .select("id, scorer_id, assist_id, matches!inner(team_id)")
     .eq("id", id)
     .eq("matches.team_id", ctx.teamId)
     .single();
@@ -175,5 +193,9 @@ export async function DELETE(request: NextRequest) {
   const { error } = await db.from("match_goals").delete().eq("id", id);
   if (error) return apiError(error.message);
   invalidateTeamStats(ctx.teamId).catch(() => {});
+  revalidatePlayers([
+    (goalCheck as { scorer_id?: string | null }).scorer_id,
+    (goalCheck as { assist_id?: string | null }).assist_id,
+  ]);
   return apiSuccess({ ok: true });
 }
