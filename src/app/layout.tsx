@@ -6,8 +6,8 @@ import { GAPageTracker } from "@/components/GAPageTracker";
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
 
-// Next.js 16: 내부 페이지(/_global-error, /_not-found) 정적 생성 시 workUnitAsyncStorage 오류 방지
-export const dynamic = "force-dynamic";
+// 인증 영역만 (app)/layout.tsx 에서 force-dynamic 명시.
+// root 에서 강제하면 정적 가능한 랜딩(/login·/pricing 등)까지 매 요청 SSR 부담.
 
 const GA_ID = "G-XWRB861513";
 
