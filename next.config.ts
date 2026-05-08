@@ -58,11 +58,21 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // HTML 페이지 - 인증 응답이 Cloudflare edge에 캐시되어 다른 사용자에게 노출되는 사고 방지.
-        // (app)/* 라우트는 force-dynamic + cookies() 기반이라 매 요청 SSR — 어차피 캐시 효과 0.
-        // 랜딩(/login·/guide)도 root layout force-dynamic 상속이라 동일.
+        // 공개 정적 페이지·문서 — 인증 의존 X, 검색엔진/edge 캐시 효과 필요.
+        // robots/sitemap 은 SEO 용도, /pricing·/privacy·/terms·/offline 은 정적 prerender.
+        source: "/(robots.txt|sitemap.xml|pricing|privacy|terms|offline)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=60, stale-while-revalidate=300",
+          },
+        ],
+      },
+      {
+        // 그 외 HTML — 인증 응답이 Cloudflare edge에 캐시되어 다른 사용자에게 노출되는 사고 방지.
+        // (app)/* 라우트는 (app)/layout.tsx force-dynamic + cookies() 기반이라 매 요청 SSR.
         // 사용자 정의 headers()는 Vercel의 force-dynamic 자동 헤더보다 우선되므로 명시적으로 private 박음.
-        source: "/((?!api|_next/static).*)",
+        source: "/((?!api|_next/static|robots.txt|sitemap.xml|pricing|privacy|terms|offline).*)",
         headers: [
           {
             key: "Cache-Control",
