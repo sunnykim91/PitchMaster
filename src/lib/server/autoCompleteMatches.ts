@@ -108,13 +108,17 @@ export async function autoCompleteTeamMatches(
 
   // 3) 완료된 경기들의 참석자 시그니처 stale 처리 (신 스탯 반영, 백그라운드)
   if (completedIds.length > 0) {
-    invalidateSignaturesForMatches(db, completedIds).catch(() => {});
+    invalidateSignaturesForMatches(db, completedIds).catch((err) => {
+      console.error("[autoCompleteMatches] invalidateSignatures failed", err);
+    });
 
     // 4) MVP 투표 시작 + OVR 변동 푸시 (fire-and-forget — 페이지 로드 즉시 반응)
     //    crons 도 안전망으로 돌지만, 경기 종료 직후 누군가 페이지 열면 여기서 먼저 나감.
-    processMatchCompletedPush(db, completedIds).catch(() => {});
+    processMatchCompletedPush(db, completedIds).catch((err) => {
+      console.error("[autoCompleteMatches] processMatchCompletedPush failed", err);
+    });
 
-    // 5) AI 팀 스탯 캐시 무효화 — COMPLETED 전환은 통계 집계에 직접 영향
+    // 5) AI 팀 스탯 캐시 무효화 — 함수 내부에서 error 로그 처리. 호출처는 fire-and-forget.
     invalidateTeamStats(teamId).catch(() => {});
   }
 }

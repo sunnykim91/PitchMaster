@@ -136,14 +136,14 @@ export async function getOrComputeTeamStats(teamId: string): Promise<TeamStats> 
   return stats;
 }
 
-/** 강제 무효화 (경기 완료 시 호출 가능) */
+/** 강제 무효화 (경기 완료 시 호출 가능). 호출처는 거의 fire-and-forget으로 .catch(()=>{})만 묶기 때문에
+ *  여기서 실패 로그를 남기지 않으면 stale 캐시 + 운영 가시성 0이 된다. */
 export async function invalidateTeamStats(teamId: string): Promise<void> {
   const db = getSupabaseAdmin();
   if (!db) return;
-  try {
-    await db.from("ai_team_stats_cache").delete().eq("team_id", teamId);
-  } catch {
-    /* ignore */
+  const { error } = await db.from("ai_team_stats_cache").delete().eq("team_id", teamId);
+  if (error) {
+    console.error("[invalidateTeamStats] cache delete failed", { teamId, error: error.message });
   }
 }
 
