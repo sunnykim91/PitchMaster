@@ -1,24 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
-import ExcelJS from "exceljs";
+import * as XLSX from "xlsx";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-// exceljs row.values 는 [, c1, c2, ...] 1-indexed 형태. rich text/formula 셀 처리 포함.
-function normalizeCell(v: unknown): string | number | Date | "" {
-  if (v === null || v === undefined) return "";
-  if (v instanceof Date) return v;
-  if (typeof v === "string" || typeof v === "number") return v;
-  if (typeof v === "object") {
-    const obj = v as Record<string, unknown>;
-    if ("result" in obj) return normalizeCell(obj.result); // 수식 셀
-    if ("text" in obj) return String(obj.text);             // rich text
-    if ("richText" in obj && Array.isArray(obj.richText)) {
-      return obj.richText.map((r: { text?: string }) => r.text ?? "").join("");
-    }
-  }
-  return String(v);
-}
 
 export async function POST(req: NextRequest) {
   const ctx = await getApiContext();
@@ -37,17 +21,10 @@ export async function POST(req: NextRequest) {
       return apiError("엑셀 파일만 업로드 가능합니다. (.xls, .xlsx)", 400);
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(arrayBuffer);
-    const sheet = workbook.worksheets[0];
-    if (!sheet) return apiError("시트가 비어 있습니다.", 400);
-
-    const rows: any[][] = [];
-    sheet.eachRow({ includeEmpty: true }, (row) => {
-      const values = (row.values as unknown[]).slice(1).map(normalizeCell);
-      rows.push(values);
-    });
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const workbook = XLSX.read(buffer, { type: "buffer", cellDates: true });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
 
     // 헤더 행 찾기 — "거래일시" 텍스트가 포함된 행
     let headerIdx = -1;
