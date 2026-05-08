@@ -405,7 +405,7 @@ export default function HeroSection({
             >
               <span aria-hidden className="text-[14px]">✓</span>
               <span>
-                <b className="font-extrabold">₩0</b> · 광고·결제 없이 시작 — 먼저 함께한 팀 보호 약속
+                <b className="font-extrabold">₩0</b> · 광고·결제 없이 현재 무료로 운영 중
               </span>
             </motion.div>
 
