@@ -208,7 +208,7 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
                     value={p.status}
                     onChange={(e) => handleStatusChange(p.id, e.target.value)}
                     className={cn(
-                      "h-7 w-[4.5rem] text-[11px] py-0 bg-card border-white/[0.06]",
+                      "h-7 w-[4.5rem] text-[12.5px] py-0 bg-card border-white/[0.06]",
                       p.status === "WAIVED" && "border-[hsl(var(--warning))]/40"
                     )}
                   >
@@ -227,7 +227,7 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
               ) : (
                 <Badge
                   variant={p.status === "PAID" ? "success" : p.status === "WAIVED" ? "warning" : "destructive"}
-                  className="text-[10px] px-1.5 py-0 border-0"
+                  className="text-[12px] px-1.5 py-0 border-0"
                 >
                   {p.status === "PAID" ? "납부" : p.status === "WAIVED" ? "면제" : "미납"}
                 </Badge>
@@ -273,19 +273,19 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
           <form action={handleManualAdd} className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">멤버</Label>
+                <Label className="text-[12.5px] text-muted-foreground">멤버</Label>
                 <NativeSelect name="memberId" required className="h-9 text-sm">
                   <option value="">선택</option>
                   {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                 </NativeSelect>
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">금액</Label>
+                <Label className="text-[12.5px] text-muted-foreground">금액</Label>
                 <Input name="amount" type="number" min={0} required placeholder="5000" className="h-9 text-sm" />
               </div>
             </div>
             <div className="space-y-1">
-              <Label className="text-[11px] text-muted-foreground">사유 (선택)</Label>
+              <Label className="text-[12.5px] text-muted-foreground">사유 (선택)</Label>
               <Input name="note" placeholder="예: 회식 불참" className="h-9 text-sm" />
             </div>
             <div className="flex gap-2 justify-end">

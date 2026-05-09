@@ -193,7 +193,7 @@ export default function FinalCtaSection({
           }}
         >
           <span
-            className="w-6 h-6 rounded-full flex items-center justify-center font-display text-[10px]"
+            className="w-6 h-6 rounded-full flex items-center justify-center font-display text-[12px]"
             style={{
               background: "linear-gradient(135deg, hsl(var(--primary)), hsl(16 70% 44%))",
               color: "white",

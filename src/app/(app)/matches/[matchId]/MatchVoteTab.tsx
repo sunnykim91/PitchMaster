@@ -153,14 +153,14 @@ function MatchVoteTabInner({
                     prev.setHours(17, 0, 0, 0);
                     const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, voteDeadline: prev.toISOString() });
                     if (!err) { setIsExpired(false); showToast("투표가 재개되었습니다."); await refetchVote(); }
-                  })} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/10 px-3 py-1.5 text-[12.5px] font-semibold text-[hsl(var(--success))] transition-colors hover:bg-[hsl(var(--success))]/20 disabled:opacity-50">
+                  })} aria-label="투표 마감을 해제하고 재개" className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/10 px-3 py-1.5 text-[12.5px] font-semibold text-[hsl(var(--success))] transition-colors hover:bg-[hsl(var(--success))]/20 disabled:opacity-50">
                     <LockOpen className="h-3.5 w-3.5" />{deadlineLoading ? "처리 중..." : "재개"}
                   </button>
                 ) : (
                   <button type="button" disabled={deadlineLoading} onClick={() => runDeadline(async () => {
                     const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, voteDeadline: new Date().toISOString() });
                     if (!err) { setIsExpired(true); showToast("투표가 마감되었습니다."); }
-                  })} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-[12.5px] font-semibold text-destructive transition-colors hover:bg-destructive/20 disabled:opacity-50">
+                  })} aria-label="투표를 즉시 마감" className="flex shrink-0 items-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-[12.5px] font-semibold text-destructive transition-colors hover:bg-destructive/20 disabled:opacity-50">
                     <Lock className="h-3.5 w-3.5" />{deadlineLoading ? "처리 중..." : "마감"}
                   </button>
                 )
@@ -241,7 +241,7 @@ function MatchVoteTabInner({
             ]).map((s) => (
               <div key={s.label} className="flex-1">
                 <div className={cn("text-xl font-bold", s.color)}>{s.n}</div>
-                <div className="text-[10px] font-medium tracking-wide text-muted-foreground">{s.label}</div>
+                <div className="text-[12px] font-medium tracking-wide text-muted-foreground">{s.label}</div>
               </div>
             ))}
           </div>
@@ -270,7 +270,7 @@ function MatchVoteTabInner({
                   className={cn("relative h-9 rounded-lg px-3 text-xs", voteFilter === v && "bg-primary text-primary-foreground")}>
                   {l}
                   {v === "unvoted" && noVote.length > 0 && (
-                    <Badge className="absolute -right-1.5 -top-1.5 bg-destructive text-destructive-foreground text-[10px] px-1.5 min-w-[18px] h-[18px]">{noVote.length}</Badge>
+                    <Badge className="absolute -right-1.5 -top-1.5 bg-destructive text-destructive-foreground text-[12px] px-1.5 min-w-[18px] h-[18px]">{noVote.length}</Badge>
                   )}
                 </Button>
               ))}
@@ -412,7 +412,7 @@ function MatchVoteTabInner({
                       return (
                         <Badge key={m.id} className="border-0 font-medium bg-secondary/50 text-muted-foreground/60">
                           {DORMANT_ICON[info?.type] ?? ""} {m.name}
-                          {info?.type && <span className="ml-1 text-[10px]">({DORMANT_LABEL[info.type] ?? "휴면"})</span>}
+                          {info?.type && <span className="ml-1 text-[12px]">({DORMANT_LABEL[info.type] ?? "휴면"})</span>}
                         </Badge>
                       );
                     })}

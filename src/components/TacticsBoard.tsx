@@ -900,7 +900,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             return (
               <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--success))]/10 px-3 py-1.5">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--success))]" />
-                <span className="text-[11px] font-semibold text-[hsl(var(--success))]">
+                <span className="text-[12.5px] font-semibold text-[hsl(var(--success))]">
                   초록 표시 = 선호 포지션에 잘 배치된 선수 · {matchedCount}명
                 </span>
               </div>
@@ -1036,12 +1036,12 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                         )}
                         title={(firstMatched || secondMatched) ? "선호 포지션과 일치" : undefined}
                       >
-                        <span className="flex items-center gap-0.5 whitespace-nowrap text-[10px] font-bold text-white sm:text-xs">
+                        <span className="flex items-center gap-0.5 whitespace-nowrap text-[12px] font-bold text-white sm:text-xs">
                           <span className="rounded bg-sky-500/40 px-0.5">전</span>
                           {firstMatched && <span className="hidden sm:inline rounded bg-white/25 px-0.5 text-[9px]">적합</span>}
                           <span className="whitespace-nowrap">{(player?.name ?? "선수").slice(0, 3)}</span>
                         </span>
-                        <span className="flex items-center gap-0.5 whitespace-nowrap text-[10px] font-bold text-white sm:text-xs">
+                        <span className="flex items-center gap-0.5 whitespace-nowrap text-[12px] font-bold text-white sm:text-xs">
                           <span className="rounded bg-violet-500/40 px-0.5">후</span>
                           {secondMatched && <span className="hidden sm:inline rounded bg-white/25 px-0.5 text-[9px]">적합</span>}
                           <span className="whitespace-nowrap">{secondPlayer.name.slice(0, 3)}</span>
@@ -1050,7 +1050,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                     ) : (
                       <span
                         className={cn(
-                          "flex max-w-[64px] items-center gap-1 whitespace-nowrap rounded-md px-1 py-0.5 text-[10px] font-bold shadow-sm sm:max-w-[110px] sm:px-1.5 sm:text-xs",
+                          "flex max-w-[64px] items-center gap-1 whitespace-nowrap rounded-md px-1 py-0.5 text-[12px] font-bold shadow-sm sm:max-w-[110px] sm:px-1.5 sm:text-xs",
                           singleMatched
                             ? "bg-[hsl(var(--success))] text-white ring-2 ring-[hsl(var(--success))] shadow-[0_0_10px_hsl(var(--success)/0.6)]"
                             : "bg-black/70 text-white"
@@ -1239,14 +1239,14 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                       <div className="flex items-baseline justify-between gap-2">
                         <p className="text-sm font-bold text-foreground">선수 선택</p>
                         {activeSlotId && recommendCount > 0 && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(var(--success))]/15 px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--success))]">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(var(--success))]/15 px-2 py-0.5 text-[12px] font-bold text-[hsl(var(--success))]">
                             <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--success))]" />
                             추천 {recommendCount}명
                           </span>
                         )}
                       </div>
                       {activeSlotId && (
-                        <p className="mt-1 text-[11px] text-muted-foreground">
+                        <p className="mt-1 text-[12.5px] text-muted-foreground">
                           이 포지션의 선호 포지션과 일치하는 선수가 초록색으로 표시됩니다
                         </p>
                       )}
@@ -1289,12 +1289,12 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                                 matched ? "text-white/85" : "text-muted-foreground"
                               )}>
                                 {matched && (
-                                  <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                                  <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[12px] font-bold text-white">
                                     추천
                                   </span>
                                 )}
                                 {qCount > 0 && !matched && (
-                                  <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+                                  <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[12px] font-bold text-primary">
                                     {qCount}Q
                                   </span>
                                 )}
@@ -1402,7 +1402,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                       {activeSlotId && recommendCount > 0 && (
                         <div className="mt-3 flex items-center gap-2 rounded-lg bg-[hsl(var(--success))]/10 px-3 py-2">
                           <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--success))]" />
-                          <span className="text-[11px] font-semibold text-[hsl(var(--success))]">
+                          <span className="text-[12.5px] font-semibold text-[hsl(var(--success))]">
                             추천 {recommendCount}명 · 선호 포지션과 일치하는 선수
                           </span>
                         </div>
@@ -1441,7 +1441,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                                 matched ? "text-white/85" : "text-muted-foreground"
                               )}>
                                 {matched && (
-                                  <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                                  <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[12px] font-bold text-white">
                                     추천
                                   </span>
                                 )}
@@ -1609,7 +1609,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
           쿼터별 출전 현황
         </SheetTitle>
         {/* 범례 */}
-        <div className="mt-3 flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+        <div className="mt-3 flex flex-wrap gap-3 text-[12.5px] text-muted-foreground">
           <span className="flex items-center gap-1">
             <span className="inline-block h-4 w-4 rounded-full bg-primary/20 text-center text-[9px] font-bold leading-4 text-primary">●</span>풀타임
           </span>
@@ -1648,7 +1648,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                           {qt === "full" ? (
                             /* 풀타임 출전 */
                             <span className={cn(
-                              "inline-block h-5 w-5 rounded-full text-[10px] font-bold leading-5 text-center",
+                              "inline-block h-5 w-5 rounded-full text-[12px] font-bold leading-5 text-center",
                               q === activeQuarter ? "bg-primary text-white" : "bg-primary/20 text-primary"
                             )}>●</span>
                           ) : qt === "first" ? (
@@ -1672,7 +1672,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                       );
                     })}
                     <td className="pl-3 py-2 text-center">
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                      <Badge variant="secondary" className="text-[12px] px-1.5 py-0">
                         {totalQ % 1 === 0 ? totalQ : totalQ.toFixed(1)}/{quarters.length}
                       </Badge>
                     </td>

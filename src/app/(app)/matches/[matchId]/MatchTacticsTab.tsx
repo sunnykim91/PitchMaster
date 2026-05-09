@@ -489,11 +489,11 @@ function MatchTacticsTabInner({
                 refetchGuests?.();
               }} className="space-y-4 rounded-xl bg-secondary/30 p-4">
                 <div>
-                  <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">이름 <span className="text-destructive">*</span></p>
+                  <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">이름 <span className="text-destructive">*</span></p>
                   <input name="guestName" required placeholder="용병 이름" className="h-12 w-full rounded-xl border-0 bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
                 </div>
                 <div>
-                  <p className="mb-2 text-[11px] font-medium text-muted-foreground">선호 포지션 (복수 선택)</p>
+                  <p className="mb-2 text-[12.5px] font-medium text-muted-foreground">선호 포지션 (복수 선택)</p>
                   <div className="grid grid-cols-4 gap-2">
                     {(["GK","CB","LB","RB","CDM","CM","CAM","LW","RW","ST"] as const).map((pos) => (
                       <label key={pos} className="flex cursor-pointer items-center gap-2 rounded-lg bg-background px-3 py-2.5">
@@ -504,11 +504,11 @@ function MatchTacticsTabInner({
                   </div>
                 </div>
                 <div>
-                  <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">연락처</p>
+                  <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">연락처</p>
                   <PhoneInput name="guestPhone" />
                 </div>
                 <div>
-                  <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">메모</p>
+                  <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">메모</p>
                   <input name="guestNote" placeholder="소속팀, 실력 등" className="h-12 w-full rounded-xl border-0 bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
                 </div>
                 <Button type="submit" className="w-full h-12 rounded-xl">용병 등록</Button>
@@ -552,7 +552,7 @@ function MatchTacticsTabInner({
                           className="space-y-3"
                         >
                           <div>
-                            <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">
+                            <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">
                               이름 <span className="text-destructive">*</span>
                             </p>
                             <input
@@ -564,7 +564,7 @@ function MatchTacticsTabInner({
                             />
                           </div>
                           <div>
-                            <p className="mb-2 text-[11px] font-medium text-muted-foreground">선호 포지션 (복수 선택)</p>
+                            <p className="mb-2 text-[12.5px] font-medium text-muted-foreground">선호 포지션 (복수 선택)</p>
                             <div className="grid grid-cols-4 gap-2">
                               {(["GK","CB","LB","RB","CDM","CM","CAM","LW","RW","ST"] as const).map((pos) => (
                                 <label key={pos} className="flex cursor-pointer items-center gap-2 rounded-lg bg-background px-3 py-2">
@@ -581,11 +581,11 @@ function MatchTacticsTabInner({
                             </div>
                           </div>
                           <div>
-                            <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">연락처</p>
+                            <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">연락처</p>
                             <PhoneInput name="editPhone" defaultValue={g.phone ?? ""} />
                           </div>
                           <div>
-                            <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">메모</p>
+                            <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">메모</p>
                             <input
                               name="editNote"
                               defaultValue={g.note ?? ""}
@@ -613,7 +613,7 @@ function MatchTacticsTabInner({
                             {g.position && (
                               <div className="flex flex-wrap gap-1">
                                 {existingPositions.map((pos) => (
-                                  <Badge key={pos} variant="secondary" className="text-[10px] px-1.5 py-0">{pos}</Badge>
+                                  <Badge key={pos} variant="secondary" className="text-[12px] px-1.5 py-0">{pos}</Badge>
                                 ))}
                               </div>
                             )}

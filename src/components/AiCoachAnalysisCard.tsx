@@ -278,12 +278,12 @@ export function AiCoachAnalysisCard({
               {loading && <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-primary/60 align-middle" />}
             </p>
             {source === "rule" ? (
-              <p className="mt-2 text-[11px] text-muted-foreground/70">
+              <p className="mt-2 text-[12.5px] text-muted-foreground/70">
                 AI 분석이 실패해 자동 생성본을 보여드립니다. 이 경기는 재생성할 수 없습니다.
               </p>
             ) : !loading && source === "ai" && matchCap != null && matchUsedCount < matchCap && !isMonthlyExhausted && allSlotsFilled && (
               <div className="mt-3 flex flex-col gap-1">
-                <p className="text-[11px] text-muted-foreground/70 text-center">
+                <p className="text-[12.5px] text-muted-foreground/70 text-center">
                   현재 전술판 기준으로 AI 코칭을 재생성합니다
                 </p>
                 <Button

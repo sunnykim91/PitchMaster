@@ -81,7 +81,7 @@ function MiniPlayerCard({
         <div className="flex justify-between items-start">
           <div className="flex flex-col items-center">
             <span className={cn("text-3xl font-black leading-none", config.color)}>{ovr}</span>
-            <span className="text-[10px] font-bold text-white/80">{positionLabel}</span>
+            <span className="text-[12px] font-bold text-white/80">{positionLabel}</span>
           </div>
           <span className={cn("text-[8px] tracking-[0.15em] font-semibold", config.color)}>
             {config.label}
@@ -152,7 +152,7 @@ function StoryShareCard({ data }: { data: ShareCardData }) {
           <h2 className="text-xl font-black text-white mb-1">{playerName}</h2>
           <p className="text-xs text-white/60">{teamName}</p>
           {signature && (
-            <p className="text-[10px] text-white/50 mt-2 italic">&ldquo;{signature}&rdquo;</p>
+            <p className="text-[12px] text-white/50 mt-2 italic">&ldquo;{signature}&rdquo;</p>
           )}
         </div>
         
@@ -340,8 +340,8 @@ export function PremiumShareCard({ playerCardProps, teamName, seasonName, side =
       <div className="relative h-full flex flex-col px-6 py-5">
         {/* Top brand + season */}
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[10px] tracking-[0.35em] text-white/50 font-bold">PITCHMASTER</p>
-          <p className="text-[11px] text-white/70 font-medium">{seasonName}</p>
+          <p className="text-[12px] tracking-[0.35em] text-white/50 font-bold">PITCHMASTER</p>
+          <p className="text-[12.5px] text-white/70 font-medium">{seasonName}</p>
         </div>
 
         {/* Actual PlayerCard — 정중앙, side에 따라 앞/뒷면 고정 */}
@@ -358,7 +358,7 @@ export function PremiumShareCard({ playerCardProps, teamName, seasonName, side =
         {/* Bottom team + footer */}
         <div className="text-center mt-3">
           <p className="text-sm text-white/80 font-semibold tracking-wide">{teamName}</p>
-          <p className="text-[10px] tracking-[0.25em] text-white/40 mt-1.5">pitch-master.app</p>
+          <p className="text-[12px] tracking-[0.25em] text-white/40 mt-1.5">pitch-master.app</p>
         </div>
       </div>
     </div>
@@ -661,7 +661,7 @@ export function ShareModal({
           </button>
         </div>
 
-        <p className="text-[10px] text-white/30 text-center mt-3">
+        <p className="text-[12px] text-white/30 text-center mt-3">
           고해상도 1080 × 1350 PNG · Instagram 피드·스토리 호환
         </p>
       </div>
@@ -696,16 +696,16 @@ export function ShareCardDemo() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <p className="text-[10px] tracking-[0.4em] text-white/40 mb-2">PITCHMASTER</p>
+          <p className="text-[12px] tracking-[0.4em] text-white/40 mb-2">PITCHMASTER</p>
           <h1 className="text-3xl font-black text-white mb-2">공유 카드</h1>
           <p className="text-sm text-white/50">3가지 포맷으로 공유하세요</p>
-          <p className="mt-2 text-[11px] text-white/30">
+          <p className="mt-2 text-[12.5px] text-white/30">
             ※ 미리보기 사이즈입니다. 실제 공유 시에는 1080×1920 / 1080×1080 / 1200×630 PNG로 출력됩니다.
           </p>
         </div>
 
         {/* Cards Preview — 모바일은 가로 스크롤(OG 카드 480px 잘림 방지) */}
-        <p className="text-center text-[10px] text-white/30 mb-3 sm:hidden">
+        <p className="text-center text-[12px] text-white/30 mb-3 sm:hidden">
           ← 좌우로 스와이프 →
         </p>
         <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 mb-12">

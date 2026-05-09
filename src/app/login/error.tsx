@@ -32,7 +32,7 @@ export default function LoginError({
           잠시 후 다시 시도해주세요. 카카오 로그인 도중 문제가 생겼다면 카카오톡을 잠시 닫았다 열어주세요.
         </p>
         {error.digest && (
-          <p className="mt-3 text-[11px] text-muted-foreground/60">
+          <p className="mt-3 text-[12.5px] text-muted-foreground/60">
             오류 ID: {error.digest}
           </p>
         )}

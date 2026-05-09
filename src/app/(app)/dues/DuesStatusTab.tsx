@@ -295,13 +295,13 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
               <span className="text-sm font-semibold text-foreground truncate">{m.name}</span>
               {m.status === "PAID" && (
-                <Badge variant="success" className="border-0 text-[10px] px-1.5 py-0 shrink-0">납부</Badge>
+                <Badge variant="success" className="border-0 text-[12px] px-1.5 py-0 shrink-0">납부</Badge>
               )}
               {m.status === "UNPAID" && (
-                <Badge variant="destructive" className="border-0 text-[10px] px-1.5 py-0 shrink-0">미납</Badge>
+                <Badge variant="destructive" className="border-0 text-[12px] px-1.5 py-0 shrink-0">미납</Badge>
               )}
               {m.status === "EXEMPT" && (
-                <Badge variant="warning" className="border-0 text-[10px] px-1.5 py-0 shrink-0">면제</Badge>
+                <Badge variant="warning" className="border-0 text-[12px] px-1.5 py-0 shrink-0">면제</Badge>
               )}
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
@@ -320,7 +320,7 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
                     disabled={!!changingId}
                     onChange={async (e) => { await handleStatusChange(m, e.target.value as "PAID" | "UNPAID" | "EXEMPT"); }}
                     className={cn(
-                      "h-7 w-[5rem] text-[11px] bg-card border-white/[0.06] py-0",
+                      "h-7 w-[5rem] text-[12.5px] bg-card border-white/[0.06] py-0",
                       m.status === "EXEMPT" && "border-[hsl(var(--warning))]/40",
                       changingId && "opacity-50"
                     )}

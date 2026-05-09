@@ -339,7 +339,7 @@ function DuesRecordsTabInner({
                 <fieldset disabled={saving} className="space-y-3 disabled:opacity-60">
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <Label className="text-[11px] text-muted-foreground">유형</Label>
+                      <Label className="text-[12.5px] text-muted-foreground">유형</Label>
                       <NativeSelect
                         name="type"
                         value={formType}
@@ -351,7 +351,7 @@ function DuesRecordsTabInner({
                       </NativeSelect>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[11px] text-muted-foreground">금액</Label>
+                      <Label className="text-[12.5px] text-muted-foreground">금액</Label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₩</span>
                         <Input
@@ -372,7 +372,7 @@ function DuesRecordsTabInner({
                   </div>
 
                   <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">내용</Label>
+                    <Label className="text-[12.5px] text-muted-foreground">내용</Label>
                     <Input
                       name="description"
                       required
@@ -383,7 +383,7 @@ function DuesRecordsTabInner({
 
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <Label className="text-[11px] text-muted-foreground">날짜</Label>
+                      <Label className="text-[12.5px] text-muted-foreground">날짜</Label>
                       <Input
                         name="recordedAt"
                         type="date"
@@ -398,7 +398,7 @@ function DuesRecordsTabInner({
                       {formErrors.recordedAt && <p className="text-xs text-destructive">{formErrors.recordedAt}</p>}
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[11px] text-muted-foreground">시간</Label>
+                      <Label className="text-[12.5px] text-muted-foreground">시간</Label>
                       <Input
                         name="recordedTime"
                         type="time"
@@ -411,7 +411,7 @@ function DuesRecordsTabInner({
                   {formType === "EXPENSE" ? (
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <Label className="text-[11px] text-muted-foreground">결제 수단</Label>
+                        <Label className="text-[12.5px] text-muted-foreground">결제 수단</Label>
                         <NativeSelect
                           name="method"
                           className="h-10 rounded-lg bg-secondary border-0"
@@ -441,7 +441,7 @@ function DuesRecordsTabInner({
                     </Button>
                   )}
 
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[12.5px] text-muted-foreground">
                     이름 포함 시 납부 자동 연결
                   </p>
                 </fieldset>
@@ -468,29 +468,29 @@ function DuesRecordsTabInner({
                   <form className="space-y-3" action={(fd) => handleUpdateRecord(fd)}>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <Label className="text-[11px] text-muted-foreground">유형</Label>
+                        <Label className="text-[12.5px] text-muted-foreground">유형</Label>
                         <NativeSelect name="editType" defaultValue={record.type} className="h-10 rounded-lg bg-secondary border-0">
                           <option value="INCOME">입금</option>
                           <option value="EXPENSE">출금</option>
                         </NativeSelect>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[11px] text-muted-foreground">금액</Label>
+                        <Label className="text-[12.5px] text-muted-foreground">금액</Label>
                         <Input name="editAmount" type="number" defaultValue={record.amount} min={1} required placeholder="금액" className="h-10 rounded-lg bg-secondary border-0" />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <Label className="text-[11px] text-muted-foreground">날짜</Label>
+                        <Label className="text-[12.5px] text-muted-foreground">날짜</Label>
                         <Input name="editDate" type="date" defaultValue={(() => { const d = new Date(record.recordedAt); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })()} className="h-10 rounded-lg bg-secondary border-0" />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[11px] text-muted-foreground">시간</Label>
+                        <Label className="text-[12.5px] text-muted-foreground">시간</Label>
                         <Input name="editTime" type="time" defaultValue={(() => { const d = new Date(record.recordedAt); return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; })()} className="h-10 rounded-lg bg-secondary border-0" />
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[11px] text-muted-foreground">내용</Label>
+                      <Label className="text-[12.5px] text-muted-foreground">내용</Label>
                       <Input name="editDescription" defaultValue={record.description} required placeholder="내용" className="h-10 rounded-lg bg-secondary border-0" />
                     </div>
                     <div className="flex justify-end gap-2">
@@ -518,7 +518,7 @@ function DuesRecordsTabInner({
                             : "border-muted-foreground/30"
                         )}
                       >
-                        {selectedIds.has(record.id) && <span className="text-[10px] font-bold">✓</span>}
+                        {selectedIds.has(record.id) && <span className="text-[12px] font-bold">✓</span>}
                       </button>
                     )}
                     <div className="min-w-0 flex-1">
@@ -536,7 +536,7 @@ function DuesRecordsTabInner({
                       <div className="flex items-center gap-1.5">
                         <Badge
                           variant={record.type === "INCOME" ? "success" : "destructive"}
-                          className="border-0 text-[10px] px-1.5 py-0"
+                          className="border-0 text-[12px] px-1.5 py-0"
                         >
                           {record.type === "INCOME" ? "입금" : "출금"}
                         </Badge>

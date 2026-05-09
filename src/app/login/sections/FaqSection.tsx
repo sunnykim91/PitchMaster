@@ -221,7 +221,7 @@ export default function FaqSection() {
                 >
                   <div className="flex items-center gap-2.5 flex-1 min-w-0">
                     <span
-                      className="text-[10px] font-display tracking-[0.20em] px-1.5 py-0.5 rounded shrink-0"
+                      className="text-[12px] font-display tracking-[0.20em] px-1.5 py-0.5 rounded shrink-0"
                       style={{
                         background: "hsl(var(--accent) / 0.14)",
                         color: "hsl(var(--accent))",

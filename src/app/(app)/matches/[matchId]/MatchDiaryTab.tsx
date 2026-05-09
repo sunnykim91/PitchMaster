@@ -405,7 +405,7 @@ function MatchDiaryTabInner({
           <Card className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm font-bold">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">AI</span>
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[12px] font-black text-primary">AI</span>
                 AI가 정리한 경기
               </CardTitle>
             </CardHeader>
@@ -420,7 +420,7 @@ function MatchDiaryTabInner({
                   <p className="text-sm text-muted-foreground">
                     {autoGenError ?? "기록(득점·MVP·참석) 중 하나라도 입력돼야 후기를 만들 수 있어요."}
                   </p>
-                  <p className="text-[11px] text-muted-foreground/80">
+                  <p className="text-[12.5px] text-muted-foreground/80">
                     기록 탭에서 득점을 추가하거나, 출석 탭에서 참석 체크를 마친 뒤 다시 시도해 주세요.
                   </p>
                   <Button
@@ -470,7 +470,7 @@ function MatchDiaryTabInner({
         <Card className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-bold">
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[10px] font-black text-primary">AI</span>
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[12px] font-black text-primary">AI</span>
               AI가 정리한 경기
             </CardTitle>
           </CardHeader>
@@ -544,7 +544,7 @@ function MatchDiaryTabInner({
             {regenerateError && (
               <p className="mt-2 text-xs text-destructive">{regenerateError}</p>
             )}
-            <p className="mt-2 text-[11px] text-muted-foreground/70">
+            <p className="mt-2 text-[12.5px] text-muted-foreground/70">
               경기 데이터를 기반으로 AI가 작성했어요. 팀원 전체가 같은 후기를 봅니다.
               {canRegenerateAi && (
                 <span className={cn("ml-1", regenerateUsed ? "text-muted-foreground/50" : "text-primary/70")}>
@@ -588,7 +588,7 @@ function MatchDiaryTabInner({
                         <input type="radio" name="weather" value={w} defaultChecked={diary.weather === w} className="peer sr-only" />
                         <div className="flex flex-col items-center gap-1.5 rounded-xl border border-border p-3 text-muted-foreground transition-all peer-checked:bg-primary peer-checked:text-primary-foreground peer-checked:border-primary hover:bg-secondary/80">
                           <span className="text-lg">{icons[w] ?? "🌤️"}</span>
-                          <span className="text-[10px] font-medium">{w}</span>
+                          <span className="text-[12px] font-medium">{w}</span>
                         </div>
                       </label>
                     );

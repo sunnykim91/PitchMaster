@@ -214,7 +214,7 @@ function StatBar({ label, value, unit }: { label: string; value: string | number
 // Context Chip
 function ContextChip({ text, icon }: { text: string; icon?: string }) {
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full bg-white/10 text-white/80">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[12px] font-medium rounded-full bg-white/10 text-white/80">
       {icon && <span>{icon}</span>}
       {text}
     </span>
@@ -291,12 +291,12 @@ function BestMomentCard({ moment, index }: { moment: BestMoment; index: number }
 
       {/* 우측: 라벨/헤드라인/디테일 */}
       <div className="relative min-w-0 flex-1">
-        <p className="text-[10px] tracking-[0.2em] text-white/70 uppercase font-bold mb-1">
+        <p className="text-[12px] tracking-[0.2em] text-white/70 uppercase font-bold mb-1">
           {titles[moment.kind]}
         </p>
         <h4 className="text-base sm:text-lg font-bold text-white mb-0.5 line-clamp-2 leading-snug drop-shadow">{moment.headline}</h4>
         <p className="text-sm text-white/80 line-clamp-1">{moment.detail}</p>
-        <p className="text-[11px] text-white/50 mt-1">{moment.date}</p>
+        <p className="text-[12.5px] text-white/50 mt-1">{moment.date}</p>
       </div>
     </div>
   );
@@ -345,11 +345,11 @@ function MatchTimelineItem({ match, isLast }: { match: RecentMatch; isLast: bool
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-bold", resultColors[match.result])}>
+                <span className={cn("px-1.5 py-0.5 rounded text-[12px] font-bold", resultColors[match.result])}>
                   {resultLabels[match.result]}
                 </span>
                 {match.isHighlight && (
-                  <span className="text-[10px] text-[hsl(16,85%,58%)]">HIGHLIGHT</span>
+                  <span className="text-[12px] text-[hsl(16,85%,58%)]">HIGHLIGHT</span>
                 )}
               </div>
               <p className="text-base font-semibold text-white">
@@ -509,13 +509,13 @@ export function PlayerProfilePage({
 
         {/* PITCHMASTER Watermark - Top Right */}
         <div className="absolute top-6 right-6 sm:top-10 sm:right-10">
-          <span className="text-[10px] tracking-[0.35em] text-white/25 font-medium">PITCHMASTER</span>
+          <span className="text-[12px] tracking-[0.35em] text-white/25 font-medium">PITCHMASTER</span>
         </div>
 
         {/* Main Content */}
         <div className="relative text-center z-10 max-w-4xl mx-auto">
           {/* Season Overline */}
-          <p className="text-[11px] sm:text-xs tracking-[0.4em] text-white/40 mb-4 uppercase font-medium">
+          <p className="text-[12.5px] sm:text-xs tracking-[0.4em] text-white/40 mb-4 uppercase font-medium">
             {seasonName}
           </p>
 
@@ -574,7 +574,7 @@ export function PlayerProfilePage({
 
           {/* Signature Statement - Primary Color, Italic */}
           <div className="flex flex-col items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] tracking-[0.15em] text-white/50 uppercase">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[12px] tracking-[0.15em] text-white/50 uppercase">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
               AI 카피
             </span>
@@ -589,7 +589,7 @@ export function PlayerProfilePage({
 
         {/* Scroll Cue - Bottom Center */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
-          <span className="text-[10px] tracking-[0.3em] text-white/30 uppercase">Scroll</span>
+          <span className="text-[12px] tracking-[0.3em] text-white/30 uppercase">Scroll</span>
           <svg className="w-5 h-5 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
           </svg>
@@ -694,7 +694,7 @@ export function PlayerProfilePage({
           <h3 className="text-lg font-bold text-white mb-1">출석 히트맵</h3>
           <p className="text-xs text-white/40 mb-4">최근 {attendanceHistory.length}경기 · 왼쪽=오래된 경기, 오른쪽=최신</p>
           <AttendanceHeatmap cells={attendanceHistory} />
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-white/50">
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-[12.5px] text-white/50">
             <span className="flex items-center gap-1.5">
               <span className="h-3 w-3 rounded bg-emerald-500/80" />출석·승
             </span>
@@ -758,7 +758,7 @@ export function PlayerProfilePage({
 
       {/* Footer */}
       <footer className="text-center py-8 border-t border-white/5">
-        <p className="text-[10px] tracking-[0.3em] text-white/30">PITCHMASTER</p>
+        <p className="text-[12px] tracking-[0.3em] text-white/30">PITCHMASTER</p>
         <p className="text-xs text-white/20 mt-1">pitch-master.app</p>
       </footer>
 

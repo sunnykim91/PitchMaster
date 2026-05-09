@@ -159,7 +159,7 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
               setPhaseIdx(i);
             }}
             className={cn(
-              "flex-1 rounded px-2 py-1 text-[11px] font-semibold transition-colors text-center",
+              "flex-1 rounded px-2 py-1 text-[12.5px] font-semibold transition-colors text-center",
               i === phaseIdx
                 ? mode === "attack"
                   ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]"
@@ -278,14 +278,14 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
       {/* 캡션 — phase 라벨 + step 진행 + step caption */}
       <div className="mt-3 rounded-md bg-background/60 p-2.5 text-[12px] leading-relaxed text-foreground">
         {highlightSlot && highlightLabel && (
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-[hsl(var(--primary))]">
+          <p className="mb-1 text-[12px] font-bold uppercase tracking-wider text-[hsl(var(--primary))]">
             내 포지션: {highlightLabel}
           </p>
         )}
         <div className="mb-1 flex items-baseline justify-between gap-2">
-          <span className="text-[11px] font-bold text-foreground">{phase.label}</span>
+          <span className="text-[12.5px] font-bold text-foreground">{phase.label}</span>
           {steps.length > 1 && (
-            <span className="text-[10px] text-muted-foreground tabular-nums">
+            <span className="text-[12px] text-muted-foreground tabular-nums">
               {stepIdx + 1} / {steps.length}
             </span>
           )}

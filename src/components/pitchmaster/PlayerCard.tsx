@@ -69,7 +69,7 @@ function SparklesDots({ count = 8, color = "gold" }: { count?: number; color?: s
 // Context Chip Component
 function ContextChip({ text }: { text: string }) {
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-white/15 text-white/90 whitespace-nowrap">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[12px] font-semibold rounded-full bg-white/15 text-white/90 whitespace-nowrap">
       {text}
     </span>
   );
@@ -198,10 +198,10 @@ function CardBack({
         {/* Header — 컴팩트 */}
         <div className="mb-2">
           <div className="flex items-center justify-between mb-1">
-            <p className={cn("text-[10px] tracking-[0.3em] font-bold", config.labelColor)}>
+            <p className={cn("text-[12px] tracking-[0.3em] font-bold", config.labelColor)}>
               {config.label}
             </p>
-            <p className="text-[10px] tracking-[0.2em] text-white/40 font-semibold">{positionLabel}</p>
+            <p className="text-[12px] tracking-[0.2em] text-white/40 font-semibold">{positionLabel}</p>
           </div>
           <div className="flex items-end gap-2">
             <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-none">{playerName}</h3>
@@ -209,7 +209,7 @@ function CardBack({
               {ovr}
             </span>
           </div>
-          <p className="text-[11px] text-white/50 mt-1">{teamName} · {seasonName}</p>
+          <p className="text-[12.5px] text-white/50 mt-1">{teamName} · {seasonName}</p>
         </div>
 
         {/* Divider with rarity color */}
@@ -511,7 +511,7 @@ export function PlayerCard({
                 <path d="M21 12a9 9 0 11-3-6.7" />
                 <path d="M21 3v6h-6" />
               </svg>
-              <span className="text-[10px] font-bold text-white tracking-wide whitespace-nowrap">탭해서 기록 보기</span>
+              <span className="text-[12px] font-bold text-white tracking-wide whitespace-nowrap">탭해서 기록 보기</span>
             </div>
           )}
         </div>
@@ -630,7 +630,7 @@ export function PlayerCardDemo() {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10 sm:mb-16">
-          <p className="text-[10px] tracking-[0.4em] text-white/40 mb-2">PITCHMASTER PRESENTS</p>
+          <p className="text-[12px] tracking-[0.4em] text-white/40 mb-2">PITCHMASTER PRESENTS</p>
           <h1 className="text-3xl sm:text-5xl font-black text-white mb-3">플레이어 카드</h1>
           <p className="text-sm sm:text-base text-white/50">카드를 클릭하여 뒷면을 확인하세요</p>
         </div>

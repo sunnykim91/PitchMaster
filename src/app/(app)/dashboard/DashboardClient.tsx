@@ -695,7 +695,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                             ? ` vs ${vote.opponentName}`
                             : " 팀 일정"}
                     </p>
-                    <div className="mt-2 flex items-center gap-3 text-[11px]">
+                    <div className="mt-2 flex items-center gap-3 text-[12.5px]">
                       <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--success))]" />참석 <strong className="text-[hsl(var(--success))]">{vote.voteCounts.attend}</strong></span>
                       <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--loss))]" />불참 <strong className="text-[hsl(var(--loss))]">{vote.voteCounts.absent}</strong></span>
                       <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--warning))]" />미정 <strong className="text-[hsl(var(--warning))]">{vote.voteCounts.undecided}</strong></span>

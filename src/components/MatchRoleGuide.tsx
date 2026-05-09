@@ -235,7 +235,7 @@ function SectionFrame({ children }: { children: React.ReactNode }) {
         <Sparkles className="h-4 w-4 text-primary" />
         <div>
           <h3 className="text-base font-bold leading-tight">역할 가이드</h3>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[12.5px] text-muted-foreground">
             쿼터별 내 포지션의 역할과 주의점을 확인하세요.
           </p>
         </div>
@@ -335,7 +335,7 @@ function RoleCard({ group, canManage }: { group: AssignmentGroup; canManage: boo
           <QuarterBadge label={quarterLabel} />
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">{mergedRole.title}</p>
-            <p className="truncate text-[11px] text-muted-foreground">
+            <p className="truncate text-[12.5px] text-muted-foreground">
               {mergedRole.summary}
             </p>
           </div>
@@ -509,7 +509,7 @@ function RoleDetail({ role }: { role: MergedPositionRole }) {
 
 function QuarterBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex shrink-0 items-center rounded-md bg-primary/15 px-2 py-0.5 text-[11px] font-bold text-primary">
+    <span className="inline-flex shrink-0 items-center rounded-md bg-primary/15 px-2 py-0.5 text-[12.5px] font-bold text-primary">
       {label}
     </span>
   );
@@ -518,7 +518,7 @@ function QuarterBadge({ label }: { label: string }) {
 function Block({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-1.5 text-[11px] font-semibold text-foreground/60">{label}</p>
+      <p className="mb-1.5 text-[12.5px] font-semibold text-foreground/60">{label}</p>
       <div className="text-[13.5px] text-foreground/90">{children}</div>
     </div>
   );
@@ -528,7 +528,7 @@ function BulletBlock({ label, items }: { label: string; items: string[] }) {
   if (items.length === 0) return null;
   return (
     <div>
-      <p className="mb-1.5 text-[11px] font-semibold text-foreground/60">{label}</p>
+      <p className="mb-1.5 text-[12.5px] font-semibold text-foreground/60">{label}</p>
       <ul className="space-y-1.5 text-[13.5px] text-foreground/90">
         {items.map((t, i) => (
           <li key={i} className="flex gap-2">
@@ -547,7 +547,7 @@ function CautionList({ items }: { items: CautionItem[] }) {
   if (items.length === 0) return null;
   return (
     <div>
-      <p className="mb-1.5 flex items-center gap-1 text-[11px] font-semibold text-[hsl(var(--warning))]">
+      <p className="mb-1.5 flex items-center gap-1 text-[12.5px] font-semibold text-[hsl(var(--warning))]">
         <AlertTriangle className="h-3 w-3" />
         조심할 실수
       </p>
@@ -572,7 +572,7 @@ function LinkageList({ items }: { items: LinkageItem[] }) {
   if (items.length === 0) return null;
   return (
     <div>
-      <p className="mb-1.5 text-[11px] font-semibold text-foreground/60">
+      <p className="mb-1.5 text-[12.5px] font-semibold text-foreground/60">
         동료와의 연계
       </p>
       <ul className="space-y-1.5">
@@ -663,7 +663,7 @@ function FormationSlotCard({
       header={
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">{role.title}</p>
-          <p className="truncate text-[11px] text-muted-foreground">{role.summary}</p>
+          <p className="truncate text-[12.5px] text-muted-foreground">{role.summary}</p>
         </div>
       }
     >

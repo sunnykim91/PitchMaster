@@ -148,8 +148,8 @@ export default function MonthlyReportClient({ teamName }: { teamName: string }) 
         </button>
         <div className="text-center">
           <div className="font-bold text-lg">{ymLabel(ym)}</div>
-          {isCurrentMonth && <div className="text-[10px] text-muted-foreground">진행 중</div>}
-          {isFutureMonth && <div className="text-[10px] text-[hsl(var(--warning))]">미래 월</div>}
+          {isCurrentMonth && <div className="text-[12px] text-muted-foreground">진행 중</div>}
+          {isFutureMonth && <div className="text-[12px] text-[hsl(var(--warning))]">미래 월</div>}
         </div>
         <button
           type="button"
@@ -167,11 +167,11 @@ export default function MonthlyReportClient({ teamName }: { teamName: string }) 
         {/* 카드 헤더 — 공유 이미지에 포함될 브랜딩 */}
         <div className="flex items-center justify-between border-b border-border/50 pb-3">
           <div>
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Monthly Report</div>
+            <div className="text-[12.5px] uppercase tracking-wider text-muted-foreground">Monthly Report</div>
             <div className="font-heading text-xl font-bold">{teamName}</div>
           </div>
           <div className="text-right">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Period</div>
+            <div className="text-[12.5px] uppercase tracking-wider text-muted-foreground">Period</div>
             <div className="font-heading text-xl font-bold text-primary">{ymLabel(ym)}</div>
           </div>
         </div>
@@ -211,7 +211,7 @@ export default function MonthlyReportClient({ teamName }: { teamName: string }) 
                   tone={data.finance.net >= 0 ? "primary" : "loss"}
                 />
               </div>
-              <p className="mt-2 text-[11px] text-muted-foreground text-right">
+              <p className="mt-2 text-[12.5px] text-muted-foreground text-right">
                 거래 {data.finance.transactionCount}건
               </p>
 
@@ -271,8 +271,8 @@ export default function MonthlyReportClient({ teamName }: { teamName: string }) 
 
         {/* 카드 푸터 */}
         <div className="border-t border-border/30 pt-3 text-center">
-          <div className="text-[10px] tracking-[0.3em] text-muted-foreground/60">PITCHMASTER</div>
-          <div className="text-[10px] text-muted-foreground/40 mt-0.5">pitch-master.app</div>
+          <div className="text-[12px] tracking-[0.3em] text-muted-foreground/60">PITCHMASTER</div>
+          <div className="text-[12px] text-muted-foreground/40 mt-0.5">pitch-master.app</div>
         </div>
       </div>
 
@@ -297,7 +297,7 @@ export default function MonthlyReportClient({ teamName }: { teamName: string }) 
       )}
 
       {/* 가이드 */}
-      <p className="text-center text-[11px] text-muted-foreground">
+      <p className="text-center text-[12.5px] text-muted-foreground">
         공유 시 이미지로 저장되어 카카오톡·인스타그램에 올릴 수 있어요
       </p>
     </div>
@@ -322,7 +322,7 @@ function FinanceStatCard({
   };
   return (
     <div className="rounded-lg bg-secondary/40 p-3 text-center">
-      <div className="flex items-center justify-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="flex items-center justify-center gap-1 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
         {icon}
         {label}
       </div>
@@ -351,7 +351,7 @@ function MatchStatCard({
   return (
     <div className="rounded-lg bg-secondary/40 p-3 text-center">
       <div className={cn("font-bold text-lg", toneClass)}>{value}</div>
-      <div className="text-[10px] font-medium text-muted-foreground">{label}</div>
+      <div className="text-[12px] font-medium text-muted-foreground">{label}</div>
     </div>
   );
 }

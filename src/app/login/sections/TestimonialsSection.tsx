@@ -210,14 +210,14 @@ export default function TestimonialsSection({
                     {t.name}
                   </div>
                   <div
-                    className="text-[11.5px]"
+                    className="text-[12.5px]"
                     style={{ color: "hsl(var(--muted-foreground))" }}
                   >
                     {t.age}세 · {t.years}년차
                   </div>
                 </div>
                 <span
-                  className="font-display text-[10px] tracking-[0.18em] px-2 py-0.5 rounded-full whitespace-nowrap"
+                  className="font-display text-[12px] tracking-[0.18em] px-2 py-0.5 rounded-full whitespace-nowrap"
                   style={{
                     background: "hsl(var(--primary) / 0.13)",
                     color: "hsl(var(--primary))",

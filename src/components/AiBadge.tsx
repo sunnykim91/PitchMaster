@@ -22,8 +22,8 @@ export type AiBadgeProps = {
  */
 export function AiBadge({ variant, label, size = "md", className }: AiBadgeProps) {
   const sizeClasses = size === "sm"
-    ? { box: "h-5 px-1.5 gap-1 text-[10px]", icon: "h-3 w-3", text: "text-xs" }
-    : { box: "h-6 px-2 gap-1 text-[11px]", icon: "h-3.5 w-3.5", text: "text-sm" };
+    ? { box: "h-5 px-1.5 gap-1 text-[12px]", icon: "h-3 w-3", text: "text-xs" }
+    : { box: "h-6 px-2 gap-1 text-[12.5px]", icon: "h-3.5 w-3.5", text: "text-sm" };
 
   // variant별 박스 스타일 + 박스 안에 표시할 축약 라벨("AI"/"룰"/"생성중"/"실패")
   const variantClasses: Record<AiBadgeVariant, { box: string; text: string; short: string }> = {

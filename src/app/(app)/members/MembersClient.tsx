@@ -689,7 +689,7 @@ export default function MembersClient({
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <span className="text-[10px] font-bold text-muted-foreground">{member.name.charAt(0)}</span>
+                            <span className="text-[12px] font-bold text-muted-foreground">{member.name.charAt(0)}</span>
                           )}
                         </span>
                         {member.jerseyNumber !== null && (
@@ -703,7 +703,7 @@ export default function MembersClient({
                           <Badge variant="secondary" className="text-xs px-1.5 py-0 shrink-0">부주장</Badge>
                         )}
                         {member.status === "DORMANT" && member.dormantType && (
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0 bg-muted-foreground/15 text-muted-foreground">
+                          <Badge variant="secondary" className="text-[12px] px-1.5 py-0 shrink-0 bg-muted-foreground/15 text-muted-foreground">
                             {DORMANT_ICONS[member.dormantType]} {DORMANT_LABELS[member.dormantType] ?? "휴면"}
                             {member.dormantUntil && (
                               <span className="ml-0.5">~{member.dormantUntil.slice(5)}</span>
@@ -743,7 +743,7 @@ export default function MembersClient({
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <span className="text-[10px] font-bold text-muted-foreground">{member.name.charAt(0)}</span>
+                            <span className="text-[12px] font-bold text-muted-foreground">{member.name.charAt(0)}</span>
                           )}
                         </span>
                         {member.jerseyNumber !== null && (
@@ -757,7 +757,7 @@ export default function MembersClient({
                           <Badge variant="secondary" className="text-xs px-1.5 py-0 shrink-0">부주장</Badge>
                         )}
                         {member.status === "DORMANT" && member.dormantType && (
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0 bg-muted-foreground/15 text-muted-foreground">
+                          <Badge variant="secondary" className="text-[12px] px-1.5 py-0 shrink-0 bg-muted-foreground/15 text-muted-foreground">
                             {DORMANT_ICONS[member.dormantType]} {DORMANT_LABELS[member.dormantType] ?? "휴면"}
                             {member.dormantUntil && (
                               <span className="ml-0.5">~{member.dormantUntil.slice(5)}</span>
@@ -912,19 +912,19 @@ export default function MembersClient({
                       <div className="mt-3 rounded-lg border border-primary/20 bg-card p-3 space-y-2">
                         <div className="grid grid-cols-2 gap-2">
                           <div className="space-y-1">
-                            <Label className="text-[11px] text-muted-foreground">사유</Label>
+                            <Label className="text-[12.5px] text-muted-foreground">사유</Label>
                             <NativeSelect value={dormantType} onChange={(e) => setDormantType(e.target.value)} className="h-9 text-sm">
                               <option value="INJURED">🏥 부상</option>
                               <option value="PERSONAL">✈️ 개인사정</option>
                             </NativeSelect>
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-[11px] text-muted-foreground">복귀 예정일</Label>
+                            <Label className="text-[12.5px] text-muted-foreground">복귀 예정일</Label>
                             <Input type="date" value={dormantUntil} onChange={(e) => setDormantUntil(e.target.value)} className="h-9 text-sm" />
                           </div>
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[11px] text-muted-foreground">메모 (선택)</Label>
+                          <Label className="text-[12.5px] text-muted-foreground">메모 (선택)</Label>
                           <Input value={dormantReason} onChange={(e) => setDormantReason(e.target.value)} placeholder="예: 무릎 인대 부상, 해외 출장" className="h-9 text-sm" />
                         </div>
                         <div className="flex gap-2 justify-end">
@@ -987,7 +987,7 @@ export default function MembersClient({
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm font-semibold text-muted-foreground">{member.name}</p>
                       {member.dormantType && (
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-muted-foreground/15 text-muted-foreground">
+                        <Badge variant="secondary" className="text-[12px] px-1.5 py-0 bg-muted-foreground/15 text-muted-foreground">
                           {DORMANT_ICONS[member.dormantType]} {DORMANT_LABELS[member.dormantType]}
                           {member.dormantUntil && <span className="ml-0.5">~{member.dormantUntil.slice(5)}</span>}
                         </Badge>

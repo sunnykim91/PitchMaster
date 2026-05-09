@@ -315,7 +315,7 @@ export default function AdminClient() {
                         {u.teamName ?? "팀 없음"}
                       </span>
                       {!u.profileComplete && (
-                        <Badge variant="outline" className="text-[10px] px-1 py-0 shrink-0">프로필 미완성</Badge>
+                        <Badge variant="outline" className="text-[12px] px-1 py-0 shrink-0">프로필 미완성</Badge>
                       )}
                     </span>
                     <span className="text-xs text-muted-foreground shrink-0" suppressHydrationWarning>{timeAgo(u.createdAt)}</span>
@@ -342,7 +342,7 @@ export default function AdminClient() {
                   <li key={t.id} className="flex items-center justify-between gap-2 text-sm">
                     <span className="flex items-center gap-1.5 min-w-0">
                       <span className="font-medium truncate">{t.name}</span>
-                      <Badge variant="outline" className="text-[10px] px-1 py-0 shrink-0">
+                      <Badge variant="outline" className="text-[12px] px-1 py-0 shrink-0">
                         {t.sportType === "FUTSAL" ? "풋살" : "축구"}
                       </Badge>
                       <span className="text-xs text-muted-foreground shrink-0">{t.memberCount}명</span>

@@ -798,7 +798,7 @@ function DuesBulkTabInner({
                     {/* Row 2: 내용, 회원 매칭 */}
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <label className="text-[10px] text-muted-foreground uppercase tracking-wide">내용</label>
+                        <label className="text-[12px] text-muted-foreground uppercase tracking-wide">내용</label>
                         <Input
                           value={row.description}
                           onChange={(e) => {
@@ -813,7 +813,7 @@ function DuesBulkTabInner({
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[10px] text-muted-foreground uppercase tracking-wide">회원 매칭</label>
+                        <label className="text-[12px] text-muted-foreground uppercase tracking-wide">회원 매칭</label>
                         <Select
                           value={row.memberName || "none"}
                           onValueChange={(v) => updateBulkRow(index, "memberName", v === "none" ? "" : v)}
@@ -866,7 +866,7 @@ function DuesBulkTabInner({
               ⚠️ 정보가 부족한 거래 ({partialRows.length}건)
             </p>
           </div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[12.5px] text-muted-foreground">
             날짜나 시간이 잘려 정확하지 않을 수 있습니다. 직접 확인 후 추가하거나 제외해주세요.
           </p>
           <div className="space-y-2">
@@ -887,14 +887,14 @@ function DuesBulkTabInner({
                             {row.type === "INCOME" ? "+" : "-"}{formatAmount(Number(row.amount))}
                           </span>
                         </p>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        <p className="mt-0.5 text-[12.5px] text-muted-foreground">
                           {row.date}{row.time ? ` ${row.time}` : ""}
                         </p>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {row.reasons.map((r) => (
-                        <span key={r} className="rounded bg-[hsl(var(--warning)/0.15)] px-1.5 py-0.5 text-[10px] text-[hsl(var(--warning))]">
+                        <span key={r} className="rounded bg-[hsl(var(--warning)/0.15)] px-1.5 py-0.5 text-[12px] text-[hsl(var(--warning))]">
                           {reasonLabels[r] ?? r}
                         </span>
                       ))}

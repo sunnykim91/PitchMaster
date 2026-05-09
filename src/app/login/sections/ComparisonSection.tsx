@@ -122,7 +122,7 @@ export default function ComparisonSection() {
 
         {/* Header row (desktop only) */}
         <div
-          className="hidden md:grid mt-12 grid-cols-[1.1fr_1.5fr_1.2fr] gap-4 px-5 pb-3 text-[11px] font-display tracking-[0.22em]"
+          className="hidden md:grid mt-12 grid-cols-[1.1fr_1.5fr_1.2fr] gap-4 px-5 pb-3 text-[12.5px] font-display tracking-[0.22em]"
           style={{ color: "hsl(var(--muted-foreground))", borderBottom: "1px solid hsl(var(--border))" }}
         >
           <div>FEATURE</div>
@@ -161,7 +161,7 @@ export default function ComparisonSection() {
                 </span>
                 {r.highlight && (
                   <span
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-display tracking-[0.18em] whitespace-nowrap"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] font-display tracking-[0.18em] whitespace-nowrap"
                     style={{
                       background:
                         "linear-gradient(90deg, hsl(var(--primary) / 0.18), hsl(var(--accent) / 0.16))",

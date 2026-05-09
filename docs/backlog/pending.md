@@ -1,7 +1,7 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=89팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-05-07 (47차-2)
+last_updated: 2026-05-09 (51차)
 related: [completed-recent.md, reviews.md]
 ---
 
@@ -11,6 +11,21 @@ related: [completed-recent.md, reviews.md]
 - **HIGH**: 현재 89팀+ 운영에 직접 영향
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
+
+## 51차 신규 추가 (2026-05-09)
+
+### SessionEnd 훅 실제 동작 확인 (MEDIUM, 다음 세션 종료 후)
+- **배경**: `1bade98`에서 `.claude/settings.json` SessionEnd 훅 추가 완료. Claude desktop 재시작 후 활성화.
+- [ ] 다음 세션 종료 후 `sunnykim91/pitchmaster-memory` repo 커밋 이력 확인 (자동 push 됐는지)
+- [ ] 동작 안 했으면: bash 경로 문제 (Windows) → PowerShell 전환 또는 절대 경로로 수정
+- 참고: `project_multi_computer_memory_sync.md`
+
+### GA4 트래픽 채널 fix 효과 검증 (HIGH, 2026-05-09 시점 도래)
+- **배경**: `0f2b820` 2026-05-07 배포. source → cta_source/vote_source 키 변경. 오늘(5/9) 검증 시점.
+- [ ] GA4 트래픽 획득 보고서 "세션 소스/매체" 확인 — Unassigned 63% → 정상화 여부
+- [ ] sticky_mobile/hero/match_detail 등 7개 비정상 source 사라졌는지 확인
+- [ ] 정상화 확인 후 `reference_ga4_app_router.md` 갱신
+- 참고: `feedback_ga4_reserved_param_names.md`
 
 ## 50차 신규 추가 (2026-05-08)
 

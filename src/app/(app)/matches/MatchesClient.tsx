@@ -850,7 +850,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         : match.opponent ? `  ·  vs ${match.opponent}` : ""}
                     </span>
                     {match.matchType !== "EVENT" && match.sportType === "FUTSAL" && (
-                      <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-tight bg-[hsl(var(--info))]/15 text-[hsl(var(--info))] border border-[hsl(var(--info))]/30">
+                      <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[12px] font-bold tracking-tight bg-[hsl(var(--info))]/15 text-[hsl(var(--info))] border border-[hsl(var(--info))]/30">
                         풋살
                       </span>
                     )}
@@ -988,7 +988,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
 
             {inviteCode && (
               <div className="mb-4 rounded-lg border border-border bg-secondary/50 p-3">
-                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">초대 코드</p>
+                <p className="text-[12.5px] uppercase tracking-wide text-muted-foreground">초대 코드</p>
                 <p className="mt-0.5 font-mono text-base font-bold text-primary">{inviteCode}</p>
               </div>
             )}

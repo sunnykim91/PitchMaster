@@ -327,7 +327,7 @@ function MatchInfoTabInner({
                 <div className="relative flex flex-1 flex-col items-center gap-3">
                   <div className="h-14 w-14 rounded-sm shadow-lg" style={homeJerseyStyle} />
                   {match.status === "COMPLETED" && scoreData.result === "승" && (
-                    <Badge className="absolute -right-1 -top-1 bg-[hsl(var(--success))] px-1.5 py-0.5 text-[10px] font-bold text-white">WIN</Badge>
+                    <Badge className="absolute -right-1 -top-1 bg-[hsl(var(--success))] px-1.5 py-0.5 text-[12px] font-bold text-white">WIN</Badge>
                   )}
                   <span className="max-w-[100px] truncate text-sm font-semibold">{isInternal ? "A팀" : "우리팀"}</span>
                 </div>
@@ -352,10 +352,10 @@ function MatchInfoTabInner({
                     </div>
                   )}
                   {match.status === "COMPLETED" && scoreData.result === "패" && (
-                    <Badge className="absolute -left-1 -top-1 bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-white">WIN</Badge>
+                    <Badge className="absolute -left-1 -top-1 bg-destructive px-1.5 py-0.5 text-[12px] font-bold text-white">WIN</Badge>
                   )}
                   {match.status === "COMPLETED" && scoreData.result === "무" && (
-                    <Badge className="absolute -right-1 -top-1 bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">DRAW</Badge>
+                    <Badge className="absolute -right-1 -top-1 bg-muted px-1.5 py-0.5 text-[12px] font-bold text-muted-foreground">DRAW</Badge>
                   )}
                   <span className="max-w-[100px] truncate text-sm font-semibold text-muted-foreground">{isInternal ? "B팀" : (match.opponent ?? "상대팀")}</span>
                 </div>
@@ -392,23 +392,23 @@ function MatchInfoTabInner({
               <div className="edit-form space-y-5">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">날짜</p>
+                    <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">날짜</p>
                     <input type="date" name="date" defaultValue={match.date} required className="relative h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
                   </div>
                   <div>
-                    <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">{match.matchType === "EVENT" ? "일정 제목" : "상대팀"}</p>
+                    <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">{match.matchType === "EVENT" ? "일정 제목" : "상대팀"}</p>
                     <input name="opponent" defaultValue={match.opponent ?? ""} placeholder={match.matchType === "EVENT" ? "예: 연말 회식" : "미정"} className="h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">시작</p>
+                    <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">시작</p>
                     <select name="time" defaultValue={formatTime(match.time)} className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
                       {Array.from({ length: 48 }, (_, i) => { const h = String(Math.floor(i / 2)).padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>; })}
                     </select>
                   </div>
                   <div>
-                    <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">종료</p>
+                    <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">종료</p>
                     <select name="endTime" defaultValue={match.endTime ? formatTime(match.endTime) : ""} className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
                       <option value="">미설정</option>
                       {Array.from({ length: 48 }, (_, i) => { const h = String(Math.floor(i / 2)).padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>; })}
@@ -416,13 +416,13 @@ function MatchInfoTabInner({
                   </div>
                 </div>
                 <div>
-                  <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">장소</p>
+                  <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">장소</p>
                   <input name="location" defaultValue={match.location} required className="h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
                 </div>
                 {/* 종목 선택 — 변경 시 인원 옵션 동적 변경 */}
                 {match.matchType !== "EVENT" && (
                   <div>
-                    <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">종목</p>
+                    <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">종목</p>
                     <div className="flex gap-2">
                       {([
                         { type: "SOCCER" as const, label: "⚽ 축구", color: "primary" },
@@ -447,7 +447,7 @@ function MatchInfoTabInner({
                 )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">참가 인원</p>
+                    <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">참가 인원</p>
                     <select key={editingSportType} name="playerCount" defaultValue={String(match.playerCount ?? (editingIsFutsal ? 6 : 11))} className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
                       {(editingIsFutsal ? [3, 4, 5, 6] : [8, 9, 10, 11]).map((n) => (
                         <option key={n} value={n}>{n}:{n} ({n}명)</option>
@@ -455,7 +455,7 @@ function MatchInfoTabInner({
                     </select>
                   </div>
                   <div>
-                    <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">투표 마감</p>
+                    <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">투표 마감</p>
                     <input type="datetime-local" name="voteDeadline" defaultValue={match.voteDeadline?.slice(0, 16) ?? ""} className="relative h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
                   </div>
                 </div>

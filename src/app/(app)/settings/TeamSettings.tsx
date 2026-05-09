@@ -758,7 +758,7 @@ function UniformSettings({
 
       {/* 프리셋 색상 */}
       <div className="space-y-1.5">
-        <p className="text-[11px] font-medium text-muted-foreground">메인 색상</p>
+        <p className="text-[12.5px] font-medium text-muted-foreground">메인 색상</p>
         <div className="flex flex-wrap gap-2">
           {PRESET_COLORS.map((c) => (
             <button key={c.value} type="button" disabled={disabled}
@@ -779,7 +779,7 @@ function UniformSettings({
       </div>
 
       <div className="space-y-1.5">
-        <p className="text-[11px] font-medium text-muted-foreground">서브 색상</p>
+        <p className="text-[12.5px] font-medium text-muted-foreground">서브 색상</p>
         <div className="flex flex-wrap gap-2">
           {PRESET_COLORS.map((c) => (
             <button key={c.value} type="button" disabled={disabled}
@@ -801,7 +801,7 @@ function UniformSettings({
 
       {/* 패턴 */}
       <div className="space-y-1.5">
-        <p className="text-[11px] font-medium text-muted-foreground">패턴</p>
+        <p className="text-[12.5px] font-medium text-muted-foreground">패턴</p>
         <div className="grid grid-cols-4 gap-2">
           {PATTERN_OPTIONS.map((p) => (
             <button key={p.value} type="button" disabled={disabled}

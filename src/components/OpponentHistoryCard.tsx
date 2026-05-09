@@ -143,7 +143,7 @@ export function OpponentHistoryCard({
         {/* 최근 5경기 (현재 경기 제외) */}
         {pastScores.length > 0 && (
           <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-2 text-[12.5px] font-semibold uppercase tracking-wider text-muted-foreground">
               최근 5경기
             </p>
             <div className="space-y-1.5">
@@ -159,7 +159,7 @@ export function OpponentHistoryCard({
                   </span>
                   <span
                     className={cn(
-                      "rounded px-1.5 py-0.5 text-[10px] font-bold",
+                      "rounded px-1.5 py-0.5 text-[12px] font-bold",
                       s.result === "W" && "bg-[hsl(var(--win))]/15 text-[hsl(var(--win))]",
                       s.result === "D" && "bg-secondary text-muted-foreground",
                       s.result === "L" && "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]",
@@ -186,7 +186,7 @@ function StatBox({ label, value, tone }: { label: string; value: number; tone?: 
   return (
     <div className="rounded-lg bg-secondary/40 p-3 text-center">
       <div className={cn("font-bold text-lg", toneClass)}>{value}</div>
-      <div className="text-[10px] font-medium text-muted-foreground">{label}</div>
+      <div className="text-[12px] font-medium text-muted-foreground">{label}</div>
     </div>
   );
 }

@@ -34,7 +34,7 @@ export default function AppError({
           일시적인 오류일 수 있어요. 다시 시도하거나 잠시 후에 다시 와주세요.
         </p>
         {error.digest && (
-          <p className="mt-3 text-[11px] text-muted-foreground/60">
+          <p className="mt-3 text-[12.5px] text-muted-foreground/60">
             오류 ID: {error.digest}
           </p>
         )}

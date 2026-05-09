@@ -457,7 +457,7 @@ export default function AnimationEditorClient({ initial }: Props) {
       </div>
 
       {/* 장면 탭 (phase) */}
-      <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">장면</div>
+      <div className="mb-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">장면</div>
       <div className="mb-3 flex gap-1 overflow-x-auto pb-1">
         {phases.map((p, i) => (
           <button
@@ -505,7 +505,7 @@ export default function AnimationEditorClient({ initial }: Props) {
       </div>
 
       {/* 컷 탭 (step) */}
-      <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+      <div className="mb-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
         장면 안의 컷 (이어 재생되며 영상이 됨)
       </div>
       <div className="mb-2 flex items-center gap-1 overflow-x-auto pb-1">
@@ -515,7 +515,7 @@ export default function AnimationEditorClient({ initial }: Props) {
             type="button"
             onClick={() => setStepIdx(i)}
             className={cn(
-              "shrink-0 rounded px-2 py-1 text-[11px] font-semibold tabular-nums transition-colors",
+              "shrink-0 rounded px-2 py-1 text-[12.5px] font-semibold tabular-nums transition-colors",
               i === stepIdx
                 ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]"
                 : "text-muted-foreground hover:text-foreground",
@@ -527,7 +527,7 @@ export default function AnimationEditorClient({ initial }: Props) {
         <button
           type="button"
           onClick={addStep}
-          className="shrink-0 rounded px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+          className="shrink-0 rounded px-2 py-1 text-[12.5px] font-semibold text-muted-foreground hover:text-foreground"
           title="현재 컷 복사해 다음 컷 추가"
         >
           <Plus className="h-3 w-3" />
@@ -535,7 +535,7 @@ export default function AnimationEditorClient({ initial }: Props) {
         <button
           type="button"
           onClick={duplicateStep}
-          className="shrink-0 rounded px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+          className="shrink-0 rounded px-2 py-1 text-[12.5px] font-semibold text-muted-foreground hover:text-foreground"
           title="현재 컷 복사"
         >
           <Copy className="h-3 w-3" />
@@ -543,7 +543,7 @@ export default function AnimationEditorClient({ initial }: Props) {
         <button
           type="button"
           onClick={deleteStep}
-          className="shrink-0 rounded px-2 py-1 text-[11px] font-semibold text-destructive hover:bg-destructive/10"
+          className="shrink-0 rounded px-2 py-1 text-[12.5px] font-semibold text-destructive hover:bg-destructive/10"
           title="현재 컷 삭제"
         >
           <Trash2 className="h-3 w-3" />
@@ -552,7 +552,7 @@ export default function AnimationEditorClient({ initial }: Props) {
 
       {/* 편집 SVG 위 컴팩트 액션 바 — 미리보기·저장 손쉽게 */}
       <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="text-[11px] text-muted-foreground tabular-nums">
+        <span className="text-[12.5px] text-muted-foreground tabular-nums">
           컷 {stepIdx + 1} / {steps.length}
         </span>
         <div className="flex items-center gap-1.5">
@@ -677,14 +677,14 @@ export default function AnimationEditorClient({ initial }: Props) {
         </div>
       </div>
 
-      <p className="mb-3 text-[11px] leading-relaxed text-muted-foreground">
+      <p className="mb-3 text-[12.5px] leading-relaxed text-muted-foreground">
         💡 선수 점·공을 직접 드래그해서 위치 조정. 컷마다 위치를 조금씩 다르게 두면 이어 재생할
         때 영상이 됩니다. <strong>저장</strong> 버튼을 눌러야 반영돼요.
       </p>
 
       {/* 저장 안 하고 나가면 경고 */}
       {dirty && (
-        <p className="mt-3 text-center text-[11px] text-[hsl(var(--warning))]">
+        <p className="mt-3 text-center text-[12.5px] text-[hsl(var(--warning))]">
           저장하지 않은 변경 사항이 있어요. 페이지를 떠나기 전에 저장하세요.
         </p>
       )}

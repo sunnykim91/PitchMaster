@@ -232,7 +232,7 @@ function AwardCard({ awardKey, award, featured = false }: { awardKey: string; aw
           {award.context && (
             <span className={cn(
               "inline-block mt-2 px-2 py-0.5 rounded bg-white/10 text-white/70",
-              featured ? "text-xs" : "text-[10px]"
+              featured ? "text-xs" : "text-[12px]"
             )}>
               {award.context}
             </span>
@@ -242,13 +242,13 @@ function AwardCard({ awardKey, award, featured = false }: { awardKey: string; aw
           {awardKey === "ironWall" && award.cleanSheets && (
             <>
               <p className="text-xs text-white/50 mt-1">클린시트 {award.cleanSheets}회</p>
-              <p className="text-[10px] text-white/40 mt-0.5">출전 경기 중 상대 무실점 경기 수</p>
+              <p className="text-[12px] text-white/40 mt-0.5">출전 경기 중 상대 무실점 경기 수</p>
             </>
           )}
           {awardKey === "luckyCharm" && award.winRate && (
             <>
               <p className="text-xs text-white/50 mt-1">승률 {Math.round(award.winRate * 100)}%</p>
-              <p className="text-[10px] text-white/40 mt-0.5">5경기 이상 출전 선수 중 최고 승률</p>
+              <p className="text-[12px] text-white/40 mt-0.5">5경기 이상 출전 선수 중 최고 승률</p>
             </>
           )}
           {awardKey === "bestMatch" && award.date && (
@@ -314,7 +314,7 @@ export function SeasonAwardsPage({ data }: { data: SeasonAwardsResponse }) {
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Intro Sequence */}
         <section className="text-center py-16 sm:py-24">
-          <p className="text-[10px] tracking-[0.5em] text-white/30 mb-4">PITCHMASTER PRESENTS</p>
+          <p className="text-[12px] tracking-[0.5em] text-white/30 mb-4">PITCHMASTER PRESENTS</p>
           
           <div className="mb-6">
             <p className="text-lg text-[hsl(16,85%,58%)] font-medium mb-2">{seasonName}</p>
@@ -357,7 +357,7 @@ export function SeasonAwardsPage({ data }: { data: SeasonAwardsResponse }) {
 
                 {/* MVP Info */}
                 <div className="flex-1 text-center lg:text-left">
-                  <p className="text-[10px] tracking-[0.3em] text-yellow-400/80 mb-2">
+                  <p className="text-[12px] tracking-[0.3em] text-yellow-400/80 mb-2">
                     ★ {seasonName} MVP ★
                   </p>
                   <h2 className="text-4xl sm:text-5xl font-black text-white text-glow-gold mb-3">
@@ -465,7 +465,7 @@ export function SeasonAwardsPage({ data }: { data: SeasonAwardsResponse }) {
 
         {/* Footer */}
         <footer className="text-center py-8 border-t border-white/5">
-          <p className="text-[10px] tracking-[0.3em] text-white/30">PITCHMASTER</p>
+          <p className="text-[12px] tracking-[0.3em] text-white/30">PITCHMASTER</p>
           <p className="text-xs text-white/20 mt-1">pitch-master.app</p>
         </footer>
       </div>

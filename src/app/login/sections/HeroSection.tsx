@@ -530,7 +530,7 @@ export default function HeroSection({
                     ₩{cashN.toLocaleString("ko-KR")}
                   </div>
                   <div
-                    className="text-[10.5px] font-bold uppercase tracking-[0.08em]"
+                    className="text-[12px] font-bold uppercase tracking-[0.08em]"
                     style={{ color: "hsl(var(--success))" }}
                   >
                     통장 캡처 → 자동 정리
@@ -697,7 +697,7 @@ function NumTip({ label, tip }: { label: string; tip: string }) {
 function LiveBadge() {
   return (
     <span
-      className="inline-flex items-center gap-1.5 font-bold text-[11.5px] tracking-[0.06em]"
+      className="inline-flex items-center gap-1.5 font-bold text-[12.5px] tracking-[0.06em]"
       style={{ color: "hsl(var(--success))" }}
     >
       <span
@@ -773,7 +773,7 @@ function FCRow({
 }) {
   if (plain) {
     return (
-      <div className="text-[11.5px] leading-[1.45]" style={{ color: "hsl(var(--foreground))" }}>
+      <div className="text-[12.5px] leading-[1.45]" style={{ color: "hsl(var(--foreground))" }}>
         {children}
       </div>
     );
@@ -847,7 +847,7 @@ function MiniFormation() {
 function MvpToast() {
   return (
     <div
-      className="absolute left-3 right-3 -top-[42px] flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[11px] opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-250 pointer-events-none"
+      className="absolute left-3 right-3 -top-[42px] flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[12.5px] opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-250 pointer-events-none"
       style={{
         background: "hsl(var(--card))",
         border: "1px solid hsl(var(--primary) / 0.4)",

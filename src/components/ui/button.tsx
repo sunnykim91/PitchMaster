@@ -19,10 +19,10 @@ const buttonVariants = cva(
         info: "bg-[hsl(var(--info))] text-white shadow-sm hover:bg-[hsl(var(--info))]/90 hover:shadow-md hover:shadow-[hsl(var(--info))]/20",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-9 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
-        icon: "h-9 w-9",
+        default: "h-11 px-4 py-2",
+        sm: "h-9 rounded-md px-3 text-sm",
+        lg: "h-12 rounded-md px-8",
+        icon: "h-11 w-11",
       },
     },
     defaultVariants: {

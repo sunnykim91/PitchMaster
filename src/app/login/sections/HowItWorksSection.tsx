@@ -242,7 +242,7 @@ export default function HowItWorksSection() {
                       {s.n}
                     </span>
                     <span
-                      className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-full text-[11.5px] font-semibold tabular-nums"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-full text-[12.5px] font-semibold tabular-nums"
                       style={{
                         background: "hsl(var(--secondary) / 0.6)",
                         border: "1px solid hsl(var(--border))",
@@ -331,13 +331,13 @@ function StepMini({ index }: { index: number }) {
         }}
       >
         <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[11.5px]"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[12.5px]"
           style={{ background: "hsl(var(--kakao))", color: "hsl(var(--kakao-foreground))" }}
         >
           <KakaoIcon />
           카카오로 시작
         </span>
-        <span className="ml-auto text-[11.5px]">탭 1번</span>
+        <span className="ml-auto text-[12.5px]">탭 1번</span>
       </div>
     );
   }
@@ -350,7 +350,7 @@ function StepMini({ index }: { index: number }) {
           border: "1px solid hsl(var(--border))",
         }}
       >
-        <span className="text-[11.5px]">초대 코드</span>
+        <span className="text-[12.5px]">초대 코드</span>
         <span
           className="px-2.5 py-[3px] rounded-md text-[17px]"
           style={{
@@ -363,7 +363,7 @@ function StepMini({ index }: { index: number }) {
         >
           FCMZ-2026
         </span>
-        <span className="ml-auto text-[11.5px]" style={{ color: "hsl(var(--success))" }}>
+        <span className="ml-auto text-[12.5px]" style={{ color: "hsl(var(--success))" }}>
           ✓ 클립보드 복사
         </span>
       </div>

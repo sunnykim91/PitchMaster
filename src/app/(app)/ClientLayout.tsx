@@ -403,7 +403,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       <Separator className="my-4" />
       <SidebarNav items={navItems} />
       <div className="mt-1 space-y-0.5">
-        <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">계정</p>
+        <p className="px-3 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-widest text-muted-foreground/50">계정</p>
         <button
           type="button"
           onClick={handleFeedback}

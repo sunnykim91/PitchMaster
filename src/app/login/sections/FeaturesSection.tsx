@@ -294,7 +294,7 @@ function VoteCard() {
           <CheckSquare className="w-[22px] h-[22px]" strokeWidth={2} />
         </div>
         <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide whitespace-nowrap"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12.5px] font-bold tracking-wide whitespace-nowrap"
           style={{
             background: "hsl(var(--success) / 0.14)",
             border: "1px solid hsl(var(--success) / 0.30)",
@@ -387,7 +387,7 @@ function SettleCard() {
           <CreditCard className="w-[22px] h-[22px]" strokeWidth={2} />
         </div>
         <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12.5px] font-bold whitespace-nowrap"
           style={{
             background:
               "linear-gradient(90deg, hsl(var(--info) / 0.18), hsl(var(--primary) / 0.16))",
@@ -487,7 +487,7 @@ function AutoLineupCard() {
           <Target className="w-[22px] h-[22px]" strokeWidth={2} />
         </div>
         <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12.5px] font-bold whitespace-nowrap"
           style={{
             background:
               "linear-gradient(90deg, hsl(var(--info) / 0.18), hsl(var(--primary) / 0.16))",
@@ -936,7 +936,7 @@ function TacticsBoardReplica() {
         ))}
 
         {/* 상단 chip — 쿼터·포메이션 */}
-        <div className="absolute top-3 left-3 right-3 flex items-center justify-between text-[10.5px] font-bold">
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between text-[12px] font-bold">
           <span
             className="px-2 py-0.5 rounded text-white"
             style={{
@@ -963,7 +963,7 @@ function TacticsBoardReplica() {
           className="w-1.5 h-1.5 rounded-full"
           style={{ background: "hsl(var(--success))" }}
         />
-        <span className="text-[10.5px] font-semibold" style={{ color: "hsl(var(--success))" }}>
+        <span className="text-[12px] font-semibold" style={{ color: "hsl(var(--success))" }}>
           🟢 = 선호 포지션 자동 매칭 · 7명
         </span>
       </div>
@@ -1149,7 +1149,7 @@ function FCMZBuildupDemo({ inView }: { inView: boolean }) {
       {/* 헤더 — PC: row1 col1 / 모바일: 첫 row */}
       <div className="px-5 pt-5 md:p-0 md:row-start-1 md:col-start-1">
         <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-bold tracking-[0.18em] uppercase mb-2.5"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-bold tracking-[0.18em] uppercase mb-2.5"
           style={{
             background: "hsl(var(--primary) / 0.15)",
             border: "1px solid hsl(var(--primary) / 0.35)",
@@ -1253,7 +1253,7 @@ function FCMZBuildupDemo({ inView }: { inView: boolean }) {
         {/* STEP 진행 인디케이터 — 전술판 바로 아래 */}
         <div className="flex items-center justify-center gap-2.5 max-w-[420px] md:max-w-[320px] lg:max-w-[360px] mx-auto w-full">
           <span
-            className="text-[11px] font-bold tracking-[0.18em] uppercase tabular-nums"
+            className="text-[12.5px] font-bold tracking-[0.18em] uppercase tabular-nums"
             style={{ color: "hsl(var(--primary))" }}
           >
             STEP {stepIdx + 1} / {BUILDUP_STEPS.length}
@@ -1303,7 +1303,7 @@ function FCMZBuildupDemo({ inView }: { inView: boolean }) {
         {/* 사용 흐름 3단계 */}
         <div className="mt-1 md:mt-2">
           <span
-            className="block text-[10.5px] font-bold tracking-[0.20em] uppercase mb-2.5"
+            className="block text-[12px] font-bold tracking-[0.20em] uppercase mb-2.5"
             style={{ color: "hsl(var(--muted-foreground))" }}
           >
             How it works
@@ -1319,7 +1319,7 @@ function FCMZBuildupDemo({ inView }: { inView: boolean }) {
                 className="flex items-start gap-2.5 text-[13px] lg:text-[14.5px] leading-[1.5]"
               >
                 <span
-                  className="w-5 h-5 shrink-0 rounded-full flex items-center justify-center text-[11px] font-bold tabular-nums mt-[1px]"
+                  className="w-5 h-5 shrink-0 rounded-full flex items-center justify-center text-[12.5px] font-bold tabular-nums mt-[1px]"
                   style={{
                     background: "hsl(var(--primary) / 0.15)",
                     color: "hsl(var(--primary))",
@@ -1432,7 +1432,7 @@ function PlayerCardsAndAwards() {
               <div className="w-full max-w-[260px]">
                 <PlayerCard {...c} />
               </div>
-              <span className="text-[10px] tracking-[0.2em] font-bold text-white/40">
+              <span className="text-[12px] tracking-[0.2em] font-bold text-white/40">
                 {c.rarity} · OVR {c.ovr}
               </span>
             </motion.div>

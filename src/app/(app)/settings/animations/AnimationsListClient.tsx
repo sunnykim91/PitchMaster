@@ -237,13 +237,13 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
             <SelectValue placeholder="포메이션 선택" />
           </SelectTrigger>
           <SelectContent>
-            <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">축구</div>
+            <div className="px-2 py-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">축구</div>
             {formationTemplates.filter((f) => f.sportType === "SOCCER").map((f) => (
               <SelectItem key={f.id} value={f.id}>
                 {f.name}
               </SelectItem>
             ))}
-            <div className="mt-1 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">풋살</div>
+            <div className="mt-1 px-2 py-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">풋살</div>
             {formationTemplates.filter((f) => f.sportType === "FUTSAL").map((f) => (
               <SelectItem key={f.id} value={f.id}>
                 {f.name}
@@ -290,7 +290,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
                   <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="text-base font-bold truncate">{animation.name}</h2>
                     {animation.is_default && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(var(--primary))]/15 px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--primary))]">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(var(--primary))]/15 px-2 py-0.5 text-[12px] font-bold text-[hsl(var(--primary))]">
                         <Star className="h-2.5 w-2.5" aria-hidden="true" />
                         대표 영상
                       </span>
@@ -349,7 +349,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
                       </span>
                     </SelectTrigger>
                     <SelectContent>
-                      <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">대상 포메이션</div>
+                      <div className="px-2 py-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">대상 포메이션</div>
                       {formationTemplates
                         .filter((f) => f.sportType === (formationTemplates.find((t) => t.id === animation.formation_id)?.sportType))
                         .map((f) => (

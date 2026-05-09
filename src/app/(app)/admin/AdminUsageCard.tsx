@@ -137,7 +137,7 @@ export function AdminUsageCard() {
               />
             ))}
           </div>
-          <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+          <div className="flex justify-between text-[12px] text-muted-foreground mt-1">
             <span>{u.dailyTrend[0]?.date.slice(5)}</span>
             <span>{u.dailyTrend[u.dailyTrend.length - 1]?.date.slice(5)}</span>
           </div>
@@ -242,12 +242,12 @@ function SummaryStat({
 
   return (
     <div className="rounded-lg border border-border/40 bg-card p-3">
-      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-1.5">
+      <div className="flex items-center gap-1.5 text-[12.5px] text-muted-foreground mb-1.5">
         {icon}
         {label}
       </div>
       <div className={`text-xl font-bold ${valueColor}`}>{value}</div>
-      <div className="text-[10px] text-muted-foreground/80 mt-0.5">{sub}</div>
+      <div className="text-[12px] text-muted-foreground/80 mt-0.5">{sub}</div>
     </div>
   );
 }

@@ -400,7 +400,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
         <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, hsl(16 85% 58% / 0.12) 0%, transparent 60%)" }} />
         <CardContent className="relative space-y-3 px-4">
           <div className="space-y-0.5">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">통장 잔고</p>
+            <p className="text-[12.5px] font-medium uppercase tracking-wider text-muted-foreground">통장 잔고</p>
             {summaryData.balance !== null ? (
               <p className="text-[clamp(1.75rem,7vw,2.5rem)] font-bold leading-none tracking-wide text-primary tabular-nums">
                 {formatAmount(summaryData.balance)}
@@ -711,7 +711,7 @@ function MonthlySettlement({ records }: { records: SettlementRecord[] }) {
 
   return (
     <div className="space-y-2 border-t border-white/[0.08] pt-3">
-      <p className="text-[11px] font-medium text-muted-foreground">월별 수지결산</p>
+      <p className="text-[12.5px] font-medium text-muted-foreground">월별 수지결산</p>
       <div className="space-y-1">
         <div className="flex items-center justify-between text-sm">
           <span className="text-foreground/80">{now.getMonth() + 1}월 수입</span>

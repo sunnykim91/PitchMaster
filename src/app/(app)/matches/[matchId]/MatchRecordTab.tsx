@@ -363,7 +363,7 @@ function MatchRecordTabInner({
                   </>
                 ) : (
                   <>
-                    <Button type="button" className="flex-1 min-h-[48px] bg-[hsl(var(--success))]/20 text-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/30 font-semibold"
+                    <Button type="button" aria-label="우리 팀 득점 기록 추가" className="flex-1 min-h-[48px] bg-[hsl(var(--success))]/20 text-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/30 font-semibold"
                       disabled={addingGoal}
                       onClick={() => runAddGoal(async () => {
                         const formData = new FormData();
@@ -377,7 +377,7 @@ function MatchRecordTabInner({
                       })}>
                       {addingGoal ? "처리 중..." : "+ 득점"}
                     </Button>
-                    <Button type="button" className="flex-1 min-h-[48px] bg-destructive/20 text-destructive hover:bg-destructive/30 font-semibold"
+                    <Button type="button" aria-label="상대 팀 실점 기록 추가" className="flex-1 min-h-[48px] bg-destructive/20 text-destructive hover:bg-destructive/30 font-semibold"
                       disabled={addingGoal}
                       onClick={() => runAddGoal(async () => {
                         const formData = new FormData();
@@ -447,7 +447,7 @@ function MatchRecordTabInner({
                   {!editingIsOpponent && (
                   <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <p className="text-[11px] font-medium text-muted-foreground">득점자</p>
+                      <p className="text-[12.5px] font-medium text-muted-foreground">득점자</p>
                       <select name="scorerId" className="h-12 w-full appearance-none rounded-xl border border-border bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
                         <option value="">선택</option>
                         <optgroup label="참석 멤버">
@@ -478,7 +478,7 @@ function MatchRecordTabInner({
                     </div>
 
                     <div className="space-y-1.5">
-                      <p className="text-[11px] font-medium text-muted-foreground">어시스트</p>
+                      <p className="text-[12.5px] font-medium text-muted-foreground">어시스트</p>
                       <select name="assistId" className="h-12 w-full appearance-none rounded-xl border border-border bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
                         <option value="">선택</option>
                         <optgroup label="참석 멤버">
@@ -508,7 +508,7 @@ function MatchRecordTabInner({
                     </div>
 
                     <div className="space-y-1.5">
-                      <p className="text-[11px] font-medium text-muted-foreground">골 유형</p>
+                      <p className="text-[12.5px] font-medium text-muted-foreground">골 유형</p>
                       <select name="goalType" defaultValue="NORMAL" className="h-12 w-full appearance-none rounded-xl border border-border bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
                         <option value="NORMAL">일반</option>
                         <option value="PK">PK (페널티킥)</option>
@@ -522,7 +522,7 @@ function MatchRecordTabInner({
 
                   {/* 쿼터 UI — 득점/실점 수정 모두 표시 */}
                   <div className={cn("space-y-1.5", !editingIsOpponent && "mt-4")}>
-                    <p className="text-[11px] font-medium text-muted-foreground">쿼터</p>
+                    <p className="text-[12.5px] font-medium text-muted-foreground">쿼터</p>
                     <div className="flex gap-1 rounded-lg bg-secondary p-1">
                       <button
                         type="button"
@@ -576,7 +576,7 @@ function MatchRecordTabInner({
                 <EmptyState icon={Target} title="아직 기록이 없습니다" description="위의 +득점 버튼으로 골을 기록하세요" />
               ) : canRecord ? (
                 <>
-                  <p className="text-[11px] text-muted-foreground">💡 카드를 길게 눌러 순서를 변경할 수 있어요</p>
+                  <p className="text-[12.5px] text-muted-foreground">💡 카드를 길게 눌러 순서를 변경할 수 있어요</p>
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={orderedGoals.map((g) => g.id)} strategy={verticalListSortingStrategy}>
                       {orderedGoals.map((goal) => (
@@ -663,7 +663,7 @@ function MatchRecordTabInner({
                       )}
                     </div>
                     {attendeeCount > 0 && !reached && (
-                      <p className="rounded-md bg-[hsl(var(--warning))]/10 px-2.5 py-1.5 text-[11px] leading-snug text-[hsl(var(--warning))]">
+                      <p className="rounded-md bg-[hsl(var(--warning))]/10 px-2.5 py-1.5 text-[12.5px] leading-snug text-[hsl(var(--warning))]">
                         참석자 70% 이상이 투표해야 공식 MVP로 확정됩니다. 미달 시 운영진이 직접 지정할 수 있어요.
                       </p>
                     )}
@@ -728,7 +728,7 @@ function MatchRecordTabInner({
                         >
                           {player.name}
                           {count > 0 && (
-                            <Badge className="absolute -right-1.5 -top-1.5 bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] text-[10px] px-1.5 min-w-[20px] h-[20px]">
+                            <Badge className="absolute -right-1.5 -top-1.5 bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] text-[12px] px-1.5 min-w-[20px] h-[20px]">
                               {count}
                             </Badge>
                           )}
@@ -749,7 +749,7 @@ function MatchRecordTabInner({
                       >
                         {player.name}
                         {count > 0 && (
-                          <Badge className="absolute -right-1.5 -top-1.5 bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] text-[10px] px-1.5 min-w-[20px] h-[20px]">
+                          <Badge className="absolute -right-1.5 -top-1.5 bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] text-[12px] px-1.5 min-w-[20px] h-[20px]">
                             {count}
                           </Badge>
                         )}
@@ -793,7 +793,7 @@ function GoalCardContent({
     <div className="min-w-0">
       <p className="text-sm font-semibold truncate flex items-center gap-1.5">
         {isInternal && goal.side && (
-          <Badge className={cn("text-[10px] px-1.5 py-0 border-0",
+          <Badge className={cn("text-[12px] px-1.5 py-0 border-0",
             goal.side === "A" ? "bg-primary/20 text-primary" : "bg-[hsl(var(--info))]/20 text-[hsl(var(--info))]"
           )}>{goal.side}팀</Badge>
         )}
@@ -806,7 +806,7 @@ function GoalCardContent({
           </span>
         )}
         {goal.goalType && goal.goalType !== "NORMAL" && goal.goalType !== "OWN_GOAL" && (
-          <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">{goal.goalType}</span>
+          <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[12px] font-bold text-primary">{goal.goalType}</span>
         )}
         {goal.assistId
           ? <span>{((goal.quarter ?? 0) > 0 || (goal.goalType && goal.goalType !== "NORMAL" && goal.goalType !== "OWN_GOAL")) ? " · " : ""}A: {resolvePlayerName(goal.assistId)}</span>

@@ -615,11 +615,11 @@ function PenaltyRulesSection({ refetchSummary }: { refetchSummary: () => Promise
           <form action={handleAdd} className="space-y-2">
             <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">규칙 이름</Label>
+                <Label className="text-[12.5px] text-muted-foreground">규칙 이름</Label>
                 <Input name="name" required placeholder="예: 지각비" className="h-9 text-sm" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">트리거</Label>
+                <Label className="text-[12.5px] text-muted-foreground">트리거</Label>
                 <NativeSelect name="triggerType" className="h-9 text-sm">
                   <option value="LATE">지각</option>
                   <option value="ABSENT">불참</option>
@@ -628,7 +628,7 @@ function PenaltyRulesSection({ refetchSummary }: { refetchSummary: () => Promise
                 </NativeSelect>
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">금액</Label>
+                <Label className="text-[12.5px] text-muted-foreground">금액</Label>
                 <Input name="amount" type="number" min={0} required placeholder="5000" className="h-9 text-sm" />
               </div>
             </div>
@@ -853,14 +853,14 @@ function MemberExemptionSection({
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">회원</Label>
+                <Label className="text-[12.5px] text-muted-foreground">회원</Label>
                 <NativeSelect value={memberId} onChange={(e) => setMemberId(e.target.value)} className="h-9 text-sm">
                   <option value="">선택</option>
                   {members.map((m) => <option key={m.memberId} value={m.memberId}>{m.name}</option>)}
                 </NativeSelect>
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">상태</Label>
+                <Label className="text-[12.5px] text-muted-foreground">상태</Label>
                 <NativeSelect
                   value={exemptionType}
                   onChange={(e) => {
@@ -879,7 +879,7 @@ function MemberExemptionSection({
               <>
                 {/* 기간 */}
                 <div className="space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">기간</Label>
+                  <Label className="text-[12.5px] text-muted-foreground">기간</Label>
                   <div className="grid grid-cols-3 gap-1.5">
                     {PREPAID_PERIOD_OPTIONS.map((p) => (
                       <button
@@ -904,7 +904,7 @@ function MemberExemptionSection({
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">월 회비</Label>
+                    <Label className="text-[12.5px] text-muted-foreground">월 회비</Label>
                     <Input
                       type="number"
                       inputMode="numeric"
@@ -918,7 +918,7 @@ function MemberExemptionSection({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">시작월</Label>
+                    <Label className="text-[12.5px] text-muted-foreground">시작월</Label>
                     <Input
                       type="month"
                       value={startMonth.slice(0, 7)}
@@ -952,7 +952,7 @@ function MemberExemptionSection({
                     </div>
                   )}
                   {prepaidEndDate && (
-                    <div className="text-[11px] text-muted-foreground/70 pt-1">
+                    <div className="text-[12.5px] text-muted-foreground/70 pt-1">
                       {startMonth.slice(0, 7)} ~ {prepaidEndDate.slice(0, 7)}
                     </div>
                   )}
@@ -961,17 +961,17 @@ function MemberExemptionSection({
                 {/* 받은 입금 거래 선택 (최근 6개월 해당 회원) */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label className="text-[11px] text-muted-foreground">받은 입금 거래 (최근 6개월)</Label>
+                    <Label className="text-[12.5px] text-muted-foreground">받은 입금 거래 (최근 6개월)</Label>
                     {memberId && incomeCandidates.length > 0 && (
-                      <span className="text-[10px] text-muted-foreground">{incomeCandidates.length}건</span>
+                      <span className="text-[12px] text-muted-foreground">{incomeCandidates.length}건</span>
                     )}
                   </div>
                   {!memberId ? (
-                    <p className="text-[11px] text-muted-foreground/70 px-1 py-2">회원을 먼저 선택해주세요.</p>
+                    <p className="text-[12.5px] text-muted-foreground/70 px-1 py-2">회원을 먼저 선택해주세요.</p>
                   ) : candidatesLoading ? (
-                    <p className="text-[11px] text-muted-foreground/70 px-1 py-2">불러오는 중...</p>
+                    <p className="text-[12.5px] text-muted-foreground/70 px-1 py-2">불러오는 중...</p>
                   ) : incomeCandidates.length === 0 ? (
-                    <div className="rounded-lg bg-muted/40 px-3 py-2.5 text-[11px] text-muted-foreground leading-relaxed">
+                    <div className="rounded-lg bg-muted/40 px-3 py-2.5 text-[12.5px] text-muted-foreground leading-relaxed">
                       최근 6개월 입금 기록이 없습니다.<br />
                       <Link href="/dues?tab=records" className="text-primary underline">회비 기록 탭에서 먼저 등록</Link>하시거나, 그냥 등록하시면 선납만 기록됩니다.
                     </div>
@@ -1024,7 +1024,7 @@ function MemberExemptionSection({
             ) : (
               <>
                 <div className="space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">사유</Label>
+                  <Label className="text-[12.5px] text-muted-foreground">사유</Label>
                   <Input
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
@@ -1034,7 +1034,7 @@ function MemberExemptionSection({
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">시작일</Label>
+                    <Label className="text-[12.5px] text-muted-foreground">시작일</Label>
                     <Input
                       type="date"
                       value={startDate}
@@ -1043,7 +1043,7 @@ function MemberExemptionSection({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">종료일 (미정이면 비움)</Label>
+                    <Label className="text-[12.5px] text-muted-foreground">종료일 (미정이면 비움)</Label>
                     <Input
                       type="date"
                       value={endDate}
@@ -1080,7 +1080,7 @@ function MemberExemptionSection({
                   <span className="text-sm font-semibold">{getMemberName(ex.member_id)}</span>
                   <span className={`text-xs font-medium ${typeInfo.color}`}>{typeInfo.label}</span>
                   {isPrepaid && ex.period_months && (
-                    <span className="text-[10px] text-muted-foreground">({ex.period_months}개월)</span>
+                    <span className="text-[12px] text-muted-foreground">({ex.period_months}개월)</span>
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground flex-wrap">
@@ -1096,7 +1096,7 @@ function MemberExemptionSection({
                     type="button"
                     onClick={() => setLinkModalExemptionId(ex.id)}
                     className={cn(
-                      "mt-1.5 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors",
+                      "mt-1.5 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[12.5px] font-medium transition-colors",
                       isLinked
                         ? "text-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/10"
                         : "text-primary hover:bg-primary/10 border border-primary/30"
@@ -1131,8 +1131,8 @@ function MemberExemptionSection({
           <Card key={ex.id} className="border-white/[0.04] bg-card/50 p-3 opacity-60">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-medium">{getMemberName(ex.member_id)}</span>
-              <span className={`text-[10px] ${typeInfo.color}`}>{typeInfo.label}</span>
-              <span className="text-[10px] text-muted-foreground">
+              <span className={`text-[12px] ${typeInfo.color}`}>{typeInfo.label}</span>
+              <span className="text-[12px] text-muted-foreground">
                 {ex.start_date} ~ {ex.end_date ?? "무기한"}
                 {ex.reason && ` · ${ex.reason}`}
               </span>

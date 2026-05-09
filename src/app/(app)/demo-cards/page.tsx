@@ -29,7 +29,7 @@ export default function PitchMasterCardDemoPage() {
     <div className="min-h-screen bg-[hsl(240,6%,6%)] -mx-4 sm:-mx-6">
       {/* Dev 경고 배너 */}
       <div className="bg-yellow-500/10 border-b border-yellow-500/30 px-4 py-2 text-center">
-        <p className="text-[11px] text-yellow-200">
+        <p className="text-[12.5px] text-yellow-200">
           🚧 <strong>카드 디자인 데모</strong> — v0에서 이식한 UI, mock 데이터. 실제 데이터 연결은 미진행
         </p>
       </div>
@@ -77,7 +77,7 @@ export default function PitchMasterCardDemoPage() {
       {/* Footer */}
       <footer className="border-t border-white/5 py-8">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-[10px] tracking-[0.3em] text-white/30 mb-1">PITCHMASTER</p>
+          <p className="text-[12px] tracking-[0.3em] text-white/30 mb-1">PITCHMASTER</p>
           <p className="text-xs text-white/20">v0 이식 — 디자인 검증용 데모</p>
         </div>
       </footer>

@@ -1472,7 +1472,7 @@ export default function AutoFormationBuilder({
       <CardContent className="space-y-4">
         {/* ── ① 편성 방식 ── */}
         <div className="space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">편성 방식</p>
+          <p className="text-[12.5px] font-semibold uppercase tracking-wider text-muted-foreground">편성 방식</p>
           <div className="space-y-1.5">
             {([
               { id: "rule" as const, label: "규칙 기반으로 빠르게", desc: "팀 포메이션 + 감독지정/선호 포지션 매칭", icon: <Zap className="h-3.5 w-3.5" /> },
@@ -1501,7 +1501,7 @@ export default function AutoFormationBuilder({
                       <span className={cn(selected ? "text-primary" : "text-muted-foreground")}>{opt.icon}</span>
                       <span>{opt.label}</span>
                     </div>
-                    <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{opt.desc}</p>
+                    <p className="mt-0.5 text-[12.5px] leading-snug text-muted-foreground">{opt.desc}</p>
                   </div>
                 </label>
               );
@@ -1533,17 +1533,17 @@ export default function AutoFormationBuilder({
         <div className="grid grid-cols-3 gap-2">
           <div className="rounded-xl bg-secondary/30 p-3 text-center">
             <div className="text-2xl font-bold">{attendingPlayers.length}</div>
-            <div className="text-[11px] text-muted-foreground">총 선수</div>
+            <div className="text-[12.5px] text-muted-foreground">총 선수</div>
           </div>
           <div className="rounded-xl bg-secondary/30 p-3 text-center">
             <div className="text-2xl font-bold">{formation?.slots.length ?? 0}</div>
-            <div className="text-[11px] text-muted-foreground">포지션</div>
+            <div className="text-[12.5px] text-muted-foreground">포지션</div>
           </div>
           <div className="rounded-xl bg-secondary/30 p-3 text-center">
             <div className={cn("text-2xl font-bold", isBalanced ? "text-[hsl(var(--success))]" : "text-destructive")}>
               {totalAssigned}/{totalNeeded}
             </div>
-            <div className="text-[11px] text-muted-foreground">슬롯</div>
+            <div className="text-[12.5px] text-muted-foreground">슬롯</div>
           </div>
         </div>
 
@@ -1577,7 +1577,7 @@ export default function AutoFormationBuilder({
                         type="button"
                         onClick={() => toggleGK(player.id)}
                         className={cn(
-                          "flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold transition-all",
+                          "flex items-center gap-1 rounded-md px-2 py-0.5 text-[12px] font-bold transition-all",
                           player.isGK
                             ? "bg-amber-500/30 text-amber-700 dark:text-amber-400"
                             : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -1589,7 +1589,7 @@ export default function AutoFormationBuilder({
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {(player.preferredPositions ?? [player.preferredPosition]).filter((pos) => pos !== "GK").map((pos) => (
-                      <Badge key={pos} className={cn("text-[10px] px-1.5 py-0 border-0", POS_COLOR[pos])}>
+                      <Badge key={pos} className={cn("text-[12px] px-1.5 py-0 border-0", POS_COLOR[pos])}>
                         {POS_LABEL[pos] ?? pos}
                       </Badge>
                     ))}
@@ -1671,7 +1671,7 @@ export default function AutoFormationBuilder({
         {/* AI 배치 진행 중 안내 — "편성 완료"와 혼동되지 않게 명확한 로딩 상태 표시 */}
         {aiPlanLoading && (
           <div className="space-y-2 border-t border-border/30 pt-3">
-            <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-primary">
+            <p className="flex items-center justify-center gap-1.5 text-center text-[12.5px] text-primary">
               <Loader2 className="h-3 w-3 animate-spin" />
               AI가 선수 배치 중입니다 (잠시만요)
             </p>

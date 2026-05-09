@@ -33,7 +33,7 @@ export default function MatchDetailError({
           경기가 삭제됐거나 일시적인 오류일 수 있어요.
         </p>
         {error.digest && (
-          <p className="mt-3 text-[11px] text-muted-foreground/60">
+          <p className="mt-3 text-[12.5px] text-muted-foreground/60">
             오류 ID: {error.digest}
           </p>
         )}
