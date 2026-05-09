@@ -326,6 +326,7 @@ function MatchRecordTabInner({
               </div>
             </div>
             {canRecord && (
+              <>
               <div className="flex gap-3">
                 {isInternal ? (
                   <>
@@ -392,6 +393,10 @@ function MatchRecordTabInner({
                   </>
                 )}
               </div>
+              <p className="mt-2 text-xs text-muted-foreground leading-[1.5]">
+                💡 한 번 누르면 즉시 기록됩니다. 득점자·쿼터·시간은 아래 골 카드의 <b className="font-semibold text-foreground">수정</b> 버튼으로 채워주세요.
+              </p>
+              </>
             )}
           </CardContent>
         </Card>

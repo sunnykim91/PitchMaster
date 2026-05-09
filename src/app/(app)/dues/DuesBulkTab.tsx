@@ -699,12 +699,11 @@ function DuesBulkTabInner({
               인식 결과 ({bulkRows.length}건)
             </p>
             <Button
-              size="sm"
-              className="h-8 gap-1.5 active:scale-[0.97] transition-transform"
+              className="min-h-[44px] px-4 gap-1.5 text-sm font-semibold active:scale-[0.97] transition-transform"
               onClick={handleBulkSave}
               disabled={bulkSaving || validBulkCount === 0}
             >
-              <Check className="h-3.5 w-3.5" />
+              <Check className="h-4 w-4" />
               {bulkSaving ? (bulkProgress || "저장 중...") : "전체 저장"}
             </Button>
           </div>
@@ -728,7 +727,7 @@ function DuesBulkTabInner({
                     {/* Row 1: 날짜 + 시간 */}
                     <div className="grid grid-cols-[3fr_2fr] gap-2 min-w-0">
                       <div className="space-y-1 min-w-0">
-                        <label className="text-[10px] text-muted-foreground uppercase tracking-wide">날짜</label>
+                        <label className="text-xs font-medium text-muted-foreground">날짜</label>
                         <Input
                           type="date"
                           value={row.date}
@@ -743,7 +742,7 @@ function DuesBulkTabInner({
                         />
                       </div>
                       <div className="space-y-1 min-w-0">
-                        <label className="text-[10px] text-muted-foreground uppercase tracking-wide">시간</label>
+                        <label className="text-xs font-medium text-muted-foreground">시간</label>
                         <Input
                           type="time"
                           value={row.time}
@@ -756,7 +755,7 @@ function DuesBulkTabInner({
                     {/* Row 2: 유형 + 금액 (2:3 비율, 둘 다 flexible) */}
                     <div className="grid grid-cols-[2fr_3fr] gap-2 min-w-0">
                       <div className="space-y-1 min-w-0">
-                        <label className="text-[10px] text-muted-foreground uppercase tracking-wide">유형</label>
+                        <label className="text-xs font-medium text-muted-foreground">유형</label>
                         <Select
                           value={row.type}
                           onValueChange={(v) => updateBulkRow(index, "type", v as "INCOME" | "EXPENSE")}
@@ -768,13 +767,13 @@ function DuesBulkTabInner({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-card border-white/[0.06]">
-                            <SelectItem value="INCOME" className="text-[hsl(var(--success))]">입금</SelectItem>
-                            <SelectItem value="EXPENSE" className="text-destructive">출금</SelectItem>
+                            <SelectItem value="INCOME" className="text-[hsl(var(--success))]">+ 입금</SelectItem>
+                            <SelectItem value="EXPENSE" className="text-destructive">− 출금</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-1 min-w-0">
-                        <label className="text-[10px] text-muted-foreground uppercase tracking-wide">금액</label>
+                        <label className="text-xs font-medium text-muted-foreground">금액</label>
                         <div className="relative">
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs pointer-events-none">₩</span>
                           <Input

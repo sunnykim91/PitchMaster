@@ -153,15 +153,15 @@ function MatchVoteTabInner({
                     prev.setHours(17, 0, 0, 0);
                     const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, voteDeadline: prev.toISOString() });
                     if (!err) { setIsExpired(false); showToast("투표가 재개되었습니다."); await refetchVote(); }
-                  })} className="flex shrink-0 items-center gap-1 rounded-lg border border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/10 px-2.5 py-1 text-[11px] font-semibold text-[hsl(var(--success))] transition-colors hover:bg-[hsl(var(--success))]/20 disabled:opacity-50">
-                    <LockOpen className="h-3 w-3" />{deadlineLoading ? "처리 중..." : "재개"}
+                  })} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/10 px-3 py-1.5 text-[12.5px] font-semibold text-[hsl(var(--success))] transition-colors hover:bg-[hsl(var(--success))]/20 disabled:opacity-50">
+                    <LockOpen className="h-3.5 w-3.5" />{deadlineLoading ? "처리 중..." : "재개"}
                   </button>
                 ) : (
                   <button type="button" disabled={deadlineLoading} onClick={() => runDeadline(async () => {
                     const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, voteDeadline: new Date().toISOString() });
                     if (!err) { setIsExpired(true); showToast("투표가 마감되었습니다."); }
-                  })} className="flex shrink-0 items-center gap-1 rounded-lg border border-destructive/30 bg-destructive/10 px-2.5 py-1 text-[11px] font-semibold text-destructive transition-colors hover:bg-destructive/20 disabled:opacity-50">
-                    <Lock className="h-3 w-3" />{deadlineLoading ? "처리 중..." : "마감"}
+                  })} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-[12.5px] font-semibold text-destructive transition-colors hover:bg-destructive/20 disabled:opacity-50">
+                    <Lock className="h-3.5 w-3.5" />{deadlineLoading ? "처리 중..." : "마감"}
                   </button>
                 )
               )}

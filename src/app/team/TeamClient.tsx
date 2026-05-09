@@ -156,8 +156,7 @@ export default function TeamClient({ hasExistingTeam = false }: { hasExistingTea
   const createTeamCard = (
     <Card>
       <CardHeader>
-        <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Create</p>
-        <CardTitle className="font-heading text-2xl font-bold uppercase">새 팀 만들기</CardTitle>
+        <CardTitle className="font-heading text-2xl font-bold">새 팀 만들기</CardTitle>
         <CardDescription>팀명을 입력하면 초대 코드가 생성됩니다.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -221,8 +220,7 @@ export default function TeamClient({ hasExistingTeam = false }: { hasExistingTea
   const searchTeamCard = (
     <Card>
       <CardHeader>
-        <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Search</p>
-        <CardTitle className="font-heading text-2xl font-bold uppercase">팀 검색해서 가입</CardTitle>
+        <CardTitle className="font-heading text-2xl font-bold">팀 검색해서 가입</CardTitle>
         <CardDescription>팀 이름을 검색하면 가입 신청할 수 있습니다. 운영진 승인 후 가입됩니다.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -308,8 +306,7 @@ export default function TeamClient({ hasExistingTeam = false }: { hasExistingTea
             {/* 초대 코드가 있을 때: 가입 폼을 메인으로 */}
             <Card className="border-primary/20">
               <CardHeader className="text-center">
-                <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Join Team</p>
-                <CardTitle className="font-heading text-2xl font-bold uppercase">팀에 가입하기</CardTitle>
+                <CardTitle className="font-heading text-2xl font-bold">팀에 가입하기</CardTitle>
                 <CardDescription>초대 코드가 확인되었습니다. 아래 버튼을 눌러 가입하세요.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -343,8 +340,7 @@ export default function TeamClient({ hasExistingTeam = false }: { hasExistingTea
 
               <Card>
                 <CardHeader>
-                  <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Join</p>
-                  <CardTitle className="font-heading text-2xl font-bold uppercase">초대 코드로 가입</CardTitle>
+                  <CardTitle className="font-heading text-2xl font-bold">초대 코드로 가입</CardTitle>
                   <CardDescription>팀에서 받은 초대 코드를 입력하면 즉시 가입됩니다.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
