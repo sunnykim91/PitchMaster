@@ -13,6 +13,7 @@ import { useConfirm } from "@/lib/ConfirmContext";
 import { EmptyState } from "@/components/EmptyState";
 import { Target, ChevronDown, Trophy, Check, Pencil, Trash2, Clock, GripVertical } from "lucide-react";
 import { useToast } from "@/lib/ToastContext";
+import { PlayerPicker, type PlayerPickerGroup } from "@/components/PlayerPicker";
 import {
   DndContext,
   closestCenter,
@@ -239,16 +240,13 @@ function MatchRecordTabInner({
     const setFormValues = () => {
       const form = formRef.current;
       if (!form) return false;
-      const scorerSelect = form.elements.namedItem("scorerId") as HTMLSelectElement;
-      if (!scorerSelect) return false;
-      const assistSelect = form.elements.namedItem("assistId") as HTMLSelectElement;
-      const quarterInput = form.elements.namedItem("quarter") as HTMLInputElement;
-      const ownGoalInput = form.elements.namedItem("isOwnGoal") as HTMLInputElement;
-      scorerSelect.value = goal.scorerId;
-      if (assistSelect) assistSelect.value = goal.assistId ?? "";
+      // PlayerPicker(scorerId/assistId)는 key prop 리마운트로 defaultValue 자동 적용 — 외부 set 불필요
+      const quarterInput = form.elements.namedItem("quarter") as HTMLInputElement | null;
+      if (!quarterInput) return false;
+      const ownGoalInput = form.elements.namedItem("isOwnGoal") as HTMLInputElement | null;
       if (quarterInput) quarterInput.value = String(goal.quarter ?? 0);
       if (ownGoalInput) ownGoalInput.checked = !!goal.isOwnGoal;
-      const goalTypeSelect = form.elements.namedItem("goalType") as HTMLSelectElement;
+      const goalTypeSelect = form.elements.namedItem("goalType") as HTMLSelectElement | null;
       if (goalTypeSelect) goalTypeSelect.value = goal.goalType ?? "NORMAL";
       const quarterBtns = quarterInput?.parentElement?.querySelectorAll("button");
       quarterBtns?.forEach((btn) => {
@@ -444,81 +442,70 @@ function MatchRecordTabInner({
                     </>
                   )}
 
-                  {!editingIsOpponent && (
-                  <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <p className="text-[12.5px] font-medium text-muted-foreground">득점자</p>
-                      <select name="scorerId" className="h-12 w-full appearance-none rounded-xl border border-border bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
-                        <option value="">선택</option>
-                        <optgroup label="참석 멤버">
-                          {attendingMembers.map((player) => (
-                            <option key={player.id} value={player.id}>
-                              {player.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                        {guests.length > 0 && (
-                          <optgroup label="용병">
-                            {guests.map((g) => (
-                              <option key={g.id} value={g.id}>
-                                {g.name}
-                              </option>
-                            ))}
-                          </optgroup>
-                        )}
-                        <optgroup label="기타">
-                          <option value="OWN_GOAL">자책골</option>
-                          {specialPlayers.map((sp) => (
-                            <option key={sp.id} value={sp.id}>
-                              {sp.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                      </select>
+                  {!editingIsOpponent && (() => {
+                    const editingGoal = editingGoalId ? goals.find((g) => g.id === editingGoalId) : undefined;
+                    const scorerGroups: PlayerPickerGroup[] = [
+                      { label: "참석 멤버", players: attendingMembers.map((p) => ({ id: p.id, name: p.name })), tone: "default" },
+                      ...(guests.length > 0
+                        ? ([{ label: "용병", players: guests.map((g) => ({ id: g.id, name: g.name })), tone: "guest" }] as PlayerPickerGroup[])
+                        : []),
+                      {
+                        label: "기타",
+                        players: [
+                          { id: "OWN_GOAL", name: "⚽ 자책골" },
+                          ...specialPlayers.map((sp) => ({ id: sp.id, name: sp.name })),
+                        ],
+                        tone: "special",
+                      },
+                    ];
+                    const assistGroups: PlayerPickerGroup[] = [
+                      { label: "참석 멤버", players: attendingMembers.map((p) => ({ id: p.id, name: p.name })), tone: "default" },
+                      ...(guests.length > 0
+                        ? ([{ label: "용병", players: guests.map((g) => ({ id: g.id, name: g.name })), tone: "guest" }] as PlayerPickerGroup[])
+                        : []),
+                      {
+                        label: "기타",
+                        players: specialPlayers.map((sp) => ({ id: sp.id, name: sp.name })),
+                        tone: "special",
+                      },
+                    ];
+                    return (
+                  <div className="space-y-5">
+                    <div className="space-y-2">
+                      <p className="text-[13px] font-semibold text-foreground">득점자</p>
+                      <PlayerPicker
+                        key={`scorer-${editingGoalId ?? "new"}`}
+                        name="scorerId"
+                        defaultValue={editingGoal?.scorerId ?? ""}
+                        groups={scorerGroups}
+                        emptyLabel="선택"
+                      />
                     </div>
 
-                    <div className="space-y-1.5">
-                      <p className="text-[12.5px] font-medium text-muted-foreground">어시스트</p>
-                      <select name="assistId" className="h-12 w-full appearance-none rounded-xl border border-border bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
-                        <option value="">선택</option>
-                        <optgroup label="참석 멤버">
-                          {attendingMembers.map((player) => (
-                            <option key={player.id} value={player.id}>
-                              {player.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                        {guests.length > 0 && (
-                          <optgroup label="용병">
-                            {guests.map((g) => (
-                              <option key={g.id} value={g.id}>
-                                {g.name}
-                              </option>
-                            ))}
-                          </optgroup>
-                        )}
-                        <optgroup label="기타">
-                          {specialPlayers.map((sp) => (
-                            <option key={sp.id} value={sp.id}>
-                              {sp.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                      </select>
+                    <div className="space-y-2">
+                      <p className="text-[13px] font-semibold text-foreground">어시스트</p>
+                      <PlayerPicker
+                        key={`assist-${editingGoalId ?? "new"}`}
+                        name="assistId"
+                        defaultValue={editingGoal?.assistId ?? ""}
+                        groups={assistGroups}
+                        emptyLabel="없음"
+                      />
                     </div>
 
                     <div className="space-y-1.5">
                       <p className="text-[12.5px] font-medium text-muted-foreground">골 유형</p>
-                      <select name="goalType" defaultValue="NORMAL" className="h-12 w-full appearance-none rounded-xl border border-border bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+                      <select name="goalType" defaultValue={editingGoal?.goalType ?? "NORMAL"} className="h-12 w-full appearance-none rounded-xl border border-border bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
                         <option value="NORMAL">일반</option>
-                        <option value="PK">PK (페널티킥)</option>
-                        <option value="FK">FK (프리킥)</option>
+                        <option value="PK">페널티킥 (PK)</option>
+                        <option value="FK">프리킥 (FK)</option>
                         <option value="HEADER">헤딩</option>
                         <option value="OWN_GOAL">자책골</option>
                       </select>
                     </div>
                   </div>
-                  )}
+                    );
+                  })()}
 
                   {/* 쿼터 UI — 득점/실점 수정 모두 표시 */}
                   <div className={cn("space-y-1.5", !editingIsOpponent && "mt-4")}>

@@ -556,7 +556,7 @@ function DuesBulkTabInner({
 
       {/* ── OCR 섹션 — Clova OCR이 기본, AI OCR이 폴백 (비용 최소화) ── */}
       <div className="space-y-3">
-        <p className="text-xs font-medium text-muted-foreground">OCR (스크린샷)</p>
+        <p className="text-xs font-medium text-muted-foreground">통장 캡처 자동 인식</p>
 
         {/* 메인: Clova OCR */}
         <Card

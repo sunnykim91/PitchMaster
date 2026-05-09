@@ -457,7 +457,7 @@ function DuesRecordsTabInner({
         <EmptyState
           icon={Receipt}
           title="아직 거래 내역이 없습니다"
-          description="카카오뱅크 엑셀 1번 올리면 30명까지 자동 매칭돼요. 수기·스크린샷도 지원."
+          description="통장 캡처 한 장이면 입금 내역이 자동 정리됩니다. 엑셀·수기 입력도 가능해요."
         />
       ) : (
         <div className="space-y-2">

@@ -542,6 +542,31 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 </div>
                 <div className="space-y-2">
                   <Label>{matchType === "EVENT" ? "시작 시간" : "시간"}</Label>
+                  {/* 자주 쓰는 시간 빠른 버튼 — 50대 친화 (스크롤 부담 해소) */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {["06:00", "07:00", "08:00", "09:00", "10:00", "18:00", "19:00", "20:00", "21:00"].map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => {
+                          setMatchTime(t);
+                          if (matchType !== "EVENT") {
+                            const [hh, mm] = t.split(":").map(Number);
+                            const endH = String((hh + 2) % 24).padStart(2, "0");
+                            setMatchEndTime(`${endH}:${String(mm).padStart(2, "0")}`);
+                          }
+                        }}
+                        className={cn(
+                          "h-9 px-3 rounded-full text-sm font-medium border transition-colors",
+                          matchTime === t
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-secondary text-foreground border-border hover:border-primary/50"
+                        )}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
                   <div className="flex items-center gap-2">
                     <select
                       id="time"
@@ -786,7 +811,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
               <EmptyState
                 icon={Calendar}
                 title="등록된 일정이 없습니다"
-                description="일정 하나면 투표·전술판 자동 편성·MVP 투표까지 한 번에 돌아가요."
+                description="일정 하나만 등록하면 참석 투표·라인업·MVP까지 자동으로 이어집니다."
                 action={
                   isStaffOrAbove(role) ? (
                     <Button size="sm" onClick={() => setIsOpen(true)}>
