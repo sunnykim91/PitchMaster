@@ -436,7 +436,7 @@ export default function MembersClient({
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  전화번호가 있으면 가입 시 자동 연동, 없으면 이름으로 매칭됩니다.
+                  가입 안 한 팀원도 미리 추가할 수 있어요. 나중에 카카오로 가입하면 같은 팀원으로 자동으로 합쳐집니다.
                 </p>
                 <Button
                   size="sm"

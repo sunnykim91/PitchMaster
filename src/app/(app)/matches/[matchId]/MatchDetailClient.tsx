@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
-import { ChevronLeft, Check } from "lucide-react";
+import { ChevronLeft, Check, Info, Vote, LayoutGrid, UserCheck, FileEdit, MessageSquare } from "lucide-react";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { useToast } from "@/lib/ToastContext";
 import Link from "next/link";
@@ -49,15 +49,15 @@ import { MatchVoteTab } from "./MatchVoteTab";
 
 const MatchTacticsTab = dynamic(
   () => import("./MatchTacticsTab").then((m) => m.MatchTacticsTab),
-  { ssr: false, loading: () => <div className="py-8 text-center text-sm text-muted-foreground">전술판 불러오는 중...</div> }
+  { ssr: false, loading: () => <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground"><svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" strokeLinecap="round"/></svg>전술판 불러오는 중...</div> }
 );
 const MatchRecordTab = dynamic(
   () => import("./MatchRecordTab").then((m) => m.MatchRecordTab),
-  { ssr: false, loading: () => <div className="py-8 text-center text-sm text-muted-foreground">기록 불러오는 중...</div> }
+  { ssr: false, loading: () => <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground"><svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" strokeLinecap="round"/></svg>기록 불러오는 중...</div> }
 );
 const MatchDiaryTab = dynamic(
   () => import("./MatchDiaryTab").then((m) => m.MatchDiaryTab),
-  { ssr: false, loading: () => <div className="py-8 text-center text-sm text-muted-foreground">후기 불러오는 중...</div> }
+  { ssr: false, loading: () => <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground"><svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" strokeLinecap="round"/></svg>후기 불러오는 중...</div> }
 );
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -548,30 +548,31 @@ export default function MatchDetailClient({
         </Button>
       </div>
 
-      {/* ── Sticky Tab Bar ── */}
+      {/* ── Sticky Tab Bar — 7탭 모두 균등 분할 (370px도 fit) ── */}
       <div className="sticky top-0 z-10 -mx-1 px-1 bg-background/90 backdrop-blur-md">
         <div className="flex border-b border-border/50" role="tablist" aria-label="경기 상세 탭">
           {([
-            { key: "info", label: "정보" },
-            { key: "vote", label: "투표" },
-            ...(match.matchType !== "EVENT" ? [
-              { key: "tactics" as const, label: "전술" },
-              ...(canManageAttendance ? [{ key: "attendance" as const, label: "출석" }] : []),
-              { key: "record" as const, label: "기록" },
-              { key: "diary" as const, label: "후기" },
-            ] : []),
+            { key: "info", label: "정보", Icon: Info },
+            { key: "vote", label: "투표", Icon: Vote },
+            ...(match.matchType !== "EVENT" ? ([
+              { key: "tactics" as const, label: "전술", Icon: LayoutGrid },
+              ...(canManageAttendance ? [{ key: "attendance" as const, label: "출석", Icon: UserCheck }] : []),
+              { key: "record" as const, label: "기록", Icon: FileEdit },
+              { key: "diary" as const, label: "후기", Icon: MessageSquare },
+            ] as const) : []),
           ] as const).map((tab) => (
             <button
               key={tab.key}
               role="tab"
               aria-selected={activeTab === tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className="relative flex-1 py-3.5 text-center text-sm font-medium transition-all min-h-[48px]"
+              className="relative flex-1 min-w-0 py-2.5 px-0.5 text-center text-[11.5px] font-medium transition-all min-h-[52px] flex flex-col items-center justify-center gap-0.5"
               style={{ color: activeTab === tab.key ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
             >
-              {tab.label}
+              <tab.Icon className="h-[18px] w-[18px]" />
+              <span className="truncate max-w-full">{tab.label}</span>
               {activeTab === tab.key && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-1 rounded-full" style={{ backgroundColor: "hsl(var(--primary))" }} />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full" style={{ backgroundColor: "hsl(var(--primary))" }} />
               )}
             </button>
           ))}

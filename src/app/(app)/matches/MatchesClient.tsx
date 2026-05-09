@@ -503,8 +503,8 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   <Label>종목</Label>
                   <div className="flex gap-2">
                     {([
-                      { type: "SOCCER" as const, label: "⚽ 축구", color: "primary" },
-                      { type: "FUTSAL" as const, label: "⚽ 풋살", color: "info" },
+                      { type: "SOCCER" as const, label: "⚽ 축구", sub: "11인", color: "primary" },
+                      { type: "FUTSAL" as const, label: "⚽ 풋살", sub: "5·6인", color: "info" },
                     ]).map((item) => (
                       <button
                         key={item.type}
@@ -515,13 +515,14 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                           setPlayerCount(SPORT_DEFAULTS[item.type].playerCount);
                         }}
                         className={cn(
-                          "flex-1 min-h-[44px] rounded-xl border-2 px-2 text-sm font-bold transition-all sm:px-3",
+                          "flex-1 min-h-[52px] rounded-xl border-2 px-2 text-sm font-bold transition-all sm:px-3 flex flex-col items-center justify-center gap-0.5",
                           matchSportType === item.type
                             ? `border-[hsl(var(--${item.color}))] bg-[hsl(var(--${item.color}))]/15 text-[hsl(var(--${item.color}))] shadow-sm`
                             : "border-border bg-secondary/40 text-muted-foreground hover:border-foreground/30"
                         )}
                       >
-                        {item.label}
+                        <span>{item.label}</span>
+                        <span className="text-[11px] font-medium opacity-80">{item.sub}</span>
                       </button>
                     ))}
                   </div>

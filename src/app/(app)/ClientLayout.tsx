@@ -464,7 +464,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           <div className="h-full bg-primary animate-[loading-bar_1.5s_ease-in-out_infinite]" />
         </div>
       )}
-      <div className="mx-auto grid max-w-7xl gap-4 px-4 py-4 lg:grid-cols-[260px_1fr]">
+      <div className="mx-auto grid max-w-7xl gap-4 px-3 py-4 sm:px-4 lg:grid-cols-[260px_1fr]">
         {/* Offline Banner */}
         {isOffline && (
           <div className="rounded-xl bg-[hsl(var(--loss))]/15 px-4 py-2.5 text-center text-sm font-semibold text-[hsl(var(--loss))] lg:col-span-2">

@@ -139,10 +139,10 @@ function MatchVoteTabInner({
           <CardHeader className="pb-2"><CardTitle className="text-base font-bold">내 투표</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             {/* 마감 시간 + 마감/재개 버튼 */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground min-w-0">
                 <Clock className="h-3.5 w-3.5 shrink-0" />
-                <span>마감: {match.voteDeadline ? (() => { const d = new Date(match.voteDeadline); return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; })() : "미설정"}</span>
+                <span className="truncate">마감: {match.voteDeadline ? (() => { const d = new Date(match.voteDeadline); return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; })() : "미설정"}</span>
               </div>
               {canManage && (
                 isExpired ? (
