@@ -10,7 +10,7 @@
  * 외부에서 defaultValue 변경 시 key prop으로 리마운트 트리거 권장.
  */
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -61,40 +61,31 @@ export function PlayerPicker({
     return p.name.toLowerCase().includes(query.trim().toLowerCase());
   };
 
-  // 전체 인원수 — 검색 input 노출 여부 결정 (8명 이하면 검색 불필요)
-  const totalPlayers = useMemo(
-    () => groups.reduce((sum, g) => sum + g.players.length, 0),
-    [groups]
-  );
-  const showSearch = totalPlayers > 8;
-
   return (
     <div className={cn("space-y-3", className)}>
       <input type="hidden" name={name} value={selected} />
 
-      {showSearch && (
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={searchPlaceholder}
-            className="h-11 w-full rounded-xl border border-border bg-secondary pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="선수 이름 검색"
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={() => setQuery("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted-foreground hover:bg-secondary-foreground/10"
-              aria-label="검색어 지우기"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
-      )}
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={searchPlaceholder}
+          className="h-11 w-full rounded-xl border border-border bg-secondary pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          aria-label="선수 이름 검색"
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => setQuery("")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted-foreground hover:bg-secondary-foreground/10"
+            aria-label="검색어 지우기"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
 
       {emptyLabel !== null && (
         <div className="flex flex-wrap gap-2">
