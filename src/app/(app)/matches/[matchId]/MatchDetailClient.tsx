@@ -57,7 +57,7 @@ const MatchRecordTab = dynamic(
 );
 const MatchDiaryTab = dynamic(
   () => import("./MatchDiaryTab").then((m) => m.MatchDiaryTab),
-  { ssr: false, loading: () => <div className="py-8 text-center text-sm text-muted-foreground">일지 불러오는 중...</div> }
+  { ssr: false, loading: () => <div className="py-8 text-center text-sm text-muted-foreground">후기 불러오는 중...</div> }
 );
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -558,7 +558,7 @@ export default function MatchDetailClient({
               { key: "tactics" as const, label: "전술" },
               ...(canManageAttendance ? [{ key: "attendance" as const, label: "출석" }] : []),
               { key: "record" as const, label: "기록" },
-              { key: "diary" as const, label: "일지" },
+              { key: "diary" as const, label: "후기" },
             ] : []),
           ] as const).map((tab) => (
             <button
@@ -782,17 +782,11 @@ export default function MatchDetailClient({
             userId={userId}
             match={match}
             goals={goals}
-            votes={votes}
             guests={guests}
             canRecord={canRecord}
-            canVoteMvp={canVoteMvp}
-            isStaffVoter={isStaffVoter}
-            attendeeCount={presentMembers.length}
             attendingMembers={attendingMembers}
-            mvpCandidates={presentMembers}
             fullRoster={fullRoster}
             refetchGoals={refetchGoals}
-            refetchMvp={refetchMvp}
             internalTeams={internalTeams}
           />
         </div>
@@ -803,13 +797,21 @@ export default function MatchDetailClient({
         <div>
           <MatchDiaryTab
             matchId={matchId}
+            userId={userId}
             match={match}
             diary={diary}
             score={score}
             canManage={canManage}
             fullRoster={fullRoster}
             voteCounts={voteCounts}
+            votes={votes}
+            canVoteMvp={canVoteMvp}
+            isStaffVoter={isStaffVoter}
+            attendeeCount={presentMembers.length}
+            attendingMembers={attendingMembers}
+            mvpCandidates={presentMembers}
             refetchDiary={refetchDiary}
+            refetchMvp={refetchMvp}
             aiSummary={initialData?.aiSummary ?? null}
             canRegenerateAi={enableAiSummary}
             aiSummaryRegenerateCount={initialData?.aiSummaryRegenerateCount ?? 0}

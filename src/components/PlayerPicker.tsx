@@ -23,7 +23,7 @@ export type PlayerPickerOption = { id: string; name: string };
 export type PlayerPickerGroup = {
   label: string;
   players: PlayerPickerOption[];
-  tone?: "default" | "guest" | "special";
+  tone?: "default" | "guest" | "special" | "success";
 };
 
 export interface PlayerPickerProps {
@@ -191,7 +191,7 @@ export function PlayerPicker({
 interface ChipButtonProps {
   selected: boolean;
   onClick: () => void;
-  tone?: "default" | "guest" | "special" | "muted";
+  tone?: "default" | "guest" | "special" | "success" | "muted";
   children: React.ReactNode;
 }
 
@@ -203,6 +203,8 @@ function ChipButton({ selected, onClick, tone = "default", children }: ChipButto
           return "bg-[hsl(var(--info))] text-white border-[hsl(var(--info))]";
         case "special":
           return "bg-[hsl(var(--warning))] text-[hsl(0_0%_10%)] border-[hsl(var(--warning))]";
+        case "success":
+          return "bg-[hsl(var(--success))] text-white border-[hsl(var(--success))] shadow-sm";
         case "muted":
           return "bg-foreground text-background border-foreground";
         default:
@@ -214,6 +216,8 @@ function ChipButton({ selected, onClick, tone = "default", children }: ChipButto
         return "bg-[hsl(var(--info))]/10 text-[hsl(var(--info))] border-[hsl(var(--info))]/30 hover:border-[hsl(var(--info))]/60";
       case "special":
         return "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30 hover:border-[hsl(var(--warning))]/60";
+      case "success":
+        return "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/30 hover:border-[hsl(var(--success))]/60";
       case "muted":
         return "bg-secondary text-muted-foreground border-border hover:border-muted-foreground/40";
       default:

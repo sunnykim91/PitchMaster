@@ -2,10 +2,11 @@
 
 import { memo, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Camera, X as XIcon, Trash2, ImageIcon, MessageCircle, Copy, Download, RefreshCw } from "lucide-react";
+import { Camera, X as XIcon, Trash2, ImageIcon, MessageCircle, Copy, Download, RefreshCw, Trophy } from "lucide-react";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
+import { useItemAction } from "@/lib/useAsyncAction";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -18,19 +19,35 @@ import type {
   Match,
   MatchDiary,
   SimpleRosterPlayer,
+  RosterPlayer,
 } from "./matchDetailTypes";
 import { WEATHER_OPTIONS, CONDITION_OPTIONS } from "./matchDetailTypes";
 
 export interface MatchDiaryTabProps {
   matchId: string;
+  userId: string;
   match: Match;
   diary: MatchDiary;
   score: string;
   canManage: boolean;
   fullRoster: SimpleRosterPlayer[];
   voteCounts: Record<string, number>;
+  /** MVP 투표 상태 (userId → candidateId) */
+  votes: Record<string, string>;
+  /** MVP 투표 가능 여부 (mvp_vote_staff_only 설정 반영) */
+  canVoteMvp: boolean;
+  /** 현재 사용자가 운영진 이상인지 */
+  isStaffVoter: boolean;
+  /** 참석자 수 — 실제 참석(PRESENT/LATE) 기준 */
+  attendeeCount: number;
+  /** MVP 후보 폴백용 — 참석 투표 멤버 */
+  attendingMembers: RosterPlayer[];
+  /** MVP 후보 — 실제 참석(PRESENT/LATE) 멤버만 */
+  mvpCandidates?: RosterPlayer[];
   /** 일지 refetch */
   refetchDiary: () => Promise<unknown>;
+  /** MVP refetch */
+  refetchMvp: () => Promise<unknown>;
   /** AI 경기 후기 (COMPLETED 경기 + 캐시 있을 때만) */
   aiSummary?: string | null;
   /** AI 재생성 가능 여부 (김선휘 Feature Flag) */
@@ -41,17 +58,37 @@ export interface MatchDiaryTabProps {
 
 function MatchDiaryTabInner({
   matchId,
+  userId,
   match,
   diary,
   score,
   canManage,
   fullRoster,
   voteCounts,
+  votes,
+  canVoteMvp,
+  isStaffVoter,
+  attendeeCount,
+  attendingMembers,
+  mvpCandidates,
   refetchDiary,
+  refetchMvp,
   aiSummary,
   canRegenerateAi,
   aiSummaryRegenerateCount = 0,
 }: MatchDiaryTabProps) {
+  const [runMvpVote, mvpVotingId] = useItemAction();
+
+  /* ── MVP handlers ── */
+  async function handleMvpVote(candidateId: string) {
+    await apiMutate("/api/mvp", "POST", { matchId, candidateId });
+    await refetchMvp();
+  }
+  async function handleCancelMvpVote() {
+    await apiMutate(`/api/mvp?matchId=${encodeURIComponent(matchId)}`, "DELETE");
+    await refetchMvp();
+  }
+
   const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [currentAiSummary, setCurrentAiSummary] = useState<string | null>(aiSummary ?? null);
   const [regenerating, setRegenerating] = useState(false);
@@ -395,6 +432,144 @@ function MatchDiaryTabInner({
           />
         </CardContent>
       </Card>
+
+      {/* ══ MVP 투표 — 완료된 경기에서만 노출 (기록 탭 → 후기 탭으로 이동, 50차) ══ */}
+      {match.status === "COMPLETED" && (
+        <Card className="rounded-xl border-border/30">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base font-bold">
+              <Trophy className="h-4 w-4 text-[hsl(var(--warning))]" />
+              MVP 투표
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* 투표율 / 모드 안내 */}
+            {(() => {
+              const totalVotes = Object.keys(voteCounts).reduce((sum, id) => sum + (voteCounts[id] ?? 0), 0);
+              const pct = attendeeCount > 0 ? Math.round((totalVotes / attendeeCount) * 100) : null;
+              const threshold70 = attendeeCount > 0 ? Math.ceil(attendeeCount * 0.7) : null;
+              const reached = pct !== null && pct >= 70;
+              if (!canVoteMvp) {
+                return (
+                  <p className="mb-3 text-xs text-muted-foreground">운영진이 MVP를 직접 선정합니다</p>
+                );
+              }
+              if (isStaffVoter) {
+                return (
+                  <p className="mb-3 text-xs text-[hsl(var(--warning))]">
+                    운영진 선택 시 즉시 MVP 확정됩니다
+                  </p>
+                );
+              }
+              return (
+                <div className="mb-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">참석자만 1인 1표</p>
+                    {pct !== null && (
+                      <span className={cn("text-xs font-medium", reached ? "text-[hsl(var(--win))]" : "text-muted-foreground")}>
+                        {totalVotes}/{attendeeCount}명 투표 · {pct}%
+                        {threshold70 !== null && !reached && ` (${threshold70}명 이상 필요)`}
+                      </span>
+                    )}
+                  </div>
+                  {attendeeCount > 0 && !reached && (
+                    <p className="rounded-md bg-[hsl(var(--warning))]/10 px-2.5 py-1.5 text-[12.5px] leading-snug text-[hsl(var(--warning))]">
+                      참석자 70% 이상이 투표해야 공식 MVP로 확정됩니다. 미달 시 운영진이 직접 지정할 수 있어요.
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* 현재 1위 */}
+            {(() => {
+              const candidates = mvpCandidates ?? attendingMembers;
+              const topPlayer = candidates.reduce<{ id: string; name: string; count: number } | null>((top, p) => {
+                const count = voteCounts[p.id] ?? 0;
+                if (count > 0 && (!top || count > top.count)) return { id: p.id, name: p.name, count };
+                return top;
+              }, null);
+              return topPlayer ? (
+                <div className="mb-4 flex items-center gap-3 rounded-xl bg-[hsl(var(--warning))]/10 p-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--warning))]/20">
+                    <Trophy className="h-5 w-5 text-[hsl(var(--warning))]" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-[hsl(var(--warning))]">
+                      {isStaffVoter ? "운영진 지정" : "현재 1위"}
+                    </div>
+                    <div className="font-bold">{topPlayer.name} ({topPlayer.count}표)</div>
+                  </div>
+                </div>
+              ) : null;
+            })()}
+
+            {canVoteMvp ? (
+              <>
+                {votes[userId] && (
+                  <div className="mb-2 flex justify-end">
+                    <button
+                      type="button"
+                      disabled={!!mvpVotingId}
+                      onClick={() => runMvpVote("__cancel__", handleCancelMvpVote)}
+                      className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline disabled:opacity-50"
+                    >
+                      투표 취소
+                    </button>
+                  </div>
+                )}
+                <div className="grid grid-cols-3 gap-2">
+                  {(mvpCandidates ?? attendingMembers).map((player) => {
+                    const isSelf = player.id === userId;
+                    const isVoted = votes[userId] === player.id;
+                    const count = voteCounts[player.id] ?? 0;
+                    return (
+                      <button
+                        key={player.id}
+                        type="button"
+                        disabled={!!mvpVotingId || isSelf}
+                        title={isSelf ? "본인에게는 투표할 수 없습니다" : undefined}
+                        onClick={() => !isSelf && runMvpVote(player.id, () => handleMvpVote(player.id))}
+                        className={cn(
+                          "relative rounded-xl p-3 text-sm font-medium transition-all",
+                          isVoted ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+                          mvpVotingId === player.id && "opacity-70"
+                        )}
+                      >
+                        {player.name}
+                        {count > 0 && (
+                          <Badge className="absolute -right-1.5 -top-1.5 bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] text-[12px] px-1.5 min-w-[20px] h-[20px]">
+                            {count}
+                          </Badge>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {(mvpCandidates ?? attendingMembers).map((player) => {
+                  const count = voteCounts[player.id] ?? 0;
+                  return (
+                    <div
+                      key={player.id}
+                      className="relative rounded-xl bg-secondary p-3 text-center text-sm font-medium text-secondary-foreground opacity-60"
+                    >
+                      {player.name}
+                      {count > 0 && (
+                        <Badge className="absolute -right-1.5 -top-1.5 bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] text-[12px] px-1.5 min-w-[20px] h-[20px]">
+                          {count}
+                        </Badge>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* ══ AI가 정리한 경기 (수동 작성 일지와 구분 위해 스코어·사진 아래에 배치) ══ */}
       {/* 빈 상태에서도 카드 노출 — canRegenerateAi + COMPLETED + REGULAR 이면 가이드/로딩/에러 표시 */}

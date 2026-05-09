@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { apiMutate } from "@/lib/useApi";
 import { useAsyncAction, useItemAction } from "@/lib/useAsyncAction";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { EmptyState } from "@/components/EmptyState";
-import { Target, ChevronDown, Trophy, Check, Pencil, Trash2, Clock, GripVertical } from "lucide-react";
+import { Target, ChevronDown, Check, Pencil, Trash2, Clock, GripVertical } from "lucide-react";
 import { useToast } from "@/lib/ToastContext";
 import { PlayerPicker, type PlayerPickerGroup } from "@/components/PlayerPicker";
 import {
@@ -36,8 +36,6 @@ import type {
   Match,
   GoalEvent,
   Guest,
-  VoteState,
-
   RosterPlayer,
   SimpleRosterPlayer,
   InternalTeamAssignment,
@@ -49,24 +47,13 @@ export interface MatchRecordTabProps {
   userId: string;
   match: Match;
   goals: GoalEvent[];
-  votes: VoteState;
   guests: Guest[];
   canRecord: boolean;
-  /** MVP 투표 가능 여부 (mvp_vote_staff_only 설정 반영) */
-  canVoteMvp: boolean;
-  /** 현재 사용자가 운영진 이상인지 (직접 지정 여부) */
-  isStaffVoter: boolean;
-  /** 참석자 수 — 실제 참석(PRESENT/LATE) 기준. 투표율 계산용 */
-  attendeeCount: number;
-  /** 참석 투표(vote=ATTEND) 멤버 — 출석 체크 UI 용 (vote 시점 기준이라 안 온 사람도 포함) */
+  /** 골/어시 PlayerPicker용 참석 멤버 */
   attendingMembers: RosterPlayer[];
-  /** MVP 후보 — 실제 참석(PRESENT/LATE) 멤버만. 미지정 시 attendingMembers 폴백 (구버전 호환) */
-  mvpCandidates?: RosterPlayer[];
   fullRoster: SimpleRosterPlayer[];
   /** 골 데이터 refetch */
   refetchGoals: () => Promise<unknown>;
-  /** MVP refetch */
-  refetchMvp: () => Promise<unknown>;
   /** 자체전 팀 편성 */
   internalTeams?: InternalTeamAssignment[];
 }
@@ -76,17 +63,11 @@ function MatchRecordTabInner({
   userId,
   match,
   goals,
-  votes,
   guests,
   canRecord,
-  canVoteMvp,
-  isStaffVoter,
-  attendeeCount,
   attendingMembers,
-  mvpCandidates,
   fullRoster,
   refetchGoals,
-  refetchMvp,
   internalTeams,
 }: MatchRecordTabProps) {
   const { showToast } = useToast();
@@ -95,12 +76,17 @@ function MatchRecordTabInner({
   const confirm = useConfirm();
   const [runAddGoal, addingGoal] = useAsyncAction();
   const [runDeleteGoal, deletingGoalId] = useItemAction();
-  const [runMvpVote, mvpVotingId] = useItemAction();
 
   /* ── Local UI state ── */
   const [showDetailForm, setShowDetailForm] = useState(false);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [editingIsOpponent, setEditingIsOpponent] = useState(false);
+  // 어시스트 PlayerPicker 명시적 펼침 (기본 접힘 — 어시 없는 골 흔하므로)
+  const [showAssistPicker, setShowAssistPicker] = useState(false);
+  // 폼 진입/리셋 시 어시 펼침 상태 reset
+  useEffect(() => {
+    setShowAssistPicker(false);
+  }, [editingGoalId, showDetailForm]);
   const formRef = useRef<HTMLFormElement>(null);
 
   /** 드래그 재정렬용 로컬 goals state (optimistic UI) */
@@ -142,14 +128,6 @@ function MatchRecordTabInner({
     }
     await refetchGoals();
   }
-
-  const voteCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    Object.values(votes).forEach((id) => {
-      counts[id] = (counts[id] ?? 0) + 1;
-    });
-    return counts;
-  }, [votes]);
 
   const guestIds = new Set(guests.map((g) => g.id));
 
@@ -250,14 +228,14 @@ function MatchRecordTabInner({
       if (goalTypeSelect) goalTypeSelect.value = goal.goalType ?? "NORMAL";
       const quarterBtns = quarterInput?.parentElement?.querySelectorAll("button");
       quarterBtns?.forEach((btn) => {
-        btn.classList.remove("bg-background", "text-foreground", "shadow-sm");
+        btn.classList.remove("bg-primary", "text-primary-foreground", "shadow-sm");
         btn.classList.add("text-muted-foreground");
       });
       // null/0 = 모름 → index 0 (모름 버튼), 1~N = 해당 쿼터 버튼
       const targetIdx = goal.quarter ?? 0;
       if (quarterBtns && quarterBtns[targetIdx]) {
         quarterBtns[targetIdx].classList.remove("text-muted-foreground");
-        quarterBtns[targetIdx].classList.add("bg-background", "text-foreground", "shadow-sm");
+        quarterBtns[targetIdx].classList.add("bg-primary", "text-primary-foreground", "shadow-sm");
       }
       form.scrollIntoView({ behavior: "smooth", block: "center" });
       return true;
@@ -289,20 +267,11 @@ function MatchRecordTabInner({
     setShowDetailForm(false);
   }
 
-  /* ── MVP handler ── */
-  async function handleVote(candidateId: string) {
-    await apiMutate("/api/mvp", "POST", { matchId, candidateId });
-    await refetchMvp();
-  }
-  async function handleCancelVote() {
-    await apiMutate(`/api/mvp?matchId=${encodeURIComponent(matchId)}`, "DELETE");
-    await refetchMvp();
-  }
+  /* ── (MVP handlers는 MatchDiaryTab으로 이동됨) ── */
 
   return (
     <>
-      <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="space-y-5">
+      <div className="space-y-5">
         {/* ── 스코어보드 ── */}
         <Card className="rounded-xl border-0 bg-gradient-to-br from-secondary to-background overflow-hidden">
           <CardContent className="p-6">
@@ -459,7 +428,7 @@ function MatchRecordTabInner({
                       },
                     ];
                     const assistGroups: PlayerPickerGroup[] = [
-                      { label: "참석 멤버", players: attendingMembers.map((p) => ({ id: p.id, name: p.name })), tone: "default" },
+                      { label: "참석 멤버", players: attendingMembers.map((p) => ({ id: p.id, name: p.name })), tone: "success" },
                       ...(guests.length > 0
                         ? ([{ label: "용병", players: guests.map((g) => ({ id: g.id, name: g.name })), tone: "guest" }] as PlayerPickerGroup[])
                         : []),
@@ -469,6 +438,7 @@ function MatchRecordTabInner({
                         tone: "special",
                       },
                     ];
+                    const hasAssist = !!editingGoal?.assistId;
                     return (
                   <div className="space-y-5">
                     <div className="space-y-2">
@@ -484,13 +454,26 @@ function MatchRecordTabInner({
 
                     <div className="space-y-2">
                       <p className="text-[13px] font-semibold text-foreground">어시스트</p>
-                      <PlayerPicker
-                        key={`assist-${editingGoalId ?? "new"}`}
-                        name="assistId"
-                        defaultValue={editingGoal?.assistId ?? ""}
-                        groups={assistGroups}
-                        emptyLabel="없음"
-                      />
+                      {hasAssist || showAssistPicker ? (
+                        <PlayerPicker
+                          key={`assist-${editingGoalId ?? "new"}`}
+                          name="assistId"
+                          defaultValue={editingGoal?.assistId ?? ""}
+                          groups={assistGroups}
+                          emptyLabel="없음"
+                        />
+                      ) : (
+                        <>
+                          <input type="hidden" name="assistId" value="" />
+                          <button
+                            type="button"
+                            onClick={() => setShowAssistPicker(true)}
+                            className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full border border-dashed border-[hsl(var(--success))]/40 bg-[hsl(var(--success))]/5 text-[hsl(var(--success))] text-sm font-medium hover:border-[hsl(var(--success))]/70 hover:bg-[hsl(var(--success))]/10 transition-colors"
+                          >
+                            + 어시스트 추가
+                          </button>
+                        </>
+                      )}
                     </div>
 
                     <div className="space-y-1.5">
@@ -516,10 +499,10 @@ function MatchRecordTabInner({
                         onClick={(e) => {
                           const input = e.currentTarget.parentElement?.querySelector("input[name=quarter]") as HTMLInputElement;
                           if (input) input.value = "0";
-                          e.currentTarget.parentElement?.querySelectorAll("button").forEach((btn) => { btn.classList.remove("bg-background", "text-foreground", "shadow-sm"); btn.classList.add("text-muted-foreground"); });
-                          e.currentTarget.classList.remove("text-muted-foreground"); e.currentTarget.classList.add("bg-background", "text-foreground", "shadow-sm");
+                          e.currentTarget.parentElement?.querySelectorAll("button").forEach((btn) => { btn.classList.remove("bg-primary", "text-primary-foreground", "shadow-sm"); btn.classList.add("text-muted-foreground"); });
+                          e.currentTarget.classList.remove("text-muted-foreground"); e.currentTarget.classList.add("bg-primary", "text-primary-foreground", "shadow-sm");
                         }}
-                        className="flex-1 rounded-md py-2 text-sm font-medium bg-background text-foreground shadow-sm"
+                        className="flex-1 rounded-md py-2 text-sm font-medium bg-primary text-primary-foreground shadow-sm"
                       >
                         모름
                       </button>
@@ -603,155 +586,7 @@ function MatchRecordTabInner({
             </div>
           </CardContent>
         </Card>
-        </div>
-
-        {/* ── 우측 컬럼 ── */}
-        <div className="space-y-5">
-          {/* ── MVP 투표 — 완료된 경기에서만 노출 ── */}
-          {match.status === "COMPLETED" && (
-          <Card className="rounded-xl border-border/30">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base font-bold">
-                <Trophy className="h-4 w-4 text-[hsl(var(--warning))]" />
-                MVP 투표
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {/* 투표율 / 모드 안내 */}
-              {(() => {
-                const totalVotes = Object.keys(voteCounts).reduce((sum, id) => sum + (voteCounts[id] ?? 0), 0);
-                const pct = attendeeCount > 0 ? Math.round((totalVotes / attendeeCount) * 100) : null;
-                const threshold70 = attendeeCount > 0 ? Math.ceil(attendeeCount * 0.7) : null;
-                const reached = pct !== null && pct >= 70;
-                if (!canVoteMvp) {
-                  // 일반 팀원 — 운영진 전용 모드
-                  return (
-                    <p className="mb-3 text-xs text-muted-foreground">운영진이 MVP를 직접 선정합니다</p>
-                  );
-                }
-                if (isStaffVoter) {
-                  // 운영진 — 직접 지정 모드
-                  return (
-                    <p className="mb-3 text-xs text-[hsl(var(--warning))]">
-                      운영진 선택 시 즉시 MVP 확정됩니다
-                    </p>
-                  );
-                }
-                // 일반 투표 모드 — 투표율 표시 + threshold 미달 시 확정 조건 안내
-                return (
-                  <div className="mb-3 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground">참석자만 1인 1표</p>
-                      {pct !== null && (
-                        <span className={cn("text-xs font-medium", reached ? "text-[hsl(var(--win))]" : "text-muted-foreground")}>
-                          {totalVotes}/{attendeeCount}명 투표 · {pct}%
-                          {threshold70 !== null && !reached && ` (${threshold70}명 이상 필요)`}
-                        </span>
-                      )}
-                    </div>
-                    {attendeeCount > 0 && !reached && (
-                      <p className="rounded-md bg-[hsl(var(--warning))]/10 px-2.5 py-1.5 text-[12.5px] leading-snug text-[hsl(var(--warning))]">
-                        참석자 70% 이상이 투표해야 공식 MVP로 확정됩니다. 미달 시 운영진이 직접 지정할 수 있어요.
-                      </p>
-                    )}
-                  </div>
-                );
-              })()}
-
-              {/* 현재 1위 — MVP 후보(실제 참석자) 기준 */}
-              {(() => {
-                const candidates = mvpCandidates ?? attendingMembers;
-                const topPlayer = candidates.reduce<{ id: string; name: string; count: number } | null>((top, p) => {
-                  const count = voteCounts[p.id] ?? 0;
-                  if (count > 0 && (!top || count > top.count)) return { id: p.id, name: p.name, count };
-                  return top;
-                }, null);
-                return topPlayer ? (
-                  <div className="mb-4 flex items-center gap-3 rounded-xl bg-[hsl(var(--warning))]/10 p-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--warning))]/20">
-                      <Trophy className="h-5 w-5 text-[hsl(var(--warning))]" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-[hsl(var(--warning))]">
-                        {isStaffVoter ? "운영진 지정" : "현재 1위"}
-                      </div>
-                      <div className="font-bold">{topPlayer.name} ({topPlayer.count}표)</div>
-                    </div>
-                  </div>
-                ) : null;
-              })()}
-
-              {canVoteMvp ? (
-                <>
-                  {votes[userId] && (
-                    <div className="mb-2 flex justify-end">
-                      <button
-                        type="button"
-                        disabled={!!mvpVotingId}
-                        onClick={() => runMvpVote("__cancel__", handleCancelVote)}
-                        className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline disabled:opacity-50"
-                      >
-                        투표 취소
-                      </button>
-                    </div>
-                  )}
-                  <div className="grid grid-cols-3 gap-2">
-                    {(mvpCandidates ?? attendingMembers).map((player) => {
-                      const isSelf = player.id === userId;
-                      const isVoted = votes[userId] === player.id;
-                      const count = voteCounts[player.id] ?? 0;
-                      return (
-                        <button
-                          key={player.id}
-                          type="button"
-                          disabled={!!mvpVotingId || isSelf}
-                          title={isSelf ? "본인에게는 투표할 수 없습니다" : undefined}
-                          onClick={() => !isSelf && runMvpVote(player.id, () => handleVote(player.id))}
-                          className={cn(
-                            "relative rounded-xl p-3 text-sm font-medium transition-all",
-                            isVoted ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-                            mvpVotingId === player.id && "opacity-70"
-                          )}
-                        >
-                          {player.name}
-                          {count > 0 && (
-                            <Badge className="absolute -right-1.5 -top-1.5 bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] text-[12px] px-1.5 min-w-[20px] h-[20px]">
-                              {count}
-                            </Badge>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
-              ) : (
-                // 일반 팀원 — 읽기 전용 결과 표시
-                <div className="grid grid-cols-3 gap-2">
-                  {(mvpCandidates ?? attendingMembers).map((player) => {
-                    const count = voteCounts[player.id] ?? 0;
-                    return (
-                      <div
-                        key={player.id}
-                        className="relative rounded-xl bg-secondary p-3 text-center text-sm font-medium text-secondary-foreground opacity-60"
-                      >
-                        {player.name}
-                        {count > 0 && (
-                          <Badge className="absolute -right-1.5 -top-1.5 bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] text-[12px] px-1.5 min-w-[20px] h-[20px]">
-                            {count}
-                          </Badge>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          )}
-
-          {/* 출석 체크는 별도 "출석" 탭으로 이동됨 */}
-        </div>
-      </section>
+      </div>
 
     </>
   );

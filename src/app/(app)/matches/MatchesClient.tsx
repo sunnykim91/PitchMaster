@@ -208,6 +208,21 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([loc]) => loc);
   }, [matchesData.matches]);
 
+  // 자주 사용하는 시간 목록 (기존 경기에서 추출, 빈도순 최대 5개)
+  const recentTimes = useMemo(() => {
+    const times = (matchesData.matches ?? [])
+      .map((m) => m.match_time)
+      .filter((t): t is string => !!t && /^\d{1,2}:\d{2}/.test(t))
+      .map((t) => t.slice(0, 5)); // "HH:MM:SS" → "HH:MM"
+    if (times.length === 0) return [];
+    const counts = new Map<string, number>();
+    times.forEach((t) => counts.set(t, (counts.get(t) ?? 0) + 1));
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 5)
+      .map(([time]) => time);
+  }, [matchesData.matches]);
+
   const matches: Match[] = useMemo(
     () => (matchesData.matches ?? []).map(mapDbMatchToMatch),
     [matchesData.matches]
@@ -542,31 +557,33 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 </div>
                 <div className="space-y-2">
                   <Label>{matchType === "EVENT" ? "시작 시간" : "시간"}</Label>
-                  {/* 자주 쓰는 시간 빠른 버튼 — 50대 친화 (스크롤 부담 해소) */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {["06:00", "07:00", "08:00", "09:00", "10:00", "18:00", "19:00", "20:00", "21:00"].map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => {
-                          setMatchTime(t);
-                          if (matchType !== "EVENT") {
-                            const [hh, mm] = t.split(":").map(Number);
-                            const endH = String((hh + 2) % 24).padStart(2, "0");
-                            setMatchEndTime(`${endH}:${String(mm).padStart(2, "0")}`);
-                          }
-                        }}
-                        className={cn(
-                          "h-9 px-3 rounded-full text-sm font-medium border transition-colors",
-                          matchTime === t
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "bg-secondary text-foreground border-border hover:border-primary/50"
-                        )}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
+                  {/* 우리 팀이 자주 쓰는 시간 — 기존 경기에서 빈도순 추출 (최대 5개) */}
+                  {recentTimes.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {recentTimes.map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => {
+                            setMatchTime(t);
+                            if (matchType !== "EVENT") {
+                              const [hh, mm] = t.split(":").map(Number);
+                              const endH = String((hh + 2) % 24).padStart(2, "0");
+                              setMatchEndTime(`${endH}:${String(mm).padStart(2, "0")}`);
+                            }
+                          }}
+                          className={cn(
+                            "h-9 px-3 rounded-full text-sm font-medium border transition-colors",
+                            matchTime === t
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-secondary text-foreground border-border hover:border-primary/50"
+                          )}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex items-center gap-2">
                     <select
                       id="time"
