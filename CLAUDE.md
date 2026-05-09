@@ -405,3 +405,13 @@ git push origin main        # Vercel 자동배포
   - 실행파일: `C:\Users\온유아빠\.local\bin\serena.exe`
   - 기능: LSP 기반 심볼 탐색, 의존성 추적, 정확한 리팩토링
   - 상태: Connected (claude mcp list 확인됨)
+
+---
+
+## 멀티 컴퓨터 메모리 동기화
+
+세션 메모리는 별도 **private repo** `sunnykim91/pitchmaster-memory` 로 관리됨.
+- 위치: `~/.claude/projects/<슬러그>/memory/`
+- 자동 동기화: `SessionEnd` 훅 → `scripts/sync-claude-memory.sh` (슬러그 동적 감지, dirty일 때만 commit+push)
+- 새 컴퓨터 셋업 절차: [docs/MULTI_COMPUTER_SETUP.md](docs/MULTI_COMPUTER_SETUP.md)
+- 세션 시작 전 다른 기기 변경 가져오려면 메모리 폴더에서 `git pull` 한 번

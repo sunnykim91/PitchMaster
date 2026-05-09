@@ -101,13 +101,49 @@
       "PowerShell($env:JAVA_HOME = \"C:\\\\dev\\\\bw\\\\jdk\\\\jdk-17.0.11+9\"; $jarsigner = \"$env:JAVA_HOME\\\\bin\\\\jarsigner.exe\"; $env:KSPW = \"91tjsgnl\"; $aab = \"C:\\\\dev\\\\pitchmaster-twa\\\\app\\\\build\\\\outputs\\\\bundle\\\\release\\\\app-release.aab\"; $ks = \"C:\\\\dev\\\\pitchmaster-twa\\\\android.keystore\"; & $jarsigner -keystore $ks -storepass:env KSPW -keypass:env KSPW -sigalg SHA256withRSA -digestalg SHA-256 $aab android 2>&1 | Select-Object -Last 30)",
       "PowerShell(Copy-Item \"C:\\\\dev\\\\pitchmaster-twa\\\\app\\\\build\\\\outputs\\\\bundle\\\\release\\\\app-release.aab\" \"C:\\\\dev\\\\pitchmaster-twa\\\\app-release-bundle.aab\" -Force; Get-Item \"C:\\\\dev\\\\pitchmaster-twa\\\\app-release-bundle.aab\" | Select-Object FullName, Length, LastWriteTime; $env:JAVA_HOME = \"C:\\\\dev\\\\bw\\\\jdk\\\\jdk-17.0.11+9\"; & \"$env:JAVA_HOME\\\\bin\\\\jarsigner.exe\" -verify -verbose:summary \"C:\\\\dev\\\\pitchmaster-twa\\\\app-release-bundle.aab\" 2>&1 | Select-Object -Last 10)",
       "Bash(git -C \"c:\\\\Users\\\\온유아빠\\\\develop\\\\PitchMaster\" log --oneline -20)",
-      "Bash(dir /b \"C:\\\\Users\\\\온유아빠\\\\.claude\\\\projects\\\\c--Users------develop-PitchMaster\\\\memory\\\\\" 2>&1 | head -20)"
+      "Bash(dir /b \"C:\\\\Users\\\\온유아빠\\\\.claude\\\\projects\\\\c--Users------develop-PitchMaster\\\\memory\\\\\" 2>&1 | head -20)",
+      "Bash(curl -sI https://pitch-master.app/ -o /dev/null -w \"HTTP %{http_code}\\\\nLocation: %{redirect_url}\\\\n\")",
+      "Bash(curl -sI https://pitch-master.app/login -o /dev/null -w \"HTTP %{http_code}\\\\nLocation: %{redirect_url}\\\\n\")",
+      "Bash(curl -sI https://pitch-master.app/favicon.ico -o /dev/null -w \"HTTP %{http_code}\\\\nLocation: %{redirect_url}\\\\n\")",
+      "Bash(curl -sI -A \"Mozilla/5.0 \\(compatible; Yeti/1.1; +https://naver.me/spd\\)\" https://pitch-master.app/favicon.ico -w \"\\\\n=== HTTP %{http_code} | Content-Type: %{content_type} | Size: %{size_download} ===\\\\n\")",
+      "Bash(curl -sI -A \"Mozilla/5.0 \\(compatible; Yeti/1.1; +https://naver.me/spd\\)\" https://pitch-master.app/robots.txt)",
+      "Bash(curl -s -A \"Mozilla/5.0 \\(compatible; Yeti/1.1; +https://naver.me/spd\\)\" https://pitch-master.app/robots.txt)",
+      "Bash(curl -sI -A \"Mozilla/5.0 \\(compatible; Yeti/1.1; +https://naver.me/spd\\)\" https://www.pitch-master.app/favicon.ico -w \"\\\\n=== www: HTTP %{http_code} | redirect: %{redirect_url} ===\\\\n\")",
+      "Bash(npx --yes serve -p 8000 .)",
+      "Bash(taskkill /F /FI \"IMAGENAME eq node.exe\")",
+      "Bash(npm audit *)",
+      "Bash(echo \"---exit: $?\")",
+      "Bash(curl -sI https://pitch-master.app/)",
+      "Bash(curl -sI https://pitch-master.app/pricing)",
+      "Bash(curl -sI https://pitch-master.app/terms)",
+      "Bash(curl -sI https://pitch-master.app/sitemap.xml)",
+      "Bash(curl -sI https://pitch-master.app/robots.txt)",
+      "Bash(curl -sI https://pitch-master.app/login)",
+      "Bash(git revert *)",
+      "Bash(rm -f \"src/app/api/players/[userId]/evaluate/route.ts\" src/components/pitchAttributes/EvaluationModal.tsx src/components/pitchAttributes/PeerEvaluationDialog.tsx; echo \"deleted\"; ls \"src/app/api/players/[userId]/\" 2>/dev/null)",
+      "Bash(rmdir \"src/app/api/players/[userId]/evaluate\" 2>&1; echo \"---\"; ls \"src/app/api/players/[userId]/\")",
+      "Bash(rm -rf src/components/pitchAttributes/ src/lib/playerAttributes/ \"src/app/api/players/[userId]/attributes\" \"src/app/api/players/[userId]/evaluations\" \"src/app/api/team/position-rankings\" src/app/api/player-attributes \"src/app/player/[memberId]/evaluations\" src/app/api/cron/peer-eval-monthly && echo \"deleted\"; ls \"src/app/api/players/[userId]/\" 2>/dev/null; ls src/app/api/team/ 2>/dev/null; ls src/app/api/player-attributes/ 2>/dev/null)",
+      "Bash(ls \"src/app/api/players/[userId]/\" 2>/dev/null && echo \"---players/[userId] empty?\" && rmdir \"src/app/api/players/[userId]\" 2>&1; rmdir \"src/app/api/players\" 2>&1; echo \"---\"; ls \"src/app/api/players/\" 2>/dev/null)",
+      "Bash(grep -v \"//.*PitchScore\")",
+      "PowerShell(npm run build 2>&1)",
+      "Bash(curl -sI https://pitch-master.app/dashboard)",
+      "Bash(gh repo *)",
+      "Bash(curl -s \"https://api.github.com/repos/sunnykim91/PitchMaster\")",
+      "Bash(curl -s \"https://api.github.com/repos/sunnykim91/pitchmaster-memory\")",
+      "Bash(git -c user.name=thepsySunny -c user.email=tjsgnl2002@gmail.com commit -m 'memory: 2026-05-09 3차 경고 보강 + 인덱스 격상 *)",
+      "Bash(bash \"c:/Users/온유아빠/develop/PitchMaster/scripts/sync-claude-memory.sh\")",
+      "WebFetch(domain:docs.claude.com)",
+      "Bash(python -c \"import json; json.load\\(open\\('.claude/settings.json', encoding='utf-8'\\)\\); print\\('JSON valid'\\)\")",
+      "Bash(python -c ' *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\온유아빠\\develop\\PitchMaster",
       "C:\\Users\\온유아빠\\develop\\PitchMaster\\src\\app\\player\\[memberId]",
       "C:\\Users\\온유아빠\\develop\\PitchMaster\\src\\app\\api\\team\\tactical-animations",
-      "C:\\Users\\온유아빠\\develop\\PitchMaster\\src\\app\\(app)\\settings\\animations"
+      "C:\\Users\\온유아빠\\develop\\PitchMaster\\src\\app\\(app)\\settings\\animations",
+      "C:\\Users\\온유아빠\\develop\\PitchMaster\\src\\app\\api\\players\\[userId]\\evaluate",
+      "C:\\Users\\온유아빠\\develop\\PitchMaster\\src\\app\\api\\players\\[userId]\\attributes",
+      "C:\\Users\\온유아빠\\develop\\PitchMaster\\src\\app\\api\\players\\[userId]"
     ]
   },
   "hooks": {
@@ -118,6 +154,16 @@
           {
             "type": "command",
             "command": "cd C:/Users/온유아빠/develop/PitchMaster && npx tsc --noEmit 2>&1 | head -30"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"C:/Users/온유아빠/develop/PitchMaster/scripts/sync-claude-memory.sh\""
           }
         ]
       }
