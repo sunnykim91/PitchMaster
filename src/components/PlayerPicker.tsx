@@ -6,12 +6,17 @@
  * 기존 native select를 대체. 인원 많은 팀(20~50명+)에서 select 스크롤 부담을 해소.
  * 50대 사용자 친화: 칩 1탭 선택, 검색 input으로 빠른 필터.
  *
+ * UX 흐름:
+ * - 미선택: 검색 input + 칩 그리드 펼침
+ * - 선택됨: 한 줄 (선택된 이름 + 변경 버튼) — 폼 길이 단축
+ * - "변경" 누르면 다시 펼침
+ *
  * Form 통합: hidden input으로 value 전달 (native form + FormData 호환).
  * 외부에서 defaultValue 변경 시 key prop으로 리마운트 트리거 권장.
  */
 
 import { useState } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type PlayerPickerOption = { id: string; name: string };
@@ -50,10 +55,17 @@ export function PlayerPicker({
 }: PlayerPickerProps) {
   const [selected, setSelected] = useState(defaultValue);
   const [query, setQuery] = useState("");
+  // 미선택 상태에서는 펼침, 선택됐으면 접힘
+  const [expanded, setExpanded] = useState(!defaultValue);
 
   const handleSelect = (value: string) => {
     setSelected(value);
     onChange?.(value);
+    // 빈값(미선택)이 아닌 실 선택이면 자동 접힘
+    if (value !== emptyValue) {
+      setExpanded(false);
+      setQuery("");
+    }
   };
 
   const filterPlayer = (p: PlayerPickerOption) => {
@@ -61,6 +73,41 @@ export function PlayerPicker({
     return p.name.toLowerCase().includes(query.trim().toLowerCase());
   };
 
+  // 선택된 항목 이름 찾기
+  const selectedName = (() => {
+    if (!selected || selected === emptyValue) return null;
+    for (const g of groups) {
+      const p = g.players.find((p) => p.id === selected);
+      if (p) return { name: p.name, tone: g.tone ?? "default" };
+    }
+    return null;
+  })();
+
+  // 접힘 상태: 선택된 칩 + 변경 버튼 한 줄
+  if (!expanded && selectedName) {
+    return (
+      <div className={cn("flex items-center gap-2", className)}>
+        <input type="hidden" name={name} value={selected} />
+        <ChipButton
+          selected
+          onClick={() => setExpanded(true)}
+          tone={selectedName.tone}
+        >
+          <Check className="w-3.5 h-3.5 mr-1 inline" />
+          {selectedName.name}
+        </ChipButton>
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="text-xs font-medium text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+        >
+          변경
+        </button>
+      </div>
+    );
+  }
+
+  // 펼침 상태: 검색 + 칩 그리드
   return (
     <div className={cn("space-y-3", className)}>
       <input type="hidden" name={name} value={selected} />
@@ -75,7 +122,7 @@ export function PlayerPicker({
           className="h-11 w-full rounded-xl border border-border bg-secondary pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           aria-label="선수 이름 검색"
         />
-        {query && (
+        {query ? (
           <button
             type="button"
             onClick={() => setQuery("")}
@@ -84,7 +131,16 @@ export function PlayerPicker({
           >
             <X className="h-3.5 w-3.5" />
           </button>
-        )}
+        ) : selectedName ? (
+          <button
+            type="button"
+            onClick={() => setExpanded(false)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted-foreground hover:bg-secondary-foreground/10"
+            aria-label="목록 접기"
+          >
+            <ChevronDown className="h-4 w-4" />
+          </button>
+        ) : null}
       </div>
 
       {emptyLabel !== null && (
