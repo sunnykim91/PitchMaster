@@ -308,6 +308,8 @@ function MatchTacticsTabInner({
           });
           setSavingTeams(false);
           showToast("랜덤 팀 편성 완료");
+          // 결과 즉시 확인할 수 있도록 편성 영역 자동 펼침
+          setShowTeamSplit(true);
           refetchInternalTeams?.();
         }
 

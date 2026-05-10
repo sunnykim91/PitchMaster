@@ -376,8 +376,25 @@ function MatchInfoTabInner({
       <Card className="rounded-xl border-border/30">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <CardTitle className="text-base font-bold">{match.matchType === "EVENT" ? "팀 일정" : "경기 정보"}</CardTitle>
-          {canManage && match.status === "SCHEDULED" && !editing && (
-            <Button variant="ghost" size="icon" onClick={() => setEditing(true)} className="h-8 w-8 text-primary" aria-label="경기 정보 수정">
+          {canManage && !editing && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={async () => {
+                if (match.status === "COMPLETED") {
+                  const ok = await confirm({
+                    title: "이미 완료된 경기입니다",
+                    description: "정보를 수정하면 시즌 통계·기록 표시에 영향을 줄 수 있어요. 정정 목적이면 계속 진행해주세요.",
+                    confirmLabel: "정정 진행",
+                    cancelLabel: "취소",
+                  });
+                  if (!ok) return;
+                }
+                setEditing(true);
+              }}
+              className="h-8 w-8 text-primary"
+              aria-label="경기 정보 수정"
+            >
               <Pencil className="h-4 w-4" />
             </Button>
           )}
