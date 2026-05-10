@@ -83,9 +83,18 @@ function MatchRecordTabInner({
   const [editingIsOpponent, setEditingIsOpponent] = useState(false);
   // 어시스트 PlayerPicker 명시적 펼침 (기본 접힘 — 어시 없는 골 흔하므로)
   const [showAssistPicker, setShowAssistPicker] = useState(false);
-  // 폼 진입/리셋 시 어시 펼침 상태 reset
+  // 자체전 A/B팀 토글 (수정 시 기존 side로 초기화, 새 등록은 null)
+  const [selectedSide, setSelectedSide] = useState<"A" | "B" | null>(null);
+  // 폼 진입/리셋 시 어시 펼침 + side state reset
   useEffect(() => {
     setShowAssistPicker(false);
+    if (editingGoalId) {
+      const g = goals.find((g) => g.id === editingGoalId);
+      setSelectedSide(g?.side ?? null);
+    } else {
+      setSelectedSide(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingGoalId, showDetailForm]);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -388,18 +397,29 @@ function MatchRecordTabInner({
             >
               <Card className="border-0 bg-secondary shadow-none">
                 <CardContent className="p-4">
-                  {editingGoalId && (
-                    <div className="mb-3 flex items-center gap-2 rounded-lg bg-[hsl(var(--warning)/0.1)] px-3 py-2 text-xs font-bold text-[hsl(var(--warning))]">
-                      <span>기록 수정 중</span>
-                      <button
-                        type="button"
-                        onClick={handleCancelEdit}
-                        className="ml-auto text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        취소
-                      </button>
-                    </div>
-                  )}
+                  {editingGoalId && (() => {
+                    const g = goals.find((x) => x.id === editingGoalId);
+                    const sideTag = isInternal && g?.side
+                      ? (g.side === "A" ? { label: "🔵 A팀 골", cls: "bg-primary/15 text-primary border-primary/40" } : { label: "🟦 B팀 골", cls: "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))] border-[hsl(var(--info))]/40" })
+                      : null;
+                    return (
+                      <div className="mb-3 flex items-center gap-2 rounded-lg bg-[hsl(var(--warning)/0.1)] px-3 py-2 text-xs font-bold text-[hsl(var(--warning))]">
+                        <span>기록 수정 중</span>
+                        {sideTag && (
+                          <span className={cn("ml-1 px-2 py-0.5 rounded-full border text-[11px]", sideTag.cls)}>
+                            {sideTag.label}
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={handleCancelEdit}
+                          className="ml-auto text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          취소
+                        </button>
+                      </div>
+                    );
+                  })()}
 
                   {/* 실점 수정 시 득점자/어시스트/골유형 숨김 (쿼터만 표시) */}
                   {editingIsOpponent && (
@@ -413,38 +433,70 @@ function MatchRecordTabInner({
 
                   {!editingIsOpponent && (() => {
                     const editingGoal = editingGoalId ? goals.find((g) => g.id === editingGoalId) : undefined;
-                    const scorerGroups: PlayerPickerGroup[] = [
-                      { label: "참석 멤버", players: attendingMembers.map((p) => ({ id: p.id, name: p.name })), tone: "default" },
-                      ...(guests.length > 0
-                        ? ([{ label: "용병", players: guests.map((g) => ({ id: g.id, name: g.name })), tone: "guest" }] as PlayerPickerGroup[])
-                        : []),
-                      {
+                    // 자체전: 참석 멤버를 A팀 / B팀 / 미배정으로 분리
+                    const isInt = isInternal && internalTeams && internalTeams.length > 0;
+                    const teamA = isInt ? attendingMembers.filter((p) => internalTeams!.find((t) => t.playerId === p.id)?.side === "A") : [];
+                    const teamB = isInt ? attendingMembers.filter((p) => internalTeams!.find((t) => t.playerId === p.id)?.side === "B") : [];
+                    const unassigned = isInt ? attendingMembers.filter((p) => !internalTeams!.find((t) => t.playerId === p.id)) : [];
+
+                    const buildPlayerGroups = (forAssist: boolean): PlayerPickerGroup[] => {
+                      const groups: PlayerPickerGroup[] = [];
+                      if (isInt) {
+                        if (teamA.length) groups.push({ label: "🔵 A팀", players: teamA.map((p) => ({ id: p.id, name: p.name })), tone: "default" });
+                        if (teamB.length) groups.push({ label: "🟦 B팀", players: teamB.map((p) => ({ id: p.id, name: p.name })), tone: "guest" });
+                        if (unassigned.length) groups.push({ label: "미배정", players: unassigned.map((p) => ({ id: p.id, name: p.name })), tone: "muted" });
+                      } else {
+                        groups.push({ label: "참석 멤버", players: attendingMembers.map((p) => ({ id: p.id, name: p.name })), tone: forAssist ? "success" : "default" });
+                      }
+                      if (guests.length > 0) {
+                        groups.push({ label: "용병", players: guests.map((g) => ({ id: g.id, name: g.name })), tone: "guest" });
+                      }
+                      groups.push({
                         label: "기타",
-                        players: [
-                          { id: "OWN_GOAL", name: "⚽ 자책골" },
-                          ...specialPlayers.map((sp) => ({ id: sp.id, name: sp.name })),
-                        ],
+                        players: forAssist
+                          ? specialPlayers.map((sp) => ({ id: sp.id, name: sp.name }))
+                          : [{ id: "OWN_GOAL", name: "⚽ 자책골" }, ...specialPlayers.map((sp) => ({ id: sp.id, name: sp.name }))],
                         tone: "special",
-                      },
-                    ];
-                    const assistGroups: PlayerPickerGroup[] = [
-                      { label: "참석 멤버", players: attendingMembers.map((p) => ({ id: p.id, name: p.name })), tone: "success" },
-                      ...(guests.length > 0
-                        ? ([{ label: "용병", players: guests.map((g) => ({ id: g.id, name: g.name })), tone: "guest" }] as PlayerPickerGroup[])
-                        : []),
-                      {
-                        label: "기타",
-                        players: specialPlayers.map((sp) => ({ id: sp.id, name: sp.name })),
-                        tone: "special",
-                      },
-                    ];
+                      });
+                      return groups;
+                    };
+
+                    const scorerGroups = buildPlayerGroups(false);
+                    const assistGroups = buildPlayerGroups(true);
                     const hasAssist = !!editingGoal?.assistId;
                     return (
                   <div className="space-y-5">
+                    {/* 자체전 — A/B팀 토글 (수정 시 기존 side, 새 등록 시 사용자 선택) */}
+                    {isInternal && (
+                      <div className="space-y-1.5">
+                        <p className="text-[13px] font-semibold text-foreground">팀</p>
+                        <div className="flex gap-2">
+                          {(["A", "B"] as const).map((s) => {
+                            const active = selectedSide === s;
+                            const colorClass = s === "A"
+                              ? (active ? "bg-primary text-primary-foreground border-primary" : "bg-primary/10 text-primary border-primary/30 hover:border-primary/60")
+                              : (active ? "bg-[hsl(var(--info))] text-white border-[hsl(var(--info))]" : "bg-[hsl(var(--info))]/10 text-[hsl(var(--info))] border-[hsl(var(--info))]/30 hover:border-[hsl(var(--info))]/60");
+                            return (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={() => setSelectedSide(s)}
+                                className={cn("flex-1 min-h-[44px] rounded-xl border-2 px-3 text-sm font-bold transition-colors", colorClass)}
+                                aria-pressed={active}
+                              >
+                                {s === "A" ? "🔵 A팀" : "🟦 B팀"}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <input type="hidden" name="side" value={selectedSide ?? ""} />
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       <p className="text-[13px] font-semibold text-foreground">득점자</p>
                       <PlayerPicker
-                        key={`scorer-${editingGoalId ?? "new"}`}
+                        key={`scorer-${editingGoalId ?? "new"}-${selectedSide ?? "any"}`}
                         name="scorerId"
                         defaultValue={editingGoal?.scorerId ?? ""}
                         groups={scorerGroups}
@@ -544,45 +596,105 @@ function MatchRecordTabInner({
             <div className="space-y-2">
               {orderedGoals.length === 0 ? (
                 <EmptyState icon={Target} title="아직 기록이 없습니다" description="위의 +득점 버튼으로 골을 기록하세요" />
-              ) : canRecord ? (
-                <>
-                  <p className="text-[12.5px] text-muted-foreground">💡 카드를 길게 눌러 순서를 변경할 수 있어요</p>
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                    <SortableContext items={orderedGoals.map((g) => g.id)} strategy={verticalListSortingStrategy}>
-                      {orderedGoals.map((goal) => (
-                        <SortableGoalItem
-                          key={goal.id}
-                          goal={goal}
-                          isInternal={isInternal}
-                          resolvePlayerName={resolvePlayerName}
-                          canRecord={canRecord}
-                          deletingGoalId={deletingGoalId}
-                          onEdit={() => handleEditGoal(goal)}
-                          onDelete={async () => {
-                            const ok = await confirm({
-                              title: "골 기록 삭제",
-                              description: "이 골 기록을 삭제할까요? 삭제된 기록은 복구할 수 없습니다.",
-                              variant: "destructive",
-                              confirmLabel: "삭제",
-                              cancelLabel: "취소",
-                            });
-                            if (ok) runDeleteGoal(goal.id, () => handleDeleteGoal(goal.id));
-                          }}
-                        />
-                      ))}
-                    </SortableContext>
-                  </DndContext>
-                </>
-              ) : (
-                orderedGoals.map((goal) => (
-                  <StaticGoalItem
-                    key={goal.id}
-                    goal={goal}
-                    isInternal={isInternal}
-                    resolvePlayerName={resolvePlayerName}
-                  />
-                ))
-              )}
+              ) : (() => {
+                // 5골 이하: 평면 / 6골 이상: 쿼터별 자동 그룹핑
+                const useGrouping = orderedGoals.length >= 6;
+
+                const renderGoalCard = (goal: GoalEvent) => {
+                  if (canRecord) {
+                    return (
+                      <SortableGoalItem
+                        key={goal.id}
+                        goal={goal}
+                        isInternal={isInternal}
+                        resolvePlayerName={resolvePlayerName}
+                        canRecord={canRecord}
+                        deletingGoalId={deletingGoalId}
+                        onEdit={() => handleEditGoal(goal)}
+                        onDelete={async () => {
+                          const ok = await confirm({
+                            title: "골 기록 삭제",
+                            description: "이 골 기록을 삭제할까요? 삭제된 기록은 복구할 수 없습니다.",
+                            variant: "destructive",
+                            confirmLabel: "삭제",
+                            cancelLabel: "취소",
+                          });
+                          if (ok) runDeleteGoal(goal.id, () => handleDeleteGoal(goal.id));
+                        }}
+                      />
+                    );
+                  }
+                  return (
+                    <StaticGoalItem
+                      key={goal.id}
+                      goal={goal}
+                      isInternal={isInternal}
+                      resolvePlayerName={resolvePlayerName}
+                    />
+                  );
+                };
+
+                if (!useGrouping) {
+                  // 평면 모드 (5골 이하)
+                  if (canRecord) {
+                    return (
+                      <>
+                        <p className="text-[12.5px] text-muted-foreground">💡 카드를 길게 눌러 순서를 변경할 수 있어요</p>
+                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                          <SortableContext items={orderedGoals.map((g) => g.id)} strategy={verticalListSortingStrategy}>
+                            {orderedGoals.map((goal) => renderGoalCard(goal))}
+                          </SortableContext>
+                        </DndContext>
+                      </>
+                    );
+                  }
+                  return <>{orderedGoals.map((goal) => renderGoalCard(goal))}</>;
+                }
+
+                // 그룹핑 모드 (6골 이상): 쿼터별 섹션
+                const groups = new Map<number, GoalEvent[]>();
+                orderedGoals.forEach((g) => {
+                  const q = g.quarter ?? 0;
+                  if (!groups.has(q)) groups.set(q, []);
+                  groups.get(q)!.push(g);
+                });
+                // 정렬: 1·2·3·4쿼터 → 모름(0)을 맨 아래로
+                const quarterKeys = Array.from(groups.keys()).sort((a, b) => {
+                  if (a === 0) return 1;
+                  if (b === 0) return -1;
+                  return a - b;
+                });
+
+                return (
+                  <>
+                    {canRecord && (
+                      <p className="text-[12.5px] text-muted-foreground">💡 같은 쿼터 안에서 카드를 길게 눌러 순서 변경 가능</p>
+                    )}
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                      {quarterKeys.map((q) => {
+                        const groupGoals = groups.get(q)!;
+                        const label = q === 0 ? "쿼터 모름" : `Q${q}`;
+                        return (
+                          <div key={q} className="space-y-2 mt-4 first:mt-0">
+                            <div className="flex items-center gap-2 px-1">
+                              <span className="text-[12.5px] font-bold text-foreground">{label}</span>
+                              <span className="text-[12px] text-muted-foreground">{groupGoals.length}골</span>
+                              <div className="flex-1 h-px bg-border/40" />
+                            </div>
+                            {canRecord ? (
+                              <SortableContext items={groupGoals.map((g) => g.id)} strategy={verticalListSortingStrategy}>
+                                {groupGoals.map((goal) => renderGoalCard(goal))}
+                              </SortableContext>
+                            ) : (
+                              groupGoals.map((goal) => renderGoalCard(goal))
+                            )}
+                          </div>
+                        );
+                      })}
+                    </DndContext>
+                  </>
+                );
+              })()}
             </div>
           </CardContent>
         </Card>

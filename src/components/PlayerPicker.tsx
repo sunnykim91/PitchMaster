@@ -23,7 +23,7 @@ export type PlayerPickerOption = { id: string; name: string };
 export type PlayerPickerGroup = {
   label: string;
   players: PlayerPickerOption[];
-  tone?: "default" | "guest" | "special" | "success";
+  tone?: "default" | "guest" | "special" | "success" | "muted";
 };
 
 export interface PlayerPickerProps {
