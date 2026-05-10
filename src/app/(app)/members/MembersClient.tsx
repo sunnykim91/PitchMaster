@@ -20,6 +20,7 @@ import { cn, formatPhone, compactKakaoImage } from "@/lib/utils";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Search } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
+import { MemberBulkUploadModal } from "@/components/MemberBulkUploadModal";
 import { Users, ChevronDown } from "lucide-react";
 import { useConfirm } from "@/lib/ConfirmContext";
 
@@ -111,6 +112,8 @@ export default function MembersClient({
   const [regName, setRegName] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [regSubmitting, setRegSubmitting] = useState(false);
+  // 일괄 등록 모달
+  const [showBulkModal, setShowBulkModal] = useState(false);
 
   // 수동 연동
   const [linkingMemberId, setLinkingMemberId] = useState<string | null>(null);
@@ -407,12 +410,21 @@ export default function MembersClient({
                 현재 권한: {userRole ? roleLabels[userRole] : "확인 중"}
               </Badge>
               {canPreRegister && (
-                <Button
-                  size="sm"
-                  onClick={() => setShowRegForm(!showRegForm)}
-                >
-                  {showRegForm ? "닫기" : "팀원 미리 등록"}
-                </Button>
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowBulkModal(true)}
+                  >
+                    일괄 등록
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => setShowRegForm(!showRegForm)}
+                  >
+                    {showRegForm ? "닫기" : "팀원 미리 등록"}
+                  </Button>
+                </>
               )}
             </div>
           </div>
@@ -1027,6 +1039,12 @@ export default function MembersClient({
         </Card>
       )}
 
+      {/* 일괄 등록 모달 */}
+      <MemberBulkUploadModal
+        open={showBulkModal}
+        onClose={() => setShowBulkModal(false)}
+        onSuccess={refetch}
+      />
     </div>
   );
 }
