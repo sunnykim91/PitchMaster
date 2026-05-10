@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { InAppBrowserBanner } from "@/components/InAppBrowserBanner";
+import { OnboardingCoachMark } from "@/components/OnboardingCoachMark";
 import { Check, Copy, Link2, Menu, ChevronDown, ChevronRight, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Share, Sun, Moon, LogOut } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
@@ -560,7 +561,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                 </Sheet>
               <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" aria-label="메뉴 열기">
+                  <Button variant="outline" size="icon" aria-label="메뉴 열기" data-coach-id="hamburger">
                     <Menu className="h-4 w-4" />
                   </Button>
                 </SheetTrigger>
@@ -627,14 +628,17 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
       <PWAInstallPrompt />
 
+      {/* 첫 진입 코치 마크 (모바일 전용, 1회만, 더보기 메뉴에서 다시 보기 가능) */}
+      <OnboardingCoachMark />
+
       {/* Mobile Bottom Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/85 backdrop-blur-xl backdrop-saturate-150 shadow-[0_-1px_3px_0_rgb(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)] lg:hidden">
         <div className="flex items-center justify-around">
           {[
-            { href: "/dashboard", label: "홈", icon: Home },
-            { href: "/matches", label: "일정", icon: Calendar },
-            { href: "/records", label: "기록", icon: Trophy },
-            { href: "/dues", label: "회비", icon: Wallet },
+            { href: "/dashboard", label: "홈", icon: Home, coachId: "tab-home" },
+            { href: "/matches", label: "일정", icon: Calendar, coachId: "tab-matches" },
+            { href: "/records", label: "기록", icon: Trophy, coachId: "tab-records" },
+            { href: "/dues", label: "회비", icon: Wallet, coachId: "tab-dues" },
           ].map((tab) => {
             const isActive = pathname === tab.href || pathname.startsWith(tab.href + "/");
             const Icon = tab.icon;
@@ -642,6 +646,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
               <Link
                 key={tab.href}
                 href={tab.href}
+                data-coach-id={tab.coachId}
                 onClick={() => { if (!isActive) setNavigating(true); }}
                 className={cn(
                   "relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-xs active:scale-95 transition-all",
@@ -661,6 +666,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             return (
               <button
                 onClick={() => setMoreSheetOpen(true)}
+                data-coach-id="tab-more"
                 className={cn(
                   "relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-xs active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-primary",
                   isMoreActive ? "text-primary" : "text-muted-foreground"
@@ -719,6 +725,20 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                   </button>
                 </>
               )}
+              <Separator className="my-1" />
+              <button
+                onClick={() => {
+                  closeSheet();
+                  // dispatch coach mark restart
+                  setTimeout(() => {
+                    window.dispatchEvent(new CustomEvent("pm:coach-mark:start"));
+                  }, 250);
+                }}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+              >
+                <HelpCircle className="h-5 w-5" />
+                메뉴 가이드 다시 보기
+              </button>
             </nav>
           </div>
         </div>
