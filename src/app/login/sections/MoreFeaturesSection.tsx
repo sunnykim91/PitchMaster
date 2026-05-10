@@ -21,6 +21,7 @@ import {
   PieChart,
   Goal,
   Film,
+  Cake,
 } from "lucide-react";
 
 type Tone = "primary" | "info" | "accent" | "warning";
@@ -42,6 +43,7 @@ const FEATURES: Array<{
   { Icon: Swords,       label: "상대팀 전적 카드",     desc: "맞대결 이력·최근 5경기 자동 표시",              tone: "primary" },
   { Icon: PieChart,     label: "월별 결산 리포트",     desc: "회비 수입·지출 자동 집계, 카드 이미지 공유",     tone: "info" },
   { Icon: Goal,         label: "풋살 지원",            desc: "주로 5·6인제 — 포지션·전술판·역할 가이드 별도",  tone: "accent" },
+  { Icon: Cake,         label: "생일 축하 카드",       desc: "팀원 생일이면 대시보드 맨 위에 자동 축하 카드", tone: "accent" },
 ];
 
 const TONE_FG: Record<Tone, string> = {

@@ -134,7 +134,11 @@
       "Bash(bash \"c:/Users/온유아빠/develop/PitchMaster/scripts/sync-claude-memory.sh\")",
       "WebFetch(domain:docs.claude.com)",
       "Bash(python -c \"import json; json.load\\(open\\('.claude/settings.json', encoding='utf-8'\\)\\); print\\('JSON valid'\\)\")",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(awk '$1 != \"0\" || $2 != \"0\" {print $0}')",
+      "Bash(grep -nB1 -A4 \"MEDIUM\\\\|HIGH\" \"c:/Users/온유아빠/develop/PitchMaster/docs/backlog/pending.md\")",
+      "Bash(node -e \"const r = require\\('lucide-react'\\); console.log\\('Cake:', typeof r.Cake, r.Cake?.displayName ?? ''\\);\")",
+      "Bash(grep -v \"memory/$\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\온유아빠\\develop\\PitchMaster",
