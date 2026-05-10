@@ -21,6 +21,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Search } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { MemberBulkUploadModal } from "@/components/MemberBulkUploadModal";
+import { MemberEditModal } from "@/components/MemberEditModal";
 import { Users, ChevronDown } from "lucide-react";
 import { useConfirm } from "@/lib/ConfirmContext";
 
@@ -114,6 +115,8 @@ export default function MembersClient({
   const [regSubmitting, setRegSubmitting] = useState(false);
   // 일괄 등록 모달
   const [showBulkModal, setShowBulkModal] = useState(false);
+  // 회원 정보 수정 모달 (등번호·감독포지션·주장·역할·휴면 통합)
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
 
   // 수동 연동
   const [linkingMemberId, setLinkingMemberId] = useState<string | null>(null);
@@ -823,137 +826,35 @@ export default function MembersClient({
                       </p>
                     )}
 
-                    {/* 등번호 인라인 편집 */}
-                    {editingJerseyId === member.id && (
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min={0}
-                          max={999}
-                          value={tempJersey}
-                          onChange={(e) => setTempJersey(e.target.value)}
-                          placeholder="번호"
-                          className="w-20 h-8 text-xs"
-                        />
-                        <Button size="sm" className="h-7 px-3 text-xs" onClick={() => handleSaveJersey(member.id)}>저장</Button>
-                        <Button size="sm" variant="outline" className="h-7 px-3 text-xs" onClick={() => setEditingJerseyId(null)}>취소</Button>
-                      </div>
-                    )}
-
-                    {/* 감독 포지션 편집기 */}
-                    {editingCoachPos === member.id && (
-                      <div className="space-y-2">
-                        <p className="text-xs font-medium text-muted-foreground">감독 지정 포지션 선택</p>
-                        <div className="flex flex-wrap gap-1">
-                          {POSITIONS.map((pos) => {
-                            const selected = tempCoachPos.includes(pos);
-                            return (
-                              <button
-                                key={pos}
-                                type="button"
-                                aria-label={`${pos} ${selected ? "선택됨" : "미선택"}`}
-                                aria-pressed={selected}
-                                onClick={() =>
-                                  setTempCoachPos((prev) =>
-                                    selected ? prev.filter((p) => p !== pos) : [...prev, pos]
-                                  )
-                                }
-                                className={cn(
-                                  "rounded px-2 py-1 text-xs font-medium border transition-colors",
-                                  selected
-                                    ? "bg-primary text-primary-foreground border-primary"
-                                    : "bg-secondary text-secondary-foreground border-border hover:border-primary/50"
-                                )}
-                              >
-                                {pos}
-                              </button>
-                            );
-                          })}
-                        </div>
-                        <div className="flex gap-1.5">
-                          <Button size="sm" onClick={() => handleSaveCoachPositions(member.id)} disabled={savingCoachPos} className="h-7 px-3 text-xs">
-                            {savingCoachPos ? "저장 중..." : "저장"}
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => setEditingCoachPos(null)} disabled={savingCoachPos} className="h-7 px-3 text-xs">취소</Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* 관리 버튼들 */}
+                    {/* 관리 버튼: 통합 [수정] 모달 + [제명] (위험) */}
                     {(isStaffOrAbove(role) || canChangeRole || member.userIdRaw === userId) && (
                       <div className="flex flex-wrap gap-2 pt-1">
-                        {(isStaffOrAbove(role) || member.userIdRaw === userId) && editingJerseyId !== member.id && (
-                          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setEditingJerseyId(member.id); setTempJersey(member.jerseyNumber !== null ? String(member.jerseyNumber) : ""); }}>
-                            등번호
-                          </Button>
-                        )}
-                        {(canChangeRole || isStaffOrAbove(role)) && editingCoachPos !== member.id && (
-                          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setEditingCoachPos(member.id); setTempCoachPos(member.coachPositions); }}>
-                            감독 지정
-                          </Button>
-                        )}
-                        {isStaffOrAbove(role) && (
-                          <Select value={member.teamRole ?? "NONE"} onValueChange={(v) => handleTeamRoleChange(member.id, v === "NONE" ? null : v)}>
-                            <SelectTrigger className="w-auto min-w-[80px] text-xs h-8">
-                              <SelectValue placeholder="주장/부주장" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="NONE">역할 없음</SelectItem>
-                              <SelectItem value="CAPTAIN">주장</SelectItem>
-                              <SelectItem value="VICE_CAPTAIN">부주장</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
-                        {canChangeRole && member.userIdRaw !== userId && (
-                          <Select value={member.role} onValueChange={(value) => handleRoleChange(member.id, value as Role)} disabled={changingRoleId === member.id}>
-                            <SelectTrigger className="w-auto min-w-[88px] text-xs h-8">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="PRESIDENT">회장</SelectItem>
-                              <SelectItem value="STAFF">운영진</SelectItem>
-                              <SelectItem value="MEMBER">평회원</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-xs"
+                          onClick={() => setEditingMemberId(member.id)}
+                        >
+                          수정
+                        </Button>
                         {canKick && member.userIdRaw !== userId && (
-                          <>
-                            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setShowDormantForm(member.id); setDormantType("INJURED"); setDormantUntil(""); setDormantReason(""); }}>
-                              휴면 설정
-                            </Button>
-                            <Button size="sm" variant="outline" className="h-8 text-xs text-destructive hover:bg-destructive/10" disabled={kickingId === member.id} onClick={async () => { const ok = await confirm({ title: `${member.name} 님을 제명할까요?`, variant: "destructive", confirmLabel: "제명" }); if (ok) handleKick(member.id); }}>{kickingId === member.id ? "처리 중..." : "제명"}</Button>
-                          </>
-                        )}
-                      </div>
-                    )}
-
-                    {/* 휴면 설정 폼 */}
-                    {showDormantForm === member.id && (
-                      <div className="mt-3 rounded-lg border border-primary/20 bg-card p-3 space-y-2">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="space-y-1">
-                            <Label className="text-[12.5px] text-muted-foreground">사유</Label>
-                            <NativeSelect value={dormantType} onChange={(e) => setDormantType(e.target.value)} className="h-9 text-sm">
-                              <option value="INJURED">🏥 부상</option>
-                              <option value="PERSONAL">✈️ 개인사정</option>
-                              <option value="OTHER">❓ 기타</option>
-                            </NativeSelect>
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-[12.5px] text-muted-foreground">복귀 예정일</Label>
-                            <Input type="date" value={dormantUntil} onChange={(e) => setDormantUntil(e.target.value)} className="h-9 text-sm" />
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-[12.5px] text-muted-foreground">메모 (선택)</Label>
-                          <Input value={dormantReason} onChange={(e) => setDormantReason(e.target.value)} placeholder="예: 무릎 인대 부상, 해외 출장" className="h-9 text-sm" />
-                        </div>
-                        <div className="flex gap-2 justify-end">
-                          <Button type="button" variant="ghost" size="sm" onClick={() => setShowDormantForm(null)}>취소</Button>
-                          <Button size="sm" onClick={() => handleStatusChange(member.id, "DORMANT", { dormantType, dormantUntil: dormantUntil || undefined, dormantReason: dormantReason || undefined })}>
-                            휴면 처리
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs text-destructive hover:bg-destructive/10"
+                            disabled={kickingId === member.id}
+                            onClick={async () => {
+                              const ok = await confirm({
+                                title: `${member.name} 님을 제명할까요?`,
+                                variant: "destructive",
+                                confirmLabel: "제명",
+                              });
+                              if (ok) handleKick(member.id);
+                            }}
+                          >
+                            {kickingId === member.id ? "처리 중..." : "제명"}
                           </Button>
-                        </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1045,6 +946,73 @@ export default function MembersClient({
         onClose={() => setShowBulkModal(false)}
         onSuccess={refetch}
       />
+
+      {/* 회원 정보 수정 모달 (등번호·감독포지션·주장·역할·휴면 통합) */}
+      {editingMemberId && (
+        <MemberEditModal
+          open={!!editingMemberId}
+          onClose={() => setEditingMemberId(null)}
+          member={(() => {
+            const m = members.find((m) => m.id === editingMemberId);
+            return m ? {
+              id: m.id,
+              name: m.name,
+              role: m.role,
+              status: m.status,
+              jerseyNumber: m.jerseyNumber,
+              coachPositions: m.coachPositions,
+              teamRole: m.teamRole,
+              dormantType: m.dormantType,
+              dormantUntil: m.dormantUntil,
+              dormantReason: m.dormantReason,
+            } : null;
+          })()}
+          positions={POSITIONS}
+          isSelf={members.find((m) => m.id === editingMemberId)?.userIdRaw === userId}
+          isStaffOrAbove={isStaffOrAbove(role)}
+          canChangeRole={canChangeRole}
+          canKick={canKick}
+          onSaveJersey={async (memberId, value) => {
+            setTempJersey(value === null ? "" : String(value));
+            const { error: err } = await apiMutate("/api/members", "PUT", {
+              action: "update_jersey_number",
+              memberId,
+              jerseyNumber: value,
+            });
+            if (err) {
+              showToast(typeof err === "string" ? err : "등번호 저장 실패", "error");
+              return;
+            }
+            showToast("등번호가 저장되었습니다.");
+            await refetch();
+          }}
+          onSaveCoachPositions={async (memberId, positions) => {
+            const { error: err } = await apiMutate("/api/members", "PUT", {
+              action: "update_coach_positions",
+              memberId,
+              coachPositions: positions,
+            });
+            if (err) {
+              showToast(typeof err === "string" ? err : "포지션 저장 실패", "error");
+              return;
+            }
+            showToast("포지션이 저장되었습니다.");
+            await refetch();
+          }}
+          onTeamRoleChange={(memberId, teamRole) => handleTeamRoleChange(memberId, teamRole)}
+          onRoleChange={(memberId, newRole) => handleRoleChange(memberId, newRole)}
+          onSetDormant={async (memberId, type, until, reason) => {
+            await handleStatusChange(memberId, "DORMANT", {
+              dormantType: type,
+              dormantUntil: until || undefined,
+              dormantReason: reason || undefined,
+            });
+          }}
+          onUnsetDormant={async (memberId) => {
+            await handleStatusChange(memberId, "ACTIVE");
+          }}
+        />
+      )}
     </div>
   );
 }

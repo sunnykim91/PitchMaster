@@ -125,6 +125,23 @@ export function MemberBulkUploadModal({ open, onClose, onSuccess }: BulkUploadMo
 
   async function handleCsvFile(file: File) {
     setCsvFileName(file.name);
+    const lower = file.name.toLowerCase();
+    // xlsx/xls — 동적 import로 처리 (서버 번들 영향 없음)
+    if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
+      try {
+        const XLSX = await import("xlsx");
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const csv = XLSX.utils.sheet_to_csv(ws);
+        setCsvRows(parseCsv(csv));
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : "엑셀 파싱 실패", "error");
+        setCsvRows([]);
+      }
+      return;
+    }
+    // csv / txt — 텍스트 그대로
     const text = await file.text();
     setCsvRows(parseCsv(text));
   }
@@ -243,12 +260,12 @@ export function MemberBulkUploadModal({ open, onClose, onSuccess }: BulkUploadMo
               >
                 <Upload className="mx-auto h-6 w-6 text-muted-foreground" />
                 <p className="mt-2 text-sm font-medium">
-                  {csvFileName ?? "CSV 파일 선택"}
+                  {csvFileName ?? "파일 선택"}
                 </p>
-                <p className="mt-1 text-[12px] text-muted-foreground">.csv / .txt 지원</p>
+                <p className="mt-1 text-[12px] text-muted-foreground">.xlsx · .xls · .csv · .txt 지원</p>
                 <input
                   type="file"
-                  accept=".csv,.txt,text/csv,text/plain"
+                  accept=".csv,.txt,.xlsx,.xls,text/csv,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                   className="hidden"
                   onChange={(e) => {
                     const f = e.target.files?.[0];
