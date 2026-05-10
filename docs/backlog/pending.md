@@ -1,7 +1,7 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=89팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-05-09 (52차)
+last_updated: 2026-05-10 (53차)
 related: [completed-recent.md, reviews.md]
 ---
 
@@ -11,6 +11,19 @@ related: [completed-recent.md, reviews.md]
 - **HIGH**: 현재 89팀+ 운영에 직접 영향
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
+
+## 53차 신규 추가 (2026-05-10) — 랜딩 v0 리프레시 후속·결정 사안
+
+### v0/ 폴더 정리 방향 결정 (MEDIUM, 결정 대기)
+- **배경**: 53차 작업으로 `v0/` 폴더에 80+ 파일 추가됨. 실제 적용 결과물은 이미 `src/` 에 반영 완료.
+- 선택지: (A) `.gitignore`에 추가해 추적 중단, (B) 통째 삭제, (C) export 보관(별도 브랜치 또는 아카이브)
+- [ ] 사용자 방향 결정 후 처리
+
+### About·Comparison 라이브 동작 시각 검증 (HIGH, 즉시)
+- **배경**: 7a34c08 Vercel 자동배포 후 라이브에서 미확인 상태.
+- [ ] Spotlight(마우스 추적 glow), Aurora orb, Iridescent text, Word reveal 동작 확인
+- [ ] ONLY 배지 3차 디자인 가독성 사용자 최종 확인
+- [ ] 모바일(iOS Safari·Android Chrome) + 라이트 모드 렌더 확인
 
 ## 52차 신규 추가 (2026-05-09) — 50대 페르소나 UX Phase 2~4
 

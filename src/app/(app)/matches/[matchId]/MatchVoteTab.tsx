@@ -14,8 +14,16 @@ import type { Match, RosterPlayer } from "./matchDetailTypes";
 import { voteStyles as styles } from "@/lib/voteStyles";
 
 type ExemptionInfo = { type: string; reason: string | null; endDate: string | null };
-const DORMANT_LABEL: Record<string, string> = { INJURED: "부상", PERSONAL: "개인사정" };
-const DORMANT_ICON: Record<string, string> = { INJURED: "🏥", PERSONAL: "✈️" };
+const DORMANT_LABEL: Record<string, string> = {
+  INJURED: "부상",
+  PERSONAL: "개인사정",
+  OTHER: "기타",
+};
+const DORMANT_ICON: Record<string, string> = {
+  INJURED: "🏥",
+  PERSONAL: "✈️",
+  OTHER: "❓",
+};
 
 export interface MatchVoteTabProps {
   matchId: string;

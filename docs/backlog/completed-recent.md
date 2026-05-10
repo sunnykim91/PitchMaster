@@ -1,12 +1,47 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~52차)
-summary: 2026-04-11~05-09 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편, 광고 2 결과 분석 + 33초 본 캠페인 게시, 회비 선납→면제 통합 + PitchScore 카드 접힘 + 39차 백로그 반영, 보안 풀스윕 + RLS initPlan + 선납 매칭 + 풋살 AI + 역할 가이드 통일, GA4 서버사이드 + 유니코드→SVG + PitchScore 종목 분리 + 거짓 박제 사고 4건 + 벨로그 4편 발행 + MVP 정책 변경(5/4 cutoff) + 사고 4건, 풋살 자동편성 외톨이 root cause + vitest 21건 갱신 + AI 풀플랜·코치 분석 풋살 동호회 톤 + 가상 전적 hallucination 차단, PitchScore Phase 2C 동료 평가 + SSR 병렬화 + 진입점 이동 + UI 통일 + favicon.ico + SEO 진단, PitchScore Phase 2C 완료·Feature Flag 전체 오픈 + 경기 후기 silent fail fix + 알림 탭 라우팅 + 평가 이력 페이지 + distinct count fix + cron 비활성화, PitchScore Sunset + 평가 UI 전면 제거 + 조기싸커 경쟁사 분석 + 랜딩 Phase 1 (무료 트러스트 라인 + 가격 비교 행) + 5/4 경기 후기 자동 복구 검증, AI 캐시 자동 무효화 + FCMZ 빌드업 데모 + 가이드 친절 톤 전면 재작성 + 편집기 하드코딩 버그 수정 + 카피 단정 표현 일괄 정리, 랜딩 톤 보강 + AboutSection 신설 + 경기별 종목 분리(Phase 1~4) + AI 캐시 무효화 11곳 완성, 휴면팀 회장 카톡 1:1 캠페인 11명 발송 + iOS Capacitor 전략 상담 + 도달 채널 한계 발견, GA4 트래픽 채널 오염 fix, Play Console 프로덕션 신청서 + 광고 D 소재 22.5s 영상 완성, 고도화·보안·성능 풀스윕 + PitchScore 전면 제거 + mvpThreshold 단위 테스트 + root force-dynamic 제거, 가이드 IT 외래어 정리 + 멀티 컴퓨터 메모리 동기화 셋업, 50대 페르소나 UX 감사 + 접근성 보강 + MVP 후기탭 통합 + 골 입력 UX + 랜딩 카피/SEO 개선
-sections: [52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-05-09 (52차)
+title: 개선 백로그 — 최근 완료 (16~53차)
+summary: 2026-04-11~05-10 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편, 광고 2 결과 분석 + 33초 본 캠페인 게시, 회비 선납→면제 통합 + PitchScore 카드 접힘 + 39차 백로그 반영, 보안 풀스윕 + RLS initPlan + 선납 매칭 + 풋살 AI + 역할 가이드 통일, GA4 서버사이드 + 유니코드→SVG + PitchScore 종목 분리 + 거짓 박제 사고 4건 + 벨로그 4편 발행 + MVP 정책 변경(5/4 cutoff) + 사고 4건, 풋살 자동편성 외톨이 root cause + vitest 21건 갱신 + AI 풀플랜·코치 분석 풋살 동호회 톤 + 가상 전적 hallucination 차단, PitchScore Phase 2C 동료 평가 + SSR 병렬화 + 진입점 이동 + UI 통일 + favicon.ico + SEO 진단, PitchScore Phase 2C 완료·Feature Flag 전체 오픈 + 경기 후기 silent fail fix + 알림 탭 라우팅 + 평가 이력 페이지 + distinct count fix + cron 비활성화, PitchScore Sunset + 평가 UI 전면 제거 + 조기싸커 경쟁사 분석 + 랜딩 Phase 1 (무료 트러스트 라인 + 가격 비교 행) + 5/4 경기 후기 자동 복구 검증, AI 캐시 자동 무효화 + FCMZ 빌드업 데모 + 가이드 친절 톤 전면 재작성 + 편집기 하드코딩 버그 수정 + 카피 단정 표현 일괄 정리, 랜딩 톤 보강 + AboutSection 신설 + 경기별 종목 분리(Phase 1~4) + AI 캐시 무효화 11곳 완성, 휴면팀 회장 카톡 1:1 캠페인 11명 발송 + iOS Capacitor 전략 상담 + 도달 채널 한계 발견, GA4 트래픽 채널 오염 fix, Play Console 프로덕션 신청서 + 광고 D 소재 22.5s 영상 완성, 고도화·보안·성능 풀스윕 + PitchScore 전면 제거 + mvpThreshold 단위 테스트 + root force-dynamic 제거, 가이드 IT 외래어 정리 + 멀티 컴퓨터 메모리 동기화 셋업, 50대 페르소나 UX 감사 + 접근성 보강 + MVP 후기탭 통합 + 골 입력 UX + 랜딩 카피/SEO 개선, 랜딩 About·Comparison v0 리프레시 + 생일축하 기능 노출
+sections: [53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-05-10 (53차)
 related: [completed-archive.md, pending.md]
 ---
 
 # 최근 완료 (16~52차)
+
+## 53차 (2026-05-09~10, KST) — 랜딩 About·Comparison v0 리프레시 + 생일축하 기능 노출
+
+**커밋 1개** (7a34c08, +1543/-793, 8 files)
+
+### 1. 생일축하 기능 랜딩·가이드 노출
+
+- `src/app/login/sections/MoreFeaturesSection.tsx` — Cake 아이콘 + FEATURES 12번째 카드 (accent 톤) 추가
+- `public/guide.html` L1004 부근 — 13번 섹션 "그 외 알아두면 좋은 보조 기능"에 생일 축하 카드 한 줄 추가
+- 배경: 대시보드에서 활성 노출되는 기능인데 랜딩·가이드에 미노출 상태였음 (grep 0건 확인 후 추가)
+
+### 2. About·Comparison 섹션 v0 리프레시 전면 교체
+
+`src/app/login/sections/AboutSection.tsx`, `src/app/login/sections/ComparisonSection.tsx` 전면 교체.
+
+v0(Vercel)에서 받은 디자인을 PitchMaster 환경에 맞게 패치:
+- pink hsl(330 80% 65%) iridescent → coral → amber 2-stop 그라디언트
+- `var(--font-caveat)` → Pretendard italic (한글 fallback 깨짐 방지)
+- `animate-iridescent` CSS 클래스 → Framer Motion 컴포넌트 (globals.css 미정의 방지)
+- muted-foreground hsl(40 5% 62%) → hsl(40 7% 70~78%) 일괄 톤업 (가독성)
+
+**확정된 v0 디자인 토큰 패턴**:
+- 카드: `rounded-[24px]` / `hsl(240 4% 16% / 0.5)` bg / `1px hsl(240 4% 30%)` border / `backdrop-blur(12px)`
+- Spotlight: 마우스 추적 코랄 radial glow
+- Aurora orb: 40s drift 배경 애니메이션
+- Noise filter: 3% opacity overlay
+- Iridescent text: coral → amber → coral 2-stop, 8s breathing
+- Word reveal: blur 8→0, 60ms stagger
+- Pill highlight: Bebas Neue + coral 0.10 bg
+
+**ONLY 배지 최종 디자인** (3회 시도 끝):
+- 어두운 `hsl(240 6% 8%)` 배경 + 코랄 1.5px 보더 + 밝은 코랄 `hsl(16 90% 70%)` 글씨 + Pretendard 800 + 13px + letter-spacing 0.10em + 코랄 글로우
+- 1차(코랄 그라디언트 bg), 2차(코랄 단색 bg) 시도 후 3차 확정. 어두운 배경+밝은 글씨 대비 원리 적용
+
+---
 
 ## 52차 (2026-05-09, KST) — 50대 페르소나 UX 감사 + 접근성 보강 + MVP 후기탭 통합 + 골 입력 UX + 랜딩 카피/SEO
 

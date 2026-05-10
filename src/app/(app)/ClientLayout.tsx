@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
+import { InAppBrowserBanner } from "@/components/InAppBrowserBanner";
 import { Check, Copy, Link2, Menu, ChevronDown, ChevronRight, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Share, Sun, Moon, LogOut } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
@@ -464,6 +465,8 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           <div className="h-full bg-primary animate-[loading-bar_1.5s_ease-in-out_infinite]" />
         </div>
       )}
+      {/* 카카오 인앱 브라우저 안내 — 푸시 알림 미수신 등 제약 안내 */}
+      <InAppBrowserBanner />
       <div className="mx-auto grid max-w-7xl gap-4 px-3 py-4 sm:px-4 lg:grid-cols-[260px_1fr]">
         {/* Offline Banner */}
         {isOffline && (

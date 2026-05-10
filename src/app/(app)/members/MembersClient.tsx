@@ -142,8 +142,16 @@ export default function MembersClient({
   const [dormantUntil, setDormantUntil] = useState("");
   const [dormantReason, setDormantReason] = useState("");
 
-  const DORMANT_LABELS: Record<string, string> = { INJURED: "부상", PERSONAL: "개인사정" };
-  const DORMANT_ICONS: Record<string, string> = { INJURED: "🏥", PERSONAL: "✈️" };
+  const DORMANT_LABELS: Record<string, string> = {
+    INJURED: "부상",
+    PERSONAL: "개인사정",
+    OTHER: "기타",
+  };
+  const DORMANT_ICONS: Record<string, string> = {
+    INJURED: "🏥",
+    PERSONAL: "✈️",
+    OTHER: "❓",
+  };
 
   const POSITIONS = ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"];
 
@@ -916,6 +924,7 @@ export default function MembersClient({
                             <NativeSelect value={dormantType} onChange={(e) => setDormantType(e.target.value)} className="h-9 text-sm">
                               <option value="INJURED">🏥 부상</option>
                               <option value="PERSONAL">✈️ 개인사정</option>
+                              <option value="OTHER">❓ 기타</option>
                             </NativeSelect>
                           </div>
                           <div className="space-y-1">

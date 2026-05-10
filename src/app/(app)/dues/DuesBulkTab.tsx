@@ -3,7 +3,8 @@
 import React, { useRef, useState, useCallback } from "react";
 import { GA } from "@/lib/analytics";
 import Image from "next/image";
-import { Camera, FileSpreadsheet, Check, Trash2, X } from "lucide-react";
+import { Camera, FileSpreadsheet, Check, Trash2, X, HelpCircle } from "lucide-react";
+import { OcrScreenshotGuide } from "@/components/OcrScreenshotGuide";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -109,6 +110,7 @@ function DuesBulkTabInner({
   const [ocrStatus, setOcrStatus] = useState("");
   const [pendingBalance, setPendingBalance] = useState<number | null>(null);
   const [excelLoading, setExcelLoading] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const [excelRecords, setExcelRecords] = useState<{ date: string; time?: string; type: "INCOME" | "EXPENSE"; amount: number; description: string; balance: number | null }[]>([]);
   const [excelBalance, setExcelBalance] = useState<number | null>(null);
   const [bulkProgress, setBulkProgress] = useState("");
@@ -552,7 +554,21 @@ function DuesBulkTabInner({
 
   return (
     <div role="tabpanel" id="tabpanel-bulk" aria-labelledby="tab-bulk" className="space-y-4">
-      <h2 className="text-sm font-medium text-foreground">내역 올리기</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-medium text-foreground">내역 올리기</h2>
+        <button
+          type="button"
+          onClick={() => setShowGuide(true)}
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium text-foreground bg-secondary/60 border border-border hover:bg-secondary hover:border-primary/50 transition-colors active:scale-[0.97]"
+          aria-label="OCR 사용법 보기"
+        >
+          <HelpCircle className="h-3.5 w-3.5" />
+          도움말
+        </button>
+      </div>
+
+      {/* OCR/엑셀 사용 가이드 모달 */}
+      <OcrScreenshotGuide open={showGuide} onClose={() => setShowGuide(false)} />
 
       {/* ── OCR 섹션 — Clova OCR이 기본, AI OCR이 폴백 (비용 최소화) ── */}
       <div className="space-y-3">
