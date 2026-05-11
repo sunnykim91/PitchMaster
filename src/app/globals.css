@@ -608,3 +608,63 @@ select optgroup {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Guide article typography */
+.guide-prose {
+  color: hsl(var(--foreground));
+  font-size: 1rem;
+  line-height: 1.8;
+}
+.guide-prose .lead {
+  font-size: 1.05rem;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 1.75rem;
+  line-height: 1.75;
+}
+.guide-prose h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  color: hsl(var(--foreground));
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+.guide-prose h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  color: hsl(var(--foreground));
+  line-height: 1.4;
+}
+.guide-prose p {
+  margin-bottom: 1.25rem;
+  color: hsl(var(--foreground) / 0.9);
+}
+.guide-prose ul, .guide-prose ol {
+  margin: 1rem 0 1.5rem;
+  padding-left: 1.5rem;
+  color: hsl(var(--foreground) / 0.9);
+}
+.guide-prose ul { list-style-type: disc; }
+.guide-prose ol { list-style-type: decimal; }
+.guide-prose li {
+  margin-bottom: 0.5rem;
+}
+.guide-prose li > strong {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+.guide-prose strong {
+  color: hsl(var(--primary));
+  font-weight: 600;
+}
+.guide-prose a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: opacity 0.15s;
+}
+.guide-prose a:hover { opacity: 0.75; }
