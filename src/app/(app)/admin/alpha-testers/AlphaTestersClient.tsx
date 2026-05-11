@@ -9,7 +9,6 @@ import { useApi } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
 import { Check, X, Coffee, Trash2, RefreshCw, ChevronLeft, Clock, Mail } from "lucide-react";
 
-const ALPHA_OPT_IN_URL = "https://play.google.com/apps/testing/app.pitchmaster";
 const ALPHA_DOWNLOAD_URL = "https://play.google.com/store/apps/details?id=app.pitchmaster";
 const OPEN_CHAT_URL = "https://open.kakao.com/o/gSoLopui";
 
@@ -18,23 +17,21 @@ function buildInviteMailto(email: string, name: string): string {
   const body = `${name}님 안녕하세요, PitchMaster 운영자 김선휘입니다 :)
 
 알파 테스터 등록해주셔서 정말 감사합니다.
-운영자 측에서 Play Console 등록 완료해드렸습니다!
+방금 ${email} 계정을 Play Console 테스터 그룹에 등록 완료했습니다!
 
-이제 아래 2단계만 진행해주시면 돼요.
+이제 안드로이드 폰에서 아래 링크로 들어가셔서 앱 설치만 해주시면 끝이에요.
 
 ────────────────────
-[1단계] 알파 테스터 옵트인
-${ALPHA_OPT_IN_URL}
-→ 위 링크 접속 → "테스터 되기(Become a tester)" 버튼 클릭
-
-[2단계] Play Store에서 앱 설치
 ${ALPHA_DOWNLOAD_URL}
-→ Play Store에서 PitchMaster 알파 빌드 설치
-   (옵트인 직후엔 몇 분 ~ 최대 1시간 정도 반영 시간이 걸릴 수 있어요)
+
+→ 등록하신 구글 계정으로 Play Store 로그인된 상태에서 위 링크 접속
+→ "설치" 버튼 클릭 (알파 표시가 보일 거예요)
+   * 등록 직후엔 최대 1시간 정도 반영 시간이 걸릴 수 있어요
+   * 만약 안 보이면 카톡 오픈채팅방으로 알려주세요
 ────────────────────
 
 [중요] 14일 동안 매일 한 번씩, 30초만이라도 앱을 켜주세요!
-평소 쓰시던 웹/PWA 말고 꼭 Play Store에서 받은 알파 앱을 사용해주셔야 출석 카운트가 됩니다.
+평소 쓰시던 웹/PWA 말고 꼭 Play Store에서 받은 알파 앱을 켜셔야 출석으로 카운트됩니다.
 
 [보상] 14일 출석 완료하시면 커피 쿠폰 보내드립니다 ☕
 
