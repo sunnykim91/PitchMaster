@@ -19,6 +19,7 @@ import { useToast } from "@/lib/ToastContext";
 import { EmptyState } from "@/components/EmptyState";
 import { shareTeamInvite } from "@/lib/kakaoShare";
 import { getUniformStyle } from "@/lib/uniformUtils";
+import AlphaTesterBanner from "@/components/AlphaTesterBanner";
 
 type UpcomingMatch = {
   id: string;
@@ -330,6 +331,9 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
           <ChevronRight className="h-3.5 w-3.5" />
         </Link>
       </div>
+
+      {/* ── 알파 테스터 모집 배너 (Android 전용) ── */}
+      <AlphaTesterBanner />
 
       {/* ── Onboarding Wizard (new teams only) ── */}
       {showWizard && (
