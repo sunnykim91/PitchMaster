@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -21,10 +21,21 @@ type SidebarNavProps = {
 function SidebarNav({ items }: SidebarNavProps) {
   const pathname = usePathname();
 
+  // 가장 긴 prefix 매치 하나만 active — /settings/animations 진입 시
+  // /settings 까지 동시에 active되던 중복 활성 버그 차단.
+  const activeHref = useMemo(() => {
+    const matches = items.filter(
+      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+    );
+    if (matches.length === 0) return null;
+    matches.sort((a, b) => b.href.length - a.href.length);
+    return matches[0].href;
+  }, [pathname, items]);
+
   return (
     <nav className="space-y-1">
       {items.map((item) => {
-        const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const isActive = item.href === activeHref;
         return (
           <Button
             key={item.href}

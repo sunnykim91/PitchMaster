@@ -15,7 +15,7 @@ import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from 
 import { Separator } from "@/components/ui/separator";
 import { InAppBrowserBanner } from "@/components/InAppBrowserBanner";
 import { OnboardingCoachMark } from "@/components/OnboardingCoachMark";
-import { Check, Copy, Link2, Menu, ChevronDown, ChevronRight, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Share, Sun, Moon, LogOut } from "lucide-react";
+import { Check, Copy, Link2, Menu, ChevronDown, ChevronRight, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Share, Sun, Moon, LogOut, Film } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { cn, compactKakaoImage } from "@/lib/utils";
@@ -264,8 +264,9 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
     router.push("/login");
   }
 
-  const navItems = useMemo(
-    () => [
+  const displayRole = viewAsRole ?? session.user.teamRole;
+  const navItems = useMemo(() => {
+    const base = [
       { href: "/dashboard", label: "홈", detail: "대시보드", icon: Home },
       { href: "/matches", label: "경기 일정", detail: "일정·투표", icon: Calendar },
       { href: "/records", label: "기록", detail: "통계·랭킹", icon: Trophy },
@@ -275,11 +276,19 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       { href: "/rules", label: "회칙", detail: "팀 규정", icon: BookOpen },
       { href: "/settings", label: "설정", detail: "개인·팀", icon: Settings },
       { href: "/guide.html", label: "가이드", detail: "기능 안내", icon: HelpCircle },
-    ],
-    []
-  );
+    ];
+    if (isStaffOrAbove(displayRole)) {
+      // 경기 일정 다음에 전술 영상 배치 — 경기 흐름에 가장 가까운 위치
+      base.splice(2, 0, {
+        href: "/settings/animations",
+        label: "전술 영상",
+        detail: "감독의 전술노트",
+        icon: Film,
+      });
+    }
+    return base;
+  }, [displayRole]);
 
-  const displayRole = viewAsRole ?? session.user.teamRole;
   const roleLabel =
     displayRole === "PRESIDENT"
       ? "회장"

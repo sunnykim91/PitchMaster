@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { formationTemplates } from "@/lib/formations";
 import type { AttendingPlayer, GeneratedSquad } from "@/components/AutoFormationBuilder";
 import { apiMutate } from "@/lib/useApi";
@@ -12,7 +13,7 @@ import type { Match, SimpleRosterPlayer, InternalTeamAssignment, Guest } from ".
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { X, ChevronDown, Users, Plus, Pencil } from "lucide-react";
+import { X, ChevronDown, ChevronRight, Users, Plus, Pencil, Film } from "lucide-react";
 import { formatPhone } from "@/lib/utils";
 import type { SportType } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -686,6 +687,24 @@ function MatchTacticsTabInner({
             }}
           />
         </div>
+      )}
+
+      {/* 감독의 전술노트 — 영상 진입 (전술판 바로 위, 운영진 전용) */}
+      {canManage && (
+        <Link
+          href="/settings/animations"
+          style={{ order: 15 }}
+          className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-secondary/30 hover:border-primary/30"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Film className="h-4 w-4" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-bold">감독의 전술노트</span>
+            <span className="block text-xs text-muted-foreground">우리 팀 공·수 흐름을 영상으로 그리고 공유하기</span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </Link>
       )}
 
       <div

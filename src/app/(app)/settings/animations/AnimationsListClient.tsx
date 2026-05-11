@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Plus, Trash2, Star, Pencil, Loader2, Copy } from "lucide-react";
+import { ChevronLeft, Plus, Trash2, Star, Pencil, Loader2, Copy, Download } from "lucide-react";
+import { exportMotionAsGif, downloadBlob } from "@/lib/animationExport/gifExport";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/lib/ToastContext";
@@ -29,6 +30,41 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
   const [createFormation, setCreateFormation] = useState("4-2-3-1");
   const [copyingId, setCopyingId] = useState<string | null>(null);
   const [copyTargetFormation, setCopyTargetFormation] = useState<string>("");
+  /**
+   * GIF export 진행 상태.
+   * key = `${animationId}-${mode}` — 같은 영상 다른 모드를 동시에 누르지 못하게.
+   */
+  const [exportingKey, setExportingKey] = useState<string | null>(null);
+  const [exportProgress, setExportProgress] = useState(0);
+
+  async function handleExportGif(
+    animation: TeamTacticalAnimation,
+    mode: "attack" | "defense",
+  ) {
+    const key = `${animation.id}-${mode}`;
+    if (exportingKey) return;
+    const phases = mode === "attack" ? animation.animation_data.attack : animation.animation_data.defense;
+    if (phases.length === 0 || phases.every((p) => p.steps.length === 0)) {
+      showToast(`${mode === "attack" ? "공격" : "수비"} 장면이 비어 있어요`, "error");
+      return;
+    }
+    setExportingKey(key);
+    setExportProgress(0);
+    try {
+      const blob = await exportMotionAsGif(phases, {
+        mode,
+        onProgress: (pct) => setExportProgress(pct),
+      });
+      const safeName = animation.name.replace(/[/\\?%*:|"<>]/g, "_");
+      downloadBlob(blob, `${safeName}_${mode === "attack" ? "공격" : "수비"}.gif`);
+      showToast("GIF 다운로드 완료", "success");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "GIF 만들기 실패", "error");
+    } finally {
+      setExportingKey(null);
+      setExportProgress(0);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -373,6 +409,40 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
                   <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                   삭제
                 </Button>
+              </div>
+
+              {/* GIF 공유 — 카톡 단톡방에 던질 수 있게 (운영진 만든 영상을 다른 회원도 받을 수 있도록) */}
+              <div className="mt-2 flex flex-wrap gap-2 border-t border-border/40 pt-2">
+                {(["attack", "defense"] as const).map((mode) => {
+                  const key = `${animation.id}-${mode}`;
+                  const isExportingThis = exportingKey === key;
+                  return (
+                    <Button
+                      key={mode}
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 gap-1 text-xs"
+                      disabled={exportingKey !== null}
+                      onClick={() => handleExportGif(animation, mode)}
+                    >
+                      {isExportingThis ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                          {exportProgress}%
+                        </>
+                      ) : (
+                        <>
+                          <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                          {mode === "attack" ? "공격" : "수비"} GIF
+                        </>
+                      )}
+                    </Button>
+                  );
+                })}
+                <span className="ml-1 self-center text-[11px] text-muted-foreground">
+                  카톡 단톡방에 바로 공유
+                </span>
               </div>
             </div>
           ))}

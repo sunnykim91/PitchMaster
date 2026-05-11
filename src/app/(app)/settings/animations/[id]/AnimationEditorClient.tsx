@@ -33,7 +33,11 @@ import {
   Star,
   Swords,
   Shield,
+  Maximize2,
+  Minimize2,
+  Download,
 } from "lucide-react";
+import { exportMotionAsGif, downloadBlob } from "@/lib/animationExport/gifExport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,6 +88,41 @@ export default function AnimationEditorClient({ initial }: Props) {
   const [previewing, setPreviewing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+  // 좁은 모바일에서 SVG 편집 영역을 화면 가득 키우기 위한 CSS 풀스크린 토글.
+  // requestFullscreen API 는 iOS Safari 제약이 있어 position: fixed 패턴으로 대체.
+  const [maximized, setMaximized] = useState(false);
+  // GIF export 진행 상태 (미리보기 모드에서 노출)
+  const [exportingMode, setExportingMode] = useState<Mode | null>(null);
+  const [exportProgress, setExportProgress] = useState(0);
+
+  async function handleExportGif(targetMode: Mode) {
+    if (exportingMode) return;
+    if (dirty) {
+      showToast("저장하지 않은 변경사항이 있어요. 먼저 저장하세요.", "error");
+      return;
+    }
+    const phases = targetMode === "attack" ? data.attack : data.defense;
+    if (phases.length === 0 || phases.every((p) => p.steps.length === 0)) {
+      showToast(`${targetMode === "attack" ? "공격" : "수비"} 장면이 비어 있어요`, "error");
+      return;
+    }
+    setExportingMode(targetMode);
+    setExportProgress(0);
+    try {
+      const blob = await exportMotionAsGif(phases, {
+        mode: targetMode,
+        onProgress: (pct) => setExportProgress(pct),
+      });
+      const safeName = name.replace(/[/\\?%*:|"<>]/g, "_");
+      downloadBlob(blob, `${safeName}_${targetMode === "attack" ? "공격" : "수비"}.gif`);
+      showToast("GIF 다운로드 완료", "success");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "GIF 만들기 실패", "error");
+    } finally {
+      setExportingMode(null);
+      setExportProgress(0);
+    }
+  }
 
   const phases = mode === "attack" ? data.attack : data.defense;
   const phase = phases[phaseIdx] ?? phases[0];
@@ -340,12 +379,53 @@ export default function AnimationEditorClient({ initial }: Props) {
         <FormationMotionViewer
           motion={{ formationId: initial.formation_id, attack: data.attack, defense: data.defense }}
         />
+
+        {/* GIF 다운로드 — 미리보기에서 바로 카톡에 보낼 GIF 받기 */}
+        <div className="mt-4 rounded-xl border border-border bg-card p-4">
+          <p className="mb-2 text-sm font-bold">GIF로 받아 공유하기</p>
+          <p className="mb-3 text-xs text-muted-foreground">
+            카톡 단톡방·문자에 그대로 던질 수 있는 GIF로 만들어드려요. 인코딩에 5~10초 걸려요.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {(["attack", "defense"] as const).map((mode) => {
+              const isExportingThis = exportingMode === mode;
+              return (
+                <Button
+                  key={mode}
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="gap-1"
+                  disabled={exportingMode !== null}
+                  onClick={() => handleExportGif(mode)}
+                >
+                  {isExportingThis ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      {exportProgress}%
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-3.5 w-3.5" />
+                      {mode === "attack" ? "공격" : "수비"} GIF
+                    </>
+                  )}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-6 sm:py-8">
+    <div
+      className={cn(
+        "container mx-auto max-w-4xl px-4 py-6 sm:py-8",
+        maximized && "fixed inset-0 z-50 max-w-none overflow-y-auto bg-background px-3 py-3"
+      )}
+    >
       {/* 뒤로가기 + 저장 */}
       <div className="mb-4 flex items-center justify-between gap-2">
         <Link
@@ -458,14 +538,14 @@ export default function AnimationEditorClient({ initial }: Props) {
 
       {/* 장면 탭 (phase) */}
       <div className="mb-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">장면</div>
-      <div className="mb-3 flex gap-1 overflow-x-auto pb-1">
+      <div className="mb-3 flex flex-wrap gap-1 pb-1">
         {phases.map((p, i) => (
           <button
             key={i}
             type="button"
             onClick={() => setPhaseIdx(i)}
             className={cn(
-              "shrink-0 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors",
+              "rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors min-h-[32px]",
               i === phaseIdx
                 ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]"
                 : "border-border text-muted-foreground hover:text-foreground",
@@ -477,7 +557,7 @@ export default function AnimationEditorClient({ initial }: Props) {
         <button
           type="button"
           onClick={addPhase}
-          className="shrink-0 rounded-md border border-dashed border-border px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
+          className="rounded-md border border-dashed border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground min-h-[32px]"
         >
           <Plus className="mr-1 inline h-3 w-3" />
           장면 추가
@@ -508,14 +588,14 @@ export default function AnimationEditorClient({ initial }: Props) {
       <div className="mb-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
         장면 안의 컷 (이어 재생되며 영상이 됨)
       </div>
-      <div className="mb-2 flex items-center gap-1 overflow-x-auto pb-1">
+      <div className="mb-2 flex flex-wrap items-center gap-1 pb-1">
         {steps.map((s, i) => (
           <button
             key={i}
             type="button"
             onClick={() => setStepIdx(i)}
             className={cn(
-              "shrink-0 rounded px-2 py-1 text-[12.5px] font-semibold tabular-nums transition-colors",
+              "min-h-[32px] min-w-[32px] rounded px-2 py-1.5 text-[12.5px] font-semibold tabular-nums transition-colors",
               i === stepIdx
                 ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]"
                 : "text-muted-foreground hover:text-foreground",
@@ -527,7 +607,7 @@ export default function AnimationEditorClient({ initial }: Props) {
         <button
           type="button"
           onClick={addStep}
-          className="shrink-0 rounded px-2 py-1 text-[12.5px] font-semibold text-muted-foreground hover:text-foreground"
+          className="min-h-[32px] min-w-[32px] rounded px-2 py-1.5 text-[12.5px] font-semibold text-muted-foreground hover:text-foreground"
           title="현재 컷 복사해 다음 컷 추가"
         >
           <Plus className="h-3 w-3" />
@@ -535,7 +615,7 @@ export default function AnimationEditorClient({ initial }: Props) {
         <button
           type="button"
           onClick={duplicateStep}
-          className="shrink-0 rounded px-2 py-1 text-[12.5px] font-semibold text-muted-foreground hover:text-foreground"
+          className="min-h-[32px] min-w-[32px] rounded px-2 py-1.5 text-[12.5px] font-semibold text-muted-foreground hover:text-foreground"
           title="현재 컷 복사"
         >
           <Copy className="h-3 w-3" />
@@ -543,19 +623,31 @@ export default function AnimationEditorClient({ initial }: Props) {
         <button
           type="button"
           onClick={deleteStep}
-          className="shrink-0 rounded px-2 py-1 text-[12.5px] font-semibold text-destructive hover:bg-destructive/10"
+          className="min-h-[32px] min-w-[32px] rounded px-2 py-1.5 text-[12.5px] font-semibold text-destructive hover:bg-destructive/10"
           title="현재 컷 삭제"
         >
           <Trash2 className="h-3 w-3" />
         </button>
       </div>
 
-      {/* 편집 SVG 위 컴팩트 액션 바 — 미리보기·저장 손쉽게 */}
+      {/* 편집 SVG 위 컴팩트 액션 바 — 미리보기·풀화면·저장 손쉽게 */}
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="text-[12.5px] text-muted-foreground tabular-nums">
           컷 {stepIdx + 1} / {steps.length}
         </span>
         <div className="flex items-center gap-1.5">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setMaximized((v) => !v)}
+            className="h-7 text-xs gap-1"
+            title={maximized ? "원래 크기로" : "캔버스 최대화"}
+            aria-label={maximized ? "캔버스 원래 크기로" : "캔버스 최대화"}
+          >
+            {maximized ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
+            <span className="hidden sm:inline">{maximized ? "축소" : "최대화"}</span>
+          </Button>
           <Button
             type="button"
             size="sm"
@@ -610,8 +702,8 @@ export default function AnimationEditorClient({ initial }: Props) {
               onPointerCancel={handlePointerUp}
               style={{ cursor: dragging?.slotId === pos.slot ? "grabbing" : "grab", touchAction: "none" }}
             >
-              {/* 클릭 영역 확대 (투명 원) — 모바일 터치 정확도 ↑ */}
-              <circle cx={0} cy={0} r={6} fill="transparent" />
+              {/* 클릭 영역 확대 (투명 원) — 모바일 터치 정확도 ↑ (Z Flip 5 370px 기준 약 30px hit area) */}
+              <circle cx={0} cy={0} r={8} fill="transparent" />
               <circle cx={0} cy={0} r={3.6} fill="hsl(0 0% 92%)" stroke="hsl(140 25% 18%)" strokeWidth="0.5" />
               <text
                 x={0}
@@ -639,7 +731,7 @@ export default function AnimationEditorClient({ initial }: Props) {
               style={{ cursor: dragging?.kind === "ball" ? "grabbing" : "grab", touchAction: "none" }}
             >
               {/* 클릭 영역 확대 */}
-              <circle cx={0} cy={0} r={4} fill="transparent" />
+              <circle cx={0} cy={0} r={6} fill="transparent" />
               <circle cx={0} cy={0} r={1.8} fill="white" stroke="#0f0f0f" strokeWidth={0.4} />
               <polygon
                 points="0,-0.78 0.74,-0.24 0.46,0.63 -0.46,0.63 -0.74,-0.24"
