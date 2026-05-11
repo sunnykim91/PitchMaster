@@ -467,7 +467,7 @@ function MailContentModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl rounded-2xl bg-card p-5 shadow-2xl"
+        className="w-full max-w-3xl rounded-2xl bg-card p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -539,7 +539,7 @@ function MailContentModal({
             <textarea
               readOnly
               value={body}
-              className="w-full h-64 rounded-md border bg-secondary/30 px-2 py-1.5 text-xs font-mono resize-none"
+              className="w-full h-[28rem] rounded-md border bg-secondary/30 px-3 py-2 text-xs font-mono resize-none leading-relaxed"
               onFocus={(e) => e.currentTarget.select()}
             />
           </div>
