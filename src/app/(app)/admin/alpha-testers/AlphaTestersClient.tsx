@@ -7,7 +7,48 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApi } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
-import { Check, X, Coffee, Trash2, RefreshCw, ChevronLeft, Clock } from "lucide-react";
+import { Check, X, Coffee, Trash2, RefreshCw, ChevronLeft, Clock, Mail } from "lucide-react";
+
+const ALPHA_OPT_IN_URL = "https://play.google.com/apps/testing/app.pitchmaster";
+const ALPHA_DOWNLOAD_URL = "https://play.google.com/store/apps/details?id=app.pitchmaster";
+const OPEN_CHAT_URL = "https://open.kakao.com/o/gSoLopui";
+
+function buildInviteMailto(email: string, name: string): string {
+  const subject = `[PitchMaster] 알파 테스터 등록 완료 — Play Store에서 받아주세요!`;
+  const body = `${name}님 안녕하세요, PitchMaster 운영자 김선휘입니다 :)
+
+알파 테스터 등록해주셔서 정말 감사합니다.
+운영자 측에서 Play Console 등록 완료해드렸습니다!
+
+이제 아래 2단계만 진행해주시면 돼요.
+
+────────────────────
+[1단계] 알파 테스터 옵트인
+${ALPHA_OPT_IN_URL}
+→ 위 링크 접속 → "테스터 되기(Become a tester)" 버튼 클릭
+
+[2단계] Play Store에서 앱 설치
+${ALPHA_DOWNLOAD_URL}
+→ Play Store에서 PitchMaster 알파 빌드 설치
+   (옵트인 직후엔 몇 분 ~ 최대 1시간 정도 반영 시간이 걸릴 수 있어요)
+────────────────────
+
+[중요] 14일 동안 매일 한 번씩, 30초만이라도 앱을 켜주세요!
+평소 쓰시던 웹/PWA 말고 꼭 Play Store에서 받은 알파 앱을 사용해주셔야 출석 카운트가 됩니다.
+
+[보상] 14일 출석 완료하시면 커피 쿠폰 보내드립니다 ☕
+
+[질문·진행상황 안내] 아래 카카오톡 오픈채팅방에 들어와주세요.
+${OPEN_CHAT_URL}
+(커피 쿠폰 수령도 오픈채팅방에서 진행됩니다)
+
+진행하시다 막히는 부분 있으면 언제든 답장 주세요.
+정말 감사합니다 🙏
+
+— PitchMaster 김선휘`;
+
+  return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
 import Link from "next/link";
 
 type Tester = {
@@ -330,6 +371,13 @@ export default function AlphaTestersClient() {
                           >
                             {t.approvedAt ? "승인 취소" : "승인"}
                           </Button>
+                          <a
+                            href={buildInviteMailto(t.googleEmail, t.name)}
+                            className="inline-flex h-6 w-6 items-center justify-center rounded-md border bg-background hover:bg-secondary"
+                            title="안내 메일 보내기"
+                          >
+                            <Mail className="h-3 w-3 text-primary" />
+                          </a>
                           <Button
                             size="sm"
                             variant={t.rewardedAt ? "default" : "outline"}

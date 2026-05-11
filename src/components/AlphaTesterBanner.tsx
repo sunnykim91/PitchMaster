@@ -15,6 +15,23 @@ function isAndroid(): boolean {
   return /Android/i.test(navigator.userAgent);
 }
 
+/**
+ * TWA(Trusted Web Activity = Play Store 알파 빌드)에서 진입했는지 감지.
+ *
+ * Bubblewrap이 만든 TWA는 진입 시 document.referrer 가
+ * `android-app://app.pitchmaster/...` 로 시작함.
+ *
+ * 일반 모바일 브라우저(Chrome/Samsung Internet)·PWA(홈화면 추가본)는
+ * 일반 https referrer 또는 빈 값.
+ *
+ * 정확도 100%는 아님 — 일부 OS·런처 조합에서 referrer 비어 올 수 있음.
+ * 그래도 PWA·일반 브라우저와 구분 가능한 가장 단순·안정적인 신호.
+ */
+function isTwa(): boolean {
+  if (typeof document === "undefined") return false;
+  return /^android-app:\/\/app\.pitchmaster/i.test(document.referrer ?? "");
+}
+
 function isAlreadyShown(): boolean {
   try {
     return !!localStorage.getItem(DISMISS_KEY);
@@ -53,8 +70,10 @@ export default function AlphaTesterBanner() {
   const [existing, setExisting] = useState<ExistingTester>(null);
   const [submitted, setSubmitted] = useState(false);
 
+  // 자동 ping: TWA(Play Store 알파 빌드)에서 진입했을 때만 호출.
+  // PWA·일반 브라우저 진입은 카운트 안 함 (Play Console 통계와 정합성 유지).
   useEffect(() => {
-    if (!isAndroid() && !isForceShow()) return;
+    if (!isTwa() && !isForceShow()) return;
     fetch("/api/alpha-testers/ping", { method: "POST" }).catch((err) => {
       console.error("[alpha-ping]", err);
     });
