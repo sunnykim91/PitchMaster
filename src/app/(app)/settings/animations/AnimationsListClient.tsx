@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Plus, Trash2, Star, Pencil, Loader2, Copy, Download } from "lucide-react";
-import { exportMotionAsGif, downloadBlob } from "@/lib/animationExport/gifExport";
+import { exportMotionAsGif, downloadBlob, buildGifFilename } from "@/lib/animationExport/gifExport";
+import FormationMotionThumb from "@/components/FormationMotionThumb";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/lib/ToastContext";
@@ -39,24 +40,41 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
 
   async function handleExportGif(
     animation: TeamTacticalAnimation,
-    mode: "attack" | "defense",
+    mode: "attack" | "defense" | "combined",
   ) {
     const key = `${animation.id}-${mode}`;
     if (exportingKey) return;
-    const phases = mode === "attack" ? animation.animation_data.attack : animation.animation_data.defense;
-    if (phases.length === 0 || phases.every((p) => p.steps.length === 0)) {
-      showToast(`${mode === "attack" ? "공격" : "수비"} 장면이 비어 있어요`, "error");
+
+    // 섹션 빌드 — combined면 attack + defense 모두
+    const sections =
+      mode === "attack"
+        ? [{ phases: animation.animation_data.attack, mode: "attack" as const }]
+        : mode === "defense"
+        ? [{ phases: animation.animation_data.defense, mode: "defense" as const }]
+        : [
+            { phases: animation.animation_data.attack, mode: "attack" as const },
+            { phases: animation.animation_data.defense, mode: "defense" as const },
+          ];
+
+    // 비어있는 섹션 거름 — combined에서 한쪽만 있어도 진행
+    const nonEmpty = sections.filter((s) => s.phases.length > 0 && s.phases.some((p) => p.steps.length > 0));
+    if (nonEmpty.length === 0) {
+      showToast("내보낼 장면이 없어요", "error");
       return;
     }
+
     setExportingKey(key);
     setExportProgress(0);
     try {
-      const blob = await exportMotionAsGif(phases, {
-        mode,
+      const blob = await exportMotionAsGif(nonEmpty, {
         onProgress: (pct) => setExportProgress(pct),
       });
-      const safeName = animation.name.replace(/[/\\?%*:|"<>]/g, "_");
-      downloadBlob(blob, `${safeName}_${mode === "attack" ? "공격" : "수비"}.gif`);
+      const filename = buildGifFilename({
+        animationName: animation.name,
+        formationId: animation.formation_id,
+        mode,
+      });
+      downloadBlob(blob, filename);
       showToast("GIF 다운로드 완료", "success");
     } catch (err) {
       showToast(err instanceof Error ? err.message : "GIF 만들기 실패", "error");
@@ -321,7 +339,8 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
               key={animation.id}
               className="rounded-xl border border-border bg-card p-4 sm:p-5"
             >
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <FormationMotionThumb data={animation.animation_data} size={64} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="text-base font-bold truncate">{animation.name}</h2>
@@ -413,15 +432,17 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
 
               {/* GIF 공유 — 카톡 단톡방에 던질 수 있게 (운영진 만든 영상을 다른 회원도 받을 수 있도록) */}
               <div className="mt-2 flex flex-wrap gap-2 border-t border-border/40 pt-2">
-                {(["attack", "defense"] as const).map((mode) => {
+                {(["attack", "defense", "combined"] as const).map((mode) => {
                   const key = `${animation.id}-${mode}`;
                   const isExportingThis = exportingKey === key;
+                  const label = mode === "attack" ? "공격" : mode === "defense" ? "수비" : "공수전체";
+                  const isCombined = mode === "combined";
                   return (
                     <Button
                       key={mode}
                       type="button"
                       size="sm"
-                      variant="outline"
+                      variant={isCombined ? "default" : "outline"}
                       className="h-8 gap-1 text-xs"
                       disabled={exportingKey !== null}
                       onClick={() => handleExportGif(animation, mode)}
@@ -434,7 +455,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
                       ) : (
                         <>
                           <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                          {mode === "attack" ? "공격" : "수비"} GIF
+                          {label} GIF
                         </>
                       )}
                     </Button>

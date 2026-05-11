@@ -37,7 +37,7 @@ import {
   Minimize2,
   Download,
 } from "lucide-react";
-import { exportMotionAsGif, downloadBlob } from "@/lib/animationExport/gifExport";
+import { exportMotionAsGif, downloadBlob, buildGifFilename } from "@/lib/animationExport/gifExport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -92,29 +92,46 @@ export default function AnimationEditorClient({ initial }: Props) {
   // requestFullscreen API 는 iOS Safari 제약이 있어 position: fixed 패턴으로 대체.
   const [maximized, setMaximized] = useState(false);
   // GIF export 진행 상태 (미리보기 모드에서 노출)
-  const [exportingMode, setExportingMode] = useState<Mode | null>(null);
+  type ExportTarget = "attack" | "defense" | "combined";
+  const [exportingMode, setExportingMode] = useState<ExportTarget | null>(null);
   const [exportProgress, setExportProgress] = useState(0);
+  // 메타 정보 카드 접힘 상태 — Z Flip 5 같은 좁은 화면에서 캔버스 빨리 보이게 기본 접힘
+  const [metaOpen, setMetaOpen] = useState(false);
 
-  async function handleExportGif(targetMode: Mode) {
+  async function handleExportGif(targetMode: ExportTarget) {
     if (exportingMode) return;
     if (dirty) {
       showToast("저장하지 않은 변경사항이 있어요. 먼저 저장하세요.", "error");
       return;
     }
-    const phases = targetMode === "attack" ? data.attack : data.defense;
-    if (phases.length === 0 || phases.every((p) => p.steps.length === 0)) {
-      showToast(`${targetMode === "attack" ? "공격" : "수비"} 장면이 비어 있어요`, "error");
+
+    const sections =
+      targetMode === "attack"
+        ? [{ phases: data.attack, mode: "attack" as const }]
+        : targetMode === "defense"
+        ? [{ phases: data.defense, mode: "defense" as const }]
+        : [
+            { phases: data.attack, mode: "attack" as const },
+            { phases: data.defense, mode: "defense" as const },
+          ];
+    const nonEmpty = sections.filter((s) => s.phases.length > 0 && s.phases.some((p) => p.steps.length > 0));
+    if (nonEmpty.length === 0) {
+      showToast("내보낼 장면이 없어요", "error");
       return;
     }
+
     setExportingMode(targetMode);
     setExportProgress(0);
     try {
-      const blob = await exportMotionAsGif(phases, {
-        mode: targetMode,
+      const blob = await exportMotionAsGif(nonEmpty, {
         onProgress: (pct) => setExportProgress(pct),
       });
-      const safeName = name.replace(/[/\\?%*:|"<>]/g, "_");
-      downloadBlob(blob, `${safeName}_${targetMode === "attack" ? "공격" : "수비"}.gif`);
+      const filename = buildGifFilename({
+        animationName: name,
+        formationId: initial.formation_id,
+        mode: targetMode,
+      });
+      downloadBlob(blob, filename);
       showToast("GIF 다운로드 완료", "success");
     } catch (err) {
       showToast(err instanceof Error ? err.message : "GIF 만들기 실패", "error");
@@ -356,7 +373,12 @@ export default function AnimationEditorClient({ initial }: Props) {
   // 미리보기 모드일 때는 FormationMotionViewer 렌더
   if (previewing) {
     return (
-      <div className="container mx-auto max-w-3xl px-4 py-6 sm:py-8">
+      <div
+        className={cn(
+          "container mx-auto max-w-3xl px-4 py-6 sm:py-8",
+          maximized && "fixed inset-0 z-50 max-w-none overflow-y-auto bg-background px-3 py-3"
+        )}
+      >
         <div className="mb-3 flex items-center justify-between gap-2">
           <Link
             href="/settings/animations"
@@ -365,15 +387,27 @@ export default function AnimationEditorClient({ initial }: Props) {
             <ChevronLeft className="h-4 w-4" />
             목록으로
           </Link>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => setPreviewing(false)}
-          >
-            <Pencil className="mr-1 h-3.5 w-3.5" />
-            편집 모드로
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setMaximized((v) => !v)}
+              title={maximized ? "원래 크기로" : "캔버스 최대화"}
+            >
+              {maximized ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+              <span className="ml-1 hidden sm:inline">{maximized ? "축소" : "최대화"}</span>
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setPreviewing(false)}
+            >
+              <Pencil className="mr-1 h-3.5 w-3.5" />
+              편집 모드로
+            </Button>
+          </div>
         </div>
         <h1 className="mb-3 text-xl font-bold">{name}</h1>
         <FormationMotionViewer
@@ -384,17 +418,19 @@ export default function AnimationEditorClient({ initial }: Props) {
         <div className="mt-4 rounded-xl border border-border bg-card p-4">
           <p className="mb-2 text-sm font-bold">GIF로 받아 공유하기</p>
           <p className="mb-3 text-xs text-muted-foreground">
-            카톡 단톡방·문자에 그대로 던질 수 있는 GIF로 만들어드려요. 인코딩에 5~10초 걸려요.
+            카톡 단톡방·문자에 그대로 던질 수 있는 GIF로 만들어드려요. 공수전체는 인코딩에 10~15초.
           </p>
           <div className="flex flex-wrap gap-2">
-            {(["attack", "defense"] as const).map((mode) => {
+            {(["attack", "defense", "combined"] as const).map((mode) => {
               const isExportingThis = exportingMode === mode;
+              const label = mode === "attack" ? "공격" : mode === "defense" ? "수비" : "공수전체";
+              const isCombined = mode === "combined";
               return (
                 <Button
                   key={mode}
                   type="button"
                   size="sm"
-                  variant="outline"
+                  variant={isCombined ? "default" : "outline"}
                   className="gap-1"
                   disabled={exportingMode !== null}
                   onClick={() => handleExportGif(mode)}
@@ -407,7 +443,7 @@ export default function AnimationEditorClient({ initial }: Props) {
                   ) : (
                     <>
                       <Download className="h-3.5 w-3.5" />
-                      {mode === "attack" ? "공격" : "수비"} GIF
+                      {label} GIF
                     </>
                   )}
                 </Button>
@@ -461,49 +497,71 @@ export default function AnimationEditorClient({ initial }: Props) {
         </div>
       </div>
 
-      {/* 메타 */}
-      <div className="mb-5 space-y-3 rounded-xl border border-border bg-card p-4">
-        <div>
-          <Label htmlFor="anim-name" className="text-xs">이름</Label>
-          <Input
-            id="anim-name"
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              setDirty(true);
-            }}
-            className="mt-1"
-          />
-        </div>
-        <div>
-          <Label htmlFor="anim-desc" className="text-xs">설명 (선택)</Label>
-          <Input
-            id="anim-desc"
-            value={description}
-            onChange={(e) => {
-              setDescription(e.target.value);
-              setDirty(true);
-            }}
-            placeholder="예: 우리 팀 좌측 빌드업 — 풀백 오버랩 중심"
-            className="mt-1"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            id="anim-default"
-            type="checkbox"
-            checked={isDefault}
-            onChange={(e) => {
-              setIsDefault(e.target.checked);
-              setDirty(true);
-            }}
-            className="h-4 w-4"
-          />
-          <Label htmlFor="anim-default" className="cursor-pointer text-xs flex items-center gap-1">
-            <Star className="h-3 w-3" />
-            우리 팀 대표로 설정 ({initial.formation_id} 경기에서 자동 노출)
-          </Label>
-        </div>
+      {/* 메타 (이름·설명·대표 설정) — 좁은 화면 친화로 기본 접힘. 가끔 수정하니 접혀있어도 무방. */}
+      <div className="mb-5 rounded-xl border border-border bg-card">
+        <button
+          type="button"
+          onClick={() => setMetaOpen((v) => !v)}
+          className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left hover:bg-secondary/30 rounded-xl"
+          aria-expanded={metaOpen}
+        >
+          <span className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="truncate text-sm font-semibold">{name || "이름 없음"}</span>
+            {isDefault && (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary">
+                <Star className="h-2.5 w-2.5" /> 대표
+              </span>
+            )}
+          </span>
+          <span className="text-xs text-muted-foreground shrink-0">
+            {metaOpen ? "접기" : "편집"}
+          </span>
+        </button>
+        {metaOpen && (
+          <div className="space-y-3 border-t border-border/40 px-4 py-3">
+            <div>
+              <Label htmlFor="anim-name" className="text-xs">이름</Label>
+              <Input
+                id="anim-name"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setDirty(true);
+                }}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="anim-desc" className="text-xs">설명 (선택)</Label>
+              <Input
+                id="anim-desc"
+                value={description}
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  setDirty(true);
+                }}
+                placeholder="예: 우리 팀 좌측 빌드업 — 풀백 오버랩 중심"
+                className="mt-1"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                id="anim-default"
+                type="checkbox"
+                checked={isDefault}
+                onChange={(e) => {
+                  setIsDefault(e.target.checked);
+                  setDirty(true);
+                }}
+                className="h-4 w-4"
+              />
+              <Label htmlFor="anim-default" className="cursor-pointer text-xs flex items-center gap-1">
+                <Star className="h-3 w-3" />
+                우리 팀 대표로 설정 ({initial.formation_id} 경기에서 자동 노출)
+              </Label>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 모드 토글 */}

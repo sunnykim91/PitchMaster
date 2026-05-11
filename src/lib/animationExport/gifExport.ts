@@ -14,8 +14,12 @@
 
 import type { MotionPhase, MotionStep, PhasePosition } from "@/lib/formationMotions/types";
 
-export interface GifExportOptions {
+export interface GifExportSection {
+  phases: MotionPhase[];
   mode: "attack" | "defense";
+}
+
+export interface GifExportOptions {
   size?: number;
   onProgress?: (pct: number) => void;
 }
@@ -24,26 +28,43 @@ const HOLD_MS = 1000;
 const TRANSITION_FRAMES = 6;
 const TRANSITION_MS_PER_FRAME = 80;
 const LAST_FRAME_HOLD_MS = 1500;
+const SECTION_BREAK_MS = 600;
 
+/**
+ * 여러 섹션(공격·수비)을 순서대로 한 GIF에 인코딩.
+ * 단일 모드만 export할 때도 `[{phases, mode}]` 형태로 호출.
+ */
 export async function exportMotionAsGif(
-  phases: MotionPhase[],
-  options: GifExportOptions,
+  sections: GifExportSection[],
+  options: GifExportOptions = {},
 ): Promise<Blob> {
   const size = options.size ?? 480;
 
-  if (phases.length === 0) {
-    throw new Error("내보낼 장면이 없어요");
-  }
+  if (sections.length === 0) throw new Error("내보낼 섹션이 없어요");
 
-  const flatSteps: { step: MotionStep; phaseLabel: string }[] = [];
-  for (const phase of phases) {
-    for (const step of phase.steps) {
-      flatSteps.push({ step, phaseLabel: phase.label });
+  // 평탄화 — 모든 (step, phaseLabel, mode) 펼침
+  const flatSteps: { step: MotionStep; phaseLabel: string; mode: "attack" | "defense"; isSectionEnd: boolean }[] = [];
+  for (let sIdx = 0; sIdx < sections.length; sIdx++) {
+    const section = sections[sIdx];
+    let stepCount = 0;
+    for (let pIdx = 0; pIdx < section.phases.length; pIdx++) {
+      const phase = section.phases[pIdx];
+      for (let stIdx = 0; stIdx < phase.steps.length; stIdx++) {
+        flatSteps.push({
+          step: phase.steps[stIdx],
+          phaseLabel: phase.label,
+          mode: section.mode,
+          isSectionEnd: false,
+        });
+        stepCount++;
+      }
     }
+    if (stepCount === 0) continue;
+    // 섹션 마지막 step에 표식
+    const last = flatSteps[flatSteps.length - 1];
+    if (last && sIdx < sections.length - 1) last.isSectionEnd = true;
   }
-  if (flatSteps.length === 0) {
-    throw new Error("내보낼 컷이 없어요");
-  }
+  if (flatSteps.length === 0) throw new Error("내보낼 컷이 없어요");
 
   const { default: GIF } = await import("gif.js");
   const gif = new GIF({
@@ -62,18 +83,24 @@ export async function exportMotionAsGif(
   if (!ctx) throw new Error("canvas 2D context를 사용할 수 없어요");
 
   for (let i = 0; i < flatSteps.length; i++) {
-    const { step, phaseLabel } = flatSteps[i];
+    const { step, phaseLabel, mode, isSectionEnd } = flatSteps[i];
     const isLast = i === flatSteps.length - 1;
-    const nextStep = isLast ? null : flatSteps[i + 1].step;
+    const nextEntry = isLast ? null : flatSteps[i + 1];
 
-    drawFrame(ctx, step, phaseLabel, options.mode, size);
-    gif.addFrame(ctx, { copy: true, delay: isLast ? LAST_FRAME_HOLD_MS : HOLD_MS });
+    drawFrame(ctx, step, phaseLabel, mode, size);
+    // 섹션 끝(공격→수비 전환)이면 마지막 frame 좀 더 머무름
+    let delay: number;
+    if (isLast) delay = LAST_FRAME_HOLD_MS;
+    else if (isSectionEnd) delay = HOLD_MS + SECTION_BREAK_MS;
+    else delay = HOLD_MS;
+    gif.addFrame(ctx, { copy: true, delay });
 
-    if (nextStep) {
+    // 다음 step이 같은 섹션(같은 모드) + 섹션 끝 아닐 때만 보간
+    if (nextEntry && !isSectionEnd && nextEntry.mode === mode) {
       for (let f = 1; f <= TRANSITION_FRAMES; f++) {
         const t = f / (TRANSITION_FRAMES + 1);
-        const interp = interpolateStep(step, nextStep, t);
-        drawFrame(ctx, interp, phaseLabel, options.mode, size);
+        const interp = interpolateStep(step, nextEntry.step, t);
+        drawFrame(ctx, interp, phaseLabel, mode, size);
         gif.addFrame(ctx, { copy: true, delay: TRANSITION_MS_PER_FRAME });
       }
     }
@@ -222,6 +249,29 @@ function drawFrame(
     }
     ctx.fillText(caption, size / 2, captionY + captionHeight / 2);
   }
+}
+
+/**
+ * GIF 파일명 빌더 — 카톡 받는 사람이 어떤 영상인지 한눈에 인지하도록.
+ * 형식: `{팀명}_{포메이션}_{영상이름끝부분}_{모드}.gif`
+ * - 공백·특수문자는 `_` 또는 제거
+ * - 영상 이름이 이미 "{팀명} {포메이션} v{N}" 패턴이면 그대로 sanitize만
+ */
+export function buildGifFilename(parts: {
+  animationName: string;
+  formationId?: string;
+  mode: "attack" | "defense" | "combined";
+}): string {
+  const modeLabel =
+    parts.mode === "attack" ? "공격" :
+    parts.mode === "defense" ? "수비" :
+    "공수전체";
+  const cleanName = parts.animationName
+    .replace(/[/\\?%*:|"<>]/g, "")
+    .replace(/\s+/g, "_")
+    .trim();
+  const base = cleanName || parts.formationId || "전술영상";
+  return `${base}_${modeLabel}.gif`;
 }
 
 export function downloadBlob(blob: Blob, filename: string) {

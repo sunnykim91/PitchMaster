@@ -116,6 +116,29 @@ function MatchTacticsTabInner({
   const { showToast } = useToast();
 
   /**
+   * 팀 전술 영상 메타 — 진입 카드에 개수·대표 포메이션 표시용.
+   * 운영진만 카드 보여서 운영진 진입 시에만 fetch.
+   */
+  const [animationMeta, setAnimationMeta] = useState<{ count: number; defaultFormation: string | null } | null>(null);
+  useEffect(() => {
+    if (!canManage) return;
+    let cancelled = false;
+    fetch("/api/team/tactical-animations")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (cancelled || !j?.animations) return;
+        const list = j.animations as Array<{ is_default: boolean; formation_id: string }>;
+        const defaultAnim = list.find((a) => a.is_default);
+        setAnimationMeta({
+          count: list.length,
+          defaultFormation: defaultAnim?.formation_id ?? null,
+        });
+      })
+      .catch(() => { /* 실패해도 정적 라벨로 fallback */ });
+    return () => { cancelled = true; };
+  }, [canManage]);
+
+  /**
    * DB에 저장된 쿼터별 스쿼드 — AI 코치 분석 fallback + 편성 완료 판단 소스.
    * 저장 이벤트가 들어오면 refetch.
    */
@@ -700,8 +723,26 @@ function MatchTacticsTabInner({
             <Film className="h-4 w-4" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold">감독의 전술노트</span>
-            <span className="block text-xs text-muted-foreground">우리 팀 공·수 흐름을 영상으로 그리고 공유하기</span>
+            {animationMeta === null ? (
+              <>
+                <span className="block text-sm font-bold">감독의 전술노트</span>
+                <span className="block text-xs text-muted-foreground">우리 팀 공·수 흐름을 영상으로</span>
+              </>
+            ) : animationMeta.count === 0 ? (
+              <>
+                <span className="block text-sm font-bold">우리 팀 영상 처음 만들기</span>
+                <span className="block text-xs text-muted-foreground">만든 영상은 회원에게 자동 노출돼요</span>
+              </>
+            ) : (
+              <>
+                <span className="block text-sm font-bold">
+                  감독의 전술노트 <span className="ml-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary tabular-nums">{animationMeta.count}개</span>
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  {animationMeta.defaultFormation ? `대표 ${animationMeta.defaultFormation} · 카톡으로 GIF 공유` : "카톡으로 GIF 공유"}
+                </span>
+              </>
+            )}
           </span>
           <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
         </Link>
