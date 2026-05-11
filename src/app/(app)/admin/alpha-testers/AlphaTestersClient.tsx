@@ -7,14 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApi } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
-import { Check, X, Coffee, Trash2, RefreshCw, ChevronLeft, Clock, Mail } from "lucide-react";
+import { Check, X, Coffee, Trash2, RefreshCw, ChevronLeft, Clock, Mail, Copy } from "lucide-react";
+import Link from "next/link";
 
 const ALPHA_DOWNLOAD_URL = "https://play.google.com/store/apps/details?id=app.pitchmaster";
 const OPEN_CHAT_URL = "https://open.kakao.com/o/gSoLopui";
 
-function buildInviteMailto(email: string, name: string): string {
-  const subject = `[PitchMaster] 알파 테스터 등록 완료 — Play Store에서 받아주세요!`;
-  const body = `${name}님 안녕하세요, PitchMaster 운영자 김선휘입니다 :)
+const INVITE_SUBJECT = "[PitchMaster] 알파 테스터 등록 완료 — Play Store에서 받아주세요!";
+
+function buildInviteBody(email: string, name: string): string {
+  return `${name}님 안녕하세요, PitchMaster 운영자 김선휘입니다 :)
 
 알파 테스터 등록해주셔서 정말 감사합니다.
 방금 ${email} 계정을 Play Console 테스터 그룹에 등록 완료했습니다!
@@ -43,10 +45,7 @@ ${OPEN_CHAT_URL}
 정말 감사합니다 🙏
 
 — PitchMaster 김선휘`;
-
-  return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
-import Link from "next/link";
 
 type Tester = {
   id: string;
@@ -101,11 +100,21 @@ export default function AlphaTestersClient() {
   );
   const { showToast } = useToast();
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [mailTarget, setMailTarget] = useState<{ email: string; name: string } | null>(null);
 
   useEffect(() => {
     const t = setInterval(() => refetch(), 30000);
     return () => clearInterval(t);
   }, [refetch]);
+
+  async function copyText(text: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast(`${label} 복사되었습니다.`);
+    } catch {
+      showToast("복사 실패. 직접 선택 복사해주세요.", "error");
+    }
+  }
 
   async function patchTester(
     id: string,
@@ -368,13 +377,14 @@ export default function AlphaTestersClient() {
                           >
                             {t.approvedAt ? "승인 취소" : "승인"}
                           </Button>
-                          <a
-                            href={buildInviteMailto(t.googleEmail, t.name)}
+                          <button
+                            type="button"
+                            onClick={() => setMailTarget({ email: t.googleEmail, name: t.name })}
                             className="inline-flex h-6 w-6 items-center justify-center rounded-md border bg-background hover:bg-secondary"
-                            title="안내 메일 보내기"
+                            title="안내 메일 내용 보기"
                           >
                             <Mail className="h-3 w-3 text-primary" />
-                          </a>
+                          </button>
                           <Button
                             size="sm"
                             variant={t.rewardedAt ? "default" : "outline"}
@@ -424,6 +434,136 @@ export default function AlphaTestersClient() {
           </p>
         </CardContent>
       </Card>
+
+      {mailTarget && (
+        <MailContentModal
+          email={mailTarget.email}
+          name={mailTarget.name}
+          onClose={() => setMailTarget(null)}
+          onCopy={copyText}
+        />
+      )}
+    </div>
+  );
+}
+
+function MailContentModal({
+  email,
+  name,
+  onClose,
+  onCopy,
+}: {
+  email: string;
+  name: string;
+  onClose: () => void;
+  onCopy: (text: string, label: string) => void;
+}) {
+  const body = buildInviteBody(email, name);
+  const fullText = `받는 사람: ${email}\n제목: ${INVITE_SUBJECT}\n\n${body}`;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4 pt-6"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-2xl rounded-2xl bg-card p-5 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold text-foreground">안내 메일 내용</h3>
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-7 w-7 p-0">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          각 영역을 복사해서 본인 메일 클라이언트에 붙여넣으세요.
+        </p>
+
+        <div className="mt-4 space-y-3">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-semibold text-foreground">받는 사람</span>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-6 px-2 text-[10px]"
+                onClick={() => onCopy(email, "받는 사람이")}
+              >
+                <Copy className="mr-1 h-3 w-3" />
+                복사
+              </Button>
+            </div>
+            <input
+              readOnly
+              value={email}
+              className="w-full rounded-md border bg-secondary/30 px-2 py-1.5 text-xs font-mono"
+              onFocus={(e) => e.currentTarget.select()}
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-semibold text-foreground">제목</span>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-6 px-2 text-[10px]"
+                onClick={() => onCopy(INVITE_SUBJECT, "제목이")}
+              >
+                <Copy className="mr-1 h-3 w-3" />
+                복사
+              </Button>
+            </div>
+            <input
+              readOnly
+              value={INVITE_SUBJECT}
+              className="w-full rounded-md border bg-secondary/30 px-2 py-1.5 text-xs"
+              onFocus={(e) => e.currentTarget.select()}
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-semibold text-foreground">본문</span>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-6 px-2 text-[10px]"
+                onClick={() => onCopy(body, "본문이")}
+              >
+                <Copy className="mr-1 h-3 w-3" />
+                복사
+              </Button>
+            </div>
+            <textarea
+              readOnly
+              value={body}
+              className="w-full h-64 rounded-md border bg-secondary/30 px-2 py-1.5 text-xs font-mono resize-none"
+              onFocus={(e) => e.currentTarget.select()}
+            />
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onCopy(fullText, "전체 내용이")}
+          >
+            <Copy className="mr-1 h-3.5 w-3.5" />
+            전체 한 번에 복사
+          </Button>
+          <Button size="sm" onClick={onClose}>
+            닫기
+          </Button>
+        </div>
+
+        <p className="mt-3 text-[10px] text-muted-foreground">
+          💡 보통은 본문만 복사해서 메일 클라이언트의 본문에 붙여넣고, 받는 사람·제목은 따로
+          복사·붙여넣기 하면 됩니다.
+        </p>
+      </div>
     </div>
   );
 }
