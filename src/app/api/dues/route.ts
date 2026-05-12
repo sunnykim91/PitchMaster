@@ -50,8 +50,16 @@ export async function POST(request: NextRequest) {
     return apiError("type은 INCOME 또는 EXPENSE여야 합니다");
   }
 
-  // 중복 체크: 같은 날짜 + 금액 + 설명 + 구분이 이미 있으면 스킵
-  if (body.recordedAt && body.description && body.amount) {
+  const recordedAtValue = body.recordedAt ? `${body.recordedAt}T${body.recordedTime || "00:00"}:00+09:00` : new Date().toISOString();
+
+  // 중복 체크: 같은 팀 + type + amount + description + 분 단위 시각까지 같으면 중복으로 간주 (옵션 B)
+  // 분 단위로 좁힌 이유: 정상 케이스(같은 사람이 같은 날 다른 입금 두 번)는 시각이 다름.
+  //                     OCR/단톡방 정리 시 두 명이 거의 동시에 같은 입금 등록하는 race 만 잡힘.
+  // 범위 비교: recordedAtValue 의 분 단위 ±59초 까지 fuzzy 매칭 (recordedTime 이 '00:00' 인 경우 등 보정)
+  if (body.description && body.amount) {
+    const baseDate = new Date(recordedAtValue);
+    const minuteStart = new Date(Math.floor(baseDate.getTime() / 60_000) * 60_000).toISOString();
+    const minuteEnd = new Date(Math.floor(baseDate.getTime() / 60_000) * 60_000 + 60_000).toISOString();
     const { data: existing } = await db
       .from("dues_records")
       .select("id")
@@ -59,15 +67,13 @@ export async function POST(request: NextRequest) {
       .eq("type", body.type)
       .eq("amount", body.amount)
       .eq("description", body.description)
-      .gte("recorded_at", `${body.recordedAt}T00:00:00`)
-      .lte("recorded_at", `${body.recordedAt}T23:59:59`)
+      .gte("recorded_at", minuteStart)
+      .lt("recorded_at", minuteEnd)
       .limit(1);
     if (existing && existing.length > 0) {
       return apiSuccess({ duplicate: true, id: existing[0].id });
     }
   }
-
-  const recordedAtValue = body.recordedAt ? `${body.recordedAt}T${body.recordedTime || "00:00"}:00+09:00` : new Date().toISOString();
 
   const resolvedUserId = (body.userId && !body.userId.startsWith("unlinked_")) ? body.userId : null;
   const insertPayload = {
@@ -114,7 +120,11 @@ export async function POST(request: NextRequest) {
 
       if (!memberId) throw new Error("no member");
 
-      const { data: matchingPenalty } = await db
+      // 매칭 race 방지 멱등 패턴:
+      // 1) 미납 후보 최대 3개 fetch (오래된 순)
+      // 2) 각각 atomic claim 시도 — UPDATE 시 status='UNPAID' 조건으로 다른 입금이 먼저 점유했으면 자연 skip
+      // 3) 한 건 성공하면 종료. 우선순위 정책(가장 오래된 미납부터) 유지.
+      const { data: candidates } = await db
         .from("penalty_records")
         .select("id")
         .eq("team_id", ctx.teamId)
@@ -123,14 +133,17 @@ export async function POST(request: NextRequest) {
         .eq("status", "UNPAID")
         .lte("date", incomeDate)
         .order("date", { ascending: true })
-        .limit(1)
-        .maybeSingle();
+        .limit(3);
 
-      if (matchingPenalty) {
-        await db
+      for (const p of (candidates ?? []) as { id: string }[]) {
+        const { data: claimed } = await db
           .from("penalty_records")
           .update({ status: "PAID", is_paid: true, dues_record_id: data.id })
-          .eq("id", matchingPenalty.id);
+          .eq("id", p.id)
+          .eq("status", "UNPAID") // 다른 입금이 먼저 PAID 처리한 경우 0 row → next candidate
+          .select("id")
+          .maybeSingle();
+        if (claimed) break;
       }
     } catch {
       // 벌금 매칭 실패해도 입금 내역 등록은 성공

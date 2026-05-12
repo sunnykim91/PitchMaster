@@ -7,6 +7,7 @@ import {
 } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS, hasMinRole } from "@/lib/permissions";
+import { invalidateAuthSync } from "@/lib/auth";
 
 export async function GET() {
   const ctx = await getApiContext();
@@ -318,6 +319,8 @@ export async function PUT(request: NextRequest) {
       .eq("user_id", ctx.userId);
 
     if (demoteError) return apiError(demoteError.message);
+    // 이임 시 본인(기존 회장)의 auth 캐시 무효화 — 다음 페이지 진입 시 STAFF 권한 즉시 반영
+    invalidateAuthSync(ctx.userId, ctx.teamId);
   }
 
   const { error } = await db
@@ -327,6 +330,10 @@ export async function PUT(request: NextRequest) {
     .eq("team_id", ctx.teamId);
 
   if (error) return apiError(error.message);
+  // 변경된 회원의 auth 캐시 무효화 — 60초 지연 없이 즉시 새 권한 반영
+  if (targetMember?.user_id) {
+    invalidateAuthSync(targetMember.user_id, ctx.teamId);
+  }
   return apiSuccess({ ok: true });
 }
 
@@ -369,5 +376,9 @@ export async function DELETE(request: NextRequest) {
     .eq("team_id", ctx.teamId);
 
   if (error) return apiError(error.message);
+  // 강퇴된 회원의 auth 캐시 무효화 — 60초 지연 없이 즉시 접근 차단
+  if (target?.user_id) {
+    invalidateAuthSync(target.user_id, ctx.teamId);
+  }
   return apiSuccess({ ok: true });
 }

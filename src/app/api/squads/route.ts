@@ -68,35 +68,45 @@ export async function POST(request: NextRequest) {
   if (!matchCheck) return apiError("Match not found", 404);
 
   const side = body.side ?? null;
+  const payload = {
+    match_id: body.matchId,
+    quarter_number: body.quarterNumber,
+    formation: body.formation,
+    positions: body.positions,
+    side,
+  };
 
-  // partial unique index 사용으로 upsert 대신 delete+insert
-  let deleteQuery = db
-    .from("match_squads")
-    .delete()
-    .eq("match_id", body.matchId)
-    .eq("quarter_number", body.quarterNumber);
+  // Race-safe upsert (delete+insert 패턴은 두 명이 동시에 자동편성 누르면 한쪽 작업 손실 위험).
+  // match_attendance 의 검증된 패턴(00003) 따라:
+  //   1) 기존 row 조회 → 있으면 UPDATE, 없으면 INSERT
+  //   2) INSERT 시 UNIQUE 위반(23505) → 그새 다른 요청이 INSERT 한 것 → 다시 조회 후 UPDATE
+  // partial unique index 가 NULL/NOT NULL 케이스 모두 보호. last-writer-wins 시맨틱.
+  const findQuery = side
+    ? db.from("match_squads").select("id").eq("match_id", body.matchId).eq("quarter_number", body.quarterNumber).eq("side", side)
+    : db.from("match_squads").select("id").eq("match_id", body.matchId).eq("quarter_number", body.quarterNumber).is("side", null);
 
-  if (side) {
-    deleteQuery = deleteQuery.eq("side", side);
+  const { data: existing } = await findQuery.maybeSingle();
+
+  let data: unknown;
+  let error: { code?: string; message?: string } | null = null;
+
+  if (existing) {
+    ({ data, error } = await db.from("match_squads").update(payload).eq("id", existing.id).select().single());
   } else {
-    deleteQuery = deleteQuery.is("side", null);
+    ({ data, error } = await db.from("match_squads").insert(payload).select().single());
+    // INSERT 직후 race로 UNIQUE 위반 → 동시 다른 요청이 INSERT 한 것. 우리는 UPDATE 로 가야 함.
+    if (error && (error.code === "23505" || (error.message?.includes("duplicate") ?? false))) {
+      const recheck = side
+        ? db.from("match_squads").select("id").eq("match_id", body.matchId).eq("quarter_number", body.quarterNumber).eq("side", side)
+        : db.from("match_squads").select("id").eq("match_id", body.matchId).eq("quarter_number", body.quarterNumber).is("side", null);
+      const { data: raced } = await recheck.maybeSingle();
+      if (raced) {
+        ({ data, error } = await db.from("match_squads").update(payload).eq("id", raced.id).select().single());
+      }
+    }
   }
-  const { error: delError } = await deleteQuery;
-  if (delError) return apiError(`편성 저장 실패: ${delError.message}`);
 
-  const { data, error } = await db
-    .from("match_squads")
-    .insert({
-      match_id: body.matchId,
-      quarter_number: body.quarterNumber,
-      formation: body.formation,
-      positions: body.positions,
-      side,
-    })
-    .select()
-    .single();
-
-  if (error) return apiError(error.message);
+  if (error) return apiError(error.message ?? "편성 저장 실패");
   invalidateTeamStats(ctx.teamId).catch(() => {});
   return apiSuccess(data);
 }
