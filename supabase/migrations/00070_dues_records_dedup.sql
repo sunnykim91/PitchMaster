@@ -33,13 +33,24 @@
 --   DELETE FROM dues_records
 --   WHERE id IN (SELECT id FROM dups WHERE rn > 1);
 
+-- date_trunc('minute', timestamptz) 는 STABLE 함수라 인덱스 표현식으로 못 씀(42P17).
+-- timezone 을 명시한 IMMUTABLE wrapper 를 만들어 우회.
+CREATE OR REPLACE FUNCTION public.dues_minute_bucket(ts timestamptz)
+RETURNS timestamp
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+AS $$
+  SELECT date_trunc('minute', (ts AT TIME ZONE 'UTC')::timestamp);
+$$;
+
 CREATE UNIQUE INDEX IF NOT EXISTS dues_records_dedup
   ON public.dues_records (
     team_id,
     type,
     amount,
     description,
-    date_trunc('minute', recorded_at)
+    public.dues_minute_bucket(recorded_at)
   )
   WHERE description IS NOT NULL;
 
