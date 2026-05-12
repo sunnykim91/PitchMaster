@@ -444,35 +444,52 @@ export default function RecordsClient({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {loadingRecords ? (
-            <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-              {[1, 2, 3, 4].map((i) => (
-                <Card key={i} className="border-0 p-4">
-                  <Skeleton className="h-3 w-16 mb-2" />
-                  <Skeleton className="h-8 w-12" />
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-              {[
-                { label: "득점", value: myStats.goals, color: "text-[hsl(var(--success))]", bg: "bg-[hsl(var(--success)/0.1)]" },
-                { label: "어시스트", value: myStats.assists, color: "text-[hsl(var(--info))]", bg: "bg-[hsl(var(--info)/0.1)]" },
-                { label: "MVP", value: myStats.mvp, color: "text-[hsl(var(--warning))]", bg: "bg-[hsl(var(--warning)/0.1)]" },
-                { label: "출석률", value: `${Math.round(myStats.attendanceRate * 100)}%`, color: "text-[hsl(var(--accent))]", bg: "bg-[hsl(var(--accent)/0.1)]" },
-              ].map((item) => {
-                const isEmpty = item.value === 0 || item.value === "0%";
-                return (
-                  <div key={item.label} className={cn("card-stat", isEmpty ? "" : item.bg)}>
-                    <p className="type-overline">{item.label}</p>
-                    <p className={cn("mt-1 type-stat", isEmpty ? "text-muted-foreground/40" : item.color)}>
-                      {isEmpty ? "-" : item.value}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          {(() => {
+            // 토글 ON 팀(myStats.avgRating 채워짐)이면 평점 카드 추가 — 5칸
+            const showRating = myStats.avgRating !== undefined;
+            const items = [
+              { label: "득점", value: myStats.goals, color: "text-[hsl(var(--success))]", bg: "bg-[hsl(var(--success)/0.1)]" },
+              { label: "어시스트", value: myStats.assists, color: "text-[hsl(var(--info))]", bg: "bg-[hsl(var(--info)/0.1)]" },
+              { label: "MVP", value: myStats.mvp, color: "text-[hsl(var(--warning))]", bg: "bg-[hsl(var(--warning)/0.1)]" },
+              { label: "출석률", value: `${Math.round(myStats.attendanceRate * 100)}%`, color: "text-[hsl(var(--accent))]", bg: "bg-[hsl(var(--accent)/0.1)]" },
+              ...(showRating
+                ? [{
+                    label: `평점 (${myStats.ratingCount ?? 0}회)`,
+                    value: myStats.avgRating!.toFixed(1),
+                    color: "text-[hsl(var(--warning))]",
+                    bg: "bg-[hsl(var(--warning)/0.1)]",
+                  }]
+                : []),
+            ];
+            const gridCols = showRating ? "grid-cols-2 md:grid-cols-5" : "grid-cols-2 md:grid-cols-4";
+            if (loadingRecords) {
+              return (
+                <div className={cn("grid gap-3", gridCols)}>
+                  {Array.from({ length: items.length }).map((_, i) => (
+                    <Card key={i} className="border-0 p-4">
+                      <Skeleton className="h-3 w-16 mb-2" />
+                      <Skeleton className="h-8 w-12" />
+                    </Card>
+                  ))}
+                </div>
+              );
+            }
+            return (
+              <div className={cn("grid gap-3", gridCols)}>
+                {items.map((item) => {
+                  const isEmpty = item.value === 0 || item.value === "0%";
+                  return (
+                    <div key={item.label} className={cn("card-stat", isEmpty ? "" : item.bg)}>
+                      <p className="type-overline">{item.label}</p>
+                      <p className={cn("mt-1 type-stat", isEmpty ? "text-muted-foreground/40" : item.color)}>
+                        {isEmpty ? "-" : item.value}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </CardContent>
       </Card>
 
@@ -627,7 +644,15 @@ export default function RecordsClient({
                           {s.teamRole === "CAPTAIN" && <Badge variant="warning" className="text-xs px-1 py-0 shrink-0">C</Badge>}
                           {s.teamRole === "VICE_CAPTAIN" && <Badge variant="secondary" className="text-xs px-1 py-0 shrink-0">VC</Badge>}
                         </div>
-                        <span className="text-sm font-bold text-primary shrink-0">G+A {s.points}</span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {s.avgRating !== undefined && (
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-[hsl(var(--warning))]/15 px-2 py-0.5 text-xs font-bold text-[hsl(var(--warning))] tabular-nums">
+                              ⭐ {s.avgRating.toFixed(1)}
+                              <span className="ml-0.5 text-[10px] font-normal text-muted-foreground">({s.ratingCount ?? 0})</span>
+                            </span>
+                          )}
+                          <span className="text-sm font-bold text-primary">G+A {s.points}</span>
+                        </div>
                       </div>
                       <div className="grid grid-cols-4 gap-1 text-center text-xs">
                         {([
