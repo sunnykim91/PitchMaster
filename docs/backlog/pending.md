@@ -1,24 +1,72 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=89팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-05-11 (54차-3)
+last_updated: 2026-05-12 (56차)
 related: [completed-recent.md, reviews.md]
 ---
 
 # 미완료 백로그
 
 우선순위 기준:
-- **HIGH**: 현재 89팀+ 운영에 직접 영향
+- **HIGH**: 현재 100팀+ 운영에 직접 영향
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
 
+## 56차-2 신규 추가 (2026-05-12) — SEO·블로그·경쟁사·GA4
+
+### 자체 도메인 가이드 2편 GSC 색인 요청 (MEDIUM, 즉시)
+- **배경**: `/guide/dues-exemption-policy` 5/12 발행 완료. 사용자 직접 색인 요청 필요.
+- [ ] GSC URL 검사 + 색인 생성 요청 (사용자 직접)
+- [ ] 네이버 서치어드바이저 수집 요청 (자체 도메인이므로 ✅ 권장)
+- 참고: 1편 색인 결과 2~4주 후 확인 (5/25 이후)
+
+### 블로그 3편 작성·발행 (HIGH, 다음 작업)
+- **배경**: 시리즈 2편 완료. 3편 = 풋살 3파전·4파전 자동 분배 운영법.
+- [ ] `src/lib/guides/posts/futsal-split-teams.tsx` (자체 도메인)
+- [ ] 네이버 블로그 초안 `docs/blog-guide-futsal-split-teams-naver.md`
+- [ ] 티스토리 초안 발행
+- 검색어 근거: "풋살 3파전 팀섞는법" 네이버 1 노출
+
+### Unassigned 채널 42% 원인 기록 (정보, 코드 수정 불필요)
+- **배경**: GA4 Unassigned 42% — 카카오 OAuth redirect referrer 끊김. GA4 메커니즘 한계. 코드 수정으로 해결 불가.
+- [ ] users.signup_source 컬럼 추가가 영구 해결책 (feedback_channel_attribution_limit.md, 56차)
+- 참고: `reference_ga4_app_router.md` — user-stick + Unassigned 원인 박제됨
+
+### 경쟁사 분석 박제 완료 확인 [x]
+- [x] FM조축·동네축구·레츠고알레 메모리 박제 완료 (`reference_competitor_other_apps.md`, 56차-2)
+
+### GA4 트래픽 채널 fix 효과 검증 완료 [x]
+- [x] 비정상 source 51% → 6.6% 정상화 확인 (56차-2, `feedback_ga4_reserved_param_names.md` 갱신)
+- [ ] 1주 후 잔존 39세션(user-stick) 추가 감소 여부 재확인 (5/19 이후)
+
+## 56차 신규 추가 (2026-05-12) — 어드민 활성도·채널 측정·마케팅
+
+### 어드민 활성 회원 카드 변경 커밋 (HIGH, 즉시)
+- **배경**: 56차에 코드 수정 완료했지만 미커밋 상태. voted_at·recorded_at 컬럼 fix 포함.
+- [ ] `src/app/api/admin/stats/route.ts` + `src/app/(app)/admin/AdminClient.tsx` git add + commit + push
+- 참고: `feedback_supabase_column_verify.md` — 컬럼 정확 매핑 확인
+
+### users.signup_source 컬럼 추가 (MEDIUM, 다음 코호트 측정 시작)
+- **배경**: 카카오 OAuth 거치면 GA4 referrer 끊김. 현재 채널별 가입자 분리 영구 불가.
+- [ ] `users` 테이블에 `signup_source JSONB` 컬럼 추가 (migration)
+- [ ] 카카오 OAuth 콜백에서 쿼리 파라미터(utm_source·utm_medium·utm_campaign) → 쿠키 → DB 저장 흐름 구축
+- 참고: `feedback_channel_attribution_limit.md`
+
+### 다음 홍보 채널 결정 (HIGH, 세션 직후 사용자 결정)
+- **배경**: 다음카페·네이버카페·인스타 소재 소진. 유튜브 시연 영상 vs 광고 영상 방향 미결.
+- [ ] 사용자 결정 수령 후 착수 (코드 변경 없음, 콘텐츠 작업)
+
+### 블로그 2편 push 및 발행 (HIGH, 5/12 완료)
+- [x] `src/lib/guides/posts/dues-exemption-policy.tsx` + registry.ts push (d832f0a)
+- [x] `docs/blog-guide-dues-exemption-policy-naver.md` + 티스토리 초안 push (d832f0a)
+- [x] 자체 도메인·네이버·티스토리 모두 5/12 발행 완료
+
 ## 54차-3 신규 추가 (2026-05-11) — SEO 콘텐츠·블로그·면접
 
-### 블로그 2편 push 및 발행 (HIGH, 5/12 예정)
-- **배경**: `dues-exemption-policy` 자체 도메인 글·네이버·티스토리 초안 완성, push 보류 상태.
-- [ ] `src/lib/guides/posts/dues-exemption-policy.tsx` + `src/lib/guides/registry.ts` push
-- [ ] `docs/blog-guide-dues-exemption-policy-naver.md` + 티스토리 초안 push
-- 발행 일정: 5/12 자체 도메인 → 5/12 네이버 → 5/13 티스토리
+### 블로그 2편 push 및 발행 (HIGH, 5/12 완료)
+- [x] `src/lib/guides/posts/dues-exemption-policy.tsx` + `src/lib/guides/registry.ts` push (d832f0a)
+- [x] `docs/blog-guide-dues-exemption-policy-naver.md` + 티스토리 초안 push (d832f0a)
+- [x] 자체 도메인·네이버·티스토리 모두 5/12 발행 완료
 
 ### 블로그 3~5편 작성·발행 (MEDIUM, 시리즈 이어가기)
 - **배경**: 5편 시리즈 계획 중 1편 완료. 검색어 인사이트 기반 다음 주제 확정됨.

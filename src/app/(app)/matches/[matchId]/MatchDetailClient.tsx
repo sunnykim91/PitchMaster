@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useRealtimeSubscription } from "@/lib/useRealtimeSubscription";
 import { ChevronLeft, Check, Info, Vote, LayoutGrid, UserCheck, FileEdit, MessageSquare } from "lucide-react";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { useToast } from "@/lib/ToastContext";
@@ -120,26 +119,6 @@ export default function MatchDetailClient({
     initialData?.comments ?? { comments: [] },
     { skip: !!initialData?.comments },
   );
-
-  // 실시간 동기화: 참석투표, 골 기록, MVP 투표
-  useRealtimeSubscription({
-    table: "match_attendance",
-    filter: `match_id=eq.${matchId}`,
-    events: ["INSERT", "UPDATE"],
-    onchange: () => refetchAttendance(),
-  });
-  useRealtimeSubscription({
-    table: "match_goals",
-    filter: `match_id=eq.${matchId}`,
-    events: ["INSERT", "UPDATE", "DELETE"],
-    onchange: () => refetchGoals(),
-  });
-  useRealtimeSubscription({
-    table: "match_mvp_votes",
-    filter: `match_id=eq.${matchId}`,
-    events: ["INSERT", "DELETE"],
-    onchange: () => refetchMvp(),
-  });
 
   const {
     data: diaryData,

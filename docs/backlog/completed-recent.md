@@ -2,11 +2,104 @@
 title: 개선 백로그 — 최근 완료 (16~54차)
 summary: 2026-04-11~05-11 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편, 광고 2 결과 분석 + 33초 본 캠페인 게시, 회비 선납→면제 통합 + PitchScore 카드 접힘 + 39차 백로그 반영, 보안 풀스윕 + RLS initPlan + 선납 매칭 + 풋살 AI + 역할 가이드 통일, GA4 서버사이드 + 유니코드→SVG + PitchScore 종목 분리 + 거짓 박제 사고 4건 + 벨로그 4편 발행 + MVP 정책 변경(5/4 cutoff) + 사고 4건, 풋살 자동편성 외톨이 root cause + vitest 21건 갱신 + AI 풀플랜·코치 분석 풋살 동호회 톤 + 가상 전적 hallucination 차단, PitchScore Phase 2C 동료 평가 + SSR 병렬화 + 진입점 이동 + UI 통일 + favicon.ico + SEO 진단, PitchScore Phase 2C 완료·Feature Flag 전체 오픈 + 경기 후기 silent fail fix + 알림 탭 라우팅 + 평가 이력 페이지 + distinct count fix + cron 비활성화, PitchScore Sunset + 평가 UI 전면 제거 + 조기싸커 경쟁사 분석 + 랜딩 Phase 1 (무료 트러스트 라인 + 가격 비교 행) + 5/4 경기 후기 자동 복구 검증, AI 캐시 자동 무효화 + FCMZ 빌드업 데모 + 가이드 친절 톤 전면 재작성 + 편집기 하드코딩 버그 수정 + 카피 단정 표현 일괄 정리, 랜딩 톤 보강 + AboutSection 신설 + 경기별 종목 분리(Phase 1~4) + AI 캐시 무효화 11곳 완성, 휴면팀 회장 카톡 1:1 캠페인 11명 발송 + iOS Capacitor 전략 상담 + 도달 채널 한계 발견, GA4 트래픽 채널 오염 fix, Play Console 프로덕션 신청서 + 광고 D 소재 22.5s 영상 완성, 고도화·보안·성능 풀스윕 + PitchScore 전면 제거 + mvpThreshold 단위 테스트 + root force-dynamic 제거, 가이드 IT 외래어 정리 + 멀티 컴퓨터 메모리 동기화 셋업, 50대 페르소나 UX 감사 + 접근성 보강 + MVP 후기탭 통합 + 골 입력 UX + 랜딩 카피/SEO 개선, 랜딩 About·Comparison v0 리프레시 + 생일축하 기능 노출, 50대 페르소나 UX Phase 2~4 — 코치마크·회원 일괄등록·골 쿼터 그룹핑·자체전 PlayerPicker·완료 경기 정정, 광고 5차 게시 — 코드 변경 없음·인스타 앱 부스팅·standalone HTML + OBS 작업, 전술판 영상 접근성·모바일 편집·GIF 공유 통합 개선 + 진입 카드 동적 라벨 + 카드 미리보기 + 합본 GIF + 편집기 UX 가다듬기
 sections: [55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-05-11 (55차)
+last_updated: 2026-05-12 (56차)
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~55차)
+# 최근 완료 (16~56차)
+
+## 56차-2 (2026-05-12, KST) — 랜딩 정리 + 회비 면제 가이드 + SEO 키워드 보강 + 경쟁사 분석
+
+**커밋 2개** (d832f0a, 1bfc935 푸시 완료)
+
+### 주제 1 — 랜딩 Hero 정리 + 접근성 개선 (d832f0a)
+
+- Hero 첫 줄 취소선·SoccerBall·긴 설명문·중복 정통성 라인 제거. 모바일 가운데 정렬, stats↔CTA 간격 mb-22→34, ₩0 trust pill CTA 아래 이동
+- SiteHeader 모바일 우상단 CTA 제거 (`hidden lg:block`) — sticky CTA 중복 해소
+- AboutSection h2 lineHeight 1.05→1.22 — "5년" underline 다음 줄 겹침 해소
+- TestimonialsSection 마퀴 hover/touch 일시정지 (pointerType 분기)
+
+### 주제 2 — 회비 면제 정책 가이드 (d832f0a)
+
+- `src/lib/guides/posts/dues-exemption-policy.tsx` 신규 + registry 등록
+- `/guide/dues-exemption-policy` 라우트 발행
+- `docs/blog-guide-dues-exemption-policy-{naver,tistory}.md` 추가
+- 네이버 블로그·티스토리 5/12 발행 완료
+
+### 주제 3 — 어드민 활성 유저 카운트 (d832f0a, 사용자 사전 작업 포함)
+
+- `src/app/api/admin/stats/route.ts` — 14일 활성 유저 집합 누적 (voted_at·recorded_at·goals scorer_id→user_id 매핑)
+- `src/app/(app)/admin/AdminClient.tsx` — 활성 유저 수·비율 + 활성 팀 비율 표시
+
+### 주제 4 — SEO 키워드 보강 + 뒤로가기 개선 (1bfc935)
+
+- `treasurer-start` 가이드: description·keywords·본문에 OCR·조기축구 자동화 키워드 + "자동화 후보 영역" ul 추가
+- `dues-exemption-policy` keywords 보강
+- `AnimationsListClient`: Link → BackButton 동적 복귀 (사용자 IDE 작업)
+
+### 주제 5 — v0 prototype 폴더 대량 삭제 (d832f0a)
+
+- `v0/` 디렉토리 90+ 파일 전체 삭제 (프로토타입 정리)
+
+### 주제 6 — 경쟁사 분석 + GA4 fix 효과 검증 (코드 변경 없음)
+
+- FM조축·동네축구·레츠고알레 App Store 실측 데이터 박제 (`reference_competitor_other_apps.md`)
+- GA4 reserved param fix 효과: 비정상 source 51% → 6.6% 정상화 확인 (`feedback_ga4_reserved_param_names.md`)
+- 네이버 서치어드바이저 실측 TOP 10 박제 (`reference_naver_keyword_real_2026_05_12.md`)
+
+### 삽질·사고
+
+- **메모리 grep 없이 backlog/pending.md만 읽고 잘못된 추천** — 사용자 3차 분노. feedback_grep_memory_before_analysis.md 패턴 4차 재발
+  - "이력서 N+1 정정 시급" 추천 → feedback_resume_metric_overclaim.md에 "정정 보류" 이미 박제됨 (사용자 결정 무시)
+  - "futsal-tactics-board·app-comparison 새 글" 추천 → project_blog_publishing_cadence.md에 5편 시리즈 주제 이미 박제됨 (사용자 결정 무시)
+- **outdated 메모리 참조** — project_play_console_v1_0_1.md("검토 대기")를 최신으로 봄. 실제 상태는 3차 반려 + 알파 테스터 비공개 테스트 중
+- **GSC 메뉴 워딩 2회 틀림** — 사용자가 본 화면에 없는 워딩 제시. 사용자 정정
+- **네이버 서치어드바이저 절차 설명 잉여** — 세션 기록에 이미 박제된 데이터임에도 절차 설명
+
+---
+
+## 56차 (2026-05-12, KST) — 어드민 활성도 분석 + 컬럼 사고 수정 + 다음카페 4편 발행
+
+**코드 변경 미커밋** (어드민 stats route + AdminClient 수정, push 예정)
+
+### 주제 1 — 어드민 활성 회원·활성 팀 카드 추가
+
+- `src/app/api/admin/stats/route.ts` — 14일 활성 유저·팀 카운트 집계 로직 추가
+- `src/app/(app)/admin/AdminClient.tsx` — 전체 회원/팀 카드에 활성 보조 라인 추가
+
+### 주제 2 — Supabase 컬럼명 사고 수정 (CRITICAL)
+
+- `match_attendance.created_at` / `dues_records.created_at` → 존재하지 않는 컬럼
+- PostgREST silently 빈 결과 반환 (에러 없음) → 14일 활성 유저 **18명** 보고 / 실제 **245명** (13배 차이)
+- 정정: `voted_at` / `recorded_at` 컬럼 사용. `member_id → user_id` 변환 매핑 추가
+- 메모리 박제: `feedback_supabase_column_verify.md` (56차)
+
+### 주제 3 — 코호트 분석 + PMF 진단
+
+- 출시일: 2026-03-23 (네이버카페 1편 홍보 시점)
+- W1-W2(3/23~4/5) 67팀 가입 → 정착 5팀 (7-9%)
+- W6-W7(4/27~5/10) 19팀 가입 → retention 36-63% (7배 개선)
+- 운영 기간 추측 사고 5번째 재발 박제 — `feedback_blog_fact_verify.md` 갱신
+
+### 주제 4 — 다음카페 4편 발행 (사용자 직접)
+
+- 주제: 출시 후 추가 기능 (AI 코치·풋살·전술노트·월별 결산)
+- "전술노트(GIF 합본)" 섹션 사용자 직접 추가
+- 사용자가 문장 직접 다듬어 발행 완료
+
+### 삽질·사고
+
+- 채널 단정 사고: W6-W7 회복을 "다음카페 4/27 글 효과"로 단정 → 사용자 지적. users.signup_source 없어 채널 분리 불가
+- 시간 표현 사고: 4편 초안에 "한 달 사이" 박음 → 실제 4/27~5/12 = 15일. "약 보름"으로 정정
+- 가격 추측 사고: 초안에 "9,900원/월" 박음 → 현재 무료. project_pricing.md grep 안 한 결과
+
+### 사실 데이터 (외부 콘텐츠 작성 시 참고)
+
+- 출시일: 2026-03-23 / 오늘 5/12 = 출시 50일차 (약 7주)
+- 누적 약 100팀 / users 530명 / team_members ACTIVE+DORMANT 826명
+- 14일 활성: 팀 20개, 회원 245명
+
+---
 
 ## 55차 (2026-05-11, KST) — 전술판 영상 접근성·모바일 편집·GIF 공유 통합 개선
 
