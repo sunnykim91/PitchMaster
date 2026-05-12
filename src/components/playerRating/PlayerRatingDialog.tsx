@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Modal } from "@/components/ui/Modal";
 import { apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
 import type { PlayerRating } from "./types";
@@ -30,15 +31,6 @@ export default function PlayerRatingDialog({
   const [score, setScore] = useState<number>(existing?.score ?? 7.0);
   const [comment, setComment] = useState<string>(existing?.comment ?? "");
   const [saving, setSaving] = useState(false);
-
-  // body scroll lock
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, []);
 
   async function handleSave() {
     setSaving(true);
@@ -76,7 +68,7 @@ export default function PlayerRatingDialog({
   const scoreLabel = score.toFixed(1);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center">
+    <Modal open onClose={onClose} ariaLabel={`${rateeName} 평점`}>
       <div className="w-full max-w-md rounded-t-2xl bg-card p-5 shadow-xl sm:rounded-2xl">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-base font-bold">
@@ -159,6 +151,6 @@ export default function PlayerRatingDialog({
           </div>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
