@@ -35,11 +35,13 @@
 
 -- date_trunc('minute', timestamptz) 는 STABLE 함수라 인덱스 표현식으로 못 씀(42P17).
 -- timezone 을 명시한 IMMUTABLE wrapper 를 만들어 우회.
+-- search_path = public 명시는 Supabase Security Advisor 권고 (search_path mutable 차단).
 CREATE OR REPLACE FUNCTION public.dues_minute_bucket(ts timestamptz)
 RETURNS timestamp
 LANGUAGE sql
 IMMUTABLE
 PARALLEL SAFE
+SET search_path = public
 AS $$
   SELECT date_trunc('minute', (ts AT TIME ZONE 'UTC')::timestamp);
 $$;
