@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { findOrCreateKakaoUser, setSession } from "@/lib/auth";
 import { sendServerGAEvent } from "@/lib/server/sendGAEvent";
+
+const SIGNUP_SOURCE_COOKIE = "pm_signup_source";
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
@@ -36,6 +39,12 @@ export async function GET(request: NextRequest) {
     });
     const userData = await userRes.json();
 
+    // 가입 출처 쿠키 읽기 (SignupSourceTracker 가 first-touch 저장)
+    // 카카오 OAuth 거치며 referrer 끊기는 문제 회피용.
+    const cookieStore = await cookies();
+    const signupSourceCookie = cookieStore.get(SIGNUP_SOURCE_COOKIE)?.value;
+    const signupSource = signupSourceCookie ? decodeURIComponent(signupSourceCookie).slice(0, 100) : null;
+
     let session;
     let isNewUser = false;
     try {
@@ -43,6 +52,7 @@ export async function GET(request: NextRequest) {
         id: String(userData.id),
         nickname: userData.properties?.nickname ?? "사용자",
         profileImage: userData.properties?.profile_image,
+        signupSource,
       });
       session = result.session;
       isNewUser = result.isNewUser;
@@ -54,6 +64,15 @@ export async function GET(request: NextRequest) {
     }
 
     await setSession(session);
+
+    // 신규 가입자만 쿠키 삭제 — 기존 사용자는 다음 가입 추적용으로 유지 안 함 (이미 끝났음)
+    if (isNewUser && signupSourceCookie) {
+      try {
+        cookieStore.set(SIGNUP_SOURCE_COOKIE, "", { path: "/", maxAge: 0 });
+      } catch {
+        // 삭제 실패해도 다음에 first-touch 정책으로 덮어쓰이지 않음 — 무시
+      }
+    }
 
     // 신규 가입자 — 카카오 인앱 WebView에서 클라이언트 GA가 누락되는 사고 보정용
     // 서버사이드 Measurement Protocol 발화로 가입 측정 정확도 향상.

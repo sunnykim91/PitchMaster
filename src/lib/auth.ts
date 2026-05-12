@@ -211,6 +211,7 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
   id: string;
   nickname: string;
   profileImage?: string;
+  signupSource?: string | null;
 }): Promise<{ session: Session; isNewUser: boolean }> {
   const db = getSupabaseAdmin();
   if (!db) throw new Error("Supabase is not configured");
@@ -282,7 +283,7 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
     };
   }
 
-  // Create new user
+  // Create new user — signup_source 는 카카오 콜백에서 쿠키로 전달됨 (first-touch attribution)
   const { data: newUser, error } = await db
     .from("users")
     .insert({
@@ -290,6 +291,7 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
       name: sanitizeKakaoNickname(kakaoProfile.nickname),
       profile_image_url: normalizeKakaoImageUrl(kakaoProfile.profileImage),
       is_profile_complete: false,
+      signup_source: kakaoProfile.signupSource ?? null,
     })
     .select()
     .single();
