@@ -15,6 +15,7 @@ export function KakaoLoginLink({
   className,
   style,
   onPointerDown,
+  tabIndex,
   children,
 }: {
   href: string;
@@ -22,6 +23,7 @@ export function KakaoLoginLink({
   className?: string;
   style?: CSSProperties;
   onPointerDown?: PointerEventHandler<HTMLAnchorElement>;
+  tabIndex?: number;
   children: ReactNode;
 }) {
   return (
@@ -30,6 +32,7 @@ export function KakaoLoginLink({
       className={className}
       style={style}
       onPointerDown={onPointerDown}
+      tabIndex={tabIndex}
       onClick={() => GA.loginClick(source)}
     >
       {children}

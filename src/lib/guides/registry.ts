@@ -1,7 +1,8 @@
 import * as treasurerStart from "./posts/treasurer-start";
+import * as duesExemptionPolicy from "./posts/dues-exemption-policy";
 import type { GuidePost } from "./types";
 
-const all: GuidePost[] = [treasurerStart];
+const all: GuidePost[] = [treasurerStart, duesExemptionPolicy];
 
 export const guides = Object.fromEntries(all.map((g) => [g.meta.slug, g])) as Record<
   string,

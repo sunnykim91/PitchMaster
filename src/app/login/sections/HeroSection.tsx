@@ -276,7 +276,7 @@ export default function HeroSection({
 
         <div className="w-full max-w-[1280px] mx-auto grid gap-10 lg:gap-14 lg:grid-cols-[1.05fr_1fr] items-center">
           {/* ── TEXT COLUMN ── */}
-          <div>
+          <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
             <motion.span
               variants={fadeUp}
               custom={0}
@@ -301,52 +301,12 @@ export default function HeroSection({
             </motion.span>
 
             <h1
-              className="font-extrabold leading-[1.05] tracking-[-0.03em] text-foreground text-balance mb-[18px] m-0"
+              className="font-extrabold leading-[1.05] tracking-[-0.03em] text-foreground text-balance mb-[20px] m-0"
               style={{ fontSize: "clamp(36px, 8.4vw, 72px)" }}
             >
-              <span className="block">
-                <motion.span
-                  className="relative inline-block whitespace-nowrap px-0.5 text-muted-foreground"
-                  variants={wordVariants}
-                  custom={0}
-                  initial="hidden"
-                  animate="show"
-                >
-                  매주 카톡 투표
-                  <motion.span
-                    aria-hidden
-                    className="absolute left-0 right-0 rounded-[3px] origin-left"
-                    style={{
-                      top: "54%",
-                      height: 4,
-                      background: "hsl(var(--primary))",
-                      boxShadow: "0 0 8px hsl(var(--primary) / 0.5)",
-                      rotate: -3,
-                    }}
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ delay: 0.6, duration: 0.5, ease: [0.65, 0.05, 0.36, 1] }}
-                  />
-                </motion.span>{" "}
-                <motion.span
-                  variants={wordVariants}
-                  custom={1}
-                  initial="hidden"
-                  animate="show"
-                  className="inline-block align-baseline -mb-1 mr-1"
-                  aria-hidden
-                >
-                  <span
-                    className="pm-anim inline-block"
-                    style={{ animation: "pm-ball-spin 12s linear infinite" }}
-                  >
-                    <SoccerBall />
-                  </span>
-                </motion.span>
-              </span>
               <motion.span
                 variants={wordVariants}
-                custom={2}
+                custom={0}
                 initial="hidden"
                 animate="show"
                 className="block"
@@ -375,61 +335,30 @@ export default function HeroSection({
               피치마스터 PitchMaster — 조기축구 · 풋살 팀 관리 웹앱. 참석 투표, 회비 관리, AI 라인업 자동 배치, 전술판, 전술 영상 편집(전술 애니메이션), 경기 기록, MVP 투표를 한 곳에서. 축구 11인제·풋살 5·6인제 모두 지원.
             </h2>
 
-            <motion.p
-              variants={fadeUp}
-              custom={0.7}
-              initial="hidden"
-              animate="show"
-              className="text-muted-foreground text-[15.5px] lg:text-[18.5px] leading-[1.55] m-0 mb-[14px] max-w-[520px] text-pretty"
-              style={{ wordBreak: "keep-all" }}
-            >
-              투표·회비·라인업·기록까지 자동화.{" "}
-              <b className="font-bold text-foreground">
-                {teamN}개 팀 {memberN.toLocaleString("ko-KR")}명
-              </b>
-              이 매주 카톡 대신 PitchMaster를 켭니다.
-            </motion.p>
-
-            {/* 무료 트러스트 라인 — 카드 등록·결제 진입장벽 사전 해소 */}
             <motion.div
               variants={fadeUp}
-              custom={0.78}
+              custom={0.5}
               initial="hidden"
               animate="show"
-              className="inline-flex items-center gap-2 mb-[10px] px-3 py-1.5 rounded-full text-[12.5px] font-semibold"
-              style={{
-                background: "hsl(var(--success) / 0.10)",
-                border: "1px solid hsl(var(--success) / 0.32)",
-                color: "hsl(var(--success))",
-              }}
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-x-3 gap-y-2.5 mb-[34px] text-[13px] text-muted-foreground"
+              style={{ wordBreak: "keep-all" }}
             >
-              <span aria-hidden className="text-[14px]">✓</span>
+              <AvatarStack />
               <span>
-                <b className="font-extrabold">₩0</b> · 광고·결제 없이 현재 무료로 운영 중
+                현재{" "}
+                <NumTip label={`${teamCount}개 팀`} tip={`${teamSampleNames.join(" · ")} · …외 ${Math.max(0, teamCount - teamSampleNames.length)}팀`} />{" "}
+                · <b className="font-bold text-foreground">{memberCount.toLocaleString("ko-KR")}명</b>이 사용 중
               </span>
+              <LiveBadge />
             </motion.div>
-
-            {/* 정통성 라인 — 5년 회장 직접 운영 강조 */}
-            <motion.p
-              variants={fadeUp}
-              custom={0.82}
-              initial="hidden"
-              animate="show"
-              className="mb-[22px] text-[13px] lg:text-[13.5px] leading-[1.5]"
-              style={{ color: "hsl(var(--muted-foreground))" }}
-            >
-              <span aria-hidden className="mr-1.5">🏟️</span>
-              <b className="text-foreground font-semibold">조기축구 5년차 회장</b>이 직접 운영하다 만든,{" "}
-              <b className="text-foreground font-semibold">불필요한 기능 하나 없는</b> 진짜 운영 도구
-            </motion.p>
 
             {/* CTAs */}
             <motion.div
               variants={fadeUp}
-              custom={0.85}
+              custom={0.7}
               initial="hidden"
               animate="show"
-              className="flex flex-col sm:flex-row gap-2.5 mb-[22px] max-w-[460px]"
+              className="flex flex-col sm:flex-row gap-2.5 mb-[14px] max-w-[460px]"
             >
               <KakaoCta
                 kakaoEnabled={kakaoEnabled}
@@ -443,21 +372,23 @@ export default function HeroSection({
               </Suspense>
             </motion.div>
 
+            {/* 무료 트러스트 라인 */}
             <motion.div
               variants={fadeUp}
-              custom={1}
+              custom={0.85}
               initial="hidden"
               animate="show"
-              className="flex flex-wrap items-center gap-x-3 gap-y-2.5 text-[13px] text-muted-foreground"
-              style={{ wordBreak: "keep-all" }}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[12.5px] font-semibold"
+              style={{
+                background: "hsl(var(--success) / 0.10)",
+                border: "1px solid hsl(var(--success) / 0.32)",
+                color: "hsl(var(--success))",
+              }}
             >
-              <AvatarStack />
+              <span aria-hidden className="text-[14px]">✓</span>
               <span>
-                현재{" "}
-                <NumTip label={`${teamCount}개 팀`} tip={`${teamSampleNames.join(" · ")} · …외 ${Math.max(0, teamCount - teamSampleNames.length)}팀`} />{" "}
-                · <b className="font-bold text-foreground">{memberCount.toLocaleString("ko-KR")}명</b>이 사용 중
+                <b className="font-extrabold">₩0</b> · 광고·결제 없이 현재 무료로 운영 중
               </span>
-              <LiveBadge />
             </motion.div>
           </div>
 
@@ -563,20 +494,6 @@ export default function HeroSection({
 /* ------------------------------------------------------------------ *
  * Sub-components
  * ------------------------------------------------------------------ */
-
-function SoccerBall() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden>
-      <circle cx="16" cy="16" r="14" fill="hsl(40 30% 96%)" stroke="#1a1a1a" strokeWidth="1.2" />
-      <path d="M16 5 L21 9 L19 15 L13 15 L11 9 Z" fill="#1a1a1a" />
-      <path
-        d="M16 5 L11 9 M16 5 L21 9 M19 15 L24 17 M13 15 L8 17 M11 9 L5 12 M21 9 L27 12"
-        stroke="#1a1a1a"
-        strokeWidth="1"
-      />
-    </svg>
-  );
-}
 
 function KakaoCta({
   children,

@@ -7,7 +7,7 @@
  * Hero v2의 AvatarStack과 동일한 그라데이션 톤.
  */
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { Star } from "lucide-react";
 
@@ -85,9 +85,26 @@ export default function TestimonialsSection({
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: "-10% 0px" });
   const reduced = useReducedMotion();
+  const [paused, setPaused] = useState(false);
 
   // duplicate for seamless marquee
   const loop = [...T, ...T];
+
+  const onPointerEnter = (e: React.PointerEvent) => {
+    if (e.pointerType === "mouse") setPaused(true);
+  };
+  const onPointerLeave = (e: React.PointerEvent) => {
+    if (e.pointerType === "mouse") setPaused(false);
+  };
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") setPaused(true);
+  };
+  const onPointerUp = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") setPaused(false);
+  };
+  const onPointerCancel = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") setPaused(false);
+  };
 
   return (
     <section
@@ -137,6 +154,11 @@ export default function TestimonialsSection({
       {/* Marquee */}
       <div
         className="relative mt-12 lg:mt-14"
+        onPointerEnter={onPointerEnter}
+        onPointerLeave={onPointerLeave}
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
         style={{
           maskImage:
             "linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%)",
@@ -149,6 +171,7 @@ export default function TestimonialsSection({
           style={{
             width: "max-content",
             animation: reduced ? undefined : "tm-marquee 60s linear infinite",
+            animationPlayState: paused ? "paused" : "running",
           }}
         >
           {loop.map((t, i) => (
@@ -235,9 +258,6 @@ export default function TestimonialsSection({
           @keyframes tm-marquee {
             0%   { transform: translateX(0); }
             100% { transform: translateX(-50%); }
-          }
-          .marquee-track:hover {
-            animation-play-state: paused;
           }
         `}</style>
       </div>

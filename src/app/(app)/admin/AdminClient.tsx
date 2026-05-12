@@ -58,6 +58,7 @@ type AdminStats = {
     totalMatches: number;
     totalPosts: number;
     activeTeams: number;
+    activeUsers: number;
     pendingJoinRequests: number;
   };
   teams: TeamDetail[];
@@ -74,6 +75,7 @@ const emptyData: AdminStats = {
     totalMatches: 0,
     totalPosts: 0,
     activeTeams: 0,
+    activeUsers: 0,
     pendingJoinRequests: 0,
   },
   teams: [],
@@ -185,6 +187,14 @@ export default function AdminClient() {
     overview.totalUsers > 0
       ? Math.round((overview.profileComplete / overview.totalUsers) * 100)
       : 0;
+  const activeUserRate =
+    overview.totalUsers > 0
+      ? Math.round((overview.activeUsers / overview.totalUsers) * 100)
+      : 0;
+  const activeTeamRate =
+    overview.totalTeams > 0
+      ? Math.round((overview.activeTeams / overview.totalTeams) * 100)
+      : 0;
 
   return (
     <div className="space-y-4">
@@ -224,7 +234,7 @@ export default function AdminClient() {
             </div>
             <p className="mt-1 text-2xl font-bold">{overview.totalUsers}</p>
             <p className="text-xs text-muted-foreground">
-              프로필 완료 {overview.profileComplete}명 ({profileRate}%)
+              활성 <span className="text-foreground font-medium">{overview.activeUsers}명</span> ({activeUserRate}%) · 프로필 {profileRate}%
             </p>
           </CardContent>
         </Card>
@@ -246,6 +256,9 @@ export default function AdminClient() {
               <p className="text-sm text-muted-foreground">활성 팀 (14일)</p>
             </div>
             <p className="mt-1 text-2xl font-bold">{overview.activeTeams}</p>
+            <p className="text-xs text-muted-foreground">
+              전체의 {activeTeamRate}%
+            </p>
           </CardContent>
         </Card>
       </div>

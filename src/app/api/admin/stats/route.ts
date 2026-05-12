@@ -19,26 +19,36 @@ export async function GET() {
   const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
 
   // 전체 병렬 쿼리 (개별 팀 쿼리 제거)
-  const [teamsRes, usersRes, matchesRes, postsRes, joinReqRes, recentUsersRes, membersRes, demoMembersRes, recentVotesRes, recentGoalsRes, recentPostsRes, recentDuesRes] =
+  // 각 테이블의 실제 시간 컬럼:
+  //   match_attendance → voted_at  (created_at 없음, 무한 0건 사고 방지)
+  //   match_goals      → created_at
+  //   posts            → created_at
+  //   dues_records     → recorded_at  (created_at 없음)
+  //   matches          → created_at
+  const [teamsRes, usersRes, matchesRes, postsRes, joinReqRes, recentUsersRes, membersRes, demoMembersRes, recentVotesRes, recentGoalsRes, recentPostsRes, recentDuesRes, recentMatchesByCreatorRes, allMembersRes] =
     await Promise.all([
       db.from("teams").select("id, name, sport_type, created_at, is_searchable"),
       db.from("users").select("id, name, created_at, is_profile_complete", { count: "exact" }),
       db.from("matches").select("id, team_id, match_date, status, created_at"),
-      db.from("posts").select("id, team_id, created_at", { count: "exact" }),
+      db.from("posts").select("id, team_id, author_id, created_at", { count: "exact" }),
       db.from("team_join_requests").select("id, team_id, name, status, created_at").eq("status", "PENDING"),
       db.from("users").select("id", { count: "exact" }).gte("created_at", sevenDaysAgo),
       // 전체 멤버 한 번에 조회 (BANNED 제외)
       db.from("team_members").select("team_id, status").in("status", ["ACTIVE", "DORMANT"]),
       // 데모 멤버
       db.from("team_members").select("user_id").eq("team_id", DEMO_TEAM_ID).not("user_id", "is", null),
-      // 최근 투표 (14일)
-      db.from("match_attendance").select("match_id").gte("created_at", fourteenDaysAgo),
-      // 최근 골 기록 (14일)
-      db.from("match_goals").select("match_id").gte("created_at", fourteenDaysAgo),
+      // 최근 투표 (14일) — voted_at 사용. user_id null이면 member_id로 보완
+      db.from("match_attendance").select("match_id, user_id, member_id").gte("voted_at", fourteenDaysAgo),
+      // 최근 골 기록 (14일) — scorer_id는 team_members.id, recorded_by는 user_id
+      db.from("match_goals").select("match_id, scorer_id, recorded_by").gte("created_at", fourteenDaysAgo),
       // 최근 게시글 (14일)
-      db.from("posts").select("team_id").gte("created_at", fourteenDaysAgo),
-      // 최근 회비 내역 (14일)
-      db.from("dues_records").select("team_id").gte("created_at", fourteenDaysAgo),
+      db.from("posts").select("team_id, author_id").gte("created_at", fourteenDaysAgo),
+      // 최근 회비 내역 (14일) — recorded_at 사용
+      db.from("dues_records").select("team_id, user_id, recorded_by").gte("recorded_at", fourteenDaysAgo),
+      // 최근 경기 등록 (14일) — 등록자 활성 카운트용
+      db.from("matches").select("team_id, created_by").gte("created_at", fourteenDaysAgo),
+      // team_members.id → user_id 매핑 (match_attendance.member_id, match_goals.scorer_id 변환용)
+      db.from("team_members").select("id, user_id"),
     ]);
 
   // 데모 제외
@@ -78,31 +88,52 @@ export async function GET() {
   }
 
   // 활성 팀 판단 (14일 내: 경기 등록 / 투표 / 골 기록 / 게시글 / 회비 내역)
+  // 동시에 활성 유저(14일 내 앱에 흔적 남긴 유저) 집합도 누적
   const recentMatches = matches.filter((m: { created_at: string }) => m.created_at >= fourteenDaysAgo);
   const activeTeamIds = new Set(recentMatches.map((m: { team_id: string }) => m.team_id));
+  const activeUserIds = new Set<string>();
 
-  // 투표 활동
-  if (recentVotesRes.data) {
-    const voteMatchIds = new Set(recentVotesRes.data.map((v: { match_id: string }) => v.match_id));
-    for (const m of matches) {
-      if (voteMatchIds.has(m.id)) activeTeamIds.add(m.team_id);
-    }
+  const matchTeamMap = new Map<string, string>(matches.map((m: { id: string; team_id: string }) => [m.id, m.team_id]));
+
+  // team_members.id → user_id 매핑 (member_id / scorer_id 변환)
+  const memberToUser = new Map<string, string>();
+  for (const m of (allMembersRes.data ?? []) as { id: string; user_id: string | null }[]) {
+    if (m.user_id) memberToUser.set(m.id, m.user_id);
   }
-  // 골 기록 활동
-  if (recentGoalsRes.data) {
-    const goalMatchIds = new Set(recentGoalsRes.data.map((g: { match_id: string }) => g.match_id));
-    for (const m of matches) {
-      if (goalMatchIds.has(m.id)) activeTeamIds.add(m.team_id);
-    }
+  const addActiveUser = (uid: string | null | undefined) => {
+    if (uid && !demoMemberIds.has(uid)) activeUserIds.add(uid);
+  };
+
+  // 투표 활동 (팀 + 유저). user_id null이면 member_id → user_id 변환
+  for (const v of (recentVotesRes.data ?? []) as { match_id: string; user_id: string | null; member_id: string | null }[]) {
+    const teamId = matchTeamMap.get(v.match_id);
+    if (teamId) activeTeamIds.add(teamId);
+    addActiveUser(v.user_id ?? (v.member_id ? memberToUser.get(v.member_id) ?? null : null));
   }
-  // 게시글 활동
-  for (const p of recentPostsRes.data ?? []) {
+  // 골 기록 활동 (팀 + scorer/recorded_by 유저)
+  for (const g of (recentGoalsRes.data ?? []) as { match_id: string; scorer_id: string | null; recorded_by: string | null }[]) {
+    const teamId = matchTeamMap.get(g.match_id);
+    if (teamId) activeTeamIds.add(teamId);
+    if (g.scorer_id) addActiveUser(memberToUser.get(g.scorer_id) ?? null);
+    addActiveUser(g.recorded_by);
+  }
+  // 게시글 활동 (팀 + 작성자)
+  for (const p of (recentPostsRes.data ?? []) as { team_id: string; author_id: string | null }[]) {
     activeTeamIds.add(p.team_id);
+    addActiveUser(p.author_id);
   }
-  // 회비 활동
-  for (const d of recentDuesRes.data ?? []) {
+  // 회비 활동 (팀 + 입력자 + 본인 user_id)
+  for (const d of (recentDuesRes.data ?? []) as { team_id: string; user_id: string | null; recorded_by: string | null }[]) {
     activeTeamIds.add(d.team_id);
+    addActiveUser(d.user_id);
+    addActiveUser(d.recorded_by);
   }
+  // 경기 등록 활동 (등록자)
+  for (const m of (recentMatchesByCreatorRes.data ?? []) as { team_id: string; created_by: string | null }[]) {
+    if (m.team_id === DEMO_TEAM_ID) continue;
+    addActiveUser(m.created_by);
+  }
+  activeTeamIds.delete(DEMO_TEAM_ID);
 
   // 팀 상태: 활성 / 휴면 / 미사용
   function getTeamStatus(teamId: string): "active" | "dormant" | "unused" {
@@ -185,6 +216,7 @@ export async function GET() {
       totalMatches: matches.length,
       totalPosts: postsRes.count ?? posts.length,
       activeTeams: activeTeamIds.size,
+      activeUsers: activeUserIds.size,
       pendingJoinRequests: pendingRequests.length,
     },
     teams: teamDetails,

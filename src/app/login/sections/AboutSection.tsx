@@ -469,7 +469,7 @@ export default function AboutSection() {
             style={{
               fontSize: "clamp(30px, 5.4vw, 52px)",
               color: "hsl(40 10% 92%)",
-              lineHeight: 1.05,
+              lineHeight: 1.22,
               fontWeight: 900,
             }}
           >

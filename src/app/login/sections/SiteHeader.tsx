@@ -110,15 +110,17 @@ export default function SiteHeader({
           ))}
         </nav>
 
-        {kakaoEnabled ? (
-          <KakaoLoginLink href={kakaoHref} source="header" className={ctaClass} style={ctaStyle}>
-            {ctaInner}
-          </KakaoLoginLink>
-        ) : (
-          <button type="button" disabled className={`${ctaClass} opacity-60`} style={ctaStyle}>
-            {ctaInner}
-          </button>
-        )}
+        <div className="hidden lg:block">
+          {kakaoEnabled ? (
+            <KakaoLoginLink href={kakaoHref} source="header" className={ctaClass} style={ctaStyle}>
+              {ctaInner}
+            </KakaoLoginLink>
+          ) : (
+            <button type="button" disabled className={`${ctaClass} opacity-60`} style={ctaStyle}>
+              {ctaInner}
+            </button>
+          )}
+        </div>
       </motion.header>
     </MotionConfig>
   );

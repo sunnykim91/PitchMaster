@@ -1,12 +1,254 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~53차)
-summary: 2026-04-11~05-10 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편, 광고 2 결과 분석 + 33초 본 캠페인 게시, 회비 선납→면제 통합 + PitchScore 카드 접힘 + 39차 백로그 반영, 보안 풀스윕 + RLS initPlan + 선납 매칭 + 풋살 AI + 역할 가이드 통일, GA4 서버사이드 + 유니코드→SVG + PitchScore 종목 분리 + 거짓 박제 사고 4건 + 벨로그 4편 발행 + MVP 정책 변경(5/4 cutoff) + 사고 4건, 풋살 자동편성 외톨이 root cause + vitest 21건 갱신 + AI 풀플랜·코치 분석 풋살 동호회 톤 + 가상 전적 hallucination 차단, PitchScore Phase 2C 동료 평가 + SSR 병렬화 + 진입점 이동 + UI 통일 + favicon.ico + SEO 진단, PitchScore Phase 2C 완료·Feature Flag 전체 오픈 + 경기 후기 silent fail fix + 알림 탭 라우팅 + 평가 이력 페이지 + distinct count fix + cron 비활성화, PitchScore Sunset + 평가 UI 전면 제거 + 조기싸커 경쟁사 분석 + 랜딩 Phase 1 (무료 트러스트 라인 + 가격 비교 행) + 5/4 경기 후기 자동 복구 검증, AI 캐시 자동 무효화 + FCMZ 빌드업 데모 + 가이드 친절 톤 전면 재작성 + 편집기 하드코딩 버그 수정 + 카피 단정 표현 일괄 정리, 랜딩 톤 보강 + AboutSection 신설 + 경기별 종목 분리(Phase 1~4) + AI 캐시 무효화 11곳 완성, 휴면팀 회장 카톡 1:1 캠페인 11명 발송 + iOS Capacitor 전략 상담 + 도달 채널 한계 발견, GA4 트래픽 채널 오염 fix, Play Console 프로덕션 신청서 + 광고 D 소재 22.5s 영상 완성, 고도화·보안·성능 풀스윕 + PitchScore 전면 제거 + mvpThreshold 단위 테스트 + root force-dynamic 제거, 가이드 IT 외래어 정리 + 멀티 컴퓨터 메모리 동기화 셋업, 50대 페르소나 UX 감사 + 접근성 보강 + MVP 후기탭 통합 + 골 입력 UX + 랜딩 카피/SEO 개선, 랜딩 About·Comparison v0 리프레시 + 생일축하 기능 노출
-sections: [53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-05-10 (53차)
+title: 개선 백로그 — 최근 완료 (16~54차)
+summary: 2026-04-11~05-11 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편, 광고 2 결과 분석 + 33초 본 캠페인 게시, 회비 선납→면제 통합 + PitchScore 카드 접힘 + 39차 백로그 반영, 보안 풀스윕 + RLS initPlan + 선납 매칭 + 풋살 AI + 역할 가이드 통일, GA4 서버사이드 + 유니코드→SVG + PitchScore 종목 분리 + 거짓 박제 사고 4건 + 벨로그 4편 발행 + MVP 정책 변경(5/4 cutoff) + 사고 4건, 풋살 자동편성 외톨이 root cause + vitest 21건 갱신 + AI 풀플랜·코치 분석 풋살 동호회 톤 + 가상 전적 hallucination 차단, PitchScore Phase 2C 동료 평가 + SSR 병렬화 + 진입점 이동 + UI 통일 + favicon.ico + SEO 진단, PitchScore Phase 2C 완료·Feature Flag 전체 오픈 + 경기 후기 silent fail fix + 알림 탭 라우팅 + 평가 이력 페이지 + distinct count fix + cron 비활성화, PitchScore Sunset + 평가 UI 전면 제거 + 조기싸커 경쟁사 분석 + 랜딩 Phase 1 (무료 트러스트 라인 + 가격 비교 행) + 5/4 경기 후기 자동 복구 검증, AI 캐시 자동 무효화 + FCMZ 빌드업 데모 + 가이드 친절 톤 전면 재작성 + 편집기 하드코딩 버그 수정 + 카피 단정 표현 일괄 정리, 랜딩 톤 보강 + AboutSection 신설 + 경기별 종목 분리(Phase 1~4) + AI 캐시 무효화 11곳 완성, 휴면팀 회장 카톡 1:1 캠페인 11명 발송 + iOS Capacitor 전략 상담 + 도달 채널 한계 발견, GA4 트래픽 채널 오염 fix, Play Console 프로덕션 신청서 + 광고 D 소재 22.5s 영상 완성, 고도화·보안·성능 풀스윕 + PitchScore 전면 제거 + mvpThreshold 단위 테스트 + root force-dynamic 제거, 가이드 IT 외래어 정리 + 멀티 컴퓨터 메모리 동기화 셋업, 50대 페르소나 UX 감사 + 접근성 보강 + MVP 후기탭 통합 + 골 입력 UX + 랜딩 카피/SEO 개선, 랜딩 About·Comparison v0 리프레시 + 생일축하 기능 노출, 50대 페르소나 UX Phase 2~4 — 코치마크·회원 일괄등록·골 쿼터 그룹핑·자체전 PlayerPicker·완료 경기 정정, 광고 5차 게시 — 코드 변경 없음·인스타 앱 부스팅·standalone HTML + OBS 작업, 전술판 영상 접근성·모바일 편집·GIF 공유 통합 개선 + 진입 카드 동적 라벨 + 카드 미리보기 + 합본 GIF + 편집기 UX 가다듬기
+sections: [55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-05-11 (55차)
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~52차)
+# 최근 완료 (16~55차)
+
+## 55차 (2026-05-11, KST) — 전술판 영상 접근성·모바일 편집·GIF 공유 통합 개선
+
+**커밋 2개** (621a0fc 푸시 완료, 1092aef 로컬 보류)
+
+### 주제 1 — 접근성 개선 (621a0fc 일부)
+
+- 햄버거 메뉴 SidebarNav에 "전술 영상" 항목 추가 (STAFF+ only, 경기 일정 다음 위치)
+- 경기 전술 탭 전술판 위 진입 카드 추가 (order: 15)
+
+### 주제 2 — 모바일 편집 UX 개선 (621a0fc 일부)
+
+- `AnimationEditorClient.tsx` SVG 선수 점 r 6→8, 공 r 4→6 (터치 타겟 확대)
+- 장면/컷 탭 `overflow-x-auto` → `flex-wrap` + 최소 높이 32px
+- 액션 바에 캔버스 최대화 토글 추가 (position: fixed inset-0 패턴, iOS Safari 호환)
+
+### 주제 3 — GIF 공유 (621a0fc 일부)
+
+- `gif.js` 패키지 도입 + `public/gif.worker.js`
+- `src/lib/animationExport/gifExport.ts` 신규 (480x480, step 사이 6프레임 linear 보간, 1초 머무름)
+- 영상 목록 카드 + 미리보기 모드에 공격/수비 별도 다운로드 버튼
+
+### 주제 4 — SidebarNav 중복 활성 버그 수정 (621a0fc 일부)
+
+- `/settings/animations` 진입 시 `/settings`도 active되던 prefix 매치 충돌
+- 가장 긴 매치 하나만 active 처리하는 로직으로 수정
+
+### 주제 5 — 진입 카드 동적 라벨·카드 미리보기·합본 GIF·편집기 UX (1092aef, 로컬 보류)
+
+- `MatchTacticsTab` 진입 카드 동적 라벨: 영상 0개("처음 만들기") / N개("감독의 전술노트 X개") + 대표 포메이션 표시
+- `FormationMotionThumb.tsx` 신규 — 64px 정적 SVG 인라인 미리보기
+- `buildGifFilename` 헬퍼: 공백·특수문자 sanitize + 모드 라벨 (공격/수비/공수전체)
+- 합본 GIF: `sections[]` 구조로 공격→수비 순차, 섹션 전환 +600ms 머무름
+- 미리보기 모드 풀스크린 토글 (편집 모드와 maximized state 공유)
+- 메타 정보 카드 기본 접힘: 한 줄 요약(이름 + 대표 뱃지) + ▼ 토글
+
+### 검증
+
+- tsc 에러 0건, vitest 49파일 799케이스 통과, 클린 빌드 성공 (7.1~7.2s)
+
+### 메모리 정리
+
+- `feedback_prepaid_domain_merge.md` 삭제 + MEMORY.md 인덱스 해당 라인 제거 (사용자 요청)
+- 신규 메모리: `feedback_recommendation_grep_first.md`, `feedback_route_prefix_sibling_check.md`
+
+---
+
+## 54차-3 (2026-05-11, KST) — SEO 콘텐츠 인프라 + 블로그 1편 발행 + 면접 답변 검증
+
+**커밋 5개** (9042ad6, 621a0fc, cd283bd, b0572db, d036c58) — SEO/콘텐츠/면접 작업
+
+### 1. /guide HTML 메타 개선 (9042ad6)
+
+- `public/guide.html` title·description·keywords·og·twitter 전면 갱신
+- 이전: "PitchMaster 시작 가이드" (브랜드 검색 전용)
+- 이후: "조기축구·풋살 팀 관리 가이드 — PitchMaster 사용법"
+- GSC/네이버 서치어드바이저 실제 검색어("조기축구 팀관리", "조기축구 앱", "풋살 전술판앱") 기반 키워드 삽입
+- keywords meta 신규 추가 (네이버 서치어드바이저 매칭용)
+
+### 2. /guide/[slug] 정보형 콘텐츠 인프라 (cd283bd)
+
+신규 파일 6개 (423줄 추가):
+- `src/lib/guides/types.ts` — GuideMeta·GuidePost 타입
+- `src/lib/guides/registry.ts` — getGuide·listGuides·guideSlugs
+- `src/app/guide/[slug]/page.tsx` — generateStaticParams + generateMetadata (canonical·og·twitter·JSON-LD Article)
+- `src/lib/guides/posts/treasurer-start.tsx` — 첫 글 (~2500자, 5단계 구조)
+- `src/app/sitemap.ts` 수정 — 가이드 글 자동 등록 (priority 0.8)
+- `src/app/globals.css` 수정 — `.guide-prose` typography (h2·h3·p·ul·strong·a)
+
+첫 글: `/guide/treasurer-start` "조기축구 총무 처음 맡았다면 — 5단계 시작 가이드"
+검색어 매칭: 조기축구 총무, 조기축구 회비 정책, 회장 총무 회비 면제, 동호회 총무 가이드
+
+### 3. 경쟁사 직접 언급 제거 (b0572db)
+
+- 자체 도메인 가이드 본문에서 타 앱 이름 노출 제거 (사용자 지적)
+- '방식 B - 운영 앱 사용' 섹션 일반화, PitchMaster 자연 추천 CTA 유지
+
+### 4. 블로그 초안 2종 작성 (d036c58)
+
+- `docs/blog-guide-treasurer-start-naver.md` — 네이버용 (1인칭 경험담·캐주얼 톤·태그 13개, ~2000자)
+- `docs/blog-guide-treasurer-start-tistory.md` — 티스토리용 (~요/~습니다·마크다운 최소·feedback_blog_style 준수)
+- 사용자 5/11 두 채널 모두 발행 완료
+  - 네이버: blog.naver.com/tjsgnl2002
+  - 티스토리: sunnykim91.tistory.com/155
+
+### 5. 면접 답변 검증 (커밋 없음, 대화 내용)
+
+NHN Dooray 서류 제출 후 면접 예상 질문 3개 검증:
+
+- **Q1 라인업 점수**: `src/lib/formationAI.ts` 100% 규칙 기반. AI 미사용. 공식: (골×3 + 어시×2 + MVP×5 + 출석률×10) + 포지션 매칭 +5/+2/0 탐욕 알고리즘
+- **Q2 회비 OCR**: 은행별 파서 없음. Claude Haiku Vision 단일 프롬프트 6개 은행 일괄 처리. Naver Clova OCR 폴백
+- **Q3 N+1 표현 위험**: "90% 단축" 클레임은 실측 근거 부족. 안전한 표현 = "DB 호출 35회→9회 (74% 감소)" 또는 "/matches/[id] LCP 5265ms→1407ms (73%)" — `docs/resume-pitchmaster-update.md:37` 수정 보류 (다음 세션)
+
+### 6. v0 디자인 시도 3회 실패
+
+랜딩 Hero 영역 v0 재디자인 의뢰:
+- 1차: 너무 미니멀
+- 2차: bento 카드 추가했지만 디테일 약함
+- 3차: 영어 프롬프트도 본질 변화 없음
+- 결론: v0 포기, Claude Design 토큰 초기화(5/13 수요일 오후 5시) 대기
+
+### 7. 2편 콘텐츠 작성 (push 보류)
+
+미커밋 상태 (5/12 발행 계획):
+- `src/lib/guides/posts/dues-exemption-policy.tsx` — "조기축구 회비 면제 정책 비교" 자체 도메인 글
+- `src/lib/guides/registry.ts` 수정 — 2편 등록
+- `docs/blog-guide-dues-exemption-policy-naver.md` — 네이버용
+- `docs/blog-guide-dues-exemption-policy-tistory.md` — 티스토리용
+
+---
+
+## 54차-2 (2026-05-11, KST) — Play Store 알파 테스터 시스템 신규 구축
+
+**커밋 5개** (b8c1102, fdf3ba1, bf08144, 33ee7cc, 5f4494c) — 1086줄 신규 추가
+
+### 배경
+
+Play Console 프로덕션 3차 반려: "비공개 테스트 중 테스터가 앱에 참여하지 않았습니다" + "사용자 의견 수집·조치 미흡". 핵심 원인은 **v1.0.4 release AAB 빌드 미첨부** — 메타데이터만 작성되어 모든 테스터 다운로드 불가.
+
+요건: 검토일(5/11)부터 12명 이상 14일 연속 비공개 테스트 (5/11~5/25).
+
+### 1. 마이그레이션 00067 + API 3개 (`b8c1102`)
+
+- `alpha_testers` (user_id·google_email·registered_at·approved_at·rewarded_at·notes)
+- `alpha_tester_daily_log` (alpha_tester_id·log_date UNIQUE) — KST 자정 기준 1일 1회
+- POST `/api/alpha-testers` — 본인 등록 (20명 cap)
+- POST `/api/alpha-testers/ping` — 일일 출석 ping
+- GET/PATCH/DELETE `/api/admin/alpha-testers` — 어드민용
+
+### 2. AlphaTesterBanner 모달 (`b8c1102`)
+
+- `src/components/AlphaTesterBanner.tsx` 신규 (241줄)
+- 안드로이드 사용자 한정, 대시보드 진입 1초 후 1회성 팝업
+- `localStorage("alpha-tester-modal-shown-v1")` 제어
+- `?alpha=1` 쿼리로 PC 강제 표시
+- 구글 이메일 등록 폼 + 카카오 오픈채팅 안내
+
+### 3. 어드민 페이지 `/admin/alpha-testers` (`b8c1102`)
+
+- 사람별 D1~D14 출석 그리드 (승인일 기준 D1)
+- 30초 자동 새로고침
+- 승인/쿠폰지급 토글, 삭제
+- 14일 연속 12명 도달 시 "프로덕션 신청 가능" 배너
+
+### 4. TWA 전용 ping 가드 (`fdf3ba1`)
+
+- `isTwa()`: `document.referrer === "android-app://app.pitchmaster"` 체크
+- PWA·일반 브라우저 진입은 출석 카운트 안 함
+- Play Console 활성 사용자 통계와 정합성 유지
+
+### 5. 안내메일 단순화 (`bf08144`)
+
+- closed testing은 운영자가 이메일 직접 등록만 해도 테스터가 details URL로 즉시 설치 가능
+- 별도 옵트인 페이지 단계 제거
+
+### 6. 복사 모달 전환 (`33ee7cc`, `5f4494c`)
+
+- ✉ 버튼의 `mailto:` → 복사 모달로 전환
+- 사유: Windows 환경에서 메일 클라이언트 미등록 시 `mailto:` 반응 없음
+- 받는 사람·제목·본문 각각 복사 버튼 + 전체 복사 버튼
+- 모달 사이즈: max-w-3xl + 본문 textarea h-[28rem]
+
+---
+
+## 54차 (2026-05-11, KST) — 광고 5차 게시 (코드 변경 없음)
+
+**PitchMaster repo 커밋 없음** — 광고 집행·영상 작업 전용 세션.
+
+### 1. 광고 5차 게시 결정 및 집행
+
+- 47차에 완성한 22.5초 v6 영상(`Desktop/pitchmaster/video/ad/`) 그대로 사용
+- 채널: 인스타 앱 부스팅 (메타 광고 관리자 대비 UTM 추적 포기 → 셋업 5분·4차 검증된 안전 경로)
+- 캡션 A안 (단톡방 페인 후킹), 해시태그 17개, 위치 Seoul/South Korea, 커버 cut9 CTA
+- 타겟: 1차 6.5~7.6백만(성별 모두) → 남성 좁힘 → 최종 1.9~2.2백만, "5월11일기준타겟" 저장
+- 집행 규모: 일 ₩5,000 × 3일 = 부가세 포함 ₩16,860
+
+### 2. OBS Browser Source 기반 standalone HTML 작성
+
+- 모바일 화질 흐림 호소 → 1920×1080 모니터 → 1080×1920 자동 다운스케일 1차 진단
+- 파일: `C:\Users\온유아빠\Desktop\pitchmaster\video\PitchMaster Ad standalone.html`
+  - cut01~09 + app.jsx 인라인 합본
+  - `?obs` 쿼리파라미터로 UI 숨김 + 자동 loop 활성
+- Chrome `--allow-file-access-from-files` 플래그로 file:// 외부 JSX 로드 우회 (npx serve 실행 권한 거부)
+
+### 3. 영상 화질 흐림 진짜 원인 확정
+
+- OBS 비트레이트 버그(NVENC 단순 모드)와 별개로 **카톡/드라이브 전송 자동 압축**이 진짜 원인
+- Gmail 첨부(25MB 이하) 전송 시 원본 화질 보존 확인 → 향후 전송 경로 확정
+- 메모리 `reference_video_transfer_gmail.md` 기 작성 (53차 후반), `reference_obs_nvenc_bitrate_bug.md` 신규 작성
+
+---
+
+## 53차-2 (2026-05-10, KST) — 50대 페르소나 UX Phase 2~4 본격 진행
+
+**커밋 6개** (3df6dd0, 41734f7, 6f7dc88, 9c98958, e698e29, 23ba64f) — 한 번에 push
+
+### 1. Phase 2 — 휴면 사유 압축 + 카카오 인앱 배너 + OCR 가이드 모달 (`3df6dd0`)
+
+- 휴면 사유 6개 → 3개 (INJURED·PERSONAL·OTHER) — MembersClient·MatchVoteTab 동시 갱신
+- 카카오 인앱 브라우저 감지 시 "외부 브라우저로 열기" 배너 (`DuesBulkTab.tsx` 상단)
+  - 감지: `navigator.userAgent` 내 KAKAOTALK 포함 여부
+  - URL Scheme: `kakaotalk://web/openExternal?url=<encoded>`
+- OCR 기능 사용 가이드 모달 추가 — 어떤 스크린샷이 인식 잘 되는지 SVG 데모 이미지 포함
+  - 실제 통장 이미지 대신 SVG로 직접 UI 재현 (sharp 자동 마스킹 4회 시도 실패 → SVG 전환)
+  - Tailwind v4 `sm:w-[440px]` 미작동 → inline `style={{maxWidth:"min(100vw,440px)"}}` 우회
+
+### 2. 첫 진입 5스텝 코치 마크 (`41734f7`)
+
+- `src/components/OnboardingCoachMark.tsx` 신규
+- 모바일 전용 (window.innerWidth < 768)
+- `data-coach-id` 속성으로 타겟 탐지 → `getBoundingClientRect` 위치 계산 → clip-path spotlight
+- `localStorage.getItem("coachmark_v1")` 1회성 제어
+- 스텝: 햄버거 → 탭바(일정) → 탭바(회비) → 탭바(기록) → 사이드바(설정)
+
+### 3. 회원 일괄 등록 (`6f7dc88`)
+
+- `src/app/(app)/members/MemberBulkUploadModal.tsx` 신규
+- 붙여넣기(paste) 또는 CSV 파일 토글
+- `xlsx` 동적 import (`import("xlsx")`) — 서버 번들 영향 회피
+- `/api/members/bulk` 신규 Route Handler — `validateSafeName` 검증 일괄 적용
+- 검증: 이름 필수·중복·특수문자 차단
+
+### 4. 회원 수정 모달 통합 + xlsx 지원 (`9c98958`)
+
+- `MemberEditModal.tsx` 신규 — 인라인 펼침 편집기 → 통합 모달로 대체
+- xlsx 동적 import 회원 데이터 내보내기 기능 추가
+- 라벨 통일: "관리자 추천 포지션" → "감독 지정 포지션" (MembersClient 전체)
+
+### 5. 골 카드 쿼터별 그룹핑 + 자체전 PlayerPicker A/B팀 분리 (`e698e29`)
+
+- 골 6개 이상 시 쿼터 헤더 + 쿼터별 카드 그룹
+- DnD SortableContext 그룹별 분리 → 같은 쿼터 안에서만 정렬
+- 자체전(INTERNAL) PlayerPicker: `internalTeams` 활용 A팀/B팀 그룹 분리
+  - 팀 색상: default(홈)/guest(원정)/muted(미배정) 구분
+  - `side` 토글 — 수정 시 팀 전환 가능
+
+### 6. 완료 경기 수정 허용(confirm) + 자체전 랜덤 편성 자동 펼침 (`23ba64f`)
+
+- COMPLETED 경기 정보 수정: confirm 다이얼로그 노출 후 "정정" 허용 (기존: 차단)
+- 자체전 랜덤 편성 후 A팀/B팀 결과 accordion 자동 펼침
+
+---
 
 ## 53차 (2026-05-09~10, KST) — 랜딩 About·Comparison v0 리프레시 + 생일축하 기능 노출
 
