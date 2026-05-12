@@ -53,6 +53,9 @@ type RecordStat = {
   preferredPositions: string[];
   jerseyNumber: number | null;
   teamRole: string | null;
+  /** 토글 ON 팀에만 채워짐. OFF면 undefined */
+  avgRating?: number;
+  ratingCount?: number;
 };
 
 function mapSeason(raw: Record<string, unknown>): Season {
@@ -80,6 +83,8 @@ function mapRecord(raw: Record<string, unknown>): RecordStat {
       : [],
     jerseyNumber: (raw.jerseyNumber as number) ?? null,
     teamRole: (raw.teamRole as string) ?? null,
+    avgRating: typeof raw.avgRating === "number" ? Number(raw.avgRating) : undefined,
+    ratingCount: typeof raw.ratingCount === "number" ? Number(raw.ratingCount) : undefined,
   };
 }
 
@@ -242,12 +247,13 @@ export default function RecordsClient({
   const topAssists = useMemo(() => [...stats].sort((a, b) => b.assists - a.assists).slice(0, 3), [stats]);
   const topMvp = useMemo(() => [...stats].sort((a, b) => b.mvp - a.mvp).slice(0, 3), [stats]);
 
-  const [sortKey, setSortKey] = useState<"points" | "goals" | "assists" | "mvp" | "attendanceRate">("points");
+  const [sortKey, setSortKey] = useState<"points" | "goals" | "assists" | "mvp" | "attendanceRate" | "avgRating">("points");
   const allStats = useMemo(() => {
     const withPoints = stats.map((s) => ({ ...s, points: s.goals + s.assists }));
     return [...withPoints].sort((a, b) => {
       if (sortKey === "points") return b.points - a.points;
       if (sortKey === "attendanceRate") return b.attendanceRate - a.attendanceRate;
+      if (sortKey === "avgRating") return (b.avgRating ?? -1) - (a.avgRating ?? -1);
       return (b[sortKey] as number) - (a[sortKey] as number);
     });
   }, [stats, sortKey]);
@@ -661,6 +667,9 @@ export default function RecordsClient({
                           { key: "assists" as const, label: "어시" },
                           { key: "mvp" as const, label: "MVP" },
                           { key: "attendanceRate" as const, label: "출석률" },
+                          ...(allStats.some((s) => s.avgRating !== undefined)
+                            ? [{ key: "avgRating" as const, label: "평점" }]
+                            : []),
                         ]).map((col) => (
                           <th
                             key={col.key}
@@ -707,6 +716,18 @@ export default function RecordsClient({
                             <td className="py-2.5 text-center"><button type="button" disabled={s.assists === 0} onClick={() => openDetail(s.memberId, s.memberName, "assists")} className="text-[hsl(var(--info))] hover:underline disabled:no-underline disabled:cursor-default">{s.assists}</button></td>
                             <td className="py-2.5 text-center"><button type="button" disabled={s.mvp === 0} onClick={() => openDetail(s.memberId, s.memberName, "mvp")} className="text-[hsl(var(--warning))] hover:underline disabled:no-underline disabled:cursor-default">{s.mvp}</button></td>
                             <td className="py-2.5 text-center"><button type="button" onClick={() => openDetail(s.memberId, s.memberName, "attendance")} className="text-primary hover:underline">{Math.round(s.attendanceRate * 100)}%</button></td>
+                            {allStats.some((row) => row.avgRating !== undefined) && (
+                              <td className="py-2.5 text-center tabular-nums">
+                                {s.avgRating !== undefined ? (
+                                  <span className="text-[hsl(var(--warning))]">
+                                    {s.avgRating.toFixed(1)}
+                                    <span className="ml-1 text-[11px] text-muted-foreground">({s.ratingCount ?? 0})</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground">-</span>
+                                )}
+                              </td>
+                            )}
                           </tr>
                         );
                       })}

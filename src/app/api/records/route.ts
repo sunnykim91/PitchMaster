@@ -221,9 +221,10 @@ export async function GET(request: NextRequest) {
 
   // 경기별 MVP winner만 집계 — 참석자 70% 이상 투표 통과 시 최다득표자, 또는 운영진 직접 지정.
   const { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
-  // 새 MVP 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04)
-  const { data: teamSettingsForMvp } = await db.from("teams").select("mvp_vote_staff_only").eq("id", ctx.teamId).maybeSingle();
+  // 새 MVP 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04) + 평점 토글
+  const { data: teamSettingsForMvp } = await db.from("teams").select("mvp_vote_staff_only, player_rating_enabled").eq("id", ctx.teamId).maybeSingle();
   const mvpVoteStaffOnlyForMvp = (teamSettingsForMvp as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
+  const playerRatingEnabledForRecords = (teamSettingsForMvp as { player_rating_enabled?: boolean } | null)?.player_rating_enabled ?? false;
   const matchDateById = new Map<string, string>();
   for (const m of (matches ?? []) as Array<{ id: string; match_date: string }>) matchDateById.set(m.id, m.match_date);
   const attendedPerMatch = new Map<string, number>();
@@ -259,6 +260,22 @@ export async function GET(request: NextRequest) {
     if (row.member_id) attendByMemberId.set(row.member_id, (attendByMemberId.get(row.member_id) ?? 0) + 1);
   }
 
+  // 평점 시즌 집계 — 토글 ON 팀에만 옵셔널 필드. 잠정 도입 (FCO2 팀 요청, 2026-05-12)
+  const ratingSumByUser = new Map<string, { sum: number; count: number }>();
+  if (playerRatingEnabledForRecords && matchIds.length > 0) {
+    const { data: ratingsForSeason } = await db
+      .from("player_ratings")
+      .select("ratee_id, score")
+      .eq("team_id", ctx.teamId)
+      .in("match_id", matchIds);
+    for (const r of (ratingsForSeason ?? []) as Array<{ ratee_id: string; score: number }>) {
+      const cur = ratingSumByUser.get(r.ratee_id) ?? { sum: 0, count: 0 };
+      cur.sum += Number(r.score);
+      cur.count += 1;
+      ratingSumByUser.set(r.ratee_id, cur);
+    }
+  }
+
   // 멤버별 집계 (동기, O(1) 맵 조회)
   const stats = typedMembers.map((m) => {
     const userId = m.user_id;
@@ -275,6 +292,15 @@ export async function GET(request: NextRequest) {
       attendByMemberId.get(memberId) ?? 0
     );
 
+    // 토글 ON 팀에만 옵셔널 평점 필드 — OFF 팀은 응답에서 필드 자체 미포함
+    const ratingAgg = userId ? ratingSumByUser.get(userId) : undefined;
+    const avgRating =
+      playerRatingEnabledForRecords && ratingAgg && ratingAgg.count > 0
+        ? Math.round((ratingAgg.sum / ratingAgg.count) * 10) / 10
+        : undefined;
+    const ratingCount =
+      playerRatingEnabledForRecords && ratingAgg ? ratingAgg.count : undefined;
+
     return {
       memberId: userId ?? memberId,
       name,
@@ -285,6 +311,8 @@ export async function GET(request: NextRequest) {
       preferredPositions: user?.preferred_positions ?? [],
       jerseyNumber: m.jersey_number ?? null,
       teamRole: m.team_role ?? null,
+      ...(avgRating !== undefined && { avgRating }),
+      ...(ratingCount !== undefined && { ratingCount }),
     };
   });
 
