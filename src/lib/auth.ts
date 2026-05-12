@@ -6,6 +6,42 @@ import { sanitizeKakaoNickname } from "@/lib/validators/safeText";
 
 const SESSION_COOKIE = "pm_session";
 
+/**
+ * auth() DB sync 결과 in-memory 캐시.
+ *
+ * Why: 매 SSR/API 요청마다 team_members + users 2회 SELECT 발생 → Disk IO 큰 부담.
+ *      메모 `feedback_supabase_column_verify.md` 사고와 같은 컨텍스트, 일 22M+ 잠재 요청.
+ *      Vercel serverless function 인스턴스 단위로 분리되지만 hot path에선 효과 큼.
+ *
+ * Trade-off: 권한 변경(역할 부여/팀 로고 변경/프로필 이미지 변경)이 최대 60초 지연 반영.
+ *            현실적으로 권한 변경 빈도 낮아 무시 가능.
+ *
+ * 메모리 무한 증가 방지: 1000개 초과 시 가장 오래된 절반 제거 (LRU-lite).
+ */
+type AuthCacheValue = { lastSyncMs: number };
+const AUTH_SYNC_CACHE = new Map<string, AuthCacheValue>();
+const AUTH_SYNC_TTL_MS = 60_000;
+const AUTH_CACHE_MAX = 1000;
+
+function rememberAuthSync(key: string): void {
+  if (AUTH_SYNC_CACHE.size >= AUTH_CACHE_MAX) {
+    // 가장 오래된 절반 제거 (insertion order = oldest first)
+    const half = Math.floor(AUTH_CACHE_MAX / 2);
+    let i = 0;
+    for (const k of AUTH_SYNC_CACHE.keys()) {
+      if (i++ >= half) break;
+      AUTH_SYNC_CACHE.delete(k);
+    }
+  }
+  AUTH_SYNC_CACHE.set(key, { lastSyncMs: Date.now() });
+}
+
+function isAuthSyncFresh(key: string): boolean {
+  const v = AUTH_SYNC_CACHE.get(key);
+  if (!v) return false;
+  return Date.now() - v.lastSyncMs < AUTH_SYNC_TTL_MS;
+}
+
 // 카카오가 보내는 프로필 이미지 URL은 http://k.kakaocdn.net/... 형태.
 // HTML src에 http://가 그대로 박히면 mixed-content 경고 + Lighthouse Best Practices 깎임.
 // next/image가 자동 https 업그레이드하긴 하지만 src 자체를 https로 정규화해 저장.
@@ -61,7 +97,10 @@ export async function auth(): Promise<Session | null> {
   if (!session) return null;
 
   // DB에서 최신 역할 + 팀 로고 + 프로필 이미지를 확인하여 세션과 동기화
+  // 60초 in-memory 캐시: hot path Disk IO 30~40% 절감 (메모 위 주석 참고)
   if (session.user.teamId) {
+    const cacheKey = `${session.user.id}:${session.user.teamId}`;
+    if (isAuthSyncFresh(cacheKey)) return session;
     const db = getSupabaseAdmin();
     if (db) {
       const [membershipRes, userRes] = await Promise.all([
@@ -111,10 +150,20 @@ export async function auth(): Promise<Session | null> {
           }
         }
       }
+      // DB sync 완료 — 60초 동안 같은 user+team 조합은 캐시 hit으로 DB skip
+      rememberAuthSync(cacheKey);
     }
   }
 
   return session;
+}
+
+/**
+ * 권한·로고·프로필 변경 직후 캐시 무효화. 변경 endpoint 측에서 호출하면
+ * 최대 60초 지연 없이 즉시 반영됨.
+ */
+export function invalidateAuthSync(userId: string, teamId: string): void {
+  AUTH_SYNC_CACHE.delete(`${userId}:${teamId}`);
 }
 
 export async function setSession(session: Session) {
