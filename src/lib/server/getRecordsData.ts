@@ -30,7 +30,7 @@ export async function getRecordsData(teamId: string) {
       .eq("team_id", teamId)
       .order("start_date", { ascending: false }),
     db.from("teams")
-      .select("mvp_vote_staff_only")
+      .select("mvp_vote_staff_only, player_rating_enabled")
       .eq("id", teamId)
       .maybeSingle(),
   ]);
@@ -39,6 +39,7 @@ export async function getRecordsData(teamId: string) {
   const activeSeason = seasonList.find((s) => s.is_active) ?? seasonList[0];
   const activeSeasonId: string | null = activeSeason?.id ?? null;
   const mvpVoteStaffOnly = teamSettingsRes.data?.mvp_vote_staff_only ?? false;
+  const playerRatingEnabled = teamSettingsRes.data?.player_rating_enabled ?? false;
 
   if (!activeSeasonId) return { seasons: seasonList, activeSeasonId: null, records: [] };
 
@@ -128,12 +129,16 @@ export async function getRecordsData(teamId: string) {
 
   // ── Stage 3: 통계 raw 데이터 일괄 (이전 6개 + allGoals 별도 → 5개로 통합) ──
   // match_goals 한 번에 가져와 goalMap·matchScores 양쪽 사용 (이전 중복 fetch 제거)
-  const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes] = await Promise.all([
+  // 평점은 토글 ON 팀에만 추가 쿼리 (FCO2 팀 잠정 도입, 2026-05-12)
+  const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes, ratingsRes] = await Promise.all([
     db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", matchIds),
     db.from("match_goals").select("assist_id").in("match_id", matchIds).not("assist_id", "is", null),
     db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision").in("match_id", matchIds),
     db.from("match_attendance").select("user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
     db.from("match_attendance").select("match_id").in("match_id", matchIds).in("attendance_status", ["PRESENT", "LATE"]),
+    playerRatingEnabled
+      ? db.from("player_ratings").select("ratee_id, score").eq("team_id", teamId).in("match_id", matchIds)
+      : Promise.resolve({ data: null }),
   ]);
 
   type GoalRow = { match_id: string; scorer_id: string; is_own_goal: boolean };
@@ -182,6 +187,17 @@ export async function getRecordsData(teamId: string) {
     if (winner) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
   }
 
+  // 평점 시즌 집계 (토글 ON 팀만)
+  const ratingSumByUser = new Map<string, { sum: number; count: number }>();
+  if (playerRatingEnabled && ratingsRes.data) {
+    for (const r of ratingsRes.data as Array<{ ratee_id: string; score: number }>) {
+      const cur = ratingSumByUser.get(r.ratee_id) ?? { sum: 0, count: 0 };
+      cur.sum += Number(r.score);
+      cur.count += 1;
+      ratingSumByUser.set(r.ratee_id, cur);
+    }
+  }
+
   const records = typedMembers.map((m) => {
     const userId = m.user_id;
     const memberId = m.id;
@@ -191,6 +207,16 @@ export async function getRecordsData(teamId: string) {
       userId ? (attendByUser.get(userId) ?? 0) : 0,
       attendByMember.get(memberId) ?? 0
     );
+
+    // 평점 — 토글 ON 팀만 옵셔널 필드. OFF는 undefined → 응답 미포함
+    const ratingAgg = userId ? ratingSumByUser.get(userId) : undefined;
+    const avgRating =
+      playerRatingEnabled && ratingAgg && ratingAgg.count > 0
+        ? Math.round((ratingAgg.sum / ratingAgg.count) * 10) / 10
+        : undefined;
+    const ratingCount =
+      playerRatingEnabled && ratingAgg ? ratingAgg.count : undefined;
+
     return {
       memberId: userId ?? memberId,
       name: user?.name ?? m.pre_name ?? "",
@@ -201,6 +227,8 @@ export async function getRecordsData(teamId: string) {
       preferredPositions: user?.preferred_positions ?? [],
       jerseyNumber: m.jersey_number ?? null,
       teamRole: m.team_role ?? null,
+      ...(avgRating !== undefined && { avgRating }),
+      ...(ratingCount !== undefined && { ratingCount }),
     };
   });
 
