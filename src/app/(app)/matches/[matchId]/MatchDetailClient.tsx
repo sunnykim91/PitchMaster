@@ -133,7 +133,7 @@ export default function MatchDetailClient({
   // (일정 목록은 서버에서 teamUniform prop 직접 전달해 정상이지만 여기는 useApi 경유)
   const {
     data: teamData,
-  } = useApi<{ team: { sport_type?: SportType; player_count?: number; uniform_primary?: string; uniform_secondary?: string; uniform_pattern?: string; uniforms?: { home?: { primary: string; secondary: string; pattern: string }; away?: { primary: string; secondary: string; pattern: string }; third?: { primary: string; secondary: string; pattern: string } | null } | null; default_formation_id?: string; stats_recording_staff_only?: boolean; mvp_vote_staff_only?: boolean } }>(
+  } = useApi<{ team: { sport_type?: SportType; player_count?: number; uniform_primary?: string; uniform_secondary?: string; uniform_pattern?: string; uniforms?: { home?: { primary: string; secondary: string; pattern: string }; away?: { primary: string; secondary: string; pattern: string }; third?: { primary: string; secondary: string; pattern: string } | null } | null; default_formation_id?: string; stats_recording_staff_only?: boolean; mvp_vote_staff_only?: boolean; player_rating_enabled?: boolean } }>(
     "/api/teams",
     initialData?.team ?? { team: {} },
     // SSR initialData 의 team.sport_type 이 실제로 채워진 경우만 skip — 빈 객체({})면 client fetch
@@ -159,6 +159,7 @@ export default function MatchDetailClient({
   const defaultFormationId = teamData.team?.default_formation_id ?? "";
   const statsRecordingStaffOnly = teamData.team?.stats_recording_staff_only ?? false;
   const mvpVoteStaffOnly = teamData.team?.mvp_vote_staff_only ?? false;
+  const playerRatingEnabled = teamData.team?.player_rating_enabled ?? false;
 
   const {
     data: voteData,
@@ -795,6 +796,8 @@ export default function MatchDetailClient({
             aiSummary={initialData?.aiSummary ?? null}
             canRegenerateAi={enableAiSummary}
             aiSummaryRegenerateCount={initialData?.aiSummaryRegenerateCount ?? 0}
+            playerRatingEnabled={playerRatingEnabled}
+            canRatePlayers={isStaffOrAbove(role)}
           />
         </div>
       )}

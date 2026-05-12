@@ -4,6 +4,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Camera, X as XIcon, Trash2, ImageIcon, MessageCircle, Copy, Download, RefreshCw, Trophy } from "lucide-react";
 import { ImageLightbox } from "@/components/ImageLightbox";
+import PlayerRatingCard from "@/components/playerRating/PlayerRatingCard";
 import { apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
 import { useItemAction } from "@/lib/useAsyncAction";
@@ -54,6 +55,10 @@ export interface MatchDiaryTabProps {
   canRegenerateAi?: boolean;
   /** AI 후기 재생성 횟수 (0 = 재생성 가능, 1 = 소진) */
   aiSummaryRegenerateCount?: number;
+  /** 팀 토글 — 운영진 평점 기능 활성화 여부 (기본 OFF, FCO2 팀 요청 잠정 도입) */
+  playerRatingEnabled?: boolean;
+  /** STAFF+ 여부 — 평점 입력·수정·삭제 권한 */
+  canRatePlayers?: boolean;
 }
 
 function MatchDiaryTabInner({
@@ -76,6 +81,8 @@ function MatchDiaryTabInner({
   aiSummary,
   canRegenerateAi,
   aiSummaryRegenerateCount = 0,
+  playerRatingEnabled = false,
+  canRatePlayers = false,
 }: MatchDiaryTabProps) {
   const [runMvpVote, mvpVotingId] = useItemAction();
 
@@ -569,6 +576,16 @@ function MatchDiaryTabInner({
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* ══ 운영진 평점 — 토글 ON 팀 + 완료된 경기 한정 (FCO2 팀 요청 잠정 도입) ══ */}
+      {playerRatingEnabled && match.status === "COMPLETED" && (
+        <PlayerRatingCard
+          matchId={matchId}
+          candidates={(mvpCandidates ?? attendingMembers).map((p) => ({ id: p.id, name: p.name }))}
+          viewerUserId={userId}
+          canRate={canRatePlayers}
+        />
       )}
 
       {/* ══ AI가 정리한 경기 (수동 작성 일지와 구분 위해 스코어·사진 아래에 배치) ══ */}
