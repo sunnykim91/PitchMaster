@@ -36,6 +36,7 @@ export default async function SettingsPage() {
         defaultFormationId: (t?.default_formation_id as string | null) ?? "",
         statsRecordingStaffOnly: (t?.stats_recording_staff_only as boolean) ?? false,
         mvpVoteStaffOnly: (t?.mvp_vote_staff_only as boolean) ?? false,
+        playerRatingEnabled: (t?.player_rating_enabled as boolean) ?? false,
         sportType: ((t?.sport_type as string) === "FUTSAL" ? "FUTSAL" : "SOCCER"),
         defaultPlayerCount: (t?.default_player_count as number | undefined) ?? undefined,
       }}

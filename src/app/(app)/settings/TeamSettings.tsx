@@ -35,6 +35,7 @@ export type TeamSettingsData = {
   defaultFormationId: string;
   statsRecordingStaffOnly: boolean;
   mvpVoteStaffOnly: boolean;
+  playerRatingEnabled: boolean;
   sportType?: "SOCCER" | "FUTSAL";
   defaultPlayerCount?: number;
 };
@@ -142,6 +143,30 @@ function TeamSettingsComponent({
         newVal
           ? "이제 운영진만 MVP 투표를 할 수 있습니다."
           : "모든 참석 회원이 MVP 투표를 할 수 있습니다."
+      );
+      teamSyncedRef.current = false;
+      await refetchTeam();
+    }
+    setTimeout(() => setMessage(null), 2500);
+  }
+
+  // ── 운영진 평점 기능 토글 (기본 OFF, FCO2 팀 요청으로 잠정 도입) ──
+  const [playerRatingLoading, setPlayerRatingLoading] = useState(false);
+
+  async function handleTogglePlayerRatingEnabled() {
+    if (!canEditTeam) return;
+    setPlayerRatingLoading(true);
+    const newVal = !team.playerRatingEnabled;
+    const { error } = await apiMutate("/api/teams", "PUT", { playerRatingEnabled: newVal });
+    setPlayerRatingLoading(false);
+    if (error) {
+      setMessage(toKoreanError(String(error)));
+    } else {
+      setTeam({ ...team, playerRatingEnabled: newVal });
+      setMessage(
+        newVal
+          ? "운영진 평점 기능이 켜졌어요. 경기 일지에서 회원별 평점을 남길 수 있습니다."
+          : "운영진 평점 기능이 꺼졌어요. 기존 평점 데이터는 보존됩니다."
       );
       teamSyncedRef.current = false;
       await refetchTeam();
@@ -416,6 +441,43 @@ function TeamSettingsComponent({
                       pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg
                       ring-0 transition-transform duration-200 ease-in-out
                       ${team.mvpVoteStaffOnly ? "translate-x-5" : "translate-x-0.5"}
+                    `}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* 운영진 평점 기능 (기본 OFF, 잠정 도입) */}
+            <div className="rounded-xl border border-border p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <p className="text-sm font-semibold">운영진 평점 기능</p>
+                  <p className="text-xs text-muted-foreground">
+                    {team.playerRatingEnabled
+                      ? "감독·운영진이 경기마다 회원별 평점과 코멘트를 남깁니다. 평점은 모두 볼 수 있고, 코멘트는 본인에게 달린 것만 본인이 볼 수 있어요."
+                      : "꺼져 있어요. 켜면 경기 일지에 회원 평점 카드가 노출됩니다."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={team.playerRatingEnabled}
+                  aria-label="운영진 평점 기능"
+                  disabled={!canEditTeam || playerRatingLoading}
+                  onClick={handleTogglePlayerRatingEnabled}
+                  className={`
+                    relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full
+                    transition-colors duration-200 ease-in-out
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
+                    disabled:cursor-not-allowed disabled:opacity-50
+                    ${team.playerRatingEnabled ? "bg-primary" : "bg-muted"}
+                  `}
+                >
+                  <span
+                    className={`
+                      pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg
+                      ring-0 transition-transform duration-200 ease-in-out
+                      ${team.playerRatingEnabled ? "translate-x-5" : "translate-x-0.5"}
                     `}
                   />
                 </button>
