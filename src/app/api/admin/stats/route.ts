@@ -28,7 +28,7 @@ export async function GET() {
   const [teamsRes, usersRes, matchesRes, postsRes, joinReqRes, recentUsersRes, membersRes, demoMembersRes, recentVotesRes, recentGoalsRes, recentPostsRes, recentDuesRes, recentMatchesByCreatorRes, allMembersRes] =
     await Promise.all([
       db.from("teams").select("id, name, sport_type, created_at, is_searchable"),
-      db.from("users").select("id, name, created_at, is_profile_complete", { count: "exact" }),
+      db.from("users").select("id, name, created_at, is_profile_complete, signup_source", { count: "exact" }),
       db.from("matches").select("id, team_id, match_date, status, created_at"),
       db.from("posts").select("id, team_id, author_id, created_at", { count: "exact" }),
       db.from("team_join_requests").select("id, team_id, name, status, created_at").eq("status", "PENDING"),
@@ -187,6 +187,32 @@ export async function GET() {
     }
   }
 
+  // === 가입 출처별 cohort 분석 (30일 내 가입자) ===
+  // signup_source 컬럼은 2026-05-12 도입. 그 전 가입자는 NULL → "미추적" 그룹.
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  type UserWithSource = { id: string; created_at: string; signup_source: string | null };
+  const recent30dUsers = (users as UserWithSource[]).filter(
+    (u) => u.created_at && u.created_at >= thirtyDaysAgo,
+  );
+
+  const sourceMap = new Map<string, { signups: number; activeUsers: number }>();
+  for (const u of recent30dUsers) {
+    const key = u.signup_source && u.signup_source.trim() ? u.signup_source : "(미추적)";
+    const bucket = sourceMap.get(key) ?? { signups: 0, activeUsers: 0 };
+    bucket.signups += 1;
+    if (activeUserIds.has(u.id)) bucket.activeUsers += 1;
+    sourceMap.set(key, bucket);
+  }
+
+  const signupSourceCohorts = Array.from(sourceMap.entries())
+    .map(([source, { signups, activeUsers }]) => ({
+      source,
+      signups,
+      activeUsers,
+      activeRate: signups > 0 ? Math.round((activeUsers / signups) * 100) : 0,
+    }))
+    .sort((a, b) => b.signups - a.signups);
+
   const recentSignups = {
     users: recentUsersList.map((u: { id: string; name: string; created_at: string; is_profile_complete: boolean }) => ({
       id: u.id,
@@ -228,5 +254,6 @@ export async function GET() {
       createdAt: r.created_at,
     })),
     recentSignups,
+    signupSourceCohorts,
   });
 }

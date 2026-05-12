@@ -49,6 +49,13 @@ type RecentSignupTeam = {
   memberCount: number;
 };
 
+type SignupSourceCohort = {
+  source: string;
+  signups: number;
+  activeUsers: number;
+  activeRate: number;
+};
+
 type AdminStats = {
   overview: {
     totalTeams: number;
@@ -64,6 +71,7 @@ type AdminStats = {
   teams: TeamDetail[];
   pendingRequests: PendingRequest[];
   recentSignups: { users: RecentSignupUser[]; teams: RecentSignupTeam[] };
+  signupSourceCohorts: SignupSourceCohort[];
 };
 
 const emptyData: AdminStats = {
@@ -81,6 +89,7 @@ const emptyData: AdminStats = {
   teams: [],
   pendingRequests: [],
   recentSignups: { users: [], teams: [] },
+  signupSourceCohorts: [],
 };
 
 // ── Helpers ────────────────────────────────────────────
@@ -182,7 +191,8 @@ export default function AdminClient() {
     );
   }
 
-  const { overview, teams, pendingRequests, recentSignups } = data;
+  const { overview, teams, pendingRequests, recentSignups, signupSourceCohorts } = data;
+  const cohortMaxSignups = Math.max(1, ...signupSourceCohorts.map((c) => c.signups));
   const profileRate =
     overview.totalUsers > 0
       ? Math.round((overview.profileComplete / overview.totalUsers) * 100)
@@ -368,6 +378,71 @@ export default function AdminClient() {
           </CardContent>
         </Card>
       </div>
+
+      {/* ── 가입 출처별 코호트 (30일) ── */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Activity className="h-4 w-4 text-primary" />
+            가입 출처별 코호트 (30일)
+            <Badge variant="secondary" className="ml-auto">{signupSourceCohorts.length}개 채널</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {signupSourceCohorts.length === 0 ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">최근 30일 가입자가 없습니다.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[480px]">
+                <thead>
+                  <tr className="border-b border-border text-left text-muted-foreground">
+                    <th className="py-2 pr-4 font-medium">출처</th>
+                    <th className="py-2 pr-4 font-medium text-right">가입</th>
+                    <th className="py-2 pr-4 font-medium text-right">활성</th>
+                    <th className="py-2 pr-4 font-medium text-right">활성률</th>
+                    <th className="py-2 font-medium">분포</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {signupSourceCohorts.map((c) => {
+                    const widthPct = Math.round((c.signups / cohortMaxSignups) * 100);
+                    const rateColor =
+                      c.activeRate >= 50 ? "text-[hsl(var(--success))]"
+                      : c.activeRate >= 25 ? "text-[hsl(var(--warning))]"
+                      : "text-muted-foreground";
+                    const isUntracked = c.source === "(미추적)";
+                    return (
+                      <tr key={c.source} className="border-b border-border/50 last:border-0">
+                        <td className="py-2.5 pr-4">
+                          <span className={cn("font-medium", isUntracked && "text-muted-foreground italic")}>
+                            {c.source}
+                          </span>
+                        </td>
+                        <td className="py-2.5 pr-4 text-right tabular-nums">{c.signups}</td>
+                        <td className="py-2.5 pr-4 text-right tabular-nums">{c.activeUsers}</td>
+                        <td className={cn("py-2.5 pr-4 text-right tabular-nums font-medium", rateColor)}>
+                          {c.activeRate}%
+                        </td>
+                        <td className="py-2.5 min-w-[80px]">
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary/50">
+                            <div
+                              className="h-full rounded-full bg-primary transition-all duration-500"
+                              style={{ width: `${widthPct}%` }}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <p className="mt-3 text-xs text-muted-foreground">
+                활성 = 14일 내 투표·골·게시글·회비·매치등록 등 흔적 있음. signup_source 추적 시작 2026-05-12.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* ── Team Table ── */}
       <Card>
