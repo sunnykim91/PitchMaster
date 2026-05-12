@@ -14,6 +14,8 @@ export const meta: GuideMeta = {
     "풋살 회비 면제",
     "조기축구 회비 정책",
     "조기축구 회칙",
+    "회비 OCR 자동 파싱",
+    "조기축구 회비 총무 자동화",
   ],
   category: "회비",
   publishedAt: "2026-05-12",

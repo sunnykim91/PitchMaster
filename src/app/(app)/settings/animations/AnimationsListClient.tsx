@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Plus, Trash2, Star, Pencil, Loader2, Copy, Download } from "lucide-react";
+import { Plus, Trash2, Star, Pencil, Loader2, Copy, Download } from "lucide-react";
 import { exportMotionAsGif, downloadBlob, buildGifFilename } from "@/lib/animationExport/gifExport";
 import FormationMotionThumb from "@/components/FormationMotionThumb";
+import BackButton from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/lib/ToastContext";
@@ -263,14 +264,13 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-6 sm:py-8">
-      {/* 뒤로가기 */}
-      <Link
-        href="/settings?tab=team"
+      {/* 뒤로가기 — 진입 경로(팀 설정·경기 전술·SidebarNav)에 따라 동적 복귀 */}
+      <BackButton
+        label="뒤로"
+        fallbackHref="/settings?tab=team"
         className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        팀 설정으로 돌아가기
-      </Link>
+      />
+
 
       {/* 헤더 */}
       <header className="mb-5">
