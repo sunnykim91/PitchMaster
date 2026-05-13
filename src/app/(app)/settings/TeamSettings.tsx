@@ -92,6 +92,29 @@ function TeamSettingsComponent({
   const canEditTeam = isPresident(role);
   const canManageRequests = isStaffOrAbove(role);
 
+  // ── 미저장 팀 설정 변경 시 페이지 이탈 경고 ──
+  const initialTeamRef = useRef<string | null>(null);
+  const prevSavingTeamRef = useRef(saving);
+  useEffect(() => {
+    if (initialTeamRef.current === null) {
+      initialTeamRef.current = JSON.stringify(team);
+    }
+  }, [team]);
+  useEffect(() => {
+    if (prevSavingTeamRef.current && !saving) {
+      initialTeamRef.current = JSON.stringify(team);
+    }
+    prevSavingTeamRef.current = saving;
+  }, [saving, team]);
+  const teamDirty = initialTeamRef.current !== null
+    && initialTeamRef.current !== JSON.stringify(team);
+  useEffect(() => {
+    if (!teamDirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [teamDirty]);
+
   const uniformPrimary = team.uniformPrimary ?? "#2563eb";
   const uniformSecondary = team.uniformSecondary ?? "#f97316";
   const uniformPattern = team.uniformPattern ?? "SOLID";

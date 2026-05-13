@@ -37,6 +37,24 @@ import {
   Minimize2,
   Download,
 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  horizontalListSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { exportMotionAsGif, downloadBlob, buildGifFilename } from "@/lib/animationExport/gifExport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -163,6 +181,14 @@ export default function AnimationEditorClient({ initial }: Props) {
     setStepIdx(0);
   }, [phaseIdx]);
 
+  // ── 저장 안 한 채 탭 닫기·새로고침·뒤로가기 시도 시 브라우저 경고 ──
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+
   // 데이터 변경 시 dirty
   function patchData(next: TacticalAnimationData) {
     setData(next);
@@ -268,6 +294,29 @@ export default function AnimationEditorClient({ initial }: Props) {
     if (!ok) return;
     patchPhase((p) => ({ ...p, steps: p.steps.filter((_, i) => i !== stepIdx) }));
     setStepIdx(Math.max(0, stepIdx - 1));
+  }
+
+  // ── 컷 순서 드래그 (long-press 200ms 활성화) ──
+  const stepSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  function handleStepDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIndex = Number(String(active.id).replace("step-", ""));
+    const newIndex = Number(String(over.id).replace("step-", ""));
+    if (!Number.isFinite(oldIndex) || !Number.isFinite(newIndex)) return;
+    if (oldIndex < 0 || newIndex < 0) return;
+    patchPhase((p) => ({ ...p, steps: arrayMove(p.steps, oldIndex, newIndex) }));
+    // 선택된 컷이 함께 이동하도록 stepIdx 추적
+    let nextIdx = stepIdx;
+    if (stepIdx === oldIndex) nextIdx = newIndex;
+    else if (oldIndex < stepIdx && stepIdx <= newIndex) nextIdx = stepIdx - 1;
+    else if (newIndex <= stepIdx && stepIdx < oldIndex) nextIdx = stepIdx + 1;
+    setStepIdx(nextIdx);
   }
 
   function setCaption(caption: string) {
@@ -643,25 +692,32 @@ export default function AnimationEditorClient({ initial }: Props) {
       </div>
 
       {/* 컷 탭 (step) */}
-      <div className="mb-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
-        장면 안의 컷 (이어 재생되며 영상이 됨)
+      <div className="mb-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
+        <div className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
+          장면 안의 컷 (이어 재생되며 영상이 됨)
+        </div>
+        {steps.length > 1 && (
+          <div className="text-[11px] font-normal normal-case tracking-normal text-muted-foreground/70">
+            💡 컷 번호 꾹 눌러 순서 변경
+          </div>
+        )}
       </div>
       <div className="mb-2 flex flex-wrap items-center gap-1 pb-1">
-        {steps.map((s, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => setStepIdx(i)}
-            className={cn(
-              "min-h-[32px] min-w-[32px] rounded px-2 py-1.5 text-[12.5px] font-semibold tabular-nums transition-colors",
-              i === stepIdx
-                ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]"
-                : "text-muted-foreground hover:text-foreground",
-            )}
+        <DndContext sensors={stepSensors} collisionDetection={closestCenter} onDragEnd={handleStepDragEnd}>
+          <SortableContext
+            items={steps.map((_, i) => `step-${i}`)}
+            strategy={horizontalListSortingStrategy}
           >
-            {i + 1}
-          </button>
-        ))}
+            {steps.map((_, i) => (
+              <SortableStepChip
+                key={`step-${i}`}
+                index={i}
+                active={i === stepIdx}
+                onSelect={() => setStepIdx(i)}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
         <button
           type="button"
           onClick={addStep}
@@ -840,5 +896,48 @@ export default function AnimationEditorClient({ initial }: Props) {
       )}
 
     </div>
+  );
+}
+
+/**
+ * 컷 번호 칩 — long-press(200ms) 드래그로 순서 변경, 짧은 탭은 선택.
+ * activationConstraint.delay 덕분에 onClick은 정상 동작.
+ */
+function SortableStepChip({
+  index,
+  active,
+  onSelect,
+}: {
+  index: number;
+  active: boolean;
+  onSelect: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: `step-${index}`,
+  });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+  };
+  return (
+    <button
+      ref={setNodeRef}
+      style={style}
+      type="button"
+      onClick={onSelect}
+      {...attributes}
+      {...listeners}
+      aria-label={`컷 ${index + 1} 선택 (길게 눌러 순서 변경)`}
+      className={cn(
+        "min-h-[32px] min-w-[32px] rounded px-2 py-1.5 text-[12.5px] font-semibold tabular-nums transition-colors touch-none select-none",
+        active
+          ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]"
+          : "text-muted-foreground hover:text-foreground",
+        isDragging && "scale-[1.08] shadow-lg ring-2 ring-[hsl(var(--primary))]/40 cursor-grabbing",
+      )}
+    >
+      {index + 1}
+    </button>
   );
 }

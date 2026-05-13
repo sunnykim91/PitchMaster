@@ -16,7 +16,7 @@
  * 핸들러는 부모(MembersClient)에서 props로 전달 — confirm·refetch 로직 재사용.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -91,15 +91,40 @@ export function MemberEditModal({
 
   useEffect(() => { setMounted(true); }, []);
 
-  // 모달 열릴 때 member 정보로 state 초기화
+  // 모달 열릴 때 member 정보로 state 초기화 + dirty 비교용 초기 snapshot 저장
+  const initialSnapshotRef = useRef<string>("");
   useEffect(() => {
     if (!open || !member) return;
-    setJerseyValue(member.jerseyNumber !== null ? String(member.jerseyNumber) : "");
-    setCoachPos(member.coachPositions);
-    setDormantType(member.dormantType || "INJURED");
-    setDormantUntil(member.dormantUntil || "");
-    setDormantReason(member.dormantReason || "");
+    const jersey = member.jerseyNumber !== null ? String(member.jerseyNumber) : "";
+    const cpos = member.coachPositions;
+    const dType = member.dormantType || "INJURED";
+    const dUntil = member.dormantUntil || "";
+    const dReason = member.dormantReason || "";
+    setJerseyValue(jersey);
+    setCoachPos(cpos);
+    setDormantType(dType);
+    setDormantUntil(dUntil);
+    setDormantReason(dReason);
+    initialSnapshotRef.current = JSON.stringify({ jersey, cpos, dType, dUntil, dReason });
   }, [open, member]);
+
+  // 미저장 변경 시 페이지 이탈 경고
+  const dirty = (() => {
+    if (!open || !initialSnapshotRef.current) return false;
+    return initialSnapshotRef.current !== JSON.stringify({
+      jersey: jerseyValue,
+      cpos: coachPos,
+      dType: dormantType,
+      dUntil: dormantUntil,
+      dReason: dormantReason,
+    });
+  })();
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
 
   // body scroll lock + ESC
   useEffect(() => {

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import type { DetailedPosition, Role } from "@/lib/types";
 import { isPresident, isStaffOrAbove } from "@/lib/permissions";
@@ -113,6 +113,14 @@ export default function MembersClient({
   const [regName, setRegName] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [regSubmitting, setRegSubmitting] = useState(false);
+
+  // 사전 등록 입력 중 페이지 이탈 경고
+  useEffect(() => {
+    if (!regName.trim() && !regPhone.trim()) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [regName, regPhone]);
   // 일괄 등록 모달
   const [showBulkModal, setShowBulkModal] = useState(false);
   // 회원 정보 수정 모달 (등번호·감독포지션·주장·역할·휴면 통합)

@@ -321,6 +321,8 @@ export default function BoardClient({
       title: post.title,
       content: post.content,
       imageUrl: post.imageUrls?.[0] ?? "",
+      category: post.category,
+      isGlobal: post.isGlobal,
     });
     setPollForm(EMPTY_POLL);
     setShowForm(true);

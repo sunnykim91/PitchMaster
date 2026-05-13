@@ -66,6 +66,30 @@ function PersonalSettingsComponent({
   const [withdrawing, setWithdrawing] = useState(false);
   const confirm = useConfirm();
 
+  // ── 미저장 프로필 변경 시 페이지 이탈 경고 ──
+  const initialProfileRef = useRef<string | null>(null);
+  const prevSavingRef = useRef(saving);
+  useEffect(() => {
+    if (initialProfileRef.current === null) {
+      initialProfileRef.current = JSON.stringify(profile);
+    }
+  }, [profile]);
+  useEffect(() => {
+    // saving true → false 전환 = 저장 완료 → snapshot 갱신
+    if (prevSavingRef.current && !saving) {
+      initialProfileRef.current = JSON.stringify(profile);
+    }
+    prevSavingRef.current = saving;
+  }, [saving, profile]);
+  const profileDirty = initialProfileRef.current !== null
+    && initialProfileRef.current !== JSON.stringify(profile);
+  useEffect(() => {
+    if (!profileDirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [profileDirty]);
+
   function handleFeedback() {
     const lines = [
       "",
