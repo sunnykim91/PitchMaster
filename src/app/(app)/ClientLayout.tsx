@@ -726,21 +726,29 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-center py-3"><div className="h-1 w-10 rounded-full bg-muted" /></div>
-            <nav className="grid gap-1" aria-label="추가 메뉴">
+            <nav className="grid grid-cols-2 gap-2" aria-label="추가 메뉴">
               {[
-                { href: "/members", icon: Users, label: "회원 관리" },
-                { href: "/board", icon: MessageSquare, label: "게시판 · 앨범" },
-                { href: "/rules", icon: BookOpen, label: "회칙" },
-                { href: "/settings", icon: Settings, label: "설정" },
+                { href: "/board", icon: MessageSquare, label: "게시판 · 앨범", description: "공지·자유·사진", featured: true },
+                { href: "/members", icon: Users, label: "회원 관리", description: "멤버·권한", featured: false },
+                { href: "/rules", icon: BookOpen, label: "회칙", description: "팀 규정", featured: false },
+                { href: "/settings", icon: Settings, label: "설정", description: "개인·팀", featured: false },
               ].map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={closeSheet}
-                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                  className={cn(
+                    "flex flex-col items-start gap-1.5 rounded-xl border p-3 transition-colors active:scale-95",
+                    item.featured
+                      ? "border-primary/30 bg-primary/5 hover:bg-primary/10"
+                      : "border-border bg-secondary/30 hover:bg-secondary"
+                  )}
                 >
-                  <item.icon className="h-5 w-5" />
-                  {item.label}
+                  <item.icon className={cn("h-5 w-5", item.featured ? "text-primary" : "text-muted-foreground")} />
+                  <div>
+                    <p className={cn("text-sm font-semibold leading-tight", item.featured ? "text-primary" : "text-foreground")}>{item.label}</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">{item.description}</p>
+                  </div>
                 </Link>
               ))}
               {installMode !== "none" && (

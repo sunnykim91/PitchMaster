@@ -6,7 +6,10 @@ import { useSearchParams } from "next/navigation";
 import { BarChart3, ArrowUpDown, ArrowDown, Download, Share2, Trophy, Sparkles } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
+import { isStaffOrAbove } from "@/lib/permissions";
 import type { Role } from "@/lib/types";
+import MembersPairsClient from "@/app/(app)/members/pairs/MembersPairsClient";
+import type { PairMatrix } from "@/lib/server/getPairSynergy";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -124,8 +127,11 @@ export default function RecordsClient({
   const searchParams = useSearchParams();
 
   // ── Tab state ──
-  type RecordsTab = "my" | "ranking" | "all" | "awards";
-  const validTabs: RecordsTab[] = ["my", "ranking", "all", "awards"];
+  type RecordsTab = "my" | "ranking" | "all" | "awards" | "pairs";
+  const isStaff = isStaffOrAbove(role);
+  const validTabs: RecordsTab[] = isStaff
+    ? ["my", "ranking", "all", "awards", "pairs"]
+    : ["my", "ranking", "all", "awards"];
   const tabFromUrl = searchParams.get("tab") as RecordsTab | null;
   const [activeTab, setActiveTabState] = useState<RecordsTab>(
     tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : "my"
@@ -141,6 +147,7 @@ export default function RecordsClient({
     { key: "ranking" as const, label: "팀 랭킹" },
     { key: "all" as const, label: "전체 기록" },
     { key: "awards" as const, label: "시즌 어워드" },
+    ...(isStaff ? [{ key: "pairs" as const, label: "페어" }] : []),
   ];
 
   // ── Seasons (SSR 데이터 사용) ──
@@ -387,53 +394,6 @@ export default function RecordsClient({
 
       {/* ── Tab: 내 기록 ── */}
       <div className={activeTab === "my" ? "grid gap-5" : "hidden"}>
-      {/* ── Row 0: 팀 전적 ── */}
-      {initialData?.teamRecord && (initialData.teamRecord.wins + initialData.teamRecord.draws + initialData.teamRecord.losses) > 0 && (() => {
-        const tr = initialData.teamRecord;
-        const total = tr.wins + tr.draws + tr.losses;
-        const diff = tr.goalsFor - tr.goalsAgainst;
-        return (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">팀 전적</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-baseline gap-2">
-                    <span className="type-stat text-[hsl(var(--win))]">{tr.wins}승</span>
-                    <span className="type-stat text-muted-foreground">{tr.draws}무</span>
-                    <span className="type-stat text-[hsl(var(--loss))]">{tr.losses}패</span>
-                  </div>
-                  <Badge variant="outline" className="text-xs">승률 {Math.round((tr.wins / total) * 100)}%</Badge>
-                </div>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span>득점 <strong className="text-foreground">{tr.goalsFor}</strong></span>
-                  <span>실점 <strong className="text-foreground">{tr.goalsAgainst}</strong></span>
-                  <span>득실차 <strong className={diff >= 0 ? "text-[hsl(var(--win))]" : "text-[hsl(var(--loss))]"}>{diff >= 0 ? "+" : ""}{diff}</strong></span>
-                </div>
-              </div>
-              {tr.recent5.length > 0 && (
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">최근 {tr.recent5.length}경기</span>
-                  {tr.recent5.map((r, i) => (
-                    <span
-                      key={i}
-                      className={cn(
-                        "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold",
-                        r === "W" ? "bg-[hsl(var(--win)/0.2)] text-[hsl(var(--win))]" : r === "D" ? "bg-muted text-muted-foreground" : "bg-[hsl(var(--loss)/0.2)] text-[hsl(var(--loss))]"
-                      )}
-                    >
-                      {r === "W" ? "승" : r === "D" ? "무" : "패"}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        );
-      })()}
-
       {/* ── 시즌 요약 + 레이더 ── */}
       <Card>
         <CardHeader>
@@ -469,19 +429,17 @@ export default function RecordsClient({
           <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
             내 기록
           </CardTitle>
-          {/* 히어로 한 줄 — 이름 · #등번호 · 주 포지션 + 보조 포지션 개수 */}
+          {/* 히어로 한 줄 — 풀 한국어 라벨로 약어·기호 제거 */}
           {(myStats.memberName || myStats.jerseyNumber || myStats.preferredPositions.length > 0) && (
             <p className="mt-0.5 text-sm text-muted-foreground">
               {[
                 myStats.memberName,
-                myStats.jerseyNumber ? `#${myStats.jerseyNumber}` : null,
-                myStats.preferredPositions[0] ? `주 ${myStats.preferredPositions[0]}` : null,
+                myStats.jerseyNumber ? `등번호 ${myStats.jerseyNumber}번` : null,
+                myStats.preferredPositions[0] ? `주포지션 ${myStats.preferredPositions[0]}` : null,
+                myStats.preferredPositions.length > 1
+                  ? `서브포지션 ${myStats.preferredPositions.length - 1}개`
+                  : null,
               ].filter(Boolean).join(" · ")}
-              {myStats.preferredPositions.length > 1 && (
-                <span className="text-muted-foreground/60">
-                  {" "}· 보조 포지션 {myStats.preferredPositions.length - 1}개
-                </span>
-              )}
             </p>
           )}
         </CardHeader>
@@ -609,9 +567,52 @@ export default function RecordsClient({
       {/* ── Tab: 팀 랭킹 ── */}
       <div className={activeTab === "ranking" ? "grid gap-5" : "hidden"}>
 
-      {/* 시즌 어워드 — TODO: 디자인 개선 후 활성화
-      {!isAllTime && <SeasonAwardsCard seasonId={seasonId} />}
-      */}
+      {/* ── 팀 전적 (시즌 누적 승무패·득실·최근 5경기) ── */}
+      {initialData?.teamRecord && (initialData.teamRecord.wins + initialData.teamRecord.draws + initialData.teamRecord.losses) > 0 && (() => {
+        const tr = initialData.teamRecord;
+        const total = tr.wins + tr.draws + tr.losses;
+        const diff = tr.goalsFor - tr.goalsAgainst;
+        return (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">팀 전적</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-baseline gap-2">
+                    <span className="type-stat text-[hsl(var(--win))]">{tr.wins}승</span>
+                    <span className="type-stat text-muted-foreground">{tr.draws}무</span>
+                    <span className="type-stat text-[hsl(var(--loss))]">{tr.losses}패</span>
+                  </div>
+                  <Badge variant="outline" className="text-xs">승률 {Math.round((tr.wins / total) * 100)}%</Badge>
+                </div>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span>득점 <strong className="text-foreground">{tr.goalsFor}</strong></span>
+                  <span>실점 <strong className="text-foreground">{tr.goalsAgainst}</strong></span>
+                  <span>득실차 <strong className={diff >= 0 ? "text-[hsl(var(--win))]" : "text-[hsl(var(--loss))]"}>{diff >= 0 ? "+" : ""}{diff}</strong></span>
+                </div>
+              </div>
+              {tr.recent5.length > 0 && (
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">최근 {tr.recent5.length}경기</span>
+                  {tr.recent5.map((r, i) => (
+                    <span
+                      key={i}
+                      className={cn(
+                        "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold",
+                        r === "W" ? "bg-[hsl(var(--win)/0.2)] text-[hsl(var(--win))]" : r === "D" ? "bg-muted text-muted-foreground" : "bg-[hsl(var(--loss)/0.2)] text-[hsl(var(--loss))]"
+                      )}
+                    >
+                      {r === "W" ? "승" : r === "D" ? "무" : "패"}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* ── Row 2: 팀 랭킹 (PC: 3열 가로 배치) ── */}
       <Card>
@@ -891,6 +892,13 @@ export default function RecordsClient({
         )}
       </div>
 
+      {/* ── Tab: 페어 시너지 (운영진 전용) ── */}
+      {isStaff && (
+        <div className={activeTab === "pairs" ? "grid gap-5" : "hidden"}>
+          <PairsTabPanel active={activeTab === "pairs"} />
+        </div>
+      )}
+
       {/* ── 드릴다운 Sheet ── */}
       <Sheet open={detailOpen} onOpenChange={setDetailOpen} key="detail-sheet">
         <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto rounded-t-2xl px-0">
@@ -963,6 +971,29 @@ export default function RecordsClient({
 
     </div>
   );
+}
+
+// ── 페어 시너지 탭 (운영진 전용, 활성 시 lazy fetch) ──
+const EMPTY_PAIR_MATRIX: PairMatrix = { members: [], pairs: [], totalMatches: 0 };
+function PairsTabPanel({ active }: { active: boolean }) {
+  const { data, loading } = useApi<PairMatrix>(
+    "/api/pair-synergy",
+    EMPTY_PAIR_MATRIX,
+    { skip: !active },
+  );
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="space-y-3 py-6">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+  return <MembersPairsClient initialData={data} hideHeader />;
 }
 
 // ── 선수 카드 버튼 컴포넌트 ──

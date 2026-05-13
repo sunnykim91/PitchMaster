@@ -80,21 +80,24 @@ export async function getPairSynergy(teamId: string): Promise<PairMatrix> {
     if (m.user_id) userToMember.set(m.user_id, m.id);
   }
 
+  // 이름이 없는 멤버는 페어 통계에서 제외 — "이름 없음" 표시 방지
   const memberName = new Map<string, string>();
   const memberOrder: { id: string; name: string }[] = [];
   for (const m of memberRows) {
     const u = Array.isArray(m.users) ? m.users[0] : m.users;
-    const name = u?.name ?? m.pre_name ?? "이름 없음";
-    memberName.set(m.id, name);
-    memberOrder.push({ id: m.id, name });
+    const rawName = (u?.name ?? m.pre_name ?? "").trim();
+    if (!rawName) continue;
+    memberName.set(m.id, rawName);
+    memberOrder.push({ id: m.id, name: rawName });
   }
   memberOrder.sort((a, b) => a.name.localeCompare(b.name, "ko"));
 
-  // 매치별 출석 멤버 집합 (team_members.id 기준)
+  // 매치별 출석 멤버 집합 (team_members.id 기준, 이름 있는 멤버만)
   const attendees = new Map<string, Set<string>>();
   for (const row of attendRes.data ?? []) {
     const memberId = row.member_id ?? (row.user_id ? userToMember.get(row.user_id) : null);
     if (!memberId) continue;
+    if (!memberName.has(memberId)) continue;
     if (!attendees.has(row.match_id)) attendees.set(row.match_id, new Set());
     attendees.get(row.match_id)!.add(memberId);
   }

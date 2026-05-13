@@ -340,9 +340,9 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
       {/* ── 알파 테스터 모집 배너 (Android 전용) ── */}
       <AlphaTesterBanner />
 
-      {/* ── 공지 핀 (운영공지 + 팀공지) — 둘 다 없으면 자동 숨김 ── */}
+      {/* ── 공지 핀 (운영공지 + 팀공지) — 둘 다 없으면 자동 숨김. order로 최상단 고정 ── */}
       {!showWizard && data.noticePins && (data.noticePins.global || data.noticePins.team.length > 0) && (
-        <div className="space-y-2">
+        <div className="space-y-2" style={{ order: -10 }}>
           {data.noticePins.global && (
             <Link
               href={`/board?post=${data.noticePins.global.id}`}
@@ -531,8 +531,8 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
         </div>
       )}
 
-      {/* ── Hero: Next Match (full width) ── */}
-      <div className="card-featured">
+      {/* ── Hero: Next Match (공지 다음, 내 시즌 기록·생일 등보다 위) ── */}
+      <div className="card-featured" style={{ order: -5 }}>
         <div className="flex items-center justify-between">
           <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">다가오는 경기</CardTitle>
           <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>

@@ -11,9 +11,9 @@ import type { PairMatrix, PairStat } from "@/lib/server/getPairSynergy";
 
 const MIN_MATCHES_FOR_RANKING = 3; // 3경기 이상 함께 뛴 페어만 랭킹 노출
 
-type Props = { initialData: PairMatrix };
+type Props = { initialData: PairMatrix; hideHeader?: boolean };
 
-export default function MembersPairsClient({ initialData }: Props) {
+export default function MembersPairsClient({ initialData, hideHeader }: Props) {
   const { members, pairs, totalMatches } = initialData;
   const [query, setQuery] = useState("");
 
@@ -64,7 +64,7 @@ export default function MembersPairsClient({ initialData }: Props) {
   if (totalMatches === 0) {
     return (
       <div className="space-y-4">
-        <Header />
+        {!hideHeader && <Header />}
         <EmptyState
           icon={Users}
           title="시즌 데이터가 없습니다"
@@ -76,7 +76,7 @@ export default function MembersPairsClient({ initialData }: Props) {
 
   return (
     <div className="space-y-4">
-      <Header totalMatches={totalMatches} />
+      {!hideHeader && <Header totalMatches={totalMatches} />}
 
       {/* 베스트 페어 */}
       {bestPairs.length > 0 && (

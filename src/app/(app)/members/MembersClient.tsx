@@ -22,7 +22,7 @@ import { Search } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { MemberBulkUploadModal } from "@/components/MemberBulkUploadModal";
 import { MemberEditModal } from "@/components/MemberEditModal";
-import { Users, ChevronDown, Sparkles } from "lucide-react";
+import { Users, ChevronDown } from "lucide-react";
 import { useConfirm } from "@/lib/ConfirmContext";
 
 type Member = {
@@ -490,9 +490,9 @@ export default function MembersClient({
         </CardContent>
       </Card>
 
-      {/* ── Section 2: 미연동 멤버 ── */}
+      {/* ── Section 2: 미연동 멤버 (운영진 전용 — 멤버 목록 다음으로 밀어줌) ── */}
       {unlinkedMembers.length > 0 && canViewAll && (
-        <Card>
+        <Card style={{ order: 10 }}>
           <CardHeader>
             <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">
               미가입 멤버 ({unlinkedMembers.length}명)
@@ -887,9 +887,9 @@ export default function MembersClient({
         </CardContent>
       </Card>
 
-      {/* ── Section 4: 휴면 회원 ── */}
+      {/* ── Section 4: 휴면 회원 (운영진 전용 — 멤버 목록·미가입 다음) ── */}
       {dormantMembers.length > 0 && canViewAll && (
-        <Card>
+        <Card style={{ order: 11 }}>
           <CardHeader>
             <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">
               휴면 회원 ({dormantMembers.length}명)
@@ -1014,22 +1014,6 @@ export default function MembersClient({
         />
       )}
 
-      {/* ── 페어 시너지 진입 (운영진 only) ── */}
-      {canPreRegister && (
-        <Link
-          href="/members/pairs"
-          className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/30 hover:bg-secondary/30"
-        >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Sparkles className="h-4 w-4" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold">페어 시너지</span>
-            <span className="block text-xs text-muted-foreground">함께 뛰면 잘 풀리는 팀원 조합 보기 · 운영진 전용</span>
-          </span>
-          <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
-        </Link>
-      )}
     </div>
   );
 }
