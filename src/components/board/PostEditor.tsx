@@ -99,56 +99,38 @@ export const PostEditor = memo(function PostEditor({
             {editingPostId ? "게시글 수정" : "새 글 작성"}
           </h2>
 
-          {/* 카테고리 선택 (작성 모드에서만, STAFF+ 또는 운영자에게만 노출) */}
-          {!editingPostId && (isStaff || isOperator) && (
+          {/* 카테고리 선택 (작성 모드 + STAFF+ 만). 운영공지는 별도 admin 페이지에서 작성 — 게시판에 노출하지 않음 */}
+          {!editingPostId && isStaff && (
             <div className="flex flex-wrap gap-1.5">
               <button
                 type="button"
                 onClick={() => setForm((prev) => ({ ...prev, category: "FREE", isGlobal: false }))}
                 className={cn(
                   "rounded-full border px-3 py-1 text-xs font-medium transition-all active:scale-95",
-                  form.category === "FREE" && !form.isGlobal
+                  form.category === "FREE"
                     ? "border-primary bg-primary/15 text-primary"
                     : "border-border bg-transparent text-muted-foreground hover:text-foreground"
                 )}
               >
                 일반
               </button>
-              {isStaff && (
-                <button
-                  type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, category: "NOTICE", isGlobal: false }))}
-                  className={cn(
-                    "rounded-full border px-3 py-1 text-xs font-medium transition-all active:scale-95",
-                    form.category === "NOTICE" && !form.isGlobal
-                      ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]"
-                      : "border-border bg-transparent text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  📢 팀공지
-                </button>
-              )}
-              {isOperator && (
-                <button
-                  type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, category: "FREE", isGlobal: true }))}
-                  className={cn(
-                    "rounded-full border px-3 py-1 text-xs font-medium transition-all active:scale-95",
-                    form.isGlobal
-                      ? "border-[hsl(var(--warning))] bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]"
-                      : "border-border bg-transparent text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  🔔 운영공지 (모든 팀)
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, category: "NOTICE", isGlobal: false }))}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-all active:scale-95",
+                  form.category === "NOTICE"
+                    ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]"
+                    : "border-border bg-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                📢 팀공지
+              </button>
             </div>
           )}
-          {!editingPostId && (form.category === "NOTICE" || form.isGlobal) && (
+          {!editingPostId && form.category === "NOTICE" && (
             <p className="text-xs text-muted-foreground">
-              {form.isGlobal
-                ? "이 글은 PitchMaster를 쓰는 모든 팀의 홈에 노출됩니다."
-                : "이 글은 우리 팀 게시판 상단과 홈에 핀으로 노출됩니다."}
+              팀공지로 작성하면 게시판 상단·홈 화면에 핀으로 노출됩니다.
             </p>
           )}
 

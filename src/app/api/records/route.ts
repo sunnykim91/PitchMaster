@@ -307,6 +307,7 @@ export async function GET(request: NextRequest) {
       goals,
       assists,
       mvp,
+      matches: attended,
       attendanceRate: matchIds.length > 0 ? attended / matchIds.length : 0,
       preferredPositions: user?.preferred_positions ?? [],
       jerseyNumber: m.jersey_number ?? null,
@@ -316,5 +317,5 @@ export async function GET(request: NextRequest) {
     };
   });
 
-  return apiSuccess({ records: stats });
+  return apiSuccess({ records: stats, totalSeasonMatches: matchIds.length });
 }

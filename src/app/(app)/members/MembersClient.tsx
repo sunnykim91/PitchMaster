@@ -414,9 +414,6 @@ export default function MembersClient({
               </Badge>
               {canPreRegister && (
                 <>
-                  <Button size="sm" variant="ghost" asChild>
-                    <Link href="/members/pairs">페어 시너지</Link>
-                  </Button>
                   <Button
                     size="sm"
                     variant="outline"

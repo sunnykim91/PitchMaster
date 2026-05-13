@@ -223,6 +223,7 @@ export async function getRecordsData(teamId: string) {
       goals: ids.reduce((s, id) => s + (goalMap.get(id) ?? 0), 0),
       assists: ids.reduce((s, id) => s + (assistMap.get(id) ?? 0), 0),
       mvp: ids.reduce((s, id) => s + (mvpMap.get(id) ?? 0), 0),
+      matches: attended,
       attendanceRate: matchIds.length > 0 ? attended / matchIds.length : 0,
       preferredPositions: user?.preferred_positions ?? [],
       jerseyNumber: m.jersey_number ?? null,
@@ -253,5 +254,11 @@ export async function getRecordsData(teamId: string) {
 
   const teamRecord = { wins, draws, losses, goalsFor: gf, goalsAgainst: ga, recent5: recent5.slice(0, 5) };
 
-  return { seasons: seasonList, activeSeasonId, records, teamRecord };
+  return {
+    seasons: seasonList,
+    activeSeasonId,
+    records,
+    teamRecord,
+    totalSeasonMatches: matchIds.length,
+  };
 }

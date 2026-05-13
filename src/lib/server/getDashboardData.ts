@@ -206,13 +206,12 @@ export async function getDashboardData(
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    // 팀공지 핀 최근 2건
+    // 팀공지 최근 2건 (category=NOTICE 인 글은 자동 핀 처리되므로 is_pinned 추가 필터 불필요)
     db.from("posts")
       .select("id, title, created_at")
       .eq("team_id", teamId)
       .eq("category", "NOTICE")
-      .eq("is_pinned", true)
-      .order("pinned_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false })
       .limit(2),
   ]);
 

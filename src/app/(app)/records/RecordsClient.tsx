@@ -49,6 +49,8 @@ type RecordStat = {
   goals: number;
   assists: number;
   mvp: number;
+  /** 시즌 출전 경기 수 (vote=ATTEND 기준) */
+  matches: number;
   attendanceRate: number;
   preferredPositions: string[];
   jerseyNumber: number | null;
@@ -77,6 +79,7 @@ function mapRecord(raw: Record<string, unknown>): RecordStat {
     goals: Number(raw.goals ?? 0),
     assists: Number(raw.assists ?? 0),
     mvp: Number(raw.mvp ?? 0),
+    matches: Number(raw.matches ?? raw.attended ?? 0),
     attendanceRate: Number(raw.attendanceRate ?? raw.attendance_rate ?? 0),
     preferredPositions: Array.isArray(raw.preferredPositions ?? raw.preferred_positions)
       ? (raw.preferredPositions ?? raw.preferred_positions) as string[]
@@ -102,6 +105,7 @@ type InitialData = {
   activeSeasonId?: string | null;
   records?: Record<string, unknown>[];
   teamRecord?: TeamRecord;
+  totalSeasonMatches?: number;
 };
 
 export default function RecordsClient({
@@ -181,9 +185,12 @@ export default function RecordsClient({
   const {
     data: recordsPayload,
     loading: loadingRecords,
-  } = useApi<{ records: Record<string, unknown>[] }>(
+  } = useApi<{ records: Record<string, unknown>[]; totalSeasonMatches?: number }>(
     recordsUrl,
-    { records: (isInitialSeason && initialData?.records) ? initialData.records : [] },
+    {
+      records: (isInitialSeason && initialData?.records) ? initialData.records : [],
+      totalSeasonMatches: (isInitialSeason ? initialData?.totalSeasonMatches : undefined),
+    },
     { skip: !seasonId || (isInitialSeason && !!initialData?.records?.length && !initialRecordsUsed) },
   );
   const effectiveRecords = useMemo(() => {
@@ -199,19 +206,39 @@ export default function RecordsClient({
     [effectiveRecords]
   );
 
+  const totalSeasonMatches = recordsPayload.totalSeasonMatches
+    ?? (isInitialSeason ? initialData?.totalSeasonMatches : undefined)
+    ?? 0;
+
   const season = seasons.find((s) => s.id === seasonId) ?? activeSeason;
 
-  const myStats = stats.find((item) => item.memberId === userId) ?? {
+  const myStats: RecordStat = stats.find((item) => item.memberId === userId) ?? {
     memberId: userId,
-    memberName: "",
+    memberName: userName ?? "",
     goals: 0,
     assists: 0,
     mvp: 0,
+    matches: 0,
     attendanceRate: 0,
     preferredPositions: [],
     jerseyNumber: null,
     teamRole: null,
   };
+
+  // 본인 랭킹 (각 스탯별, 1위부터). 0인 스탯은 랭킹 표시 안 함
+  const myRanks = useMemo(() => {
+    function rankOf(key: "goals" | "assists" | "mvp"): number | null {
+      if (myStats[key] === 0) return null;
+      const sorted = [...stats].sort((a, b) => b[key] - a[key]);
+      const idx = sorted.findIndex((s) => s.memberId === userId);
+      return idx >= 0 ? idx + 1 : null;
+    }
+    return {
+      goals: rankOf("goals"),
+      assists: rankOf("assists"),
+      mvp: rankOf("mvp"),
+    };
+  }, [stats, userId, myStats.goals, myStats.assists, myStats.mvp]);
 
   // 드릴다운 상태
   const [detailOpen, setDetailOpen] = useState(false);
@@ -436,29 +463,86 @@ export default function RecordsClient({
         </CardContent>
       </Card>
 
-      {/* ── 내 기록 4개 스탯 (단독 카드) ── */}
+      {/* ── 내 기록 — 히어로 헤더 + 4(또는 5) 카드 + 랭킹 배지 ── */}
       <Card>
         <CardHeader className="px-4 sm:px-6">
           <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
             내 기록
           </CardTitle>
+          {/* 히어로 한 줄 — 이름 · #등번호 · 주포지션 (있는 것만 노출) */}
+          {(myStats.memberName || myStats.jerseyNumber || myStats.preferredPositions.length > 0) && (
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {[
+                myStats.memberName,
+                myStats.jerseyNumber ? `#${myStats.jerseyNumber}` : null,
+                myStats.preferredPositions[0] || null,
+              ].filter(Boolean).join(" · ")}
+              {myStats.preferredPositions.length > 1 && (
+                <span className="text-muted-foreground/60">
+                  {" "}+{myStats.preferredPositions.length - 1}
+                </span>
+              )}
+            </p>
+          )}
         </CardHeader>
         <CardContent>
           {(() => {
-            // 토글 ON 팀(myStats.avgRating 채워짐)이면 평점 카드 추가 — 5칸
             const showRating = myStats.avgRating !== undefined;
-            const items = [
-              { label: "득점", value: myStats.goals, color: "text-[hsl(var(--success))]", bg: "bg-[hsl(var(--success)/0.1)]" },
-              { label: "어시스트", value: myStats.assists, color: "text-[hsl(var(--info))]", bg: "bg-[hsl(var(--info)/0.1)]" },
-              { label: "MVP", value: myStats.mvp, color: "text-[hsl(var(--warning))]", bg: "bg-[hsl(var(--warning)/0.1)]" },
-              { label: "출석률", value: `${Math.round(myStats.attendanceRate * 100)}%`, color: "text-[hsl(var(--accent))]", bg: "bg-[hsl(var(--accent)/0.1)]" },
+            const points = myStats.goals + myStats.assists;
+            const attendancePercent = Math.round(myStats.attendanceRate * 100);
+
+            type Item = {
+              label: string;
+              value: string | number;
+              color: string;
+              bg: string;
+              rank: number | null;
+              sub?: string;
+            };
+            const items: Item[] = [
+              {
+                label: "득점",
+                value: myStats.goals,
+                color: "text-[hsl(var(--success))]",
+                bg: "bg-[hsl(var(--success)/0.1)]",
+                rank: myRanks.goals,
+                sub: points > 0 ? `공격포인트 ${points}` : undefined,
+              },
+              {
+                label: "어시스트",
+                value: myStats.assists,
+                color: "text-[hsl(var(--info))]",
+                bg: "bg-[hsl(var(--info)/0.1)]",
+                rank: myRanks.assists,
+              },
+              {
+                label: "MVP",
+                value: myStats.mvp,
+                color: "text-[hsl(var(--warning))]",
+                bg: "bg-[hsl(var(--warning)/0.1)]",
+                rank: myRanks.mvp,
+              },
+              {
+                label: "출전",
+                value: myStats.matches,
+                color: "text-[hsl(var(--accent))]",
+                bg: "bg-[hsl(var(--accent)/0.1)]",
+                rank: null,
+                sub:
+                  totalSeasonMatches > 0
+                    ? `시즌 ${totalSeasonMatches}경기 · 출석률 ${attendancePercent}%`
+                    : myStats.matches > 0
+                    ? `출석률 ${attendancePercent}%`
+                    : undefined,
+              },
               ...(showRating
                 ? [{
                     label: `평점 (${myStats.ratingCount ?? 0}회)`,
                     value: myStats.avgRating!.toFixed(1),
                     color: "text-[hsl(var(--warning))]",
                     bg: "bg-[hsl(var(--warning)/0.1)]",
-                  }]
+                    rank: null as number | null,
+                  } as Item]
                 : []),
             ];
             const gridCols = showRating ? "grid-cols-2 md:grid-cols-5" : "grid-cols-2 md:grid-cols-4";
@@ -474,20 +558,47 @@ export default function RecordsClient({
                 </div>
               );
             }
+
+            // 전체 0 = 빈 응원 카피 분기
+            const allEmpty =
+              myStats.goals === 0 &&
+              myStats.assists === 0 &&
+              myStats.mvp === 0 &&
+              myStats.matches === 0 &&
+              !showRating;
+
             return (
-              <div className={cn("grid gap-3", gridCols)}>
-                {items.map((item) => {
-                  const isEmpty = item.value === 0 || item.value === "0%";
-                  return (
-                    <div key={item.label} className={cn("card-stat", isEmpty ? "" : item.bg)}>
-                      <p className="type-overline">{item.label}</p>
-                      <p className={cn("mt-1 type-stat", isEmpty ? "text-muted-foreground/40" : item.color)}>
-                        {isEmpty ? "-" : item.value}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
+              <>
+                <div className={cn("grid gap-3", gridCols)}>
+                  {items.map((item) => {
+                    const isEmpty = item.value === 0 || item.value === "0";
+                    return (
+                      <div key={item.label} className={cn("card-stat relative", isEmpty ? "" : item.bg)}>
+                        {item.rank !== null && (
+                          <span
+                            aria-label={`팀 ${item.rank}위`}
+                            className="absolute right-2 top-2 rounded-full bg-[hsl(var(--warning))]/15 px-1.5 py-0.5 text-[10px] font-bold text-[hsl(var(--warning))]"
+                          >
+                            {item.rank === 1 ? "🥇 1위" : item.rank === 2 ? "🥈 2위" : item.rank === 3 ? "🥉 3위" : `${item.rank}위`}
+                          </span>
+                        )}
+                        <p className="type-overline">{item.label}</p>
+                        <p className={cn("mt-1 type-stat", isEmpty ? "text-muted-foreground/40" : item.color)}>
+                          {isEmpty ? "-" : item.value}
+                        </p>
+                        {item.sub && !isEmpty && (
+                          <p className="mt-1 text-[11px] text-muted-foreground">{item.sub}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {allEmpty && (
+                  <p className="mt-4 text-center text-xs text-muted-foreground">
+                    아직 기록이 없어요. 다음 경기에 첫 골 노려보세요! ⚽
+                  </p>
+                )}
+              </>
             );
           })()}
         </CardContent>
