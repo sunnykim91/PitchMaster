@@ -691,14 +691,14 @@ export default function AnimationEditorClient({ initial }: Props) {
         </Button>
       </div>
 
-      {/* 컷 탭 (step) */}
-      <div className="mb-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
+      {/* 컷 탭 (step) — 라벨과 순서 변경 안내를 같은 줄 왼쪽에 묶어 PC에서도 시선 분산 없게 */}
+      <div className="mb-1 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
         <div className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
           장면 안의 컷 (이어 재생되며 영상이 됨)
         </div>
         {steps.length > 1 && (
           <div className="text-[11px] font-normal normal-case tracking-normal text-muted-foreground/70">
-            💡 컷 번호 꾹 눌러 순서 변경
+            💡 꾹 눌러 순서 변경
           </div>
         )}
       </div>
