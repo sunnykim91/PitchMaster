@@ -6,5 +6,12 @@ export default async function BoardPage() {
   const session = await auth();
   if (!session) return null;
   const initialData = await getBoardData(session.user.teamId!, session.user.id);
-  return <BoardClient userId={session.user.id} userRole={session.user.teamRole} initialData={initialData} />;
+  return (
+    <BoardClient
+      userId={session.user.id}
+      userName={session.user.name}
+      userRole={session.user.teamRole}
+      initialData={initialData}
+    />
+  );
 }

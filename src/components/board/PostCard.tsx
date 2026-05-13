@@ -73,7 +73,11 @@ export const PostCard = memo(function PostCard({
     <Card
       className={cn(
         "overflow-hidden transition-colors",
-        post.isPinned && "border-primary/30 bg-primary/[0.06]"
+        post.isGlobal
+          ? "border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/[0.05]"
+          : post.category === "NOTICE"
+          ? "border-[hsl(var(--accent))]/30 bg-[hsl(var(--accent))]/[0.05]"
+          : post.isPinned && "border-primary/30 bg-primary/[0.06]"
       )}
     >
       <CardContent className="p-4">
@@ -91,9 +95,19 @@ export const PostCard = memo(function PostCard({
               )}
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {post.isGlobal && (
+                  <Badge className="text-xs px-1.5 py-0 h-4 gap-0.5 bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30 hover:bg-[hsl(var(--warning))]/20">
+                    🔔 운영공지
+                  </Badge>
+                )}
+                {!post.isGlobal && post.category === "NOTICE" && (
+                  <Badge className="text-xs px-1.5 py-0 h-4 gap-0.5 bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))] border-[hsl(var(--accent))]/30 hover:bg-[hsl(var(--accent))]/20">
+                    📢 팀공지
+                  </Badge>
+                )}
                 <span className="text-sm font-semibold truncate">{post.author}</span>
-                {post.isPinned && (
+                {post.isPinned && !post.isGlobal && post.category !== "NOTICE" && (
                   <Badge variant="outline" className="text-xs px-1.5 py-0 h-4 gap-0.5 text-primary border-primary/30">
                     <Pin className="h-2.5 w-2.5" />
                     고정

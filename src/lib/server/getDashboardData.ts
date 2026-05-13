@@ -69,6 +69,11 @@ export type DashboardData = {
     goals: number;
     attendanceRate: number;
   } | null;
+  /** 홈 공지 노출 — 운영공지(전역) 최신 1건 + 팀공지 최근 핀 2건 */
+  noticePins: {
+    global: { id: string; title: string; createdAt: string } | null;
+    team: { id: string; title: string; createdAt: string }[];
+  };
 };
 
 /**
@@ -111,6 +116,7 @@ export async function getDashboardData(
     teamRecord: EMPTY_RECORD, teamUniform: null, birthdayMembers: [],
     hasDuesSettings: false, totalMatches: 0, registeredMemberCount: 0,
     mySeasonStats: null,
+    noticePins: { global: null, team: [] },
   };
 
   const nowIso = new Date().toISOString();
@@ -135,6 +141,8 @@ export async function getDashboardData(
     totalMatchesRes,
     profileRes,
     duesSettingsRes,
+    globalNoticeRes,
+    teamNoticePinsRes,
   ] = await Promise.all([
     autoCompleteTeamMatches(db, teamId),
     db.from("matches")
@@ -191,6 +199,21 @@ export async function getDashboardData(
       .select("id", { count: "exact", head: true })
       .eq("team_id", teamId)
       .neq("member_type", "__PERIOD__"),
+    // 운영공지 최신 1건 (전역)
+    db.from("posts")
+      .select("id, title, created_at")
+      .eq("is_global", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    // 팀공지 핀 최근 2건
+    db.from("posts")
+      .select("id, title, created_at")
+      .eq("team_id", teamId)
+      .eq("category", "NOTICE")
+      .eq("is_pinned", true)
+      .order("pinned_at", { ascending: false, nullsFirst: false })
+      .limit(2),
   ]);
 
   const upcomingRaw = upcomingRes.data ?? null;
@@ -534,6 +557,16 @@ export async function getDashboardData(
       }
     : null;
 
+  type NoticeRow = { id: string; title: string; created_at: string };
+  const globalNoticeRow = (globalNoticeRes.data as NoticeRow | null) ?? null;
+  const teamNoticeRows = ((teamNoticePinsRes.data ?? []) as NoticeRow[]);
+  const noticePins = {
+    global: globalNoticeRow
+      ? { id: globalNoticeRow.id, title: globalNoticeRow.title, createdAt: globalNoticeRow.created_at }
+      : null,
+    team: teamNoticeRows.map((r) => ({ id: r.id, title: r.title, createdAt: r.created_at })),
+  };
+
   return {
     upcomingMatch,
     recentResult,
@@ -546,5 +579,6 @@ export async function getDashboardData(
     totalMatches,
     registeredMemberCount,
     mySeasonStats,
+    noticePins,
   };
 }

@@ -93,6 +93,10 @@ type DashboardData = {
   /** 실제 가입 완료한 팀원 수 */
   registeredMemberCount?: number;
   mySeasonStats?: { matches: number; goals: number; attendanceRate: number } | null;
+  noticePins?: {
+    global: { id: string; title: string; createdAt: string } | null;
+    team: { id: string; title: string; createdAt: string }[];
+  };
 };
 
 const emptyData: DashboardData = {
@@ -335,6 +339,41 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
 
       {/* ── 알파 테스터 모집 배너 (Android 전용) ── */}
       <AlphaTesterBanner />
+
+      {/* ── 공지 핀 (운영공지 + 팀공지) — 둘 다 없으면 자동 숨김 ── */}
+      {!showWizard && data.noticePins && (data.noticePins.global || data.noticePins.team.length > 0) && (
+        <div className="space-y-2">
+          {data.noticePins.global && (
+            <Link
+              href={`/board?post=${data.noticePins.global.id}`}
+              className="block rounded-xl border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/5 p-3 transition-colors hover:bg-[hsl(var(--warning))]/10"
+            >
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 rounded-full bg-[hsl(var(--warning))]/15 px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--warning))]">
+                  🔔 운영공지
+                </span>
+                <p className="text-sm font-semibold truncate">{data.noticePins.global.title}</p>
+                <ChevronRight className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              </div>
+            </Link>
+          )}
+          {data.noticePins.team.map((n) => (
+            <Link
+              key={n.id}
+              href={`/board?post=${n.id}`}
+              className="block rounded-xl border border-[hsl(var(--accent))]/30 bg-[hsl(var(--accent))]/5 p-3 transition-colors hover:bg-[hsl(var(--accent))]/10"
+            >
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 rounded-full bg-[hsl(var(--accent))]/15 px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--accent))]">
+                  📢 팀공지
+                </span>
+                <p className="text-sm font-semibold truncate">{n.title}</p>
+                <ChevronRight className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* ── 내 시즌 기록 — 출전/골/출석률. 데이터 없으면 자동 숨김 ── */}
       {!showWizard && data.mySeasonStats && (

@@ -22,6 +22,10 @@ export interface PostEditorProps {
   onCancel: () => void;
   formErrors: Record<string, string>;
   setFormErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  /** STAFF+ — 팀공지 작성 가능 */
+  isStaff?: boolean;
+  /** PitchMaster 운영자(김선휘) — 운영공지 작성 가능 */
+  isOperator?: boolean;
 }
 
 export const PostEditor = memo(function PostEditor({
@@ -35,6 +39,8 @@ export const PostEditor = memo(function PostEditor({
   onCancel,
   formErrors,
   setFormErrors,
+  isStaff,
+  isOperator,
 }: PostEditorProps) {
   /* ── Image upload state ── */
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -92,6 +98,59 @@ export const PostEditor = memo(function PostEditor({
           <h2 className="text-base font-semibold">
             {editingPostId ? "게시글 수정" : "새 글 작성"}
           </h2>
+
+          {/* 카테고리 선택 (작성 모드에서만, STAFF+ 또는 운영자에게만 노출) */}
+          {!editingPostId && (isStaff || isOperator) && (
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, category: "FREE", isGlobal: false }))}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-all active:scale-95",
+                  form.category === "FREE" && !form.isGlobal
+                    ? "border-primary bg-primary/15 text-primary"
+                    : "border-border bg-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                일반
+              </button>
+              {isStaff && (
+                <button
+                  type="button"
+                  onClick={() => setForm((prev) => ({ ...prev, category: "NOTICE", isGlobal: false }))}
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-xs font-medium transition-all active:scale-95",
+                    form.category === "NOTICE" && !form.isGlobal
+                      ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]"
+                      : "border-border bg-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  📢 팀공지
+                </button>
+              )}
+              {isOperator && (
+                <button
+                  type="button"
+                  onClick={() => setForm((prev) => ({ ...prev, category: "FREE", isGlobal: true }))}
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-xs font-medium transition-all active:scale-95",
+                    form.isGlobal
+                      ? "border-[hsl(var(--warning))] bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]"
+                      : "border-border bg-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  🔔 운영공지 (모든 팀)
+                </button>
+              )}
+            </div>
+          )}
+          {!editingPostId && (form.category === "NOTICE" || form.isGlobal) && (
+            <p className="text-xs text-muted-foreground">
+              {form.isGlobal
+                ? "이 글은 PitchMaster를 쓰는 모든 팀의 홈에 노출됩니다."
+                : "이 글은 우리 팀 게시판 상단과 홈에 핀으로 노출됩니다."}
+            </p>
+          )}
 
           {/* Title */}
           <div>

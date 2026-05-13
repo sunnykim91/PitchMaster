@@ -32,6 +32,8 @@ export type Poll = {
   myVote: string | null;
 };
 
+export type PostCategory = "FREE" | "NOTICE";
+
 export type Post = {
   id: string;
   title: string;
@@ -44,6 +46,8 @@ export type Post = {
   comments: number;
   imageUrls?: string[];
   isPinned: boolean;
+  category: PostCategory;
+  isGlobal: boolean;
   poll: Poll | null;
 };
 
@@ -61,6 +65,8 @@ export type FormState = {
   title: string;
   content: string;
   imageUrl: string;
+  category: PostCategory;
+  isGlobal: boolean;
 };
 
 export type PollFormState = {
@@ -83,6 +89,8 @@ function mapPost(raw: Record<string, unknown>): Post {
     comments: (raw.comments_count as number) ?? 0,
     imageUrls: (raw.image_urls as string[]) ?? [],
     isPinned: (raw.is_pinned as boolean) ?? false,
+    category: ((raw.category as string) === "NOTICE" ? "NOTICE" : "FREE") as PostCategory,
+    isGlobal: (raw.is_global as boolean) ?? false,
     poll: poll
       ? {
           id: poll.id as string,
@@ -108,23 +116,26 @@ function mapComment(raw: Record<string, unknown>): Comment {
   };
 }
 
-const EMPTY_FORM: FormState = { title: "", content: "", imageUrl: "" };
+const EMPTY_FORM: FormState = { title: "", content: "", imageUrl: "", category: "FREE", isGlobal: false };
 const EMPTY_POLL: PollFormState = { enabled: false, question: "", options: ["", ""] };
 
 type InitialData = { posts: Record<string, unknown>[] };
 
 export default function BoardClient({
   userId,
+  userName,
   userRole,
   initialData,
 }: {
   userId: string;
+  userName?: string;
   userRole?: Role;
   initialData?: InitialData;
 }) {
   const { showToast } = useToast();
   const searchParams = useSearchParams();
   const isStaff = isStaffOrAbove(userRole);
+  const isOperator = userName === "김선휘"; // PitchMaster 운영자 — 운영공지 작성 권한
 
   // 탭 상태 (URL ?tab=gallery 또는 기본값 posts)
   const [activeTab, setActiveTab] = useState<"posts" | "gallery">(
@@ -283,6 +294,8 @@ export default function BoardClient({
           title: form.title,
           content: form.content,
           imageUrls,
+          category: form.category,
+          isGlobal: form.isGlobal,
         };
         if (pollForm.enabled) {
           body.poll = {
@@ -569,6 +582,8 @@ export default function BoardClient({
           onCancel={handleCancelEdit}
           formErrors={formErrors}
           setFormErrors={setFormErrors}
+          isStaff={isStaff}
+          isOperator={isOperator}
         />
       )}
 

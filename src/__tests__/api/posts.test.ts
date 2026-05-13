@@ -17,6 +17,8 @@ const mockPosts = [
     content: "내용1",
     category: "FREE",
     is_pinned: false,
+    is_global: false,
+    created_at: "2026-05-13T10:00:00Z",
     post_likes: [{ count: 5 }],
     post_comments: [{ count: 2 }],
   },
@@ -25,7 +27,9 @@ const mockPosts = [
     title: "두 번째 게시글",
     content: "내용2",
     category: "FREE",
-    is_pinned: true,
+    is_pinned: false,
+    is_global: false,
+    created_at: "2026-05-13T09:00:00Z",
     post_likes: [{ count: 0 }],
     post_comments: [{ count: 7 }],
   },
@@ -79,7 +83,8 @@ describe("GET /api/posts", () => {
 
   it("200: 게시글 목록 반환 — likes_count, comments_count 평탄화", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["posts", mockPosts]);
+    // GET이 team posts + global posts 두 쿼리 분리되어 mock 응답도 두 번 등록
+    const db = createMockDb(["posts", mockPosts], ["posts", []]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeGetRequest());
@@ -96,7 +101,7 @@ describe("GET /api/posts", () => {
   it("200: likes_count/comments_count — 집계 없을 때 기본값 0", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const postsNoAgg = [{ id: "p3", title: "집계 없음", post_likes: [], post_comments: [] }];
-    const db = createMockDb(["posts", postsNoAgg]);
+    const db = createMockDb(["posts", postsNoAgg], ["posts", []]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeGetRequest());

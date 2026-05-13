@@ -29,6 +29,7 @@ const TacticsBoardSkeleton = () => (
 
 import TacticsBoard, { type TeamSettings } from "@/components/TacticsBoard";
 import AutoFormationBuilder from "@/components/AutoFormationBuilder";
+import { PairSynergyHint } from "@/components/PairSynergyHint";
 import { AiCoachAnalysisCard } from "@/components/AiCoachAnalysisCard";
 import { MatchRoleGuide } from "@/components/MatchRoleGuide";
 
@@ -708,6 +709,25 @@ function MatchTacticsTabInner({
               matchType: (match.matchType ?? "REGULAR"),
               opponent: match.opponent ?? null,
             }}
+          />
+        </div>
+      )}
+
+      {/* 페어 시너지 힌트 — 현재 라인업의 팀원 페어 평균 승률 (운영진 전용) */}
+      {canManage && (
+        <div style={{ order: 12 }}>
+          <PairSynergyHint
+            memberIds={(() => {
+              const set = new Set<string>();
+              for (const sq of dbSquads) {
+                for (const pos of Object.values(sq.positions ?? {})) {
+                  if (pos?.playerId) set.add(pos.playerId);
+                  if (pos?.secondPlayerId) set.add(pos.secondPlayerId);
+                }
+              }
+              return [...set];
+            })()}
+            isStaff={canManage}
           />
         </div>
       )}

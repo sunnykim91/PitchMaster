@@ -11,24 +11,49 @@ export async function GET(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  const query = db
-    .from("posts")
-    .select(
-      "*, author:author_id(name), post_likes(count), post_comments(count)"
-    )
-    .eq("team_id", ctx.teamId)
-    .order("is_pinned", { ascending: false })
-    .order("created_at", { ascending: false });
+  // 운영공지(is_global=true) + 우리 팀 글을 분리 fetch 후 id 기준 dedupe
+  // (PostgREST or 절 인젝션 회피 — feedback_postgrest_or_injection 패턴)
+  const [teamRes, globalRes] = await Promise.all([
+    db.from("posts")
+      .select("*, author:author_id(name), post_likes(count), post_comments(count)")
+      .eq("team_id", ctx.teamId)
+      .order("is_pinned", { ascending: false })
+      .order("created_at", { ascending: false }),
+    db.from("posts")
+      .select("*, author:author_id(name), post_likes(count), post_comments(count)")
+      .eq("is_global", true)
+      .order("created_at", { ascending: false }),
+  ]);
 
-  const { data, error } = await query;
-  if (error) return apiError(error.message);
+  if (teamRes.error) return apiError(teamRes.error.message);
+  if (globalRes.error) return apiError(globalRes.error.message);
 
-  // Supabase returns aggregated counts as [{ count: N }] — flatten
   type PostRow = Record<string, unknown> & {
+    id: string;
+    is_pinned?: boolean;
+    is_global?: boolean;
+    created_at?: string;
     post_likes?: { count: number }[];
     post_comments?: { count: number }[];
   };
-  const rows = (data ?? []) as PostRow[];
+  const seen = new Set<string>();
+  const merged: PostRow[] = [];
+  for (const row of [...(globalRes.data ?? []), ...(teamRes.data ?? [])] as PostRow[]) {
+    if (seen.has(row.id)) continue;
+    seen.add(row.id);
+    merged.push(row);
+  }
+  // 정렬: 운영공지 최상단 → 팀 핀 → created_at desc
+  merged.sort((a, b) => {
+    const aGlobal = a.is_global ? 1 : 0;
+    const bGlobal = b.is_global ? 1 : 0;
+    if (aGlobal !== bGlobal) return bGlobal - aGlobal;
+    const aPinned = a.is_pinned ? 1 : 0;
+    const bPinned = b.is_pinned ? 1 : 0;
+    if (aPinned !== bPinned) return bPinned - aPinned;
+    return (b.created_at ?? "").localeCompare(a.created_at ?? "");
+  });
+  const rows = merged;
   const postIds = rows.map((r) => r.id as string);
   const posts = rows.map((row) => ({
     ...row,
@@ -110,6 +135,18 @@ export async function POST(request: NextRequest) {
   const contentCheck = validateFreeText(body.content, { maxLength: 10000, fieldLabel: "내용" });
   if (!contentCheck.ok) return apiError(contentCheck.reason);
 
+  // 카테고리 가드:
+  //   - NOTICE (팀공지): STAFF+ 만
+  //   - is_global (운영공지): PitchMaster 운영자(김선휘) 만
+  const requestedCategory = body.category === "NOTICE" ? "NOTICE" : "FREE";
+  const requestedIsGlobal = body.isGlobal === true;
+  if (requestedCategory === "NOTICE" && !isStaffOrAbove(ctx.teamRole)) {
+    return apiError("팀공지는 운영진만 작성할 수 있어요.", 403);
+  }
+  if (requestedIsGlobal && ctx.session.user.name !== "김선휘") {
+    return apiError("운영공지는 PitchMaster 운영자만 작성할 수 있어요.", 403);
+  }
+
   const { data, error } = await db
     .from("posts")
     .insert({
@@ -117,7 +154,11 @@ export async function POST(request: NextRequest) {
       author_id: ctx.userId,
       title: titleCheck.value,
       content: contentCheck.value,
-      category: "FREE",
+      category: requestedCategory,
+      is_global: requestedIsGlobal,
+      // 운영공지·팀공지는 자동 핀
+      is_pinned: requestedIsGlobal || requestedCategory === "NOTICE",
+      pinned_at: (requestedIsGlobal || requestedCategory === "NOTICE") ? new Date().toISOString() : null,
       image_urls: body.imageUrls || [],
     })
     .select()
