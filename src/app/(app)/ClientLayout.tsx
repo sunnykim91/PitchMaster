@@ -727,17 +727,17 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           >
             <div className="flex justify-center py-3"><div className="h-1 w-10 rounded-full bg-muted" /></div>
             <nav className="space-y-2" aria-label="추가 메뉴">
-              {/* Hero: 게시판 · 앨범 — 풀너비 강조 카드 */}
+              {/* 게시판 · 앨범 — 풀너비 (크기로만 강조, active state 오해 방지 위해 중성 톤) */}
               <Link
                 href="/board"
                 onClick={closeSheet}
-                className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10 active:scale-[0.98]"
+                className="flex items-center gap-3 rounded-xl border border-border bg-secondary/30 p-4 transition-colors hover:bg-secondary active:scale-[0.98]"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <MessageSquare className="h-5 w-5" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-bold text-primary">게시판 · 앨범</span>
+                  <span className="block text-sm font-bold text-foreground">게시판 · 앨범</span>
                   <span className="mt-0.5 block text-xs text-muted-foreground">공지 · 자유게시판 · 경기 사진</span>
                 </span>
                 <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
