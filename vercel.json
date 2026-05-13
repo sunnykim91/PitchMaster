@@ -31,6 +31,10 @@
       "schedule": "0 13 * * *"
     },
     {
+      "path": "/api/cron/auto-complete-matches",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/cron/match-completed-push",
       "schedule": "*/5 * * * *"
     },

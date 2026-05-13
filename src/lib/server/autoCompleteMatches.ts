@@ -122,3 +122,69 @@ export async function autoCompleteTeamMatches(
     invalidateTeamStats(teamId).catch(() => {});
   }
 }
+
+/**
+ * 모든 팀 일괄 자동 완료 — 사용자 페이지 진입에 의존하지 않는 cron 전용 경로.
+ *
+ * 배경: autoCompleteTeamMatches 는 SSR/API 진입 시점에만 트리거되므로,
+ * 활성 사용자가 없는 팀(휴면·주말만 활성)은 SCHEDULED 가 영영 stuck.
+ * → 후속 cron(match-completed-push, match-result)이 작동 못 함.
+ *
+ * 가드: 최근 7일 윈도우만 처리.
+ * 오래된 SCHEDULED 무더기 COMPLETED 전환 시 processMatchCompletedPush 가
+ * matchIds 명시 호출이라 7일 가드 우회 → 푸시 폭탄 위험.
+ */
+export async function autoCompleteAllMatches(
+  db: SupabaseClient,
+  nowMs: number = Date.now()
+): Promise<{ completed: number; teams: number }> {
+  const today = getKstToday(nowMs);
+  const nowTime = getKstTimeOfDay(nowMs);
+  const sevenDaysAgo = new Date(getKstNow(nowMs).getTime() - 7 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+
+  const completedIds: string[] = [];
+  const teamIds = new Set<string>();
+
+  // 1·2) team_id 필터 없이 전역 — Promise.all 로 병렬
+  const [past, todayEnded] = await Promise.all([
+    db
+      .from("matches")
+      .update({ status: "COMPLETED" })
+      .eq("status", "SCHEDULED")
+      .lt("match_date", today)
+      .gte("match_date", sevenDaysAgo)
+      .select("id, team_id"),
+    db
+      .from("matches")
+      .update({ status: "COMPLETED" })
+      .eq("status", "SCHEDULED")
+      .eq("match_date", today)
+      .not("match_end_time", "is", null)
+      .lte("match_end_time", nowTime)
+      .select("id, team_id"),
+  ]);
+  for (const m of (past.data ?? []) as Array<{ id: string; team_id: string }>) {
+    completedIds.push(m.id);
+    teamIds.add(m.team_id);
+  }
+  for (const m of (todayEnded.data ?? []) as Array<{ id: string; team_id: string }>) {
+    completedIds.push(m.id);
+    teamIds.add(m.team_id);
+  }
+
+  if (completedIds.length > 0) {
+    invalidateSignaturesForMatches(db, completedIds).catch((err) => {
+      console.error("[autoCompleteAllMatches] invalidateSignatures failed", err);
+    });
+    processMatchCompletedPush(db, completedIds).catch((err) => {
+      console.error("[autoCompleteAllMatches] processMatchCompletedPush failed", err);
+    });
+    for (const tid of teamIds) {
+      invalidateTeamStats(tid).catch(() => {});
+    }
+  }
+
+  return { completed: completedIds.length, teams: teamIds.size };
+}

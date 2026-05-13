@@ -67,3 +67,53 @@ teams
 - 파일명: `000XX_설명.sql` (순번 유지)
 - 기존 RLS 정책 영향 여부 반드시 확인
 - `supabase db push`로 로컬 적용 후 커밋
+
+## 🚨 새 테이블 추가 시 GRANT 의무 (2026-05-30~)
+
+Supabase 정책 변경:
+- **2026-05-30**: 신규 프로젝트는 `public` 스키마 테이블이 Data API(supabase-js·PostgREST·GraphQL)에 기본 미노출
+- **2026-10-30**: 기존 프로젝트(= PitchMaster)도 강제 적용
+- 기존 테이블 grant는 유지 — 영향 없음. **새로 만드는 테이블만** 명시 grant 필요
+- GRANT 누락 시 PostgREST가 `42501` 에러 + 필요한 GRANT 문 그대로 응답
+
+### `CREATE TABLE` 뒤에 항상 붙일 템플릿
+
+```sql
+create table if not exists public.your_table (
+  id uuid primary key default uuid_generate_v4(),
+  -- ...
+);
+
+-- ❶ Data API 노출 GRANT (anon은 보통 select 만, 필요 없으면 생략)
+grant select on public.your_table to anon;
+grant select, insert, update, delete on public.your_table to authenticated;
+grant select, insert, update, delete on public.your_table to service_role;
+
+-- ❷ RLS 활성화 (이 프로젝트는 모든 테이블 RLS 필수)
+alter table public.your_table enable row level security;
+
+-- ❸ 정책 (PitchMaster 표준: team_members 소속 기반)
+create policy "members can read team rows"
+  on public.your_table
+  for select to authenticated
+  using (
+    exists (
+      select 1 from public.team_members m
+      where m.team_id = public.your_table.team_id
+        and m.user_id = (select auth.uid())
+    )
+  );
+```
+
+### 빠진 GRANT 진단
+
+```sql
+-- 현재 테이블에 어떤 role이 어떤 권한을 가졌는지
+select grantee, privilege_type
+from information_schema.role_table_grants
+where table_schema = 'public' and table_name = 'your_table';
+```
+
+### 점검 1회 (10/30 전)
+
+Supabase Studio → Security Advisor에서 grant 누락 테이블 확인. 기존 테이블은 자동 유지지만, 마이그레이션 재실행 시점이나 새 환경 복제 시 누락 발생 가능.

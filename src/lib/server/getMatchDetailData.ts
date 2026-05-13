@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getWeatherData } from "@/lib/server/getWeather";
+import { autoCompleteTeamMatches } from "@/lib/server/autoCompleteMatches";
 
 /**
  * SSR 블로킹 제거 (2026-04-20):
@@ -12,6 +13,9 @@ import { getWeatherData } from "@/lib/server/getWeather";
 export async function getMatchDetailData(matchId: string, teamId: string, _enableAi: boolean = false, _userId: string | null = null) {
   const db = getSupabaseAdmin();
   if (!db) return null;
+
+  // 페이지 진입 시 자동 종료 트리거 — 후기 탭 새로고침만 해도 MVP 투표 활성화됨
+  await autoCompleteTeamMatches(db, teamId);
 
   const [matchRes, goalsRes, mvpRes, attendanceCheckRes, guestsRes, internalTeamsRes, diaryRes, membersRes, teamRes, voteRes, commentsRes] = await Promise.all([
     db.from("matches").select("*").eq("id", matchId).eq("team_id", teamId).single(),
