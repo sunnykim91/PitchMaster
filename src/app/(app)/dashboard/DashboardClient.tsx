@@ -871,6 +871,12 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                   </Link>
                 );
               })
+            ) : upcomingMatch ? (
+              // 다가오는 경기와 dedup된 정상 상태 — 짧은 인라인 안내로 영역 축소
+              <p className="py-3 text-center text-xs text-muted-foreground">
+                다가오는 경기는 위 카드에서 확인할 수 있어요.<br />
+                그 외 진행 중인 투표는 없습니다.
+              </p>
             ) : (
               <EmptyState
                 icon={Vote}
