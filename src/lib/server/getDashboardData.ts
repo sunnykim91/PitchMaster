@@ -63,6 +63,12 @@ export type DashboardData = {
   hasDuesSettings: boolean;
   totalMatches: number;
   registeredMemberCount: number;
+  /** 본인 시즌 기록 — 활성 시즌 범위 내 출석/골/출석률. 시즌 없거나 멤버 아니면 null */
+  mySeasonStats: {
+    matches: number;
+    goals: number;
+    attendanceRate: number;
+  } | null;
 };
 
 /**
@@ -104,6 +110,7 @@ export async function getDashboardData(
     upcomingMatch: null, recentResult: null, activeVotes: [], tasks: [],
     teamRecord: EMPTY_RECORD, teamUniform: null, birthdayMembers: [],
     hasDuesSettings: false, totalMatches: 0, registeredMemberCount: 0,
+    mySeasonStats: null,
   };
 
   const nowIso = new Date().toISOString();
@@ -449,14 +456,32 @@ export async function getDashboardData(
     }
   }
 
-  // ── Stage 3: completedMatches → allGoals (시즌 전적) ──
+  // ── Stage 3: completedMatches 의존 — 시즌 전적 + 본인 시즌 통계 병렬 ──
   const completedMatchIds = (completedMatchesRes.data ?? []).map((m) => m.id);
   let teamRecord = EMPTY_RECORD;
+  let mySeasonStats: DashboardData["mySeasonStats"] = null;
   if (completedMatchIds.length > 0) {
-    const { data: allGoals } = await db
-      .from("match_goals")
-      .select("match_id, scorer_id, is_own_goal")
-      .in("match_id", completedMatchIds);
+    const [allGoalsRes, myAttByUserRes, myAttByMemberRes, myGoalsRes] = await Promise.all([
+      db.from("match_goals")
+        .select("match_id, scorer_id, is_own_goal")
+        .in("match_id", completedMatchIds),
+      db.from("match_attendance")
+        .select("match_id, attendance_status")
+        .in("match_id", completedMatchIds)
+        .eq("user_id", userId),
+      myTeamMemberId
+        ? db.from("match_attendance")
+            .select("match_id, attendance_status")
+            .in("match_id", completedMatchIds)
+            .eq("member_id", myTeamMemberId)
+        : Promise.resolve({ data: [] as { match_id: string; attendance_status: string }[] }),
+      db.from("match_goals")
+        .select("id")
+        .in("match_id", completedMatchIds)
+        .eq("scorer_id", userId)
+        .eq("is_own_goal", false),
+    ]);
+    const allGoals = allGoalsRes.data;
     const matchScores = new Map<string, { our: number; opp: number }>();
     for (const g of allGoals ?? []) {
       if (!matchScores.has(g.match_id)) matchScores.set(g.match_id, { our: 0, opp: 0 });
@@ -475,6 +500,25 @@ export async function getDashboardData(
       else { losses++; results.push("L"); }
     }
     teamRecord = { wins, draws, losses, goalsFor: gf, goalsAgainst: ga, recent5: results.slice(0, 5) };
+
+    // 본인 시즌 통계 — user_id 또는 member_id 양쪽 attendance row 모두 검색 후 match_id 기준 dedupe
+    const attMap = new Map<string, string>();
+    for (const r of (myAttByUserRes.data ?? [])) attMap.set(r.match_id, r.attendance_status);
+    for (const r of (myAttByMemberRes.data ?? [])) {
+      if (!attMap.has(r.match_id)) attMap.set(r.match_id, r.attendance_status);
+    }
+    const attStatuses = Array.from(attMap.values());
+    const presentCount = attStatuses.filter((s) => s === "PRESENT" || s === "LATE").length;
+    const absentCount = attStatuses.filter((s) => s === "ABSENT").length;
+    const decidedTotal = presentCount + absentCount;
+    const myGoalCount = (myGoalsRes.data ?? []).length;
+    if (decidedTotal > 0 || myGoalCount > 0) {
+      mySeasonStats = {
+        matches: presentCount,
+        goals: myGoalCount,
+        attendanceRate: decidedTotal > 0 ? Math.round((presentCount / decidedTotal) * 100) : 0,
+      };
+    }
   }
 
   const teamUniform: TeamUniformInfo | null = teamSettings
@@ -497,5 +541,6 @@ export async function getDashboardData(
     hasDuesSettings,
     totalMatches,
     registeredMemberCount,
+    mySeasonStats,
   };
 }

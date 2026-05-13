@@ -92,6 +92,7 @@ type DashboardData = {
   totalMatches?: number;
   /** 실제 가입 완료한 팀원 수 */
   registeredMemberCount?: number;
+  mySeasonStats?: { matches: number; goals: number; attendanceRate: number } | null;
 };
 
 const emptyData: DashboardData = {
@@ -334,6 +335,33 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
 
       {/* ── 알파 테스터 모집 배너 (Android 전용) ── */}
       <AlphaTesterBanner />
+
+      {/* ── 내 시즌 기록 — 출전/골/출석률. 데이터 없으면 자동 숨김 ── */}
+      {!showWizard && data.mySeasonStats && (
+        <Link
+          href={`/player/${userId}${teamId ? `?team=${teamId}` : ""}`}
+          className="block rounded-xl border border-[hsl(var(--success))]/20 bg-[hsl(var(--success))]/5 p-4 transition-colors hover:bg-[hsl(var(--success))]/10"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(var(--success))]">내 시즌 기록</p>
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-foreground">{data.mySeasonStats.matches}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">출전</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-primary">{data.mySeasonStats.goals}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">골</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-foreground">{data.mySeasonStats.attendanceRate}%</p>
+              <p className="text-xs text-muted-foreground mt-0.5">출석률</p>
+            </div>
+          </div>
+        </Link>
+      )}
 
       {/* ── Onboarding Wizard (new teams only) ── */}
       {showWizard && (

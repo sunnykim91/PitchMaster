@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { createMockDb } from "../helpers/db";
 import { memberSession, staffSession, presidentSession, noTeamSession } from "../helpers/auth";
 
-vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
+vi.mock("@/lib/auth", () => ({ auth: vi.fn(), invalidateAuthSync: vi.fn() }));
 vi.mock("@/lib/supabase/admin", () => ({ getSupabaseAdmin: vi.fn() }));
 
 import { auth } from "@/lib/auth";

@@ -265,28 +265,36 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   }
 
   const displayRole = viewAsRole ?? session.user.teamRole;
-  const navItems = useMemo(() => {
-    const base = [
-      { href: "/dashboard", label: "홈", detail: "대시보드", icon: Home },
+
+  // 홈 단독 + 3그룹(운영 / 기록·소통 / 설정) 구조 — 햄버거 정보 위계 가시화
+  const homeNavItem = useMemo(
+    () => ({ href: "/dashboard", label: "홈", detail: "대시보드", icon: Home }),
+    [],
+  );
+
+  const navGroups = useMemo(() => {
+    const operations = [
       { href: "/matches", label: "경기 일정", detail: "일정·투표", icon: Calendar },
-      { href: "/records", label: "기록", detail: "통계·랭킹", icon: Trophy },
-      { href: "/dues", label: "회비 관리", detail: "거래 내역·납부", icon: Wallet },
+      ...(isStaffOrAbove(displayRole)
+        ? [{ href: "/settings/animations", label: "전술 영상", detail: "감독의 전술노트", icon: Film }]
+        : []),
       { href: "/members", label: "회원 관리", detail: "멤버·권한", icon: Users },
+      { href: "/dues", label: "회비 관리", detail: "거래 내역·납부", icon: Wallet },
+    ];
+    const recordsAndSocial = [
+      { href: "/records", label: "기록", detail: "통계·랭킹", icon: Trophy },
       { href: "/board", label: "게시판 · 앨범", detail: "공지·자유·경기 사진", icon: MessageSquare },
+    ];
+    const settings = [
       { href: "/rules", label: "회칙", detail: "팀 규정", icon: BookOpen },
       { href: "/settings", label: "설정", detail: "개인·팀", icon: Settings },
       { href: "/guide.html", label: "가이드", detail: "기능 안내", icon: HelpCircle },
     ];
-    if (isStaffOrAbove(displayRole)) {
-      // 경기 일정 다음에 전술 영상 배치 — 경기 흐름에 가장 가까운 위치
-      base.splice(2, 0, {
-        href: "/settings/animations",
-        label: "전술 영상",
-        detail: "감독의 전술노트",
-        icon: Film,
-      });
-    }
-    return base;
+    return [
+      { title: "운영", items: operations },
+      { title: "기록 · 소통", items: recordsAndSocial },
+      { title: "설정", items: settings },
+    ];
   }, [displayRole]);
 
   const roleLabel =
@@ -412,9 +420,17 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
         </div>
       )}
       <Separator className="my-4" />
-      <SidebarNav items={navItems} />
-      <div className="mt-1 space-y-0.5">
-        <p className="px-3 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-widest text-muted-foreground/50">계정</p>
+      <SidebarNav items={[homeNavItem]} />
+      {navGroups.map((group) => (
+        <div key={group.title} className="mt-4">
+          <p className="px-3 pb-1 text-[12px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+            {group.title}
+          </p>
+          <SidebarNav items={group.items} />
+        </div>
+      ))}
+      <div className="mt-4 space-y-0.5">
+        <p className="px-3 pb-1 pt-4 text-[12px] font-semibold uppercase tracking-widest text-muted-foreground/50">계정</p>
         <button
           type="button"
           onClick={handleFeedback}

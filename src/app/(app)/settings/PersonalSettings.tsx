@@ -405,40 +405,68 @@ function PersonalSettingsComponent({
                   <span className="ml-1.5 text-xs font-normal text-primary">{profile.preferredPositions.length}개 선택</span>
                 )}
               </Label>
+              <p className="text-xs text-muted-foreground">
+                선택 순서가 곧 우선순위입니다. <span className="font-semibold text-foreground">1순위가 주 포지션</span>으로 자동 편성에 우선 반영돼요.
+                {profile.preferredPositions.length > 3 && " 4번째부터는 \"기타 가능\"으로 처리됩니다."}
+              </p>
               <div className="space-y-3">
                 {posGroups.map((group) => (
                   <div key={group.group}>
                     <p className="mb-1.5 text-xs font-semibold text-muted-foreground">{group.group}</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {group.positions.map((pos) => (
-                        <button
-                          key={pos}
-                          type="button"
-                          onClick={() => {
-                            const next = profile.preferredPositions.includes(pos)
-                              ? profile.preferredPositions.filter((p) => p !== pos)
-                              : [...profile.preferredPositions, pos];
-                            setProfile({ ...profile, preferredPositions: next });
-                          }}
-                          className={cn(
-                            "rounded-full border px-2.5 py-1 text-xs font-medium transition-all active:scale-95",
-                            profile.preferredPositions.includes(pos)
-                              ? "border-primary bg-primary/15 text-primary"
-                              : "border-border bg-transparent text-secondary-foreground hover:border-primary/30 hover:text-foreground"
-                          )}
-                        >
-                          {(posShort as Record<string, string>)[pos] ?? pos}
-                          {isFutsal && pos !== "GK" && (
-                            <span className="ml-1 text-muted-foreground font-normal">
-                              {pos === "FIXO" ? "(수비)" : pos === "ALA" ? "(측면)" : pos === "PIVO" ? "(공격)" : ""}
-                            </span>
-                          )}
-                        </button>
-                      ))}
+                      {group.positions.map((pos) => {
+                        const rankIndex = profile.preferredPositions.indexOf(pos);
+                        const isSelected = rankIndex >= 0;
+                        const isTopThree = isSelected && rankIndex < 3;
+                        return (
+                          <button
+                            key={pos}
+                            type="button"
+                            onClick={() => {
+                              const next = profile.preferredPositions.includes(pos)
+                                ? profile.preferredPositions.filter((p) => p !== pos)
+                                : [...profile.preferredPositions, pos];
+                              setProfile({ ...profile, preferredPositions: next });
+                            }}
+                            className={cn(
+                              "relative rounded-full border px-2.5 py-1 text-xs font-medium transition-all active:scale-95",
+                              isTopThree
+                                ? "border-primary bg-primary/15 text-primary"
+                                : isSelected
+                                ? "border-primary/40 bg-primary/5 text-primary/70"
+                                : "border-border bg-transparent text-secondary-foreground hover:border-primary/30 hover:text-foreground"
+                            )}
+                            aria-label={isSelected ? `${pos} ${rankIndex + 1}순위 — 클릭하면 해제` : `${pos} 선택`}
+                          >
+                            {isSelected && (
+                              <span
+                                aria-hidden="true"
+                                className={cn(
+                                  "absolute -left-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold",
+                                  isTopThree ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                                )}
+                              >
+                                {rankIndex + 1}
+                              </span>
+                            )}
+                            {(posShort as Record<string, string>)[pos] ?? pos}
+                            {isFutsal && pos !== "GK" && (
+                              <span className="ml-1 text-muted-foreground font-normal">
+                                {pos === "FIXO" ? "(수비)" : pos === "ALA" ? "(측면)" : pos === "PIVO" ? "(공격)" : ""}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
               </div>
+              {profile.preferredPositions.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  순서를 바꾸려면 해당 칩을 해제하고 원하는 순서대로 다시 선택하세요.
+                </p>
+              )}
             </div>
           </div>
 
