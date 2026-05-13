@@ -463,23 +463,23 @@ export default function RecordsClient({
         </CardContent>
       </Card>
 
-      {/* ── 내 기록 — 히어로 헤더 + 4(또는 5) 카드 + 랭킹 배지 ── */}
-      <Card>
+      {/* ── 내 기록 — 히어로 헤더 + 4(또는 5) 카드 + 랭킹 배지 (탭 최상단 고정) ── */}
+      <Card style={{ order: -1 }}>
         <CardHeader className="px-4 sm:px-6">
           <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">
             내 기록
           </CardTitle>
-          {/* 히어로 한 줄 — 이름 · #등번호 · 주포지션 (있는 것만 노출) */}
+          {/* 히어로 한 줄 — 이름 · #등번호 · 주 포지션 + 보조 포지션 개수 */}
           {(myStats.memberName || myStats.jerseyNumber || myStats.preferredPositions.length > 0) && (
             <p className="mt-0.5 text-sm text-muted-foreground">
               {[
                 myStats.memberName,
                 myStats.jerseyNumber ? `#${myStats.jerseyNumber}` : null,
-                myStats.preferredPositions[0] || null,
+                myStats.preferredPositions[0] ? `주 ${myStats.preferredPositions[0]}` : null,
               ].filter(Boolean).join(" · ")}
               {myStats.preferredPositions.length > 1 && (
                 <span className="text-muted-foreground/60">
-                  {" "}+{myStats.preferredPositions.length - 1}
+                  {" "}· 보조 포지션 {myStats.preferredPositions.length - 1}개
                 </span>
               )}
             </p>

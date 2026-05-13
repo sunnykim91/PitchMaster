@@ -227,16 +227,30 @@ function PairRow({ pair, nameById, index, accent, highlightId }: PairRowProps) {
     ? nameById.get(otherId!) ?? "이름 없음"
     : `${nameA} · ${nameB}`;
 
+  // 1·2·3 위 메달 이모지, 4~10은 숫자만
+  const rankBadge = index === 1 ? "🥇" : index === 2 ? "🥈" : index === 3 ? "🥉" : index !== undefined ? String(index) : null;
+
   return (
-    <div className="flex items-center gap-2 rounded-md bg-secondary/30 px-2.5 py-2">
-      {index !== undefined && (
-        <span className="w-5 shrink-0 text-center text-xs font-bold text-muted-foreground">{index}</span>
+    <div className="flex items-center gap-2.5 rounded-lg bg-secondary/40 px-3 py-2.5 transition-colors hover:bg-secondary/60">
+      {rankBadge !== null && (
+        <span
+          className={cn(
+            "flex h-6 w-6 shrink-0 items-center justify-center text-sm font-bold",
+            index! > 3 && "text-muted-foreground",
+          )}
+        >
+          {rankBadge}
+        </span>
       )}
-      <p className="min-w-0 flex-1 truncate text-sm">{display}</p>
-      <p className="shrink-0 text-xs text-muted-foreground">
-        {pair.wins}승 {pair.draws}무 {pair.losses}패
+      <p className="min-w-0 flex-1 truncate text-sm font-medium">{display}</p>
+      <p className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
+        <span className="text-[hsl(var(--success))]">{pair.wins}</span>
+        <span className="mx-0.5">·</span>
+        <span>{pair.draws}</span>
+        <span className="mx-0.5">·</span>
+        <span className="text-[hsl(var(--loss))]">{pair.losses}</span>
       </p>
-      <p className={cn("shrink-0 w-12 text-right text-sm font-bold", accentColor)}>
+      <p className={cn("shrink-0 w-12 text-right text-sm font-bold tabular-nums", accentColor)}>
         {ratePercent}%
       </p>
     </div>

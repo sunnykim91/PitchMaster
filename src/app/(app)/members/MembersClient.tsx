@@ -22,7 +22,7 @@ import { Search } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { MemberBulkUploadModal } from "@/components/MemberBulkUploadModal";
 import { MemberEditModal } from "@/components/MemberEditModal";
-import { Users, ChevronDown } from "lucide-react";
+import { Users, ChevronDown, Sparkles } from "lucide-react";
 import { useConfirm } from "@/lib/ConfirmContext";
 
 type Member = {
@@ -1012,6 +1012,23 @@ export default function MembersClient({
             await handleStatusChange(memberId, "ACTIVE");
           }}
         />
+      )}
+
+      {/* ── 페어 시너지 진입 (운영진 only) ── */}
+      {canPreRegister && (
+        <Link
+          href="/members/pairs"
+          className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/30 hover:bg-secondary/30"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-bold">페어 시너지</span>
+            <span className="block text-xs text-muted-foreground">함께 뛰면 잘 풀리는 팀원 조합 보기 · 운영진 전용</span>
+          </span>
+          <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
+        </Link>
       )}
     </div>
   );

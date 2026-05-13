@@ -15,7 +15,7 @@ import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from 
 import { Separator } from "@/components/ui/separator";
 import { InAppBrowserBanner } from "@/components/InAppBrowserBanner";
 import { OnboardingCoachMark } from "@/components/OnboardingCoachMark";
-import { Check, Copy, Link2, Menu, ChevronDown, ChevronRight, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Share, Sun, Moon, LogOut, Film, Sparkles, Megaphone } from "lucide-react";
+import { Check, Copy, Link2, Menu, ChevronDown, ChevronRight, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Share, Sun, Moon, LogOut, Film, Megaphone } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { cn, compactKakaoImage } from "@/lib/utils";
@@ -281,9 +281,6 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
         ? [{ href: "/settings/animations", label: "전술 영상", detail: "감독의 전술노트", icon: Film }]
         : []),
       { href: "/members", label: "회원 관리", detail: "멤버·권한", icon: Users },
-      ...(isStaffOrAbove(displayRole)
-        ? [{ href: "/members/pairs", label: "페어 시너지", detail: "팀원 조합 분석 (운영진)", icon: Sparkles }]
-        : []),
       { href: "/dues", label: "회비 관리", detail: "거래 내역·납부", icon: Wallet },
     ];
     const recordsAndSocial = [
