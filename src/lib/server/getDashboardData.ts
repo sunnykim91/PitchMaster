@@ -457,29 +457,30 @@ export async function getDashboardData(
   }
 
   // ── Stage 3: completedMatches 의존 — 시즌 전적 + 본인 시즌 통계 병렬 ──
+  // getRecordsData 와 동일 기준 사용:
+  //   - 출전 = vote='ATTEND' 카운트 (user_id 또는 member_id 매칭, match_id dedupe)
+  //   - 골   = scorer_id 가 user_id 또는 member_id (records가 ids.reduce로 둘 다 합산)
+  //   - 출석률 = attended / completedMatchIds.length (시즌 전체 경기 분모)
   const completedMatchIds = (completedMatchesRes.data ?? []).map((m) => m.id);
   let teamRecord = EMPTY_RECORD;
   let mySeasonStats: DashboardData["mySeasonStats"] = null;
   if (completedMatchIds.length > 0) {
-    const [allGoalsRes, myAttByUserRes, myAttByMemberRes, myGoalsRes] = await Promise.all([
+    const [allGoalsRes, myAttByUserRes, myAttByMemberRes] = await Promise.all([
       db.from("match_goals")
         .select("match_id, scorer_id, is_own_goal")
         .in("match_id", completedMatchIds),
       db.from("match_attendance")
-        .select("match_id, attendance_status")
+        .select("match_id")
         .in("match_id", completedMatchIds)
+        .eq("vote", "ATTEND")
         .eq("user_id", userId),
       myTeamMemberId
         ? db.from("match_attendance")
-            .select("match_id, attendance_status")
+            .select("match_id")
             .in("match_id", completedMatchIds)
+            .eq("vote", "ATTEND")
             .eq("member_id", myTeamMemberId)
-        : Promise.resolve({ data: [] as { match_id: string; attendance_status: string }[] }),
-      db.from("match_goals")
-        .select("id")
-        .in("match_id", completedMatchIds)
-        .eq("scorer_id", userId)
-        .eq("is_own_goal", false),
+        : Promise.resolve({ data: [] as { match_id: string }[] }),
     ]);
     const allGoals = allGoalsRes.data;
     const matchScores = new Map<string, { our: number; opp: number }>();
@@ -501,22 +502,25 @@ export async function getDashboardData(
     }
     teamRecord = { wins, draws, losses, goalsFor: gf, goalsAgainst: ga, recent5: results.slice(0, 5) };
 
-    // 본인 시즌 통계 — user_id 또는 member_id 양쪽 attendance row 모두 검색 후 match_id 기준 dedupe
-    const attMap = new Map<string, string>();
-    for (const r of (myAttByUserRes.data ?? [])) attMap.set(r.match_id, r.attendance_status);
-    for (const r of (myAttByMemberRes.data ?? [])) {
-      if (!attMap.has(r.match_id)) attMap.set(r.match_id, r.attendance_status);
+    // 본인 출전 — vote='ATTEND' row 합집합 (user_id 또는 member_id), match_id 기준 dedupe
+    const attMatchSet = new Set<string>();
+    for (const r of (myAttByUserRes.data ?? [])) attMatchSet.add(r.match_id);
+    for (const r of (myAttByMemberRes.data ?? [])) attMatchSet.add(r.match_id);
+    const attendCount = attMatchSet.size;
+
+    // 본인 골 — scorer_id 가 userId 또는 myTeamMemberId 일 수 있어 둘 다 매칭
+    const myScorerIds = new Set<string>([userId]);
+    if (myTeamMemberId) myScorerIds.add(myTeamMemberId);
+    let myGoalCount = 0;
+    for (const g of allGoals ?? []) {
+      if (g.scorer_id && !g.is_own_goal && myScorerIds.has(g.scorer_id)) myGoalCount++;
     }
-    const attStatuses = Array.from(attMap.values());
-    const presentCount = attStatuses.filter((s) => s === "PRESENT" || s === "LATE").length;
-    const absentCount = attStatuses.filter((s) => s === "ABSENT").length;
-    const decidedTotal = presentCount + absentCount;
-    const myGoalCount = (myGoalsRes.data ?? []).length;
-    if (decidedTotal > 0 || myGoalCount > 0) {
+
+    if (attendCount > 0 || myGoalCount > 0) {
       mySeasonStats = {
-        matches: presentCount,
+        matches: attendCount,
         goals: myGoalCount,
-        attendanceRate: decidedTotal > 0 ? Math.round((presentCount / decidedTotal) * 100) : 0,
+        attendanceRate: Math.round((attendCount / completedMatchIds.length) * 100),
       };
     }
   }
