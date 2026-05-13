@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, MessageCircle, UserPlus, Users } from "lucide-react";
 import { createTeam, joinTeam } from "@/app/team/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GA } from "@/lib/analytics";
+import DemoButton from "@/app/login/DemoButton";
 
 export default function TeamClient({ hasExistingTeam = false }: { hasExistingTeam?: boolean }) {
   const searchParams = useSearchParams();
@@ -334,6 +335,42 @@ export default function TeamClient({ hasExistingTeam = false }: { hasExistingTea
           </>
         ) : (
           <>
+            {/* ── Wayfinding 카드 — 코드 없이 진입한 사용자를 위한 안내 ── */}
+            {!hasExistingTeam && (
+              <Card className="mb-8 border-primary/20 bg-primary/5">
+                <CardContent className="p-5">
+                  <p className="text-sm font-bold text-foreground mb-3">어떻게 시작할지 모르겠나요?</p>
+                  <ul className="space-y-2.5 text-sm">
+                    <li className="flex gap-2.5">
+                      <MessageCircle className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+                      <span className="text-muted-foreground">
+                        친구가 보내준 <b className="text-foreground">초대 코드</b>가 있다면 우측 칸에 입력하세요.
+                      </span>
+                    </li>
+                    <li className="flex gap-2.5">
+                      <UserPlus className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+                      <span className="text-muted-foreground">
+                        우리 팀에 처음 도입하는 거라면 <b className="text-foreground">새 팀 만들기</b>로 회장으로 등록한 뒤, 단톡방에 초대 코드를 공유하세요.
+                      </span>
+                    </li>
+                    <li className="flex gap-2.5">
+                      <Users className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+                      <span className="text-muted-foreground">
+                        회원으로 참여만 하고 싶다면 아래 <b className="text-foreground">팀 검색</b>으로 가입 신청을 보내거나, 회장님께 코드를 요청하세요.
+                      </span>
+                    </li>
+                  </ul>
+                  <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-primary/10 pt-3">
+                    <p className="text-xs text-muted-foreground">어떤 앱인지 먼저 둘러볼래요 →</p>
+                    <DemoButton compact />
+                    <p className="text-[11px] text-muted-foreground/80 mt-1 w-full">
+                      ※ 데모로 전환되면 현재 계정에서 잠시 로그아웃돼요. 카카오로 다시 로그인하면 본인 계정으로 돌아옵니다.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* 초대 코드가 없을 때: 기존 2열 레이아웃 */}
             <div className="grid gap-8 lg:grid-cols-2">
               {createTeamCard}

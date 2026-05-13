@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Cake, Calendar, Check, ChevronRight, Copy, DollarSign, Link2, Loader2, Trophy, User, Users, Vote } from "lucide-react";
+import { Cake, Calendar, Check, ChevronRight, Copy, DollarSign, Link2, Loader2, Trophy, User, Users, Vote, X } from "lucide-react";
 import { GA } from "@/lib/analytics";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
@@ -183,6 +183,8 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
   const [loadingVote, setLoadingVote] = useState<"ATTEND" | "ABSENT" | "MAYBE" | null>(null);
   const [shakeVote, setShakeVote] = useState<"ATTEND" | "ABSENT" | "MAYBE" | null>(null);
   const [inviteCopied, setInviteCopied] = useState(false);
+  const [joinedWelcome, setJoinedWelcome] = useState<{ team: string } | null>(null);
+  const [wizardDismissed, setWizardDismissed] = useState(false);
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
 
@@ -199,9 +201,21 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
       const method = searchParams.get("method") ?? "invite_code";
       showToast(`${team} 팀에 가입되었습니다.`, "success");
       GA.teamJoin(method);
+      setJoinedWelcome({ team });
       window.history.replaceState(null, "", "/dashboard");
     }
   }, [searchParams]);
+
+  // 위자드 dismissed 상태 localStorage 동기화 (팀별 1회성)
+  useEffect(() => {
+    if (typeof window === "undefined" || !teamId) return;
+    try {
+      const key = `wizard_dismissed:${teamId}`;
+      if (localStorage.getItem(key)) setWizardDismissed(true);
+    } catch {
+      /* localStorage 비활성 환경 무시 */
+    }
+  }, [teamId]);
 
   // 첫 경기 완료 발견 유도 토스트 (팀 누적 완료 1건일 때 1회만)
   const firstCompleteRecordTotal =
@@ -289,11 +303,29 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
   // Team record totals
   const recordTotal = teamRecord.wins + teamRecord.draws + teamRecord.losses;
 
-  // Onboarding wizard: show only for brand-new teams with no data
-  const showWizard = !upcomingMatch && activeVotes.length === 0 && !recentResult && recordTotal === 0;
+  // Onboarding wizard: 빈 새 팀 + 운영진(STAFF+) + 닫지 않은 상태에서만 노출
+  const showWizard =
+    !wizardDismissed &&
+    isStaffOrAbove(role) &&
+    !upcomingMatch &&
+    activeVotes.length === 0 &&
+    !recentResult &&
+    recordTotal === 0;
 
   // 경기 0건 넛지 카드: 위자드와 별개로, 한 번도 경기를 등록한 적 없는 팀에게 운영진에게만 표시
   const showNoMatchNudge = !showWizard && isStaffOrAbove(role) && (data.totalMatches ?? 0) === 0;
+
+  // 위자드 닫기 핸들러
+  function dismissWizard() {
+    setWizardDismissed(true);
+    if (typeof window !== "undefined" && teamId) {
+      try {
+        localStorage.setItem(`wizard_dismissed:${teamId}`, "1");
+      } catch {
+        /* 무시 */
+      }
+    }
+  }
 
   if (error) {
     return (
@@ -402,9 +434,69 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
         </Link>
       )}
 
+      {/* ── 신규 가입자(팀원 합류) 환영 카드 ── */}
+      {joinedWelcome && (
+        <Card className="card-featured relative">
+          <button
+            type="button"
+            onClick={() => setJoinedWelcome(null)}
+            className="absolute top-3 right-3 rounded-full p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+            aria-label="환영 카드 닫기"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <CardContent className="pt-6">
+            <h2 className="text-lg font-bold text-foreground">{joinedWelcome.team}에 합류했어요! 👋</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              먼저 해보면 좋은 3가지를 골라봤어요. 천천히 둘러보셔도 돼요.
+            </p>
+            <div className="mt-4 space-y-3">
+              <div className="flex items-start gap-3 rounded-xl bg-secondary/50 p-4">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">1</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">다가오는 경기에 투표하기</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">참석 여부를 알리면 회장님이 명단을 짜기 편해져요.</p>
+                  <Button size="sm" className="mt-2" asChild>
+                    <Link href="/matches">일정 보러가기 →</Link>
+                  </Button>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 rounded-xl bg-secondary/50 p-4">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">2</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">내 프로필 완성하기</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">포지션이나 사진을 추가하면 자동 편성·기록에 반영돼요.</p>
+                  <Button size="sm" variant="outline" className="mt-2" asChild>
+                    <Link href={`/player/${userId}${teamId ? `?team=${teamId}` : ""}`}>프로필 보기 →</Link>
+                  </Button>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 rounded-xl bg-secondary/50 p-4">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">3</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">팀 게시판 둘러보기</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">공지·회칙·일정 정보가 게시판에 모여 있어요.</p>
+                  <Button size="sm" variant="outline" className="mt-2" asChild>
+                    <Link href="/board">게시판 →</Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* ── Onboarding Wizard (new teams only) ── */}
       {showWizard && (
-        <Card className="card-featured">
+        <Card className="card-featured relative">
+          <button
+            type="button"
+            onClick={dismissWizard}
+            className="absolute top-3 right-3 rounded-full p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+            aria-label="위자드 닫기"
+          >
+            <X className="h-4 w-4" />
+          </button>
           <CardContent className="pt-6">
             <h2 className="text-lg font-bold text-foreground">팀이 생성되었습니다! 🎉</h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -440,9 +532,9 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                   2
                 </span>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">팀원 미리 등록</p>
+                  <p className="text-sm font-semibold text-foreground">팀원 명단 먼저 만들기</p>
                   <p className="mt-0.5 text-sm text-muted-foreground">
-                    가입 전 팀원 이름을 미리 등록하면 출석/회비 관리가 편해집니다.
+                    팀원이 앱에 가입하기 전이라도 이름을 등록해두면, 출석·회비 기록을 바로 시작할 수 있어요.
                   </p>
                   <Button size="sm" variant="outline" className="mt-2" asChild>
                     <Link href="/members">회원 관리 &rarr;</Link>

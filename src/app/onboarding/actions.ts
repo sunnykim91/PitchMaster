@@ -27,7 +27,7 @@ export async function completeOnboarding(formData: FormData) {
   if (!nameCheck.ok) errors.push(nameCheck.reason);
   if (birthDate && !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) errors.push("올바른 생년월일 형식이 아닙니다");
   if (phone && (phone.length < 10 || phone.length > 11)) errors.push("올바른 전화번호를 입력해주세요");
-  if (preferredPositions.length === 0) errors.push("선호 포지션을 최소 1개 선택해주세요");
+  // 포지션은 선택 사항 — 비워두면 나중에 설정에서 추가 가능
 
   if (errors.length > 0) {
     const inviteCode = String(formData.get("inviteCode") || "").trim();

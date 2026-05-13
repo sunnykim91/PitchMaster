@@ -59,7 +59,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
             <div className="absolute h-1 rounded-full bg-primary" style={{ width: "33%" }} />
           </div>
           <p className="mt-2 text-xs text-muted-foreground text-center">
-            지금은 1단계예요. 다음에 팀을 선택하거나 만들고, 마지막에 첫 경기를 등록하면 끝!
+            지금은 1단계예요. 다음 단계에서 팀에 합류하거나 새로 만들면 시작할 수 있어요.
           </p>
         </div>
 
@@ -74,7 +74,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
           <CardHeader>
             <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">가입 정보</p>
             <CardTitle className="font-heading text-3xl font-bold uppercase">기본 정보를 입력해주세요</CardTitle>
-            <CardDescription>이름과 선호 포지션은 필수입니다. 나머지는 나중에 설정에서 추가할 수 있어요.</CardDescription>
+            <CardDescription>이름만 필수예요. 나머지는 비워둬도 되고, 나중에 설정에서 언제든 바꿀 수 있어요.</CardDescription>
           </CardHeader>
           <CardContent>
             <form action={completeOnboarding} className="space-y-6">
@@ -102,7 +102,10 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
                 </div>
               </div>
               <div className="space-y-3">
-                <Label>선호 포지션 (복수 선택)</Label>
+                <div className="flex items-baseline justify-between gap-2">
+                  <Label>선호 포지션 <span className="text-muted-foreground font-normal">(선택, 복수 가능)</span></Label>
+                  <p className="text-xs text-muted-foreground">아직 모르겠으면 비워두세요</p>
+                </div>
                 {isFutsal ? (
                   /* ── 풋살 포지션 ── */
                   <div className="grid gap-2 sm:grid-cols-2">
@@ -127,19 +130,29 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
                     <div>
                       <p className="mb-2 text-xs font-semibold text-muted-foreground">골키퍼</p>
                       <div className="grid gap-2 sm:grid-cols-2">
-                        <label className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
-                          <input type="checkbox" name="preferredPositions" value="GK" className="h-4 w-4 accent-primary" />
-                          GK · 골키퍼
+                        <label className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3 cursor-pointer hover:bg-accent transition-colors">
+                          <input type="checkbox" name="preferredPositions" value="GK" className="h-4 w-4 accent-primary mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium">GK · 골키퍼</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">골문을 지키는 최후방</p>
+                          </div>
                         </label>
                       </div>
                     </div>
                     <div>
                       <p className="mb-2 text-xs font-semibold text-muted-foreground">수비</p>
                       <div className="grid gap-2 sm:grid-cols-3">
-                        {([["CB", "센터백"], ["LB", "좌측 윙백"], ["RB", "우측 윙백"]] as const).map(([v, l]) => (
-                          <label key={v} className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
-                            <input type="checkbox" name="preferredPositions" value={v} className="h-4 w-4 accent-primary" />
-                            {v} · {l}
+                        {([
+                          ["CB", "센터백", "중앙 수비, 상대 공격수 차단"],
+                          ["LB", "좌측 윙백", "왼쪽 측면 수비 + 오버래핑"],
+                          ["RB", "우측 윙백", "오른쪽 측면 수비 + 오버래핑"],
+                        ] as const).map(([v, l, d]) => (
+                          <label key={v} className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3 cursor-pointer hover:bg-accent transition-colors">
+                            <input type="checkbox" name="preferredPositions" value={v} className="h-4 w-4 accent-primary mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium">{v} · {l}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">{d}</p>
+                            </div>
                           </label>
                         ))}
                       </div>
@@ -147,10 +160,17 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
                     <div>
                       <p className="mb-2 text-xs font-semibold text-muted-foreground">미드필더</p>
                       <div className="grid gap-2 sm:grid-cols-3">
-                        {([["CDM", "수비형 미드필더"], ["CM", "중앙 미드필더"], ["CAM", "공격형 미드필더"]] as const).map(([v, l]) => (
-                          <label key={v} className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
-                            <input type="checkbox" name="preferredPositions" value={v} className="h-4 w-4 accent-primary" />
-                            {v} · {l}
+                        {([
+                          ["CDM", "수비형 미드필더", "수비 라인 보호, 1차 빌드업"],
+                          ["CM", "중앙 미드필더", "공수 연결, 경기 조율"],
+                          ["CAM", "공격형 미드필더", "공격 전개, 결정적 패스"],
+                        ] as const).map(([v, l, d]) => (
+                          <label key={v} className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3 cursor-pointer hover:bg-accent transition-colors">
+                            <input type="checkbox" name="preferredPositions" value={v} className="h-4 w-4 accent-primary mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium">{v} · {l}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">{d}</p>
+                            </div>
                           </label>
                         ))}
                       </div>
@@ -158,10 +178,17 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
                     <div>
                       <p className="mb-2 text-xs font-semibold text-muted-foreground">공격</p>
                       <div className="grid gap-2 sm:grid-cols-3">
-                        {([["LW", "좌측 윙어"], ["RW", "우측 윙어"], ["ST", "스트라이커"]] as const).map(([v, l]) => (
-                          <label key={v} className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium cursor-pointer hover:bg-accent transition-colors">
-                            <input type="checkbox" name="preferredPositions" value={v} className="h-4 w-4 accent-primary" />
-                            {v} · {l}
+                        {([
+                          ["LW", "좌측 윙어", "왼쪽 측면 돌파, 크로스"],
+                          ["RW", "우측 윙어", "오른쪽 측면 돌파, 크로스"],
+                          ["ST", "스트라이커", "최전방, 골 마무리"],
+                        ] as const).map(([v, l, d]) => (
+                          <label key={v} className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3 cursor-pointer hover:bg-accent transition-colors">
+                            <input type="checkbox" name="preferredPositions" value={v} className="h-4 w-4 accent-primary mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium">{v} · {l}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">{d}</p>
+                            </div>
                           </label>
                         ))}
                       </div>
