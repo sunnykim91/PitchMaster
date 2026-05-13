@@ -427,7 +427,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       <Separator className="my-4" />
       <SidebarNav items={[homeNavItem]} />
       {navGroups.map((group) => (
-        <div key={group.title} className="mt-4">
+        <div key={group.title} className="mt-4 border-t border-border/30 pt-3">
           <p className="px-3 pb-1 text-[12px] font-semibold uppercase tracking-widest text-muted-foreground/50">
             {group.title}
           </p>
@@ -726,31 +726,40 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-center py-3"><div className="h-1 w-10 rounded-full bg-muted" /></div>
-            <nav className="grid grid-cols-2 gap-2" aria-label="추가 메뉴">
-              {[
-                { href: "/board", icon: MessageSquare, label: "게시판 · 앨범", description: "공지·자유·사진", featured: true },
-                { href: "/members", icon: Users, label: "회원 관리", description: "멤버·권한", featured: false },
-                { href: "/rules", icon: BookOpen, label: "회칙", description: "팀 규정", featured: false },
-                { href: "/settings", icon: Settings, label: "설정", description: "개인·팀", featured: false },
-              ].map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={closeSheet}
-                  className={cn(
-                    "flex flex-col items-start gap-1.5 rounded-xl border p-3 transition-colors active:scale-95",
-                    item.featured
-                      ? "border-primary/30 bg-primary/5 hover:bg-primary/10"
-                      : "border-border bg-secondary/30 hover:bg-secondary"
-                  )}
-                >
-                  <item.icon className={cn("h-5 w-5", item.featured ? "text-primary" : "text-muted-foreground")} />
-                  <div>
-                    <p className={cn("text-sm font-semibold leading-tight", item.featured ? "text-primary" : "text-foreground")}>{item.label}</p>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">{item.description}</p>
-                  </div>
-                </Link>
-              ))}
+            <nav className="space-y-2" aria-label="추가 메뉴">
+              {/* Hero: 게시판 · 앨범 — 풀너비 강조 카드 */}
+              <Link
+                href="/board"
+                onClick={closeSheet}
+                className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10 active:scale-[0.98]"
+              >
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                  <MessageSquare className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-primary">게시판 · 앨범</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">공지 · 자유게시판 · 경기 사진</span>
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </Link>
+              {/* 보조: 3열 작은 그리드 */}
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { href: "/members", icon: Users, label: "회원 관리" },
+                  { href: "/rules", icon: BookOpen, label: "회칙" },
+                  { href: "/settings", icon: Settings, label: "설정" },
+                ].map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={closeSheet}
+                    className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-secondary/30 p-3 transition-colors hover:bg-secondary active:scale-95"
+                  >
+                    <item.icon className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-xs font-semibold">{item.label}</span>
+                  </Link>
+                ))}
+              </div>
               {installMode !== "none" && (
                 <>
                   <Separator className="my-1" />
