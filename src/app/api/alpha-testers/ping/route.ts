@@ -1,50 +1,33 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
-const TWA_PACKAGE = "app.pitchmaster";
-const TWA_REFERER_PREFIX = `android-app://${TWA_PACKAGE}`;
-
+// KST 기준 오늘 날짜 (YYYY-MM-DD)
 function todayKst(): string {
   const now = new Date();
   const kstMs = now.getTime() + 9 * 60 * 60 * 1000;
-  return new Date(kstMs).toISOString().slice(0, 10);
+  const kst = new Date(kstMs);
+  return kst.toISOString().slice(0, 10);
 }
 
 /**
- * TWA(Play Store 알파 빌드) 진입 검증 — Play Console 활성 통계 정합성 우선.
+ * 알파 테스터 출석 카운트.
  *
- * 2가지 신호 중 하나라도 매치되면 TWA로 인정:
- *  1. Referer 헤더가 `android-app://app.pitchmaster` 로 시작 (가장 신뢰)
- *  2. X-Requested-With 헤더가 패키지명과 일치 (Android WebView 표준)
+ * TWA 진입 검증은 **클라이언트 측 isTwa()** 가 담당:
+ *   - `document.referrer === android-app://app.pitchmaster/...` 일 때만 fetch 호출
+ *   - PWA·일반 브라우저는 클라이언트에서 호출 자체를 안 함
  *
- * PWA 홈 화면 추가본·일반 모바일 Chrome은 위 신호를 모두 만족하지 못함.
- * referrer 누락 케이스 보강은 클라이언트 신뢰 헤더로는 false positive 위험.
+ * 서버 측에서는 HTTP `Referer` 헤더로 TWA를 구분할 수 없음
+ * (fetch의 Referer는 현재 페이지 URL이라 항상 https://pitch-master.app/...).
+ * 따라서 서버는 인증·등록·승인만 검증하고 INSERT.
+ *
+ * 알파 단계 한정으로 클라이언트 신뢰. 우회 가능하지만 14일 운영 안정성 우선.
  */
-function detectTwa(req: NextRequest): { ok: boolean; signal: string | null } {
-  const referer = req.headers.get("referer") ?? "";
-  if (referer.toLowerCase().startsWith(TWA_REFERER_PREFIX)) {
-    return { ok: true, signal: "referer" };
-  }
-
-  const xrw = req.headers.get("x-requested-with") ?? "";
-  if (xrw.toLowerCase() === TWA_PACKAGE) {
-    return { ok: true, signal: "x-requested-with" };
-  }
-
-  return { ok: false, signal: null };
-}
-
-export async function POST(req: NextRequest) {
+export async function POST() {
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  const url = new URL(req.url);
-  const forceAlpha = url.searchParams.get("alpha") === "1";
-  const twa = detectTwa(req);
-  const isTwa = twa.ok || forceAlpha;
 
   const db = getSupabaseAdmin();
   if (!db) {
@@ -70,16 +53,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, registered: true, approved: false });
   }
 
-  if (!isTwa) {
-    return NextResponse.json({
-      ok: true,
-      registered: true,
-      approved: true,
-      twa: false,
-      reason: "TWA signal not detected — PWA·browser entry not counted",
-    });
-  }
-
   const logDate = todayKst();
 
   const { error: insertErr } = await db
@@ -89,18 +62,11 @@ export async function POST(req: NextRequest) {
       log_date: logDate,
     });
 
+  // 23505 = 이미 오늘 로그 있음 (정상)
   if (insertErr && insertErr.code !== "23505") {
     console.error("[alpha-testers/ping insert]", insertErr);
     return NextResponse.json({ error: "로깅 실패" }, { status: 500 });
   }
 
-  return NextResponse.json({
-    ok: true,
-    registered: true,
-    approved: true,
-    twa: true,
-    signal: forceAlpha ? "force" : twa.signal,
-    logDate,
-    alreadyLogged: insertErr?.code === "23505",
-  });
+  return NextResponse.json({ ok: true, registered: true, approved: true, logDate });
 }
