@@ -16,20 +16,48 @@ function isAndroid(): boolean {
 }
 
 /**
- * TWA(Trusted Web Activity = Play Store 알파 빌드)에서 진입했는지 감지.
+ * TWA(Trusted Web Activity = Play Store 알파 빌드) 진입 신호 다중 감지.
  *
- * Bubblewrap이 만든 TWA는 진입 시 document.referrer 가
- * `android-app://app.pitchmaster/...` 로 시작함.
+ * 1차: document.referrer === `android-app://app.pitchmaster/...`
+ * 2차 (fallback): Android + standalone display-mode + sessionStorage 캐시
  *
- * 일반 모바일 브라우저(Chrome/Samsung Internet)·PWA(홈화면 추가본)는
- * 일반 https referrer 또는 빈 값.
+ * referrer는 일부 OS·런처·Chrome 버전 조합에서 누락되는 사례 박제됨 (53차).
+ * 한 번이라도 TWA referrer를 본 세션은 sessionStorage에 박제해 두고,
+ * 같은 세션 안에서는 referrer 없어도 TWA로 인정.
  *
- * 정확도 100%는 아님 — 일부 OS·런처 조합에서 referrer 비어 올 수 있음.
- * 그래도 PWA·일반 브라우저와 구분 가능한 가장 단순·안정적인 신호.
+ * 최종 판정은 서버에서 Referer·X-Requested-With·커스텀 헤더로 재검증.
  */
-function isTwa(): boolean {
+const TWA_SESSION_KEY = "pitchmaster-twa-session-v1";
+
+function refererSaysTwa(): boolean {
   if (typeof document === "undefined") return false;
   return /^android-app:\/\/app\.pitchmaster/i.test(document.referrer ?? "");
+}
+
+function isStandalone(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.matchMedia?.("(display-mode: standalone)").matches ?? false;
+  } catch {
+    return false;
+  }
+}
+
+function isTwa(): boolean {
+  if (refererSaysTwa()) {
+    try {
+      sessionStorage.setItem(TWA_SESSION_KEY, "1");
+    } catch {
+      // ignore
+    }
+    return true;
+  }
+  try {
+    if (sessionStorage.getItem(TWA_SESSION_KEY) === "1") return true;
+  } catch {
+    // ignore
+  }
+  return isAndroid() && isStandalone();
 }
 
 function isAlreadyShown(): boolean {
@@ -70,11 +98,16 @@ export default function AlphaTesterBanner() {
   const [existing, setExisting] = useState<ExistingTester>(null);
   const [submitted, setSubmitted] = useState(false);
 
-  // 자동 ping: TWA(Play Store 알파 빌드)에서 진입했을 때만 호출.
-  // PWA·일반 브라우저 진입은 카운트 안 함 (Play Console 통계와 정합성 유지).
+  // 자동 ping: Android 사용자는 무조건 시도 (서버에서 다중 신호로 TWA 재검증).
+  // 클라이언트가 TWA로 판단되면 X-Pitchmaster-Source 헤더로 신호 전달 —
+  // referrer가 누락돼도 클라이언트 다른 신호(standalone·sessionStorage)로
+  // 보강 가능. PWA·일반 브라우저는 서버에서 거름.
   useEffect(() => {
-    if (!isTwa() && !isForceShow()) return;
-    fetch("/api/alpha-testers/ping", { method: "POST" }).catch((err) => {
+    if (!isAndroid() && !isForceShow()) return;
+    const headers: HeadersInit = { "Content-Type": "application/json" };
+    if (isTwa()) headers["X-Pitchmaster-Source"] = "twa";
+    const url = isForceShow() ? "/api/alpha-testers/ping?alpha=1" : "/api/alpha-testers/ping";
+    fetch(url, { method: "POST", headers }).catch((err) => {
       console.error("[alpha-ping]", err);
     });
   }, []);
