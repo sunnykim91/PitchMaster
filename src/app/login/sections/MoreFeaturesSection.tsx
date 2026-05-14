@@ -22,6 +22,7 @@ import {
   Goal,
   Film,
   Cake,
+  UserPlus,
 } from "lucide-react";
 
 type Tone = "primary" | "info" | "accent" | "warning";
@@ -32,6 +33,7 @@ const FEATURES: Array<{
   desc: string;
   tone: Tone;
 }> = [
+  { Icon: UserPlus,     label: "회원 일괄 등록",       desc: "카카오톡 명단 복붙 또는 CSV로 한 번에 등록",      tone: "info" },
   { Icon: Megaphone,    label: "게시판 / 공지",       desc: "고정 공지 + 댓글, 단톡방에 묻히지 않음",       tone: "primary" },
   { Icon: BarChart3,    label: "경기 기록",            desc: "골/어시/MVP 자동 집계, 시즌 누적 통계",         tone: "info" },
   { Icon: Film,         label: "전술 영상 편집 (전술 애니메이션)", desc: "선수 위치 직접 그려 빌드업·수비 흐름 영상 — 축구 11인제·풋살 5·6인제 모두",   tone: "accent" },

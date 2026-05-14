@@ -534,11 +534,17 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-foreground">팀원 명단 먼저 만들기</p>
                   <p className="mt-0.5 text-sm text-muted-foreground">
-                    팀원이 앱에 가입하기 전이라도 이름을 등록해두면, 출석·회비 기록을 바로 시작할 수 있어요.
+                    카카오톡 단체방 명단을 복붙하면 한 번에 등록됩니다. 가입 전이라도 출석·회비 기록을 바로 시작할 수 있어요.
                   </p>
-                  <Button size="sm" variant="outline" className="mt-2" asChild>
-                    <Link href="/members">회원 관리 &rarr;</Link>
+                  <Button size="sm" className="mt-2" asChild>
+                    <Link href="/members?bulk=true">카톡 명단 복붙으로 한 번에 등록 &rarr;</Link>
                   </Button>
+                  <Link
+                    href="/members"
+                    className="mt-2 ml-3 inline-block text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                  >
+                    한 명씩 등록 →
+                  </Link>
                 </div>
               </div>
 

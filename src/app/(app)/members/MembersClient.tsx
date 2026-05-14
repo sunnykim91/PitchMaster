@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useApi, apiMutate } from "@/lib/useApi";
 import type { DetailedPosition, Role } from "@/lib/types";
 import { isPresident, isStaffOrAbove } from "@/lib/permissions";
@@ -121,8 +122,9 @@ export default function MembersClient({
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [regName, regPhone]);
-  // 일괄 등록 모달
-  const [showBulkModal, setShowBulkModal] = useState(false);
+  // 일괄 등록 모달 — URL ?bulk=true 진입 시 자동 오픈 (위자드·랜딩 진입점)
+  const searchParams = useSearchParams();
+  const [showBulkModal, setShowBulkModal] = useState(() => searchParams.get("bulk") === "true");
   // 회원 정보 수정 모달 (등번호·감독포지션·주장·역할·휴면 통합)
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
 
