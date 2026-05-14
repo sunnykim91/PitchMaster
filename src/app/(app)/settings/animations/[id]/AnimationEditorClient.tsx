@@ -17,7 +17,8 @@
  *  - 드래그 시 boardRef.current.getBoundingClientRect() 로 변환 (TacticsBoard 패턴)
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { formationTemplates } from "@/lib/formations";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -108,7 +109,28 @@ export default function AnimationEditorClient({ initial }: Props) {
   const [dirty, setDirty] = useState(false);
   // 좁은 모바일에서 SVG 편집 영역을 화면 가득 키우기 위한 CSS 풀스크린 토글.
   // requestFullscreen API 는 iOS Safari 제약이 있어 position: fixed 패턴으로 대체.
+  // 부모 wrapper(ClientLayout의 animate-fade-in-up 등)가 transform/filter를
+  // 가지면 fixed inset-0이 viewport 대신 wrapper 기준이 되므로,
+  // 최대화 시에는 createPortal로 document.body 직속으로 띄운다.
   const [maximized, setMaximized] = useState(false);
+  const [portalReady, setPortalReady] = useState(false);
+  useEffect(() => setPortalReady(true), []);
+
+  function withMaybePortal(inner: ReactNode): ReactNode {
+    if (!maximized) return inner;
+    if (!portalReady || typeof document === "undefined") return inner;
+    return createPortal(inner, document.body);
+  }
+
+  // 최대화 중에는 body 스크롤 잠금 — 배경 페이지가 뒤에서 스크롤되는 거 차단
+  useEffect(() => {
+    if (!maximized || typeof document === "undefined") return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [maximized]);
   // GIF export 진행 상태 (미리보기 모드에서 노출)
   type ExportTarget = "attack" | "defense" | "combined";
   const [exportingMode, setExportingMode] = useState<ExportTarget | null>(null);
@@ -424,11 +446,11 @@ export default function AnimationEditorClient({ initial }: Props) {
 
   // 미리보기 모드일 때는 FormationMotionViewer 렌더
   if (previewing) {
-    return (
+    return withMaybePortal(
       <div
         className={cn(
           "container mx-auto max-w-3xl px-4 py-6 sm:py-8",
-          maximized && "fixed inset-0 z-50 max-w-none overflow-y-auto bg-background px-3 py-3"
+          maximized && "fixed inset-0 z-[100] max-w-none overflow-y-auto bg-background px-3 py-3"
         )}
       >
         <div className="mb-3 flex items-center justify-between gap-2">
@@ -515,11 +537,11 @@ export default function AnimationEditorClient({ initial }: Props) {
     );
   }
 
-  return (
+  return withMaybePortal(
     <div
       className={cn(
         "container mx-auto max-w-4xl px-4 py-6 sm:py-8",
-        maximized && "fixed inset-0 z-50 max-w-none overflow-y-auto bg-background px-3 py-3"
+        maximized && "fixed inset-0 z-[100] max-w-none overflow-y-auto bg-background px-3 py-3"
       )}
     >
       {/* 뒤로가기 + 저장 */}
