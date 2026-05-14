@@ -156,6 +156,10 @@ public/v6.png
 public/전술판.png
 public/localhost_*.png
 public/screenshots/www.pitch-master.app_*.png
+public/22333.png
+
+# PII 포함 개인 문서 (커밋 금지)
+docs/portfolio.md
 
 # v0 design export (참조용)
 v0card/
