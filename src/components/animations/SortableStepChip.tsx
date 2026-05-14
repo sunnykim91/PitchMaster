@@ -34,6 +34,7 @@ export function SortableStepChip({
       {...attributes}
       {...listeners}
       aria-label={`컷 ${index + 1} 선택 (길게 눌러 순서 변경)`}
+      aria-pressed={active}
       className={cn(
         "min-h-[32px] min-w-[32px] rounded px-2 py-1.5 text-[12.5px] font-semibold tabular-nums transition-colors touch-none select-none",
         active

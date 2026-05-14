@@ -39,6 +39,7 @@ import {
   Download,
   Play,
   Pause,
+  X,
 } from "lucide-react";
 import {
   DndContext,
@@ -239,6 +240,66 @@ export default function AnimationEditorClient({ initial }: Props) {
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [dirty, exportingMode]);
+
+  // 첫 진입 인라인 안내 — localStorage 1회 토글로 dismiss
+  const COACH_KEY = "animation-editor-coach-v1";
+  const [coachOpen, setCoachOpen] = useState(false);
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem(COACH_KEY)) setCoachOpen(true);
+    } catch {
+      // ignore
+    }
+  }, []);
+  function dismissCoach() {
+    setCoachOpen(false);
+    try {
+      localStorage.setItem(COACH_KEY, "1");
+    } catch {
+      // ignore
+    }
+  }
+
+  // 키보드 단축키 — Space 재생/정지, ←/→ 컷 이동, F 최대화, Ctrl/Cmd+S 저장.
+  // INPUT/TEXTAREA 입력 중에는 비활성, 미리보기 모드도 비활성.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (previewing) return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) return;
+
+      if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
+        e.preventDefault();
+        if (!saving && dirty) void handleSave();
+        return;
+      }
+      if (e.code === "Space") {
+        e.preventDefault();
+        if (steps.length > 1) setEditorPlaying((v) => !v);
+        return;
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setStepIdx((i) => Math.min(steps.length - 1, i + 1));
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setStepIdx((i) => Math.max(0, i - 1));
+        return;
+      }
+      if (e.key === "f" || e.key === "F") {
+        if (e.ctrlKey || e.metaKey) return; // 브라우저 찾기와 충돌 방지
+        e.preventDefault();
+        setMaximized((v) => !v);
+        return;
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewing, saving, dirty, steps.length]);
 
   // 데이터 변경 시 dirty
   function patchData(next: TacticalAnimationData) {
@@ -664,11 +725,46 @@ export default function AnimationEditorClient({ initial }: Props) {
         )}
       </div>
 
+      {/* 첫 진입 안내 — 1회 표시 후 localStorage로 dismiss. 최대화 모드에선 숨김. */}
+      {coachOpen && !maximized && (
+        <div className="mb-4 rounded-xl border border-primary/30 bg-primary/5 p-3">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 text-[12.5px] leading-relaxed text-foreground">
+              <p className="mb-1.5 font-bold text-primary">전술 영상은 이렇게 만들어요</p>
+              <ol className="ml-4 list-decimal space-y-0.5 text-muted-foreground">
+                <li><span className="text-foreground font-semibold">장면</span>(빌드업·압박 등)을 하나 골라 첫 컷 좌표를 잡으세요.</li>
+                <li>컷 <span className="font-bold">+</span> 으로 다음 컷을 추가하고 점·공을 드래그해 옮기면 흐름이 됩니다.</li>
+                <li>SVG 위 <span className="font-bold">▶ 재생</span>으로 즉시 확인하거나 <span className="font-bold">미리보기</span>에서 GIF로 받아 카톡 공유하세요.</li>
+              </ol>
+              <p className="mt-2 text-[11px] text-muted-foreground/80">
+                단축키: <kbd className="rounded border border-border bg-background px-1 py-0.5 text-[10px] font-mono">Space</kbd> 재생/정지 ·
+                <kbd className="mx-0.5 rounded border border-border bg-background px-1 py-0.5 text-[10px] font-mono">← →</kbd> 컷 이동 ·
+                <kbd className="mx-0.5 rounded border border-border bg-background px-1 py-0.5 text-[10px] font-mono">F</kbd> 최대화 ·
+                <kbd className="rounded border border-border bg-background px-1 py-0.5 text-[10px] font-mono">Ctrl+S</kbd> 저장
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={dismissCoach}
+              className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              aria-label="안내 닫기"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 모드 토글 */}
-      <div className="mb-3 inline-flex rounded-md border border-border bg-background p-0.5">
+      <div
+        className="mb-3 inline-flex rounded-md border border-border bg-background p-0.5"
+        role="group"
+        aria-label="공격·수비 모드 전환"
+      >
         <button
           type="button"
           onClick={() => setMode("attack")}
+          aria-pressed={mode === "attack"}
           className={cn(
             "inline-flex items-center gap-1 rounded px-3 py-1.5 text-xs font-semibold transition-colors",
             mode === "attack"
@@ -676,12 +772,13 @@ export default function AnimationEditorClient({ initial }: Props) {
               : "text-muted-foreground hover:text-foreground"
           )}
         >
-          <Swords className="h-3 w-3" />
+          <Swords className="h-3 w-3" aria-hidden="true" />
           공격 시
         </button>
         <button
           type="button"
           onClick={() => setMode("defense")}
+          aria-pressed={mode === "defense"}
           className={cn(
             "inline-flex items-center gap-1 rounded px-3 py-1.5 text-xs font-semibold transition-colors",
             mode === "defense"
@@ -689,7 +786,7 @@ export default function AnimationEditorClient({ initial }: Props) {
               : "text-muted-foreground hover:text-foreground"
           )}
         >
-          <Shield className="h-3 w-3" />
+          <Shield className="h-3 w-3" aria-hidden="true" />
           수비 시
         </button>
       </div>
@@ -878,6 +975,8 @@ export default function AnimationEditorClient({ initial }: Props) {
           viewBox="0 0 100 100"
           preserveAspectRatio="xMidYMid meet"
           className="absolute inset-0 h-full w-full select-none touch-none"
+          role="application"
+          aria-label={`전술 편집 캔버스 — ${mode === "attack" ? "공격" : "수비"} · ${phase?.label ?? ""} · 컷 ${stepIdx + 1}/${steps.length}. 선수 점·공을 드래그해 위치를 조정합니다.`}
         >
           {/* 피치 배경 */}
           <rect x="0" y="0" width="100" height="100" fill="hsl(140 25% 18%)" />
