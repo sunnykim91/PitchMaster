@@ -17,8 +17,7 @@
  *  - 드래그 시 boardRef.current.getBoundingClientRect() 로 변환 (TacticsBoard 패턴)
  */
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { formationTemplates } from "@/lib/formations";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -34,8 +33,6 @@ import {
   Star,
   Swords,
   Shield,
-  Maximize2,
-  Minimize2,
   Download,
   Play,
   Pause,
@@ -61,6 +58,7 @@ import { exportMotionAsGif, downloadBlob, buildGifFilename } from "@/lib/animati
 import { SortableStepChip } from "@/components/animations/SortableStepChip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/lib/ToastContext";
 import { useConfirm } from "@/lib/ConfirmContext";
@@ -113,30 +111,8 @@ export default function AnimationEditorClient({ initial }: Props) {
   const [previewing, setPreviewing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
-  // 좁은 모바일에서 SVG 편집 영역을 화면 가득 키우기 위한 CSS 풀스크린 토글.
-  // requestFullscreen API 는 iOS Safari 제약이 있어 position: fixed 패턴으로 대체.
-  // 부모 wrapper(ClientLayout의 animate-fade-in-up 등)가 transform/filter를
-  // 가지면 fixed inset-0이 viewport 대신 wrapper 기준이 되므로,
-  // 최대화 시에는 createPortal로 document.body 직속으로 띄운다.
-  const [maximized, setMaximized] = useState(false);
-  const [portalReady, setPortalReady] = useState(false);
-  useEffect(() => setPortalReady(true), []);
-
-  function withMaybePortal(inner: ReactNode): ReactNode {
-    if (!maximized) return inner;
-    if (!portalReady || typeof document === "undefined") return inner;
-    return createPortal(inner, document.body);
-  }
-
-  // 최대화 중에는 body 스크롤 잠금 — 배경 페이지가 뒤에서 스크롤되는 거 차단
-  useEffect(() => {
-    if (!maximized || typeof document === "undefined") return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [maximized]);
+  // 최대화·미니뷰 토글은 P1 정리에서 제거 (SVG max-height가 이미 viewport 친화이며
+  // 인라인 재생 토글이 미니뷰 역할을 대신).
   // GIF export 진행 상태 (미리보기 모드에서 노출)
   type ExportTarget = "attack" | "defense" | "combined";
   const [exportingMode, setExportingMode] = useState<ExportTarget | null>(null);
@@ -155,8 +131,6 @@ export default function AnimationEditorClient({ initial }: Props) {
   }
   // 편집 모드 안에서 컷을 자동 재생 — 미리보기 화면 안 가도 흐름 확인
   const [editorPlaying, setEditorPlaying] = useState(false);
-  // 인라인 미니뷰 — 편집 SVG 옆/위에 작은 viewer를 띄워 편집과 결과를 동시에
-  const [miniViewOpen, setMiniViewOpen] = useState(false);
   // GIF export 중단 핸들 — 페이지 언마운트·이탈 시 worker 정리
   const exportHandleRef = useRef<{ abort: () => void } | null>(null);
   // 메타 정보 카드 접힘 상태 — Z Flip 5 같은 좁은 화면에서 캔버스 빨리 보이게 기본 접힘
@@ -288,7 +262,7 @@ export default function AnimationEditorClient({ initial }: Props) {
     }
   }
 
-  // 키보드 단축키 — Space 재생/정지, ←/→ 컷 이동, F 최대화, Ctrl/Cmd+S 저장.
+  // 키보드 단축키 — Space 재생/정지, ←/→ 컷 이동, Ctrl/Cmd+S 저장.
   // INPUT/TEXTAREA 입력 중에는 비활성, 미리보기 모드도 비활성.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -315,12 +289,6 @@ export default function AnimationEditorClient({ initial }: Props) {
       if (e.key === "ArrowLeft") {
         e.preventDefault();
         setStepIdx((i) => Math.max(0, i - 1));
-        return;
-      }
-      if (e.key === "f" || e.key === "F") {
-        if (e.ctrlKey || e.metaKey) return; // 브라우저 찾기와 충돌 방지
-        e.preventDefault();
-        setMaximized((v) => !v);
         return;
       }
     }
@@ -561,13 +529,8 @@ export default function AnimationEditorClient({ initial }: Props) {
 
   // 미리보기 모드일 때는 FormationMotionViewer 렌더
   if (previewing) {
-    return withMaybePortal(
-      <div
-        className={cn(
-          "container mx-auto max-w-3xl px-4 py-6 sm:py-8",
-          maximized && "fixed inset-0 z-[100] max-w-none overflow-y-auto bg-background px-3 py-3"
-        )}
-      >
+    return (
+      <div className="container mx-auto max-w-3xl px-4 py-6 sm:py-8">
         <div className="mb-3 flex items-center justify-between gap-2">
           <Link
             href="/settings/animations"
@@ -576,27 +539,15 @@ export default function AnimationEditorClient({ initial }: Props) {
             <ChevronLeft className="h-4 w-4" />
             목록으로
           </Link>
-          <div className="flex items-center gap-1.5">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setMaximized((v) => !v)}
-              title={maximized ? "원래 크기로" : "캔버스 최대화"}
-            >
-              {maximized ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
-              <span className="ml-1 hidden sm:inline">{maximized ? "축소" : "최대화"}</span>
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setPreviewing(false)}
-            >
-              <Pencil className="mr-1 h-3.5 w-3.5" />
-              편집 모드로
-            </Button>
-          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setPreviewing(false)}
+          >
+            <Pencil className="mr-1 h-3.5 w-3.5" />
+            편집 모드로
+          </Button>
         </div>
         <h1 className="mb-3 text-xl font-bold">{name}</h1>
         <FormationMotionViewer
@@ -653,13 +604,8 @@ export default function AnimationEditorClient({ initial }: Props) {
     );
   }
 
-  return withMaybePortal(
-    <div
-      className={cn(
-        "container mx-auto max-w-4xl px-4 py-6 sm:py-8",
-        maximized && "fixed inset-0 z-[100] max-w-none overflow-y-auto bg-background px-3 py-3"
-      )}
-    >
+  return (
+    <div className="container mx-auto max-w-4xl px-4 py-6 sm:py-8">
       {/* 뒤로가기 + 저장 */}
       <div className="mb-4 flex items-center justify-between gap-2">
         <Link
@@ -688,7 +634,7 @@ export default function AnimationEditorClient({ initial }: Props) {
       </div>
 
       {/* 메타 (이름·설명·대표 설정) — 좁은 화면 친화로 기본 접힘. 최대화 모드에선 캔버스 우선해 숨김. */}
-      <div className={cn("mb-5 rounded-xl border border-border bg-card", maximized && "hidden")}>
+      <div className="mb-5 rounded-xl border border-border bg-card">
         <button
           type="button"
           onClick={() => setMetaOpen((v) => !v)}
@@ -755,7 +701,7 @@ export default function AnimationEditorClient({ initial }: Props) {
       </div>
 
       {/* 첫 진입 안내 — 1회 표시 후 localStorage로 dismiss. 최대화 모드에선 숨김. */}
-      {coachOpen && !maximized && (
+      {coachOpen && (
         <div className="mb-4 rounded-xl border border-primary/30 bg-primary/5 p-3">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 text-[12.5px] leading-relaxed text-foreground">
@@ -768,7 +714,6 @@ export default function AnimationEditorClient({ initial }: Props) {
               <p className="mt-2 hidden text-[11px] text-muted-foreground/80 lg:block">
                 키보드 단축키: <kbd className="rounded border border-border bg-background px-1 py-0.5 text-[10px] font-mono">Space</kbd> 재생/정지 ·
                 <kbd className="mx-0.5 rounded border border-border bg-background px-1 py-0.5 text-[10px] font-mono">← →</kbd> 컷 이동 ·
-                <kbd className="mx-0.5 rounded border border-border bg-background px-1 py-0.5 text-[10px] font-mono">F</kbd> 최대화 ·
                 <kbd className="rounded border border-border bg-background px-1 py-0.5 text-[10px] font-mono">Ctrl+S</kbd> 저장
               </p>
             </div>
@@ -820,14 +765,12 @@ export default function AnimationEditorClient({ initial }: Props) {
         </button>
       </div>
 
-      {/* 장면 탭 (phase) — 첫 진입자 학습 비용 ↓: 용어 1줄 안내. 최대화 시엔 라벨만 컴팩트. */}
+      {/* 장면 탭 (phase) — 첫 진입자 학습 비용 ↓: 용어 1줄 안내. */}
       <div className="mb-1 flex flex-wrap items-baseline gap-x-2">
         <span className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">장면</span>
-        {!maximized && (
-          <span className="text-[11px] text-muted-foreground/70">
-            빌드업·압박처럼 큰 흐름 단위 · 그 안에 컷을 쌓아 영상을 만들어요
-          </span>
-        )}
+        <span className="text-[11px] text-muted-foreground/70">
+          빌드업·압박처럼 큰 흐름 단위 · 그 안에 컷을 쌓아 영상을 만들어요
+        </span>
       </div>
       <div className="mb-3 flex flex-wrap gap-1 pb-1">
         {phases.map((p, i) => (
@@ -950,31 +893,6 @@ export default function AnimationEditorClient({ initial }: Props) {
           <Button
             type="button"
             size="sm"
-            variant={miniViewOpen ? "default" : "outline"}
-            onClick={() => setMiniViewOpen((v) => !v)}
-            className="h-7 text-xs gap-1"
-            title={miniViewOpen ? "미니뷰 닫기" : "편집 위에 결과 미니뷰 띄우기 — 편집·재생 동시에 보기"}
-            aria-label={miniViewOpen ? "미니뷰 닫기" : "미니뷰 열기"}
-            aria-pressed={miniViewOpen}
-          >
-            <Eye className="h-3 w-3" aria-hidden="true" />
-            <span className="hidden sm:inline">미니뷰</span>
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => setMaximized((v) => !v)}
-            className="h-7 text-xs gap-1"
-            title={maximized ? "원래 크기로" : "캔버스 최대화"}
-            aria-label={maximized ? "캔버스 원래 크기로" : "캔버스 최대화"}
-          >
-            {maximized ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
-            <span className="hidden sm:inline">{maximized ? "축소" : "최대화"}</span>
-          </Button>
-          <Button
-            type="button"
-            size="sm"
             variant="outline"
             onClick={() => setPreviewing(true)}
             className="h-7 text-xs gap-1"
@@ -995,38 +913,18 @@ export default function AnimationEditorClient({ initial }: Props) {
         </div>
       </div>
 
-      {/* 인라인 미니뷰 — 편집과 결과 동시에. 모바일은 SVG 위, PC도 동일(공간 단순화). */}
-      {miniViewOpen && phase && (
-        <div className="mb-3 mx-auto" style={{ maxWidth: "min(100%, 260px)" }}>
-          <FormationMotionViewer
-            motion={{
-              formationId: initial.formation_id,
-              attack: mode === "attack" ? [phase] : [],
-              defense: mode === "defense" ? [phase] : [],
-            }}
-            compact
-            controlledMode={mode}
-            initialRate={previewRate}
-            onRateChange={handlePreviewRateChange}
-          />
-        </div>
-      )}
+      {/* 드래그 안내 — 첫 방문자 발견 가능성 ↑ */}
+      <p className="mb-1.5 text-[11px] text-muted-foreground/80">
+        💡 선수 점·공을 <span className="font-semibold text-foreground">드래그</span>해 위치를 옮기세요.
+      </p>
 
-      {/* 드래그 안내 — 첫 방문자 발견 가능성 ↑. 최대화 모드엔 숨김(이미 익숙한 사용자만 진입). */}
-      {!maximized && (
-        <p className="mb-1.5 text-[11px] text-muted-foreground/80">
-          💡 선수 점·공을 <span className="font-semibold text-foreground">드래그</span>해 위치를 옮기세요.
-        </p>
-      )}
-
-      {/* 편집 SVG 피치 — PC에서 viewport 높이 초과하지 않게 max-height 제한, 정사각 유지.
-          최대화 시엔 메타·안내 숨겨 캔버스가 viewport의 거의 전체를 차지하도록 max-height·max-width를 더 크게. */}
+      {/* 편집 SVG 피치 — viewport 높이 초과 시 폭이 같이 줄도록 max-height·max-width 동시 제한, 정사각 유지. */}
       <div
         className="mb-3 relative mx-auto w-full overflow-hidden rounded-lg"
         style={{
           aspectRatio: "1 / 1",
-          maxHeight: maximized ? "calc(100vh - 140px)" : "calc(100vh - 160px)",
-          maxWidth: maximized ? "calc(100vh - 140px)" : "calc(100vh - 160px)",
+          maxHeight: "calc(100vh - 160px)",
+          maxWidth: "calc(100vh - 160px)",
         }}
       >
         <svg
@@ -1104,13 +1002,14 @@ export default function AnimationEditorClient({ initial }: Props) {
       {/* 현재 컷 편집 — 설명 + 공 표시 */}
       <div className="mb-3 space-y-2 rounded-md bg-card/50 p-3">
         <div>
-          <Label htmlFor="step-caption" className="text-xs">컷 설명 (시청자가 읽을 한 줄)</Label>
-          <Input
+          <Label htmlFor="step-caption" className="text-xs">컷 설명 (시청자가 읽을 짧은 글)</Label>
+          <Textarea
             id="step-caption"
             value={step?.caption ?? ""}
             onChange={(e) => setCaption(e.target.value)}
-            placeholder="예: GK 가 좌측 센터백에게 패스"
-            className="mt-1 text-xs"
+            placeholder="예: GK 가 좌측 센터백에게 패스 — 상대 압박을 끌어내며 우측으로 빠른 전환을 준비한다"
+            className="mt-1 text-xs min-h-[64px] resize-y"
+            rows={3}
           />
         </div>
         <div className="flex items-center gap-2">
