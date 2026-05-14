@@ -312,60 +312,73 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
         </p>
       </header>
 
-      {/* 신규 생성 — ① 종목 토글 → ② 포메이션 선택 → ③ 만들기 */}
-      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center">
-        {/* 종목 토글 */}
-        <div className="inline-flex rounded-md border border-border bg-card p-0.5 text-xs font-medium">
-          <button
-            type="button"
-            onClick={() => handleSportToggle("SOCCER")}
-            className={cn(
-              "rounded px-3 py-1.5 transition-colors",
-              selectedSport === "SOCCER"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            축구{sportType === "SOCCER" && <span className="ml-1 text-[10px] opacity-70">우리 팀</span>}
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSportToggle("FUTSAL")}
-            className={cn(
-              "rounded px-3 py-1.5 transition-colors",
-              selectedSport === "FUTSAL"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            풋살{sportType === "FUTSAL" && <span className="ml-1 text-[10px] opacity-70">우리 팀</span>}
-          </button>
+      {/* 신규 생성 — ① 종목 → ② 포메이션 → ③ 만들기 */}
+      <div className="mb-5 space-y-3">
+        {/* ① 종목 */}
+        <div>
+          <div className="mb-1.5 flex items-center gap-2">
+            <span className="text-xs font-semibold text-foreground">종목</span>
+            <span className="text-[11px] text-muted-foreground">
+              우리 팀: {sportType === "FUTSAL" ? "풋살" : "축구"}
+            </span>
+          </div>
+          <div className="grid w-full grid-cols-2 gap-1 rounded-lg border border-border bg-secondary/30 p-1 sm:w-[260px]">
+            <button
+              type="button"
+              onClick={() => handleSportToggle("SOCCER")}
+              className={cn(
+                "rounded-md py-2 text-sm font-medium transition-colors",
+                selectedSport === "SOCCER"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-foreground/70 hover:bg-card hover:text-foreground",
+              )}
+            >
+              축구
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSportToggle("FUTSAL")}
+              className={cn(
+                "rounded-md py-2 text-sm font-medium transition-colors",
+                selectedSport === "FUTSAL"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-foreground/70 hover:bg-card hover:text-foreground",
+              )}
+            >
+              풋살
+            </button>
+          </div>
         </div>
 
-        {/* 포메이션 선택 — 선택된 종목 only */}
-        <Select value={createFormation} onValueChange={setCreateFormation}>
-          <SelectTrigger className="sm:w-[180px]">
-            <SelectValue placeholder="포메이션 선택" />
-          </SelectTrigger>
-          <SelectContent>
-            {formationTemplates.filter((f) => f.sportType === selectedSport).map((f) => (
-              <SelectItem key={f.id} value={f.id}>
-                {f.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* ② 포메이션 */}
+        <div>
+          <div className="mb-1.5 text-xs font-semibold text-foreground">포메이션</div>
+          <Select value={createFormation} onValueChange={setCreateFormation}>
+            <SelectTrigger className="w-full sm:w-[260px]">
+              <SelectValue placeholder="포메이션 선택" />
+            </SelectTrigger>
+            <SelectContent>
+              {formationTemplates.filter((f) => f.sportType === selectedSport).map((f) => (
+                <SelectItem key={f.id} value={f.id}>
+                  {f.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {/* ③ 만들기 */}
         <Button
           type="button"
           onClick={handleCreate}
           disabled={creating}
+          className="w-full sm:w-[260px]"
         >
           {creating ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <Plus className="mr-2 h-4 w-4" />
           )}
-          새 영상 만들기 ({currentFormationName} 형태)
+          {currentFormationName} 영상 만들기
         </Button>
       </div>
 
