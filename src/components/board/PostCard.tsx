@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, Fragment, type ReactNode } from "react";
 import Image from "next/image";
 import { MessageSquare, Heart, Pin, ChevronDown, ChevronUp, Pencil, Trash2, Share2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -165,8 +165,8 @@ export const PostCard = memo(function PostCard({
         {/* Post body */}
         <div className="mt-3">
           <h3 className="text-[15px] font-bold leading-snug">{post.title}</h3>
-          <p className="mt-1.5 text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
-            {post.content}
+          <p className="mt-1.5 text-sm text-muted-foreground whitespace-pre-line leading-relaxed break-words">
+            {renderContentWithLinks(post.content)}
           </p>
         </div>
 
@@ -249,3 +249,28 @@ export const PostCard = memo(function PostCard({
     </Card>
   );
 });
+
+// 본문 plain text 안의 http(s) URL을 클릭 가능한 anchor로 변환.
+// javascript:·data: 등 다른 스킴은 정규식에서 매칭되지 않으므로 차단됨.
+const URL_REGEX = /(https?:\/\/[^\s<>]+[^\s<>.,!?)])/g;
+
+function renderContentWithLinks(text: string): ReactNode {
+  if (!text) return text;
+  const parts = text.split(URL_REGEX);
+  return parts.map((part, i) => {
+    if (i % 2 === 1) {
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline underline-offset-2 hover:opacity-80"
+        >
+          {part}
+        </a>
+      );
+    }
+    return <Fragment key={i}>{part}</Fragment>;
+  });
+}
