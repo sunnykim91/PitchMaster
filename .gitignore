@@ -1,3 +1,6 @@
+# DB 백업 (마이그레이션 전 안전망 — PII 우려, 커밋 금지)
+docs/backups/
+
 # Logs
 logs
 *.log
