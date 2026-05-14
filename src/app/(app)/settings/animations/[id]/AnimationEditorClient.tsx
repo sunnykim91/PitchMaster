@@ -55,10 +55,9 @@ import {
   SortableContext,
   horizontalListSortingStrategy,
   sortableKeyboardCoordinates,
-  useSortable,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { exportMotionAsGif, downloadBlob, buildGifFilename } from "@/lib/animationExport/gifExport";
+import { SortableStepChip } from "@/components/animations/SortableStepChip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -598,8 +597,8 @@ export default function AnimationEditorClient({ initial }: Props) {
         </div>
       </div>
 
-      {/* 메타 (이름·설명·대표 설정) — 좁은 화면 친화로 기본 접힘. 가끔 수정하니 접혀있어도 무방. */}
-      <div className="mb-5 rounded-xl border border-border bg-card">
+      {/* 메타 (이름·설명·대표 설정) — 좁은 화면 친화로 기본 접힘. 최대화 모드에선 캔버스 우선해 숨김. */}
+      <div className={cn("mb-5 rounded-xl border border-border bg-card", maximized && "hidden")}>
         <button
           type="button"
           onClick={() => setMetaOpen((v) => !v)}
@@ -695,12 +694,14 @@ export default function AnimationEditorClient({ initial }: Props) {
         </button>
       </div>
 
-      {/* 장면 탭 (phase) — 첫 진입자 학습 비용 ↓: 용어 1줄 안내 */}
+      {/* 장면 탭 (phase) — 첫 진입자 학습 비용 ↓: 용어 1줄 안내. 최대화 시엔 라벨만 컴팩트. */}
       <div className="mb-1 flex flex-wrap items-baseline gap-x-2">
         <span className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">장면</span>
-        <span className="text-[11px] text-muted-foreground/70">
-          빌드업·압박처럼 큰 흐름 단위 · 그 안에 컷을 쌓아 영상을 만들어요
-        </span>
+        {!maximized && (
+          <span className="text-[11px] text-muted-foreground/70">
+            빌드업·압박처럼 큰 흐름 단위 · 그 안에 컷을 쌓아 영상을 만들어요
+          </span>
+        )}
       </div>
       <div className="mb-3 flex flex-wrap gap-1 pb-1">
         {phases.map((p, i) => (
@@ -855,18 +856,21 @@ export default function AnimationEditorClient({ initial }: Props) {
         </div>
       </div>
 
-      {/* 드래그 안내 — 첫 방문자 발견 가능성 ↑ */}
-      <p className="mb-1.5 text-[11px] text-muted-foreground/80">
-        💡 선수 점·공을 <span className="font-semibold text-foreground">드래그</span>해 위치를 옮기세요.
-      </p>
+      {/* 드래그 안내 — 첫 방문자 발견 가능성 ↑. 최대화 모드엔 숨김(이미 익숙한 사용자만 진입). */}
+      {!maximized && (
+        <p className="mb-1.5 text-[11px] text-muted-foreground/80">
+          💡 선수 점·공을 <span className="font-semibold text-foreground">드래그</span>해 위치를 옮기세요.
+        </p>
+      )}
 
-      {/* 편집 SVG 피치 — PC에서 viewport 높이 초과하지 않게 max-height 제한, 정사각 유지 */}
+      {/* 편집 SVG 피치 — PC에서 viewport 높이 초과하지 않게 max-height 제한, 정사각 유지.
+          최대화 시엔 메타·안내 숨겨 캔버스가 viewport의 거의 전체를 차지하도록 max-height·max-width를 더 크게. */}
       <div
         className="mb-3 relative mx-auto w-full overflow-hidden rounded-lg"
         style={{
           aspectRatio: "1 / 1",
-          maxHeight: "calc(100vh - 160px)",
-          maxWidth: "calc(100vh - 160px)",
+          maxHeight: maximized ? "calc(100vh - 140px)" : "calc(100vh - 160px)",
+          maxWidth: maximized ? "calc(100vh - 140px)" : "calc(100vh - 160px)",
         }}
       >
         <svg
@@ -981,45 +985,3 @@ export default function AnimationEditorClient({ initial }: Props) {
   );
 }
 
-/**
- * 컷 번호 칩 — long-press(200ms) 드래그로 순서 변경, 짧은 탭은 선택.
- * activationConstraint.delay 덕분에 onClick은 정상 동작.
- */
-function SortableStepChip({
-  index,
-  active,
-  onSelect,
-}: {
-  index: number;
-  active: boolean;
-  onSelect: () => void;
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: `step-${index}`,
-  });
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 50 : undefined,
-  };
-  return (
-    <button
-      ref={setNodeRef}
-      style={style}
-      type="button"
-      onClick={onSelect}
-      {...attributes}
-      {...listeners}
-      aria-label={`컷 ${index + 1} 선택 (길게 눌러 순서 변경)`}
-      className={cn(
-        "min-h-[32px] min-w-[32px] rounded px-2 py-1.5 text-[12.5px] font-semibold tabular-nums transition-colors touch-none select-none",
-        active
-          ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]"
-          : "text-muted-foreground hover:text-foreground",
-        isDragging && "scale-[1.08] shadow-lg ring-2 ring-[hsl(var(--primary))]/40 cursor-grabbing",
-      )}
-    >
-      {index + 1}
-    </button>
-  );
-}
