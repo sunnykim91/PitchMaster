@@ -18,6 +18,7 @@ import FormationMotionViewer from "@/components/FormationMotionViewer";
 import { getFormationMotion, hasFormationMotion } from "@/lib/formationMotions";
 import type { FormationMotion } from "@/lib/formationMotions";
 import type { TeamTacticalAnimation } from "@/lib/formationMotions/dbTypes";
+import { toLegacyMotionShape } from "@/lib/formationMotions/dbTypes";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -386,10 +387,11 @@ function FormationMotionBlock({
           (a) => a.formation_id === formationId && a.is_default,
         );
         if (def) {
+          // P3/P4 평면 영상은 steps에 컷이 있고 attack/defense는 빈 배열.
+          // toLegacyMotionShape으로 카테고리에 맞춰 단일 phase로 wrap해 viewer 호환.
           setTeamMotion({
             formationId,
-            attack: def.animation_data.attack,
-            defense: def.animation_data.defense,
+            ...toLegacyMotionShape(def.animation_data),
           });
         }
         setLoadedTeam(true);

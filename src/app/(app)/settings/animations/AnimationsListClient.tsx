@@ -238,20 +238,31 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
       }
 
       const newData: TacticalAnimationData = {
-        attack: source.animation_data.attack.map((phase) => ({
+        attack: (source.animation_data.attack ?? []).map((phase) => ({
           ...phase,
           steps: phase.steps.map((step) => ({
             ...step,
             positions: mapPositions(step.positions),
           })),
         })),
-        defense: source.animation_data.defense.map((phase) => ({
+        defense: (source.animation_data.defense ?? []).map((phase) => ({
           ...phase,
           steps: phase.steps.map((step) => ({
             ...step,
             positions: mapPositions(step.positions),
           })),
         })),
+        // P3 평면 영상 복제 — steps도 같이 옮김
+        ...(Array.isArray(source.animation_data.steps)
+          ? {
+              steps: source.animation_data.steps.map((step) => ({
+                ...step,
+                positions: mapPositions(step.positions),
+              })),
+              category: source.animation_data.category ?? "ATTACK",
+            }
+          : {}),
+        ...(source.animation_data.defaultRate ? { defaultRate: source.animation_data.defaultRate } : {}),
       };
 
       const sameFormation = animations.filter((a) => a.formation_id === targetFormationId);
@@ -497,6 +508,15 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="text-base font-bold truncate">{animation.name}</h2>
+                    <span className={cn(
+                      "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold",
+                      animation._category === "ATTACK" && "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]",
+                      animation._category === "DEFENSE" && "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]",
+                      animation._category === "SETPIECE" && "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]",
+                      animation._category === "TRANSITION" && "bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]",
+                    )}>
+                      {ANIMATION_CATEGORY_LABEL[animation._category]}
+                    </span>
                     {animation.is_default && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(var(--primary))]/15 px-2 py-0.5 text-[12px] font-bold text-[hsl(var(--primary))]">
                         <Star className="h-2.5 w-2.5" aria-hidden="true" />

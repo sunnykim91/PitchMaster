@@ -17,7 +17,9 @@ interface Props {
 }
 
 export default function FormationMotionThumb({ data, size = 64 }: Props) {
-  const firstStep = data.attack[0]?.steps[0] ?? data.defense[0]?.steps[0];
+  // P3 평면 영상은 data.steps에 컷이 있음. 레거시는 attack/defense의 첫 phase·첫 step.
+  const firstStep =
+    data.steps?.[0] ?? data.attack?.[0]?.steps[0] ?? data.defense?.[0]?.steps[0];
   if (!firstStep) {
     return (
       <div
