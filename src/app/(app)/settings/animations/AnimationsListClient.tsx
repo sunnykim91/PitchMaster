@@ -15,13 +15,30 @@ import { getFormationMotion } from "@/lib/formationMotions";
 import { formationTemplates } from "@/lib/formations";
 import type { TeamTacticalAnimation, TacticalAnimationData } from "@/lib/formationMotions/dbTypes";
 import type { PhasePosition } from "@/lib/formationMotions/types";
+import type { SportType } from "@/lib/types";
 
 interface Props {
   teamId: string;
   teamName: string;
+  sportType: SportType;
+  defaultPlayerCount: number;
 }
 
-export default function AnimationsListClient({ teamId: _teamId, teamName }: Props) {
+/**
+ * 팀의 sport_type + default_player_count에 맞는 포메이션 기본값 선택.
+ * 1순위: fieldCount === defaultPlayerCount 매치
+ * 2순위: 같은 sportType의 첫 항목
+ * 3순위: 축구 4-2-3-1 (안전 폴백)
+ */
+function pickDefaultFormation(sportType: SportType, defaultPlayerCount: number): string {
+  const sameSport = formationTemplates.filter((f) => f.sportType === sportType);
+  const sameCount = sameSport.find((f) => (f.fieldCount ?? 11) === defaultPlayerCount);
+  if (sameCount) return sameCount.id;
+  if (sameSport.length > 0) return sameSport[0].id;
+  return "4-2-3-1";
+}
+
+export default function AnimationsListClient({ teamId: _teamId, teamName, sportType, defaultPlayerCount }: Props) {
   void _teamId;
   const router = useRouter();
   const { showToast } = useToast();
@@ -29,7 +46,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
   const [animations, setAnimations] = useState<TeamTacticalAnimation[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [createFormation, setCreateFormation] = useState("4-2-3-1");
+  const [createFormation, setCreateFormation] = useState(() => pickDefaultFormation(sportType, defaultPlayerCount));
   const [copyingId, setCopyingId] = useState<string | null>(null);
   const [copyTargetFormation, setCopyTargetFormation] = useState<string>("");
   /**
@@ -291,14 +308,10 @@ export default function AnimationsListClient({ teamId: _teamId, teamName }: Prop
             <SelectValue placeholder="포메이션 선택" />
           </SelectTrigger>
           <SelectContent>
-            <div className="px-2 py-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">축구</div>
-            {formationTemplates.filter((f) => f.sportType === "SOCCER").map((f) => (
-              <SelectItem key={f.id} value={f.id}>
-                {f.name}
-              </SelectItem>
-            ))}
-            <div className="mt-1 px-2 py-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">풋살</div>
-            {formationTemplates.filter((f) => f.sportType === "FUTSAL").map((f) => (
+            <div className="px-2 py-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
+              {sportType === "FUTSAL" ? "풋살" : "축구"}
+            </div>
+            {formationTemplates.filter((f) => f.sportType === sportType).map((f) => (
               <SelectItem key={f.id} value={f.id}>
                 {f.name}
               </SelectItem>
