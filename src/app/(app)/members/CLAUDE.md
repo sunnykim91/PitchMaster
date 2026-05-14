@@ -18,11 +18,12 @@
 | 사전 등록 | STAFF |
 | 검색/정렬 | MEMBER |
 
-## 미구현 항목
+## 일괄 등록 (2026-05-14 — ✅ 완료)
 
-- **벌크 CSV 등록** — 현재 한 명씩만 가능 (`canPreRegister` 플로우)
-  - `regName`, `regPhone` 상태로 단건 입력 처리
-  - 파일 업로드 UI 없음
+- **벌크 등록** — `MemberBulkUploadModal` (paste·CSV 둘 다, max 200명)
+  - 진입: "일괄 등록" 버튼 (PRESIDENT only, MembersClient.tsx:425)
+  - URL 파라미터 `?bulk=true` 진입 시 모달 자동 오픈 (위자드·외부 링크용)
+  - API: `POST /api/members/bulk`
 
 ## 정렬 옵션
 

@@ -103,12 +103,12 @@ v{hash}
 
 ## 디자인 시스템
 
-### CSS 변수 토큰 위치 — 3곳 분산 (주의)
-1. `src/app/globals.css` → 다크모드 기본 변수
-2. `src/app/layout.tsx` → `<script>` 인라인으로 라이트모드 CSS 변수 주입 (하드코딩)
-3. `src/app/(app)/ClientLayout.tsx` → 테마 토글 로직
+### CSS 변수 토큰 위치 — 단일 source (2026-05-14 통합)
+- `src/app/globals.css` — **다크(`:root`) + 라이트(`:root.light`) 둘 다 정의**
+- `src/app/layout.tsx` — FOUC 방지 인라인 스크립트 = `classList.add('light')` 토글만
+- `src/lib/ThemeContext.tsx` — `applyTheme()` = `classList.toggle('light')` 토글만
 
-라이트모드 색상 변경 시 **layout.tsx 스크립트 문자열 안**을 수정해야 함.
+라이트/다크 색상 변경 시 **globals.css 한 곳만** 수정.
 
 ### 주요 색상 토큰
 - `--primary`: coral (#FF6B6B 계열)
@@ -129,19 +129,23 @@ v{hash}
 `src/app/(app)/matches/[matchId]/MatchDetailClient.tsx`
 
 ```
-정보 | 투표 | 전술 | 출석 | 기록 | 일지
+정보 | 투표 | 전술 | 출석 | 기록 | 후기
 ```
-6개 탭 전부 텍스트 전용 (아이콘 없음), `flex-1` 균등 분할.
-좁은 화면에서 터치 타겟이 작아짐.
+6개 탭 (EVENT 타입은 2개만). 각 탭 = lucide 아이콘 + 라벨 세로 배치, `flex-1` 균등 분할 + `min-h-[52px]`. 370px Z Flip도 fit (52차에 라벨 후기로 변경 + 아이콘 추가 적용).
 
 ---
 
-## 실제 미구현 항목 (코드 기준, 2개)
+## 실제 미구현 항목 (2026-05-14 정정 — 채택된 큰 미구현 0개)
 
-> **중요**: TODO.md는 outdated. 아래가 실제 미구현.
+이전 박제(회원 벌크 CSV·guide.html 마이그)는 **둘 다 완료**:
+- ✅ 회원 벌크 CSV/paste 등록 — `MemberBulkUploadModal.tsx` + `/api/members/bulk` (max 200명, paste+CSV, PRESIDENT only)
+- ✅ guide.html → Next.js 마이그 — `/guide/[slug]/page.tsx` 이관 완료. `public/guide.html` 레거시 잔재 정리 LOW
 
-1. **회원 벌크 CSV 등록** — 현재 한 명씩만 등록 가능
-2. **guide.html → Next.js 마이그레이션** — `public/guide.html` 방치 중
+남은 채택 후보 (조기싸커 차용 검토 — 마감 없음):
+- GK 로테이션 자동 (AutoFormationBuilder 통합 후보, 축구·풋살 둘 다)
+- 라인 밸런스 시각화 — PitchScore 50차 제거로 보류
+
+UI/UX 부채 잔존 (CLAUDE.md 알려진 이슈 참조)
 
 ## 골 기록 설계 (2026-04-18 기준)
 
