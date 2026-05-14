@@ -9,6 +9,7 @@ import FormationMotionThumb from "@/components/FormationMotionThumb";
 import BackButton from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/lib/ToastContext";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { getFormationMotion } from "@/lib/formationMotions";
@@ -46,7 +47,17 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
   const [animations, setAnimations] = useState<TeamTacticalAnimation[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [selectedSport, setSelectedSport] = useState<SportType>(sportType);
   const [createFormation, setCreateFormation] = useState(() => pickDefaultFormation(sportType, defaultPlayerCount));
+
+  function handleSportToggle(next: SportType) {
+    if (next === selectedSport) return;
+    setSelectedSport(next);
+    const fallbackCount = next === sportType ? defaultPlayerCount : (next === "FUTSAL" ? 6 : 11);
+    setCreateFormation(pickDefaultFormation(next, fallbackCount));
+  }
+
+  const currentFormationName = formationTemplates.find((f) => f.id === createFormation)?.name ?? createFormation;
   const [copyingId, setCopyingId] = useState<string | null>(null);
   const [copyTargetFormation, setCopyTargetFormation] = useState<string>("");
   /**
@@ -301,26 +312,43 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
         </p>
       </header>
 
-      {/* 신규 생성 — 포메이션 선택 + 만들기 */}
-      <div className="mb-5 flex flex-col sm:flex-row gap-2">
+      {/* 신규 생성 — ① 종목 토글 → ② 포메이션 선택 → ③ 만들기 */}
+      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center">
+        {/* 종목 토글 */}
+        <div className="inline-flex rounded-md border border-border bg-card p-0.5 text-xs font-medium">
+          <button
+            type="button"
+            onClick={() => handleSportToggle("SOCCER")}
+            className={cn(
+              "rounded px-3 py-1.5 transition-colors",
+              selectedSport === "SOCCER"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            축구{sportType === "SOCCER" && <span className="ml-1 text-[10px] opacity-70">우리 팀</span>}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSportToggle("FUTSAL")}
+            className={cn(
+              "rounded px-3 py-1.5 transition-colors",
+              selectedSport === "FUTSAL"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            풋살{sportType === "FUTSAL" && <span className="ml-1 text-[10px] opacity-70">우리 팀</span>}
+          </button>
+        </div>
+
+        {/* 포메이션 선택 — 선택된 종목 only */}
         <Select value={createFormation} onValueChange={setCreateFormation}>
-          <SelectTrigger className="sm:w-[220px]">
+          <SelectTrigger className="sm:w-[180px]">
             <SelectValue placeholder="포메이션 선택" />
           </SelectTrigger>
           <SelectContent>
-            {/* 팀의 sport_type 그룹을 위에 노출 (축구·풋살 동시 운영 팀 고려) */}
-            <div className="px-2 py-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
-              {sportType === "FUTSAL" ? "풋살 (우리 팀 종목)" : "축구 (우리 팀 종목)"}
-            </div>
-            {formationTemplates.filter((f) => f.sportType === sportType).map((f) => (
-              <SelectItem key={f.id} value={f.id}>
-                {f.name}
-              </SelectItem>
-            ))}
-            <div className="mt-1 px-2 py-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
-              {sportType === "FUTSAL" ? "축구" : "풋살"}
-            </div>
-            {formationTemplates.filter((f) => f.sportType !== sportType).map((f) => (
+            {formationTemplates.filter((f) => f.sportType === selectedSport).map((f) => (
               <SelectItem key={f.id} value={f.id}>
                 {f.name}
               </SelectItem>
@@ -337,7 +365,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
           ) : (
             <Plus className="mr-2 h-4 w-4" />
           )}
-          새 영상 만들기 ({createFormation} 기본 형태)
+          새 영상 만들기 ({currentFormationName} 형태)
         </Button>
       </div>
 
@@ -351,7 +379,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
         <div className="rounded-xl border border-dashed border-border bg-card/40 p-8 text-center">
           <p className="text-sm text-muted-foreground">
             아직 만든 영상이 없어요.<br />
-            위 버튼으로 4-2-3-1 기본 형태에서 시작하세요.
+            위에서 종목·포메이션을 고르고 첫 영상을 만들어보세요.
           </p>
         </div>
       ) : (
