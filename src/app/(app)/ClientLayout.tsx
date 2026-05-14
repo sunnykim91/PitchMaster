@@ -302,6 +302,19 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
     ];
   }, [displayRole, isOperator]);
 
+  // 그룹 간 sibling prefix 충돌 방지 (예: /settings/animations 진입 시
+  // '전술 영상'과 '설정' 동시 active) — 전체 nav items를 평탄화해
+  // 가장 긴 prefix 매치 하나를 결정, 모든 SidebarNav 인스턴스에 동일 전달.
+  const globalActiveHref = useMemo(() => {
+    const all = [homeNavItem, ...navGroups.flatMap((g) => g.items)];
+    const matches = all.filter(
+      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+    );
+    if (matches.length === 0) return null;
+    matches.sort((a, b) => b.href.length - a.href.length);
+    return matches[0].href;
+  }, [pathname, homeNavItem, navGroups]);
+
   const roleLabel =
     displayRole === "PRESIDENT"
       ? "회장"
@@ -425,13 +438,13 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
         </div>
       )}
       <Separator className="my-4" />
-      <SidebarNav items={[homeNavItem]} />
+      <SidebarNav items={[homeNavItem]} activeHref={globalActiveHref} />
       {navGroups.map((group) => (
         <div key={group.title} className="mt-4 border-t border-border/30 pt-3">
           <p className="px-3 pb-1 text-[12px] font-semibold uppercase tracking-widest text-muted-foreground/50">
             {group.title}
           </p>
-          <SidebarNav items={group.items} />
+          <SidebarNav items={group.items} activeHref={globalActiveHref} />
         </div>
       ))}
       <div className="mt-4 space-y-0.5">

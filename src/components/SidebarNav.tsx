@@ -16,14 +16,17 @@ type NavItem = {
 
 type SidebarNavProps = {
   items: NavItem[];
+  /** 외부에서 결정한 active href — 여러 SidebarNav 인스턴스가 그룹별로
+   * 분리될 때 그룹 간 가장 긴 prefix 비교가 안 되는 버그(예: /settings/animations
+   * 진입 시 '전술 영상'과 '설정' 동시 active)를 막기 위해 부모가 평탄화로 계산해 전달. */
+  activeHref?: string | null;
 };
 
-function SidebarNav({ items }: SidebarNavProps) {
+function SidebarNav({ items, activeHref: externalActiveHref }: SidebarNavProps) {
   const pathname = usePathname();
 
-  // 가장 긴 prefix 매치 하나만 active — /settings/animations 진입 시
-  // /settings 까지 동시에 active되던 중복 활성 버그 차단.
-  const activeHref = useMemo(() => {
+  // 외부 activeHref 있으면 우선. 없을 때만 내부에서 자기 items 기준 가장 긴 prefix.
+  const internalActiveHref = useMemo(() => {
     const matches = items.filter(
       (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
     );
@@ -31,6 +34,7 @@ function SidebarNav({ items }: SidebarNavProps) {
     matches.sort((a, b) => b.href.length - a.href.length);
     return matches[0].href;
   }, [pathname, items]);
+  const activeHref = externalActiveHref !== undefined ? externalActiveHref : internalActiveHref;
 
   return (
     <nav className="space-y-1">
