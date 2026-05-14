@@ -52,7 +52,7 @@ const CATEGORY_BADGE_STYLE: Record<AnimationCategory, { cls: string; Icon: typeo
 
 const STEP_DURATION = 1500; // ms — phase 안 한 step 머무는 시간
 const BALL_OFFSET_Y = 2.4; // 공을 선수 점 발 옆으로 살짝 오프셋 — 라벨 가리지 않게
-export const PLAYBACK_RATES = [0.5, 1, 1.5, 2] as const;
+export const PLAYBACK_RATES = [0.25, 0.5, 0.75, 1, 1.5, 2] as const;
 export type PlaybackRate = (typeof PLAYBACK_RATES)[number];
 
 /** 축구공 — SVG 미니 디자인 (흰 원 + 검정 5각형 + panel 경계 선) */
@@ -228,7 +228,7 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
           <button
             type="button"
             onClick={cycleRate}
-            className="inline-flex h-7 min-w-[2.5rem] items-center justify-center rounded-md border border-border px-1.5 text-[11px] font-bold tabular-nums text-muted-foreground hover:text-foreground"
+            className="inline-flex h-7 min-w-[3.2rem] items-center justify-center rounded-md border border-border px-1.5 text-[11px] font-bold tabular-nums text-muted-foreground hover:text-foreground"
             aria-label={`재생 배속 ${rateLabel} — 누르면 변경`}
             title={`배속 ${rateLabel}`}
           >
