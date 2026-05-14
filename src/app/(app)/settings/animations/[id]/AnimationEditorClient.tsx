@@ -598,7 +598,7 @@ export default function AnimationEditorClient({ initial }: Props) {
           initialRate={previewRate}
         />
 
-        {/* GIF 다운로드 — 미리보기에서 바로 카톡에 보낼 GIF 받기 */}
+        {/* GIF 다운로드 — 평면 영상은 카테고리 1개라 단일 버튼. 레거시 영상만 3분할(공격·수비·공수전체). */}
         <div className="mt-4 rounded-xl border border-border bg-card p-4">
           <div className="mb-2 flex items-center gap-2">
             <p className="text-sm font-bold">GIF로 받아 공유하기</p>
@@ -607,12 +607,38 @@ export default function AnimationEditorClient({ initial }: Props) {
             </span>
           </div>
           <p className="mb-3 text-xs text-muted-foreground">
-            카톡 단톡방·문자에 그대로 던질 수 있는 GIF로 만들어드려요. 공수전체는 인코딩에 10~15초.
+            카톡 단톡방·문자에 그대로 던질 수 있는 GIF로 만들어드려요. 인코딩에 5~15초 정도.
             <br />
             위 미리보기 배속 그대로 저장돼요 — 배속을 바꾸려면 미리보기 상단의 <span className="font-bold">{previewRate}×</span> 버튼을 눌러 변경하세요.
           </p>
           <div className="flex flex-wrap gap-2">
-            {(["attack", "defense", "combined"] as const).map((mode) => {
+            {isFlat ? (() => {
+              // 평면 영상은 카테고리에 따라 단일 mode export
+              const mode: ExportTarget = (data.category ?? "ATTACK") === "DEFENSE" ? "defense" : "attack";
+              const isExportingThis = exportingMode === mode;
+              return (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="default"
+                  className="gap-1"
+                  disabled={exportingMode !== null}
+                  onClick={() => handleExportGif(mode)}
+                >
+                  {isExportingThis ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      {exportProgress}%
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-3.5 w-3.5" />
+                      이 영상 GIF 다운로드
+                    </>
+                  )}
+                </Button>
+              );
+            })() : (["attack", "defense", "combined"] as const).map((mode) => {
               const isExportingThis = exportingMode === mode;
               const label = mode === "attack" ? "공격" : mode === "defense" ? "수비" : "공수전체";
               const isCombined = mode === "combined";

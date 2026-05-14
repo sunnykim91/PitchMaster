@@ -618,37 +618,67 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
                 </Button>
               </div>
 
-              {/* GIF 공유 — 카톡 단톡방에 던질 수 있게 (운영진 만든 영상을 다른 회원도 받을 수 있도록) */}
+              {/* GIF 공유 — 평면 영상은 카테고리 1개라 단일 버튼. 레거시는 3분할. */}
               <div className="mt-2 flex flex-wrap gap-2 border-t border-border/40 pt-2">
-                {(["attack", "defense", "combined"] as const).map((mode) => {
-                  const key = `${animation.id}-${mode}`;
-                  const isExportingThis = exportingKey === key;
-                  const label = mode === "attack" ? "공격" : mode === "defense" ? "수비" : "공수전체";
-                  const isCombined = mode === "combined";
-                  return (
-                    <Button
-                      key={mode}
-                      type="button"
-                      size="sm"
-                      variant={isCombined ? "default" : "outline"}
-                      className="h-8 gap-1 text-xs"
-                      disabled={exportingKey !== null}
-                      onClick={() => handleExportGif(animation, mode)}
-                    >
-                      {isExportingThis ? (
-                        <>
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                          {exportProgress}%
-                        </>
-                      ) : (
-                        <>
-                          <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                          {label} GIF
-                        </>
-                      )}
-                    </Button>
-                  );
-                })}
+                {(() => {
+                  const isFlatRow = Array.isArray(animation.animation_data.steps) && animation.animation_data.steps.length > 0;
+                  if (isFlatRow) {
+                    const mode: "attack" | "defense" = (animation.animation_data.category ?? "ATTACK") === "DEFENSE" ? "defense" : "attack";
+                    const key = `${animation.id}-${mode}`;
+                    const isExportingThis = exportingKey === key;
+                    return (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="default"
+                        className="h-8 gap-1 text-xs"
+                        disabled={exportingKey !== null}
+                        onClick={() => handleExportGif(animation, mode)}
+                      >
+                        {isExportingThis ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                            {exportProgress}%
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                            이 영상 GIF
+                          </>
+                        )}
+                      </Button>
+                    );
+                  }
+                  return (["attack", "defense", "combined"] as const).map((mode) => {
+                    const key = `${animation.id}-${mode}`;
+                    const isExportingThis = exportingKey === key;
+                    const label = mode === "attack" ? "공격" : mode === "defense" ? "수비" : "공수전체";
+                    const isCombined = mode === "combined";
+                    return (
+                      <Button
+                        key={mode}
+                        type="button"
+                        size="sm"
+                        variant={isCombined ? "default" : "outline"}
+                        className="h-8 gap-1 text-xs"
+                        disabled={exportingKey !== null}
+                        onClick={() => handleExportGif(animation, mode)}
+                      >
+                        {isExportingThis ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                            {exportProgress}%
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                            {label} GIF
+                          </>
+                        )}
+                      </Button>
+                    );
+                  });
+                })()}
                 <span className="ml-1 self-center text-[11px] text-muted-foreground">
                   카톡 단톡방에 바로 공유
                 </span>

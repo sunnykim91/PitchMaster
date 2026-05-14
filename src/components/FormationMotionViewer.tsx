@@ -94,7 +94,17 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
   const [stepIdx, setStepIdx] = useState(0);
   const [rate, setRate] = useState<PlaybackRate>(initialRate ?? 1);
 
-  const phases = mode === "attack" ? data.attack : data.defense;
+  // P3 평면 영상은 attack 또는 defense 한 쪽만 채워져 있음 → 비어있지 않은 쪽 자동 선택,
+  // 두 쪽 다 데이터 있을 때(레거시)만 mode 토글 노출.
+  const hasAttack = (data.attack ?? []).length > 0;
+  const hasDefense = (data.defense ?? []).length > 0;
+  const dualMode = hasAttack && hasDefense;
+  const effectiveMode: "attack" | "defense" = dualMode
+    ? mode
+    : hasDefense
+    ? "defense"
+    : "attack";
+  const phases = effectiveMode === "attack" ? (data.attack ?? []) : (data.defense ?? []);
   const phase = phases[phaseIdx] ?? phases[0];
   const steps = phase?.steps ?? [];
   const step = steps[stepIdx] ?? steps[0];
@@ -145,9 +155,9 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
 
   return (
     <div className={cn("rounded-xl border border-border bg-background/40", compact ? "p-2" : "p-3 sm:p-4")}>
-      {/* 헤더: compact·controlledMode 둘 다 모드 토글 hide. 외부 통제일 땐 토글 어색. */}
+      {/* 헤더: compact·controlledMode·단일 mode 영상은 모드 토글 hide (P3 평면 영상은 한 카테고리만 있어 토글 의미 없음). */}
       <div className={cn("flex items-center justify-between gap-2", compact ? "mb-1.5" : "mb-3")}>
-        {!compact && !controlledMode && (
+        {!compact && !controlledMode && dualMode && (
           <div className="inline-flex rounded-md border border-border bg-background p-0.5" role="group" aria-label="공격·수비 모드 전환">
             <button
               type="button"
@@ -182,10 +192,20 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
         {compact && (
           <span className={cn(
             "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold",
-            mode === "attack" ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]" : "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]"
+            effectiveMode === "attack" ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]" : "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]"
           )}>
-            {mode === "attack" ? <Swords className="h-2.5 w-2.5" aria-hidden="true" /> : <Shield className="h-2.5 w-2.5" aria-hidden="true" />}
-            {mode === "attack" ? "공격" : "수비"} 미니뷰
+            {effectiveMode === "attack" ? <Swords className="h-2.5 w-2.5" aria-hidden="true" /> : <Shield className="h-2.5 w-2.5" aria-hidden="true" />}
+            {effectiveMode === "attack" ? "공격" : "수비"} 미니뷰
+          </span>
+        )}
+        {!compact && !dualMode && !controlledMode && (
+          // 평면 영상(단일 카테고리) — 배지로 카테고리만 표시. 토글 대체.
+          <span className={cn(
+            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold",
+            effectiveMode === "attack" ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]" : "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]"
+          )}>
+            {effectiveMode === "attack" ? <Swords className="h-3 w-3" aria-hidden="true" /> : <Shield className="h-3 w-3" aria-hidden="true" />}
+            {effectiveMode === "attack" ? "공격" : "수비"}
           </span>
         )}
 
@@ -223,7 +243,7 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
             className={cn(
               "flex-1 rounded px-2 py-1 text-[12.5px] font-semibold transition-colors text-center",
               i === phaseIdx
-                ? mode === "attack"
+                ? effectiveMode === "attack"
                   ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]"
                   : "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]"
                 : "text-muted-foreground hover:text-foreground"
@@ -327,14 +347,14 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
               }}
               initial={false}
             >
-              {mode === "attack" ? <SoccerBall /> : <OpponentBall />}
+              {effectiveMode === "attack" ? <SoccerBall /> : <OpponentBall />}
               {/* 펄스 ring — 작게 + 빠르게 */}
               <motion.circle
                 cx={0}
                 cy={0}
                 r={1.6}
                 fill="none"
-                stroke={mode === "attack" ? "white" : "hsl(0 0% 65%)"}
+                stroke={effectiveMode === "attack" ? "white" : "hsl(0 0% 65%)"}
                 strokeWidth="0.3"
                 animate={{ r: [1.6, 3.2, 1.6], opacity: [0.7, 0, 0.7] }}
                 transition={{ duration: 0.9, repeat: Infinity, ease: "easeOut" }}
