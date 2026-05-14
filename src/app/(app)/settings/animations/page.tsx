@@ -19,18 +19,20 @@ export default async function AnimationsListPage() {
   const teamId = session.user.teamId ?? "";
   let sportType: SportType = "SOCCER";
   let defaultPlayerCount = 11;
+  let defaultFormationId: string | null = null;
 
   if (teamId) {
     const sb = getSupabaseAdmin();
     if (sb) {
       const { data } = await sb
         .from("teams")
-        .select("sport_type, default_player_count")
+        .select("sport_type, default_player_count, default_formation_id")
         .eq("id", teamId)
         .maybeSingle();
       if (data) {
         sportType = (data.sport_type as SportType) ?? "SOCCER";
         defaultPlayerCount = data.default_player_count ?? (sportType === "FUTSAL" ? 6 : 11);
+        defaultFormationId = (data.default_formation_id as string | null) ?? null;
       }
     }
   }
@@ -41,6 +43,7 @@ export default async function AnimationsListPage() {
       teamName={session.user.teamName ?? "우리 팀"}
       sportType={sportType}
       defaultPlayerCount={defaultPlayerCount}
+      defaultFormationId={defaultFormationId}
     />
   );
 }

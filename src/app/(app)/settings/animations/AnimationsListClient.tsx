@@ -25,15 +25,27 @@ interface Props {
   teamName: string;
   sportType: SportType;
   defaultPlayerCount: number;
+  defaultFormationId?: string | null;
 }
 
 /**
- * 팀의 sport_type + default_player_count에 맞는 포메이션 기본값 선택.
- * 1순위: fieldCount === defaultPlayerCount 매치
- * 2순위: 같은 sportType의 첫 항목
- * 3순위: 축구 4-2-3-1 (안전 폴백)
+ * 영상 만들기 포메이션 기본값 선택 우선순위:
+ *  1) 팀의 default_formation_id (있고 같은 sportType이면)
+ *  2) fieldCount === defaultPlayerCount 매치
+ *  3) 같은 sportType의 첫 항목
+ *  4) 축구 4-2-3-1 (안전 폴백)
  */
-function pickDefaultFormation(sportType: SportType, defaultPlayerCount: number): string {
+function pickDefaultFormation(
+  sportType: SportType,
+  defaultPlayerCount: number,
+  teamDefaultFormationId?: string | null,
+): string {
+  if (teamDefaultFormationId) {
+    const teamDefault = formationTemplates.find(
+      (f) => f.id === teamDefaultFormationId && f.sportType === sportType,
+    );
+    if (teamDefault) return teamDefault.id;
+  }
   const sameSport = formationTemplates.filter((f) => f.sportType === sportType);
   const sameCount = sameSport.find((f) => (f.fieldCount ?? 11) === defaultPlayerCount);
   if (sameCount) return sameCount.id;
@@ -41,7 +53,7 @@ function pickDefaultFormation(sportType: SportType, defaultPlayerCount: number):
   return "4-2-3-1";
 }
 
-export default function AnimationsListClient({ teamId: _teamId, teamName, sportType, defaultPlayerCount }: Props) {
+export default function AnimationsListClient({ teamId: _teamId, teamName, sportType, defaultPlayerCount, defaultFormationId }: Props) {
   void _teamId;
   const router = useRouter();
   const { showToast } = useToast();
@@ -50,13 +62,16 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [selectedSport, setSelectedSport] = useState<SportType>(sportType);
-  const [createFormation, setCreateFormation] = useState(() => pickDefaultFormation(sportType, defaultPlayerCount));
+  const [createFormation, setCreateFormation] = useState(() =>
+    pickDefaultFormation(sportType, defaultPlayerCount, defaultFormationId),
+  );
 
   function handleSportToggle(next: SportType) {
     if (next === selectedSport) return;
     setSelectedSport(next);
     const fallbackCount = next === sportType ? defaultPlayerCount : (next === "FUTSAL" ? 6 : 11);
-    setCreateFormation(pickDefaultFormation(next, fallbackCount));
+    // 종목 전환 시엔 팀 default_formation_id가 다른 종목용일 수 있어 우선순위 적용 안 함
+    setCreateFormation(pickDefaultFormation(next, fallbackCount, next === sportType ? defaultFormationId : null));
   }
 
   const currentFormationName = formationTemplates.find((f) => f.id === createFormation)?.name ?? createFormation;
