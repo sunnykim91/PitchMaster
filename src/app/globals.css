@@ -85,7 +85,43 @@
   --sidebar-ring: 16 85% 58%;
 }
 
-/* ── Light mode — style 태그로 주입됨 (ThemeContext) ── */
+/* ── Light mode — :root.light 클래스 토글 (ThemeContext + layout.tsx FOUC 스크립트) ── */
+:root.light {
+  --background: 220 14% 96%;
+  --foreground: 220 20% 14%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 20% 14%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 20% 14%;
+  --primary: 16 85% 48%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 12% 91%;
+  --secondary-foreground: 220 10% 30%;
+  --muted: 220 12% 93%;
+  --muted-foreground: 220 8% 42%;
+  --accent: 40 65% 46%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 72% 46%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 12% 84%;
+  --input: 220 12% 84%;
+  --ring: 16 85% 48%;
+  --success: 152 60% 34%;
+  --warning: 38 90% 44%;
+  --info: 210 75% 42%;
+  --win: 152 60% 34%;
+  --draw: 220 8% 54%;
+  --loss: 0 68% 44%;
+  --pitch: 152 45% 32%;
+  --sidebar-background: 220 14% 94%;
+  --sidebar-foreground: 220 20% 14%;
+  --sidebar-primary: 16 85% 48%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 12% 91%;
+  --sidebar-accent-foreground: 220 10% 30%;
+  --sidebar-border: 220 12% 84%;
+  --sidebar-ring: 16 85% 48%;
+}
 
 
 html, body {
@@ -176,8 +212,8 @@ select optgroup {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
+    transform: none;
+    filter: none;
   }
 }
 
