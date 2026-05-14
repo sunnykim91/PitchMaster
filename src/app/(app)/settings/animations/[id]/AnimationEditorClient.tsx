@@ -64,6 +64,8 @@ import { useToast } from "@/lib/ToastContext";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { cn } from "@/lib/utils";
 import FormationMotionViewer, { type PlaybackRate, PLAYBACK_RATES } from "@/components/FormationMotionViewer";
+import type { AnimationCategory } from "@/lib/formationMotions/dbTypes";
+import { ANIMATION_CATEGORIES, ANIMATION_CATEGORY_LABEL, toLegacyMotionShape } from "@/lib/formationMotions/dbTypes";
 
 function isPlaybackRate(v: unknown): v is PlaybackRate {
   return typeof v === "number" && (PLAYBACK_RATES as readonly number[]).includes(v);
@@ -143,14 +145,16 @@ export default function AnimationEditorClient({ initial }: Props) {
       return;
     }
 
+    // P3 평면 영상은 단일 phase로 wrap된 형태로 GIF export (mode는 카테고리에 따라).
+    const legacy = toLegacyMotionShape(data);
     const sections =
       targetMode === "attack"
-        ? [{ phases: data.attack, mode: "attack" as const }]
+        ? [{ phases: legacy.attack, mode: "attack" as const }]
         : targetMode === "defense"
-        ? [{ phases: data.defense, mode: "defense" as const }]
+        ? [{ phases: legacy.defense, mode: "defense" as const }]
         : [
-            { phases: data.attack, mode: "attack" as const },
-            { phases: data.defense, mode: "defense" as const },
+            { phases: legacy.attack, mode: "attack" as const },
+            { phases: legacy.defense, mode: "defense" as const },
           ];
     const nonEmpty = sections.filter((s) => s.phases.length > 0 && s.phases.some((p) => p.steps.length > 0));
     if (nonEmpty.length === 0) {
@@ -190,9 +194,11 @@ export default function AnimationEditorClient({ initial }: Props) {
     };
   }, []);
 
+  // P3 평면화 — data.steps 있으면 새 구조, 없으면 레거시(mode/phase) 사용.
+  const isFlat = Array.isArray(data.steps);
   const phases = mode === "attack" ? data.attack : data.defense;
   const phase = phases[phaseIdx] ?? phases[0];
-  const steps = phase?.steps ?? [];
+  const steps = isFlat ? (data.steps ?? []) : (phase?.steps ?? []);
   const step = steps[stepIdx] ?? steps[0];
 
   // 이 애니메이션의 포메이션 기반 시작 좌표 — 풋살(5~8명)이면 5~8 슬롯, 축구면 11 슬롯.
@@ -312,10 +318,30 @@ export default function AnimationEditorClient({ initial }: Props) {
   }
 
   function patchStep(updater: (step: MotionStep) => MotionStep) {
+    if (isFlat) {
+      patchData({
+        ...data,
+        steps: (data.steps ?? []).map((s, i) => (i === stepIdx ? updater(s) : s)),
+      });
+      return;
+    }
     patchPhase((phase) => ({
       ...phase,
       steps: phase.steps.map((s, i) => (i === stepIdx ? updater(s) : s)),
     }));
+  }
+
+  // P3 평면 영상의 steps 배열 통째 갱신 헬퍼 (추가·삭제·정렬)
+  function patchFlatSteps(updater: (steps: MotionStep[]) => MotionStep[]) {
+    patchData({
+      ...data,
+      steps: updater(data.steps ?? []),
+    });
+  }
+
+  // 카테고리 변경 (평면 영상 전용)
+  function setCategory(c: AnimationCategory) {
+    patchData({ ...data, category: c });
   }
 
   // ── Phase 관리 ──
@@ -373,7 +399,11 @@ export default function AnimationEditorClient({ initial }: Props) {
           ball: { x: 50, y: 50 },
           positions: basePositions.map((p) => ({ ...p })),
         };
-    patchPhase((p) => ({ ...p, steps: [...p.steps, newStep] }));
+    if (isFlat) {
+      patchFlatSteps((curr) => [...curr, newStep]);
+    } else {
+      patchPhase((p) => ({ ...p, steps: [...p.steps, newStep] }));
+    }
     setStepIdx(steps.length);
   }
 
@@ -384,7 +414,11 @@ export default function AnimationEditorClient({ initial }: Props) {
       positions: step.positions.map((p) => ({ ...p })),
       ball: step.ball ? { ...step.ball } : null,
     };
-    patchPhase((p) => ({ ...p, steps: [...p.steps, newStep] }));
+    if (isFlat) {
+      patchFlatSteps((curr) => [...curr, newStep]);
+    } else {
+      patchPhase((p) => ({ ...p, steps: [...p.steps, newStep] }));
+    }
     setStepIdx(steps.length);
   }
 
@@ -400,7 +434,11 @@ export default function AnimationEditorClient({ initial }: Props) {
       confirmLabel: "삭제",
     });
     if (!ok) return;
-    patchPhase((p) => ({ ...p, steps: p.steps.filter((_, i) => i !== stepIdx) }));
+    if (isFlat) {
+      patchFlatSteps((curr) => curr.filter((_, i) => i !== stepIdx));
+    } else {
+      patchPhase((p) => ({ ...p, steps: p.steps.filter((_, i) => i !== stepIdx) }));
+    }
     setStepIdx(Math.max(0, stepIdx - 1));
   }
 
@@ -418,7 +456,11 @@ export default function AnimationEditorClient({ initial }: Props) {
     const newIndex = Number(String(over.id).replace("step-", ""));
     if (!Number.isFinite(oldIndex) || !Number.isFinite(newIndex)) return;
     if (oldIndex < 0 || newIndex < 0) return;
-    patchPhase((p) => ({ ...p, steps: arrayMove(p.steps, oldIndex, newIndex) }));
+    if (isFlat) {
+      patchFlatSteps((curr) => arrayMove(curr, oldIndex, newIndex));
+    } else {
+      patchPhase((p) => ({ ...p, steps: arrayMove(p.steps, oldIndex, newIndex) }));
+    }
     // 선택된 컷이 함께 이동하도록 stepIdx 추적
     let nextIdx = stepIdx;
     if (stepIdx === oldIndex) nextIdx = newIndex;
@@ -551,7 +593,7 @@ export default function AnimationEditorClient({ initial }: Props) {
         </div>
         <h1 className="mb-3 text-xl font-bold">{name}</h1>
         <FormationMotionViewer
-          motion={{ formationId: initial.formation_id, attack: data.attack, defense: data.defense }}
+          motion={{ formationId: initial.formation_id, ...toLegacyMotionShape(data) }}
           onRateChange={handlePreviewRateChange}
           initialRate={previewRate}
         />
@@ -729,94 +771,127 @@ export default function AnimationEditorClient({ initial }: Props) {
         </div>
       )}
 
-      {/* 모드 토글 */}
-      <div
-        className="mb-3 inline-flex rounded-md border border-border bg-background p-0.5"
-        role="group"
-        aria-label="공격·수비 모드 전환"
-      >
-        <button
-          type="button"
-          onClick={() => setMode("attack")}
-          aria-pressed={mode === "attack"}
-          className={cn(
-            "inline-flex items-center gap-1 rounded px-3 py-1.5 text-xs font-semibold transition-colors",
-            mode === "attack"
-              ? "bg-[hsl(var(--primary))] text-white"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          <Swords className="h-3 w-3" aria-hidden="true" />
-          공격 시
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("defense")}
-          aria-pressed={mode === "defense"}
-          className={cn(
-            "inline-flex items-center gap-1 rounded px-3 py-1.5 text-xs font-semibold transition-colors",
-            mode === "defense"
-              ? "bg-[hsl(var(--info))] text-white"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          <Shield className="h-3 w-3" aria-hidden="true" />
-          수비 시
-        </button>
-      </div>
-
-      {/* 장면 탭 (phase) — 첫 진입자 학습 비용 ↓: 용어 1줄 안내. */}
-      <div className="mb-1 flex flex-wrap items-baseline gap-x-2">
-        <span className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">장면</span>
-        <span className="text-[11px] text-muted-foreground/70">
-          빌드업·압박처럼 큰 흐름 단위 · 그 안에 컷을 쌓아 영상을 만들어요
-        </span>
-      </div>
-      <div className="mb-3 flex flex-wrap gap-1 pb-1">
-        {phases.map((p, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => setPhaseIdx(i)}
-            className={cn(
-              "rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors min-h-[32px]",
-              i === phaseIdx
-                ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]"
-                : "border-border text-muted-foreground hover:text-foreground",
-            )}
+      {/* 평면(신규) 영상: 카테고리 칩 선택. 레거시 영상: 기존 mode/phase UI. */}
+      {isFlat ? (
+        <div className="mb-3">
+          <div className="mb-1 flex flex-wrap items-baseline gap-x-2">
+            <span className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">카테고리</span>
+            <span className="text-[11px] text-muted-foreground/70">이 영상이 어떤 종류인지 고르세요</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="영상 카테고리 선택">
+            {ANIMATION_CATEGORIES.map((c) => {
+              const active = (data.category ?? "ATTACK") === c;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCategory(c)}
+                  aria-pressed={active}
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+                    active
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {ANIMATION_CATEGORY_LABEL[c]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* 모드 토글 — 레거시 영상 전용 */}
+          <div
+            className="mb-3 inline-flex rounded-md border border-border bg-background p-0.5"
+            role="group"
+            aria-label="공격·수비 모드 전환"
           >
-            {p.label}
-          </button>
-        ))}
-        <button
-          type="button"
-          onClick={addPhase}
-          className="rounded-md border border-dashed border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground min-h-[32px]"
-        >
-          <Plus className="mr-1 inline h-3 w-3" />
-          장면 추가
-        </button>
-      </div>
+            <button
+              type="button"
+              onClick={() => setMode("attack")}
+              aria-pressed={mode === "attack"}
+              className={cn(
+                "inline-flex items-center gap-1 rounded px-3 py-1.5 text-xs font-semibold transition-colors",
+                mode === "attack"
+                  ? "bg-[hsl(var(--primary))] text-white"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Swords className="h-3 w-3" aria-hidden="true" />
+              공격 시
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("defense")}
+              aria-pressed={mode === "defense"}
+              className={cn(
+                "inline-flex items-center gap-1 rounded px-3 py-1.5 text-xs font-semibold transition-colors",
+                mode === "defense"
+                  ? "bg-[hsl(var(--info))] text-white"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Shield className="h-3 w-3" aria-hidden="true" />
+              수비 시
+            </button>
+          </div>
 
-      {/* 장면 이름 + 삭제 */}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Input
-          value={phase?.label ?? ""}
-          onChange={(e) => renamePhase(e.target.value)}
-          placeholder="장면 이름 (예: 좌측 빌드업, 전방 압박)"
-          className="h-8 max-w-[260px] text-xs"
-        />
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={deletePhase}
-          className="h-8 gap-1 border-destructive/40 text-destructive hover:bg-destructive/10"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-          장면 삭제
-        </Button>
-      </div>
+          {/* 장면 탭 (phase) — 레거시 전용 */}
+          <div className="mb-1 flex flex-wrap items-baseline gap-x-2">
+            <span className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">장면</span>
+            <span className="text-[11px] text-muted-foreground/70">
+              (레거시 영상) 빌드업·압박처럼 큰 흐름 단위
+            </span>
+          </div>
+          <div className="mb-3 flex flex-wrap gap-1 pb-1">
+            {phases.map((p, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setPhaseIdx(i)}
+                className={cn(
+                  "rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors min-h-[32px]",
+                  i === phaseIdx
+                    ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]"
+                    : "border-border text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {p.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={addPhase}
+              className="rounded-md border border-dashed border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground min-h-[32px]"
+            >
+              <Plus className="mr-1 inline h-3 w-3" />
+              장면 추가
+            </button>
+          </div>
+
+          {/* 장면 이름 + 삭제 — 레거시 전용 */}
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <Input
+              value={phase?.label ?? ""}
+              onChange={(e) => renamePhase(e.target.value)}
+              placeholder="장면 이름 (예: 좌측 빌드업, 전방 압박)"
+              className="h-8 max-w-[260px] text-xs"
+            />
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={deletePhase}
+              className="h-8 gap-1 border-destructive/40 text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              장면 삭제
+            </Button>
+          </div>
+        </>
+      )}
 
       {/* 컷 탭 (step) — 라벨과 순서 변경 안내를 같은 줄 왼쪽에 묶어 PC에서도 시선 분산 없게 */}
       <div className="mb-1 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">

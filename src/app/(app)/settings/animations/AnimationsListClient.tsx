@@ -15,7 +15,7 @@ import { useConfirm } from "@/lib/ConfirmContext";
 import { getFormationMotion } from "@/lib/formationMotions";
 import { formationTemplates } from "@/lib/formations";
 import type { TeamTacticalAnimation, TacticalAnimationData, AnimationCategory } from "@/lib/formationMotions/dbTypes";
-import { ANIMATION_CATEGORIES, ANIMATION_CATEGORY_LABEL } from "@/lib/formationMotions/dbTypes";
+import { ANIMATION_CATEGORIES, ANIMATION_CATEGORY_LABEL, toLegacyMotionShape } from "@/lib/formationMotions/dbTypes";
 import { inferAnimationCategory } from "@/lib/formationMotions/inferCategory";
 import type { PhasePosition } from "@/lib/formationMotions/types";
 import type { SportType } from "@/lib/types";
@@ -96,15 +96,16 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
     const key = `${animation.id}-${mode}`;
     if (exportingKey) return;
 
-    // 섹션 빌드 — combined면 attack + defense 모두
+    // P3 평면 영상은 카테고리 기반 단일 phase로 wrap. 레거시는 그대로.
+    const legacy = toLegacyMotionShape(animation.animation_data);
     const sections =
       mode === "attack"
-        ? [{ phases: animation.animation_data.attack, mode: "attack" as const }]
+        ? [{ phases: legacy.attack, mode: "attack" as const }]
         : mode === "defense"
-        ? [{ phases: animation.animation_data.defense, mode: "defense" as const }]
+        ? [{ phases: legacy.defense, mode: "defense" as const }]
         : [
-            { phases: animation.animation_data.attack, mode: "attack" as const },
-            { phases: animation.animation_data.defense, mode: "defense" as const },
+            { phases: legacy.attack, mode: "attack" as const },
+            { phases: legacy.defense, mode: "defense" as const },
           ];
 
     // 비어있는 섹션 거름 — combined에서 한쪽만 있어도 진행
@@ -165,13 +166,19 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
   async function handleCreate() {
     setCreating(true);
     try {
-      // 표준 motion (4-2-3-1 풀 시퀀스 또는 builder 자동 생성) 가져옴
-      const motion = getFormationMotion(createFormation);
-      if (!motion) {
+      // P3 평면화 — 신규 영상은 카테고리 ATTACK 기본, 1컷부터 시작.
+      // formationTemplates에서 슬롯 좌표만 가져와 첫 컷 positions로.
+      const tpl = formationTemplates.find((f) => f.id === createFormation);
+      if (!tpl) {
         showToast("지원하지 않는 포메이션이에요", "error");
         setCreating(false);
         return;
       }
+      const firstStep = {
+        caption: "",
+        ball: { x: 50, y: 50 } as const,
+        positions: tpl.slots.map((s) => ({ slot: s.id, x: s.x, y: s.y })),
+      };
       // 같은 포메이션 기존 개수 + 1 = 다음 버전
       const sameFormation = animations.filter((a) => a.formation_id === createFormation);
       const nextVersion = sameFormation.length + 1;
@@ -183,8 +190,10 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
           name: `${teamName} ${createFormation} v${nextVersion}`,
           description: null,
           animation_data: {
-            attack: motion.attack,
-            defense: motion.defense,
+            steps: [firstStep],
+            attack: [], // 레거시 호환 — 빈 배열
+            defense: [],
+            category: "ATTACK",
           },
           is_default: sameFormation.length === 0,
         }),

@@ -140,9 +140,9 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
 
   return (
     <div className={cn("rounded-xl border border-border bg-background/40", compact ? "p-2" : "p-3 sm:p-4")}>
-      {/* 헤더: 컴팩트 모드에선 mode 토글 hide(외부 통제), 기본 모드만 노출 */}
+      {/* 헤더: compact·controlledMode 둘 다 모드 토글 hide. 외부 통제일 땐 토글 어색. */}
       <div className={cn("flex items-center justify-between gap-2", compact ? "mb-1.5" : "mb-3")}>
-        {!compact && (
+        {!compact && !controlledMode && (
           <div className="inline-flex rounded-md border border-border bg-background p-0.5" role="group" aria-label="공격·수비 모드 전환">
             <button
               type="button"
