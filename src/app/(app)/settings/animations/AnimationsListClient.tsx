@@ -14,7 +14,9 @@ import { useToast } from "@/lib/ToastContext";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { getFormationMotion } from "@/lib/formationMotions";
 import { formationTemplates } from "@/lib/formations";
-import type { TeamTacticalAnimation, TacticalAnimationData } from "@/lib/formationMotions/dbTypes";
+import type { TeamTacticalAnimation, TacticalAnimationData, AnimationCategory } from "@/lib/formationMotions/dbTypes";
+import { ANIMATION_CATEGORIES, ANIMATION_CATEGORY_LABEL } from "@/lib/formationMotions/dbTypes";
+import { inferAnimationCategory } from "@/lib/formationMotions/inferCategory";
 import type { PhasePosition } from "@/lib/formationMotions/types";
 import type { SportType } from "@/lib/types";
 
@@ -66,6 +68,26 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
    */
   const [exportingKey, setExportingKey] = useState<string | null>(null);
   const [exportProgress, setExportProgress] = useState(0);
+  // P2 카테고리 필터 — null이면 전체. animation_data.category 없으면 phase 라벨 기반 자동 추정.
+  const [categoryFilter, setCategoryFilter] = useState<AnimationCategory | null>(null);
+
+  // 추정된 카테고리 캐시 — 매 렌더마다 재계산 막기
+  const animationsWithCategory = animations.map((a) => ({
+    ...a,
+    _category: inferAnimationCategory(a.animation_data),
+  }));
+  const filteredAnimations = categoryFilter
+    ? animationsWithCategory.filter((a) => a._category === categoryFilter)
+    : animationsWithCategory;
+
+  // 각 카테고리별 개수 (필터 칩에 노출)
+  const categoryCounts = ANIMATION_CATEGORIES.reduce(
+    (acc, c) => {
+      acc[c] = animationsWithCategory.filter((a) => a._category === c).length;
+      return acc;
+    },
+    {} as Record<AnimationCategory, number>,
+  );
 
   async function handleExportGif(
     animation: TeamTacticalAnimation,
@@ -408,7 +430,55 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
         </div>
       ) : (
         <div className="space-y-3">
-          {animations.map((animation) => (
+          {/* 카테고리 칩 필터 — 영상이 많아져도 빠르게 좁히기 */}
+          <div
+            className="flex flex-wrap gap-1.5"
+            role="group"
+            aria-label="카테고리 필터"
+          >
+            <button
+              type="button"
+              onClick={() => setCategoryFilter(null)}
+              aria-pressed={categoryFilter === null}
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+                categoryFilter === null
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border text-muted-foreground hover:text-foreground"
+              )}
+            >
+              전체 <span className="ml-1 tabular-nums opacity-80">{animations.length}</span>
+            </button>
+            {ANIMATION_CATEGORIES.map((c) => {
+              const count = categoryCounts[c];
+              if (count === 0) return null;
+              const active = categoryFilter === c;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCategoryFilter(c)}
+                  aria-pressed={active}
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+                    active
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {ANIMATION_CATEGORY_LABEL[c]} <span className="ml-1 tabular-nums opacity-80">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+          {filteredAnimations.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border bg-card/40 p-6 text-center">
+              <p className="text-sm text-muted-foreground">
+                이 카테고리에 해당하는 영상이 없어요.
+              </p>
+            </div>
+          ) : null}
+          {filteredAnimations.map((animation) => (
             <div
               key={animation.id}
               className="rounded-xl border border-border bg-card p-4 sm:p-5"
