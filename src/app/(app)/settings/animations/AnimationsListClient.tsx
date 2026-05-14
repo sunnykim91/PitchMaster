@@ -308,10 +308,19 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
             <SelectValue placeholder="포메이션 선택" />
           </SelectTrigger>
           <SelectContent>
+            {/* 팀의 sport_type 그룹을 위에 노출 (축구·풋살 동시 운영 팀 고려) */}
             <div className="px-2 py-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
-              {sportType === "FUTSAL" ? "풋살" : "축구"}
+              {sportType === "FUTSAL" ? "풋살 (우리 팀 종목)" : "축구 (우리 팀 종목)"}
             </div>
             {formationTemplates.filter((f) => f.sportType === sportType).map((f) => (
+              <SelectItem key={f.id} value={f.id}>
+                {f.name}
+              </SelectItem>
+            ))}
+            <div className="mt-1 px-2 py-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
+              {sportType === "FUTSAL" ? "축구" : "풋살"}
+            </div>
+            {formationTemplates.filter((f) => f.sportType !== sportType).map((f) => (
               <SelectItem key={f.id} value={f.id}>
                 {f.name}
               </SelectItem>
