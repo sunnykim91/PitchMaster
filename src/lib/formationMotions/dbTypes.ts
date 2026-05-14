@@ -23,6 +23,9 @@ export interface TeamTacticalAnimation {
 export interface TacticalAnimationData {
   attack: MotionPhase[];
   defense: MotionPhase[];
+  /** 작성자가 저장한 기본 재생 배속 — 미리보기·GIF·미니뷰에서 첫 진입 시 이 값으로 시작.
+   * 미설정(레거시 영상)은 1로 폴백. PLAYBACK_RATES = [0.5, 1, 1.5, 2] 중 하나. */
+  defaultRate?: number;
 }
 
 /** 생성 payload */

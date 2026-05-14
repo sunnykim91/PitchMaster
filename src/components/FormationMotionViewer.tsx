@@ -34,6 +34,8 @@ interface Props {
   compact?: boolean;
   /** 외부에서 모드를 통제 — compact 미니뷰에서 부모 mode와 sync */
   controlledMode?: "attack" | "defense";
+  /** 첫 진입 시 사용할 초기 배속 — 저장된 영상의 defaultRate 같은 경우 */
+  initialRate?: PlaybackRate;
 }
 
 const STEP_DURATION = 1500; // ms — phase 안 한 step 머무는 시간
@@ -80,7 +82,7 @@ function OpponentBall() {
   );
 }
 
-export default function FormationMotionViewer({ motion: data, highlightSlot, highlightLabel, onRateChange, compact, controlledMode }: Props) {
+export default function FormationMotionViewer({ motion: data, highlightSlot, highlightLabel, onRateChange, compact, controlledMode, initialRate }: Props) {
   const [internalMode, setInternalMode] = useState<"attack" | "defense">("attack");
   const mode = controlledMode ?? internalMode;
   const setMode = (m: "attack" | "defense") => {
@@ -90,7 +92,7 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
   const [playing, setPlaying] = useState(true);
   const [phaseIdx, setPhaseIdx] = useState(0);
   const [stepIdx, setStepIdx] = useState(0);
-  const [rate, setRate] = useState<PlaybackRate>(1);
+  const [rate, setRate] = useState<PlaybackRate>(initialRate ?? 1);
 
   const phases = mode === "attack" ? data.attack : data.defense;
   const phase = phases[phaseIdx] ?? phases[0];

@@ -65,7 +65,11 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/lib/ToastContext";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { cn } from "@/lib/utils";
-import FormationMotionViewer, { type PlaybackRate } from "@/components/FormationMotionViewer";
+import FormationMotionViewer, { type PlaybackRate, PLAYBACK_RATES } from "@/components/FormationMotionViewer";
+
+function isPlaybackRate(v: unknown): v is PlaybackRate {
+  return typeof v === "number" && (PLAYBACK_RATES as readonly number[]).includes(v);
+}
 import type {
   TeamTacticalAnimation,
   TacticalAnimationData,
@@ -137,8 +141,18 @@ export default function AnimationEditorClient({ initial }: Props) {
   type ExportTarget = "attack" | "defense" | "combined";
   const [exportingMode, setExportingMode] = useState<ExportTarget | null>(null);
   const [exportProgress, setExportProgress] = useState(0);
-  // 미리보기에서 사용자가 고른 배속 — GIF export에도 그대로 적용
-  const [previewRate, setPreviewRate] = useState<PlaybackRate>(1);
+  // 미리보기에서 사용자가 고른 배속 — GIF export에도 그대로 적용.
+  // 초기값은 저장된 영상 데이터의 defaultRate, 없으면 1×.
+  // 변경 시 data.defaultRate 갱신 + dirty 처리 → 저장하면 다음 진입에도 유지.
+  const [previewRate, setPreviewRate] = useState<PlaybackRate>(() => {
+    const saved = initial.animation_data.defaultRate;
+    return isPlaybackRate(saved) ? saved : 1;
+  });
+  function handlePreviewRateChange(next: PlaybackRate) {
+    setPreviewRate(next);
+    setData((prev) => ({ ...prev, defaultRate: next }));
+    setDirty(true);
+  }
   // 편집 모드 안에서 컷을 자동 재생 — 미리보기 화면 안 가도 흐름 확인
   const [editorPlaying, setEditorPlaying] = useState(false);
   // 인라인 미니뷰 — 편집 SVG 옆/위에 작은 viewer를 띄워 편집과 결과를 동시에
@@ -587,7 +601,8 @@ export default function AnimationEditorClient({ initial }: Props) {
         <h1 className="mb-3 text-xl font-bold">{name}</h1>
         <FormationMotionViewer
           motion={{ formationId: initial.formation_id, attack: data.attack, defense: data.defense }}
-          onRateChange={setPreviewRate}
+          onRateChange={handlePreviewRateChange}
+          initialRate={previewRate}
         />
 
         {/* GIF 다운로드 — 미리보기에서 바로 카톡에 보낼 GIF 받기 */}
@@ -991,6 +1006,8 @@ export default function AnimationEditorClient({ initial }: Props) {
             }}
             compact
             controlledMode={mode}
+            initialRate={previewRate}
+            onRateChange={handlePreviewRateChange}
           />
         </div>
       )}
