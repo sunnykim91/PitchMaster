@@ -96,16 +96,11 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
 
   const phases = mode === "attack" ? data.attack : data.defense;
   const phase = phases[phaseIdx] ?? phases[0];
-  // compact 미니뷰에서 빈 phases 받는 경우 가드 (편집 중 phase 0개로 줄였을 때 등)
-  if (!phase) {
-    return (
-      <div className="rounded-xl border border-border bg-background/40 p-4 text-center text-[12px] text-muted-foreground">
-        이 모드는 아직 장면이 없어요
-      </div>
-    );
-  }
-  const steps = phase.steps;
+  const steps = phase?.steps ?? [];
   const step = steps[stepIdx] ?? steps[0];
+
+  // ⚠️ hook은 early return 이전에 모두 호출 (React #300 방지).
+  // mode 전환 시 빈 phases가 되면 일찍 return하더라도 hook 갯수는 일관해야 함.
 
   // mode 또는 phase 변경 시 step 처음부터
   useEffect(() => {
@@ -120,12 +115,22 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
   // 정지 phase (steps 1개) 는 자동 진행 안 함
   useEffect(() => {
     if (!playing || steps.length <= 1) return;
+    if (!step) return; // phase 없는 경우 자동 진행 안 함
     const t = setTimeout(
       () => setStepIdx((i) => (i + 1) % steps.length),
       (step.duration ?? STEP_DURATION) / rate,
     );
     return () => clearTimeout(t);
-  }, [stepIdx, playing, steps.length, step.duration, rate]);
+  }, [stepIdx, playing, steps.length, step, rate]);
+
+  // 빈 phases 가드 (compact 미니뷰·평면 영상에서 mode 토글 시 발생 가능)
+  if (!phase || !step) {
+    return (
+      <div className="rounded-xl border border-border bg-background/40 p-4 text-center text-[12px] text-muted-foreground">
+        이 모드는 아직 장면이 없어요
+      </div>
+    );
+  }
 
   function cycleRate() {
     const i = PLAYBACK_RATES.indexOf(rate);
