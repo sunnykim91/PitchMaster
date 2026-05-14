@@ -12,18 +12,14 @@ function todayKst(): string {
 }
 
 /**
- * TWA(Play Store 알파 빌드) 진입 신호 다중 검증.
+ * TWA(Play Store 알파 빌드) 진입 검증 — Play Console 활성 통계 정합성 우선.
  *
- * Bubblewrap TWA는 Chrome Custom Tabs 위에서 동작하는데, OS·런처·Chrome 버전 조합에
- * 따라 referrer가 누락되는 케이스가 있음 (53차 박제). 단일 referrer만 의존하면
- * 자동 카운트가 사일런트로 빠진다.
- *
- * 3가지 신호 중 하나라도 매치되면 TWA로 인정:
+ * 2가지 신호 중 하나라도 매치되면 TWA로 인정:
  *  1. Referer 헤더가 `android-app://app.pitchmaster` 로 시작 (가장 신뢰)
  *  2. X-Requested-With 헤더가 패키지명과 일치 (Android WebView 표준)
- *  3. 클라이언트 신뢰 헤더 `X-Pitchmaster-Source: twa` (Android 진입 시 클라가 세팅)
  *
  * PWA 홈 화면 추가본·일반 모바일 Chrome은 위 신호를 모두 만족하지 못함.
+ * referrer 누락 케이스 보강은 클라이언트 신뢰 헤더로는 false positive 위험.
  */
 function detectTwa(req: NextRequest): { ok: boolean; signal: string | null } {
   const referer = req.headers.get("referer") ?? "";
@@ -34,11 +30,6 @@ function detectTwa(req: NextRequest): { ok: boolean; signal: string | null } {
   const xrw = req.headers.get("x-requested-with") ?? "";
   if (xrw.toLowerCase() === TWA_PACKAGE) {
     return { ok: true, signal: "x-requested-with" };
-  }
-
-  const clientSignal = req.headers.get("x-pitchmaster-source") ?? "";
-  if (clientSignal.toLowerCase() === "twa") {
-    return { ok: true, signal: "x-pitchmaster-source" };
   }
 
   return { ok: false, signal: null };
