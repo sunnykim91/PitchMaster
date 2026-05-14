@@ -27,12 +27,14 @@ interface Props {
   highlightSlot?: string;
   /** 본인 슬롯 라벨 (한국어 — 예: "공격형 미드"). 캡션에 부제로 노출 */
   highlightLabel?: string;
+  /** 사용자가 배속을 바꿀 때 부모에게 통지 (GIF export 동일 배속 사용 등) */
+  onRateChange?: (rate: PlaybackRate) => void;
 }
 
 const STEP_DURATION = 1500; // ms — phase 안 한 step 머무는 시간
 const BALL_OFFSET_Y = 2.4; // 공을 선수 점 발 옆으로 살짝 오프셋 — 라벨 가리지 않게
-const PLAYBACK_RATES = [0.5, 1, 1.5, 2] as const;
-type PlaybackRate = (typeof PLAYBACK_RATES)[number];
+export const PLAYBACK_RATES = [0.5, 1, 1.5, 2] as const;
+export type PlaybackRate = (typeof PLAYBACK_RATES)[number];
 
 /** 축구공 — SVG 미니 디자인 (흰 원 + 검정 5각형 + panel 경계 선) */
 function SoccerBall() {
@@ -73,7 +75,7 @@ function OpponentBall() {
   );
 }
 
-export default function FormationMotionViewer({ motion: data, highlightSlot, highlightLabel }: Props) {
+export default function FormationMotionViewer({ motion: data, highlightSlot, highlightLabel, onRateChange }: Props) {
   const [mode, setMode] = useState<"attack" | "defense">("attack");
   const [playing, setPlaying] = useState(true);
   const [phaseIdx, setPhaseIdx] = useState(0);
@@ -107,7 +109,9 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
 
   function cycleRate() {
     const i = PLAYBACK_RATES.indexOf(rate);
-    setRate(PLAYBACK_RATES[(i + 1) % PLAYBACK_RATES.length]);
+    const next = PLAYBACK_RATES[(i + 1) % PLAYBACK_RATES.length];
+    setRate(next);
+    onRateChange?.(next);
   }
   const rateLabel = `${rate}×`;
 

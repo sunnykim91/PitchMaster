@@ -22,6 +22,8 @@ export interface GifExportSection {
 export interface GifExportOptions {
   size?: number;
   onProgress?: (pct: number) => void;
+  /** 재생 배속. 1=기본, 2=두 배 빠르게, 0.5=절반 속도. 미리보기와 동일 의미. */
+  rate?: number;
 }
 
 const HOLD_MS = 1000;
@@ -39,6 +41,7 @@ export async function exportMotionAsGif(
   options: GifExportOptions = {},
 ): Promise<Blob> {
   const size = options.size ?? 480;
+  const rate = options.rate && options.rate > 0 ? options.rate : 1;
 
   if (sections.length === 0) throw new Error("내보낼 섹션이 없어요");
 
@@ -93,15 +96,16 @@ export async function exportMotionAsGif(
     if (isLast) delay = LAST_FRAME_HOLD_MS;
     else if (isSectionEnd) delay = HOLD_MS + SECTION_BREAK_MS;
     else delay = HOLD_MS;
-    gif.addFrame(ctx, { copy: true, delay });
+    gif.addFrame(ctx, { copy: true, delay: Math.max(20, Math.round(delay / rate)) });
 
     // 다음 step이 같은 섹션(같은 모드) + 섹션 끝 아닐 때만 보간
     if (nextEntry && !isSectionEnd && nextEntry.mode === mode) {
+      const transitionDelay = Math.max(20, Math.round(TRANSITION_MS_PER_FRAME / rate));
       for (let f = 1; f <= TRANSITION_FRAMES; f++) {
         const t = f / (TRANSITION_FRAMES + 1);
         const interp = interpolateStep(step, nextEntry.step, t);
         drawFrame(ctx, interp, phaseLabel, mode, size);
-        gif.addFrame(ctx, { copy: true, delay: TRANSITION_MS_PER_FRAME });
+        gif.addFrame(ctx, { copy: true, delay: transitionDelay });
       }
     }
   }

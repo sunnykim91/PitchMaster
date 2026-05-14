@@ -62,7 +62,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/lib/ToastContext";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { cn } from "@/lib/utils";
-import FormationMotionViewer from "@/components/FormationMotionViewer";
+import FormationMotionViewer, { type PlaybackRate } from "@/components/FormationMotionViewer";
 import type {
   TeamTacticalAnimation,
   TacticalAnimationData,
@@ -113,6 +113,8 @@ export default function AnimationEditorClient({ initial }: Props) {
   type ExportTarget = "attack" | "defense" | "combined";
   const [exportingMode, setExportingMode] = useState<ExportTarget | null>(null);
   const [exportProgress, setExportProgress] = useState(0);
+  // 미리보기에서 사용자가 고른 배속 — GIF export에도 그대로 적용
+  const [previewRate, setPreviewRate] = useState<PlaybackRate>(1);
   // 메타 정보 카드 접힘 상태 — Z Flip 5 같은 좁은 화면에서 캔버스 빨리 보이게 기본 접힘
   const [metaOpen, setMetaOpen] = useState(false);
 
@@ -143,6 +145,7 @@ export default function AnimationEditorClient({ initial }: Props) {
     try {
       const blob = await exportMotionAsGif(nonEmpty, {
         onProgress: (pct) => setExportProgress(pct),
+        rate: previewRate,
       });
       const filename = buildGifFilename({
         animationName: name,
@@ -461,13 +464,21 @@ export default function AnimationEditorClient({ initial }: Props) {
         <h1 className="mb-3 text-xl font-bold">{name}</h1>
         <FormationMotionViewer
           motion={{ formationId: initial.formation_id, attack: data.attack, defense: data.defense }}
+          onRateChange={setPreviewRate}
         />
 
         {/* GIF 다운로드 — 미리보기에서 바로 카톡에 보낼 GIF 받기 */}
         <div className="mt-4 rounded-xl border border-border bg-card p-4">
-          <p className="mb-2 text-sm font-bold">GIF로 받아 공유하기</p>
+          <div className="mb-2 flex items-center gap-2">
+            <p className="text-sm font-bold">GIF로 받아 공유하기</p>
+            <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold tabular-nums text-muted-foreground">
+              {previewRate}× 배속
+            </span>
+          </div>
           <p className="mb-3 text-xs text-muted-foreground">
             카톡 단톡방·문자에 그대로 던질 수 있는 GIF로 만들어드려요. 공수전체는 인코딩에 10~15초.
+            <br />
+            위 미리보기 배속 그대로 저장돼요 — 배속을 바꾸려면 미리보기 상단의 <span className="font-bold">{previewRate}×</span> 버튼을 눌러 변경하세요.
           </p>
           <div className="flex flex-wrap gap-2">
             {(["attack", "defense", "combined"] as const).map((mode) => {
