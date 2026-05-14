@@ -31,6 +31,8 @@ interface Props {
 
 const STEP_DURATION = 1500; // ms — phase 안 한 step 머무는 시간
 const BALL_OFFSET_Y = 2.4; // 공을 선수 점 발 옆으로 살짝 오프셋 — 라벨 가리지 않게
+const PLAYBACK_RATES = [0.5, 1, 1.5, 2] as const;
+type PlaybackRate = (typeof PLAYBACK_RATES)[number];
 
 /** 축구공 — SVG 미니 디자인 (흰 원 + 검정 5각형 + panel 경계 선) */
 function SoccerBall() {
@@ -76,6 +78,7 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
   const [playing, setPlaying] = useState(true);
   const [phaseIdx, setPhaseIdx] = useState(0);
   const [stepIdx, setStepIdx] = useState(0);
+  const [rate, setRate] = useState<PlaybackRate>(1);
 
   const phases = mode === "attack" ? data.attack : data.defense;
   const phase = phases[phaseIdx] ?? phases[0];
@@ -97,10 +100,16 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
     if (!playing || steps.length <= 1) return;
     const t = setTimeout(
       () => setStepIdx((i) => (i + 1) % steps.length),
-      step.duration ?? STEP_DURATION,
+      (step.duration ?? STEP_DURATION) / rate,
     );
     return () => clearTimeout(t);
-  }, [stepIdx, playing, steps.length, step.duration]);
+  }, [stepIdx, playing, steps.length, step.duration, rate]);
+
+  function cycleRate() {
+    const i = PLAYBACK_RATES.indexOf(rate);
+    setRate(PLAYBACK_RATES[(i + 1) % PLAYBACK_RATES.length]);
+  }
+  const rateLabel = `${rate}×`;
 
   // slot id → 위치 맵
   const positionMap = new Map(step.positions.map((p) => [p.slot, p]));
@@ -138,14 +147,25 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
           </button>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setPlaying((v) => !v)}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground"
-          aria-label={playing ? "일시정지" : "재생"}
-        >
-          {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={cycleRate}
+            className="inline-flex h-7 min-w-[2.5rem] items-center justify-center rounded-md border border-border px-1.5 text-[11px] font-bold tabular-nums text-muted-foreground hover:text-foreground"
+            aria-label={`재생 배속 ${rateLabel} — 누르면 변경`}
+            title={`배속 ${rateLabel}`}
+          >
+            {rateLabel}
+          </button>
+          <button
+            type="button"
+            onClick={() => setPlaying((v) => !v)}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground"
+            aria-label={playing ? "일시정지" : "재생"}
+          >
+            {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+          </button>
+        </div>
       </div>
 
       {/* 진행 표시 (phase index) */}
@@ -206,7 +226,7 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
               <motion.g
                 key={pos.slot}
                 animate={{ x: pos.x, y: pos.y }}
-                transition={{ type: "spring", stiffness: 90, damping: 15, mass: 0.8 }}
+                transition={{ type: "spring", stiffness: 90 * rate, damping: 15, mass: 0.8 }}
                 initial={false}
               >
                 {/* 본인 포지션 펄스 링 — "여기가 나" 한눈에 */}
@@ -252,9 +272,9 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
             <motion.g
               animate={{ x: step.ball.x, y: step.ball.y + BALL_OFFSET_Y, scale: [0.7, 1.15, 1] }}
               transition={{
-                x: { type: "spring", stiffness: 120, damping: 16 },
-                y: { type: "spring", stiffness: 120, damping: 16 },
-                scale: { duration: 0.5, ease: "easeOut" },
+                x: { type: "spring", stiffness: 120 * rate, damping: 16 },
+                y: { type: "spring", stiffness: 120 * rate, damping: 16 },
+                scale: { duration: 0.5 / rate, ease: "easeOut" },
               }}
               initial={false}
             >
