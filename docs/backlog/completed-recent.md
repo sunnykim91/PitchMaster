@@ -1,12 +1,291 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~54차)
-summary: 2026-04-11~05-11 진행된 AI 도입 Phase 0/1/2/3, 출시 직전 보안·UX 스윕, v0 카드 UI 이식, 커리어 프로필 v0 완성, 골 기록 UX 개선, AI 코치 고도화, 축구 8/9/10:10 지원, 시그니처 룰 전환, 경기 후기 환각 수정, 역할 가이드 + 전술 탭 재정비, Supabase Advisor 전건 해소 + TWA v1.0.1 빌드, 실사용자 CS 5건 대응 + MVP 집계 백필 버그 치유, 투표 마감 UX + API 서버 가드 + 팀 앨범 + 월별 결산 + 게시판 통합, 역할 가이드 푸시 + 자동편성 버그 수정 + AI 코치 버튼 비활성 버그 수정, 라이트 모드 대비 + OCR Vision 전환 + 역할 가이드 ID 매칭 + GA page_view 수정, 광고 ROI 측정 + SEO 안정화 + OCR UX 정리, 랜딩 v2 디자인 통합 + 차별화 카피 정정 + .gitignore 정리, SEO 안정화 + 푸시 사고 대응 + Realtime WAL 폭발 수정 + 광고 분석, 부심 기능 + 회장 보호 다층 방어 + useApi fallback fix + 풋살 sport_type 검증, 조기싸커 분석 + 가이드 전면 개편, 광고 2 결과 분석 + 33초 본 캠페인 게시, 회비 선납→면제 통합 + PitchScore 카드 접힘 + 39차 백로그 반영, 보안 풀스윕 + RLS initPlan + 선납 매칭 + 풋살 AI + 역할 가이드 통일, GA4 서버사이드 + 유니코드→SVG + PitchScore 종목 분리 + 거짓 박제 사고 4건 + 벨로그 4편 발행 + MVP 정책 변경(5/4 cutoff) + 사고 4건, 풋살 자동편성 외톨이 root cause + vitest 21건 갱신 + AI 풀플랜·코치 분석 풋살 동호회 톤 + 가상 전적 hallucination 차단, PitchScore Phase 2C 동료 평가 + SSR 병렬화 + 진입점 이동 + UI 통일 + favicon.ico + SEO 진단, PitchScore Phase 2C 완료·Feature Flag 전체 오픈 + 경기 후기 silent fail fix + 알림 탭 라우팅 + 평가 이력 페이지 + distinct count fix + cron 비활성화, PitchScore Sunset + 평가 UI 전면 제거 + 조기싸커 경쟁사 분석 + 랜딩 Phase 1 (무료 트러스트 라인 + 가격 비교 행) + 5/4 경기 후기 자동 복구 검증, AI 캐시 자동 무효화 + FCMZ 빌드업 데모 + 가이드 친절 톤 전면 재작성 + 편집기 하드코딩 버그 수정 + 카피 단정 표현 일괄 정리, 랜딩 톤 보강 + AboutSection 신설 + 경기별 종목 분리(Phase 1~4) + AI 캐시 무효화 11곳 완성, 휴면팀 회장 카톡 1:1 캠페인 11명 발송 + iOS Capacitor 전략 상담 + 도달 채널 한계 발견, GA4 트래픽 채널 오염 fix, Play Console 프로덕션 신청서 + 광고 D 소재 22.5s 영상 완성, 고도화·보안·성능 풀스윕 + PitchScore 전면 제거 + mvpThreshold 단위 테스트 + root force-dynamic 제거, 가이드 IT 외래어 정리 + 멀티 컴퓨터 메모리 동기화 셋업, 50대 페르소나 UX 감사 + 접근성 보강 + MVP 후기탭 통합 + 골 입력 UX + 랜딩 카피/SEO 개선, 랜딩 About·Comparison v0 리프레시 + 생일축하 기능 노출, 50대 페르소나 UX Phase 2~4 — 코치마크·회원 일괄등록·골 쿼터 그룹핑·자체전 PlayerPicker·완료 경기 정정, 광고 5차 게시 — 코드 변경 없음·인스타 앱 부스팅·standalone HTML + OBS 작업, 전술판 영상 접근성·모바일 편집·GIF 공유 통합 개선 + 진입 카드 동적 라벨 + 카드 미리보기 + 합본 GIF + 편집기 UX 가다듬기
-sections: [55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-05-12 (56차)
+title: 개선 백로그 — 최근 완료 (16~60차)
+summary: 2026-04-11~05-14 진행. 최근: 가이드 통계 정정 + 알파 TWA 디버깅 + 전술 영상 sport_type 분기 (60차)
+sections: [60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-05-14 (60차)
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~56차)
+# 최근 완료 (16~60차)
+
+## 60차 (2026-05-14, KST) — 가이드 통계 정정 + 블로그 시리즈 + 알파 TWA 디버깅 + 전술 영상 sport_type 분기
+
+**커밋 9개** (42a8a4f · cd298ea · b340e1c · 5834ab4 · 7110aa1 · 3aadbc4 · 3b012be · d8ddf84 · 5f267bf, push 완료)
+
+### 주제 1 — 자체 도메인 가이드 3편 발행 + 통계 갱신 (42a8a4f · cd298ea)
+
+- 자체 도메인 `/blog/futsal-split-teams` 신규 발행 (풋살 3파전·4파전 운영법)
+- 네이버·티스토리 동시 발행
+- 5/14 Supabase 직접 조회: **106팀 / 844명** (4/29 대비 +17팀 2주 성장)
+- 가이드 3편 전체 "90+ 팀" → "100+ 팀, 800+ 명" 정정
+- 풋살 키워드 보강: 5:5 → 6:6 표준, 18명 이상 3파전 기준 수정
+- 블로그 시리즈 순서 교체: 4편(New)=무료 풋살 전술판 앱 비교, 5편(New)=휴면·부상 회비 자동 면제, 기존 4편(리그 경우의 수) 폐기
+
+### 주제 2 — 알파 테스터 TWA ping 디버깅 → 원본 복귀 (b340e1c · 5834ab4 · 7110aa1)
+
+- **b340e1c**: 서버 측 Referer·User-Agent 다중 신호 검증 추가 → 모든 ping INSERT 실패 (fetch HTTP Referer는 android-app:// 아님)
+- **5834ab4**: referer-only 엄격 검증으로 원복 시도 → 동일 실패
+- **7110aa1**: 서버 detectTwa() 완전 제거, 5/11 원본(b8c1102) 로직으로 복귀 → 본인 5/14 카운트 정상화
+- 사고 박제: `feedback_fetch_vs_document_referrer.md` 신규 (60차)
+- Vercel logs "android-app" 검색 5/11~5/14 0건 확인 = 서버 Referer로 TWA 판별 불가 검증
+
+### 주제 3 — 전술 영상 sport_type 기반 포메이션 분기 (3aadbc4 · 3b012be · d8ddf84 · 5f267bf)
+
+- FCMZ 풋살팀에서 default 포메이션이 4-2-3-1(축구 11인제) → 풋살 6인제 포메이션으로 분기 필요
+- FCMZ 풋살팀 기존 영상 3건 삭제 (사용자 승인, 축구팀 3건 보존)
+- AnimationsListClient: `sport_type` props 추가, `pickDefaultFormation()`, 종목 토글(segmented control), 포메이션 드롭다운 분리
+- 최종: 두 종목 동시 운영팀도 대응 (양쪽 포메이션 모두 접근 가능)
+- 포메이션 드롭다운 표시명 = formation.name (id 노출 제거), 빈 상태 문구 동적화
+
+### 사고 기록 (60차, 5건)
+
+1. fetch HTTP Referer vs JS document.referrer 혼동 → b340e1c·5834ab4 2회 잘못된 fix (`feedback_fetch_vs_document_referrer.md` 신규 박제)
+2. `alpha_tester_daily_log.created_at` 컬럼 없음(first_seen_at) → silent fail → "0건" 거짓 보고 (`feedback_supabase_column_verify.md` 4차)
+3. 블로그 "4년 운영" 의심 → 메모리에 5년차 박제 3건 무시 (`feedback_memory_grep_before_analysis.md` 5차)
+4. "90팀 넘는" outdated 인지하면서도 DB 조회 없이 그대로 인용 (CLAUDE.md 명시 의무 위반)
+5. TWA fallback 완화 제안 → 알파 정합성 원칙 망각 → 사용자 격노 (`feedback_alpha_integrity_principle.md` 신규 박제)
+
+---
+
+## 59차 (2026-05-14, KST) — 경기 자동 종료 cron 신설 + 알파 테스터 연락처 조회 + Supabase GRANT 대응
+
+**커밋 1개** (4e58663, push 완료, HEAD = 4e58663)
+5파일 변경 (+153 / -0)
+
+### 주제 1 — 경기 자동 종료 전담 cron 신설 (4e58663)
+
+- **배경**: 22시 경기 종료 후 후기 탭 새로고침 시 MVP 투표 활성화 안 됨. 활성 사용자 없는 팀에서 SCHEDULED stuck.
+- **Root cause**: `autoCompleteTeamMatches`가 페이지 진입 시에만 호출, `getMatchDetailData` 누락 + vercel.json에 전담 cron 없음
+- **수정**: `src/lib/server/autoCompleteMatches.ts` (전역 일괄 종료, 7일 가드) + `/api/cron/auto-complete-matches` + `vercel.json` `*/5 * * * *` + `getMatchDetailData` 1줄 추가
+- **연쇄 해결**: `match-completed-push` · `match-result` 두 cron도 COMPLETED 전제 정상화
+- 참고: `domain_match_auto_complete_cron.md`
+
+### 주제 2 — 알파 테스터 4명 phone 연락처 조회 (성원창·김민성·서성재·노진우)
+
+- 모두 `alpha_testers` 승인 완료, `rewarded_at null`. `google_email` 등록되어 있으나 미응답 → phone 필요
+- `users.phone` 조회로 해결. `scripts/lookup-alpha-phones.mjs` 로컬 스크립트 작성 후 실행
+- **사고 2건**:
+  1. `team_members.phone` 컬럼 없음을 마이그레이션 grep만 보고 있다고 단정 → 쿼리 실패 (`feedback_supabase_column_verify.md` 3차 위반)
+  2. `team_join_requests.user_id`로 쿼리 → 컬럼 없음. 실제 키는 `kakao_id` (`domain_team_join_requests_kakao_id.md` 신규 박제)
+- **떠넘기기 사고**: 권한 차단 시 SQL 콘솔 사용자에게 2회 떠넘김 → 사용자 지적 → 스크립트 파일 우회로 자체 해결 (`feedback_dont_offload_to_user.md` 신규 박제)
+- `scripts/lookup-alpha-phones.mjs` — untracked 유지 (PII, push 금지)
+
+### 주제 3 — Supabase GRANT 정책 변경 공지 대응
+
+- 2026-05-30 신규 프로젝트 / 2026-10-30 기존 프로젝트: public 스키마 신규 테이블은 명시 GRANT 의무
+- `supabase/migrations/CLAUDE.md` — 신규 테이블 GRANT 4줄 + RLS + policy 템플릿 박제
+- 기존 테이블 영향 없음. 다음 마이그레이션부터 적용 의무
+
+### 별건 (커밋 없음)
+
+- 전술판 편집기 컷 순서 dnd (@dnd-kit, long-press 200ms) — git status에 없음. 사용자가 별도 처리했거나 되돌린 상태로 추정. 다음 세션 확인 필요.
+
+### 사고 기록 (3건)
+
+1. `team_members.phone` 존재 단정 → 쿼리 실패 (`feedback_supabase_column_verify.md` 3차)
+2. `team_join_requests.kakao_id` 미인지 → `user_id` 쿼리 실패 (신규 박제)
+3. 권한 차단 시 우회 미시도 → 사용자에게 2회 떠넘김 (신규 박제)
+
+---
+
+## 58차 (2026-05-13~14, KST) — 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix
+
+**커밋 2개** (b083e9c · 39a8ac0, push 완료, HEAD = 39a8ac0)
+코드 변경 없음 (광고 분석), 4+1파일 변경
+
+### 주제 1 — 인스타 광고 5차 분석 (단톡방 인용 슬라이드, 인스타 앱 부스팅)
+
+- **소재**: FCMZ 정모방 단톡방 캡처 인용 슬라이드 ("투표좀 해주세요~ / 회비 납부 부탁드립니다~~") — 신소재
+- **기간**: 2026-05-11 14:00 ~ 2026-05-14 14:00 KST (3일). 캡처 시점 5/13 17:00, 21시간 남음.
+- **지표 (진행 중)**: 지출 ₩10,185/₩15,327 (66%) · 도달 971 · 조회 1,303 · 프로필 방문 60 (CPV ₩170) · 팔로우 2
+- 도달 인구 남성 93.3% · 25-44세 96% · 수도권 76% — 타겟 정합성 우수
+- 광고 기간(51시간) 신규 회장 5팀: VANTA FC(활성) · FC클린(경기만) · 세븐스타풋살·FC KS·FC한사바리(휴면)
+- 활성률 1/5(엄격)~2/5(느슨). Baseline 51h 2.5팀 → 순증분 +2.5팀
+- 현재 단가 ₩2,037/팀 — 3차(₩3,290) 대비 38% 개선. 단톡방 인용 신소재 효과 확인
+- signup_source 첫 캡처: 5/12 19:03 이주현(instagram) 1명 → 팀 합류 0건 이탈
+- **최종 수치 미확정** — 5/14 14:00 종료 후 reference_meta_ads_setup.md 추가 업데이트 필요
+
+### 주제 2 — 온보딩 친절도 전수 점검 + 개선 8건 (b083e9c)
+
+파일: src/app/onboarding/page.tsx · actions.ts · src/app/team/TeamClient.tsx · src/app/(app)/dashboard/DashboardClient.tsx
+
+- (a) /onboarding 1단계 카피 — 회장 가정 제거. "첫 경기 등록하면 끝" → "팀에 합류하거나 새로 만들면 시작"
+- (b) 축구 포지션 10개 한 줄 설명 추가 (풋살과 동일 친절도)
+- (d) 포지션 강제 해제 — 비워두기 허용, "(선택, 복수 가능)" + "아직 모르겠으면 비워두세요"
+- (f) 위자드 Step 2 카피 "가입 전" 모호함 명확화
+- /team 코드 없이 진입 시 wayfinding 카드 + 데모 진입 보조 + 본 계정 복귀 안내
+- (g) welcome=joined 환영 카드 — 첫 액션 3종(투표·프로필·게시판) · 닫기 가능
+- (e) 위자드 닫기 버튼 + teamId별 localStorage dismissal
+- (h) 위자드 role 게이트 — STAFF+에게만 노출
+- 클린 빌드 통과 · 49파일 / 799 테스트 전부 통과
+
+**보류**: /onboarding 포지션 입력 → 팀 가입 후 이동(옵션 C). (d)로 80% 해결, 데이터 확인 후 재판단.
+**건너뜀**: 카카오 콜백 로딩 인디케이터 — 서버 라우트 핸들러, ROI 낮음.
+
+### 주제 3 — 투표 현황 empty state 오해 유발 fix (39a8ac0)
+
+파일: `src/app/(app)/dashboard/DashboardClient.tsx` (+6줄)
+
+**현상**: FCMZ 5/20 경기가 홈 "다가오는 경기" 카드엔 보이는데 "투표 현황" 카드엔 안 보임.
+
+**원인**: `getDashboardData.ts:264-266` — `voteMatchRows` 생성 시 `.filter((m) => !upcomingRaw || m.id !== upcomingRaw.id)` 로 upcomingMatch와 동일한 경기를 의도적으로 dedup. FCMZ처럼 SCHEDULED 미래 경기가 5/20 1건뿐인 팀은 투표 현황 카드가 항상 빈 상태 → 기존 EmptyState "진행 중인 투표가 없습니다" 노출 → 사용자 오해.
+
+**dedup 자체는 정상 (의도된 중복 제거)**. EmptyState 카피가 오해 유발.
+
+**fix**:
+- upcomingMatch 있음 (dedup 정상 상태) → py-3 인라인 2줄 안내: "다가오는 경기는 위 카드에서 확인할 수 있어요. 그 외 진행 중인 투표는 없습니다."
+- upcomingMatch 없음 (진짜 빈 상태) → 기존 EmptyState 유지
+- py-16 → py-3 (~80% 영역 축소)
+
+### 사고 기록 (3회)
+
+1. /team 데모 진입 동선 없음 단정 — grep 없이 발화. 실제 /login 3곳에 노출됨. feedback_grep_before_assertion 박제.
+2. 광고 분석 시 가입자(user) 수부터 제시 — KPI는 신규 회장(team) 수임. reference_meta_ads_setup grep 없이 시작한 사고. feedback_ad_kpi_team_count 박제.
+3. 투표 현황 버그 진단 시 "홈화면에서 보고 있다"고 명시된 컨텍스트를 두 번 되물음 → 사용자 불쾌. feedback_user_context_repeat 박제.
+
+---
+
+## 57차 (2026-05-13, KST) — 조기싸커 분석 + IA 재정렬 + 운영공지·팀공지 + 페어 시너지 + form-guard
+
+**커밋 9개** (2cf0763~7c25f80, 전부 push 완료, HEAD = 7c25f80)
+마이그레이션 1개: `00072_posts_global_notice.sql` (사용자가 Supabase Dashboard에서 직접 실행)
+
+### 주제 1 — 조기싸커 경쟁사 3라운드 분석
+
+- 1차 fetch: 메인·가이드·App Store — "등록 팀 0팀" 오판 (SPA 렌더링 한계, SSR 미포함)
+- 2차: 사용자 제공 사진으로 206팀 확인·정정
+- 3차: 가이드 페이지 추가 fetch (SPA 한계로 일부만 추출)
+- 가격 카피 확인: "베타 기간 동안 모든 기능 완전 무료. 정식 출시 후 기본 플랜 무료, 팀 단위 과금, 선수 개인 항상 무료" — 메인 #pricing 섹션에 없음, 앱 내부 또는 App Store 추정
+- `reference_competitor_jogisoccer.md` 갱신: 206팀 정정 + 차용 결정 + admin 분리 기록
+
+### 주제 2 — PR 1: 햄버거 3그룹 + 홈 시즌 기록 카드 + 선호 포지션 순위 (2cf0763, 1544726)
+
+- 햄버거 메뉴 운영·기록·소통·설정 4그룹 구분선 명시
+- 홈 대시보드에 시즌 기록 요약 카드 추가 (records 페이지 정식 기준과 동일하게 1544726에서 재통일)
+- 회원 프로필에 선호 포지션 1·2·3 순위 입력 필드 추가
+
+### 주제 3 — PR 2: 운영공지·팀공지 + 페어 시너지 (fa8b9cc)
+
+- `posts` 테이블에 `post_type` 컬럼 + `is_global_notice` BOOLEAN 추가 (00072)
+- 운영공지(전역, 김선휘 전용): `/admin/notice` 별도 경로 분리 — 일반 게시판 폼에서 분리한 사용자 지시에 따름
+- 팀공지: PRESIDENT/STAFF가 게시판 내에서 작성, 상단 고정
+- 페어 시너지 섹션: `/members` 페이지 하단 카드로 배치 (헤더 옆·햄버거 배치 2회 실패 끝에 도달)
+
+### 주제 4 — PR 3 + Fix: 내 기록 확장 + IA 재정렬 + 운영공지 admin 분리 (8e41069, dd67bb0, 585801c)
+
+- `/records` 내 기록 탭 히어로 카드 최상단 고정 (`style={{ order: -10 }}`)
+- IA 전수조사 후속: 홈/더보기/회원관리/records 4건 위치 재정렬 (585801c)
+- 운영공지 admin 분리 재확인 + 페어 시너지 위치·디자인 정돈
+
+### 주제 5 — form-guard 6곳 보강 + UI 소폭 조정 (b46b19a, 45ff944, b24aa9c, 7c25f80)
+
+- 미저장 이탈 경고 누락 6곳 일괄 추가 (`b24aa9c`)
+- `BoardClient.tsx` TS 에러 동시 수정
+- 게시판 카드 톤 중성화 (선택됨 오해 방지, `45ff944`)
+- 햄버거 그룹 구분선 + 더보기 시트 hero 카드 디자인 (`b46b19a`)
+- 애니메이션 편집기 컷 순서 변경 안내 위치 수정 (`7c25f80`)
+
+### 사고 기록 (5회, 동일 세션)
+
+모두 코드 grep 없이 stale 메모리·추측으로 단정 후 사용자 정정:
+1. 조기싸커 등록 팀 "0팀" → 실제 206팀 (SPA 렌더링 한계 미고려)
+2. AI 기능 "김선휘 한정" → 이미 전체 공개 (`enableAi = true`, 47차 이후)
+3. 페어 시너지 위치 — 헤더 옆 제안 → 거부 → 햄버거 제안 → 거부 → `/members` 하단
+4. BeforeAfterSection 추가 권고 → 47차에 이미 폐기 박제
+5. 풋살 AI 차단 단정 → 47차에 이미 풀림 (코드 주석 명시)
+
+결과: `feedback_verify_first_or_silence.md` 4차 경고 신설. 사용자 신뢰 비용 및 정정 라운드 비용 발생.
+
+---
+
+## 56차 후반 (2026-05-12, KST) — Supabase Disk IO 대응 + 동시성 fix + signup_source 인프라
+
+**커밋 8개** (02dc6f6~db39091 push 완료, origin/main 동기화)
+
+### 주제 1 — Supabase Disk IO 폭증 사고 대응 (CRITICAL, 02dc6f6)
+
+- Supabase "Disk IO Budget 임박" 경고 메일 수신 계기
+- Query Performance 분석: `SELECT wal->>$5 as type` 쿼리 78.4% / 948,963 calls 점유
+- **원인**: 4/29 에 publication 에서 테이블 3개 제거했으나 `MatchDetailClient.tsx` `useRealtimeSubscription` 3개 호출 방치 → SDK 가 채널 subscribe → 5분 cycle spin-up/shutdown 무한 반복
+- **fix**: `MatchDetailClient.tsx` useRealtimeSubscription 3개 + import 제거, `useRealtimeSubscription.ts` dead code 삭제
+- **검증**: Realtime 로그 `Tenant initializing` cycle 즉시 소멸 / WAL calls 949만 → 2,565 (3700배), 비중 78% → 32%
+- **잔존 32%**: `supabase_realtime_messages_publication` protected 테이블 baseline — 제거 불가
+
+### 주제 2 — auth.ts 60초 in-memory 캐시 + 인덱스 (58f43c9, 마이그레이션 00068)
+
+- 매 SSR/API 요청마다 team_members + users 2회 SELECT 반복 (3.85초마다 hit)
+- in-memory Map 캐시 + `invalidateAuthSync(userId)` 헬퍼 추가
+- 추가 인덱스 3종 (00068): `idx_match_attendance_voted_at`, `idx_match_goals_created_at`, `idx_posts_created_at`
+
+### 주제 3 — 동시성 race condition 전수 fix (0b3728c)
+
+발견된 race 4종 중 HIGH 3종 수정:
+- 회비 중복 입금: 분 단위 dedup UNIQUE + 23505 catch 멱등 응답
+- 벌금 중복 매칭: atomic claim 패턴 (UPDATE WHERE status='UNPAID')
+- squad 편성: race-safe upsert (기존 select → UPDATE / INSERT + 23505 재조회)
+- `members/route.ts`: `invalidateAuthSync` 3곳 (role 변경·이임·강퇴)
+
+마이그레이션 00070 — 회비 dedup UNIQUE:
+- 1차 시도: `date_trunc('minute', timestamptz)` → 42P17 (STABLE 함수 인덱스 거부)
+- 해결: `dues_minute_bucket` IMMUTABLE wrapper 함수 + `AT TIME ZONE 'UTC'` (37cf026)
+- `SET search_path = public` Supabase Security Advisor 권고 적용 (340e73f)
+
+### 주제 4 — signup_source 자동 캡처 인프라 (c78c993, 마이그레이션 00071)
+
+- 배경: 휴면 회장 카톡 컨택 효과 0 → 다음 가입자부터 자동 측정
+- `users.signup_source TEXT` 컬럼 추가
+- `SignupSourceTracker` 컴포넌트 (utm 우선 + referrer 호스트 + first-touch 쿠키 30일 TTL)
+- 카카오 콜백에서 쿠키 읽어 `findOrCreateKakaoUser` 에 전달
+- 5/12 이전 가입자는 NULL (소급 불가)
+
+### 주제 5 — 어드민 cohort 분석 카드 (db39091)
+
+- `/api/admin/stats`: 30일 내 가입자 signup_source 별 그룹핑
+- `AdminClient`: 팀별 현황 위에 가입 출처별 코호트 표
+- 활성률 색상: 50%↑ 성공 / 25%↑ 경고 / 낮음 회색
+
+### 사용자 직접 실행 마이그레이션
+
+- 00068 (시간 인덱스 3종): 완료
+- 00070 (회비 dedup IMMUTABLE wrapper): 완료
+- 00071 (users.signup_source): 완료
+- `ALTER FUNCTION … SET search_path = public` (dues_minute_bucket·trg_player_ratings_updated_at): 완료
+
+### 삽질·사고
+
+- **4/29 fix 불완전**: publication 에서 테이블 제거 후 SDK 채널 호출 방치 → Disk IO 폭증 재발. `feedback_realtime_publication_protected.md` 신규 박제
+- **timestamptz 인덱스 표현식**: `date_trunc('minute', timestamptz)` STABLE 함수라 42P17 거부 → IMMUTABLE wrapper 함수 패턴. `feedback_immutable_function_index.md` 신규 박제
+
+---
+
+## 57차 (2026-05-12, KST) — 운영진 단방향 회원 평점·코멘트 시스템 잠정 도입
+
+**커밋 8개** (19a0184~9b26313 모두 push 완료, origin/main 동기화)
+
+### 배경
+
+- `project_evaluation_systems_decision.md` (2026-05-06) "경기 평점 도입 안 함 (시나리오 D)" 박제 상태에서 FCO2 팀(외부 팀)이 단방향 평점 기능 요청 — 재논의 트리거 1번 발화
+- 메모리 충돌 감지 후 사용자 확인 절차 거쳐 잠정 도입 결정. PitchScore 부활 아님
+- 본인 팀(FCMZ·FK Rebirth·FC DEMO·시즌FC) 토글 OFF 유지. FCMZ 풋살팀만 테스트 ON
+
+### 완료 항목 (잠정 — 본 도입 검토 보류)
+
+- **(1/5)** DB 스키마 (`19a0184`) — `00069_player_ratings.sql`, `player_ratings` 테이블, UNIQUE `(match_id, ratee_id, rater_id)`, `teams.player_rating_enabled` 컬럼, RLS service_role 전용
+- **(2/5)** API 4종 (`a93d062`) — `/api/player-ratings/route.ts` + `[id]/route.ts` (GET·POST·PUT·DELETE), 토글 가드, 코멘트 서버 사이드 마스킹
+- **(3/5)** 팀 설정 토글 (`751af6b`) — TeamSettings·SettingsClient·page.tsx·getSettingsData·`/api/teams` GET/PATCH 매핑
+- **(4/5)** 일지 탭 카드 + 컴포넌트 (`8f26e99`) — `src/components/playerRating/` 신규 폴더 (PlayerRatingCard·PlayerRatingDialog·types), MatchDiaryTab MVP 카드 직후 렌더
+- **(5/5)** 시즌 누적 (`d7c03f6`) — `/api/records` 옵셔널 필드 + RecordsClient 전체 기록 데스크탑 테이블 평점 컬럼 (avgRating 있는 row 있을 때만 노출)
+- **표준 Modal 래퍼 도입** (`985f11e`) — `src/components/ui/Modal.tsx` 신규. PlayerRatingDialog 교체. 신규 모달 필수 사용 의무화
+- **records 노출 보강** (`01f630f`) — `/records?tab=my` 내 기록 카드 5번째 스탯 + 전체 기록 모바일 카드 평점 배지
+- **SSR 누락 보강** (`9b26313`) — `getRecordsData.ts` 평점 집계 추가 (API에만 추가하고 SSR 빼먹은 버그 수정)
+
+### 삽질·사고
+
+- **Modal containing block 재발** (985f11e) — 44차 `feedback_modal_portal_containing_block.md` 박제 후 56차에 PlayerRatingDialog 만들면서 또 `fixed inset-0` 직접 작성. 위치 깨짐 사용자 발견 → Modal 래퍼 컴포넌트 수준 강제로 근본 해결. 메모리 박제만으로는 반복 사고 차단 불충분 확인
+- **SSR/API 이중 진입 경로 누락** (9b26313) — `feedback_data_flow_dual_check.md` 규칙 박제 후 또 `/api/records`만 손대고 `getRecordsData.ts` 빠뜨림. 사용자가 FCMZ 풋살팀 테스트 후 직접 발견
+- **최소 노출 → 진입점 없음** (01f630f) — 잠정 도입이라 데스크탑 테이블 1곳만 노출했더니 사용자 "어디서 봐?" → 모바일·내 스탯 추가. 잠정이라도 최소 진입점 1개는 명확하게
+
+---
 
 ## 56차-2 (2026-05-12, KST) — 랜딩 정리 + 회비 면제 가이드 + SEO 키워드 보강 + 경쟁사 분석
 

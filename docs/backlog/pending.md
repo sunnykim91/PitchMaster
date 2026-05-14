@@ -1,7 +1,7 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
-summary: 우선순위별 미완료 항목 정리. HIGH=89팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-05-12 (56차)
+summary: 우선순위별 미완료 항목 정리. HIGH=106팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
+last_updated: 2026-05-14 (60차)
 related: [completed-recent.md, reviews.md]
 ---
 
@@ -11,6 +11,173 @@ related: [completed-recent.md, reviews.md]
 - **HIGH**: 현재 100팀+ 운영에 직접 영향
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
+
+## 60차 신규 추가 (2026-05-14) — 블로그 4·5편 + 알파 추적
+
+### 블로그 4편 — 무료 풋살 전술판 앱 비교 (HIGH, 다음 세션 우선)
+- **배경**: 기존 4편(리그 경우의 수) 폐기. 네이버 부상 키워드 "풋살 전술판" 공략.
+- [ ] 자체 도메인 `/blog/futsal-tactics-app-comparison` 작성·발행
+- [ ] 네이버 블로그 동시 발행
+- [ ] 티스토리 동시 발행
+- 참고: `project_blog_publishing_cadence.md`
+
+### 블로그 5편 — 휴면·부상 회비 자동 면제 패턴 (HIGH, 다음 세션 이후)
+- **배경**: PitchMaster unique value — 출석 기반 자동 면제. 경쟁사 없는 차별화 포인트.
+- [ ] 자체 도메인 `/blog/dues-exemption-policy` 작성·발행
+- [ ] 네이버·티스토리 동시 발행
+
+### 본인 알파 5/15~5/25 TWA 출석 지속 확인 (HIGH, 매일)
+- **배경**: 7110aa1으로 원본 복귀 후 5/14 정상 카운트 확인. 서버 검증 없음 상태로 5/25까지 유지.
+- [ ] 매일 TWA 진입 후 어드민 그리드 D값 확인
+- [ ] 5/25 12명 14일 달성 시 Play Console 프로덕션 신청
+
+---
+
+## 59차 신규 추가 (2026-05-14) — cron 잔여 버그 + 운영 후속
+
+### match-result cron 22시 이후 경기 누락 버그 (HIGH, 즉시 대응 권장)
+- **배경**: cron이 매일 22:00 KST 고정 실행 + `match_date = today` 조건 → 22시 이후 종료 경기는 영구 누락
+- **Fix 방향 A**: cron 시각을 23:59 또는 다음날 01:00 KST 로 변경 (`vercel.json` cron expression 수정)
+- **Fix 방향 B**: `match_date >= yesterday` 윈도우로 변경 (전일 23:00 경기도 커버)
+- 59차에 `auto-complete-matches` cron 신설로 SCHEDULED→COMPLETED 전환은 해결됐으나 결과 푸시 누락은 잔존
+- 참고: `domain_match_auto_complete_cron.md`
+
+### 전술판 편집기 컷 순서 dnd 처리 확인 (MEDIUM, 다음 세션 초)
+- **배경**: 59차 세션 중 @dnd-kit long-press dnd 작업이 커밋에 포함되지 않은 상태. 사용자가 되돌렸는지 보류인지 불명.
+- [ ] 다음 세션 시작 시 `AnimationEditorClient.tsx` git status 확인 후 적용/폐기 결정
+- [ ] 적용 원할 시: `SortableStepChip` + `handleStepDragEnd` + arrayMove + stepIdx 추적 패턴 재적용
+
+### 알파 테스터 4명 직접 연락 (HIGH, 운영)
+- **배경**: 성원창·김민성·서성재·노진우 — `users.phone` 확인 완료. `rewarded_at null`, 미응답 상태.
+- [ ] 사용자가 phone으로 직접 연락 (수동 처리 항목)
+- [ ] 연락 완료 후 `alpha_testers.rewarded_at` 업데이트
+
+---
+
+## 58차 신규 추가 (2026-05-13) — 광고 5차 후속 + 온보딩 ROI 측정
+
+### 광고 5차 최종 수치 재집계 (HIGH, 5/14 14:00 이후)
+- **배경**: 5/13 17:00 기준 66% 소진 · 21시간 남음. 최종 종료 후 확정 수치 필요.
+- [ ] 5/14 14:00 이후 도달·조회·프로필 방문·신규 팀 최종 확인
+- [ ] reference_meta_ads_setup.md 5차 행 완성 + 차수별 비교표 갱신
+- [ ] feedback_ad_fatigue_pattern.md 5차 최종 확정 기록
+
+### 신규 회장 3팀 휴면 추적 (MEDIUM, 5/21 이후)
+- **배경**: 세븐스타풋살(지민철)·FC KS(백동준)·FC한사바리(서성재) — 현재 본인만 등록, 멤버 0.
+- [ ] 5/21 시점 Supabase 조회 — 멤버 모집·경기 생성 여부 확인
+- [ ] 위자드 카드 → 멤버 초대 전환률 판정 (온보딩 개선 ROI의 핵심 지표)
+
+### 온보딩 친절도 개선 ROI 측정 (MEDIUM, 다음 광고 사이클 이후)
+- **배경**: b083e9c 개선 8건 완료. 활성률 1/5가 개선되는지 확인 필요.
+- [ ] 다음 광고 사이클 신규 팀 활성률 대조 (현재 베이스라인 20~40%)
+- [ ] 신규 가입자 → 팀 합류 전환률 추적 (signup_source 있는 가입자 기준)
+
+### 5/14 이후 signup_source 분포 확인 (MEDIUM, 5/18 이후)
+- **배경**: 광고 5차 기간(5/11~5/14) 귀속 분리 후 자연 유입 베이스라인 확보 필요.
+- [ ] 광고 종료 후 1주 signup_source 분포 확인 (instagram / direct / null 비율)
+- [ ] 참고: domain_signup_source_tracking.md
+
+### 블로그 발행 페이스 확인 (HIGH, 다음 세션 초)
+- **배경**: project_blog_publishing_cadence.md — 네이버 매일·자체 도메인 주2편 페이스 박제. 현재 진행 상태 확인 필요.
+- [ ] 3편 이후 발행 상태 확인 후 다음 편 착수 여부 결정
+
+---
+
+## 57차 신규 추가 (2026-05-13) — 조기싸커 차용 후속 + 마케팅
+
+### 인스타 광고 5차 결과 분석 (HIGH, 즉시)
+- **배경**: 사용자가 ads/*.png 5장 공유했으나 세션 내 분석 미완료. 사용자 "안되면 마무리" — 다음 세션 초입에 확인 필요.
+- [ ] 광고 5차 CTR·CPR·전환 수치 확인 후 다음 채널 결정에 반영
+
+### 마케팅 콘텐츠 — 조기싸커 카드뉴스 차용 (MEDIUM, 콘텐츠 작업)
+- **배경**: 57차에 조기싸커 카드뉴스 포맷·내용 분석 완료, 차용 권고까지만 진행. 실 제작 미완료.
+- [ ] 카드 1장 (핵심 기능 1가지) 포맷으로 인스타·카카오채널 게시용 소재 제작
+- 조기싸커 분석 내용: `reference_competitor_jogisoccer.md` 참조
+
+### 가이드 14섹션 Next.js 마이그레이션 (LOW, CLAUDE.md 미구현 항목)
+- **배경**: `public/guide.html` 방치 중. CLAUDE.md 미구현 항목 2개 중 하나.
+- [ ] `/guide/*` Next.js 라우트 이관 (기존 가이드 블로그 포스트 패턴 재사용)
+- 우선순위 낮음 — 블로그 3~5편 완성 후 고려
+
+### 가격 정책 결정 (HIGH, 100팀 도달 임박)
+- **배경**: `project_pricing.md` flat 9,900원 확정 + 활성 100팀 트리거 추정 2027-01. 현재 90팀+ 운영 중 — 임박.
+- [ ] 현재 팀 수 Supabase 직접 조회 후 트리거까지 남은 팀 수 확인
+- [ ] freemium B2B vs flat 9,900 재검토 필요 여부 사용자 확인
+- 거부 확정 항목: 팀 ELO·다국어 5개·MBTI/혈액형 입력 (`project_pricing.md` 참조)
+
+### iOS Apple Developer 결정 ($99/년) (MEDIUM, 결정 대기)
+- **배경**: 57차에 이어갈 항목으로 명시. 결정 보류 상태.
+- [ ] 사용자 결정 수령 후 착수 (Capacitor vs TWA iOS 전략 `domain_alpha_tester_system.md` 참조)
+
+### 블로그 시리즈 진행 현황 (갱신: 60차)
+- **배경**: `project_blog_publishing_cadence.md` — 네이버 매일·자체 도메인 주2편 페이스 박제.
+- [x] 3편: 풋살 3파전·4파전 자동 분배 운영법 — **5/14 발행 완료** (42a8a4f · cd298ea)
+- [ ] 4편: 무료 풋살 전술판 앱 비교 — 60차 신규 추가 항목으로 이동
+- [ ] 5편: 휴면·부상 회비 자동 면제 패턴 — 60차 신규 추가 항목으로 이동
+- (폐기) 기존 4편 리그 잔여 경기 우승 경우의 수 — 차별화 미스매치로 폐기
+
+### 반복 추천 금지 항목 (절대 재추천 금지)
+- ❌ BeforeAfterSection 추가 (47차 폐기, `feedback_design_tone_reset.md` 박제)
+- ❌ 후기·만족도 조사 (57차 명시 거부)
+- ❌ AI 코치 STAFF+ 풀기 (이미 풀려있음, `domain_ai_release_state.md`)
+- ❌ 58 능력치 (50차 제거)
+- ❌ 팀 ELO (외부 비교, 친목 깨기)
+- ❌ MBTI·혈액형 입력
+- ❌ 다국어 5개
+
+---
+
+## 56차 후반 신규 추가 (2026-05-12) — 인프라·동시성·분석
+
+### Disk IO 사후 확인 (HIGH, 5/13 12:00 이후)
+- **배경**: 02dc6f6 fix 직후 Query Performance Reset. 24시간 후 정상 여부 확인 필요.
+- [ ] 5/13 12:00(KST) 이후 Supabase Query Performance 재조회 — WAL 폴링 비중 32% 이하 유지 확인
+- [ ] Disk IO Budget 경고 메일 추가 수신 여부 확인
+- 참고: `feedback_realtime_publication_protected.md` — fix 내용 + 검증 방법
+
+### signup_source 데이터 분석 (MEDIUM, 5/19 이후)
+- **배경**: c78c993 으로 5/12 도입. 1주 데이터 쌓인 후 첫 분석.
+- [ ] 5/19 이후 어드민 cohort 카드에서 출처별 가입자·활성률 확인
+- [ ] 인스타 광고 utm_source 파라미터 연결 여부 점검
+- 참고: `domain_signup_source_tracking.md`
+
+### W6-W7 cohort 6주 후 retention 재추적 (LOW, 6월 중순)
+- **배경**: 4/27~5/10 가입 19팀의 6주 후 retention 36-63% (측정 시점 5/12). 장기 retention 추적 필요.
+- [ ] 6월 중순 이후 팀 활성 여부 재집계
+
+### 동시성 미처리 항목 (LOW, 빈도 낮음)
+- **배경**: 0b3728c 에서 HIGH 3종 수정. 나머지 2종은 빈도 낮아 보류.
+- [ ] MVP is_staff_decision 동시 투표 race-safe 처리
+- [ ] OVR 동시 재계산 race-safe 처리
+- 참고: `domain_concurrency_patterns.md`
+
+### AI 캐시 무효화 cascade 정책 (MEDIUM, 사용자 재설명 후 결정)
+- **배경**: 56차 후반 상담 결과 사용자 이해 어려움 — 구체 시나리오로 재설명 필요.
+- [ ] 다음 세션에서 "경기 결과 수정 시 AI 캐시도 같이 무효화할까요?" 형식으로 재논의
+- [ ] 사용자 승인 후 착수
+
+### 골 기록 dedup (LOW, 깊은 고민 필요)
+- **배경**: 원클릭 UX 유지하면서 빠른 더블탭 dedup 필요. 56차 후반 사용자 명시 보류.
+- [ ] 보류 유지 — 재논의 시 원클릭 UX vs 서버 dedup 트레이드오프 표 제시
+
+## 57차 신규 추가 (2026-05-12) — 평점 시스템 본 도입 결정 대기 항목
+
+### 잠정 → 본 도입 결정 보류 기능 (LOW, 트리거 대기)
+
+다음 조건 중 하나 이상 충족 시 본 도입 검토: FCO2 실 사용 빈도·만족도 / 추가 요청 팀 발생 / 코멘트 악용 사례 / 운영진 부담 피드백. `project_player_rating_provisional.md` 참조.
+
+- [ ] vitest 케이스 `__tests__/api/player-ratings.test.ts` (본 도입 시 추가)
+- [ ] `/api/player-card`·`PlayerProfilePage.tsx` 평점 노출 (본 도입 시)
+- [ ] `/records?tab=ranking` 팀 랭킹 평점 막대 차트 (본 도입 시)
+- [ ] `/records?tab=awards` 시즌 평점 1위 어워드 (본 도입 시)
+- [ ] 대시보드 평점 노출 (본 도입 시)
+- [ ] 푸시 알림 — 본인에게 코멘트 달릴 때 (본 도입 시)
+- [ ] `getDashboardData`·`MatchRecordTab`·`/api/share-card`·`/api/season-awards`·`/api/records/detail`·`aiTeamStats.ts` 옵셔널 평점 노출 (본 도입 시)
+
+### 기존 6개 모달 Modal 래퍼 마이그레이션 (LOW, 신규 변경 시 점진적 교체)
+
+현재 createPortal 직접 적용 중인 6개는 동작하므로 강제 마이그레이션 안 함. 신규 변경 시 `src/components/ui/Modal` 래퍼로 교체 권장.
+- MemberEditModal / MemberBulkUploadModal / OnboardingCoachMark / OcrScreenshotGuide / ImageLightbox / ConfirmContext
 
 ## 56차-2 신규 추가 (2026-05-12) — SEO·블로그·경쟁사·GA4
 

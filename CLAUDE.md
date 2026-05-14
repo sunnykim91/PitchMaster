@@ -162,26 +162,33 @@ v{hash}
 
 ---
 
-## AI 기능 설계 (2026-04-18 기준)
+## AI 기능 설계 (2026-05-13 정정 — 전체 공개 상태)
 
-### Feature Flag
+### Feature Flag (현행)
 ```typescript
-// page.tsx (서버 컴포넌트)
-const enableAi = session.user.name === "김선휘";
+// page.tsx — 모두 true (전체 STAFF+ 공개)
+const enableAi = true;                              // matches/[matchId]/page.tsx:19
+const enableAi = true;                              // dues/page.tsx:10 (OCR)
+const enableAi = true;                              // player/[memberId]/page.tsx:447
+const enableAiSummary = true;                       // MatchDetailClient.tsx:152
 
-// MatchDetailClient.tsx (클라이언트)
-const effectiveEnableAi = enableAi && sportType === "SOCCER";
-// → 풋살팀에는 AI 기능 전체 비노출
+// 클라이언트 — 풋살 분기 제거됨 (47차에 풋살 4 포메이션 등록 후)
+const effectiveEnableAi = enableAi;
+// 주석: "AI 코치 분석 + AI Full Plan: 축구·풋살 모두 활성"
 ```
+
+> 과거 `session.user.name === "김선휘"` 게이트와 sportType=SOCCER 게이트는 **둘 다 풀림**. 비용 안전망은 rate limit + 이미지 해시 캐시.
 
 ### AI 기능 목록 (5개)
 | 기능 | 위치 | 공개 범위 | 모델 |
 |------|------|-----------|------|
-| 선수 시그니처 | /player/[id] | 캐시 전체 공개, 생성은 김선휘만 | Haiku 4.5 |
-| 경기 후기 | 경기 일지 탭 | 캐시 전체 공개, 재생성은 김선휘만 | Haiku 4.5 |
-| AI 코치 분석 | 전술 탭 | 김선휘 + 축구 팀 전용 | Haiku 4.5 |
-| AI Full Plan | 자동편성 빌더 | 김선휘 + 축구 팀 전용 | Haiku 4.5 |
-| OCR 거래 파싱 | 회비 일괄등록 | 전체 공개 | Haiku 4.5 Vision |
+| 선수 시그니처 | /player/[id] | **전체 공개 (축구·풋살)** | Haiku 4.5 |
+| 경기 후기 | 경기 일지 탭 | **전체 공개 (축구·풋살). 단 LLM 아닌 결정론적 템플릿 (25차 이후)** | — |
+| AI 코치 분석 | 전술 탭 | **전체 공개 (STAFF+, 축구·풋살)** | Haiku 4.5 |
+| AI Full Plan | 자동편성 빌더 | **전체 공개 (STAFF+, 축구·풋살)** | Haiku 4.5 |
+| OCR 거래 파싱 | 회비 일괄등록 | **전체 공개 (rate limit: user 20/team 100/day + 이미지 해시 캐시)** | Haiku 4.5 Vision |
+
+> ⚠️ 단 하나의 풋살 차단: `/api/ai/match-summary/[matchId]` POST 재생성만 403. 자동 생성은 풋살도 받음 → 실질 무의미. 정리 후보.
 
 ### AI 코치 분석 데이터 파이프라인 (2026-04-19 갱신)
 

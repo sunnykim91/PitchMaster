@@ -138,7 +138,8 @@
       "Bash(awk '$1 != \"0\" || $2 != \"0\" {print $0}')",
       "Bash(grep -nB1 -A4 \"MEDIUM\\\\|HIGH\" \"c:/Users/온유아빠/develop/PitchMaster/docs/backlog/pending.md\")",
       "Bash(node -e \"const r = require\\('lucide-react'\\); console.log\\('Cake:', typeof r.Cake, r.Cake?.displayName ?? ''\\);\")",
-      "Bash(grep -v \"memory/$\")"
+      "Bash(grep -v \"memory/$\")",
+      "Bash(git -C \"c:\\\\Users\\\\온유아빠\\\\develop\\\\PitchMaster\" log --oneline -25)"
     ],
     "additionalDirectories": [
       "C:\\Users\\온유아빠\\develop\\PitchMaster",
