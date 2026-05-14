@@ -231,26 +231,39 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   // 멤버 목록 (투표 필터링용)
   const {
     data: teamMembersData,
-  } = useApi<{ members: { id: string; user_id: string | null }[] }>("/api/members", { members: [] });
+  } = useApi<{ members: { id: string; user_id: string | null; status: "ACTIVE" | "DORMANT" | "BANNED" }[] }>("/api/members", { members: [] });
+
+  // 경기별 matchType 룩업 — EVENT는 휴면 회원도 카운트 (홈·매치 상세와 동일 정책)
+  const matchTypeById = useMemo(() => {
+    const map: Record<string, "REGULAR" | "INTERNAL" | "EVENT"> = {};
+    for (const m of matches) map[m.id] = m.matchType;
+    return map;
+  }, [matches]);
 
   const attendance: AttendanceState = useMemo(() => {
     const state: AttendanceState = {};
-    const memberIds = new Set(teamMembersData.members.map((m) => m.id));
+    const activeMemberIds = new Set(
+      teamMembersData.members.filter((m) => m.status === "ACTIVE").map((m) => m.id),
+    );
+    const allMemberIds = new Set(teamMembersData.members.map((m) => m.id));
     const userToMember = new Map(teamMembersData.members.filter((m) => m.user_id).map((m) => [m.user_id!, m.id]));
 
     for (const row of attendanceData.attendance ?? []) {
       if (!state[row.match_id]) state[row.match_id] = {};
       // member_id로 정규화 (경기 상세와 동일)
       let key: string | null = null;
-      if (row.member_id && memberIds.has(row.member_id)) {
+      if (row.member_id && allMemberIds.has(row.member_id)) {
         key = row.member_id;
       } else if (row.user_id) {
         key = userToMember.get(row.user_id) ?? null;
       }
-      if (key) state[row.match_id][key] = row.vote;
+      if (!key) continue;
+      // 카운트 대상 멤버 필터 — EVENT만 휴면 회원 포함, 그 외(REGULAR/INTERNAL)는 ACTIVE만
+      const countable = matchTypeById[row.match_id] === "EVENT" ? allMemberIds : activeMemberIds;
+      if (countable.has(key)) state[row.match_id][key] = row.vote;
     }
     return state;
-  }, [attendanceData.attendance, teamMembersData.members]);
+  }, [attendanceData.attendance, teamMembersData.members, matchTypeById]);
 
   // 현재 로그인 사용자의 team_member.id — attendance 상태가 memberId 키라 본인 투표 조회에 필요
   const myMemberId = useMemo(
