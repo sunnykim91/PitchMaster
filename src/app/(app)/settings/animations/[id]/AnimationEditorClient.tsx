@@ -141,6 +141,10 @@ export default function AnimationEditorClient({ initial }: Props) {
   const [previewRate, setPreviewRate] = useState<PlaybackRate>(1);
   // 편집 모드 안에서 컷을 자동 재생 — 미리보기 화면 안 가도 흐름 확인
   const [editorPlaying, setEditorPlaying] = useState(false);
+  // 인라인 미니뷰 — 편집 SVG 옆/위에 작은 viewer를 띄워 편집과 결과를 동시에
+  const [miniViewOpen, setMiniViewOpen] = useState(false);
+  // GIF export 중단 핸들 — 페이지 언마운트·이탈 시 worker 정리
+  const exportHandleRef = useRef<{ abort: () => void } | null>(null);
   // 메타 정보 카드 접힘 상태 — Z Flip 5 같은 좁은 화면에서 캔버스 빨리 보이게 기본 접힘
   const [metaOpen, setMetaOpen] = useState(false);
 
@@ -169,10 +173,12 @@ export default function AnimationEditorClient({ initial }: Props) {
     setExportingMode(targetMode);
     setExportProgress(0);
     try {
-      const blob = await exportMotionAsGif(nonEmpty, {
+      const handle = exportMotionAsGif(nonEmpty, {
         onProgress: (pct) => setExportProgress(pct),
         rate: previewRate,
       });
+      exportHandleRef.current = handle;
+      const blob = await handle.promise;
       const filename = buildGifFilename({
         animationName: name,
         formationId: initial.formation_id,
@@ -183,10 +189,18 @@ export default function AnimationEditorClient({ initial }: Props) {
     } catch (err) {
       showToast(err instanceof Error ? err.message : "GIF 만들기 실패", "error");
     } finally {
+      exportHandleRef.current = null;
       setExportingMode(null);
       setExportProgress(0);
     }
   }
+
+  // 컴포넌트 언마운트 시 진행 중인 GIF 인코딩 worker 정리
+  useEffect(() => {
+    return () => {
+      exportHandleRef.current?.abort();
+    };
+  }, []);
 
   const phases = mode === "attack" ? data.attack : data.defense;
   const phase = phases[phaseIdx] ?? phases[0];
@@ -736,8 +750,8 @@ export default function AnimationEditorClient({ initial }: Props) {
                 <li>컷 <span className="font-bold">+</span> 으로 다음 컷을 추가하고 점·공을 드래그해 옮기면 흐름이 됩니다.</li>
                 <li>SVG 위 <span className="font-bold">▶ 재생</span>으로 즉시 확인하거나 <span className="font-bold">미리보기</span>에서 GIF로 받아 카톡 공유하세요.</li>
               </ol>
-              <p className="mt-2 text-[11px] text-muted-foreground/80">
-                단축키: <kbd className="rounded border border-border bg-background px-1 py-0.5 text-[10px] font-mono">Space</kbd> 재생/정지 ·
+              <p className="mt-2 hidden text-[11px] text-muted-foreground/80 lg:block">
+                키보드 단축키: <kbd className="rounded border border-border bg-background px-1 py-0.5 text-[10px] font-mono">Space</kbd> 재생/정지 ·
                 <kbd className="mx-0.5 rounded border border-border bg-background px-1 py-0.5 text-[10px] font-mono">← →</kbd> 컷 이동 ·
                 <kbd className="mx-0.5 rounded border border-border bg-background px-1 py-0.5 text-[10px] font-mono">F</kbd> 최대화 ·
                 <kbd className="rounded border border-border bg-background px-1 py-0.5 text-[10px] font-mono">Ctrl+S</kbd> 저장
@@ -921,6 +935,19 @@ export default function AnimationEditorClient({ initial }: Props) {
           <Button
             type="button"
             size="sm"
+            variant={miniViewOpen ? "default" : "outline"}
+            onClick={() => setMiniViewOpen((v) => !v)}
+            className="h-7 text-xs gap-1"
+            title={miniViewOpen ? "미니뷰 닫기" : "편집 위에 결과 미니뷰 띄우기 — 편집·재생 동시에 보기"}
+            aria-label={miniViewOpen ? "미니뷰 닫기" : "미니뷰 열기"}
+            aria-pressed={miniViewOpen}
+          >
+            <Eye className="h-3 w-3" aria-hidden="true" />
+            <span className="hidden sm:inline">미니뷰</span>
+          </Button>
+          <Button
+            type="button"
+            size="sm"
             variant="outline"
             onClick={() => setMaximized((v) => !v)}
             className="h-7 text-xs gap-1"
@@ -952,6 +979,21 @@ export default function AnimationEditorClient({ initial }: Props) {
           </Button>
         </div>
       </div>
+
+      {/* 인라인 미니뷰 — 편집과 결과 동시에. 모바일은 SVG 위, PC도 동일(공간 단순화). */}
+      {miniViewOpen && phase && (
+        <div className="mb-3 mx-auto" style={{ maxWidth: "min(100%, 260px)" }}>
+          <FormationMotionViewer
+            motion={{
+              formationId: initial.formation_id,
+              attack: mode === "attack" ? [phase] : [],
+              defense: mode === "defense" ? [phase] : [],
+            }}
+            compact
+            controlledMode={mode}
+          />
+        </div>
+      )}
 
       {/* 드래그 안내 — 첫 방문자 발견 가능성 ↑. 최대화 모드엔 숨김(이미 익숙한 사용자만 진입). */}
       {!maximized && (
@@ -1063,7 +1105,7 @@ export default function AnimationEditorClient({ initial }: Props) {
             className="h-4 w-4"
           />
           <Label htmlFor="ball-on" className="cursor-pointer text-xs">
-            공 표시 (기본 ON · 필요 없으면 체크 해제)
+            이 컷에서 공 표시{!step?.ball && " (체크하면 공이 나타남)"}
           </Label>
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Star, Pencil, Loader2, Copy, Download } from "lucide-react";
@@ -95,9 +95,11 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
     setExportingKey(key);
     setExportProgress(0);
     try {
-      const blob = await exportMotionAsGif(nonEmpty, {
+      const handle = exportMotionAsGif(nonEmpty, {
         onProgress: (pct) => setExportProgress(pct),
       });
+      exportHandleRef.current = handle;
+      const blob = await handle.promise;
       const filename = buildGifFilename({
         animationName: animation.name,
         formationId: animation.formation_id,
@@ -108,10 +110,19 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
     } catch (err) {
       showToast(err instanceof Error ? err.message : "GIF 만들기 실패", "error");
     } finally {
+      exportHandleRef.current = null;
       setExportingKey(null);
       setExportProgress(0);
     }
   }
+
+  // GIF export abort handle — 페이지 이탈·언마운트 시 worker 정리
+  const exportHandleRef = useRef<{ abort: () => void } | null>(null);
+  useEffect(() => {
+    return () => {
+      exportHandleRef.current?.abort();
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

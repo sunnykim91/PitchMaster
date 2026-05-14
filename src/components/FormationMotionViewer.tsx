@@ -29,6 +29,11 @@ interface Props {
   highlightLabel?: string;
   /** 사용자가 배속을 바꿀 때 부모에게 통지 (GIF export 동일 배속 사용 등) */
   onRateChange?: (rate: PlaybackRate) => void;
+  /** 컴팩트 모드 — 모드 토글·phase 진행 표시·캡션 영역을 축소.
+   * 편집 화면 옆 인라인 미니뷰 등 좁은 공간 사용에 적합. */
+  compact?: boolean;
+  /** 외부에서 모드를 통제 — compact 미니뷰에서 부모 mode와 sync */
+  controlledMode?: "attack" | "defense";
 }
 
 const STEP_DURATION = 1500; // ms — phase 안 한 step 머무는 시간
@@ -75,8 +80,13 @@ function OpponentBall() {
   );
 }
 
-export default function FormationMotionViewer({ motion: data, highlightSlot, highlightLabel, onRateChange }: Props) {
-  const [mode, setMode] = useState<"attack" | "defense">("attack");
+export default function FormationMotionViewer({ motion: data, highlightSlot, highlightLabel, onRateChange, compact, controlledMode }: Props) {
+  const [internalMode, setInternalMode] = useState<"attack" | "defense">("attack");
+  const mode = controlledMode ?? internalMode;
+  const setMode = (m: "attack" | "defense") => {
+    if (controlledMode) return; // 외부 통제 시 내부 setter 무시
+    setInternalMode(m);
+  };
   const [playing, setPlaying] = useState(true);
   const [phaseIdx, setPhaseIdx] = useState(0);
   const [stepIdx, setStepIdx] = useState(0);
@@ -84,6 +94,14 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
 
   const phases = mode === "attack" ? data.attack : data.defense;
   const phase = phases[phaseIdx] ?? phases[0];
+  // compact 미니뷰에서 빈 phases 받는 경우 가드 (편집 중 phase 0개로 줄였을 때 등)
+  if (!phase) {
+    return (
+      <div className="rounded-xl border border-border bg-background/40 p-4 text-center text-[12px] text-muted-foreground">
+        이 모드는 아직 장면이 없어요
+      </div>
+    );
+  }
   const steps = phase.steps;
   const step = steps[stepIdx] ?? steps[0];
 
@@ -119,37 +137,50 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
   const positionMap = new Map(step.positions.map((p) => [p.slot, p]));
 
   return (
-    <div className="rounded-xl border border-border bg-background/40 p-3 sm:p-4">
-      {/* 모드 토글 */}
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <div className="inline-flex rounded-md border border-border bg-background p-0.5">
-          <button
-            type="button"
-            onClick={() => setMode("attack")}
-            className={cn(
-              "inline-flex items-center gap-1 rounded px-2.5 py-1 text-xs font-semibold transition-colors",
-              mode === "attack"
-                ? "bg-[hsl(var(--primary))] text-white"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Swords className="h-3 w-3" />
-            공격 시
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("defense")}
-            className={cn(
-              "inline-flex items-center gap-1 rounded px-2.5 py-1 text-xs font-semibold transition-colors",
-              mode === "defense"
-                ? "bg-[hsl(var(--info))] text-white"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Shield className="h-3 w-3" />
-            수비 시
-          </button>
-        </div>
+    <div className={cn("rounded-xl border border-border bg-background/40", compact ? "p-2" : "p-3 sm:p-4")}>
+      {/* 헤더: 컴팩트 모드에선 mode 토글 hide(외부 통제), 기본 모드만 노출 */}
+      <div className={cn("flex items-center justify-between gap-2", compact ? "mb-1.5" : "mb-3")}>
+        {!compact && (
+          <div className="inline-flex rounded-md border border-border bg-background p-0.5" role="group" aria-label="공격·수비 모드 전환">
+            <button
+              type="button"
+              onClick={() => setMode("attack")}
+              aria-pressed={mode === "attack"}
+              className={cn(
+                "inline-flex items-center gap-1 rounded px-2.5 py-1 text-xs font-semibold transition-colors",
+                mode === "attack"
+                  ? "bg-[hsl(var(--primary))] text-white"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Swords className="h-3 w-3" aria-hidden="true" />
+              공격 시
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("defense")}
+              aria-pressed={mode === "defense"}
+              className={cn(
+                "inline-flex items-center gap-1 rounded px-2.5 py-1 text-xs font-semibold transition-colors",
+                mode === "defense"
+                  ? "bg-[hsl(var(--info))] text-white"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Shield className="h-3 w-3" aria-hidden="true" />
+              수비 시
+            </button>
+          </div>
+        )}
+        {compact && (
+          <span className={cn(
+            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold",
+            mode === "attack" ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]" : "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]"
+          )}>
+            {mode === "attack" ? <Swords className="h-2.5 w-2.5" aria-hidden="true" /> : <Shield className="h-2.5 w-2.5" aria-hidden="true" />}
+            {mode === "attack" ? "공격" : "수비"} 미니뷰
+          </span>
+        )}
 
         <div className="flex items-center gap-1.5">
           <button
@@ -172,8 +203,8 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
         </div>
       </div>
 
-      {/* 진행 표시 (phase index) */}
-      <div className="mb-2 flex items-center gap-1">
+      {/* 진행 표시 (phase index) — compact는 단일 phase만 받으므로 숨김 */}
+      <div className={cn("mb-2 flex items-center gap-1", compact && "hidden")}>
         {phases.map((p, i) => (
           <button
             key={p.label + i}
@@ -306,23 +337,34 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
         </svg>
       </div>
 
-      {/* 캡션 — phase 라벨 + step 진행 + step caption */}
-      <div className="mt-3 rounded-md bg-background/60 p-2.5 text-[12px] leading-relaxed text-foreground">
-        {highlightSlot && highlightLabel && (
-          <p className="mb-1 text-[12px] font-bold uppercase tracking-wider text-[hsl(var(--primary))]">
-            내 포지션: {highlightLabel}
-          </p>
-        )}
-        <div className="mb-1 flex items-baseline justify-between gap-2">
-          <span className="text-[12.5px] font-bold text-foreground">{phase.label}</span>
+      {/* 캡션 — phase 라벨 + step 진행 + step caption. compact는 미니 1줄. */}
+      {compact ? (
+        <div className="mt-1.5 flex items-baseline justify-between gap-2 text-[11px]">
+          <span className="truncate font-semibold text-foreground">{phase.label}</span>
           {steps.length > 1 && (
-            <span className="text-[12px] text-muted-foreground tabular-nums">
-              {stepIdx + 1} / {steps.length}
+            <span className="shrink-0 text-muted-foreground tabular-nums">
+              {stepIdx + 1}/{steps.length}
             </span>
           )}
         </div>
-        <p className="text-muted-foreground">{step.caption}</p>
-      </div>
+      ) : (
+        <div className="mt-3 rounded-md bg-background/60 p-2.5 text-[12px] leading-relaxed text-foreground">
+          {highlightSlot && highlightLabel && (
+            <p className="mb-1 text-[12px] font-bold uppercase tracking-wider text-[hsl(var(--primary))]">
+              내 포지션: {highlightLabel}
+            </p>
+          )}
+          <div className="mb-1 flex items-baseline justify-between gap-2">
+            <span className="text-[12.5px] font-bold text-foreground">{phase.label}</span>
+            {steps.length > 1 && (
+              <span className="text-[12px] text-muted-foreground tabular-nums">
+                {stepIdx + 1} / {steps.length}
+              </span>
+            )}
+          </div>
+          <p className="text-muted-foreground">{step.caption}</p>
+        </div>
+      )}
     </div>
   );
 }

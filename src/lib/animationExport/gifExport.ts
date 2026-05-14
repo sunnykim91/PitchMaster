@@ -26,6 +26,12 @@ export interface GifExportOptions {
   rate?: number;
 }
 
+/** 중단 가능한 GIF export 핸들 — 호출자가 abort() 호출로 worker 종료. */
+export interface GifExportHandle {
+  promise: Promise<Blob>;
+  abort: () => void;
+}
+
 const HOLD_MS = 1000;
 const TRANSITION_FRAMES = 6;
 const TRANSITION_MS_PER_FRAME = 80;
@@ -36,9 +42,28 @@ const SECTION_BREAK_MS = 600;
  * 여러 섹션(공격·수비)을 순서대로 한 GIF에 인코딩.
  * 단일 모드만 export할 때도 `[{phases, mode}]` 형태로 호출.
  */
-export async function exportMotionAsGif(
+/**
+ * 호출자가 abort 가능한 형태. 페이지 이탈·언마운트 시 abort()로 worker 정리.
+ * 기존 `await exportMotionAsGif(...)` 호출은 깨므로 `await exportMotionAsGif(...).promise`로 변경.
+ */
+export function exportMotionAsGif(
   sections: GifExportSection[],
   options: GifExportOptions = {},
+): GifExportHandle {
+  let abortFn: () => void = () => {};
+  const promise = runExport(sections, options, (fn) => {
+    abortFn = fn;
+  });
+  return {
+    promise,
+    abort: () => abortFn(),
+  };
+}
+
+async function runExport(
+  sections: GifExportSection[],
+  options: GifExportOptions,
+  registerAbort: (fn: () => void) => void,
 ): Promise<Blob> {
   const size = options.size ?? 480;
   const rate = options.rate && options.rate > 0 ? options.rate : 1;
@@ -78,6 +103,16 @@ export async function exportMotionAsGif(
     workerScript: "/gif.worker.js",
     background: "#2a4e3a",
   });
+  // 외부에서 abort 호출 시 worker 정리. gif.js abort()는 worker 종료 + finished 이벤트 미발화.
+  let aborted = false;
+  registerAbort(() => {
+    aborted = true;
+    try {
+      gif.abort();
+    } catch {
+      // worker 이미 종료된 경우 등 무시
+    }
+  });
 
   const canvas = document.createElement("canvas");
   canvas.width = size;
@@ -112,9 +147,11 @@ export async function exportMotionAsGif(
 
   return new Promise<Blob>((resolve, reject) => {
     gif.on("progress", (arg) => {
+      if (aborted) return;
       if (typeof arg === "number") options.onProgress?.(Math.round(arg * 100));
     });
     gif.on("finished", (arg) => {
+      if (aborted) return; // abort 후 도착한 finished는 무시
       if (arg instanceof Blob) resolve(arg);
       else reject(new Error("GIF 인코딩 결과가 Blob이 아니에요"));
     });
