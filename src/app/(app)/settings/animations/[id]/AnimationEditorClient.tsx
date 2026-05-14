@@ -596,6 +596,7 @@ export default function AnimationEditorClient({ initial }: Props) {
           motion={{ formationId: initial.formation_id, ...toLegacyMotionShape(data) }}
           onRateChange={handlePreviewRateChange}
           initialRate={previewRate}
+          category={data.category}
         />
 
         {/* GIF 다운로드 — 평면 영상은 카테고리 1개라 단일 버튼. 레거시 영상만 3분할(공격·수비·공수전체). */}

@@ -17,9 +17,11 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { Pause, Play, Shield, Swords } from "lucide-react";
+import { Pause, Play, Shield, Swords, Calendar, Repeat } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { FormationMotion, MotionPhase } from "@/lib/formationMotions";
+import type { AnimationCategory } from "@/lib/formationMotions/dbTypes";
+import { ANIMATION_CATEGORY_LABEL } from "@/lib/formationMotions/dbTypes";
 
 interface Props {
   motion: FormationMotion;
@@ -36,7 +38,17 @@ interface Props {
   controlledMode?: "attack" | "defense";
   /** 첫 진입 시 사용할 초기 배속 — 저장된 영상의 defaultRate 같은 경우 */
   initialRate?: PlaybackRate;
+  /** 영상의 카테고리 — 단일 mode 영상의 배지·색상에 정확한 라벨 노출
+   * (toLegacyMotionShape이 SETPIECE/TRANSITION을 attack에 wrap하므로 viewer 단에서 명시 필요) */
+  category?: AnimationCategory;
 }
+
+const CATEGORY_BADGE_STYLE: Record<AnimationCategory, { cls: string; Icon: typeof Swords }> = {
+  ATTACK: { cls: "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]", Icon: Swords },
+  DEFENSE: { cls: "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]", Icon: Shield },
+  SETPIECE: { cls: "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]", Icon: Calendar },
+  TRANSITION: { cls: "bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]", Icon: Repeat },
+};
 
 const STEP_DURATION = 1500; // ms — phase 안 한 step 머무는 시간
 const BALL_OFFSET_Y = 2.4; // 공을 선수 점 발 옆으로 살짝 오프셋 — 라벨 가리지 않게
@@ -82,7 +94,7 @@ function OpponentBall() {
   );
 }
 
-export default function FormationMotionViewer({ motion: data, highlightSlot, highlightLabel, onRateChange, compact, controlledMode, initialRate }: Props) {
+export default function FormationMotionViewer({ motion: data, highlightSlot, highlightLabel, onRateChange, compact, controlledMode, initialRate, category }: Props) {
   const [internalMode, setInternalMode] = useState<"attack" | "defense">("attack");
   const mode = controlledMode ?? internalMode;
   const setMode = (m: "attack" | "defense") => {
@@ -189,25 +201,28 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
             </button>
           </div>
         )}
-        {compact && (
-          <span className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold",
-            effectiveMode === "attack" ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]" : "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]"
-          )}>
-            {effectiveMode === "attack" ? <Swords className="h-2.5 w-2.5" aria-hidden="true" /> : <Shield className="h-2.5 w-2.5" aria-hidden="true" />}
-            {effectiveMode === "attack" ? "공격" : "수비"} 미니뷰
-          </span>
-        )}
-        {!compact && !dualMode && !controlledMode && (
-          // 평면 영상(단일 카테고리) — 배지로 카테고리만 표시. 토글 대체.
-          <span className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold",
-            effectiveMode === "attack" ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]" : "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]"
-          )}>
-            {effectiveMode === "attack" ? <Swords className="h-3 w-3" aria-hidden="true" /> : <Shield className="h-3 w-3" aria-hidden="true" />}
-            {effectiveMode === "attack" ? "공격" : "수비"}
-          </span>
-        )}
+        {compact && (() => {
+          // 카테고리 명시되면 우선, 아니면 effectiveMode로 폴백 (레거시 viewer 호환)
+          const cat: AnimationCategory = category ?? (effectiveMode === "defense" ? "DEFENSE" : "ATTACK");
+          const { cls, Icon } = CATEGORY_BADGE_STYLE[cat];
+          return (
+            <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold", cls)}>
+              <Icon className="h-2.5 w-2.5" aria-hidden="true" />
+              {ANIMATION_CATEGORY_LABEL[cat]} 미니뷰
+            </span>
+          );
+        })()}
+        {!compact && !dualMode && !controlledMode && (() => {
+          // 평면 영상 단일 카테고리 — 배지로 카테고리 정확히 표시 (SETPIECE/TRANSITION 포함)
+          const cat: AnimationCategory = category ?? (effectiveMode === "defense" ? "DEFENSE" : "ATTACK");
+          const { cls, Icon } = CATEGORY_BADGE_STYLE[cat];
+          return (
+            <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold", cls)}>
+              <Icon className="h-3 w-3" aria-hidden="true" />
+              {ANIMATION_CATEGORY_LABEL[cat]}
+            </span>
+          );
+        })()}
 
         <div className="flex items-center gap-1.5">
           <button
@@ -230,8 +245,8 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
         </div>
       </div>
 
-      {/* 진행 표시 (phase index) — compact는 단일 phase만 받으므로 숨김 */}
-      <div className={cn("mb-2 flex items-center gap-1", compact && "hidden")}>
+      {/* 진행 표시 (phase index) — compact·phase 1개일 땐 숨김 (P3 평면 영상은 phase 1개) */}
+      <div className={cn("mb-2 flex items-center gap-1", (compact || phases.length <= 1) && "hidden")}>
         {phases.map((p, i) => (
           <button
             key={p.label + i}

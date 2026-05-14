@@ -369,6 +369,7 @@ function FormationMotionBlock({
 }) {
   const [open, setOpen] = useState(false);
   const [teamMotion, setTeamMotion] = useState<FormationMotion | null>(null);
+  const [teamCategory, setTeamCategory] = useState<import("@/lib/formationMotions/dbTypes").AnimationCategory | null>(null);
   const [loadedTeam, setLoadedTeam] = useState(false);
 
   // 팀 default 애니메이션 fetch — 있으면 표준 대신 팀 전용 데이터 사용 (한 번만)
@@ -393,6 +394,7 @@ function FormationMotionBlock({
             formationId,
             ...toLegacyMotionShape(def.animation_data),
           });
+          setTeamCategory(def.animation_data.category ?? null);
         }
         setLoadedTeam(true);
       })
@@ -432,6 +434,7 @@ function FormationMotionBlock({
             motion={data}
             highlightSlot={role.toLowerCase()}
             highlightLabel={roleTitle}
+            category={teamCategory ?? undefined}
           />
           {/* 팀 default 없을 때 운영진에게 만들기 CTA */}
           {!isTeamCustom && canManage && (
