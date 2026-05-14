@@ -196,8 +196,15 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
         ))}
       </div>
 
-      {/* 피치 SVG — 정사각형 (위·아래 여백 0) */}
-      <div className="relative w-full overflow-hidden rounded-lg" style={{ aspectRatio: "1 / 1" }}>
+      {/* 피치 SVG — 정사각형 (위·아래 여백 0). PC에서 viewport 높이 초과 시 폭이 같이 줄도록 max-height·max-width 동시 제한 */}
+      <div
+        className="relative mx-auto w-full overflow-hidden rounded-lg"
+        style={{
+          aspectRatio: "1 / 1",
+          maxHeight: "calc(100vh - 220px)",
+          maxWidth: "calc(100vh - 220px)",
+        }}
+      >
         <svg
           viewBox="0 0 100 100"
           preserveAspectRatio="xMidYMid meet"

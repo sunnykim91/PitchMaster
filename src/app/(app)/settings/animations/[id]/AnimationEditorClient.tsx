@@ -37,6 +37,8 @@ import {
   Maximize2,
   Minimize2,
   Download,
+  Play,
+  Pause,
 } from "lucide-react";
 import {
   DndContext,
@@ -137,6 +139,8 @@ export default function AnimationEditorClient({ initial }: Props) {
   const [exportProgress, setExportProgress] = useState(0);
   // 미리보기에서 사용자가 고른 배속 — GIF export에도 그대로 적용
   const [previewRate, setPreviewRate] = useState<PlaybackRate>(1);
+  // 편집 모드 안에서 컷을 자동 재생 — 미리보기 화면 안 가도 흐름 확인
+  const [editorPlaying, setEditorPlaying] = useState(false);
   // 메타 정보 카드 접힘 상태 — Z Flip 5 같은 좁은 화면에서 캔버스 빨리 보이게 기본 접힘
   const [metaOpen, setMetaOpen] = useState(false);
 
@@ -196,23 +200,46 @@ export default function AnimationEditorClient({ initial }: Props) {
     return tpl.slots.map((s) => ({ slot: s.id, x: s.x, y: s.y }));
   }, [initial.formation_id]);
 
-  // 모드 변경 시 phase/step 처음으로
+  // 모드별 마지막 phase·step 기억 — 공격에서 작업 중 수비 잠깐 봤다가
+  // 돌아왔을 때 처음(0)으로 튕기지 않고 이어서 작업하도록.
+  const lastPhaseByMode = useRef<{ attack: number; defense: number }>({ attack: 0, defense: 0 });
+  const lastStepByMode = useRef<{ attack: number; defense: number }>({ attack: 0, defense: 0 });
+  const prevModeRef = useRef<Mode>(mode);
   useEffect(() => {
-    setPhaseIdx(0);
-    setStepIdx(0);
-  }, [mode]);
+    const prev = prevModeRef.current;
+    if (prev !== mode) {
+      lastPhaseByMode.current[prev] = phaseIdx;
+      lastStepByMode.current[prev] = stepIdx;
+      prevModeRef.current = mode;
+      setPhaseIdx(lastPhaseByMode.current[mode]);
+      setStepIdx(lastStepByMode.current[mode]);
+    }
+  }, [mode, phaseIdx, stepIdx]);
   // phase 변경 시 step 처음으로
   useEffect(() => {
     setStepIdx(0);
   }, [phaseIdx]);
 
-  // ── 저장 안 한 채 탭 닫기·새로고침·뒤로가기 시도 시 브라우저 경고 ──
+  // 편집 모드 인라인 재생 — 1.5초마다 다음 컷, 마지막에서 첫 컷으로 loop
   useEffect(() => {
-    if (!dirty) return;
+    if (!editorPlaying || steps.length <= 1) return;
+    const t = setTimeout(() => {
+      setStepIdx((i) => (i + 1) % steps.length);
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [editorPlaying, stepIdx, steps.length]);
+  // 재생 중에 phase·mode 바뀌면 자동 정지 (혼선 방지)
+  useEffect(() => {
+    setEditorPlaying(false);
+  }, [phaseIdx, mode]);
+
+  // ── 저장 안 한 채 / GIF 인코딩 중 탭 닫기·새로고침·뒤로가기 시도 시 브라우저 경고 ──
+  useEffect(() => {
+    if (!dirty && !exportingMode) return;
     const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
-  }, [dirty]);
+  }, [dirty, exportingMode]);
 
   // 데이터 변경 시 dirty
   function patchData(next: TacticalAnimationData) {
@@ -554,15 +581,7 @@ export default function AnimationEditorClient({ initial }: Props) {
           목록으로
         </Link>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => setPreviewing(true)}
-          >
-            <Eye className="mr-1 h-3.5 w-3.5" />
-            미리보기
-          </Button>
+          {/* 미리보기·최대화는 SVG 위 액션바로 통합 — 헤더는 탐색·저장만 */}
           <Button
             type="button"
             size="sm"
@@ -676,8 +695,13 @@ export default function AnimationEditorClient({ initial }: Props) {
         </button>
       </div>
 
-      {/* 장면 탭 (phase) */}
-      <div className="mb-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">장면</div>
+      {/* 장면 탭 (phase) — 첫 진입자 학습 비용 ↓: 용어 1줄 안내 */}
+      <div className="mb-1 flex flex-wrap items-baseline gap-x-2">
+        <span className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">장면</span>
+        <span className="text-[11px] text-muted-foreground/70">
+          빌드업·압박처럼 큰 흐름 단위 · 그 안에 컷을 쌓아 영상을 만들어요
+        </span>
+      </div>
       <div className="mb-3 flex flex-wrap gap-1 pb-1">
         {phases.map((p, i) => (
           <button
@@ -777,12 +801,25 @@ export default function AnimationEditorClient({ initial }: Props) {
         </button>
       </div>
 
-      {/* 편집 SVG 위 컴팩트 액션 바 — 미리보기·풀화면·저장 손쉽게 */}
+      {/* 편집 SVG 위 컴팩트 액션 바 — 인라인 재생·최대화·미리보기·저장 손쉽게 */}
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="text-[12.5px] text-muted-foreground tabular-nums">
           컷 {stepIdx + 1} / {steps.length}
         </span>
         <div className="flex items-center gap-1.5">
+          <Button
+            type="button"
+            size="sm"
+            variant={editorPlaying ? "default" : "outline"}
+            onClick={() => setEditorPlaying((v) => !v)}
+            disabled={steps.length <= 1}
+            className="h-7 text-xs gap-1"
+            title={editorPlaying ? "이 장면 컷 자동 재생 정지" : "이 장면 컷 자동 재생 — 미리보기 안 가도 흐름 확인"}
+            aria-label={editorPlaying ? "재생 정지" : "재생"}
+          >
+            {editorPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+            <span className="hidden sm:inline">{editorPlaying ? "정지" : "재생"}</span>
+          </Button>
           <Button
             type="button"
             size="sm"
@@ -818,8 +855,20 @@ export default function AnimationEditorClient({ initial }: Props) {
         </div>
       </div>
 
-      {/* 편집 SVG 피치 */}
-      <div className="mb-3 relative w-full overflow-hidden rounded-lg" style={{ aspectRatio: "1 / 1" }}>
+      {/* 드래그 안내 — 첫 방문자 발견 가능성 ↑ */}
+      <p className="mb-1.5 text-[11px] text-muted-foreground/80">
+        💡 선수 점·공을 <span className="font-semibold text-foreground">드래그</span>해 위치를 옮기세요.
+      </p>
+
+      {/* 편집 SVG 피치 — PC에서 viewport 높이 초과하지 않게 max-height 제한, 정사각 유지 */}
+      <div
+        className="mb-3 relative mx-auto w-full overflow-hidden rounded-lg"
+        style={{
+          aspectRatio: "1 / 1",
+          maxHeight: "calc(100vh - 160px)",
+          maxWidth: "calc(100vh - 160px)",
+        }}
+      >
         <svg
           ref={boardRef}
           viewBox="0 0 100 100"
