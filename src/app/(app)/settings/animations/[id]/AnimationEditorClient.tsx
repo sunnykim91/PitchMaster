@@ -66,6 +66,13 @@ import { cn } from "@/lib/utils";
 import FormationMotionViewer, { type PlaybackRate, PLAYBACK_RATES } from "@/components/FormationMotionViewer";
 import type { AnimationCategory } from "@/lib/formationMotions/dbTypes";
 import { ANIMATION_CATEGORIES, ANIMATION_CATEGORY_LABEL, toLegacyMotionShape } from "@/lib/formationMotions/dbTypes";
+import {
+  SETPIECE_SCENARIOS,
+  SETPIECE_SCENARIO_LABEL,
+  buildSetpieceStep,
+  type SetpieceScenario,
+} from "@/lib/formationMotions/setpieceTemplates";
+import { NativeSelect } from "@/components/ui/native-select";
 
 function isPlaybackRate(v: unknown): v is PlaybackRate {
   return typeof v === "number" && (PLAYBACK_RATES as readonly number[]).includes(v);
@@ -800,32 +807,37 @@ export default function AnimationEditorClient({ initial }: Props) {
 
       {/* 평면(신규) 영상: 카테고리 칩 선택. 레거시 영상: 기존 mode/phase UI. */}
       {isFlat ? (
-        <div className="mb-3">
-          <div className="mb-1 flex flex-wrap items-baseline gap-x-2">
-            <span className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">카테고리</span>
-            <span className="text-[11px] text-muted-foreground/70">이 영상이 어떤 종류인지 고르세요</span>
+        <div className="mb-3 space-y-2">
+          <div>
+            <div className="mb-1 flex flex-wrap items-baseline gap-x-2">
+              <span className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">카테고리</span>
+              <span className="text-[11px] text-muted-foreground/70">이 영상이 어떤 종류인지 고르세요</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="영상 카테고리 선택">
+              {ANIMATION_CATEGORIES.map((c) => {
+                const active = (data.category ?? "ATTACK") === c;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCategory(c)}
+                    aria-pressed={active}
+                    className={cn(
+                      "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+                      active
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {ANIMATION_CATEGORY_LABEL[c]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="영상 카테고리 선택">
-            {ANIMATION_CATEGORIES.map((c) => {
-              const active = (data.category ?? "ATTACK") === c;
-              return (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setCategory(c)}
-                  aria-pressed={active}
-                  className={cn(
-                    "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
-                    active
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {ANIMATION_CATEGORY_LABEL[c]}
-                </button>
-              );
-            })}
-          </div>
+
+          {/* SETPIECE일 때만: 시나리오 변경 + 처음 배치로 되돌리기 */}
+          {data.category === "SETPIECE" && <SetpieceScenarioControl data={data} setData={setData} setDirty={setDirty} formationId={initial.formation_id} />}
         </div>
       ) : (
         <>
@@ -1140,6 +1152,82 @@ export default function AnimationEditorClient({ initial }: Props) {
         </p>
       )}
 
+    </div>
+  );
+}
+
+/**
+ * 세트피스 영상 전용 — 시나리오 표시·변경 + "처음 배치로 되돌리기".
+ * 시나리오 변경 자체는 메타만 갱신(좌표 보존). 사용자가 명시 클릭해야 좌표 덮어씀.
+ */
+function SetpieceScenarioControl({
+  data,
+  setData,
+  setDirty,
+  formationId,
+}: {
+  data: TacticalAnimationData;
+  setData: React.Dispatch<React.SetStateAction<TacticalAnimationData>>;
+  setDirty: (v: boolean) => void;
+  formationId: string;
+}) {
+  const confirm = useConfirm();
+  const { showToast } = useToast();
+  const scenario = (data.setpieceScenario ?? "RIGHT_CORNER") as SetpieceScenario;
+  const tpl = formationTemplates.find((f) => f.id === formationId);
+
+  function changeScenario(next: SetpieceScenario) {
+    if (next === scenario) return;
+    // 메타만 갱신 (좌표는 사용자가 명시 '되돌리기' 클릭해야 변경)
+    setData((prev) => ({ ...prev, setpieceScenario: next }));
+    setDirty(true);
+  }
+
+  async function resetToTemplate() {
+    if (!tpl) {
+      showToast("포메이션 정보를 못 찾았어요", "error");
+      return;
+    }
+    const ok = await confirm({
+      title: "처음 배치로 되돌리기",
+      description: `${SETPIECE_SCENARIO_LABEL[scenario]} 표준 배치로 11명 위치를 다시 잡습니다. 지금 잡아놓은 좌표는 사라져요.`,
+      variant: "destructive",
+      confirmLabel: "되돌리기",
+    });
+    if (!ok) return;
+    const step = buildSetpieceStep(scenario, tpl.slots);
+    setData((prev) => ({ ...prev, steps: [{ ...step }] }));
+    setDirty(true);
+    showToast("처음 배치로 되돌렸어요");
+  }
+
+  return (
+    <div className="rounded-md border border-border bg-secondary/30 p-2.5">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">세트피스 시나리오</span>
+        <NativeSelect
+          value={scenario}
+          onChange={(e) => changeScenario(e.target.value as SetpieceScenario)}
+          className="h-7 min-w-[150px] flex-1 text-xs"
+          aria-label="세트피스 시나리오 선택"
+        >
+          {SETPIECE_SCENARIOS.map((s) => (
+            <option key={s} value={s}>
+              {SETPIECE_SCENARIO_LABEL[s]}
+            </option>
+          ))}
+        </NativeSelect>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={resetToTemplate}
+          className="h-7 gap-1 text-[11px]"
+          title="이 시나리오 표준 배치로 11명 위치를 다시 잡습니다 (현재 좌표 덮어씀)"
+        >
+          처음 배치로 되돌리기
+        </Button>
+      </div>
     </div>
   );
 }

@@ -270,6 +270,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
             attack: [], // 레거시 호환 — 빈 배열
             defense: [],
             category: createCategory,
+            ...(createCategory === "SETPIECE" ? { setpieceScenario: createScenario } : {}),
           },
           is_default: sameFormation.length === 0,
         }),

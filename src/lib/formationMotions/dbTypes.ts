@@ -54,6 +54,9 @@ export interface TacticalAnimationData {
   defaultRate?: number;
   /** 영상 단위 카테고리 (4분류). 평면화 영상은 필수에 가깝고, 레거시는 phase 라벨 기반 자동 매핑 폴백. */
   category?: AnimationCategory;
+  /** SETPIECE 카테고리일 때 어떤 시나리오로 만들어졌는지 — 편집기의 "처음 배치로 되돌리기"가
+   * 이 값을 기준으로 좌표 재배치. 폴백: "RIGHT_CORNER". */
+  setpieceScenario?: string;
 }
 
 /** 영상이 P3 평면화 구조인지 검사. 신규/마이그레이션 후 영상은 true. */
