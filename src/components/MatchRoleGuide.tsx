@@ -12,13 +12,14 @@
  */
 
 import { memo, useEffect, useMemo, useState } from "react";
-import { ChevronDown, UserRound, AlertTriangle, Sparkles, Film } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, UserRound, AlertTriangle, Sparkles, Film, Swords, Shield, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import FormationMotionViewer from "@/components/FormationMotionViewer";
 import { getFormationMotion, hasFormationMotion } from "@/lib/formationMotions";
 import type { FormationMotion } from "@/lib/formationMotions";
-import type { TeamTacticalAnimation } from "@/lib/formationMotions/dbTypes";
-import { toLegacyMotionShape } from "@/lib/formationMotions/dbTypes";
+import type { AnimationCategory, TeamTacticalAnimation } from "@/lib/formationMotions/dbTypes";
+import { ANIMATION_CATEGORY_LABEL, toLegacyMotionShape } from "@/lib/formationMotions/dbTypes";
+import { inferAnimationCategory } from "@/lib/formationMotions/inferCategory";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -85,6 +86,24 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
   const [reloadToken, setReloadToken] = useState(0);
   const defaultSelectedId = currentMemberId ?? currentUserId;
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>(defaultSelectedId);
+  // 팀 전술 영상 — 페이지당 1회 fetch 후 RoleCard들에 prop 전달 (N+1 회피).
+  const [teamAnimations, setTeamAnimations] = useState<TeamTacticalAnimation[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/team/tactical-animations")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { animations: TeamTacticalAnimation[] } | null) => {
+        if (cancelled) return;
+        setTeamAnimations(j?.animations ?? []);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setTeamAnimations([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -219,6 +238,7 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
               key={`${g.formationId}-${g.role}-${g.quarters.join(",")}-${i}`}
               group={g}
               canManage={canManage}
+              teamAnimations={teamAnimations}
             />
           ))}
         </div>
@@ -308,7 +328,15 @@ function findSelectedName(
 
 /* ────────────────────────────── 역할 카드 (쿼터 기반) ────────────────────────────── */
 
-function RoleCard({ group, canManage }: { group: AssignmentGroup; canManage: boolean }) {
+function RoleCard({
+  group,
+  canManage,
+  teamAnimations,
+}: {
+  group: AssignmentGroup;
+  canManage: boolean;
+  teamAnimations: TeamTacticalAnimation[] | null;
+}) {
   const [open, setOpen] = useState(false);
   const { mergedRole } = group;
   const quarterLabel = formatQuarterRangeLabel(group.quarters);
@@ -349,6 +377,7 @@ function RoleCard({ group, canManage }: { group: AssignmentGroup; canManage: boo
         role={group.role}
         roleTitle={mergedRole.title}
         canManage={canManage}
+        teamAnimations={teamAnimations}
       />
     </AccordionCard>
   );
@@ -356,58 +385,86 @@ function RoleCard({ group, canManage }: { group: AssignmentGroup; canManage: boo
 
 /* ────────────────────────────── 팀 움직임 (공/수 SVG 애니메이션) ────────────────────────────── */
 
+/** 카테고리별 시각 토큰 — 색대비 AA 충족 (primary·info·warning은 globals.css HSL 변수) */
+const CATEGORY_VISUAL: Record<AnimationCategory, { Icon: typeof Swords; activeCls: string; inactiveCls: string }> = {
+  ATTACK: {
+    Icon: Swords,
+    activeCls: "bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))]",
+    inactiveCls: "border-border text-muted-foreground hover:text-foreground hover:border-[hsl(var(--primary))]/50",
+  },
+  DEFENSE: {
+    Icon: Shield,
+    activeCls: "bg-[hsl(var(--info))] text-white border-[hsl(var(--info))]",
+    inactiveCls: "border-border text-muted-foreground hover:text-foreground hover:border-[hsl(var(--info))]/50",
+  },
+  SETPIECE: {
+    Icon: Calendar,
+    // 노랑 배경 + 검정 텍스트 (WCAG AA 4.5:1 확보). 흰 텍스트는 노랑 위에서 대비 부족.
+    activeCls: "bg-[hsl(var(--warning))] text-[hsl(0_0%_10%)] border-[hsl(var(--warning))]",
+    inactiveCls: "border-border text-muted-foreground hover:text-foreground hover:border-[hsl(var(--warning))]/50",
+  },
+};
+
+const CATEGORY_ORDER: AnimationCategory[] = ["ATTACK", "DEFENSE", "SETPIECE"];
+
 function FormationMotionBlock({
   formationId,
   role,
   roleTitle,
   canManage,
+  teamAnimations,
 }: {
   formationId: string;
   role: string;
   roleTitle: string;
   canManage: boolean;
+  teamAnimations: TeamTacticalAnimation[] | null;
 }) {
   const [open, setOpen] = useState(false);
-  const [teamMotion, setTeamMotion] = useState<FormationMotion | null>(null);
-  const [teamCategory, setTeamCategory] = useState<import("@/lib/formationMotions/dbTypes").AnimationCategory | null>(null);
-  const [loadedTeam, setLoadedTeam] = useState(false);
 
-  // 팀 default 애니메이션 fetch — 있으면 표준 대신 팀 전용 데이터 사용 (한 번만)
-  useEffect(() => {
-    if (loadedTeam) return;
-    let cancelled = false;
-    fetch("/api/team/tactical-animations")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j: { animations: TeamTacticalAnimation[] } | null) => {
-        if (cancelled) return;
-        if (!j) {
-          setLoadedTeam(true);
-          return;
-        }
-        const def = j.animations.find(
-          (a) => a.formation_id === formationId && a.is_default,
-        );
-        if (def) {
-          // P3/P4 평면 영상은 steps에 컷이 있고 attack/defense는 빈 배열.
-          // toLegacyMotionShape으로 카테고리에 맞춰 단일 phase로 wrap해 viewer 호환.
-          setTeamMotion({
-            formationId,
-            ...toLegacyMotionShape(def.animation_data),
-          });
-          setTeamCategory(def.animation_data.category ?? null);
-        }
-        setLoadedTeam(true);
-      })
-      .catch(() => setLoadedTeam(true));
-    return () => {
-      cancelled = true;
+  // 카테고리별 대표 영상 그룹 — useMemo로 리렌더 캐시.
+  //  · ATTACK/DEFENSE: 같은 formation + is_default
+  //  · SETPIECE: 포메이션 무관 + is_default (사용자 결정)
+  const byCategory = useMemo(() => {
+    const acc: Record<AnimationCategory, TeamTacticalAnimation[]> = {
+      ATTACK: [],
+      DEFENSE: [],
+      SETPIECE: [],
     };
-  }, [formationId, loadedTeam]);
+    if (!teamAnimations) return acc;
+    for (const a of teamAnimations) {
+      if (!a.is_default) continue;
+      const cat = a.animation_data.category ?? inferAnimationCategory(a.animation_data);
+      if (cat === "SETPIECE") {
+        acc.SETPIECE.push(a);
+      } else if (a.formation_id === formationId) {
+        acc[cat].push(a);
+      }
+    }
+    return acc;
+  }, [teamAnimations, formationId]);
 
-  // 우선순위: 팀 default → 표준 템플릿
-  const data = teamMotion ?? getFormationMotion(formationId);
+  // 첫 진입 시 영상 있는 첫 카테고리 자동 선택
+  const firstAvailableCat = CATEGORY_ORDER.find((c) => byCategory[c].length > 0) ?? null;
+  const [selectedCat, setSelectedCat] = useState<AnimationCategory | null>(null);
+  const activeCat = selectedCat ?? firstAvailableCat;
+  const [animIdx, setAnimIdx] = useState(0);
+
+  // 카테고리 전환 시 영상 인덱스 reset
+  useEffect(() => {
+    setAnimIdx(0);
+  }, [activeCat]);
+
+  const currentList = activeCat ? byCategory[activeCat] : [];
+  const currentAnim = currentList[animIdx] ?? currentList[0];
+  const hasAnyTeamAnim = CATEGORY_ORDER.some((c) => byCategory[c].length > 0);
+
+  // viewer로 넘길 motion data — 팀 영상 있으면 그것, 없으면 표준 템플릿
+  const data: FormationMotion | null = currentAnim
+    ? { formationId, ...toLegacyMotionShape(currentAnim.animation_data) }
+    : getFormationMotion(formationId);
+  const currentCategory = currentAnim?.animation_data.category ?? null;
   if (!data) return null;
-  const isTeamCustom = !!teamMotion;
 
   return (
     <div className="mt-5 border-t border-border/20 pt-4">
@@ -418,26 +475,90 @@ function FormationMotionBlock({
         aria-expanded={open}
       >
         <span className="inline-flex items-center gap-1.5">
-          <Film className="h-3.5 w-3.5" />
+          <Film className="h-3.5 w-3.5" aria-hidden="true" />
           팀 움직임 보기 ({formationId})
-          {isTeamCustom && (
+          {hasAnyTeamAnim && (
             <span className="rounded-full bg-[hsl(var(--primary))]/15 px-1.5 py-0.5 text-[9px] font-bold text-[hsl(var(--primary))]">
               우리 팀
             </span>
           )}
         </span>
-        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
+        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} aria-hidden="true" />
       </button>
       {open && (
         <div className="mt-3 space-y-3">
+          {/* 카테고리 칩 — 영상이 있는 카테고리만 노출. 다 비어있으면 hide */}
+          {hasAnyTeamAnim && (
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="전술 영상 카테고리">
+              {CATEGORY_ORDER.map((c) => {
+                const list = byCategory[c];
+                if (list.length === 0) return null;
+                const visual = CATEGORY_VISUAL[c];
+                const isActive = activeCat === c;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setSelectedCat(c)}
+                    aria-pressed={isActive}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold transition-colors",
+                      isActive ? visual.activeCls : visual.inactiveCls,
+                    )}
+                  >
+                    <visual.Icon className="h-3 w-3" aria-hidden="true" />
+                    {ANIMATION_CATEGORY_LABEL[c]}
+                    <span className="tabular-nums opacity-80">{list.length}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* 영상 N개일 때 좌우 네비 — 1개면 hide */}
+          {currentList.length > 1 && (
+            <div className="flex items-center justify-between gap-2 text-[11.5px]">
+              <button
+                type="button"
+                onClick={() => setAnimIdx((i) => Math.max(0, i - 1))}
+                disabled={animIdx === 0}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="이전 영상"
+              >
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <div className="min-w-0 flex-1 text-center">
+                <p className="truncate font-semibold text-foreground">{currentAnim?.name ?? ""}</p>
+                <p className="text-[10.5px] text-muted-foreground tabular-nums">
+                  {animIdx + 1} / {currentList.length}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAnimIdx((i) => Math.min(currentList.length - 1, i + 1))}
+                disabled={animIdx >= currentList.length - 1}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="다음 영상"
+              >
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+          )}
+          {currentList.length === 1 && (
+            <p className="truncate text-[11.5px] font-semibold text-foreground text-center">
+              {currentAnim?.name ?? ""}
+            </p>
+          )}
+
           <FormationMotionViewer
             motion={data}
             highlightSlot={role.toLowerCase()}
             highlightLabel={roleTitle}
-            category={teamCategory ?? undefined}
+            category={currentCategory ?? undefined}
           />
-          {/* 팀 default 없을 때 운영진에게 만들기 CTA */}
-          {!isTeamCustom && canManage && (
+
+          {/* 운영진 + 팀 영상 없음 → 만들기 CTA */}
+          {!hasAnyTeamAnim && canManage && (
             <a
               href="/settings/animations"
               className="block rounded-md border border-dashed border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary))]/5 p-3 text-center text-xs hover:bg-[hsl(var(--primary))]/10"
