@@ -20,7 +20,7 @@
 | -5 | 용병 관리 | `!isFormationComplete` (편성 미완료) |
 | 10 | 자동 편성 빌더 | `canManage` |
 | 20 | 전술판 | 항상 |
-| 30 | **역할 가이드** | 축구 11인제만 |
+| 30 | **역할 가이드** | 축구 11인제 + 풋살 5·6인제 |
 | 40 | AI 코치 분석 | `canManage` |
 | 95 | 용병 관리 | `isFormationComplete` (편성 완료) |
 
@@ -45,12 +45,13 @@
 
 쿼터별 본인 포지션의 역할·주의점 표시.
 
-- **지원 범위**: 축구 11인제만 (풋살·8/9/10인제는 조용히 숨김)
+- **지원 범위**: 축구 11인제 + 풋살 5·6인제 (축구 8/9/10인제는 조용히 숨김). `isSupported` 헬퍼 [MatchRoleGuide.tsx:55](src/components/MatchRoleGuide.tsx#L55) 기준
 - **권한별 차등**:
   - MEMBER: 본인만 표시. 불참 시 안내, 전술판 미작성이면 섹션 숨김
   - PRESIDENT/STAFF: 드롭다운(용병 제외)으로 다른 선수 전환 + 전술판 미작성 시 포메이션 전체 포지션 폴백
 - **쿼터 그룹화**: 같은 (formationId, role) 조합이면 비연속 쿼터도 하나로 합침 (예: "2·4쿼터 RCB" 한 카드). 포메이션 다르면 별도 카드 (whyItMatters·linkage가 달라짐)
 - **데이터**: `src/lib/positionRoles/` — base 24 포지션 + override 10 포메이션 (base+override 병합 구조)
+- **팀 영상 통합** (2026-05-15, C 패치): "팀 움직임 보기" 토글 안에 카테고리 칩 3개(공격·수비·세트피스) + 카테고리당 N개 대표 영상 ◀ ▶ swipe. ATTACK/DEFENSE는 formation_id 매치 강제, SETPIECE는 formation_id 무시(포메이션 영향 X). MatchRoleGuide에서 영상 1회 fetch 후 RoleCard에 prop drilling (N+1 회피)
 
 ## match_type 종류
 
