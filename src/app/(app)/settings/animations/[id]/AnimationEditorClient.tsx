@@ -36,6 +36,7 @@ import {
   Download,
   Play,
   Pause,
+  RotateCcw,
   X,
 } from "lucide-react";
 import {
@@ -1157,8 +1158,14 @@ export default function AnimationEditorClient({ initial }: Props) {
 }
 
 /**
- * 세트피스 영상 전용 — 시나리오 표시·변경 + "처음 배치로 되돌리기".
- * 시나리오 변경 자체는 메타만 갱신(좌표 보존). 사용자가 명시 클릭해야 좌표 덮어씀.
+ * 세트피스 영상 전용 — 시나리오 변경 = 좌표 재배치(B 안).
+ *
+ * 흐름:
+ *  · 다른 시나리오로 변경: confirm → 새 시나리오 표준 배치로 11명 좌표 덮어씀
+ *  · 같은 시나리오 옆 ↻ 리셋: 현재 시나리오 표준으로 좌표 다시 잡음 (사용자 미세조정 되돌릴 때)
+ *
+ * 별도 "처음 배치로 되돌리기" 버튼은 제거 — selector 변경 자체가 재배치 트리거라
+ * UI/UX 더 직관적.
  */
 function SetpieceScenarioControl({
   data,
@@ -1176,40 +1183,56 @@ function SetpieceScenarioControl({
   const scenario = (data.setpieceScenario ?? "RIGHT_CORNER") as SetpieceScenario;
   const tpl = formationTemplates.find((f) => f.id === formationId);
 
-  function changeScenario(next: SetpieceScenario) {
-    if (next === scenario) return;
-    // 메타만 갱신 (좌표는 사용자가 명시 '되돌리기' 클릭해야 변경)
-    setData((prev) => ({ ...prev, setpieceScenario: next }));
-    setDirty(true);
-  }
-
-  async function resetToTemplate() {
+  function applyTemplate(target: SetpieceScenario) {
     if (!tpl) {
       showToast("포메이션 정보를 못 찾았어요", "error");
       return;
     }
+    const step = buildSetpieceStep(target, tpl.slots);
+    setData((prev) => ({
+      ...prev,
+      setpieceScenario: target,
+      steps: [{ ...step }],
+    }));
+    setDirty(true);
+  }
+
+  async function handleScenarioChange(next: SetpieceScenario) {
+    if (next === scenario) return;
     const ok = await confirm({
-      title: "처음 배치로 되돌리기",
-      description: `${SETPIECE_SCENARIO_LABEL[scenario]} 표준 배치로 11명 위치를 다시 잡습니다. 지금 잡아놓은 좌표는 사라져요.`,
+      title: "시나리오 바꾸기",
+      description: `${SETPIECE_SCENARIO_LABEL[next]} 배치로 11명 위치를 다시 잡습니다. 지금 잡아놓은 좌표는 사라져요.`,
       variant: "destructive",
-      confirmLabel: "되돌리기",
+      confirmLabel: "바꾸기",
     });
     if (!ok) return;
-    const step = buildSetpieceStep(scenario, tpl.slots);
-    setData((prev) => ({ ...prev, steps: [{ ...step }] }));
-    setDirty(true);
-    showToast("처음 배치로 되돌렸어요");
+    applyTemplate(next);
+    showToast(`${SETPIECE_SCENARIO_LABEL[next]}로 바꿨어요`);
+  }
+
+  async function handleReset() {
+    const ok = await confirm({
+      title: "이 시나리오 기본 배치로 리셋",
+      description: `${SETPIECE_SCENARIO_LABEL[scenario]} 표준 배치로 11명 위치를 다시 잡습니다. 지금 잡아놓은 좌표는 사라져요.`,
+      variant: "destructive",
+      confirmLabel: "리셋",
+    });
+    if (!ok) return;
+    applyTemplate(scenario);
+    showToast("기본 배치로 리셋했어요");
   }
 
   return (
     <div className="rounded-md border border-border bg-secondary/30 p-2.5">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">세트피스 시나리오</span>
+      <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+        세트피스 시나리오
+      </p>
+      <div className="flex items-center gap-1.5">
         <NativeSelect
           value={scenario}
-          onChange={(e) => changeScenario(e.target.value as SetpieceScenario)}
-          className="h-7 min-w-[150px] flex-1 text-xs"
-          aria-label="세트피스 시나리오 선택"
+          onChange={(e) => handleScenarioChange(e.target.value as SetpieceScenario)}
+          className="h-8 min-w-0 flex-1 text-xs"
+          aria-label="세트피스 시나리오 선택 (바꾸면 11명 위치도 다시 잡힙니다)"
         >
           {SETPIECE_SCENARIOS.map((s) => (
             <option key={s} value={s}>
@@ -1217,17 +1240,19 @@ function SetpieceScenarioControl({
             </option>
           ))}
         </NativeSelect>
-        <Button
+        <button
           type="button"
-          size="sm"
-          variant="outline"
-          onClick={resetToTemplate}
-          className="h-7 gap-1 text-[11px]"
-          title="이 시나리오 표준 배치로 11명 위치를 다시 잡습니다 (현재 좌표 덮어씀)"
+          onClick={handleReset}
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
+          aria-label="현재 시나리오 기본 배치로 리셋"
+          title="이 시나리오 기본 배치로 11명 위치 리셋 (미세조정 사라짐)"
         >
-          처음 배치로 되돌리기
-        </Button>
+          <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+        </button>
       </div>
+      <p className="mt-1.5 text-[10.5px] leading-relaxed text-muted-foreground/80">
+        💡 시나리오를 바꾸면 11명 위치가 새 표준 배치로 다시 잡혀요. 위치는 드래그로 미세조정 가능.
+      </p>
     </div>
   );
 }
