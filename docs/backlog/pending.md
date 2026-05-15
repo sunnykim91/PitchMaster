@@ -1,7 +1,7 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=106팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-05-14 (60차)
+last_updated: 2026-05-15 (62차)
 related: [completed-recent.md, reviews.md]
 ---
 
@@ -11,6 +11,56 @@ related: [completed-recent.md, reviews.md]
 - **HIGH**: 현재 100팀+ 운영에 직접 영향
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
+
+## 62차 신규 추가 (2026-05-15) — 전술 영상 후속 + CLAUDE.md 정정
+
+### 카테고리별 default 영상 지정 UI (MEDIUM, 다음 세션 이후)
+- **배경**: P2~P3 카테고리 enum 도입 완료. 현재 모든 영상 `is_default=false` → 매치 전술 탭에서 자동 노출 안 됨.
+- [ ] 영상 목록에서 카테고리별 "대표 영상" 지정 UI 추가 (star 토글 또는 라디오)
+- [ ] `is_default=true` 영상을 매치 전술 탭 자동 노출에 연결
+- 참고: P5(d951ede)에서 호환 레이어 적용 완료, DB 컬럼 존재 확인 후 진행
+
+### AnimationEditorClient 추가 분리 (LOW, 기술 부채)
+- **배경**: P3 편집기 평면화 후 976줄. MetaCard·EditCanvas·StepList 등 분리 가능.
+- [ ] 600줄 기준 초과 구간 식별 후 컴포넌트 단위 분리
+- [ ] SortableStepChip은 b8db0f7에서 이미 분리됨 — 나머지 블록 추출
+
+### 잔여 호환 코드 제거 (LOW, 추후 안전망 확인 후)
+- **배경**: DB 평면화 100% 완료(58 영상). attack/defense 분기 코드는 현재 사용 안 됨.
+- [ ] `toLegacyMotionShape` 호출부 및 attack/defense 분기 grep 후 안전하게 제거
+- [ ] DB `motion_type` 컬럼 사용 여부 최종 확인
+
+### CLAUDE.md 라이트 모드 섹션 정정 (LOW, 다음 세션 초)
+- **배경**: c8f384f 커밋(CSS 토큰 단일 source 통합)으로 실제 구현은 `:root.light` 클래스 토글이나 CLAUDE.md에 구 서술 잔존 가능.
+- [ ] CLAUDE.md "디자인 시스템 > CSS 변수 토큰 위치" 섹션 현행 코드와 대조 후 정정
+- 참고: ThemeContext.tsx `applyTheme()` = `classList.toggle('light')` 토글만
+
+---
+
+## 61차 신규 추가 (2026-05-14) — 광고 재개·알파·retention·GK 로테이션
+
+### Meta Pixel 연동 + 광고 재개 (MEDIUM, 5/28 이후)
+- **배경**: 광고 4차 활성률 12.5% leaky bucket 확인. 5/28까지 광고 일시 멈춤 권고.
+- [ ] `next/script` Meta Pixel 코드 연동 (`reference_meta_ads_setup.md` 참조)
+- [ ] Lookalike audience 생성 (기존 가입자 이메일 업로드 — 카카오 email 없음 한계 확인)
+- [ ] 5/28 광고 재개 여부 결정 (인스타 콘텐츠 다양화 상태 확인 후)
+- 거부 확정: 네이버·구글·카카오·유튜브 광고 (모두 메모리상 막힘)
+
+### 4차 retention SQL 헬퍼 + 휴면 3팀 추적 (HIGH, 5/21)
+- **배경**: 광고 4차 가입 팀 활성률 12.5%(8팀 중 1팀). 휴면 3팀(세븐스타·FC KS·FC한사바리) 추적.
+- [ ] 5/21 Supabase 조회 — 멤버 모집·경기 생성 여부 확인
+- [ ] 위자드 카드 → 멤버 초대 전환률 판정 (온보딩 개선 ROI 핵심 지표)
+
+### signup_source 분포 SQL 헬퍼 작성 (MEDIUM, 5/18)
+- **배경**: 광고 기간 귀속 분리 후 자연 유입 베이스라인 확보 필요.
+- [ ] 5/18 이후 instagram / direct / null 비율 조회
+
+### GK 로테이션 자동 (LOW, 마감 없음)
+- **배경**: 사용자 "마지막" 명시. AutoFormationBuilder 통합 후보. 결정 사항 미정.
+- 미정 결정: lookback N=5 vs 10, 풋살 최소 이력 조건
+- [ ] 사용자 결정 수령 후 착수
+
+---
 
 ## 60차 신규 추가 (2026-05-14) — 블로그 4·5편 + 알파 추적
 

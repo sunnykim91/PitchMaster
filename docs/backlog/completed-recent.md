@@ -1,12 +1,105 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~60차)
-summary: 2026-04-11~05-14 진행. 최근: 가이드 통계 정정 + 알파 TWA 디버깅 + 전술 영상 sport_type 분기 (60차)
-sections: [60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-05-14 (60차)
+title: 개선 백로그 — 최근 완료 (16~62차)
+summary: 2026-04-11~05-15 진행. 최근: 전술 영상 P1~P5 리팩토링 + prod DB 8→58 마이그 (62차)
+sections: [62차 전술 영상 편집기 전면 리팩토링 P1~P5 + DB 마이그레이션 + 게시판 linkify, 60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-05-15 (62차)
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~60차)
+# 최근 완료 (16~62차)
+
+## 62차 (2026-05-15, KST) — 전술 영상 편집기 전면 리팩토링 P1~P5 + prod DB 마이그레이션 + 게시판 linkify
+
+**커밋 21개** (bfdc9a6 ~ 92d79cf, push 완료)
+
+### 주제 1 — 게시판 URL linkify (bfdc9a6)
+
+- PostCard.tsx에 http(s) URL 자동 linkify 적용 (알파 테스터 운영공지 이후 요청)
+
+### 주제 2 — 배속 토글 + GIF rate 연동 (f0d4aea · cb2cd53 · 92d79cf)
+
+- 미리보기 배속 6단계 (0.25×/0.5×/0.75×/1×/1.5×/2×) 토글 추가
+- gifExport.ts rate option 추가 + Promise → GifExportHandle 전환
+- GIF export 시 미리보기 배속 그대로 반영
+
+### 주제 3 — fade-in-up containing block + 최대화 portal fix (88c50a3 · 341e615)
+
+- root cause: `animate-fade-in-up` keyframe `to { transform:...; filter:...; }` forwards → containing block 유지 → fixed inset-0이 wrapper 크기로 갇힘
+- globals.css keyframe `to`에 `transform: none; filter: none;` 추가 (root cause fix)
+- 최대화 컨테이너를 createPortal body 직속 마운트 (이중 안전망)
+- feedback_modal_portal_containing_block.md에 keyframe forwards 패턴 추가 박제
+
+### 주제 4 — UX 9점대 + 미니뷰 + defaultRate 영속 (d81921a · b8db0f7 · bb69be0 · 3141359 · c32e12b)
+
+- 인라인 재생, viewport 친화, 단축키(Space/ArrowLeft/ArrowRight), 첫 진입 안내, 접근성 보강
+- 인라인 미니뷰 패널 + GIF abort handle 추가
+- SortableStepChip 별도 파일 분리
+- animation_data JSONB에 defaultRate 영속 — 영상마다 작성자 배속 유지
+
+### 주제 5 — P1~P5 전면 리팩토링 (18f50fc · 0afd662 · ce4346e · 4ac78fa · d951ede)
+
+- **P1**: 미니뷰·최대화 제거 (사용자 검토 끝에 의미 없다 판단) + 컷 설명 multi-line
+- **P2**: AnimationCategory enum 4분류(FORMATION/SETPIECE/TRANSITION/DRILL) + inferCategory 자동 매핑 + 목록 칩 필터
+- **P3**: 편집기 평면화 — mode 토글·phase 개념 제거, 한 영상=한 카테고리=컷
+- **P4**: prod DB 마이그레이션 8 → 58 영상 분리 실행 (scripts/migrate-flat-animations.mjs, 백업 docs/backups/team_tactical_animations-2026-05-14T13-05-41-967Z.json)
+- **P5**: MatchRoleGuide·Thumb·복제·카드 배지 평면 영상 호환
+
+### 주제 6 — 후속 bug fix (7bdd94b · eef028b · 732f741 · baeecf8 · bc39f87)
+
+- FCMZ default_formation_id 미반영 (page.tsx SELECT 누락)
+- FormationMotionViewer hook 순서 위반 (early return이 useEffect 위) → React #300 + SVG r=undefined
+- 평면 영상의 mode 토글·3분할 GIF 잔재 제거
+- viewer 배지 SETPIECE/TRANSITION 카테고리 미표시 → CATEGORY_BADGE_STYLE 매핑 추가
+- 햄버거 메뉴 그룹간 sibling prefix 충돌 동시 active → globalActiveHref 평탄화
+
+### 사고 기록 (62차, 4건)
+
+1. fade-in-up forwards containing block — feedback_modal_portal_containing_block 박제했음에도 CSS keyframe forwards 패턴 재발 (새 케이스로 추가 박제)
+2. hook 순서 위반 React #300 — feedback_hooks 박제했음에도 P3 빈 phases 가드 추가하며 재발
+3. 그룹간 sibling active 누락 — feedback_route_prefix_sibling_check이 그룹간 비교 미커버
+4. SETPIECE/TRANSITION → attack 폴백 라벨 사이드 이펙트 점검 누락 — 사용자가 직접 발견
+
+---
+
+## 61차 (2026-05-14, KST) — 박제 정정·회원 벌크 진입점 강화·CSS 토큰 통합·PII 제거·메모리 재정비
+
+**커밋 8개** (239070d · 058d478 · a4511e4 · c8f384f · bc39f87 · 17518f4 · e6dd921 · 92d79cf, push 완료)
+
+### 주제 1 — 회원 일괄 등록 진입점 강화 (17518f4)
+
+- 위자드 Step 2 "카톡 명단 복붙으로 한 번에 등록" primary CTA 추가
+- 랜딩 MoreFeaturesSection 회원 일괄 등록 카드 신규 추가
+- MembersClient `?bulk=true` URL 파라미터 → 모달 자동 오픈
+- 배경: 광고 활성률 12.5% leaky bucket → 가입 후 기능 발견 통로 부재 해소
+
+### 주제 2 — CSS 토큰 단일 source 통합 (c8f384f)
+
+- layout.tsx FOUC 인라인 스크립트 LIGHT_VARS 상수 제거 → `classList.add('light')` 토글만
+- ThemeContext.tsx `applyTheme()` LIGHT_VARS 인라인 제거 → `classList.toggle('light')` 토글만
+- globals.css `:root.light` 이미 존재 확인 후 중복 제거
+
+### 주제 3 — PII 파일 제거 (058d478)
+
+- `public/22333.png` (FCMZ 회비 통장 PII) → .gitignore
+- `docs/portfolio.md` (이력서 PII) → .gitignore
+- `jogiads/` 폴더 (조기싸커 스크린샷 8장) → 삭제
+- `scripts/insert-alpha-notice.mjs · update-alpha-notice-rename.mjs` → 삭제 (일회성 완료)
+
+### 주제 4 — CLAUDE.md·메모리 박제 대규모 정정 (239070d · a4511e4 · e6dd921)
+
+- CLAUDE.md "실제 미구현 2개" → 회원 벌크·guide 마이그 모두 완료로 정정
+- CLAUDE.md 작업 흐름 섹션 신설 (MEMORY.md 연계·역할 분리 명시)
+- reference_competitor_jogisoccer.md 차용 상태표: 채택 6개 "6/11 PR 예정" → 모두 완료로 정정
+- reference_meta_ads_setup.md 광고 차수 정정: "5차 단톡방 슬라이드" → "4차 22초 영상"
+- project_blog_publishing_cadence.md 4편 발행일 "5/16" → "5/15" 정정
+
+### 사고 기록
+
+- 메모리 박제만 보고 "미구현" 단정 — 채택 6개 전부 이미 구현 완료였음
+- 사용자 반응: "한강간다" / "나랑 지금 일부러 장난치는거야?"
+- feedback_verify_first_or_silence ⭐⭐⭐⭐⭐ 5차 경고로 갱신
+
+---
 
 ## 60차 (2026-05-14, KST) — 가이드 통계 정정 + 블로그 시리즈 + 알파 TWA 디버깅 + 전술 영상 sport_type 분기
 
