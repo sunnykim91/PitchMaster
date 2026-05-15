@@ -91,9 +91,53 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
     ...a,
     _category: inferAnimationCategory(a.animation_data),
   }));
-  const filteredAnimations = categoryFilter
-    ? animationsWithCategory.filter((a) => a._category === categoryFilter)
-    : animationsWithCategory;
+  const filteredAnimations = (
+    categoryFilter
+      ? animationsWithCategory.filter((a) => a._category === categoryFilter)
+      : animationsWithCategory
+  )
+    // 대표(⭐) 영상이 맨 위. 그 안에서 최신순.
+    .slice()
+    .sort((a, b) => {
+      if (!!a.is_default !== !!b.is_default) return a.is_default ? -1 : 1;
+      return (b.created_at ?? "").localeCompare(a.created_at ?? "");
+    });
+
+
+  // 대표(⭐) 토글 — 마이그 00073 이후 카테고리·포메이션 무관 N개 가능. 다른 영상 영향 X.
+  // 낙관적 업데이트 + 실패 시 rollback.
+  const [togglingDefault, setTogglingDefault] = useState<string | null>(null);
+  async function toggleDefault(animation: TeamTacticalAnimation) {
+    if (togglingDefault) return;
+    setTogglingDefault(animation.id);
+    const next = !animation.is_default;
+    setAnimations((prev) =>
+      prev.map((a) => (a.id === animation.id ? { ...a, is_default: next } : a)),
+    );
+    try {
+      const res = await fetch(`/api/team/tactical-animations/${animation.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_default: next }),
+      });
+      if (!res.ok) {
+        setAnimations((prev) =>
+          prev.map((a) => (a.id === animation.id ? { ...a, is_default: !next } : a)),
+        );
+        const j = await res.json().catch(() => ({}));
+        showToast(j.error ?? "대표 설정 실패", "error");
+      } else {
+        showToast(next ? "대표로 핀했어요" : "대표 핀 해제", "success");
+      }
+    } catch {
+      setAnimations((prev) =>
+        prev.map((a) => (a.id === animation.id ? { ...a, is_default: !next } : a)),
+      );
+      showToast("네트워크 오류", "error");
+    } finally {
+      setTogglingDefault(null);
+    }
+  }
 
   // 각 카테고리별 개수 (필터 칩에 노출)
   const categoryCounts = ANIMATION_CATEGORIES.reduce(
@@ -332,32 +376,6 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
     }
   }
 
-  async function handleSetDefault(animation: TeamTacticalAnimation) {
-    if (animation.is_default) return;
-    try {
-      const res = await fetch(`/api/team/tactical-animations/${animation.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_default: true }),
-      });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || "기본 설정 실패");
-      }
-      // 같은 formation_id 의 다른 default 들 OFF + 이 row default ON
-      setAnimations((prev) =>
-        prev.map((a) =>
-          a.formation_id === animation.formation_id
-            ? { ...a, is_default: a.id === animation.id }
-            : a,
-        ),
-      );
-      showToast("대표 영상으로 설정했어요", "success");
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "설정 실패", "error");
-    }
-  }
-
   return (
     <div className="container mx-auto max-w-3xl px-4 py-6 sm:py-8">
       {/* 뒤로가기 — 진입 경로(팀 설정·경기 전술·SidebarNav)에 따라 동적 복귀 */}
@@ -528,7 +546,6 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
                       animation._category === "ATTACK" && "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]",
                       animation._category === "DEFENSE" && "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]",
                       animation._category === "SETPIECE" && "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]",
-                      animation._category === "TRANSITION" && "bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]",
                     )}>
                       {ANIMATION_CATEGORY_LABEL[animation._category]}
                     </span>
@@ -564,18 +581,19 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
                     편집
                   </Link>
                 </Button>
-                {!animation.is_default && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-8 text-xs gap-1"
-                    onClick={() => handleSetDefault(animation)}
-                  >
-                    <Star className="h-3.5 w-3.5" aria-hidden="true" />
-                    대표로
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={animation.is_default ? "default" : "outline"}
+                  className="h-8 text-xs gap-1"
+                  onClick={() => toggleDefault(animation)}
+                  disabled={togglingDefault === animation.id}
+                  aria-pressed={animation.is_default}
+                  title={animation.is_default ? "대표 핀 해제 — 매치 자동 노출에서 제외" : "대표 핀 — 매치 자동 노출 + 목록 상단 고정"}
+                >
+                  <Star className={cn("h-3.5 w-3.5", animation.is_default && "fill-current")} aria-hidden="true" />
+                  {animation.is_default ? "대표 ✓" : "대표로"}
+                </Button>
                 {/* 복제 — 대상 포메이션 선택해서 복사 */}
                 <div className="inline-flex items-center gap-1 rounded-md border border-border h-8 pr-1">
                   <Copy className="h-3.5 w-3.5 ml-2 text-muted-foreground" aria-hidden="true" />

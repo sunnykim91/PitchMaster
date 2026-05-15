@@ -20,9 +20,7 @@ export function inferAnimationCategory(data: TacticalAnimationData | null | unde
   if (/(세트피스|코너|코너킥|프리킥|킥오프|페널티|throw[- ]?in|free[- ]?kick)/.test(joined)) {
     return "SETPIECE";
   }
-  if (/(전환|trans|역습|카운터)/.test(joined)) {
-    return "TRANSITION";
-  }
+  // 전환(역습/카운터)은 별도 카테고리 미운영 — 공격으로 흡수.
   const attackPhases = (data.attack ?? []).length;
   const defensePhases = (data.defense ?? []).length;
   if (defensePhases > attackPhases) return "DEFENSE";
