@@ -12,7 +12,7 @@
  */
 
 import { memo, useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, UserRound, AlertTriangle, Sparkles, Film, Swords, Shield, Calendar } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, UserRound, AlertTriangle, Sparkles, Film, Swords, Shield, Calendar, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import FormationMotionViewer from "@/components/FormationMotionViewer";
 import { getFormationMotion, hasFormationMotion } from "@/lib/formationMotions";
@@ -403,9 +403,14 @@ const CATEGORY_VISUAL: Record<AnimationCategory, { Icon: typeof Swords; activeCl
     activeCls: "bg-[hsl(var(--warning))] text-[hsl(0_0%_10%)] border-[hsl(var(--warning))]",
     inactiveCls: "border-border text-muted-foreground hover:text-foreground hover:border-[hsl(var(--warning))]/50",
   },
+  OTHER: {
+    Icon: MoreHorizontal,
+    activeCls: "bg-secondary text-foreground border-border",
+    inactiveCls: "border-border text-muted-foreground hover:text-foreground",
+  },
 };
 
-const CATEGORY_ORDER: AnimationCategory[] = ["ATTACK", "DEFENSE", "SETPIECE"];
+const CATEGORY_ORDER: AnimationCategory[] = ["ATTACK", "DEFENSE", "SETPIECE", "OTHER"];
 
 function FormationMotionBlock({
   formationId,
@@ -430,13 +435,15 @@ function FormationMotionBlock({
       ATTACK: [],
       DEFENSE: [],
       SETPIECE: [],
+      OTHER: [],
     };
     if (!teamAnimations) return acc;
     for (const a of teamAnimations) {
       if (!a.is_default) continue;
       const cat = a.animation_data.category ?? inferAnimationCategory(a.animation_data);
-      if (cat === "SETPIECE") {
-        acc.SETPIECE.push(a);
+      // SETPIECE·OTHER는 포메이션 무관, ATTACK·DEFENSE는 같은 포메이션만
+      if (cat === "SETPIECE" || cat === "OTHER") {
+        acc[cat].push(a);
       } else if (a.formation_id === formationId) {
         acc[cat].push(a);
       }

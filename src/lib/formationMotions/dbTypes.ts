@@ -19,16 +19,22 @@ export interface TeamTacticalAnimation {
   updated_at: string;
 }
 
-/** 전술 영상 카테고리 (3분류) — 목록 칩 필터·자동 매핑·매치 노출 분기에 사용.
- *  TRANSITION은 실제 사용 0건이라 제거(2026-05-15). 필요해지면 다시 추가. */
-export const ANIMATION_CATEGORIES = ["ATTACK", "DEFENSE", "SETPIECE"] as const;
+/** 전술 영상 카테고리 (4분류) — 목록 칩 필터·자동 매핑·매치 노출 분기에 사용.
+ *  ATTACK·DEFENSE는 포메이션 영향 받음 / SETPIECE·OTHER는 포메이션 무관. */
+export const ANIMATION_CATEGORIES = ["ATTACK", "DEFENSE", "SETPIECE", "OTHER"] as const;
 export type AnimationCategory = (typeof ANIMATION_CATEGORIES)[number];
 
 export const ANIMATION_CATEGORY_LABEL: Record<AnimationCategory, string> = {
   ATTACK: "공격",
   DEFENSE: "수비",
   SETPIECE: "세트피스",
+  OTHER: "기타",
 };
+
+/** 카테고리가 포메이션 영향을 받는지 — 공격·수비는 받고, 세트피스·기타는 무관. */
+export function categoryNeedsFormation(cat: AnimationCategory | undefined | null): boolean {
+  return cat === "ATTACK" || cat === "DEFENSE";
+}
 
 /** animation_data JSONB 내용.
  *

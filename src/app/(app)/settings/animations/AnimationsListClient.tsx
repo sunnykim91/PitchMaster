@@ -15,7 +15,7 @@ import { useConfirm } from "@/lib/ConfirmContext";
 import { getFormationMotion } from "@/lib/formationMotions";
 import { formationTemplates } from "@/lib/formations";
 import type { TeamTacticalAnimation, TacticalAnimationData, AnimationCategory } from "@/lib/formationMotions/dbTypes";
-import { ANIMATION_CATEGORIES, ANIMATION_CATEGORY_LABEL, toLegacyMotionShape } from "@/lib/formationMotions/dbTypes";
+import { ANIMATION_CATEGORIES, ANIMATION_CATEGORY_LABEL, categoryNeedsFormation, toLegacyMotionShape } from "@/lib/formationMotions/dbTypes";
 import { inferAnimationCategory } from "@/lib/formationMotions/inferCategory";
 import {
   SETPIECE_SCENARIOS,
@@ -408,129 +408,138 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
         <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(var(--primary))]">
           전술 영상
         </p>
-        <h1 className="mt-1 text-2xl font-bold">감독의 전술노트 — 우리 팀 공격·수비 영상</h1>
+        <h1 className="mt-1 text-2xl font-bold">감독의 전술노트</h1>
         <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-          선수 위치를 직접 그려 우리 팀 빌드업·수비 흐름을 영상처럼 만들어요 (축구 11명·풋살 5~8명, 포메이션별로 자동 적용).
+          선수 위치를 직접 그려 우리 팀 흐름을 영상처럼 만들어요.
           <strong>대표 영상</strong>으로 지정하면 경기 화면에서 선수들이 자동으로 볼 수 있어요.
         </p>
       </header>
 
-      {/* 신규 생성 — ① 종목 → ② 포메이션 → ③ 만들기 */}
-      <div className="mb-5 space-y-3">
-        {/* ① 종목 */}
-        <div>
-          <div className="mb-1.5 flex items-center gap-2">
-            <span className="text-xs font-semibold text-foreground">종목</span>
-            <span className="text-[11px] text-muted-foreground">
-              우리 팀: {sportType === "FUTSAL" ? "풋살" : "축구"}
-            </span>
-          </div>
-          <div className="grid w-full grid-cols-2 gap-1 rounded-lg border border-border bg-secondary/30 p-1 sm:w-[260px]">
-            <button
-              type="button"
-              onClick={() => handleSportToggle("SOCCER")}
-              className={cn(
-                "rounded-md py-2 text-sm font-medium transition-colors",
-                selectedSport === "SOCCER"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-foreground/70 hover:bg-card hover:text-foreground",
-              )}
-            >
-              축구
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSportToggle("FUTSAL")}
-              className={cn(
-                "rounded-md py-2 text-sm font-medium transition-colors",
-                selectedSport === "FUTSAL"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-foreground/70 hover:bg-card hover:text-foreground",
-              )}
-            >
-              풋살
-            </button>
-          </div>
-        </div>
-
-        {/* ② 포메이션 */}
-        <div>
-          <div className="mb-1.5 text-xs font-semibold text-foreground">포메이션</div>
-          <Select value={createFormation} onValueChange={setCreateFormation}>
-            <SelectTrigger className="w-full sm:w-[260px]">
-              <SelectValue placeholder="포메이션 선택" />
-            </SelectTrigger>
-            <SelectContent>
-              {formationTemplates.filter((f) => f.sportType === selectedSport).map((f) => (
-                <SelectItem key={f.id} value={f.id}>
-                  {f.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* ③ 카테고리 선택 — 만들 영상의 의도. SETPIECE면 시나리오 추가 노출 */}
-        <div>
-          <div className="mb-1.5 text-xs font-semibold text-foreground">카테고리</div>
-          <div className="grid grid-cols-3 gap-1.5 sm:w-[260px]" role="group" aria-label="영상 카테고리 선택">
-            {ANIMATION_CATEGORIES.map((c) => {
-              const active = createCategory === c;
-              return (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setCreateCategory(c)}
-                  aria-pressed={active}
-                  className={cn(
-                    "rounded-md border py-2 text-xs font-semibold transition-colors",
-                    active
-                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                      : "border-border text-foreground/70 hover:bg-card hover:text-foreground",
-                  )}
-                >
-                  {ANIMATION_CATEGORY_LABEL[c]}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ④ 세트피스 시나리오 (카테고리=SETPIECE일 때만) — 자동 1컷 배치 템플릿 */}
-        {createCategory === "SETPIECE" && (
+      {/* 신규 생성 — 종목 → 카테고리 → (공/수만) 포메이션 → (세트피스만) 시나리오 → 만들기.
+          PC·모바일 공통 카드로 묶고 라벨 너비 일관(sm:w-[300px])으로 정돈. */}
+      <div className="mb-5 rounded-xl border border-border bg-card/40 p-4 sm:p-5">
+        <div className="mb-3 text-sm font-bold text-foreground">새 영상 만들기</div>
+        <div className="space-y-3">
+          {/* ① 종목 */}
           <div>
-            <div className="mb-1.5 text-xs font-semibold text-foreground">세트피스 시나리오</div>
-            <Select value={createScenario} onValueChange={(v) => setCreateScenario(v as SetpieceScenario)}>
-              <SelectTrigger className="w-full sm:w-[260px]">
-                <SelectValue placeholder="시나리오 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {SETPIECE_SCENARIOS.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {SETPIECE_SCENARIO_LABEL[s]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="mt-1.5 text-[11px] text-muted-foreground">
-              💡 박스 안 4명·박스 밖 2명·키커 1명·반대편 윙백 1명·센터백 2명·GK 1명 표준 배치로 첫 컷이 자동 생성돼요. 만든 뒤 드래그로 미세 조정하세요.
-            </p>
+            <div className="mb-1.5 flex items-center gap-2">
+              <span className="text-xs font-semibold text-foreground">종목</span>
+              <span className="text-[11px] text-muted-foreground">
+                우리 팀: {sportType === "FUTSAL" ? "풋살" : "축구"}
+              </span>
+            </div>
+            <div className="grid w-full grid-cols-2 gap-1 rounded-lg border border-border bg-secondary/30 p-1 sm:w-[300px]">
+              <button
+                type="button"
+                onClick={() => handleSportToggle("SOCCER")}
+                aria-pressed={selectedSport === "SOCCER"}
+                className={cn(
+                  "rounded-md py-2 text-sm font-medium transition-colors",
+                  selectedSport === "SOCCER"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-foreground/70 hover:bg-card hover:text-foreground",
+                )}
+              >
+                축구
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSportToggle("FUTSAL")}
+                aria-pressed={selectedSport === "FUTSAL"}
+                className={cn(
+                  "rounded-md py-2 text-sm font-medium transition-colors",
+                  selectedSport === "FUTSAL"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-foreground/70 hover:bg-card hover:text-foreground",
+                )}
+              >
+                풋살
+              </button>
+            </div>
           </div>
-        )}
-        {/* ⑤ 만들기 */}
-        <Button
-          type="button"
-          onClick={handleCreate}
-          disabled={creating}
-          className="w-full sm:w-[260px]"
-        >
-          {creating ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Plus className="mr-2 h-4 w-4" />
+
+          {/* ② 카테고리 선택 — 만들 영상의 의도 */}
+          <div>
+            <div className="mb-1.5 text-xs font-semibold text-foreground">카테고리</div>
+            <div className="grid w-full grid-cols-4 gap-1 rounded-lg border border-border bg-secondary/30 p-1 sm:w-[300px]" role="group" aria-label="영상 카테고리 선택">
+              {ANIMATION_CATEGORIES.map((c) => {
+                const active = createCategory === c;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCreateCategory(c)}
+                    aria-pressed={active}
+                    className={cn(
+                      "rounded-md py-2 text-xs font-semibold transition-colors",
+                      active
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-foreground/70 hover:bg-card hover:text-foreground",
+                    )}
+                  >
+                    {ANIMATION_CATEGORY_LABEL[c]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ③ 포메이션 — 공격·수비만 노출 (세트피스·기타는 포메이션 무관) */}
+          {categoryNeedsFormation(createCategory) && (
+            <div>
+              <div className="mb-1.5 text-xs font-semibold text-foreground">포메이션</div>
+              <Select value={createFormation} onValueChange={setCreateFormation}>
+                <SelectTrigger className="w-full sm:w-[300px]">
+                  <SelectValue placeholder="포메이션 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  {formationTemplates.filter((f) => f.sportType === selectedSport).map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           )}
-          {currentFormationName} 영상 만들기
-        </Button>
+
+          {/* ④ 세트피스 시나리오 (카테고리=SETPIECE일 때만) — 자동 1컷 배치 템플릿 */}
+          {createCategory === "SETPIECE" && (
+            <div>
+              <div className="mb-1.5 text-xs font-semibold text-foreground">세트피스 시나리오</div>
+              <Select value={createScenario} onValueChange={(v) => setCreateScenario(v as SetpieceScenario)}>
+                <SelectTrigger className="w-full sm:w-[300px]">
+                  <SelectValue placeholder="시나리오 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SETPIECE_SCENARIOS.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {SETPIECE_SCENARIO_LABEL[s]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                💡 박스 안 4명·박스 밖 2명·키커 1명·반대편 윙백 1명·센터백 2명·GK 1명 표준 배치로 첫 컷이 자동 생성돼요. 만든 뒤 드래그로 미세 조정하세요.
+              </p>
+            </div>
+          )}
+
+          {/* ⑤ 만들기 — 통일된 '영상 만들기' 버튼 */}
+          <Button
+            type="button"
+            onClick={handleCreate}
+            disabled={creating}
+            className="w-full sm:w-[300px]"
+          >
+            {creating ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="mr-2 h-4 w-4" />
+            )}
+            영상 만들기
+          </Button>
+        </div>
       </div>
 
       {/* 목록 */}

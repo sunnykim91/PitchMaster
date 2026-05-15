@@ -17,7 +17,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { Pause, Play, Shield, Swords, Calendar } from "lucide-react";
+import { Pause, Play, Shield, Swords, Calendar, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { FormationMotion, MotionPhase } from "@/lib/formationMotions";
 import type { AnimationCategory } from "@/lib/formationMotions/dbTypes";
@@ -47,6 +47,7 @@ const CATEGORY_BADGE_STYLE: Record<AnimationCategory, { cls: string; Icon: typeo
   ATTACK: { cls: "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]", Icon: Swords },
   DEFENSE: { cls: "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]", Icon: Shield },
   SETPIECE: { cls: "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]", Icon: Calendar },
+  OTHER: { cls: "bg-secondary text-muted-foreground", Icon: MoreHorizontal },
 };
 
 const STEP_DURATION = 1500; // ms — phase 안 한 step 머무는 시간
