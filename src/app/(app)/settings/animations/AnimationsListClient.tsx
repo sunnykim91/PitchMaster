@@ -17,6 +17,12 @@ import { formationTemplates } from "@/lib/formations";
 import type { TeamTacticalAnimation, TacticalAnimationData, AnimationCategory } from "@/lib/formationMotions/dbTypes";
 import { ANIMATION_CATEGORIES, ANIMATION_CATEGORY_LABEL, toLegacyMotionShape } from "@/lib/formationMotions/dbTypes";
 import { inferAnimationCategory } from "@/lib/formationMotions/inferCategory";
+import {
+  SETPIECE_SCENARIOS,
+  SETPIECE_SCENARIO_LABEL,
+  buildSetpieceStep,
+  type SetpieceScenario,
+} from "@/lib/formationMotions/setpieceTemplates";
 import type { PhasePosition } from "@/lib/formationMotions/types";
 import type { SportType } from "@/lib/types";
 
@@ -77,6 +83,9 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
   const currentFormationName = formationTemplates.find((f) => f.id === createFormation)?.name ?? createFormation;
   const [copyingId, setCopyingId] = useState<string | null>(null);
   const [copyTargetFormation, setCopyTargetFormation] = useState<string>("");
+  // 영상 만들기 — 카테고리 선택 + (세트피스면) 시나리오 선택
+  const [createCategory, setCreateCategory] = useState<AnimationCategory>("ATTACK");
+  const [createScenario, setCreateScenario] = useState<SetpieceScenario>("RIGHT_CORNER");
   /**
    * GIF export 진행 상태.
    * key = `${animationId}-${mode}` — 같은 영상 다른 모드를 동시에 누르지 못하게.
@@ -225,34 +234,42 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
   async function handleCreate() {
     setCreating(true);
     try {
-      // P3 평면화 — 신규 영상은 카테고리 ATTACK 기본, 1컷부터 시작.
-      // formationTemplates에서 슬롯 좌표만 가져와 첫 컷 positions로.
+      // P3 평면화 — 카테고리·(세트피스면 시나리오)별 첫 컷 자동 배치.
       const tpl = formationTemplates.find((f) => f.id === createFormation);
       if (!tpl) {
         showToast("지원하지 않는 포메이션이에요", "error");
         setCreating(false);
         return;
       }
-      const firstStep = {
-        caption: "",
-        ball: { x: 50, y: 50 } as const,
-        positions: tpl.slots.map((s) => ({ slot: s.id, x: s.x, y: s.y })),
-      };
-      // 같은 포메이션 기존 개수 + 1 = 다음 버전
+      const firstStep =
+        createCategory === "SETPIECE"
+          ? // 세트피스 시나리오 표준 배치 1컷 자동 생성
+            buildSetpieceStep(createScenario, tpl.slots)
+          : // ATTACK/DEFENSE — 포메이션 기본 좌표 1컷 (빈 캡션·중앙 공)
+            {
+              caption: "",
+              ball: { x: 50, y: 50 } as const,
+              positions: tpl.slots.map((s) => ({ slot: s.id, x: s.x, y: s.y })),
+            };
+      // 같은 포메이션 기존 개수 + 1 = 다음 버전 (세트피스는 시나리오 라벨로 구분)
       const sameFormation = animations.filter((a) => a.formation_id === createFormation);
       const nextVersion = sameFormation.length + 1;
+      const baseName = `${teamName} ${createFormation} v${nextVersion}`;
+      const fullName = createCategory === "SETPIECE"
+        ? `${baseName} - ${SETPIECE_SCENARIO_LABEL[createScenario]}`
+        : baseName;
       const res = await fetch("/api/team/tactical-animations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           formation_id: createFormation,
-          name: `${teamName} ${createFormation} v${nextVersion}`,
+          name: fullName,
           description: null,
           animation_data: {
             steps: [firstStep],
             attack: [], // 레거시 호환 — 빈 배열
             defense: [],
-            category: "ATTACK",
+            category: createCategory,
           },
           is_default: sameFormation.length === 0,
         }),
@@ -452,7 +469,55 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
             </SelectContent>
           </Select>
         </div>
-        {/* ③ 만들기 */}
+
+        {/* ③ 카테고리 선택 — 만들 영상의 의도. SETPIECE면 시나리오 추가 노출 */}
+        <div>
+          <div className="mb-1.5 text-xs font-semibold text-foreground">카테고리</div>
+          <div className="grid grid-cols-3 gap-1.5 sm:w-[260px]" role="group" aria-label="영상 카테고리 선택">
+            {ANIMATION_CATEGORIES.map((c) => {
+              const active = createCategory === c;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCreateCategory(c)}
+                  aria-pressed={active}
+                  className={cn(
+                    "rounded-md border py-2 text-xs font-semibold transition-colors",
+                    active
+                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                      : "border-border text-foreground/70 hover:bg-card hover:text-foreground",
+                  )}
+                >
+                  {ANIMATION_CATEGORY_LABEL[c]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ④ 세트피스 시나리오 (카테고리=SETPIECE일 때만) — 자동 1컷 배치 템플릿 */}
+        {createCategory === "SETPIECE" && (
+          <div>
+            <div className="mb-1.5 text-xs font-semibold text-foreground">세트피스 시나리오</div>
+            <Select value={createScenario} onValueChange={(v) => setCreateScenario(v as SetpieceScenario)}>
+              <SelectTrigger className="w-full sm:w-[260px]">
+                <SelectValue placeholder="시나리오 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                {SETPIECE_SCENARIOS.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {SETPIECE_SCENARIO_LABEL[s]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
+              💡 박스 안 4명·박스 밖 2명·키커 1명·반대편 윙백 1명·센터백 2명·GK 1명 표준 배치로 첫 컷이 자동 생성돼요. 만든 뒤 드래그로 미세 조정하세요.
+            </p>
+          </div>
+        )}
+        {/* ⑤ 만들기 */}
         <Button
           type="button"
           onClick={handleCreate}
