@@ -242,10 +242,10 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
         return;
       }
       const firstStep =
-        createCategory === "SETPIECE"
-          ? // 세트피스 시나리오 표준 배치 1컷 자동 생성
+        createCategory === "SETPIECE" && tpl.slots.length === 11
+          ? // 세트피스 표준 배치는 축구 11인제 기준. 풋살(5·6)은 기본 좌표 폴백 (자유 배치).
             buildSetpieceStep(createScenario, tpl.slots)
-          : // ATTACK/DEFENSE — 포메이션 기본 좌표 1컷 (빈 캡션·중앙 공)
+          : // ATTACK/DEFENSE 또는 풋살 세트피스 — 포메이션 기본 좌표 1컷 (빈 캡션·중앙 공)
             {
               caption: "",
               ball: { x: 50, y: 50 } as const,
