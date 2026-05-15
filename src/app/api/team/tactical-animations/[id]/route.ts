@@ -88,17 +88,9 @@ export async function PUT(
     update.animation_data = body.animation_data;
   }
   if (body.is_default !== undefined) {
+    // 2026-05-15 변경 — is_default는 자유 핀/즐겨찾기 의미로 확장.
+    // 카테고리별 여러 개 가능. 다른 영상 강제 OFF 처리 제거.
     update.is_default = !!body.is_default;
-    // default ON 으로 바꾸면 같은 (team_id, formation_id) 다른 default 들 OFF
-    if (body.is_default === true) {
-      await sb
-        .from("team_tactical_animations")
-        .update({ is_default: false })
-        .eq("team_id", ctx.teamId)
-        .eq("formation_id", existing.formation_id)
-        .eq("is_default", true)
-        .neq("id", id);
-    }
   }
 
   const { data, error } = await sb
