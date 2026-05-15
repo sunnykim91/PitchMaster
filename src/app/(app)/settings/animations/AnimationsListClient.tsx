@@ -394,7 +394,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
   }
 
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-6 sm:py-8">
+    <div className="container mx-auto max-w-5xl px-4 py-6 sm:py-8">
       {/* 뒤로가기 — 진입 경로(팀 설정·경기 전술·SidebarNav)에 따라 동적 복귀 */}
       <BackButton
         label="뒤로"
@@ -416,10 +416,10 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
       </header>
 
       {/* 신규 생성 — 종목 → 카테고리 → (공/수만) 포메이션 → (세트피스만) 시나리오 → 만들기.
-          PC·모바일 공통 카드로 묶고 라벨 너비 일관(sm:w-[300px])으로 정돈. */}
+          PC·모바일 공통 카드로 묶고 라벨 너비 일관(sm:w-[300px] lg:w-full)으로 정돈. */}
       <div className="mb-5 rounded-xl border border-border bg-card/40 p-4 sm:p-5">
         <div className="mb-3 text-sm font-bold text-foreground">새 영상 만들기</div>
-        <div className="space-y-3">
+        <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-x-6 lg:gap-y-3 lg:space-y-0">
           {/* ① 종목 */}
           <div>
             <div className="mb-1.5 flex items-center gap-2">
@@ -428,7 +428,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
                 우리 팀: {sportType === "FUTSAL" ? "풋살" : "축구"}
               </span>
             </div>
-            <div className="grid w-full grid-cols-2 gap-1 rounded-lg border border-border bg-secondary/30 p-1 sm:w-[300px]">
+            <div className="grid w-full grid-cols-2 gap-1 rounded-lg border border-border bg-secondary/30 p-1 sm:w-[300px] lg:w-full">
               <button
                 type="button"
                 onClick={() => handleSportToggle("SOCCER")}
@@ -461,7 +461,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
           {/* ② 카테고리 선택 — 만들 영상의 의도 */}
           <div>
             <div className="mb-1.5 text-xs font-semibold text-foreground">카테고리</div>
-            <div className="grid w-full grid-cols-4 gap-1 rounded-lg border border-border bg-secondary/30 p-1 sm:w-[300px]" role="group" aria-label="영상 카테고리 선택">
+            <div className="grid w-full grid-cols-4 gap-1 rounded-lg border border-border bg-secondary/30 p-1 sm:w-[300px] lg:w-full" role="group" aria-label="영상 카테고리 선택">
               {ANIMATION_CATEGORIES.map((c) => {
                 const active = createCategory === c;
                 return (
@@ -489,7 +489,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
             <div>
               <div className="mb-1.5 text-xs font-semibold text-foreground">포메이션</div>
               <Select value={createFormation} onValueChange={setCreateFormation}>
-                <SelectTrigger className="w-full sm:w-[300px]">
+                <SelectTrigger className="w-full sm:w-[300px] lg:w-full">
                   <SelectValue placeholder="포메이션 선택" />
                 </SelectTrigger>
                 <SelectContent>
@@ -508,7 +508,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
             <div>
               <div className="mb-1.5 text-xs font-semibold text-foreground">세트피스 시나리오</div>
               <Select value={createScenario} onValueChange={(v) => setCreateScenario(v as SetpieceScenario)}>
-                <SelectTrigger className="w-full sm:w-[300px]">
+                <SelectTrigger className="w-full sm:w-[300px] lg:w-full">
                   <SelectValue placeholder="시나리오 선택" />
                 </SelectTrigger>
                 <SelectContent>
@@ -525,12 +525,12 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
             </div>
           )}
 
-          {/* ⑤ 만들기 — 통일된 '영상 만들기' 버튼 */}
+          {/* ⑤ 만들기 — PC grid에선 양쪽 컬럼 다 차지(col-span-2). 통일된 '영상 만들기' 버튼 */}
           <Button
             type="button"
             onClick={handleCreate}
             disabled={creating}
-            className="w-full sm:w-[300px]"
+            className="w-full sm:w-[300px] lg:col-span-2 lg:w-full"
           >
             {creating ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
