@@ -910,7 +910,8 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             ref={boardRef}
             className={cn("relative w-full overflow-hidden rounded-2xl border-2 border-white/20 shadow-xl shadow-black/30", isFutsal ? "aspect-[3/2]" : "aspect-[4/5]")}
             style={{
-              touchAction: "none",
+              // pan-y: board 빈 잔디 영역 세로 스와이프는 페이지 스크롤로 통과. 선수 칩은 자체 touchAction:none 우선 → 드래그 정상.
+              touchAction: "pan-y",
               background: "hsl(var(--pitch))",
               backgroundImage: [
                 // 진한/연한 잔디 가로 줄무늬 (실제 축구장 느낌)
