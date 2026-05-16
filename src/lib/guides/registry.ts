@@ -1,9 +1,10 @@
 import * as treasurerStart from "./posts/treasurer-start";
 import * as duesExemptionPolicy from "./posts/dues-exemption-policy";
 import * as futsalSplitTeams from "./posts/futsal-split-teams";
+import * as futsalTacticsApp from "./posts/futsal-tactics-app";
 import type { GuidePost } from "./types";
 
-const all: GuidePost[] = [treasurerStart, duesExemptionPolicy, futsalSplitTeams];
+const all: GuidePost[] = [treasurerStart, duesExemptionPolicy, futsalSplitTeams, futsalTacticsApp];
 
 export const guides = Object.fromEntries(all.map((g) => [g.meta.slug, g])) as Record<
   string,
