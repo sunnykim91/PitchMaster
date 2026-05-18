@@ -39,39 +39,49 @@ function hasCookie(name: string): boolean {
   return document.cookie.split(";").some((c) => c.trim().startsWith(`${name}=`));
 }
 
+/**
+ * 동기 캡처 함수 — useEffect 마운트 전에 jump하는 케이스(빠른 클릭)
+ * 보강용. KakaoLoginLink onClick에서도 호출돼 first-touch 누락 최소화.
+ *
+ * 정책 동일:
+ *  - 이미 쿠키 있으면 그대로 (first-touch 보존)
+ *  - utm > referrer 호스트 > 'direct' 순
+ *  - 내부 referrer는 무시
+ */
+export function captureSignupSourceIfMissing() {
+  if (typeof window === "undefined") return;
+  if (hasCookie(COOKIE_NAME)) return;
+
+  const url = new URL(window.location.href);
+  const utmSource = url.searchParams.get("utm_source");
+
+  let source: string | null = null;
+
+  if (utmSource) {
+    source = utmSource;
+  } else if (document.referrer) {
+    try {
+      const refUrl = new URL(document.referrer);
+      if (refUrl.hostname === window.location.hostname) return;
+      source = simplifyHost(refUrl.hostname);
+    } catch {
+      // ignore
+    }
+  } else {
+    source = "direct";
+  }
+
+  if (!source) return;
+
+  const value = encodeURIComponent(source);
+  const maxAge = COOKIE_TTL_DAYS * 24 * 60 * 60;
+  const secure = window.location.protocol === "https:" ? "; secure" : "";
+  document.cookie = `${COOKIE_NAME}=${value}; path=/; max-age=${maxAge}; samesite=lax${secure}`;
+}
+
 export function SignupSourceTracker() {
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    // first-touch: 이미 박힌 쿠키 있으면 그대로 유지
-    if (hasCookie(COOKIE_NAME)) return;
-
-    const url = new URL(window.location.href);
-    const utmSource = url.searchParams.get("utm_source");
-
-    let source: string | null = null;
-
-    if (utmSource) {
-      // utm 우선 — 마케팅 링크의 명시적 신호
-      source = utmSource;
-    } else if (document.referrer) {
-      try {
-        const refUrl = new URL(document.referrer);
-        // 내부 페이지 이동이면 캡처 안 함
-        if (refUrl.hostname === window.location.hostname) return;
-        source = simplifyHost(refUrl.hostname);
-      } catch {
-        // ignore — invalid referrer
-      }
-    } else {
-      source = "direct";
-    }
-
-    if (!source) return;
-
-    const value = encodeURIComponent(source);
-    const maxAge = COOKIE_TTL_DAYS * 24 * 60 * 60;
-    const secure = window.location.protocol === "https:" ? "; secure" : "";
-    document.cookie = `${COOKIE_NAME}=${value}; path=/; max-age=${maxAge}; samesite=lax${secure}`;
+    captureSignupSourceIfMissing();
   }, []);
 
   return null;
