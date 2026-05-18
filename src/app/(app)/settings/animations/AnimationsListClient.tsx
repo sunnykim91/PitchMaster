@@ -83,9 +83,34 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
   const currentFormationName = formationTemplates.find((f) => f.id === createFormation)?.name ?? createFormation;
   const [copyingId, setCopyingId] = useState<string | null>(null);
   const [copyTargetFormation, setCopyTargetFormation] = useState<string>("");
-  // 영상 만들기 — 카테고리 선택 + (세트피스면) 시나리오 선택
+  // 영상 만들기 — 카테고리 선택 + (세트피스면) 시나리오 선택.
+  // 최근 사용 값은 localStorage에 기억 (같은 카테고리 N개 연달아 만들기 흐름 단축).
+  // SSR-safe: 초기값은 ATTACK·RIGHT_CORNER 폴백, mount 후 useEffect로 복원.
   const [createCategory, setCreateCategory] = useState<AnimationCategory>("ATTACK");
   const [createScenario, setCreateScenario] = useState<SetpieceScenario>("RIGHT_CORNER");
+  useEffect(() => {
+    try {
+      const cat = localStorage.getItem("pm_anim_last_category");
+      if (cat && (ANIMATION_CATEGORIES as readonly string[]).includes(cat)) {
+        setCreateCategory(cat as AnimationCategory);
+      }
+      const sc = localStorage.getItem("pm_anim_last_scenario");
+      if (sc && (SETPIECE_SCENARIOS as readonly string[]).includes(sc)) {
+        setCreateScenario(sc as SetpieceScenario);
+      }
+    } catch {
+      // localStorage 차단 환경 — 폴백 그대로
+    }
+  }, []);
+  // 사용자가 직접 바꾼 값만 저장 (handleCreate에서 박지 않음 — 이미 사용된 값이라 의미 X)
+  function selectCategoryRemember(c: AnimationCategory) {
+    setCreateCategory(c);
+    try { localStorage.setItem("pm_anim_last_category", c); } catch { /* ignore */ }
+  }
+  function selectScenarioRemember(s: SetpieceScenario) {
+    setCreateScenario(s);
+    try { localStorage.setItem("pm_anim_last_scenario", s); } catch { /* ignore */ }
+  }
   /**
    * GIF export 진행 상태.
    * key = `${animationId}-${mode}` — 같은 영상 다른 모드를 동시에 누르지 못하게.
@@ -495,7 +520,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
                   <button
                     key={c}
                     type="button"
-                    onClick={() => setCreateCategory(c)}
+                    onClick={() => selectCategoryRemember(c)}
                     aria-pressed={active}
                     className={cn(
                       "rounded-md py-2 text-xs font-semibold transition-colors",
@@ -534,7 +559,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
           {createCategory === "SETPIECE" && selectedSport === "SOCCER" && (
             <div>
               <div className="mb-1.5 text-xs font-semibold text-foreground">세트피스 시나리오</div>
-              <Select value={createScenario} onValueChange={(v) => setCreateScenario(v as SetpieceScenario)}>
+              <Select value={createScenario} onValueChange={(v) => selectScenarioRemember(v as SetpieceScenario)}>
                 <SelectTrigger className="w-full sm:w-[300px] lg:w-full">
                   <SelectValue placeholder="시나리오 선택" />
                 </SelectTrigger>
