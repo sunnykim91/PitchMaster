@@ -157,6 +157,13 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
     {} as Record<AnimationCategory, number>,
   );
 
+  // 영상은 있는데 대표(⭐) 0개인 카테고리 — 매치 자동 노출이 안 됨. 운영진 알림용.
+  const categoriesMissingDefault = ANIMATION_CATEGORIES.filter((c) => {
+    const list = animationsWithCategory.filter((a) => a._category === c);
+    if (list.length === 0) return false;
+    return list.every((a) => !a.is_default);
+  });
+
   async function handleExportGif(
     animation: TeamTacticalAnimation,
     mode: "attack" | "defense" | "combined",
@@ -258,6 +265,18 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
       const fullName = createCategory === "SETPIECE"
         ? `${baseName} - ${SETPIECE_SCENARIO_LABEL[createScenario]}`
         : baseName;
+      // 자동 default 정책 — 매치 노출 정책과 동일 조건:
+      //  · ATTACK/DEFENSE: 같은 (team, formation_id, category)에 default 0개면 자동
+      //  · SETPIECE/OTHER: 같은 (team, category)에 default 0개면 자동 (포메이션 무관)
+      const needsFormation = createCategory === "ATTACK" || createCategory === "DEFENSE";
+      const existingDefaultsInGroup = animations.filter((a) => {
+        if (!a.is_default) return false;
+        const cat = a.animation_data.category ?? inferAnimationCategory(a.animation_data);
+        if (cat !== createCategory) return false;
+        if (needsFormation && a.formation_id !== createFormation) return false;
+        return true;
+      });
+      const shouldBeDefault = existingDefaultsInGroup.length === 0;
       const res = await fetch("/api/team/tactical-animations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -272,7 +291,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
             category: createCategory,
             ...(createCategory === "SETPIECE" ? { setpieceScenario: createScenario } : {}),
           },
-          is_default: sameFormation.length === 0,
+          is_default: shouldBeDefault,
         }),
       });
       if (!res.ok) {
@@ -558,6 +577,18 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
         </div>
       ) : (
         <div className="space-y-3">
+          {/* 운영진 알림 — 영상은 있는데 대표(⭐) 0개인 카테고리 (매치 자동 노출 안 됨) */}
+          {categoriesMissingDefault.length > 0 && (
+            <div className="rounded-lg border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/5 p-3 text-[12px]">
+              <p className="font-semibold text-foreground">
+                ⚠️ 대표 영상 미설정 카테고리: {categoriesMissingDefault.map((c) => ANIMATION_CATEGORY_LABEL[c]).join("·")}
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                대표(⭐)로 핀하면 경기 화면 역할 가이드에 자동 노출됩니다. 각 카테고리 영상 카드의 <strong>대표</strong> 버튼을 눌러주세요.
+              </p>
+            </div>
+          )}
+
           {/* 카테고리 칩 필터 — 영상이 많아져도 빠르게 좁히기 */}
           <div
             className="flex flex-wrap gap-1.5"
@@ -621,13 +652,22 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
                       animation._category === "ATTACK" && "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]",
                       animation._category === "DEFENSE" && "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]",
                       animation._category === "SETPIECE" && "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]",
+                      animation._category === "OTHER" && "bg-secondary text-muted-foreground",
                     )}>
                       {ANIMATION_CATEGORY_LABEL[animation._category]}
                     </span>
                     {animation.is_default && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(var(--primary))]/15 px-2 py-0.5 text-[12px] font-bold text-[hsl(var(--primary))]">
-                        <Star className="h-2.5 w-2.5" aria-hidden="true" />
-                        대표 영상
+                      // 카테고리별 대표 배지 — "공격 대표"·"수비 대표"·"세트피스 대표"·"기타 대표" 명시.
+                      // 매치 노출 동작과 1:1 — 사용자가 어느 카테고리의 대표인지 한눈에 인지.
+                      <span className={cn(
+                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-bold",
+                        animation._category === "ATTACK" && "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]",
+                        animation._category === "DEFENSE" && "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]",
+                        animation._category === "SETPIECE" && "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]",
+                        animation._category === "OTHER" && "bg-secondary text-foreground",
+                      )}>
+                        <Star className="h-2.5 w-2.5 fill-current" aria-hidden="true" />
+                        {ANIMATION_CATEGORY_LABEL[animation._category]} 대표
                       </span>
                     )}
                   </div>
