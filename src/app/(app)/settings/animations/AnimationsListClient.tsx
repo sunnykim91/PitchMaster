@@ -262,7 +262,9 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
       const sameFormation = animations.filter((a) => a.formation_id === createFormation);
       const nextVersion = sameFormation.length + 1;
       const baseName = `${teamName} ${createFormation} v${nextVersion}`;
-      const fullName = createCategory === "SETPIECE"
+      // 시나리오 라벨은 표준 배치 템플릿 실제 적용 시(축구 11인제)에만 부착.
+      // 풋살 세트피스는 자유 배치라 라벨 안 붙임 (이름과 실제 좌표 불일치 방지).
+      const fullName = createCategory === "SETPIECE" && tpl.slots.length === 11
         ? `${baseName} - ${SETPIECE_SCENARIO_LABEL[createScenario]}`
         : baseName;
       // 자동 default 정책 — 매치 노출 정책과 동일 조건:
@@ -289,7 +291,8 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
             attack: [], // 레거시 호환 — 빈 배열
             defense: [],
             category: createCategory,
-            ...(createCategory === "SETPIECE" ? { setpieceScenario: createScenario } : {}),
+            // 시나리오 메타도 표준 배치 적용 시(축구 11인제)에만 박음 — 풋살은 자유 배치라 무의미
+            ...(createCategory === "SETPIECE" && tpl.slots.length === 11 ? { setpieceScenario: createScenario } : {}),
           },
           is_default: shouldBeDefault,
         }),
@@ -348,7 +351,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
             positions: mapPositions(step.positions),
           })),
         })),
-        // P3 평면 영상 복제 — steps도 같이 옮김
+        // P3 평면 영상 복제 — steps + 카테고리·세트피스 시나리오 메타 함께 옮김
         ...(Array.isArray(source.animation_data.steps)
           ? {
               steps: source.animation_data.steps.map((step) => ({
@@ -356,6 +359,10 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
                 positions: mapPositions(step.positions),
               })),
               category: source.animation_data.category ?? "ATTACK",
+              // 세트피스 시나리오 메타 — 복제 후 '처음 배치로 되돌리기'·시나리오 변경 셀렉터가 올바른 시나리오 기준으로 동작하도록 보존
+              ...(source.animation_data.setpieceScenario
+                ? { setpieceScenario: source.animation_data.setpieceScenario }
+                : {}),
             }
           : {}),
         ...(source.animation_data.defaultRate ? { defaultRate: source.animation_data.defaultRate } : {}),
@@ -523,8 +530,8 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
             </div>
           )}
 
-          {/* ④ 세트피스 시나리오 (카테고리=SETPIECE일 때만) — 자동 1컷 배치 템플릿 */}
-          {createCategory === "SETPIECE" && (
+          {/* ④ 세트피스 시나리오 — 축구 11인제만 자동 배치 템플릿 지원. 풋살은 자유 배치 안내. */}
+          {createCategory === "SETPIECE" && selectedSport === "SOCCER" && (
             <div>
               <div className="mb-1.5 text-xs font-semibold text-foreground">세트피스 시나리오</div>
               <Select value={createScenario} onValueChange={(v) => setCreateScenario(v as SetpieceScenario)}>
@@ -542,6 +549,11 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
               <p className="mt-1.5 text-[11px] text-muted-foreground">
                 💡 박스 안 4명·박스 밖 2명·키커 1명·반대편 윙백 1명·센터백 2명·GK 1명 표준 배치로 첫 컷이 자동 생성돼요. 만든 뒤 드래그로 미세 조정하세요.
               </p>
+            </div>
+          )}
+          {createCategory === "SETPIECE" && selectedSport === "FUTSAL" && (
+            <div className="rounded-md border border-border bg-secondary/30 p-3 text-[11.5px] text-muted-foreground sm:w-[300px] lg:w-full">
+              💡 풋살은 표준 배치 템플릿 없이 <strong>빈 캔버스에서 자유 배치</strong>로 시작해요. 만든 후 드래그로 선수 위치를 잡아주세요.
             </div>
           )}
 
@@ -581,10 +593,12 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
           {categoriesMissingDefault.length > 0 && (
             <div className="rounded-lg border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/5 p-3 text-[12px]">
               <p className="font-semibold text-foreground">
-                ⚠️ 대표 영상 미설정 카테고리: {categoriesMissingDefault.map((c) => ANIMATION_CATEGORY_LABEL[c]).join("·")}
+                {categoriesMissingDefault.length === 1
+                  ? `${ANIMATION_CATEGORY_LABEL[categoriesMissingDefault[0]]} 카테고리에 대표 영상이 없어요`
+                  : `${categoriesMissingDefault.map((c) => ANIMATION_CATEGORY_LABEL[c]).join(", ")} 카테고리에 대표 영상이 없어요`}
               </p>
               <p className="mt-1 text-muted-foreground">
-                대표(⭐)로 핀하면 경기 화면 역할 가이드에 자동 노출됩니다. 각 카테고리 영상 카드의 <strong>대표</strong> 버튼을 눌러주세요.
+                각 영상 카드의 <strong>⭐ 대표</strong> 버튼을 눌러주세요. 누르면 경기 화면에 그 영상이 자동으로 노출돼요.
               </p>
             </div>
           )}

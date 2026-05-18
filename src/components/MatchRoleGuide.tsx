@@ -88,6 +88,9 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>(defaultSelectedId);
   // 팀 전술 영상 — 페이지당 1회 fetch 후 RoleCard들에 prop 전달 (N+1 회피).
   const [teamAnimations, setTeamAnimations] = useState<TeamTacticalAnimation[] | null>(null);
+  // 카드(쿼터)간 카테고리 동기화 — 사용자가 한 카드에서 "공격" 클릭하면 다른 카드도 자동 동기화.
+  // null=각 카드의 첫 가용 카테고리 자동 선택 (기존 동작).
+  const [sharedSelectedCat, setSharedSelectedCat] = useState<AnimationCategory | null>(null);
   useEffect(() => {
     let cancelled = false;
     fetch("/api/team/tactical-animations")
@@ -239,6 +242,8 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
               group={g}
               canManage={canManage}
               teamAnimations={teamAnimations}
+              sharedSelectedCat={sharedSelectedCat}
+              onSharedSelectedCatChange={setSharedSelectedCat}
             />
           ))}
         </div>
@@ -332,10 +337,14 @@ function RoleCard({
   group,
   canManage,
   teamAnimations,
+  sharedSelectedCat,
+  onSharedSelectedCatChange,
 }: {
   group: AssignmentGroup;
   canManage: boolean;
   teamAnimations: TeamTacticalAnimation[] | null;
+  sharedSelectedCat: AnimationCategory | null;
+  onSharedSelectedCatChange: (c: AnimationCategory | null) => void;
 }) {
   const [open, setOpen] = useState(false);
   const { mergedRole } = group;
@@ -378,6 +387,8 @@ function RoleCard({
         roleTitle={mergedRole.title}
         canManage={canManage}
         teamAnimations={teamAnimations}
+        externalSelectedCat={sharedSelectedCat}
+        onSelectedCatChange={onSharedSelectedCatChange}
       />
     </AccordionCard>
   );
@@ -418,12 +429,17 @@ function FormationMotionBlock({
   roleTitle,
   canManage,
   teamAnimations,
+  externalSelectedCat,
+  onSelectedCatChange,
 }: {
   formationId: string;
   role: string;
   roleTitle: string;
   canManage: boolean;
   teamAnimations: TeamTacticalAnimation[] | null;
+  /** 부모에서 카드(쿼터)간 동기화용 controlled prop. undefined면 자체 state. */
+  externalSelectedCat?: AnimationCategory | null;
+  onSelectedCatChange?: (c: AnimationCategory | null) => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -451,9 +467,11 @@ function FormationMotionBlock({
     return acc;
   }, [teamAnimations, formationId]);
 
-  // 첫 진입 시 영상 있는 첫 카테고리 자동 선택
+  // 부모에서 controlled — 카드(쿼터)마다 카테고리 동기화. 부모 미제공 시 자체 fallback.
   const firstAvailableCat = CATEGORY_ORDER.find((c) => byCategory[c].length > 0) ?? null;
-  const [selectedCat, setSelectedCat] = useState<AnimationCategory | null>(null);
+  const [localSelectedCat, setLocalSelectedCat] = useState<AnimationCategory | null>(null);
+  const selectedCat = externalSelectedCat !== undefined ? externalSelectedCat : localSelectedCat;
+  const setSelectedCat = onSelectedCatChange ?? setLocalSelectedCat;
   const activeCat = selectedCat ?? firstAvailableCat;
   const [animIdx, setAnimIdx] = useState(0);
 
@@ -461,6 +479,15 @@ function FormationMotionBlock({
   useEffect(() => {
     setAnimIdx(0);
   }, [activeCat]);
+
+  // 빈 카테고리 자동 reset — 영상 삭제·핀 해제로 선택된 카테고리 0개 되면 null로 fallback
+  // (다음 가용 카테고리로 자동 전환). controlled일 땐 부모 책임이라 skip.
+  useEffect(() => {
+    if (externalSelectedCat !== undefined) return; // controlled — 부모 처리
+    if (localSelectedCat && byCategory[localSelectedCat].length === 0) {
+      setLocalSelectedCat(null);
+    }
+  }, [byCategory, localSelectedCat, externalSelectedCat]);
 
   const currentList = activeCat ? byCategory[activeCat] : [];
   const currentAnim = currentList[animIdx] ?? currentList[0];

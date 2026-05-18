@@ -55,6 +55,10 @@ function simplifyHost(hostname: string): string | null {
 
 /** signup_source 서버 fallback — GET 요청에서만, 쿠키 없고 외부 진입일 때만 */
 function maybeSetSignupSource(req: NextRequest, res: NextResponse): NextResponse {
+  // 경로 가드 — HTML 페이지 진입만 의미 있음. API·sitemap·robots는 skip.
+  const path = req.nextUrl.pathname;
+  if (path.startsWith("/api/") || path === "/sitemap.xml" || path === "/robots.txt") return res;
+
   // 이미 쿠키 있으면 first-touch 보존 — 절대 덮어쓰지 않음
   if (req.cookies.get(SIGNUP_SOURCE_COOKIE)) return res;
 
@@ -89,6 +93,9 @@ function maybeSetSignupSource(req: NextRequest, res: NextResponse): NextResponse
   }
 
   if (!source) return res;
+
+  // 비정상 referer 길이 방어 (DB 컬럼 길이·로그 부하 보호)
+  source = source.slice(0, 100);
 
   // Set-Cookie — SignupSourceTracker와 동일 형식 (SameSite=lax, 30일)
   res.cookies.set({
@@ -134,7 +141,9 @@ export function middleware(req: NextRequest) {
   return NextResponse.json({ error: "missing_origin" }, { status: 403 });
 }
 
-/** 정적 자산·PWA 관련 리소스는 미들웨어 제외 (성능). */
+/** 정적 자산·PWA 관련 리소스는 미들웨어 제외 (성능).
+ *  ⚠️ api/는 CSRF 검사가 필요하므로 matcher에서 제외 X — signup_source fallback은
+ *  maybeSetSignupSource 함수 안에서 path 가드로 처리. */
 export const config = {
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|workbox-.*|icons/|screenshots/|screenshot/).*)",

@@ -64,16 +64,10 @@ export async function POST(request: NextRequest) {
   const sb = getSupabaseAdmin();
   if (!sb) return apiError("DB unavailable", 503);
 
-  // is_default = true 로 신규 생성 시 같은 (team_id, formation_id) default 가 있으면 OFF
-  if (is_default === true) {
-    await sb
-      .from("team_tactical_animations")
-      .update({ is_default: false })
-      .eq("team_id", ctx.teamId)
-      .eq("formation_id", formation_id)
-      .eq("is_default", true);
-  }
-
+  // 강제 OFF 블록 제거 (마이그 00073: unique 제약 DROP — 카테고리·포메이션별 N개 default 허용).
+  // 클라이언트가 같은 (team, category, [공/수 시 formation_id]) 그룹에 default 0개일 때만
+  // is_default=true 보내므로 서버 추가 OFF 불필요. 기존 강제 OFF는 다른 카테고리의 대표까지
+  // 잘못 풀어버리는 회귀 발생.
   const { data, error } = await sb
     .from("team_tactical_animations")
     .insert({
