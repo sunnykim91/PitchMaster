@@ -50,6 +50,8 @@ export type SignatureInput = {
   isTopScorer?: boolean;
   isTopAssist?: boolean;
   isTopMvp?: boolean;
+  /** 가장 긴 연속 출장 경기 수 — streak 카피 분기용. null/undefined면 미사용 처리 */
+  attendanceStreak?: number | null;
   /** 같은 선수는 항상 같은 시그니처가 나오도록 하는 시드 (이름·ID 등) */
   playerKey?: string;
 };
@@ -87,12 +89,13 @@ export function generateSignature(input: SignatureInput): string {
     isTopMvp,
     playerKey = "",
   } = input;
+  const attendanceStreak = input.attendanceStreak ?? 0;
 
   const winPct = Math.round(winRate * 100);
   const attPct = Math.round(attendanceRate * 100);
   const ap = goals + assists;
   // seed: 선수 + 스탯 조합 — 같은 선수여도 기록이 바뀌면 새 시그니처
-  const seed = `${playerKey}|${goals}|${assists}|${mvp}|${cleanSheets}`;
+  const seed = `${playerKey}|${goals}|${assists}|${mvp}|${cleanSheets}|${attendanceStreak}`;
 
   if (matchCount === 0) {
     return pick(["곧 첫 경기를 기다리는 선수", "아직 출전 전, 곧 시작"], seed);
@@ -107,14 +110,23 @@ export function generateSignature(input: SignatureInput): string {
 
   // ── GK / DEF ──────────────────────────────────────────────
   if (cat === "GK" || cat === "DEF") {
-    // 수비수인데 득점왕 — 특수 케이스 (희귀함이 매력)
-    if (isTopScorer && goals >= 3) {
+    // 수비수가 골 3개 이상 (절대 수치) — isTopScorer 아니어도 적중
+    if (cat === "DEF" && goals >= 3) {
+      const label = isTopScorer ? "팀 득점 1위" : "보기 드문 시즌";
       return pick([
-        `수비수가 ${goals}골, 시즌 특별상`,
+        `수비수가 ${goals}골 — ${label}`,
         `${goals}골 기록한 수비수`,
-        `${cat === "GK" ? "골키퍼" : "수비수"}가 팀 득점 1위`,
         `수비 + ${goals}골, 보기 드문 조합`,
         `${goals}골의 수비수, 기록이 증명한다`,
+        `수비수가 ${goals}골 — 공격까지 가담`,
+      ], seed);
+    }
+    // 골키퍼가 득점왕 (희귀)
+    if (cat === "GK" && isTopScorer && goals > 0) {
+      return pick([
+        `골키퍼가 ${goals}골, 시즌 특별상`,
+        `${goals}골 기록한 골키퍼`,
+        `골키퍼가 팀 득점 1위`,
       ], seed);
     }
     // 클린시트 많음
@@ -127,8 +139,16 @@ export function generateSignature(input: SignatureInput): string {
         `무실점 ${cleanSheets}회, 뚫리지 않았다`,
       ], seed);
     }
-    // 수비 MOM 1위
-    if (isTopMvp && mvp > 0) {
+    // 출석 streak 8 이상 — "빠지지 않는 후방"
+    if (attendanceStreak >= 8) {
+      return pick([
+        `${attendanceStreak}경기 연속 출장 — 빠지지 않는 후방`,
+        `${attendanceStreak}경기 연속, 매 경기 그 자리에`,
+        `연속 ${attendanceStreak}경기 출장 — 후방의 기둥`,
+      ], seed);
+    }
+    // MOM 2회 이상 — 진짜 단독 1위 신호 (1회짜리 공동 1위 변별력 부재 문제 해결)
+    if (isTopMvp && mvp >= 2) {
       return pick([
         `${mvp}회 MOM — 수비의 주연`,
         `수비수가 MOM ${mvp}회`,
@@ -144,12 +164,20 @@ export function generateSignature(input: SignatureInput): string {
         `이 선수 출전 시 승률 ${winPct}%`,
       ], seed);
     }
-    // 높은 출석률 (수비수 꾸준함)
+    // 높은 출석률
     if (attendanceRate >= 0.9) {
       return pick([
         `${attPct}% 출석, 매 경기 그 자리에`,
         `출석률 ${attPct}% — 빠지지 않는 후방`,
         `${matchCount}경기 중 ${matchCount}번 뛴 시즌`,
+      ], seed);
+    }
+    // 수비수 어시 3개 이상 — 빌드업 기여
+    if (cat === "DEF" && assists >= 3) {
+      return pick([
+        `수비수가 ${assists}어시 — 빌드업 기여`,
+        `${assists}어시 기록한 수비수`,
+        `후방에서 ${assists}어시, 공격의 시발점`,
       ], seed);
     }
     // 일반
@@ -187,8 +215,16 @@ export function generateSignature(input: SignatureInput): string {
       `어시 ${assists}개, 팀 최다`,
     ], seed);
   }
-  // MOM 1위
-  if (isTopMvp && mvp > 0) {
+  // 출석 streak 8 이상 — "팀의 기둥"
+  if (attendanceStreak >= 8) {
+    return pick([
+      `${attendanceStreak}경기 연속 출장 — 팀의 기둥`,
+      `${attendanceStreak}경기 연속, 빠지지 않은 시즌`,
+      `연속 ${attendanceStreak}경기 출장, 매 경기 뛰었다`,
+    ], seed);
+  }
+  // MOM 2회 이상 (강화)
+  if (isTopMvp && mvp >= 2) {
     return pick([
       `${mvp}회 MOM — 시즌의 주인공`,
       `MOM ${mvp}회, 팀원 투표가 몰렸다`,
@@ -449,8 +485,19 @@ export function findBestMoments(history: MatchPerformance[]): BestMoment[] {
 
 /**
  * OVR 계산 (45~99 범위).
- * 포지션 카테고리별 가중치로 5개 지표를 평가한 뒤 경기 수 보정.
- * 원본: /api/player-card/route.ts — 공유 유틸로 이동.
+ *
+ * 설계 원칙 (2026-05-18 재설계):
+ * 1) 모든 지표를 0~1 정규화 — 카운트 지표(goals/assists/cleanSheet per game)는 cap 적용해
+ *    1경기 폭발이 OVR을 비현실적으로 끌어올리는 왜곡을 차단.
+ * 2) 실점 감점 완화 — 1점 실점에 0점 받던 구식 공식 → 4점 실점에 0점 (동호회 평균 2~3점 정상 작동).
+ * 3) 표본 보정 강화 — minGames 3→6, sqrt 곡선으로 점진 감점.
+ * 4) DEF에 골 보너스, MID에 공격P 보너스 — 수비수가 골 넣거나 미드가 공격P 쌓으면 가산점.
+ *
+ * 정규화 cap 기준값:
+ *   - goalsPerGame   ÷ 1.0   (경기당 1골 만점 — FW 평균 0.3~0.5)
+ *   - assistsPerGame ÷ 0.5   (경기당 0.5어시 만점)
+ *   - cleanSheetPerGame ÷ 0.4 (10경기 중 4번 무실점 만점)
+ *   - concededPerGame   ÷ 4   (실점 4점에 0점, 0점에 만점)
  */
 export function calculateOVR(
   cat: PositionCategory,
@@ -463,27 +510,32 @@ export function calculateOVR(
   concededPerGame: number,
   matchCount: number
 ): number {
-  const minGames = 3;
-  let raw: number;
+  const goalsContrib = Math.min(1, goalsPerGame / 1.0);
+  const assistsContrib = Math.min(1, assistsPerGame / 0.5);
+  const cleanSheetContrib = Math.min(1, cleanSheetPerGame / 0.4);
+  const concededContrib = Math.max(0, 1 - concededPerGame / 4);
+  const apContrib = Math.min(1, (goalsPerGame + assistsPerGame) / 1.0);
 
+  let raw: number;
   switch (cat) {
     case "FW":
-      raw = goalsPerGame * 30 + assistsPerGame * 20 + attendRate * 15 + mvpRate * 20 + winRate * 15;
+      raw = goalsContrib * 30 + assistsContrib * 15 + attendRate * 15 + mvpRate * 25 + winRate * 15;
       break;
     case "DEF":
-      raw = cleanSheetPerGame * 25 + Math.max(0, 1 - concededPerGame) * 20 + attendRate * 20 + mvpRate * 20 + winRate * 15;
+      raw = cleanSheetContrib * 15 + concededContrib * 20 + attendRate * 15 + mvpRate * 20 + winRate * 15 + goalsContrib * 15;
       break;
     case "GK":
-      raw = cleanSheetPerGame * 30 + Math.max(0, 1 - concededPerGame) * 25 + attendRate * 15 + mvpRate * 15 + winRate * 15;
+      raw = cleanSheetContrib * 25 + concededContrib * 30 + attendRate * 15 + mvpRate * 15 + winRate * 15;
       break;
     case "MID":
-      raw = assistsPerGame * 25 + goalsPerGame * 15 + attendRate * 15 + mvpRate * 25 + winRate * 20;
+      raw = assistsContrib * 20 + goalsContrib * 15 + attendRate * 15 + mvpRate * 25 + winRate * 15 + apContrib * 10;
       break;
     default:
-      raw = goalsPerGame * 20 + assistsPerGame * 20 + attendRate * 20 + mvpRate * 20 + winRate * 20;
+      raw = goalsContrib * 20 + assistsContrib * 20 + attendRate * 20 + mvpRate * 20 + winRate * 20;
   }
 
-  const gameScale = matchCount >= minGames ? 1 : matchCount / minGames;
+  // 표본 보정: 6경기 만점, 그 미만은 sqrt 곡선 감점
+  const gameScale = Math.min(1, Math.sqrt(matchCount / 6));
   raw = raw * gameScale;
 
   const ovr = Math.round(45 + (raw / 100) * 54);
