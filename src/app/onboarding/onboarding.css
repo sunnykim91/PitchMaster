@@ -1823,8 +1823,28 @@
 }
 .pm-statuspill:hover:not(:disabled) { background: hsl(var(--accent)); }
 .pm-statuspill.is-on {
-  border-color: hsl(var(--foreground) / 0.5);
-  background: hsl(var(--foreground) / 0.06);
+  border-color: hsl(var(--foreground));
+  background: hsl(var(--foreground) / 0.18);
+  font-weight: 700;
+  box-shadow: 0 0 0 1px hsl(var(--foreground) / 0.4);
+}
+.pm-statuspill--success.is-on {
+  background: hsl(var(--success) / 0.28);
+  border-color: hsl(var(--success));
+  color: hsl(var(--success));
+  font-weight: 700;
+  box-shadow: 0 0 0 1px hsl(var(--success) / 0.5), 0 4px 14px hsl(var(--success) / 0.22);
+}
+.pm-statuspill--info.is-on {
+  background: hsl(var(--info) / 0.28);
+  border-color: hsl(var(--info));
+  color: hsl(var(--info));
+  font-weight: 700;
+  box-shadow: 0 0 0 1px hsl(var(--info) / 0.5), 0 4px 14px hsl(var(--info) / 0.22);
+}
+.pm-statuspill--success.is-on .pm-statusdot,
+.pm-statuspill--info.is-on .pm-statusdot {
+  width: 8px; height: 8px;
 }
 .pm-statuspill:disabled { cursor: default; opacity: 0.6; }
 
@@ -2140,31 +2160,42 @@
 }
 .pm-role-card:hover { background: hsl(var(--accent) / 0.5); }
 .pm-role-card.is-on {
-  background: hsl(var(--hue) / 0.10);
-  border-color: hsl(var(--hue) / 0.55);
+  background: hsl(var(--hue) / 0.30);
+  border-color: hsl(var(--hue));
+  border-width: 2px;
+  padding: 13px 9px 11px;
+  box-shadow: 0 0 0 1px hsl(var(--hue) / 0.5), 0 6px 18px hsl(var(--hue) / 0.28);
 }
 .pm-role-card-label {
   font-family: var(--font-display);
   font-size: 14px;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: hsl(var(--foreground));
+  color: hsl(var(--muted-foreground));
 }
-.pm-role-card.is-on .pm-role-card-label { color: hsl(var(--hue)); }
+.pm-role-card.is-on .pm-role-card-label {
+  color: hsl(var(--hue));
+  font-weight: 700;
+}
 .pm-role-card-radio {
   position: absolute;
   top: 8px; right: 8px;
-  width: 16px; height: 16px;
+  width: 18px; height: 18px;
   border-radius: 50%;
-  border: 1.5px solid hsl(var(--border));
-  display: grid; place-items: center;
+  border: 2px solid hsl(var(--border));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 0;
 }
 .pm-role-card-radio span {
-  width: 7px; height: 7px;
+  width: 8px; height: 8px;
   border-radius: 50%;
   background: hsl(var(--hue));
   transform: scale(0);
   transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  display: block;
 }
 .pm-role-card.is-on .pm-role-card-radio { border-color: hsl(var(--hue)); }
 .pm-role-card.is-on .pm-role-card-radio span { transform: scale(1); }

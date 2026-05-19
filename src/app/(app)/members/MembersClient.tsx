@@ -5,7 +5,6 @@ import { createPortal } from "react-dom";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApi, apiMutate } from "@/lib/useApi";
-import { useConfirm } from "@/lib/ConfirmContext";
 import { useToast } from "@/lib/ToastContext";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { isPresident, isStaffOrAbove } from "@/lib/permissions";
@@ -72,54 +71,41 @@ const DORMANT_LABELS: Record<string, string> = {
   OTHER: "기타",
 };
 
-type FilterKey = "all" | "ACTIVE" | "DORMANT" | "INJURED" | "OTHER";
-type SortKey = "joined_desc" | "joined_asc" | "name_asc" | "name_desc";
+// 통합 필터 (옵션 C — single-select chip row, status·role 의미 혼합)
+type FilterKey = "all" | "ACTIVE" | "DORMANT" | "STAFF_PLUS" | "MEMBER_ONLY";
+type SortKey = "joined_desc" | "name_asc";
 
 const SORT_OPTS: Array<{ value: SortKey; label: string }> = [
   { value: "joined_desc", label: "최신순" },
-  { value: "joined_asc", label: "가입 ↑" },
   { value: "name_asc", label: "이름 가나다" },
-  { value: "name_desc", label: "이름 역순" },
 ];
 
 function sortMembers(arr: Member[], sort: SortKey): Member[] {
   const c = [...arr];
   switch (sort) {
-    case "joined_asc":
-      return c.sort((a, b) => (a.joinedAt || "").localeCompare(b.joinedAt || ""));
     case "joined_desc":
       return c.sort((a, b) => (b.joinedAt || "").localeCompare(a.joinedAt || ""));
     case "name_asc":
       return c.sort((a, b) => a.name.localeCompare(b.name, "ko"));
-    case "name_desc":
-      return c.sort((a, b) => b.name.localeCompare(a.name, "ko"));
     default:
       return c;
   }
 }
 
-type DisplayStatus = "ACTIVE" | "DORMANT" | "INJURED" | "OTHER";
-
-function displayStatus(m: Member): DisplayStatus {
-  if (m.status === "ACTIVE") return "ACTIVE";
-  if (m.dormantType === "INJURED") return "INJURED";
-  if (m.dormantType === "OTHER") return "OTHER";
-  return "DORMANT"; // PERSONAL 또는 사유 누락
+// 화면 표시용: 휴면 사유별 라벨·dot 구분 (필터는 ACTIVE/DORMANT 2종으로 단순화)
+function displayStatusDot(m: Member): "success" | "muted" | "warning" | "info" {
+  if (m.status === "ACTIVE") return "success";
+  if (m.dormantType === "INJURED") return "warning";
+  if (m.dormantType === "OTHER") return "info";
+  return "muted";
 }
 
-const STATUS_LABEL: Record<DisplayStatus, string> = {
-  ACTIVE: "활성",
-  DORMANT: "휴면",
-  INJURED: "부상",
-  OTHER: "기타",
-};
-
-const STATUS_DOT: Record<DisplayStatus, string> = {
-  ACTIVE: "success",
-  DORMANT: "muted",
-  INJURED: "warning",
-  OTHER: "info",
-};
+function displayStatusLabel(m: Member): string {
+  if (m.status === "ACTIVE") return "활성";
+  if (m.dormantType === "INJURED") return "부상";
+  if (m.dormantType === "OTHER") return "기타";
+  return "휴면";
+}
 
 const ROLE_HUE: Record<Role, "atk" | "def" | "neutral"> = {
   PRESIDENT: "atk",
@@ -150,7 +136,6 @@ export default function MembersClient({
 }) {
   const router = useRouter();
   const { showToast } = useToast();
-  const confirm = useConfirm();
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
 
@@ -204,32 +189,9 @@ export default function MembersClient({
   }
 
   async function handleRoleChange(memberId: string, newRole: Role) {
+    // V2 MemberEditModal의 inline confirm(pm-confirm)에서 이미 사용자 확인 받음 → 즉시 실행
     if (!canChangeRole) return;
-    const target = members.find((m) => m.id === memberId);
-    const targetName = target?.name ?? "해당 회원";
-
-    if (newRole === "PRESIDENT") {
-      const ok = await confirm({
-        title: `${targetName}님에게 회장을 이임할까요?`,
-        description:
-          "이임 후 본인은 자동으로 운영진(STAFF)으로 변경됩니다. 되돌리려면 새 회장이 본인을 다시 회장으로 변경해야 합니다.",
-        variant: "destructive",
-        confirmLabel: "회장 이임",
-      });
-      if (ok) doRoleChange(memberId, newRole);
-      return;
-    }
-
-    const roleLabel = newRole === "STAFF" ? "운영진(STAFF)" : "평회원(MEMBER)";
-    const ok = await confirm({
-      title: `${targetName}님을 ${roleLabel}으로 변경할까요?`,
-      description:
-        newRole === "MEMBER"
-          ? "운영진 권한(회비·회원·경기 관리)이 모두 사라집니다."
-          : "운영진 권한을 부여합니다. 회비·회원·경기 관리가 가능해집니다.",
-      confirmLabel: "변경",
-    });
-    if (ok) doRoleChange(memberId, newRole);
+    await doRoleChange(memberId, newRole);
   }
 
   async function handleKick(memberId: string) {
@@ -341,11 +303,22 @@ export default function MembersClient({
     await refetch();
   }
 
-  // 필터링 + 검색 + 정렬
+  // 필터링 + 검색 + 정렬 (single-select chip)
   const filtered = useMemo(() => {
     let list = members;
-    if (filter !== "all") {
-      list = list.filter((m) => displayStatus(m) === filter);
+    switch (filter) {
+      case "ACTIVE":
+        list = list.filter((m) => m.status === "ACTIVE");
+        break;
+      case "DORMANT":
+        list = list.filter((m) => m.status === "DORMANT");
+        break;
+      case "STAFF_PLUS":
+        list = list.filter((m) => m.role === "PRESIDENT" || m.role === "STAFF");
+        break;
+      case "MEMBER_ONLY":
+        list = list.filter((m) => m.role === "MEMBER");
+        break;
     }
     const q = searchQuery.trim();
     if (q) {
@@ -380,10 +353,18 @@ export default function MembersClient({
   }
 
   const counts = useMemo(() => {
-    const c = { all: members.length, ACTIVE: 0, DORMANT: 0, INJURED: 0, OTHER: 0 };
+    const c = {
+      all: members.length,
+      ACTIVE: 0,
+      DORMANT: 0,
+      STAFF_PLUS: 0,
+      MEMBER_ONLY: 0,
+    };
     members.forEach((m) => {
-      const s = displayStatus(m);
-      c[s] += 1;
+      if (m.status === "ACTIVE") c.ACTIVE += 1;
+      else if (m.status === "DORMANT") c.DORMANT += 1;
+      if (m.role === "PRESIDENT" || m.role === "STAFF") c.STAFF_PLUS += 1;
+      else if (m.role === "MEMBER") c.MEMBER_ONLY += 1;
     });
     return c;
   }, [members]);
@@ -606,42 +587,40 @@ export default function MembersClient({
               </div>
             )}
 
-            {/* Filter chips */}
+            {/* Filter chips — 통합 single-select row */}
             {members.length > 0 && (
               <div className="pm-filters">
                 <FilterChip
                   active={filter === "all"}
                   onClick={() => setFilter("all")}
                   label="전체"
-                  count={counts.all}
+                  count={filter === "all" ? counts.all : undefined}
                 />
                 <FilterChip
                   active={filter === "ACTIVE"}
                   onClick={() => setFilter("ACTIVE")}
                   label="활성"
-                  count={counts.ACTIVE}
+                  count={filter === "ACTIVE" ? counts.ACTIVE : undefined}
                   dot="success"
                 />
                 <FilterChip
                   active={filter === "DORMANT"}
                   onClick={() => setFilter("DORMANT")}
                   label="휴면"
-                  count={counts.DORMANT}
+                  count={filter === "DORMANT" ? counts.DORMANT : undefined}
                   dot="muted"
                 />
                 <FilterChip
-                  active={filter === "INJURED"}
-                  onClick={() => setFilter("INJURED")}
-                  label="부상"
-                  count={counts.INJURED}
-                  dot="warning"
+                  active={filter === "STAFF_PLUS"}
+                  onClick={() => setFilter("STAFF_PLUS")}
+                  label="운영진+"
+                  count={filter === "STAFF_PLUS" ? counts.STAFF_PLUS : undefined}
                 />
                 <FilterChip
-                  active={filter === "OTHER"}
-                  onClick={() => setFilter("OTHER")}
-                  label="기타"
-                  count={counts.OTHER}
-                  dot="info"
+                  active={filter === "MEMBER_ONLY"}
+                  onClick={() => setFilter("MEMBER_ONLY")}
+                  label="평회원"
+                  count={filter === "MEMBER_ONLY" ? counts.MEMBER_ONLY : undefined}
                 />
               </div>
             )}
@@ -760,7 +739,8 @@ export default function MembersClient({
 // MemberRow
 // ─────────────────────────────────────────────────────────────
 function MemberRow({ m, onClick }: { m: Member; onClick: () => void }) {
-  const status = displayStatus(m);
+  const dot = displayStatusDot(m);
+  const label = displayStatusLabel(m);
   const hue = ROLE_HUE[m.role];
   return (
     <button type="button" className="pm-mrow" onClick={onClick}>
@@ -783,13 +763,19 @@ function MemberRow({ m, onClick }: { m: Member; onClick: () => void }) {
           {m.role !== "MEMBER" && (
             <span className={`pm-rolebadge pm-hue--${hue}`}>{ROLE_LABEL[m.role]}</span>
           )}
+          {m.teamRole === "CAPTAIN" && (
+            <span className="pm-rolebadge pm-rolebadge--cap">주장</span>
+          )}
+          {m.teamRole === "VICE_CAPTAIN" && (
+            <span className="pm-rolebadge pm-rolebadge--vice">부주장</span>
+          )}
           {!m.isLinked && (
             <span className="pm-rolebadge pm-rolebadge--unlinked">미가입</span>
           )}
         </div>
         <div className="pm-mrow-meta">
-          <span className={`pm-statusdot pm-statusdot--${STATUS_DOT[status]}`} />
-          <span>{STATUS_LABEL[status]}</span>
+          <span className={`pm-statusdot pm-statusdot--${dot}`} />
+          <span>{label}</span>
           {m.phone && (
             <>
               <span className="pm-mrow-sep">·</span>
@@ -825,14 +811,14 @@ function FilterChip({
   active: boolean;
   onClick: () => void;
   label: string;
-  count: number;
+  count?: number;
   dot?: "success" | "warning" | "info" | "muted";
 }) {
   return (
     <button type="button" onClick={onClick} className={`pm-filter ${active ? "is-on" : ""}`}>
       {dot && <span className={`pm-statusdot pm-statusdot--${dot}`} />}
       <span>{label}</span>
-      <span className="pm-filter-count">{count}</span>
+      {count !== undefined && <span className="pm-filter-count">{count}</span>}
     </button>
   );
 }

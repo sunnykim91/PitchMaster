@@ -20,6 +20,7 @@ import "@/app/onboarding/onboarding.css";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { Role } from "@/lib/types";
+import { formatPhone } from "@/lib/utils";
 
 interface MemberLite {
   id: string;
@@ -173,7 +174,7 @@ function JerseySection({
   }, [initial]);
 
   const dirty = (initial == null ? "" : String(initial)) !== val;
-  const valid = val === "" || (/^\d{1,2}$/.test(val) && +val >= 1 && +val <= 99);
+  const valid = val === "" || (/^\d{1,3}$/.test(val) && +val >= 1 && +val <= 999);
 
   // 미저장 변경 시 페이지 이탈 경고
   useEffect(() => {
@@ -209,7 +210,7 @@ function JerseySection({
             type="text"
             inputMode="numeric"
             value={val}
-            onChange={(e) => setVal(e.target.value.replace(/[^\d]/g, "").slice(0, 2))}
+            onChange={(e) => setVal(e.target.value.replace(/[^\d]/g, "").slice(0, 3))}
             placeholder="-"
             aria-label="등번호"
           />
@@ -314,10 +315,10 @@ function TeamRoleSection({
   value: string | null;
   onChange: (v: string | null) => void;
 }) {
-  const opts: Array<{ v: string | null; label: string }> = [
+  const opts: Array<{ v: string | null; label: string; variant?: string }> = [
     { v: null, label: "일반 회원" },
-    { v: "CAPTAIN", label: "주장" },
-    { v: "VICE_CAPTAIN", label: "부주장" },
+    { v: "CAPTAIN", label: "주장", variant: "success" },
+    { v: "VICE_CAPTAIN", label: "부주장", variant: "info" },
   ];
   return (
     <EditSection
@@ -330,7 +331,7 @@ function TeamRoleSection({
           <button
             key={String(o.v)}
             type="button"
-            className={`pm-statuspill ${value === o.v ? "is-on" : ""}`}
+            className={`pm-statuspill ${o.variant ? `pm-statuspill--${o.variant}` : ""} ${value === o.v ? "is-on" : ""}`}
             onClick={() => onChange(o.v)}
           >
             {o.v === "CAPTAIN" && <span className="pm-statusdot pm-statusdot--success" />}
@@ -440,6 +441,7 @@ function DormantSection({
   const [type, setType] = useState<string>("INJURED");
   const [until, setUntil] = useState("");
   const [memo, setMemo] = useState("");
+  const [expanded, setExpanded] = useState(false);
 
   if (isDormant) {
     const r = DORMANT_REASONS.find((r) => r.value === dormantInfo.type);
@@ -483,6 +485,26 @@ function DormantSection({
   }
 
   const submit = () => onSet({ type, until, reason: memo });
+
+  // 활성 회원: 기본 접힘. "휴면 처리하기" 버튼만 노출
+  if (!expanded) {
+    return (
+      <EditSection num={num} label="휴면 처리">
+        <button
+          type="button"
+          className="pm-paste-secondary"
+          onClick={() => setExpanded(true)}
+          style={{ width: "100%" }}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+            <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.4" />
+            <path d="M7 4v3.5l2 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          </svg>
+          이 회원을 휴면으로 처리하기
+        </button>
+      </EditSection>
+    );
+  }
 
   return (
     <EditSection
@@ -833,7 +855,7 @@ export function MemberEditModal({
               )}
             </div>
             <div className="pm-edit-head-meta">
-              {member.phone && <>{member.phone}</>}
+              {member.phone && <>{formatPhone(member.phone)}</>}
               {member.birthDate && <> · {member.birthDate}</>}
               {member.jerseyNumber != null && <> · #{member.jerseyNumber}</>}
             </div>
