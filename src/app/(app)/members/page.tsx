@@ -12,6 +12,8 @@ export default async function MembersPage() {
       userId={session.user.id}
       initialData={initialData}
       teamId={session.user.teamId!}
+      teamName={session.user.teamName ?? ""}
+      inviteCode={session.user.inviteCode ?? ""}
     />
   );
 }

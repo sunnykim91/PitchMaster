@@ -397,7 +397,7 @@ export default function OnboardingClient({
         <Reveal delay={80}>
           <div className="pm-chip">
             <span className="pm-chip-dot" />
-            <span>STEP 01 · WELCOME</span>
+            <span>1단계 · 환영</span>
           </div>
         </Reveal>
 
@@ -428,7 +428,7 @@ export default function OnboardingClient({
 
           <Reveal delay={260} className="pm-card">
             <div className="pm-card-head">
-              <div className="pm-card-chip">PROFILE</div>
+              <div className="pm-card-chip">기본 정보</div>
               <div className="pm-card-title">기본 프로필</div>
             </div>
 
@@ -474,7 +474,7 @@ export default function OnboardingClient({
 
           <Reveal delay={320} className="pm-card">
             <div className="pm-card-head">
-              <div className="pm-card-chip">POSITIONS</div>
+              <div className="pm-card-chip">포지션</div>
               <div className="pm-card-title">
                 선호 포지션
                 <span className="pm-card-mode">{isFutsal ? "풋살" : "축구"}</span>

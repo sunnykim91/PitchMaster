@@ -783,7 +783,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
         {/* 헤더 */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Tactics</p>
+            <p className="text-xs font-bold tracking-[0.1em] text-primary">전술</p>
             <h3 className="mt-1 font-heading text-xl font-bold uppercase text-foreground">전술판 편성</h3>
           </div>
           {saving && <span className="text-xs text-muted-foreground animate-pulse">저장 중...</span>}

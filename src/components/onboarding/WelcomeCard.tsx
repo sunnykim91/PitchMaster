@@ -57,7 +57,7 @@ function Chip() {
   return (
     <div className="pm-chip pm-chip--inline">
       <span className="pm-chip-dot" />
-      <span>STEP 03 · START</span>
+      <span>3단계 · 시작</span>
     </div>
   );
 }
@@ -103,7 +103,7 @@ function WelcomeCreated({
 
       <div className="pm-invite">
         <div>
-          <div className="pm-invite-label">INVITE CODE</div>
+          <div className="pm-invite-label">초대 코드</div>
           <div className="pm-invite-code" aria-label={`초대 코드 ${inviteCode}`}>
             {inviteCode.split("").map((c, i) => (
               <span key={i}>{c}</span>
@@ -141,7 +141,7 @@ function WelcomeCreated({
       </div>
 
       <div className="pm-next">
-        <div className="pm-next-label">NEXT</div>
+        <div className="pm-next-label">다음 할 일</div>
         <div className="pm-next-actions">
           <Link className="pm-next-action" href="/members">
             <span className="pm-next-num">01</span>
@@ -215,7 +215,7 @@ function WelcomeJoined({
       )}
 
       <div className="pm-next">
-        <div className="pm-next-label">NEXT</div>
+        <div className="pm-next-label">다음 할 일</div>
         <div className="pm-next-actions">
           <Link
             className="pm-next-action"

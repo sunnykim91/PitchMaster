@@ -349,7 +349,7 @@ function MatchTimelineItem({ match, isLast }: { match: RecentMatch; isLast: bool
                   {resultLabels[match.result]}
                 </span>
                 {match.isHighlight && (
-                  <span className="text-[12px] text-[hsl(16,85%,58%)]">HIGHLIGHT</span>
+                  <span className="text-[12px] text-[hsl(16,85%,58%)]">하이라이트</span>
                 )}
               </div>
               <p className="text-base font-semibold text-white">

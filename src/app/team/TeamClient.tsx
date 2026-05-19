@@ -283,7 +283,7 @@ function CreateTeamForm() {
   return (
     <form action={createTeam} className="pm-card">
       <div className="pm-card-head">
-        <div className="pm-card-chip">CREATE</div>
+        <div className="pm-card-chip">새 팀 만들기</div>
         <div className="pm-card-title">새 팀 만들기</div>
         <div className="pm-card-hint">회장이 되어 회원을 초대할 수 있어요.</div>
       </div>
@@ -345,7 +345,7 @@ function InviteCodeForm({ defaultValue = "" }: { defaultValue?: string }) {
   return (
     <form action={joinTeam} className="pm-card">
       <div className="pm-card-head">
-        <div className="pm-card-chip">JOIN</div>
+        <div className="pm-card-chip">초대 코드로 합류</div>
         <div className="pm-card-title">초대 코드로 합류</div>
         <div className="pm-card-hint">회장에게 받은 6자리 코드를 입력하세요.</div>
       </div>
@@ -464,7 +464,7 @@ function SearchPanel() {
   return (
     <div className="pm-card">
       <div className="pm-card-head">
-        <div className="pm-card-chip">SEARCH</div>
+        <div className="pm-card-chip">팀 검색</div>
         <div className="pm-card-title">팀 검색해서 신청</div>
         <div className="pm-card-hint">회장이 신청을 승인하면 합류돼요.</div>
       </div>
@@ -662,7 +662,7 @@ export default function TeamClient({
         <Reveal delay={80}>
           <div className="pm-chip">
             <span className="pm-chip-dot" />
-            <span>STEP 02 · TEAM</span>
+            <span>2단계 · 팀 선택</span>
           </div>
         </Reveal>
 

@@ -1,89 +1,134 @@
 "use client";
 
 /**
- * MemberBulkUploadModal — 회원 일괄 사전 등록 모달
+ * MemberBulkUploadModal — 회원 일괄 사전 등록 모달 (시안 v2)
  *
- * 두 가지 입력 방식:
- *  - paste: 텍스트 박스에 한 줄당 한 명 (이름 또는 "이름 010-1234-5678")
- *  - CSV: 파일 업로드 (header: 이름,전화번호 또는 자동 감지)
- *
- * 미리보기 표 → 검증 결과 표시 → [등록] 클릭으로 일괄 INSERT.
+ * 3-step paste → review → done.
+ *   paste:  카톡 명단 textarea + 자동 파싱(이름·전화)
+ *   review: 행별 이름·전화 수정 + 삭제
+ *   done:   N명 등록 완료 + NEXT 액션 (초대 코드 공유 · 첫 경기 만들기)
  *
  * 권한: PRESIDENT (MembersClient에서 가드)
+ * API:  POST /api/members/bulk
  */
 
-import { useEffect, useState, useMemo } from "react";
+import "@/app/onboarding/onboarding.css";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Upload, FileText, AlertCircle, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { useRouter } from "next/navigation";
 import { apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
-import { cn } from "@/lib/utils";
+import { shareTeamInvite } from "@/lib/kakaoShare";
 
-interface ParsedRow {
+type ParsedRow = {
   name: string;
-  phone: string | null;
-  rawLine: string;
-  warning?: string;
-}
+  phone: string;
+  dup: boolean;
+};
+
+type ReviewRow = {
+  name: string;
+  phone: string;
+};
+
+type InputMode = "manual" | "file";
 
 interface BulkUploadModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  teamName?: string;
+  inviteCode?: string;
 }
 
-type Mode = "paste" | "csv";
+const PHONE_RE = /(01[016789][- ]?\d{3,4}[- ]?\d{4})/;
 
-const PHONE_REGEX = /(?:^|\s|,)(\d{3}[\s-]?\d{3,4}[\s-]?\d{4})/;
-
-function parseLine(line: string): ParsedRow | null {
-  const trimmed = line.trim();
-  if (!trimmed) return null;
-  // 전화번호 추출
-  const phoneMatch = trimmed.match(PHONE_REGEX);
-  let phone: string | null = null;
-  let nameCandidate = trimmed;
-  if (phoneMatch) {
-    phone = phoneMatch[1].replace(/\D/g, "");
-    nameCandidate = trimmed.replace(phoneMatch[0], "").trim();
-  }
-  // 콤마/탭 분리 — 첫 토큰 이름, 나머지 무시
-  nameCandidate = nameCandidate.split(/[,\t]/)[0].trim();
-  if (!nameCandidate) {
-    return { name: "", phone, rawLine: trimmed, warning: "이름 누락" };
-  }
-  return { name: nameCandidate, phone, rawLine: trimmed };
+function formatPhone(p: string) {
+  const digits = p.replace(/\D/g, "");
+  if (digits.length === 11) return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+  if (digits.length === 10) return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  return p;
 }
 
 function parseCsv(text: string): ParsedRow[] {
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   if (lines.length === 0) return [];
-  // header 자동 감지 (이름·전화번호 키워드)
+  // 헤더 자동 감지 (이름·전화/phone 키워드)
   const first = lines[0].toLowerCase();
   const hasHeader = /이름|name/.test(first) && /전화|phone|번호/.test(first);
   const dataLines = hasHeader ? lines.slice(1) : lines;
-  return dataLines
-    .map((line) => {
-      const cols = line.split(",").map((c) => c.trim());
-      const name = cols[0] ?? "";
-      const phoneRaw = cols[1] ?? "";
-      const phone = phoneRaw ? phoneRaw.replace(/\D/g, "") || null : null;
-      if (!name) return { name: "", phone, rawLine: line, warning: "이름 누락" };
-      return { name, phone, rawLine: line };
-    })
-    .filter((r): r is ParsedRow => r !== null);
+  const rows: ParsedRow[] = [];
+  const seen = new Set<string>();
+  for (const line of dataLines) {
+    const cols = line.split(/[,\t]/).map((c) => c.trim());
+    const name = cols[0] ?? "";
+    if (!name) continue;
+    const phoneRaw = cols[1] ?? "";
+    const phone = phoneRaw ? formatPhone(phoneRaw) : "";
+    const key = phone || name;
+    if (seen.has(key)) {
+      rows.push({ name, phone, dup: true });
+    } else {
+      seen.add(key);
+      rows.push({ name, phone, dup: false });
+    }
+  }
+  return rows;
 }
 
-export function MemberBulkUploadModal({ open, onClose, onSuccess }: BulkUploadModalProps) {
+function parseManualInput(raw: string): ParsedRow[] {
+  const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const rows: ParsedRow[] = [];
+  const seen = new Set<string>();
+  for (const line of lines) {
+    const stripped = line.replace(/^[\d]+[.)]\s*/, "").trim();
+    if (!stripped) continue;
+    const phoneMatch = stripped.match(PHONE_RE);
+    let phone = "";
+    let name = stripped;
+    if (phoneMatch) {
+      phone = formatPhone(phoneMatch[1]);
+      name = stripped
+        .replace(phoneMatch[1], "")
+        .replace(/[,·]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    } else {
+      name = stripped.replace(/[,·]/g, " ").trim();
+    }
+    if (!name) continue;
+    const key = phone || name;
+    if (seen.has(key)) {
+      rows.push({ name, phone, dup: true });
+    } else {
+      seen.add(key);
+      rows.push({ name, phone, dup: false });
+    }
+  }
+  return rows;
+}
+
+type Step = "paste" | "review" | "done";
+
+export function MemberBulkUploadModal({
+  open,
+  onClose,
+  onSuccess,
+  teamName,
+  inviteCode,
+}: BulkUploadModalProps) {
   const { showToast } = useToast();
-  const [mode, setMode] = useState<Mode>("paste");
-  const [pasteText, setPasteText] = useState("");
-  const [csvFileName, setCsvFileName] = useState<string | null>(null);
-  const [csvRows, setCsvRows] = useState<ParsedRow[]>([]);
-  const [submitting, setSubmitting] = useState(false);
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [step, setStep] = useState<Step>("paste");
+  const [mode, setMode] = useState<InputMode>("manual");
+  const [raw, setRaw] = useState("");
+  const [fileRows, setFileRows] = useState<ParsedRow[]>([]);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [rows, setRows] = useState<ReviewRow[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [createdCount, setCreatedCount] = useState(0);
 
   useEffect(() => {
     setMounted(true);
@@ -100,62 +145,62 @@ export function MemberBulkUploadModal({ open, onClose, onSuccess }: BulkUploadMo
 
   useEffect(() => {
     if (!open) {
-      // close 시 상태 reset
-      setPasteText("");
-      setCsvFileName(null);
-      setCsvRows([]);
+      setStep("paste");
+      setMode("manual");
+      setRaw("");
+      setFileRows([]);
+      setFileName(null);
+      setFileError(null);
+      setRows([]);
       setSubmitting(false);
-      setMode("paste");
+      setCreatedCount(0);
     }
   }, [open]);
 
-  // 파싱 결과
-  const parsedRows = useMemo(() => {
-    if (mode === "paste") {
-      return pasteText
-        .split(/\r?\n/)
-        .map((line) => parseLine(line))
-        .filter((r): r is ParsedRow => r !== null);
-    }
-    return csvRows;
-  }, [mode, pasteText, csvRows]);
+  const parsed = useMemo(
+    () => (mode === "manual" ? parseManualInput(raw) : fileRows),
+    [mode, raw, fileRows],
+  );
+  const validCount = parsed.filter((r) => !r.dup).length;
+  const dupCount = parsed.length - validCount;
 
-  const validCount = parsedRows.filter((r) => r.name && !r.warning).length;
-  const errorCount = parsedRows.filter((r) => r.warning || !r.name).length;
-
-  async function handleCsvFile(file: File) {
-    setCsvFileName(file.name);
+  async function handleFile(file: File) {
+    setFileName(file.name);
+    setFileError(null);
     const lower = file.name.toLowerCase();
-    // xlsx/xls — 동적 import로 처리 (서버 번들 영향 없음)
-    if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
-      try {
+    try {
+      if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
         const XLSX = await import("xlsx");
         const buf = await file.arrayBuffer();
         const wb = XLSX.read(buf, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const csv = XLSX.utils.sheet_to_csv(ws);
-        setCsvRows(parseCsv(csv));
-      } catch (err) {
-        showToast(err instanceof Error ? err.message : "엑셀 파싱 실패", "error");
-        setCsvRows([]);
+        setFileRows(parseCsv(csv));
+      } else {
+        const text = await file.text();
+        setFileRows(parseCsv(text));
       }
-      return;
+    } catch (err) {
+      setFileError(err instanceof Error ? err.message : "파일 파싱 실패");
+      setFileRows([]);
     }
-    // csv / txt — 텍스트 그대로
-    const text = await file.text();
-    setCsvRows(parseCsv(text));
   }
 
-  async function handleSubmit() {
-    if (validCount === 0) {
+  const goReview = () => {
+    setRows(parsed.filter((r) => !r.dup).map((r) => ({ name: r.name, phone: r.phone })));
+    setStep("review");
+  };
+
+  async function submit() {
+    if (rows.length === 0) {
       showToast("등록할 회원이 없습니다", "error");
       return;
     }
     setSubmitting(true);
-    const entries = parsedRows
-      .filter((r) => r.name && !r.warning)
-      .map((r) => ({ name: r.name, phone: r.phone }));
-
+    const entries = rows.map((r) => ({
+      name: r.name.trim(),
+      phone: r.phone.trim() || null,
+    }));
     const { data, error } = await apiMutate<{
       created: number;
       skipped: { name: string; phone: string | null; reason: string }[];
@@ -165,170 +210,360 @@ export function MemberBulkUploadModal({ open, onClose, onSuccess }: BulkUploadMo
     setSubmitting(false);
 
     if (error) {
-      showToast(error, "error");
+      showToast(typeof error === "string" ? error : "등록에 실패했습니다", "error");
       return;
     }
 
-    const msgs: string[] = [];
-    if (data?.created) msgs.push(`${data.created}명 등록`);
-    if (data?.skipped?.length) msgs.push(`${data.skipped.length}명 중복 건너뜀`);
-    if (data?.errors?.length) msgs.push(`${data.errors.length}명 검증 실패`);
-    showToast(msgs.join(" · ") || "처리 완료", data?.created ? "success" : "info");
+    const created = data?.created ?? 0;
+    const skipped = data?.skipped?.length ?? 0;
+    const errors = data?.errors?.length ?? 0;
+    setCreatedCount(created);
+
+    if (skipped > 0 || errors > 0) {
+      const msgs: string[] = [];
+      msgs.push(`${created}명 등록`);
+      if (skipped) msgs.push(`${skipped}명 중복 건너뜀`);
+      if (errors) msgs.push(`${errors}명 검증 실패`);
+      showToast(msgs.join(" · "), created > 0 ? "success" : "info");
+    }
+
     onSuccess();
+    setStep("done");
+  }
+
+  const updateRow = (i: number, patch: Partial<ReviewRow>) =>
+    setRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  const removeRow = (i: number) => setRows((rs) => rs.filter((_, idx) => idx !== i));
+
+  function handleShareInvite() {
+    if (!inviteCode) {
+      router.push("/settings");
+      return;
+    }
+    shareTeamInvite({ teamName: teamName || "우리 팀", inviteCode });
+  }
+
+  function handleCreateMatch() {
     onClose();
+    router.push("/matches");
   }
 
   if (!mounted || !open) return null;
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 sm:items-center"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-    >
-      <div
-        className="relative flex w-full max-h-[90vh] flex-col overflow-hidden rounded-t-2xl bg-background shadow-2xl sm:rounded-2xl"
-        style={{ maxWidth: "min(100vw, 540px)" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* 헤더 */}
-        <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3 border-b border-border/40">
-          <div>
-            <h2 className="text-base font-bold leading-tight">회원 일괄 등록</h2>
-            <p className="mt-1 text-[12.5px] text-muted-foreground">
-              한 번에 최대 200명까지. 가입 안 한 팀원도 미리 추가할 수 있어요.
-            </p>
+    <div className="pm-modal-scrim" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="pm-modal" onClick={(e) => e.stopPropagation()}>
+        <header className="pm-modal-head">
+          <div className="pm-modal-steps">
+            {(["paste", "review", "done"] as Step[]).map((s, i) => {
+              const order = ["paste", "review", "done"] as Step[];
+              const cur = order.indexOf(step);
+              const klass =
+                step === s ? "is-on" : cur > i ? "is-done" : "";
+              return <span key={s} className={`pm-mstep ${klass}`} />;
+            })}
           </div>
           <button
             type="button"
+            className="pm-welcome-close"
             onClick={onClose}
             aria-label="닫기"
-            className="-mr-1 -mt-1 shrink-0 rounded-full p-2 hover:bg-secondary"
+            style={{ position: "static" }}
           >
-            <X className="h-4 w-4" />
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+              <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
           </button>
-        </div>
+        </header>
 
-        {/* 모드 토글 */}
-        <div className="flex gap-1 mx-5 mt-3 p-1 rounded-lg bg-secondary shrink-0">
-          <button
-            type="button"
-            onClick={() => setMode("paste")}
-            className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[13px] font-semibold transition-colors",
-              mode === "paste" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-            )}
-          >
-            <FileText className="h-3.5 w-3.5" />
-            붙여넣기
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("csv")}
-            className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[13px] font-semibold transition-colors",
-              mode === "csv" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-            )}
-          >
-            <Upload className="h-3.5 w-3.5" />
-            CSV 업로드
-          </button>
-        </div>
-
-        {/* 본문 */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-          {mode === "paste" ? (
-            <div className="space-y-2">
-              <p className="text-[13px] text-muted-foreground leading-[1.55]">
-                한 줄에 한 명씩. 이름만 또는 <b className="text-foreground">이름과 전화번호</b>를 같이 적으세요.
-              </p>
-              <Textarea
-                value={pasteText}
-                onChange={(e) => setPasteText(e.target.value)}
-                placeholder={"홍길동 010-1234-5678\n김철수\n이영희, 010-9999-8888"}
-                className="min-h-[180px] font-mono text-sm"
-              />
+        {step === "paste" && (
+          <>
+            <div className="pm-chip" style={{ marginTop: 2 }}>
+              <span className="pm-chip-dot" />
+              <span>1단계 · 명단 입력</span>
             </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-[13px] text-muted-foreground leading-[1.55]">
-                첫 줄에 <b className="text-foreground">이름,전화번호</b> 헤더가 있으면 자동 인식. 없으면 첫 번째 컬럼 = 이름, 두 번째 = 전화번호로 처리.
-              </p>
-              <label
-                className="block cursor-pointer rounded-xl border-2 border-dashed border-border bg-secondary/40 px-4 py-6 text-center transition-colors hover:border-primary/50"
+            <h2 className="pm-modal-h">
+              팀원 명단을<br />
+              추가하세요.
+            </h2>
+            <p className="pm-sub">
+              엑셀·CSV 파일을 올리거나, 한 줄씩 직접 입력할 수 있어요.
+              <br />
+              이름과 전화번호가 자동으로 인식돼요.
+            </p>
+
+            {/* 모드 토글 */}
+            <div className="pm-seg" role="radiogroup" aria-label="입력 방식">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={mode === "manual"}
+                className={`pm-seg-opt ${mode === "manual" ? "is-on" : ""}`}
+                onClick={() => setMode("manual")}
               >
-                <Upload className="mx-auto h-6 w-6 text-muted-foreground" />
-                <p className="mt-2 text-sm font-medium">
-                  {csvFileName ?? "파일 선택"}
+                직접 입력
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={mode === "file"}
+                className={`pm-seg-opt ${mode === "file" ? "is-on" : ""}`}
+                onClick={() => setMode("file")}
+              >
+                파일 업로드
+              </button>
+            </div>
+
+            {mode === "manual" ? (
+              <textarea
+                className="pm-paste-ta"
+                value={raw}
+                onChange={(e) => setRaw(e.target.value)}
+                placeholder={`한 줄에 한 명씩 입력하세요\n\n예시\n1. 김선휘 010-1234-5678\n2. 박지훈 010-2345-6789\n3. 이상민 01034567890`}
+                rows={9}
+              />
+            ) : (
+              <label
+                style={{
+                  display: "block",
+                  cursor: "pointer",
+                  borderRadius: 14,
+                  border: "2px dashed hsl(var(--border))",
+                  background: "hsl(var(--background) / 0.5)",
+                  padding: "20px 16px",
+                  textAlign: "center",
+                  transition: "border-color 200ms, background 200ms",
+                }}
+              >
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 28 28"
+                  fill="none"
+                  aria-hidden
+                  style={{ margin: "0 auto", display: "block", color: "hsl(var(--muted-foreground))" }}
+                >
+                  <path
+                    d="M14 4v14M8 10l6-6 6 6M5 22h18"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <p
+                  style={{
+                    margin: "10px 0 4px",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "hsl(var(--foreground))",
+                    letterSpacing: "-0.005em",
+                  }}
+                >
+                  {fileName ?? "파일 선택하기"}
                 </p>
-                <p className="mt-1 text-[12px] text-muted-foreground">.xlsx · .xls · .csv · .txt 지원</p>
+                <p style={{ margin: 0, fontSize: 11.5, color: "hsl(var(--muted-foreground))", letterSpacing: "-0.005em" }}>
+                  .xlsx · .xls · .csv · .txt — 첫 줄에 이름·전화번호 헤더 자동 인식
+                </p>
                 <input
                   type="file"
                   accept=".csv,.txt,.xlsx,.xls,text/csv,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                  className="hidden"
+                  style={{ display: "none" }}
                   onChange={(e) => {
                     const f = e.target.files?.[0];
-                    if (f) handleCsvFile(f);
+                    if (f) handleFile(f);
                   }}
                 />
               </label>
-            </div>
-          )}
+            )}
 
-          {/* 미리보기 */}
-          {parsedRows.length > 0 && (
-            <div className="rounded-lg border border-border overflow-hidden">
-              <div className="flex items-center justify-between px-3 py-2 bg-secondary/40 text-[12.5px] font-semibold">
-                <span>미리보기 ({parsedRows.length}명)</span>
-                <span className="text-muted-foreground">
-                  <span className="text-[hsl(var(--success))]">✓ {validCount}</span>
-                  {errorCount > 0 && <> · <span className="text-destructive">⚠ {errorCount}</span></>}
+            {fileError && mode === "file" && <p className="pm-help pm-help--err">{fileError}</p>}
+
+            <div className="pm-paste-status">
+              {parsed.length === 0 ? (
+                <span className="pm-paste-status-text">
+                  {mode === "manual" ? "입력을 기다리고 있어요" : "파일을 선택해주세요"}
                 </span>
-              </div>
-              <div className="max-h-[240px] overflow-y-auto divide-y divide-border/40">
-                {parsedRows.map((row, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-2 text-[13px]",
-                      row.warning ? "bg-destructive/5" : ""
-                    )}
-                  >
-                    {row.warning ? (
-                      <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
-                    ) : (
-                      <Check className="h-4 w-4 shrink-0 text-[hsl(var(--success))]" />
-                    )}
-                    <span className="font-medium">{row.name || <em className="text-destructive">(이름 없음)</em>}</span>
-                    {row.phone && (
-                      <span className="ml-auto text-muted-foreground tabular-nums text-[12.5px]">
-                        {row.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, "$1-$2-$3")}
-                      </span>
-                    )}
-                    {row.warning && (
-                      <span className="ml-auto text-[11.5px] text-destructive">{row.warning}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
+              ) : (
+                <>
+                  <span className="pm-paste-pill pm-paste-pill--ok">{validCount}명 인식</span>
+                  {dupCount > 0 && (
+                    <span className="pm-paste-pill pm-paste-pill--mute">중복 {dupCount}건</span>
+                  )}
+                </>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* 하단 액션 */}
-        <div className="px-5 py-3 border-t border-border/40 shrink-0 flex gap-2">
-          <Button onClick={onClose} variant="outline" className="flex-1">
-            취소
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={submitting || validCount === 0}
-            className="flex-1"
-          >
-            {submitting ? "등록 중..." : `${validCount}명 등록`}
-          </Button>
-        </div>
+            <button type="button" className="pm-cta" disabled={validCount === 0} onClick={goReview}>
+              {validCount > 0 ? `${validCount}명 확인하기` : "계속하기"}
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
+                <path
+                  d="M3 8 L13 8 M9 4 L13 8 L9 12"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <p className="pm-cta-sub">잘못 인식된 회원은 다음 화면에서 수정할 수 있어요.</p>
+          </>
+        )}
+
+        {step === "review" && (
+          <>
+            <div className="pm-chip" style={{ marginTop: 2 }}>
+              <span className="pm-chip-dot" />
+              <span>2단계 · 확인</span>
+            </div>
+            <h2 className="pm-modal-h">
+              <strong>{rows.length}명</strong>을 인식했어요.
+            </h2>
+            <p className="pm-sub">
+              잘못 인식된 회원은 등록 전에 수정할 수 있어요.
+              <br />
+              가입 전이라도 출석·회비 기록이 가능해요.
+            </p>
+
+            <div className="pm-review-list">
+              {rows.map((r, i) => (
+                <div key={i} className="pm-review-row">
+                  <input
+                    className="pm-review-input pm-review-input--name"
+                    value={r.name}
+                    onChange={(e) => updateRow(i, { name: e.target.value })}
+                    placeholder="이름"
+                  />
+                  <input
+                    className="pm-review-input pm-review-input--phone"
+                    value={r.phone}
+                    onChange={(e) => updateRow(i, { phone: e.target.value })}
+                    placeholder="010-0000-0000"
+                    inputMode="numeric"
+                  />
+                  <button
+                    type="button"
+                    className="pm-review-del"
+                    onClick={() => removeRow(i)}
+                    aria-label="제외"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                      <path
+                        d="M3 3l8 8M11 3l-8 8"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="pm-review-bar">
+              <button type="button" className="pm-review-back" onClick={() => setStep("paste")}>
+                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                  <path
+                    d="M9 3 5 7l4 4"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                돌아가기
+              </button>
+              <button
+                type="button"
+                className="pm-cta"
+                onClick={submit}
+                style={{ flex: 1 }}
+                disabled={rows.length === 0 || submitting}
+              >
+                {submitting ? "등록 중..." : `${rows.length}명 등록하기`}
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === "done" && (
+          <div className="pm-done">
+            <div className="pm-done-icon" aria-hidden>
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <circle cx="14" cy="14" r="12" stroke="currentColor" strokeWidth="1.6" />
+                <path
+                  d="m9 14 3.5 3.5L20 10"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <div className="pm-chip" style={{ marginTop: 0 }}>
+              <span className="pm-chip-dot" />
+              <span>3단계 · 완료</span>
+            </div>
+            <h2 className="pm-modal-h pm-modal-h--center">
+              <strong>{createdCount}명</strong> 등록 완료.
+              <br />
+              이제 시작이에요.
+            </h2>
+            <p className="pm-sub" style={{ textAlign: "center" }}>
+              가입 알림을 단톡방에 공유하면
+              <br />
+              회원들이 빠르게 합류할 수 있어요.
+            </p>
+
+            <div className="pm-next-actions" style={{ width: "100%" }}>
+              <button
+                type="button"
+                className="pm-next-action"
+                onClick={handleShareInvite}
+                style={{ cursor: "pointer", width: "100%", textAlign: "left" }}
+              >
+                <span className="pm-next-num">01</span>
+                <span>초대 코드 공유하기</span>
+                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                  <path
+                    d="M3 7h8M8 4l3 3-3 3"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="pm-next-action"
+                onClick={handleCreateMatch}
+                style={{ cursor: "pointer", width: "100%", textAlign: "left" }}
+              >
+                <span className="pm-next-num">02</span>
+                <span>첫 경기 만들기</span>
+                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                  <path
+                    d="M3 7h8M8 4l3 3-3 3"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <button type="button" className="pm-paste-secondary" onClick={onClose}>
+              나중에 하기
+            </button>
+          </div>
+        )}
       </div>
     </div>,
     document.body

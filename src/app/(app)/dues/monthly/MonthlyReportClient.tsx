@@ -167,11 +167,11 @@ export default function MonthlyReportClient({ teamName }: { teamName: string }) 
         {/* 카드 헤더 — 공유 이미지에 포함될 브랜딩 */}
         <div className="flex items-center justify-between border-b border-border/50 pb-3">
           <div>
-            <div className="text-[12.5px] uppercase tracking-wider text-muted-foreground">Monthly Report</div>
+            <div className="text-[12.5px] tracking-wider text-muted-foreground">월별 결산</div>
             <div className="font-heading text-xl font-bold">{teamName}</div>
           </div>
           <div className="text-right">
-            <div className="text-[12.5px] uppercase tracking-wider text-muted-foreground">Period</div>
+            <div className="text-[12.5px] tracking-wider text-muted-foreground">기간</div>
             <div className="font-heading text-xl font-bold text-primary">{ymLabel(ym)}</div>
           </div>
         </div>

@@ -1,34 +1,24 @@
 "use client";
 
-import Link from "next/link";
+import "@/app/onboarding/onboarding.css";
+import { createPortal } from "react-dom";
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useApi, apiMutate } from "@/lib/useApi";
-import type { DetailedPosition, Role } from "@/lib/types";
+import { useConfirm } from "@/lib/ConfirmContext";
+import { useToast } from "@/lib/ToastContext";
+import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { isPresident, isStaffOrAbove } from "@/lib/permissions";
 import { GA } from "@/lib/analytics";
-import { useViewAsRole } from "@/lib/ViewAsRoleContext";
-import { useToast } from "@/lib/ToastContext";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PhoneInput } from "@/components/ui/phone-input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn, formatPhone, compactKakaoImage } from "@/lib/utils";
-import { NativeSelect } from "@/components/ui/native-select";
-import { Search } from "lucide-react";
-import { EmptyState } from "@/components/EmptyState";
+import type { DetailedPosition, Role } from "@/lib/types";
+import { formatPhone } from "@/lib/utils";
 import { MemberBulkUploadModal } from "@/components/MemberBulkUploadModal";
 import { MemberEditModal } from "@/components/MemberEditModal";
-import { Users, ChevronDown } from "lucide-react";
-import { useConfirm } from "@/lib/ConfirmContext";
+import type { ApiMemberRow, MembersInitialData } from "./initialData.types";
 
 type Member = {
   id: string;
-  userIdRaw: string | null; // team_members.user_id (본인 식별용)
+  userIdRaw: string | null;
   name: string;
   role: Role;
   preferredPositions: DetailedPosition[];
@@ -36,7 +26,7 @@ type Member = {
   phone: string;
   birthDate: string;
   status: string;
-  isLinked: boolean; // user_id가 있는지
+  isLinked: boolean;
   preName: string | null;
   prePhone: string | null;
   coachPositions: string[];
@@ -48,8 +38,6 @@ type Member = {
   dormantReason: string | null;
   profileImageUrl: string | null;
 };
-
-import type { ApiMemberRow, MembersInitialData } from "./initialData.types";
 
 function mapApiMembers(rows: ApiMemberRow[]): Member[] {
   return rows.map((row) => ({
@@ -76,138 +64,122 @@ function mapApiMembers(rows: ApiMemberRow[]): Member[] {
   }));
 }
 
-const roleLabels: Record<Role, string> = {
+const POSITIONS = ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"];
+
+const DORMANT_LABELS: Record<string, string> = {
+  INJURED: "부상",
+  PERSONAL: "개인사정",
+  OTHER: "기타",
+};
+
+type FilterKey = "all" | "ACTIVE" | "DORMANT" | "INJURED" | "OTHER";
+type SortKey = "joined_desc" | "joined_asc" | "name_asc" | "name_desc";
+
+const SORT_OPTS: Array<{ value: SortKey; label: string }> = [
+  { value: "joined_desc", label: "최신순" },
+  { value: "joined_asc", label: "가입 ↑" },
+  { value: "name_asc", label: "이름 가나다" },
+  { value: "name_desc", label: "이름 역순" },
+];
+
+function sortMembers(arr: Member[], sort: SortKey): Member[] {
+  const c = [...arr];
+  switch (sort) {
+    case "joined_asc":
+      return c.sort((a, b) => (a.joinedAt || "").localeCompare(b.joinedAt || ""));
+    case "joined_desc":
+      return c.sort((a, b) => (b.joinedAt || "").localeCompare(a.joinedAt || ""));
+    case "name_asc":
+      return c.sort((a, b) => a.name.localeCompare(b.name, "ko"));
+    case "name_desc":
+      return c.sort((a, b) => b.name.localeCompare(a.name, "ko"));
+    default:
+      return c;
+  }
+}
+
+type DisplayStatus = "ACTIVE" | "DORMANT" | "INJURED" | "OTHER";
+
+function displayStatus(m: Member): DisplayStatus {
+  if (m.status === "ACTIVE") return "ACTIVE";
+  if (m.dormantType === "INJURED") return "INJURED";
+  if (m.dormantType === "OTHER") return "OTHER";
+  return "DORMANT"; // PERSONAL 또는 사유 누락
+}
+
+const STATUS_LABEL: Record<DisplayStatus, string> = {
+  ACTIVE: "활성",
+  DORMANT: "휴면",
+  INJURED: "부상",
+  OTHER: "기타",
+};
+
+const STATUS_DOT: Record<DisplayStatus, string> = {
+  ACTIVE: "success",
+  DORMANT: "muted",
+  INJURED: "warning",
+  OTHER: "info",
+};
+
+const ROLE_HUE: Record<Role, "atk" | "def" | "neutral"> = {
+  PRESIDENT: "atk",
+  STAFF: "def",
+  MEMBER: "neutral",
+};
+
+const ROLE_LABEL: Record<Role, string> = {
   PRESIDENT: "회장",
   STAFF: "운영진",
-  MEMBER: "평회원",
+  MEMBER: "회원",
 };
 
 export default function MembersClient({
   userRole,
   userId,
   initialData,
-  teamId,
+  teamId: _teamId,
+  teamName,
+  inviteCode,
 }: {
   userRole?: Role;
   userId: string;
   initialData?: MembersInitialData;
   teamId: string;
+  teamName?: string;
+  inviteCode?: string;
 }) {
+  const router = useRouter();
+  const { showToast } = useToast();
+  const confirm = useConfirm();
+  const { effectiveRole } = useViewAsRole();
+  const role = effectiveRole(userRole);
+
   const { data: membersData, loading, error, refetch } = useApi<MembersInitialData>(
     "/api/members",
     initialData ?? { members: [], isStaff: false, sportType: null },
     { skip: !!initialData },
   );
   const members = useMemo(() => mapApiMembers(membersData.members), [membersData.members]);
-  const confirm = useConfirm();
-  const { effectiveRole } = useViewAsRole();
-  const role = effectiveRole(userRole);
-  const { showToast } = useToast();
 
   const canChangeRole = isPresident(role);
   const canKick = isPresident(role);
-  const canViewAll = isStaffOrAbove(role);
   const canPreRegister = isStaffOrAbove(role);
+  const canBulk = isPresident(role);
 
-  // 사전 등록 폼
-  const [showRegForm, setShowRegForm] = useState(false);
+  const searchParams = useSearchParams();
+  const [showBulk, setShowBulk] = useState(() => searchParams.get("bulk") === "true");
+  const [showSingleAdd, setShowSingleAdd] = useState(false);
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<FilterKey>("all");
+  const [sort, setSort] = useState<SortKey>("joined_desc");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [kickingId, setKickingId] = useState<string | null>(null);
+  const [changingRoleId, setChangingRoleId] = useState<string | null>(null);
+
+  // 사전 등록 단건 (PRESIDENT/STAFF) — 시안 mini modal
   const [regName, setRegName] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [regSubmitting, setRegSubmitting] = useState(false);
-
-  // 사전 등록 입력 중 페이지 이탈 경고
-  useEffect(() => {
-    if (!regName.trim() && !regPhone.trim()) return;
-    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [regName, regPhone]);
-  // 일괄 등록 모달 — URL ?bulk=true 진입 시 자동 오픈 (위자드·랜딩 진입점)
-  const searchParams = useSearchParams();
-  const [showBulkModal, setShowBulkModal] = useState(() => searchParams.get("bulk") === "true");
-  // 회원 정보 수정 모달 (등번호·감독포지션·주장·역할·휴면 통합)
-  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
-
-  // 수동 연동
-  const [linkingMemberId, setLinkingMemberId] = useState<string | null>(null);
-
-  // 버튼 로딩 상태
-  const [changingRoleId, setChangingRoleId] = useState<string | null>(null);
-  const [kickingId, setKickingId] = useState<string | null>(null);
-  const [linkingId, setLinkingId] = useState<string | null>(null);
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"none" | "name-asc" | "name-desc" | "joined-asc" | "joined-desc">("none");
-  const [roleFilter, setRoleFilter] = useState<"ALL" | Role>("ALL");
-
-  // 감독 지정 포지션 편집
-  const [editingCoachPos, setEditingCoachPos] = useState<string | null>(null);
-  const [tempCoachPos, setTempCoachPos] = useState<string[]>([]);
-  const [savingCoachPos, setSavingCoachPos] = useState(false);
-
-  // 등번호 편집
-  const [editingJerseyId, setEditingJerseyId] = useState<string | null>(null);
-  const [tempJersey, setTempJersey] = useState<string>("");
-
-  // 카드 확장 상태
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  // 휴면 설정 폼
-  const [showDormantForm, setShowDormantForm] = useState<string | null>(null);
-  const [dormantType, setDormantType] = useState<string>("INJURED");
-  const [dormantUntil, setDormantUntil] = useState("");
-  const [dormantReason, setDormantReason] = useState("");
-
-  const DORMANT_LABELS: Record<string, string> = {
-    INJURED: "부상",
-    PERSONAL: "개인사정",
-    OTHER: "기타",
-  };
-  const DORMANT_ICONS: Record<string, string> = {
-    INJURED: "🏥",
-    PERSONAL: "✈️",
-    OTHER: "❓",
-  };
-
-  const POSITIONS = ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"];
-
-  const activeMembers = useMemo(() => members.filter((m) => m.status === "ACTIVE"), [members]);
-  const dormantMembers = useMemo(() => members.filter((m) => m.status === "DORMANT"), [members]);
-  const linkedMembers = useMemo(() => activeMembers.filter((m) => m.isLinked), [activeMembers]);
-  const unlinkedMembers = useMemo(() => activeMembers.filter((m) => !m.isLinked), [activeMembers]);
-
-  const filteredLinkedMembers = useMemo(() => {
-    const roleOrder: Record<Role, number> = { PRESIDENT: 0, STAFF: 1, MEMBER: 2 };
-    let list = linkedMembers;
-
-    // 역할 필터
-    if (roleFilter !== "ALL") {
-      list = list.filter((m) => m.role === roleFilter);
-    }
-
-    // 검색
-    if (searchQuery.trim()) {
-      list = list.filter((m) => m.name.includes(searchQuery) || m.preName?.includes(searchQuery));
-    }
-
-    // 정렬
-    return [...list].sort((a, b) => {
-      if (sortBy === "name-asc") return a.name.localeCompare(b.name, "ko");
-      if (sortBy === "name-desc") return b.name.localeCompare(a.name, "ko");
-      if (sortBy === "joined-asc") return a.joinedAt.localeCompare(b.joinedAt);
-      if (sortBy === "joined-desc") return b.joinedAt.localeCompare(a.joinedAt);
-      // none (기본): 회장 → 운영진 → 평회원, 같은 역할이면 이름순
-      return (roleOrder[a.role] - roleOrder[b.role]) || a.name.localeCompare(b.name, "ko");
-    });
-  }, [linkedMembers, searchQuery, sortBy, roleFilter]);
-
-  const stats = useMemo(() => {
-    const counts = { PRESIDENT: 0, STAFF: 0, MEMBER: 0 } as Record<Role, number>;
-    activeMembers.forEach((member) => {
-      counts[member.role] += 1;
-    });
-    return { ...counts, DORMANT: dormantMembers.length };
-  }, [activeMembers, dormantMembers]);
 
   async function doRoleChange(memberId: string, newRole: Role) {
     setChangingRoleId(memberId);
@@ -216,7 +188,7 @@ export default function MembersClient({
       if (!err) {
         if (newRole === "PRESIDENT") {
           showToast(
-            "회장 권한이 이양되었습니다. 본인은 자동으로 운영진(STAFF)으로 변경됩니다. 잘못 누르셨다면 새 회장님께 다시 회장 권한 부여를 요청해주세요.",
+            "회장 권한이 이양되었습니다. 본인은 자동으로 운영진(STAFF)으로 변경됩니다.",
           );
           setTimeout(() => window.location.reload(), 1500);
           return;
@@ -240,7 +212,7 @@ export default function MembersClient({
       const ok = await confirm({
         title: `${targetName}님에게 회장을 이임할까요?`,
         description:
-          "⚠️ 이임 후 본인은 자동으로 운영진(STAFF)으로 변경됩니다. 실수로 누르신 게 아닌지 한 번 더 확인해주세요. 되돌리려면 새 회장이 본인을 다시 회장으로 변경해야 합니다.",
+          "이임 후 본인은 자동으로 운영진(STAFF)으로 변경됩니다. 되돌리려면 새 회장이 본인을 다시 회장으로 변경해야 합니다.",
         variant: "destructive",
         confirmLabel: "회장 이임",
       });
@@ -248,7 +220,6 @@ export default function MembersClient({
       return;
     }
 
-    // STAFF·MEMBER 강등도 confirm 추가 (모바일 스크롤 우발 터치 방지)
     const roleLabel = newRole === "STAFF" ? "운영진(STAFF)" : "평회원(MEMBER)";
     const ok = await confirm({
       title: `${targetName}님을 ${roleLabel}으로 변경할까요?`,
@@ -269,6 +240,8 @@ export default function MembersClient({
       if (!err) {
         showToast("멤버가 제거되었습니다.");
         await refetch();
+      } else {
+        showToast(typeof err === "string" ? err : "제명에 실패했습니다.", "error");
       }
     } finally {
       setKickingId(null);
@@ -289,30 +262,18 @@ export default function MembersClient({
       showToast("팀원이 사전 등록되었습니다.");
       setRegName("");
       setRegPhone("");
-      setShowRegForm(false);
+      setShowSingleAdd(false);
       await refetch();
+    } else {
+      showToast(typeof err === "string" ? err : "등록에 실패했습니다.", "error");
     }
   }
 
-  async function handleLink(memberId: string, userId: string) {
-    setLinkingId(memberId);
-    try {
-      const { error: err } = await apiMutate("/api/members", "POST", {
-        action: "link",
-        memberId,
-        userId,
-      });
-      if (!err) {
-        showToast("멤버가 연동되었습니다.");
-        setLinkingMemberId(null);
-        await refetch();
-      }
-    } finally {
-      setLinkingId(null);
-    }
-  }
-
-  async function handleStatusChange(memberId: string, newStatus: "ACTIVE" | "DORMANT", opts?: { dormantType?: string; dormantUntil?: string; dormantReason?: string }) {
+  async function handleStatusChange(
+    memberId: string,
+    newStatus: "ACTIVE" | "DORMANT",
+    opts?: { dormantType?: string; dormantUntil?: string; dormantReason?: string },
+  ) {
     const { error: err } = await apiMutate("/api/members", "PUT", {
       action: "update_status",
       memberId,
@@ -326,26 +287,9 @@ export default function MembersClient({
       } else {
         showToast("활동 회원으로 복귀했습니다.");
       }
-      setShowDormantForm(null);
       await refetch();
     } else {
       showToast("상태 변경에 실패했습니다.", "error");
-    }
-  }
-
-  async function handleSaveJersey(memberId: string) {
-    const num = tempJersey.trim() === "" ? null : Number(tempJersey);
-    const { error: err } = await apiMutate("/api/members", "PUT", {
-      action: "update_jersey_number",
-      memberId,
-      jerseyNumber: num,
-    });
-    if (!err) {
-      showToast("등번호가 변경되었습니다.");
-      setEditingJerseyId(null);
-      await refetch();
-    } else {
-      showToast(err, "error");
     }
   }
 
@@ -356,661 +300,443 @@ export default function MembersClient({
       teamRole,
     });
     if (!err) {
-      showToast(teamRole === "CAPTAIN" ? "주장으로 지정되었습니다." : teamRole === "VICE_CAPTAIN" ? "부주장으로 지정되었습니다." : "해제되었습니다.");
+      showToast(
+        teamRole === "CAPTAIN"
+          ? "주장으로 지정되었습니다."
+          : teamRole === "VICE_CAPTAIN"
+          ? "부주장으로 지정되었습니다."
+          : "해제되었습니다.",
+      );
       await refetch();
     } else {
-      showToast(err, "error");
+      showToast(typeof err === "string" ? err : "지정 실패", "error");
     }
   }
 
-  async function handleSaveCoachPositions(memberId: string) {
-    setSavingCoachPos(true);
-    try {
-      const { error: err } = await apiMutate("/api/members", "PUT", {
-        action: "update_coach_positions",
-        memberId,
-        coachPositions: tempCoachPos.length > 0 ? tempCoachPos : null,
-      });
-      if (!err) {
-        showToast("감독 지정 포지션이 저장되었습니다.");
-        setEditingCoachPos(null);
-        await refetch();
-      } else {
-        showToast("저장에 실패했습니다.", "error");
-      }
-    } finally {
-      setSavingCoachPos(false);
+  async function handleSaveJersey(memberId: string, value: number | null) {
+    const { error: err } = await apiMutate("/api/members", "PUT", {
+      action: "update_jersey_number",
+      memberId,
+      jerseyNumber: value,
+    });
+    if (err) {
+      showToast(typeof err === "string" ? err : "등번호 저장 실패", "error");
+      return;
+    }
+    showToast("등번호가 저장되었습니다.");
+    await refetch();
+  }
+
+  async function handleSaveCoachPositions(memberId: string, positions: string[]) {
+    const { error: err } = await apiMutate("/api/members", "PUT", {
+      action: "update_coach_positions",
+      memberId,
+      coachPositions: positions.length > 0 ? positions : null,
+    });
+    if (err) {
+      showToast(typeof err === "string" ? err : "포지션 저장 실패", "error");
+      return;
+    }
+    showToast("감독 지정 포지션이 저장되었습니다.");
+    await refetch();
+  }
+
+  // 필터링 + 검색 + 정렬
+  const filtered = useMemo(() => {
+    let list = members;
+    if (filter !== "all") {
+      list = list.filter((m) => displayStatus(m) === filter);
+    }
+    const q = searchQuery.trim();
+    if (q) {
+      list = list.filter((m) => m.name.includes(q) || m.preName?.includes(q) || m.phone.includes(q));
+    }
+    return sortMembers(list, sort);
+  }, [members, filter, searchQuery, sort]);
+
+  // 계정 연결용 가입자 풀 (linked + 본인 자체전 제외)
+  const signupPool = useMemo(() => {
+    return membersData.members
+      .filter((r) => r.user_id && r.users)
+      .map((r) => ({
+        userId: r.user_id as string,
+        name: r.users?.name || "이름 없음",
+        phone: r.users?.phone || r.pre_phone || "",
+      }));
+  }, [membersData.members]);
+
+  async function handleLink(memberId: string, userId: string) {
+    const { error: err } = await apiMutate("/api/members", "POST", {
+      action: "link",
+      memberId,
+      userId,
+    });
+    if (!err) {
+      showToast("계정이 연결되었습니다.");
+      await refetch();
+    } else {
+      showToast(typeof err === "string" ? err : "연결에 실패했습니다.", "error");
     }
   }
 
-  if (loading) {
-    return (
-      <div className="grid gap-5 stagger-children">
-        <Card><CardHeader><Skeleton className="h-3 w-20"/><Skeleton className="mt-1 h-7 w-40"/></CardHeader>
-          <CardContent><div className="grid gap-3 sm:grid-cols-3">
-            {[1,2,3].map(i => <div key={i} className="rounded-lg bg-secondary p-4 space-y-2"><Skeleton className="h-3 w-16"/><Skeleton className="h-6 w-12"/></div>)}
-          </div></CardContent>
-        </Card>
-        <Card><CardContent className="p-4 space-y-2">
-          {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-14 w-full rounded-lg"/>)}
-        </CardContent></Card>
-      </div>
-    );
-  }
+  const counts = useMemo(() => {
+    const c = { all: members.length, ACTIVE: 0, DORMANT: 0, INJURED: 0, OTHER: 0 };
+    members.forEach((m) => {
+      const s = displayStatus(m);
+      c[s] += 1;
+    });
+    return c;
+  }, [members]);
 
-  if (error) {
-    return (
-      <Card className="p-6">
-        <div className="flex items-center justify-between">
-          <span className="text-destructive">오류: {error}</span>
-          <Button variant="outline" size="sm" onClick={refetch}>다시 시도</Button>
-        </div>
-      </Card>
-    );
-  }
+  const editingMember = editingMemberId ? members.find((m) => m.id === editingMemberId) : null;
 
   return (
-    <div className="grid gap-5 stagger-children">
-      {/* ── Section 1: 회원 관리 ── */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">회원 관리</CardTitle>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="px-4 py-2 text-xs font-bold">
-                현재 권한: {userRole ? roleLabels[userRole] : "확인 중"}
-              </Badge>
-              {canPreRegister && (
-                <>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setShowBulkModal(true)}
-                  >
-                    일괄 등록
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => setShowRegForm(!showRegForm)}
-                  >
-                    {showRegForm ? "닫기" : "팀원 미리 등록"}
-                  </Button>
-                </>
-              )}
-            </div>
+    <div className="pm-page pm-page--members">
+      <div className="pm-amb" aria-hidden />
+
+      {/* App bar */}
+      <header className="pm-appbar">
+        <button
+          type="button"
+          className="pm-appbar-icon"
+          aria-label="뒤로"
+          onClick={() => router.back()}
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
+            <path
+              d="M11 4 6 9l5 5"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <div className="pm-appbar-title">
+          회원 <span className="pm-appbar-count">{members.length}</span>
+        </div>
+        {canPreRegister ? (
+          <button
+            type="button"
+            className="pm-appbar-icon"
+            aria-label="한 명씩 추가"
+            onClick={() => setShowSingleAdd(true)}
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
+              <path
+                d="M9 4v10M4 9h10"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        ) : (
+          <span className="pm-appbar-icon" aria-hidden />
+        )}
+      </header>
+
+      <main className="pm-main pm-main--members">
+        {loading ? (
+          <div className="pm-card" style={{ padding: 24 }}>
+            <p style={{ color: "hsl(var(--muted-foreground))", textAlign: "center" }}>
+              불러오는 중…
+            </p>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* 사전 등록 폼 */}
-          {showRegForm && (
-            <Card className="border-primary/20 bg-primary/5">
-              <CardContent className="p-4 space-y-3">
-                <p className="text-sm font-bold">팀원 사전 등록</p>
-                <p className="text-xs text-muted-foreground">
-                  아직 가입하지 않은 팀원을 미리 등록해두세요. 나중에 가입하면 자동으로 연동됩니다.
-                </p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1">
-                    <Label className="text-xs">이름 (필수)</Label>
-                    <Input
-                      value={regName}
-                      onChange={(e) => setRegName(e.target.value)}
-                      placeholder="홍길동"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">전화번호 (선택)</Label>
-                    <PhoneInput
-                      value={regPhone}
-                      onValueChange={setRegPhone}
-                    />
+        ) : error ? (
+          <div className="pm-notice pm-notice--err">
+            <span>오류: {error}</span>
+          </div>
+        ) : (
+          <>
+            {/* Paste hero */}
+            {canBulk &&
+              (members.length === 0 ? (
+                <div className="pm-paste-hero">
+                  <div className="pm-amb" aria-hidden />
+                  <div className="pm-hero-inner">
+                    <div className="pm-chip" style={{ marginTop: 0 }}>
+                      <span className="pm-chip-dot" />
+                      <span>팀원 등록 · 1단계</span>
+                    </div>
+                    <h2 className="pm-h1 pm-h1--hero">
+                      팀원을 등록해<br />
+                      보세요.
+                    </h2>
+                    <p className="pm-sub" style={{ marginBottom: 4 }}>
+                      카톡 단체방 명단을 그대로 붙여넣으면 돼요.
+                      <br />
+                      이름·전화번호를 자동으로 인식해요.
+                    </p>
+                    <button type="button" className="pm-paste-cta" onClick={() => setShowBulk(true)}>
+                      <span className="pm-paste-cta-icon" aria-hidden>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                          <rect
+                            x="5"
+                            y="2.5"
+                            width="10"
+                            height="15"
+                            rx="2"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            fill="none"
+                          />
+                          <path
+                            d="M8 5.5h4M8 9h4M8 12.5h4"
+                            stroke="currentColor"
+                            strokeWidth="1.4"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </span>
+                      <div className="pm-paste-cta-body">
+                        <div className="pm-paste-cta-label">카톡 명단 붙여넣기</div>
+                        <div className="pm-paste-cta-sub">한 번에 최대 200명</div>
+                      </div>
+                      <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                        <path
+                          d="M3 7h8M8 4l3 3-3 3"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                    <div className="pm-paste-or">
+                      <span /><span>또는</span><span />
+                    </div>
+                    <button
+                      type="button"
+                      className="pm-paste-secondary"
+                      onClick={() => setShowSingleAdd(true)}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+                        <path d="M7 3v8M3 7h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                      </svg>
+                      한 명씩 추가하기
+                    </button>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  가입 안 한 팀원도 미리 추가할 수 있어요. 나중에 카카오로 가입하면 같은 팀원으로 자동으로 합쳐집니다.
-                </p>
-                <Button
-                  size="sm"
-                  onClick={handlePreRegister}
-                  disabled={regSubmitting || !regName.trim()}
-                >
-                  {regSubmitting ? "등록 중..." : "등록"}
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-            {([
-              { label: "회장", value: stats.PRESIDENT, color: "text-[hsl(var(--warning))]" },
-              { label: "운영진", value: stats.STAFF, color: "text-[hsl(var(--info))]" },
-              { label: "평회원", value: stats.MEMBER, color: "text-[hsl(var(--success))]" },
-              { label: "휴면", value: stats.DORMANT, color: "text-muted-foreground" },
-            ] as const).map((item) => (
-              <div key={item.label} className="card-stat">
-                <p className="type-overline">{item.label}</p>
-                <p className={cn("mt-1 type-stat", item.color)}>
-                  {item.value}명
-                </p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── Section 2: 미연동 멤버 (운영진 전용 — 멤버 목록 다음으로 밀어줌) ── */}
-      {unlinkedMembers.length > 0 && canViewAll && (
-        <Card style={{ order: 10 }}>
-          <CardHeader>
-            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">
-              미가입 멤버 ({unlinkedMembers.length}명)
-            </CardTitle>
-            <p className="mt-1 text-xs text-muted-foreground">
-              사전 등록된 멤버입니다. 해당 팀원이 카카오로 가입하면 자동 연동됩니다.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {unlinkedMembers.map((member) => (
-                <Card
-                  key={member.id}
-                  className="flex flex-wrap items-center justify-between gap-4 border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10 px-4 py-3"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold truncate">{member.name}</p>
-                      <Badge variant="outline" className="border-[hsl(var(--warning))]/30 text-[hsl(var(--warning))] text-xs shrink-0">
-                        미가입
-                      </Badge>
-                    </div>
-                    {member.phone && (
-                      <p className="text-xs text-muted-foreground">{formatPhone(member.phone)}</p>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {canChangeRole && (
-                      <>
-                        {linkingMemberId === member.id ? (
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Select
-                              onValueChange={(userId) => handleLink(member.id, userId)}
-                              disabled={linkingId === member.id}
-                            >
-                              <SelectTrigger className="w-auto min-w-[110px] text-xs">
-                                <SelectValue placeholder={linkingId === member.id ? "연동 중..." : "가입된 회원 선택"} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {linkedMembers
-                                  .filter((m) => m.id !== member.id)
-                                  .map((m) => (
-                                    <SelectItem key={m.id} value={membersData.members.find((r) => r.id === m.id)?.user_id ?? ""}>
-                                      {m.name} {m.phone ? `(${formatPhone(m.phone)})` : ""}
-                                    </SelectItem>
-                                  ))}
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setLinkingMemberId(null)}
-                              disabled={linkingId === member.id}
-                            >
-                              취소
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setLinkingMemberId(member.id)}
-                          >
-                            계정 연결
-                          </Button>
-                        )}
-                      </>
-                    )}
-                    {canKick && (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleStatusChange(member.id, "DORMANT")}
-                        >
-                          휴면
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={kickingId === member.id}
-                          onClick={async () => {
-                            const ok = await confirm({ title: `${member.name} 님을 제명할까요?`, variant: "destructive", confirmLabel: "제명" });
-                            if (ok) handleKick(member.id);
-                          }}
-                        >
-                          {kickingId === member.id ? "처리 중..." : "제명"}
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* ── Section 3: 멤버 목록 ── */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">
-            멤버 목록
-          </CardTitle>
-          {!canViewAll && (
-            <p className="mt-2 text-xs text-muted-foreground">
-              평회원은 이름과 선호 포지션만 조회할 수 있습니다.
-            </p>
-          )}
-        </CardHeader>
-        <CardContent>
-          <div className="mb-3 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="이름으로 검색"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              list="member-names"
-              autoComplete="off"
-              className="w-full rounded-lg border border-border bg-secondary/50 py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-            <datalist id="member-names">
-              {linkedMembers.map((m) => <option key={m.id} value={m.name} />)}
-            </datalist>
-          </div>
-          {/* 정렬 + 역할 필터 */}
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <div className="flex gap-1">
-              {([
-                { key: "name", cycle: ["none", "name-asc", "name-desc"] as string[], labels: ["이름", "이름 ↑", "이름 ↓"] },
-                { key: "joined", cycle: ["none", "joined-asc", "joined-desc"] as string[], labels: ["가입", "가입 ↑", "가입 ↓"] },
-              ]).map(({ key, cycle, labels }) => {
-                const idx = cycle.indexOf(sortBy);
-                const isActive = idx > 0;
-                const label = isActive ? labels[idx] : labels[0];
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => {
-                      const nextIdx = idx < 0 ? 1 : (idx + 1) % 3;
-                      setSortBy(cycle[nextIdx] as typeof sortBy);
-                    }}
-                    className={cn(
-                      "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                      isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="flex gap-1">
-              {([
-                { value: "ALL" as const, label: "전체" },
-                { value: "PRESIDENT" as const, label: "회장" },
-                { value: "STAFF" as const, label: "운영진" },
-                { value: "MEMBER" as const, label: "평회원" },
-              ]).map((opt) => (
+              ) : (
                 <button
-                  key={opt.value}
                   type="button"
-                  onClick={() => setRoleFilter(opt.value)}
-                  className={cn(
-                    "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                    roleFilter === opt.value
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground hover:border-primary/30"
-                  )}
+                  className="pm-paste-strip"
+                  onClick={() => setShowBulk(true)}
                 >
-                  {opt.label}
+                  <div className="pm-paste-strip-icon" aria-hidden>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <rect
+                        x="4"
+                        y="2"
+                        width="8"
+                        height="12"
+                        rx="1.5"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                      />
+                      <path d="M6 5h4M6 8h4M6 11h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                  <div className="pm-paste-strip-body">
+                    <div className="pm-paste-strip-label">카톡으로 더 추가</div>
+                    <div className="pm-paste-strip-sub">명단 붙여넣기 · 자동 인식</div>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                    <path
+                      d="M5 3l4 4-4 4"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </button>
               ))}
-            </div>
-            <span className="text-xs text-muted-foreground ml-auto">{filteredLinkedMembers.length}명</span>
-          </div>
-          <div className="space-y-2">
-            {filteredLinkedMembers.map((member) => {
-              const isExpanded = expandedId === member.id;
-              const isEditing = editingCoachPos === member.id || editingJerseyId === member.id;
-              // 일반 회원에게는 아코디언 노출 안 함 — 펼쳐도 운영진 전용 정보(연락처·생일)·관리 버튼이라 빈 컨텐츠.
-              // 본인 등번호 편집은 /settings 페이지에 이미 있음.
-              // 감독 지정 포지션은 운영 정보라 일반 회원에게 표시 안 함 (375px 좁은 화면 넘침 방지).
-              const isStaffViewer = isStaffOrAbove(role);
-              const positionLine = member.preferredPositions.join(" · ") || "포지션 미설정";
-              return (
-              <div
-                key={member.id}
-                className={cn(
-                  "rounded-xl border border-border/50 transition-colors",
-                  isExpanded && "border-primary/30 bg-primary/3"
-                )}
-              >
-                {/* ── 기본 행: 항상 표시 ── */}
-                {isStaffViewer ? (
-                  <button
-                    type="button"
-                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-                    onClick={() => { if (!isEditing) setExpandedId(isExpanded ? null : member.id); }}
+
+            {/* Search */}
+            {members.length > 0 && (
+              <div className="pm-card" style={{ padding: 10 }}>
+                <div className="pm-search-wrap">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    className="pm-search-icon"
+                    aria-hidden
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold truncate flex items-center gap-1.5">
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-1 ring-border">
-                          {member.profileImageUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={compactKakaoImage(member.profileImageUrl, 110)}
-                              alt=""
-                              width={28}
-                              height={28}
-                              loading="lazy"
-                              decoding="async"
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-[12px] font-bold text-muted-foreground">{member.name.charAt(0)}</span>
-                          )}
-                        </span>
-                        {member.jerseyNumber !== null && (
-                          <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">#{member.jerseyNumber}</span>
-                        )}
-                        <span className="truncate">{member.name}</span>
-                        {member.teamRole === "CAPTAIN" && (
-                          <Badge variant="warning" className="text-xs px-1.5 py-0 shrink-0">주장</Badge>
-                        )}
-                        {member.teamRole === "VICE_CAPTAIN" && (
-                          <Badge variant="secondary" className="text-xs px-1.5 py-0 shrink-0">부주장</Badge>
-                        )}
-                        {member.status === "DORMANT" && member.dormantType && (
-                          <Badge variant="secondary" className="text-[12px] px-1.5 py-0 shrink-0 bg-muted-foreground/15 text-muted-foreground">
-                            {DORMANT_ICONS[member.dormantType]} {DORMANT_LABELS[member.dormantType] ?? "휴면"}
-                            {member.dormantUntil && (
-                              <span className="ml-0.5">~{member.dormantUntil.slice(5)}</span>
-                            )}
-                          </Badge>
-                        )}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground truncate">
-                        {positionLine}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant="secondary" className="px-2 py-0.5 text-xs">
-                        {roleLabels[member.role]}
-                      </Badge>
-                      <ChevronDown className={cn(
-                        "h-4 w-4 text-muted-foreground transition-transform",
-                        isExpanded && "rotate-180"
-                      )} aria-hidden="true" />
-                    </div>
-                  </button>
+                    <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.4" fill="none" />
+                    <path
+                      d="m10.5 10.5 3 3"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <input
+                    className="pm-input pm-input--search"
+                    placeholder="이름·전화번호로 검색"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    aria-label="회원 검색"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Sort row */}
+            {members.length > 0 && (
+              <div className="pm-sort-row">
+                <div className="pm-sort-chips">
+                  {SORT_OPTS.map((o) => (
+                    <button
+                      key={o.value}
+                      type="button"
+                      className={`pm-sort-chip ${sort === o.value ? "is-on" : ""}`}
+                      onClick={() => setSort(o.value)}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="pm-sort-total">총 {filtered.length}명</div>
+              </div>
+            )}
+
+            {/* Filter chips */}
+            {members.length > 0 && (
+              <div className="pm-filters">
+                <FilterChip
+                  active={filter === "all"}
+                  onClick={() => setFilter("all")}
+                  label="전체"
+                  count={counts.all}
+                />
+                <FilterChip
+                  active={filter === "ACTIVE"}
+                  onClick={() => setFilter("ACTIVE")}
+                  label="활성"
+                  count={counts.ACTIVE}
+                  dot="success"
+                />
+                <FilterChip
+                  active={filter === "DORMANT"}
+                  onClick={() => setFilter("DORMANT")}
+                  label="휴면"
+                  count={counts.DORMANT}
+                  dot="muted"
+                />
+                <FilterChip
+                  active={filter === "INJURED"}
+                  onClick={() => setFilter("INJURED")}
+                  label="부상"
+                  count={counts.INJURED}
+                  dot="warning"
+                />
+                <FilterChip
+                  active={filter === "OTHER"}
+                  onClick={() => setFilter("OTHER")}
+                  label="기타"
+                  count={counts.OTHER}
+                  dot="info"
+                />
+              </div>
+            )}
+
+            {/* Member list */}
+            {members.length > 0 && (
+              <div className="pm-card pm-mlist">
+                {filtered.length === 0 ? (
+                  <div className="pm-empty">이 분류에 해당하는 회원이 없어요.</div>
                 ) : (
-                  // 일반 회원: 단순 정보 행 (펼침 없음)
-                  <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold truncate flex items-center gap-1.5">
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-1 ring-border">
-                          {member.profileImageUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={compactKakaoImage(member.profileImageUrl, 110)}
-                              alt=""
-                              width={28}
-                              height={28}
-                              loading="lazy"
-                              decoding="async"
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-[12px] font-bold text-muted-foreground">{member.name.charAt(0)}</span>
-                          )}
-                        </span>
-                        {member.jerseyNumber !== null && (
-                          <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">#{member.jerseyNumber}</span>
-                        )}
-                        <span className="truncate">{member.name}</span>
-                        {member.teamRole === "CAPTAIN" && (
-                          <Badge variant="warning" className="text-xs px-1.5 py-0 shrink-0">주장</Badge>
-                        )}
-                        {member.teamRole === "VICE_CAPTAIN" && (
-                          <Badge variant="secondary" className="text-xs px-1.5 py-0 shrink-0">부주장</Badge>
-                        )}
-                        {member.status === "DORMANT" && member.dormantType && (
-                          <Badge variant="secondary" className="text-[12px] px-1.5 py-0 shrink-0 bg-muted-foreground/15 text-muted-foreground">
-                            {DORMANT_ICONS[member.dormantType]} {DORMANT_LABELS[member.dormantType] ?? "휴면"}
-                            {member.dormantUntil && (
-                              <span className="ml-0.5">~{member.dormantUntil.slice(5)}</span>
-                            )}
-                          </Badge>
-                        )}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground truncate">
-                        {positionLine}
-                      </p>
+                  filtered.map((m, i) => (
+                    <div key={m.id}>
+                      {i > 0 && <div className="pm-mrow-div" />}
+                      <MemberRow
+                        m={m}
+                        onClick={() => {
+                          setEditingMemberId(m.id);
+                        }}
+                      />
                     </div>
-                    <Badge variant="secondary" className="px-2 py-0.5 text-xs shrink-0">
-                      {roleLabels[member.role]}
-                    </Badge>
-                  </div>
-                )}
-
-                {/* ── 확장 영역: 운영진 + 펼침 시에만 ── */}
-                {isStaffViewer && isExpanded && (
-                  <div className="border-t border-border/20 px-4 py-3 space-y-3">
-                    {/* 상세 정보 */}
-                    {canViewAll && (
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        {member.phone && (
-                          <div>
-                            <span className="text-muted-foreground">연락처</span>
-                            <p className="font-medium">{formatPhone(member.phone)}</p>
-                          </div>
-                        )}
-                        {member.birthDate && (
-                          <div>
-                            <span className="text-muted-foreground">생년월일</span>
-                            <p className="font-medium">{member.birthDate}</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* 감독 지정 포지션 */}
-                    {member.coachPositions.length > 0 && editingCoachPos !== member.id && (
-                      <p className="text-xs text-primary font-medium">
-                        감독 지정: {member.coachPositions.join(" · ")}
-                      </p>
-                    )}
-
-                    {/* 관리 버튼: 통합 [수정] 모달 + [제명] (위험) */}
-                    {(isStaffOrAbove(role) || canChangeRole || member.userIdRaw === userId) && (
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 text-xs"
-                          onClick={() => setEditingMemberId(member.id)}
-                        >
-                          수정
-                        </Button>
-                        {canKick && member.userIdRaw !== userId && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 text-xs text-destructive hover:bg-destructive/10"
-                            disabled={kickingId === member.id}
-                            onClick={async () => {
-                              const ok = await confirm({
-                                title: `${member.name} 님을 제명할까요?`,
-                                variant: "destructive",
-                                confirmLabel: "제명",
-                              });
-                              if (ok) handleKick(member.id);
-                            }}
-                          >
-                            {kickingId === member.id ? "처리 중..." : "제명"}
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  ))
                 )}
               </div>
-              );
-            })}
-            {linkedMembers.length === 0 && (
-              <EmptyState
-                icon={Users}
-                title="가입된 멤버가 없습니다"
-                description={
-                  canPreRegister
-                    ? "초대 코드를 공유하거나, 전화번호로 사전 등록해두면 가입 시 자동 연동돼요."
-                    : "초대 코드를 공유해보세요."
-                }
-                action={
-                  canPreRegister && !showRegForm ? (
-                    <Button size="sm" variant="outline" onClick={() => setShowRegForm(true)}>
-                      팀원 사전 등록
-                    </Button>
-                  ) : undefined
-                }
-              />
             )}
-            {linkedMembers.length > 0 && filteredLinkedMembers.length === 0 && (
-              <p className="py-4 text-center text-sm text-muted-foreground">검색 결과가 없습니다.</p>
+
+            {/* Member 일반회원 안내 */}
+            {role === "MEMBER" && (
+              <div
+                className="pm-card"
+                style={{
+                  padding: "14px 16px",
+                  color: "hsl(var(--muted-foreground))",
+                  fontSize: 12.5,
+                  textAlign: "center",
+                }}
+              >
+                회원은 명단을 조회할 수 있어요. 등록은 회장·운영진이 진행해요.
+              </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </>
+        )}
+      </main>
 
-      {/* ── Section 4: 휴면 회원 (운영진 전용 — 멤버 목록·미가입 다음) ── */}
-      {dormantMembers.length > 0 && canViewAll && (
-        <Card style={{ order: 11 }}>
-          <CardHeader>
-            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">
-              휴면 회원 ({dormantMembers.length}명)
-            </CardTitle>
-            <p className="mt-1 text-xs text-muted-foreground">
-              장기 휴회 또는 활동 중단 회원입니다. 복귀 시 활동 회원으로 전환할 수 있습니다.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {dormantMembers.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-secondary/30 px-4 py-3"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-sm font-semibold text-muted-foreground">{member.name}</p>
-                      {member.dormantType && (
-                        <Badge variant="secondary" className="text-[12px] px-1.5 py-0 bg-muted-foreground/15 text-muted-foreground">
-                          {DORMANT_ICONS[member.dormantType]} {DORMANT_LABELS[member.dormantType]}
-                          {member.dormantUntil && <span className="ml-0.5">~{member.dormantUntil.slice(5)}</span>}
-                        </Badge>
-                      )}
-                    </div>
-                    {(member.dormantReason || (member.isLinked && member.preferredPositions.length > 0)) && (
-                      <p className="text-xs text-muted-foreground/60">
-                        {member.dormantReason || member.preferredPositions.join(", ")}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {!member.dormantType && <Badge variant="secondary" className="text-xs">휴면</Badge>}
-                    {canKick && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleStatusChange(member.id, "ACTIVE")}
-                      >
-                        복귀
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* 일괄 등록 모달 */}
+      {/* Bulk modal (시안 v2) */}
       <MemberBulkUploadModal
-        open={showBulkModal}
-        onClose={() => setShowBulkModal(false)}
+        open={showBulk}
+        onClose={() => setShowBulk(false)}
         onSuccess={refetch}
+        teamName={teamName}
+        inviteCode={inviteCode}
       />
 
-      {/* 회원 정보 수정 모달 (등번호·감독포지션·주장·역할·휴면 통합) */}
-      {editingMemberId && (
+      {/* 단건 사전 등록 mini modal */}
+      <SingleAddModal
+        open={showSingleAdd}
+        onClose={() => setShowSingleAdd(false)}
+        name={regName}
+        phone={regPhone}
+        onNameChange={setRegName}
+        onPhoneChange={setRegPhone}
+        submitting={regSubmitting}
+        onSubmit={handlePreRegister}
+      />
+
+      {/* 기존 detail modal (v1 톤, 후속 작업에서 시안 톤으로 마이그) */}
+      {editingMember && (
         <MemberEditModal
           open={!!editingMemberId}
           onClose={() => setEditingMemberId(null)}
-          member={(() => {
-            const m = members.find((m) => m.id === editingMemberId);
-            return m ? {
-              id: m.id,
-              name: m.name,
-              role: m.role,
-              status: m.status,
-              jerseyNumber: m.jerseyNumber,
-              coachPositions: m.coachPositions,
-              teamRole: m.teamRole,
-              dormantType: m.dormantType,
-              dormantUntil: m.dormantUntil,
-              dormantReason: m.dormantReason,
-            } : null;
-          })()}
+          member={{
+            id: editingMember.id,
+            name: editingMember.name,
+            role: editingMember.role,
+            status: editingMember.status,
+            jerseyNumber: editingMember.jerseyNumber,
+            coachPositions: editingMember.coachPositions,
+            teamRole: editingMember.teamRole,
+            dormantType: editingMember.dormantType,
+            dormantUntil: editingMember.dormantUntil,
+            dormantReason: editingMember.dormantReason,
+            phone: editingMember.phone || undefined,
+            birthDate: editingMember.birthDate || undefined,
+            profileImageUrl: editingMember.profileImageUrl,
+            isLinked: editingMember.isLinked,
+          }}
           positions={POSITIONS}
-          isSelf={members.find((m) => m.id === editingMemberId)?.userIdRaw === userId}
+          sport={membersData.sportType === "FUTSAL" ? "FUTSAL" : "SOCCER"}
+          isSelf={editingMember.userIdRaw === userId}
           isStaffOrAbove={isStaffOrAbove(role)}
           canChangeRole={canChangeRole}
           canKick={canKick}
-          onSaveJersey={async (memberId, value) => {
-            setTempJersey(value === null ? "" : String(value));
-            const { error: err } = await apiMutate("/api/members", "PUT", {
-              action: "update_jersey_number",
-              memberId,
-              jerseyNumber: value,
-            });
-            if (err) {
-              showToast(typeof err === "string" ? err : "등번호 저장 실패", "error");
-              return;
-            }
-            showToast("등번호가 저장되었습니다.");
-            await refetch();
-          }}
-          onSaveCoachPositions={async (memberId, positions) => {
-            const { error: err } = await apiMutate("/api/members", "PUT", {
-              action: "update_coach_positions",
-              memberId,
-              coachPositions: positions,
-            });
-            if (err) {
-              showToast(typeof err === "string" ? err : "포지션 저장 실패", "error");
-              return;
-            }
-            showToast("포지션이 저장되었습니다.");
-            await refetch();
-          }}
-          onTeamRoleChange={(memberId, teamRole) => handleTeamRoleChange(memberId, teamRole)}
-          onRoleChange={(memberId, newRole) => handleRoleChange(memberId, newRole)}
+          onSaveJersey={handleSaveJersey}
+          onSaveCoachPositions={handleSaveCoachPositions}
+          onTeamRoleChange={handleTeamRoleChange}
+          onRoleChange={handleRoleChange}
           onSetDormant={async (memberId, type, until, reason) => {
             await handleStatusChange(memberId, "DORMANT", {
               dormantType: type,
@@ -1021,9 +747,212 @@ export default function MembersClient({
           onUnsetDormant={async (memberId) => {
             await handleStatusChange(memberId, "ACTIVE");
           }}
+          onKick={handleKick}
+          signupPool={signupPool}
+          onLink={handleLink}
         />
       )}
-
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// MemberRow
+// ─────────────────────────────────────────────────────────────
+function MemberRow({ m, onClick }: { m: Member; onClick: () => void }) {
+  const status = displayStatus(m);
+  const hue = ROLE_HUE[m.role];
+  return (
+    <button type="button" className="pm-mrow" onClick={onClick}>
+      <div className={`pm-mrow-av pm-hue--${hue}`} aria-hidden>
+        {m.profileImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={m.profileImageUrl}
+            alt=""
+            className="pm-mrow-av-img"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          m.name.slice(0, 1)
+        )}
+      </div>
+      <div>
+        <div className="pm-mrow-head">
+          <span className="pm-mrow-name">{m.name}</span>
+          {m.role !== "MEMBER" && (
+            <span className={`pm-rolebadge pm-hue--${hue}`}>{ROLE_LABEL[m.role]}</span>
+          )}
+          {!m.isLinked && (
+            <span className="pm-rolebadge pm-rolebadge--unlinked">미가입</span>
+          )}
+        </div>
+        <div className="pm-mrow-meta">
+          <span className={`pm-statusdot pm-statusdot--${STATUS_DOT[status]}`} />
+          <span>{STATUS_LABEL[status]}</span>
+          {m.phone && (
+            <>
+              <span className="pm-mrow-sep">·</span>
+              <span>{formatPhone(m.phone)}</span>
+            </>
+          )}
+        </div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 14 14" className="pm-mrow-caret" aria-hidden>
+        <path
+          d="M5 3l4 4-4 4"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// FilterChip
+// ─────────────────────────────────────────────────────────────
+function FilterChip({
+  active,
+  onClick,
+  label,
+  count,
+  dot,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  count: number;
+  dot?: "success" | "warning" | "info" | "muted";
+}) {
+  return (
+    <button type="button" onClick={onClick} className={`pm-filter ${active ? "is-on" : ""}`}>
+      {dot && <span className={`pm-statusdot pm-statusdot--${dot}`} />}
+      <span>{label}</span>
+      <span className="pm-filter-count">{count}</span>
+    </button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// SingleAddModal — 한 명씩 사전 등록 (시안 pm-modal 패턴)
+// ─────────────────────────────────────────────────────────────
+function SingleAddModal({
+  open,
+  onClose,
+  name,
+  phone,
+  onNameChange,
+  onPhoneChange,
+  submitting,
+  onSubmit,
+}: {
+  open: boolean;
+  onClose: () => void;
+  name: string;
+  phone: string;
+  onNameChange: (v: string) => void;
+  onPhoneChange: (v: string) => void;
+  submitting: boolean;
+  onSubmit: () => void;
+}) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  if (!mounted || !open) return null;
+
+  return createPortal(
+    <div className="pm-modal-scrim" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="pm-modal" onClick={(e) => e.stopPropagation()}>
+        <header className="pm-modal-head">
+          <div className="pm-modal-steps">
+            <span className="pm-mstep is-on" style={{ width: "100%" }} />
+          </div>
+          <button
+            type="button"
+            className="pm-welcome-close"
+            onClick={onClose}
+            aria-label="닫기"
+            style={{ position: "static" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+              <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
+        </header>
+
+        <div className="pm-chip" style={{ marginTop: 2 }}>
+          <span className="pm-chip-dot" />
+          <span>한 명씩 등록</span>
+        </div>
+        <h2 className="pm-modal-h">한 명씩 추가하기</h2>
+        <p className="pm-sub">
+          아직 가입하지 않은 팀원을 미리 등록해두세요. 나중에 카카오로 가입하면 자동으로 연동돼요.
+        </p>
+
+        <div className="pm-field">
+          <div className="pm-label">
+            <span>이름</span>
+            <span className="pm-pill pm-pill--req">필수</span>
+          </div>
+          <input
+            className="pm-input"
+            value={name}
+            onChange={(e) => onNameChange(e.target.value)}
+            placeholder="실명 또는 닉네임"
+            maxLength={20}
+          />
+        </div>
+        <div className="pm-field">
+          <div className="pm-label">
+            <span>연락처</span>
+            <span className="pm-pill pm-pill--opt">선택</span>
+          </div>
+          <input
+            className="pm-input"
+            value={phone}
+            onChange={(e) => onPhoneChange(e.target.value)}
+            placeholder="010-0000-0000"
+            type="tel"
+            inputMode="numeric"
+            maxLength={13}
+          />
+          <p className="pm-help">전화번호를 적어두면 가입 시 자동 연동에 도움이 돼요.</p>
+        </div>
+
+        <button
+          type="button"
+          className="pm-cta"
+          onClick={onSubmit}
+          disabled={submitting || !name.trim()}
+        >
+          {submitting ? "등록 중…" : "등록하기"}
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
+            <path
+              d="M3 8 L13 8 M9 4 L13 8 L9 12"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>,
+    document.body,
   );
 }

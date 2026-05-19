@@ -327,7 +327,7 @@ function MatchInfoTabInner({
                 <div className="relative flex flex-1 flex-col items-center gap-3">
                   <div className="h-14 w-14 rounded-sm shadow-lg" style={homeJerseyStyle} />
                   {match.status === "COMPLETED" && scoreData.result === "승" && (
-                    <Badge className="absolute -right-1 -top-1 bg-[hsl(var(--success))] px-1.5 py-0.5 text-[12px] font-bold text-white">WIN</Badge>
+                    <Badge className="absolute -right-1 -top-1 bg-[hsl(var(--success))] px-1.5 py-0.5 text-[12px] font-bold text-white">승</Badge>
                   )}
                   <span className="max-w-[100px] truncate text-sm font-semibold">{isInternal ? "A팀" : "우리팀"}</span>
                 </div>
@@ -339,7 +339,7 @@ function MatchInfoTabInner({
                     <span className="text-muted-foreground">{scoreData.right}</span>
                   </div>
                   {match.status === "COMPLETED" && (
-                    <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Final</span>
+                    <span className="text-xs font-medium tracking-wider text-muted-foreground">종료</span>
                   )}
                 </div>
                 {/* 어웨이 / B팀 */}
@@ -352,10 +352,10 @@ function MatchInfoTabInner({
                     </div>
                   )}
                   {match.status === "COMPLETED" && scoreData.result === "패" && (
-                    <Badge className="absolute -left-1 -top-1 bg-destructive px-1.5 py-0.5 text-[12px] font-bold text-white">WIN</Badge>
+                    <Badge className="absolute -left-1 -top-1 bg-destructive px-1.5 py-0.5 text-[12px] font-bold text-white">패</Badge>
                   )}
                   {match.status === "COMPLETED" && scoreData.result === "무" && (
-                    <Badge className="absolute -right-1 -top-1 bg-muted px-1.5 py-0.5 text-[12px] font-bold text-muted-foreground">DRAW</Badge>
+                    <Badge className="absolute -right-1 -top-1 bg-muted px-1.5 py-0.5 text-[12px] font-bold text-muted-foreground">무</Badge>
                   )}
                   <span className="max-w-[100px] truncate text-sm font-semibold text-muted-foreground">{isInternal ? "B팀" : (match.opponent ?? "상대팀")}</span>
                 </div>
