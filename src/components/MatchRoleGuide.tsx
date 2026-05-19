@@ -521,7 +521,8 @@ function FormationMotionBlock({
       </button>
       {open && (
         <div className="mt-3 space-y-3">
-          {/* 카테고리 칩 — 영상이 있는 카테고리만 노출. 다 비어있으면 hide */}
+          {/* 카테고리 칩 — 영상이 있는 카테고리만 노출. 다 비어있으면 hide.
+              회원에겐 카운트 배지 hide (운영진만 의미 있는 정보). */}
           {hasAnyTeamAnim && (
             <div className="flex flex-wrap gap-1.5" role="group" aria-label="전술 영상 카테고리">
               {CATEGORY_ORDER.map((c) => {
@@ -542,15 +543,16 @@ function FormationMotionBlock({
                   >
                     <visual.Icon className="h-3 w-3" aria-hidden="true" />
                     {ANIMATION_CATEGORY_LABEL[c]}
-                    <span className="tabular-nums opacity-80">{list.length}</span>
+                    {canManage && <span className="tabular-nums opacity-80">{list.length}</span>}
                   </button>
                 );
               })}
             </div>
           )}
 
-          {/* 영상 N개일 때 좌우 네비 — 1개면 hide */}
-          {currentList.length > 1 && (
+          {/* 영상 N개일 때 좌우 네비 — 1개면 hide. 회원에겐 자동 재생만 (swipe hide):
+              운영진이 N개 만든 의도라도 회원은 첫 번째만 보면 충분 (의도된 대표) */}
+          {currentList.length > 1 && canManage && (
             <div className="flex items-center justify-between gap-2 text-[11.5px]">
               <button
                 type="button"
@@ -578,7 +580,7 @@ function FormationMotionBlock({
               </button>
             </div>
           )}
-          {currentList.length === 1 && (
+          {currentList.length === 1 && canManage && (
             <p className="truncate text-[11.5px] font-semibold text-foreground text-center">
               {currentAnim?.name ?? ""}
             </p>

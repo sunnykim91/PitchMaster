@@ -275,13 +275,26 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const isOperator = session.user.name === "김선휘"; // PitchMaster 운영자 — 운영공지 admin 진입
 
   const navGroups = useMemo(() => {
+    // 권한별 라벨·detail 단순화 — 회원에겐 "관리" 단어가 부담스럽고 권한 오해 소지.
+    // 운영진(STAFF+)은 운영 의미 그대로, 회원은 본인 정보 보는 톤으로.
+    const isStaff = isStaffOrAbove(displayRole);
     const operations = [
       { href: "/matches", label: "경기 일정", detail: "일정·투표", icon: Calendar },
-      ...(isStaffOrAbove(displayRole)
+      ...(isStaff
         ? [{ href: "/settings/animations", label: "전술 영상", detail: "감독의 전술노트", icon: Film }]
         : []),
-      { href: "/members", label: "회원 관리", detail: "멤버·권한", icon: Users },
-      { href: "/dues", label: "회비 관리", detail: "거래 내역·납부", icon: Wallet },
+      {
+        href: "/members",
+        label: isStaff ? "회원 관리" : "팀 명단",
+        detail: isStaff ? "멤버·권한" : "우리 팀 회원",
+        icon: Users,
+      },
+      {
+        href: "/dues",
+        label: isStaff ? "회비 관리" : "내 회비",
+        detail: isStaff ? "거래 내역·납부" : "납부 현황·내역",
+        icon: Wallet,
+      },
     ];
     const recordsAndSocial = [
       { href: "/records", label: "기록", detail: "통계·랭킹", icon: Trophy },
