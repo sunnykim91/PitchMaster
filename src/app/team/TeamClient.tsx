@@ -1,112 +1,439 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import "@/app/onboarding/onboarding.css";
+import { motion, useReducedMotion, type Easing } from "framer-motion";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { useSearchParams } from "next/navigation";
-import { ChevronDown, MessageCircle, UserPlus, Users } from "lucide-react";
 import { createTeam, joinTeam } from "@/app/team/actions";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { GA } from "@/lib/analytics";
 import DemoButton from "@/app/login/DemoButton";
 
-export default function TeamClient({ hasExistingTeam = false }: { hasExistingTeam?: boolean }) {
-  const searchParams = useSearchParams();
-  const error = searchParams.get("error");
-  const pending = searchParams.get("pending");
-  const codeFromUrl = searchParams.get("code") ?? "";
+const EASE: Easing = [0.16, 1, 0.3, 1];
 
-  // 온보딩 완료 신호 — completeOnboarding 이 ?welcome=onboarded 로 redirect
-  useEffect(() => {
-    if (searchParams.get("welcome") === "onboarded") {
-      GA.onboardingComplete();
-      // URL 깨끗이 — code 파라미터는 유지
-      const code = searchParams.get("code");
-      const cleanUrl = code ? `/team?code=${encodeURIComponent(code)}` : "/team";
-      window.history.replaceState(null, "", cleanUrl);
-    }
-  }, [searchParams]);
+type Branch = "invite" | "direct" | "member";
+type PathKey = "create" | "invite" | "search";
 
-  const [teamName, setTeamName] = useState("");
-  const [nameStatus, setNameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+type Props = {
+  hasExistingTeam?: boolean;
+  currentTeamName?: string;
+};
+
+// ─────────────────────────────────────────────────────────────
+// Reveal
+// ─────────────────────────────────────────────────────────────
+function Reveal({
+  children,
+  delay = 0,
+  as = "div",
+  className,
+  style,
+  keyOverride,
+}: {
+  children: ReactNode;
+  delay?: number;
+  as?: "div" | "header" | "p" | "h1";
+  className?: string;
+  style?: CSSProperties;
+  keyOverride?: string;
+}) {
+  const reduced = useReducedMotion();
+  const MotionTag =
+    as === "header"
+      ? motion.header
+      : as === "p"
+      ? motion.p
+      : as === "h1"
+      ? motion.h1
+      : motion.div;
+  return (
+    <MotionTag
+      key={keyOverride}
+      initial={reduced ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={
+        reduced ? { duration: 0 } : { duration: 0.7, ease: EASE, delay: delay / 1000 }
+      }
+      className={className}
+      style={style}
+    >
+      {children}
+    </MotionTag>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// StepProgress
+// ─────────────────────────────────────────────────────────────
+function StepProgress({ current }: { current: 1 | 2 | 3 }) {
+  const labels = ["프로필 입력", "팀 선택", "시작!"];
+  return (
+    <div className="pm-progress-row">
+      {labels.map((label, i) => {
+        const idx = i + 1;
+        const state = idx < current ? "done" : idx === current ? "current" : "upcoming";
+        return (
+          <div key={i} className={`pm-step pm-step--${state}`}>
+            <div className="pm-step-bar" />
+            <div className="pm-step-meta">
+              <span className="pm-step-num">{String(idx).padStart(2, "0")}</span>
+              <span className="pm-step-label">{label}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// PathPicker — 3 path radio cards
+// ─────────────────────────────────────────────────────────────
+const PATHS: Array<{
+  key: PathKey;
+  label: string;
+  sub: string;
+  hue: "atk" | "def" | "mid";
+  icon: ReactNode;
+}> = [
+  {
+    key: "create",
+    label: "새 팀 만들기",
+    sub: "회장으로 시작",
+    hue: "atk",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    key: "invite",
+    label: "초대 코드로 합류",
+    sub: "회장에게 받은 코드",
+    hue: "def",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <rect x="3.5" y="6" width="13" height="9" rx="2" stroke="currentColor" strokeWidth="1.6" />
+        <path d="M6.5 6V4.5a3.5 3.5 0 1 1 7 0V6" stroke="currentColor" strokeWidth="1.6" />
+      </svg>
+    ),
+  },
+  {
+    key: "search",
+    label: "팀 검색해서 신청",
+    sub: "회장 승인 후 합류",
+    hue: "mid",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <circle cx="9" cy="9" r="5" stroke="currentColor" strokeWidth="1.6" />
+        <path d="m13 13 3.5 3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+];
+
+function PathPicker({
+  active,
+  onChange,
+}: {
+  active: PathKey;
+  onChange: (k: PathKey) => void;
+}) {
+  return (
+    <div className="pm-paths">
+      {PATHS.map((p) => (
+        <button
+          key={p.key}
+          type="button"
+          className={`pm-path pm-hue--${p.hue} ${active === p.key ? "is-on" : ""}`}
+          onClick={() => onChange(p.key)}
+        >
+          <div className="pm-path-icon">{p.icon}</div>
+          <div className="pm-path-body">
+            <div className="pm-path-label">{p.label}</div>
+            <div className="pm-path-sub">{p.sub}</div>
+          </div>
+          <div className="pm-path-radio" aria-hidden>
+            <span />
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// CreateTeamForm
+// ─────────────────────────────────────────────────────────────
+type NameStatus = "idle" | "checking" | "available" | "taken" | "invalid";
+
+function NameStatusBadge({ status }: { status: NameStatus }) {
+  if (status === "idle" || status === "invalid") return null;
+  if (status === "checking") return <span className="pm-input-badge pm-input-badge--checking">확인 중</span>;
+  if (status === "available") return <span className="pm-input-badge pm-input-badge--ok">사용 가능</span>;
+  if (status === "taken") return <span className="pm-input-badge pm-input-badge--err">이미 사용 중</span>;
+  return null;
+}
+
+function NameStatusMsg({ status }: { status: NameStatus }) {
+  if (status === "taken")
+    return <p className="pm-help pm-help--err">다른 이름을 시도해 보세요. 띄어쓰기·이모지·숫자 모두 OK.</p>;
+  if (status === "available")
+    return <p className="pm-help pm-help--ok">좋아요! 이 이름으로 시작할 수 있어요.</p>;
+  if (status === "invalid")
+    return <p className="pm-help pm-help--err">2글자 이상 입력해 주세요.</p>;
+  return <p className="pm-help">실시간으로 중복을 확인해요.</p>;
+}
+
+function SportPick({
+  value,
+  current,
+  onPick,
+  label,
+  sub,
+}: {
+  value: "SOCCER" | "FUTSAL";
+  current: "SOCCER" | "FUTSAL";
+  onPick: (v: "SOCCER" | "FUTSAL") => void;
+  label: string;
+  sub: string;
+}) {
+  const on = current === value;
+  return (
+    <label className={`pm-sport ${on ? "is-on" : ""}`}>
+      <input
+        type="radio"
+        name="sportType"
+        value={value}
+        checked={on}
+        onChange={() => onPick(value)}
+      />
+      <div className="pm-sport-glyph" aria-hidden>
+        {value === "SOCCER" ? (
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.4" />
+            <path
+              d="M11 5l3 2-1 3.5h-4L8 7l3-2zM4 11l3 1 1 3-2 2M18 11l-3 1-1 3 2 2"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              fill="none"
+            />
+          </svg>
+        ) : (
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <rect x="3" y="6" width="16" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+            <path
+              d="M3 9h16M3 13h16M8 6v11M14 6v11"
+              stroke="currentColor"
+              strokeWidth="1"
+              opacity="0.6"
+            />
+          </svg>
+        )}
+      </div>
+      <div className="pm-sport-body">
+        <div className="pm-sport-label">{label}</div>
+        <div className="pm-sport-sub">{sub}</div>
+      </div>
+    </label>
+  );
+}
+
+function CreateTeamForm() {
+  const [name, setName] = useState("");
+  const [status, setStatus] = useState<NameStatus>("idle");
+  const [sport, setSport] = useState<"SOCCER" | "FUTSAL">("SOCCER");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // 팀 검색 상태
-  type SearchResult = {
-    id: string;
-    name: string;
-    sportType: string;
-    memberCount: number;
-    hasPendingRequest: boolean;
-  };
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [joiningTeamId, setJoiningTeamId] = useState<string | null>(null);
-  const [joinError, setJoinError] = useState<string | null>(null);
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    const trimmed = teamName.trim();
-    if (!trimmed || trimmed.length < 2) {
-      setNameStatus("idle");
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setStatus("idle");
       return;
     }
-
-    setNameStatus("checking");
+    if (trimmed.length < 2) {
+      setStatus("invalid");
+      return;
+    }
+    setStatus("checking");
     debounceRef.current = setTimeout(async () => {
       try {
         const res = await fetch(`/api/teams/check-name?name=${encodeURIComponent(trimmed)}`);
         const data = await res.json();
-        setNameStatus(data.available ? "available" : "taken");
+        setStatus(data.available ? "available" : "taken");
       } catch {
-        setNameStatus("idle");
+        setStatus("idle");
       }
     }, 500);
-
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [teamName]);
+  }, [name]);
 
-  // 팀 검색 debounce
+  const submitDisabled = status === "taken" || status === "checking" || status === "idle" || status === "invalid";
+
+  return (
+    <form action={createTeam} className="pm-card">
+      <div className="pm-card-head">
+        <div className="pm-card-chip">CREATE</div>
+        <div className="pm-card-title">새 팀 만들기</div>
+        <div className="pm-card-hint">회장이 되어 회원을 초대할 수 있어요.</div>
+      </div>
+
+      <div className="pm-field">
+        <div className="pm-label">
+          <span>팀 이름</span>
+          <span className="pm-pill pm-pill--req">필수</span>
+        </div>
+        <div className="pm-input-wrap">
+          <input
+            className={`pm-input ${
+              status === "taken" ? "is-error" : status === "available" ? "is-ok" : ""
+            }`}
+            name="teamName"
+            placeholder="우리 팀의 이름"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            maxLength={30}
+          />
+          <NameStatusBadge status={status} />
+        </div>
+        <NameStatusMsg status={status} />
+      </div>
+
+      <div className="pm-field">
+        <div className="pm-label">
+          <span>종목</span>
+        </div>
+        <div className="pm-sport-row" role="radiogroup">
+          <SportPick value="SOCCER" current={sport} onPick={setSport} label="축구" sub="11명" />
+          <SportPick value="FUTSAL" current={sport} onPick={setSport} label="풋살" sub="5명" />
+        </div>
+      </div>
+
+      <button type="submit" className="pm-cta" disabled={submitDisabled}>
+        팀 만들고 시작하기
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
+          <path
+            d="M3 8 L13 8 M9 4 L13 8 L9 12"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+    </form>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// InviteCodeForm
+// ─────────────────────────────────────────────────────────────
+function InviteCodeForm({ defaultValue = "" }: { defaultValue?: string }) {
+  const [code, setCode] = useState(defaultValue);
+  return (
+    <form action={joinTeam} className="pm-card">
+      <div className="pm-card-head">
+        <div className="pm-card-chip">JOIN</div>
+        <div className="pm-card-title">초대 코드로 합류</div>
+        <div className="pm-card-hint">회장에게 받은 6자리 코드를 입력하세요.</div>
+      </div>
+
+      <div className="pm-field">
+        <div className="pm-label">
+          <span>초대 코드</span>
+          <span className="pm-pill pm-pill--req">필수</span>
+        </div>
+        <input
+          className="pm-input pm-input--code"
+          name="inviteCode"
+          placeholder="ABC123"
+          value={code}
+          onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 6))}
+          required
+          inputMode="text"
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          maxLength={6}
+        />
+      </div>
+
+      <button type="submit" className="pm-cta" disabled={code.length < 4}>
+        팀 합류하기
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
+          <path
+            d="M3 8 L13 8 M9 4 L13 8 L9 12"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+    </form>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// SearchPanel
+// ─────────────────────────────────────────────────────────────
+type SearchResult = {
+  id: string;
+  name: string;
+  sportType: string;
+  memberCount: number;
+  hasPendingRequest: boolean;
+};
+
+function SearchPanel() {
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [joiningId, setJoiningId] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
-    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-
-    const trimmed = searchQuery.trim();
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const trimmed = q.trim();
     if (!trimmed || trimmed.length < 2) {
-      setSearchResults([]);
-      setSearching(false);
+      setResults([]);
+      setLoading(false);
       return;
     }
-
-    setSearching(true);
-    searchDebounceRef.current = setTimeout(async () => {
+    setLoading(true);
+    debounceRef.current = setTimeout(async () => {
       try {
         const res = await fetch(`/api/teams/search?q=${encodeURIComponent(trimmed)}`);
         const data = await res.json();
-        setSearchResults(data.teams ?? []);
+        setResults(data.teams ?? []);
       } catch {
-        setSearchResults([]);
+        setResults([]);
       } finally {
-        setSearching(false);
+        setLoading(false);
       }
     }, 500);
-
     return () => {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [searchQuery]);
+  }, [q]);
 
-  // 가입 신청 핸들러
-  async function handleJoinRequest(teamId: string) {
-    setJoiningTeamId(teamId);
-    setJoinError(null);
+  async function handleJoin(teamId: string) {
+    setJoiningId(teamId);
+    setErr(null);
     try {
       const res = await fetch("/api/teams/join-request", {
         method: "POST",
@@ -114,291 +441,270 @@ export default function TeamClient({ hasExistingTeam = false }: { hasExistingTea
         body: JSON.stringify({ teamId }),
       });
       if (res.ok) {
-        // 검색 결과에서 해당 팀을 "신청 대기 중"으로 업데이트
-        setSearchResults((prev) =>
+        setResults((prev) =>
           prev.map((t) => (t.id === teamId ? { ...t, hasPendingRequest: true } : t))
         );
       } else {
-        const data = await res.json();
-        const msg =
+        const data = await res.json().catch(() => ({}));
+        setErr(
           data.error === "already_member"
             ? "이미 해당 팀에 소속되어 있습니다."
             : data.error === "already_requested" || res.status === 409
-              ? "이미 가입 신청한 팀입니다."
-              : data.error ?? "가입 신청에 실패했습니다.";
-        setJoinError(msg);
+            ? "이미 가입 신청한 팀입니다."
+            : data.error ?? "가입 신청에 실패했습니다."
+        );
       }
     } catch {
-      setJoinError("네트워크 오류가 발생했습니다.");
+      setErr("네트워크 오류가 발생했습니다.");
     } finally {
-      setJoiningTeamId(null);
+      setJoiningId(null);
     }
   }
 
-  const errorMessage =
-    error === "duplicate_name"
-      ? "이미 사용 중인 팀명입니다. 다른 이름을 입력해주세요."
-      : error === "invalid_code"
-        ? "유효하지 않은 초대 코드입니다."
-        : error === "expired_code"
-          ? "만료된 초대 코드입니다."
-          : error === "already_member"
-            ? "이미 해당 팀에 소속되어 있습니다."
-            : error === "already_requested"
-              ? "이미 가입 신청한 팀입니다."
-              : error === "demo_blocked"
-                ? "데모 모드에서는 팀 생성/가입이 불가합니다. 카카오 로그인 후 이용해주세요."
-                : error === "invalid_name"
-                  ? "팀 이름에 사용할 수 없는 문자가 포함되어 있습니다. 한글·영문·숫자로 2자 이상 입력해주세요."
-                  : error === "rate_limit"
-                    ? "팀 생성 한도(시간 1팀·일 3팀)에 도달했습니다. 잠시 후 다시 시도해주세요."
-                    : null;
+  return (
+    <div className="pm-card">
+      <div className="pm-card-head">
+        <div className="pm-card-chip">SEARCH</div>
+        <div className="pm-card-title">팀 검색해서 신청</div>
+        <div className="pm-card-hint">회장이 신청을 승인하면 합류돼요.</div>
+      </div>
 
-  const createTeamCard = (
-    <Card>
-      <CardHeader>
-        <CardTitle className="font-heading text-2xl font-bold">새 팀 만들기</CardTitle>
-        <CardDescription>팀명을 입력하면 초대 코드가 생성됩니다.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form action={createTeam} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="teamName">팀명</Label>
-            <Input
-              id="teamName"
-              name="teamName"
-              required
-              placeholder="예: 한강 FC"
-              value={teamName}
-              onChange={(e) => setTeamName(e.target.value)}
-            />
-            {nameStatus === "checking" && (
-              <p className="text-xs text-muted-foreground animate-pulse">중복 확인 중...</p>
-            )}
-            {nameStatus === "available" && (
-              <p className="text-xs text-green-500">사용 가능한 팀명입니다.</p>
-            )}
-            {nameStatus === "taken" && (
-              <p className="text-xs text-destructive">이미 사용 중인 팀명입니다.</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label>스포츠 유형</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { value: "SOCCER", label: "축구", desc: "11 vs 11" },
-                { value: "FUTSAL", label: "풋살", desc: "3~8명" },
-              ].map((opt) => (
-                <label
-                  key={opt.value}
-                  className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border border-border bg-card px-4 py-3 text-center transition-colors hover:bg-accent has-[:checked]:border-primary has-[:checked]:bg-primary/5"
-                >
-                  <input
-                    type="radio"
-                    name="sportType"
-                    value={opt.value}
-                    defaultChecked={opt.value === "SOCCER"}
-                    className="sr-only"
-                  />
-                  <span className="text-sm font-bold">{opt.label}</span>
-                  <span className="text-xs text-muted-foreground">{opt.desc}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={nameStatus === "taken" || nameStatus === "checking"}
-          >
-            팀 생성하기
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  );
-
-  const searchTeamCard = (
-    <Card>
-      <CardHeader>
-        <CardTitle className="font-heading text-2xl font-bold">팀 검색해서 가입</CardTitle>
-        <CardDescription>팀 이름을 검색하면 가입 신청할 수 있습니다. 운영진 승인 후 가입됩니다.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <Input
-            placeholder="팀 이름 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+      <div className="pm-field">
+        <div className="pm-search-wrap">
+          <svg width="16" height="16" viewBox="0 0 16 16" className="pm-search-icon" aria-hidden>
+            <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.4" fill="none" />
+            <path d="m10.5 10.5 3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          </svg>
+          <input
+            className="pm-input pm-input--search"
+            placeholder="팀 이름으로 검색"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            aria-label="팀 검색"
           />
-          {searching && (
-            <p className="text-sm text-muted-foreground animate-pulse text-center py-2">검색 중...</p>
-          )}
-          {joinError && (
-            <p className="text-sm font-semibold text-destructive text-center py-2">{joinError}</p>
-          )}
-          {searchResults.map((team) => (
-            <div
-              key={team.id}
-              className="flex items-center justify-between rounded-lg border border-border p-4"
-            >
-              <div>
-                <p className="font-semibold">{team.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {team.sportType === "SOCCER" ? "축구" : "풋살"} · {team.memberCount}명
-                </p>
+        </div>
+      </div>
+
+      {err && <p className="pm-help pm-help--err">{err}</p>}
+
+      <div className="pm-results">
+        {!q.trim() && (
+          <div className="pm-empty">
+            <div className="pm-empty-glyph" aria-hidden>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.4" />
+                <path d="m13 13 3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div>팀 이름을 입력하면 결과가 보여요.</div>
+          </div>
+        )}
+        {loading && <div className="pm-empty pm-empty--muted">검색 중…</div>}
+        {!loading && q.trim().length >= 2 && results.length === 0 && (
+          <div className="pm-empty">
+            <div>일치하는 팀이 없어요. 초대 코드로 가입하거나 새 팀을 만들어보세요.</div>
+          </div>
+        )}
+        {!loading &&
+          results.map((t) => (
+            <div key={t.id} className="pm-result">
+              <div className="pm-result-avatar" aria-hidden>
+                {t.name.slice(0, 1)}
               </div>
-              {team.hasPendingRequest ? (
-                <Badge variant="secondary">신청 대기 중</Badge>
-              ) : (
-                <Button
-                  size="sm"
-                  disabled={joiningTeamId === team.id}
-                  onClick={() => handleJoinRequest(team.id)}
-                >
-                  {joiningTeamId === team.id ? "신청 중..." : "가입 신청"}
-                </Button>
-              )}
+              <div className="pm-result-body">
+                <div className="pm-result-name">{t.name}</div>
+                <div className="pm-result-meta">
+                  {t.sportType === "SOCCER" ? "축구" : "풋살"} · {t.memberCount}명
+                </div>
+              </div>
+              <button
+                type="button"
+                className={`pm-result-btn ${t.hasPendingRequest ? "is-pending" : ""}`}
+                disabled={t.hasPendingRequest || joiningId === t.id}
+                onClick={() => handleJoin(t.id)}
+              >
+                {t.hasPendingRequest
+                  ? "신청됨"
+                  : joiningId === t.id
+                  ? "신청 중..."
+                  : "가입 신청"}
+              </button>
             </div>
           ))}
-          {searchQuery.trim().length >= 2 && searchResults.length === 0 && !searching && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              검색 결과가 없습니다. 초대 코드로 가입하거나 새 팀을 만들어보세요.
-            </p>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
+}
+
+// ─────────────────────────────────────────────────────────────
+// AlreadyInTeamBanner
+// ─────────────────────────────────────────────────────────────
+function AlreadyInTeamBanner({ teamName }: { teamName: string }) {
+  return (
+    <Reveal delay={240} className="pm-alert">
+      <div className="pm-alert-icon" aria-hidden>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 1l7 4v6c0 3-3 5-7 5s-7-2-7-5V5l7-4z" stroke="currentColor" strokeWidth="1.4" />
+          <path
+            d="m5 8 2 2 4-4"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+      <div className="pm-alert-body">
+        <div className="pm-alert-title">
+          이미 <strong>{teamName || "현재 팀"}</strong>의 멤버예요
+        </div>
+        <div className="pm-alert-sub">대시보드에서 일정과 회원 관리를 이어가세요.</div>
+      </div>
+      <a href="/dashboard" className="pm-alert-btn">
+        대시보드로
+      </a>
+    </Reveal>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// TeamClient
+// ─────────────────────────────────────────────────────────────
+export default function TeamClient({
+  hasExistingTeam = false,
+  currentTeamName = "",
+}: Props) {
+  const searchParams = useSearchParams();
+  const codeFromUrl = searchParams.get("code") ?? "";
+  const errorParam = searchParams.get("error");
+  const pending = searchParams.get("pending");
+
+  const branch: Branch = useMemo(() => {
+    if (codeFromUrl) return "invite";
+    if (hasExistingTeam) return "member";
+    return "direct";
+  }, [codeFromUrl, hasExistingTeam]);
+
+  const [active, setActive] = useState<PathKey>(branch === "invite" ? "invite" : "create");
+
+  // 온보딩 완료 신호 — completeOnboarding 이 ?welcome=onboarded 로 redirect
+  useEffect(() => {
+    if (searchParams.get("welcome") === "onboarded") {
+      GA.onboardingComplete();
+      const code = searchParams.get("code");
+      const cleanUrl = code ? `/team?code=${encodeURIComponent(code)}` : "/team";
+      window.history.replaceState(null, "", cleanUrl);
+    }
+  }, [searchParams]);
+
+  const errorMessage =
+    errorParam === "duplicate_name"
+      ? "이미 사용 중인 팀명입니다. 다른 이름을 입력해주세요."
+      : errorParam === "invalid_code"
+      ? "유효하지 않은 초대 코드입니다."
+      : errorParam === "expired_code"
+      ? "만료된 초대 코드입니다."
+      : errorParam === "already_member"
+      ? "이미 해당 팀에 소속되어 있습니다."
+      : errorParam === "already_requested"
+      ? "이미 가입 신청한 팀입니다."
+      : errorParam === "demo_blocked"
+      ? "데모 모드에서는 팀 생성/가입이 불가합니다. 카카오 로그인 후 이용해주세요."
+      : errorParam === "invalid_name"
+      ? "팀 이름에 사용할 수 없는 문자가 포함되어 있습니다. 한글·영문·숫자로 2자 이상 입력해주세요."
+      : errorParam === "rate_limit"
+      ? "팀 생성 한도(시간 1팀·일 3팀)에 도달했습니다. 잠시 후 다시 시도해주세요."
+      : errorParam === "invalid_message"
+      ? "가입 메시지에 사용할 수 없는 문자가 포함되어 있습니다."
+      : errorParam === "user_not_found"
+      ? "사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요."
+      : null;
+
+  const headTitle =
+    branch === "invite" ? (
+      <>
+        초대받았어요.
+        <br />
+        바로 합류할까요?
+      </>
+    ) : (
+      <>
+        어느 팀으로
+        <br />
+        시작할까요?
+      </>
+    );
+  const headSub =
+    branch === "invite" ? (
+      <>
+        받으신 초대 코드로 한 번에 합류할 수 있어요.
+        <br />
+        다른 방법으로 시작하고 싶다면 아래에서 선택하세요.
+      </>
+    ) : (
+      <>
+        초대 코드가 있으면 바로 합류,
+        <br />
+        없으면 새 팀을 만들어 회장으로 시작하세요.
+      </>
+    );
 
   return (
-    <main className="min-h-screen px-6 py-16">
-      <div className="mx-auto max-w-5xl">
-        {hasExistingTeam && (
-          <Card className="mb-6 border-primary/20 bg-primary/5">
-            <CardContent className="flex items-center justify-between p-4">
-              <p className="text-sm text-muted-foreground">이미 소속된 팀이 있습니다. 추가로 팀을 만들거나 다른 팀에 가입할 수 있습니다.</p>
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/dashboard">대시보드로 돌아가기</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+    <div className="pm-page">
+      <div className="pm-amb" aria-hidden />
+      <div className="pm-amb pm-amb--2" aria-hidden />
 
-        {errorMessage && (
-          <Card className="mb-6 border-destructive/30 bg-destructive/5">
-            <CardContent className="p-4 text-sm font-semibold text-destructive">
-              {errorMessage}
-            </CardContent>
-          </Card>
-        )}
+      <main className="pm-main">
+        <Reveal as="header" className="pm-progress-wrap">
+          <StepProgress current={2} />
+        </Reveal>
 
+        <Reveal delay={80}>
+          <div className="pm-chip">
+            <span className="pm-chip-dot" />
+            <span>STEP 02 · TEAM</span>
+          </div>
+        </Reveal>
+
+        <Reveal delay={140} as="h1" className="pm-h1">
+          {headTitle}
+        </Reveal>
+
+        <Reveal delay={200} as="p" className="pm-sub">
+          {headSub}
+        </Reveal>
+
+        {errorMessage && <div className="pm-notice pm-notice--err">{errorMessage}</div>}
         {pending && (
-          <Card className="mb-6 border-amber-500/30 bg-amber-500/5">
-            <CardContent className="p-4 text-sm font-semibold text-amber-500">
-              가입 신청이 완료되었습니다. 팀 관리자의 승인을 기다려주세요.
-            </CardContent>
-          </Card>
+          <div className="pm-notice pm-notice--info">
+            가입 신청이 완료되었습니다. 팀 관리자의 승인을 기다려주세요.
+          </div>
         )}
 
-        {/* ── 초대 코드로 가입 (code 있으면 메인, 없으면 2열 중 우측) ── */}
-        {codeFromUrl ? (
-          <>
-            {/* 초대 코드가 있을 때: 가입 폼을 메인으로 */}
-            <Card className="border-primary/20">
-              <CardHeader className="text-center">
-                <CardTitle className="font-heading text-2xl font-bold">팀에 가입하기</CardTitle>
-                <CardDescription>초대 코드가 확인되었습니다. 아래 버튼을 눌러 가입하세요.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form action={joinTeam} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="inviteCode">초대 코드</Label>
-                    <Input id="inviteCode" name="inviteCode" required placeholder="예: PITCH42" defaultValue={codeFromUrl} />
-                  </div>
-                  <Button type="submit" className="w-full">팀 가입하기</Button>
-                </form>
-              </CardContent>
-            </Card>
+        <div className="pm-form">
+          {branch === "member" && <AlreadyInTeamBanner teamName={currentTeamName} />}
 
-            {/* 팀 생성/검색은 접힌 상태로 */}
-            <details className="mt-6 group">
-              <summary className="flex cursor-pointer items-center justify-center gap-1.5 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <span>새 팀을 만들거나 다른 팀을 검색하고 싶으신가요?</span>
-                <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
-              </summary>
-              <div className="mt-4 grid gap-8 lg:grid-cols-2">
-                {createTeamCard}
-                {searchTeamCard}
-              </div>
-            </details>
-          </>
-        ) : (
-          <>
-            {/* ── Wayfinding 카드 — 코드 없이 진입한 사용자를 위한 안내 ── */}
-            {!hasExistingTeam && (
-              <Card className="mb-8 border-primary/20 bg-primary/5">
-                <CardContent className="p-5">
-                  <p className="text-sm font-bold text-foreground mb-3">어떻게 시작할지 모르겠나요?</p>
-                  <ul className="space-y-2.5 text-sm">
-                    <li className="flex gap-2.5">
-                      <MessageCircle className="h-4 w-4 shrink-0 text-primary mt-0.5" />
-                      <span className="text-muted-foreground">
-                        친구가 보내준 <b className="text-foreground">초대 코드</b>가 있다면 우측 칸에 입력하세요.
-                      </span>
-                    </li>
-                    <li className="flex gap-2.5">
-                      <UserPlus className="h-4 w-4 shrink-0 text-primary mt-0.5" />
-                      <span className="text-muted-foreground">
-                        우리 팀에 처음 도입하는 거라면 <b className="text-foreground">새 팀 만들기</b>로 회장으로 등록한 뒤, 단톡방에 초대 코드를 공유하세요.
-                      </span>
-                    </li>
-                    <li className="flex gap-2.5">
-                      <Users className="h-4 w-4 shrink-0 text-primary mt-0.5" />
-                      <span className="text-muted-foreground">
-                        회원으로 참여만 하고 싶다면 아래 <b className="text-foreground">팀 검색</b>으로 가입 신청을 보내거나, 회장님께 코드를 요청하세요.
-                      </span>
-                    </li>
-                  </ul>
-                  <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-primary/10 pt-3">
-                    <p className="text-xs text-muted-foreground">어떤 앱인지 먼저 둘러볼래요 →</p>
-                    <DemoButton compact />
-                    <p className="text-[11px] text-muted-foreground/80 mt-1 w-full">
-                      ※ 데모로 전환되면 현재 계정에서 잠시 로그아웃돼요. 카카오로 다시 로그인하면 본인 계정으로 돌아옵니다.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+          <Reveal delay={260}>
+            <PathPicker active={active} onChange={setActive} />
+          </Reveal>
 
-            {/* 초대 코드가 없을 때: 기존 2열 레이아웃 */}
-            <div className="grid gap-8 lg:grid-cols-2">
-              {createTeamCard}
+          <Reveal delay={320} keyOverride={active}>
+            {active === "create" && <CreateTeamForm />}
+            {active === "invite" && <InviteCodeForm defaultValue={codeFromUrl} />}
+            {active === "search" && <SearchPanel />}
+          </Reveal>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="font-heading text-2xl font-bold">초대 코드로 가입</CardTitle>
-                  <CardDescription>팀에서 받은 초대 코드를 입력하면 즉시 가입됩니다.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <form action={joinTeam} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="inviteCode">초대 코드</Label>
-                      <Input id="inviteCode" name="inviteCode" required placeholder="예: PITCH42" defaultValue={codeFromUrl} />
-                    </div>
-                    <Button type="submit" variant="secondary" className="w-full">팀 가입하기</Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* 팀 검색 */}
-            <div className="mt-8">
-              {searchTeamCard}
-            </div>
-          </>
-        )}
-      </div>
-    </main>
+          {branch !== "invite" && (
+            <Reveal delay={360} className="pm-demo">
+              <DemoButton compact />
+              <p className="pm-demo-sub">
+                현재 계정에서 잠시 로그아웃돼요. 카카오로 다시 로그인하면 본인 계정으로
+                돌아옵니다.
+              </p>
+            </Reveal>
+          )}
+        </div>
+      </main>
+    </div>
   );
 }

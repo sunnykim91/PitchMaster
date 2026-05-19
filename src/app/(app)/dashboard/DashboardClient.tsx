@@ -20,6 +20,10 @@ import { EmptyState } from "@/components/EmptyState";
 import { shareTeamInvite } from "@/lib/kakaoShare";
 import { getUniformStyle } from "@/lib/uniformUtils";
 import AlphaTesterBanner from "@/components/AlphaTesterBanner";
+import WelcomeCard from "@/components/onboarding/WelcomeCard";
+
+// TEMP: 디자인 검토용 — 김선휘만 ?previewWelcome=created로 시안 created 카드 노출. 작업 종료 후 제거.
+const DESIGN_PREVIEW_USER_ID = "7bc8a1b2-7844-41f3-b592-05a2c38f8085";
 
 type UpcomingMatch = {
   id: string;
@@ -303,22 +307,27 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
   // Team record totals
   const recordTotal = teamRecord.wins + teamRecord.draws + teamRecord.losses;
 
+  // 디자인 검토용 preview — 김선휘만 ?previewWelcome=created로 created 카드 강제 노출
+  const isPreviewWelcomeCreated =
+    searchParams.get("previewWelcome") === "created" && userId === DESIGN_PREVIEW_USER_ID;
+
   // Onboarding wizard: 빈 새 팀 + 운영진(STAFF+) + 닫지 않은 상태에서만 노출
   const showWizard =
-    !wizardDismissed &&
-    isStaffOrAbove(role) &&
-    !upcomingMatch &&
-    activeVotes.length === 0 &&
-    !recentResult &&
-    recordTotal === 0;
+    isPreviewWelcomeCreated ||
+    (!wizardDismissed &&
+      isStaffOrAbove(role) &&
+      !upcomingMatch &&
+      activeVotes.length === 0 &&
+      !recentResult &&
+      recordTotal === 0);
 
   // 경기 0건 넛지 카드: 위자드와 별개로, 한 번도 경기를 등록한 적 없는 팀에게 운영진에게만 표시
   const showNoMatchNudge = !showWizard && isStaffOrAbove(role) && (data.totalMatches ?? 0) === 0;
 
-  // 위자드 닫기 핸들러
+  // 위자드 닫기 핸들러 (preview 모드는 localStorage 박지 않음 — 새로고침으로 다시 확인 가능)
   function dismissWizard() {
     setWizardDismissed(true);
-    if (typeof window !== "undefined" && teamId) {
+    if (!isPreviewWelcomeCreated && typeof window !== "undefined" && teamId) {
       try {
         localStorage.setItem(`wizard_dismissed:${teamId}`, "1");
       } catch {
@@ -434,138 +443,37 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
         </Link>
       )}
 
-      {/* ── 신규 가입자(팀원 합류) 환영 카드 ── */}
+      {/* ── 신규 가입자(팀원 합류) 환영 카드 — 시안 v2 ── */}
       {joinedWelcome && (
-        <Card className="card-featured relative">
-          <button
-            type="button"
-            onClick={() => setJoinedWelcome(null)}
-            className="absolute top-3 right-3 rounded-full p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-            aria-label="환영 카드 닫기"
-          >
-            <X className="h-4 w-4" />
-          </button>
-          <CardContent className="pt-6">
-            <h2 className="text-lg font-bold text-foreground">{joinedWelcome.team}에 합류했어요! 👋</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              먼저 해보면 좋은 3가지를 골라봤어요. 천천히 둘러보셔도 돼요.
-            </p>
-            <div className="mt-4 space-y-3">
-              <div className="flex items-start gap-3 rounded-xl bg-secondary/50 p-4">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">1</span>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">다가오는 경기에 투표하기</p>
-                  <p className="mt-0.5 text-sm text-muted-foreground">참석 여부를 알리면 회장님이 명단을 짜기 편해져요.</p>
-                  <Button size="sm" className="mt-2" asChild>
-                    <Link href="/matches">일정 보러가기 →</Link>
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 rounded-xl bg-secondary/50 p-4">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">2</span>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">내 프로필 완성하기</p>
-                  <p className="mt-0.5 text-sm text-muted-foreground">포지션이나 사진을 추가하면 자동 편성·기록에 반영돼요.</p>
-                  <Button size="sm" variant="outline" className="mt-2" asChild>
-                    <Link href={`/player/${userId}${teamId ? `?team=${teamId}` : ""}`}>프로필 보기 →</Link>
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 rounded-xl bg-secondary/50 p-4">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">3</span>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">팀 게시판 둘러보기</p>
-                  <p className="mt-0.5 text-sm text-muted-foreground">공지·회칙·일정 정보가 게시판에 모여 있어요.</p>
-                  <Button size="sm" variant="outline" className="mt-2" asChild>
-                    <Link href="/board">게시판 →</Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <WelcomeCard
+          variant="joined"
+          teamName={joinedWelcome.team}
+          teamId={teamId ?? ""}
+          userId={userId}
+          nextMatch={
+            upcomingMatch
+              ? {
+                  id: upcomingMatch.id,
+                  when: `${formatDateKo(upcomingMatch.match_date)}${
+                    upcomingMatch.match_time ? ` ${formatTime(upcomingMatch.match_time)}` : ""
+                  }`,
+                  where: upcomingMatch.location ?? "장소 미정",
+                }
+              : null
+          }
+          onDismiss={() => setJoinedWelcome(null)}
+        />
       )}
 
-      {/* ── Onboarding Wizard (new teams only) ── */}
-      {showWizard && (
-        <Card className="card-featured relative">
-          <button
-            type="button"
-            onClick={dismissWizard}
-            className="absolute top-3 right-3 rounded-full p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-            aria-label="위자드 닫기"
-          >
-            <X className="h-4 w-4" />
-          </button>
-          <CardContent className="pt-6">
-            <h2 className="text-lg font-bold text-foreground">팀이 생성되었습니다! 🎉</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              아래 3단계를 완료하면 PitchMaster를 바로 활용할 수 있어요.
-            </p>
-
-            <div className="mt-4 space-y-3">
-              {/* Step 1: Invite */}
-              <div className="flex items-start gap-3 rounded-xl bg-secondary/50 p-4">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">
-                  1
-                </span>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">팀원 초대하기</p>
-                  <p className="mt-0.5 text-sm text-muted-foreground">
-                    초대 코드를 팀원에게 공유하면 바로 가입할 수 있습니다.
-                  </p>
-                  {inviteCode ? (
-                    <Button size="sm" className="mt-2 w-full" onClick={() => shareTeamInvite({ teamName: teamName || "우리 팀", inviteCode: inviteCode! })}>
-                      카카오톡으로 초대하기
-                    </Button>
-                  ) : (
-                    <Button size="sm" className="mt-2" asChild>
-                      <Link href="/settings">초대 코드 확인 &rarr;</Link>
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {/* Step 2: Pre-register members */}
-              <div className="flex items-start gap-3 rounded-xl bg-secondary/50 p-4">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">
-                  2
-                </span>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">팀원 명단 먼저 만들기</p>
-                  <p className="mt-0.5 text-sm text-muted-foreground">
-                    카카오톡 단체방 명단을 복붙하면 한 번에 등록됩니다. 가입 전이라도 출석·회비 기록을 바로 시작할 수 있어요.
-                  </p>
-                  <Button size="sm" className="mt-2" asChild>
-                    <Link href="/members?bulk=true">카톡 명단 복붙으로 한 번에 등록 &rarr;</Link>
-                  </Button>
-                  <Link
-                    href="/members"
-                    className="mt-2 ml-3 inline-block text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                  >
-                    한 명씩 등록 →
-                  </Link>
-                </div>
-              </div>
-
-              {/* Step 3: Create first match — 강조 CTA */}
-              <div className="flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-                  3
-                </span>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">첫 경기를 등록하세요!</p>
-                  <p className="mt-0.5 text-sm text-muted-foreground">
-                    경기를 등록하면 팀원에게 자동으로 참석 투표 알림이 갑니다.
-                  </p>
-                  <Button size="sm" className="mt-2" asChild>
-                    <Link href="/matches?create=true">지금 바로 등록하기 &rarr;</Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* ── Onboarding Wizard (new teams only) — 시안 v2 ── */}
+      {showWizard && inviteCode && (
+        <WelcomeCard
+          variant="created"
+          teamName={teamName || "우리 팀"}
+          teamId={teamId ?? ""}
+          inviteCode={inviteCode}
+          onDismiss={dismissWizard}
+        />
       )}
 
       {/* ── 경기 0건 넛지 카드 (운영진 전용, 한 번도 경기 등록 안 한 팀) ── */}

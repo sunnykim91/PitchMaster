@@ -75,6 +75,11 @@
   --draw: 40 30% 62%;
   --loss: 0 68% 52%;
   --pitch: 152 40% 28%;
+  /* Position group hue mapping — onboarding/team detail position chips */
+  --hue-gk: var(--warning);
+  --hue-def: var(--info);
+  --hue-mid: var(--success);
+  --hue-atk: var(--primary);
   --sidebar-background: 240 5% 8%;
   --sidebar-foreground: 40 10% 92%;
   --sidebar-primary: 16 85% 58%;
