@@ -110,7 +110,7 @@ function matchTypeMeta(type: Match["matchType"]): { label: string; hue: "atk" | 
     case "INTERNAL":
       return { label: "자체", hue: "def" };
     case "EVENT":
-      return { label: "이벤트", hue: "mid" };
+      return { label: "팀 일정", hue: "mid" };
     default:
       return { label: "정규", hue: "atk" };
   }
@@ -874,7 +874,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   <div className="pm-empty-type-desc">우리 팀 안에서</div>
                 </div>
                 <div className="pm-empty-type pm-hue--mid">
-                  <div className="pm-empty-type-label">이벤트</div>
+                  <div className="pm-empty-type-label">팀 일정</div>
                   <div className="pm-empty-type-desc">MT · 회식 · 모임</div>
                 </div>
               </div>
@@ -1029,7 +1029,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         )}
                         {match.matchType === "EVENT" && (
                           <div className="pm-mc-opp pm-mc-opp--mute">
-                            {match.opponent || "팀 이벤트"}
+                            {match.opponent || "팀 일정"}
                           </div>
                         )}
                         {match.location && (
@@ -1221,7 +1221,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                           ? `vs ${match.opponent}`
                           : match.matchType === "INTERNAL"
                           ? "자체전"
-                          : match.opponent || "팀 이벤트"}
+                          : match.opponent || "팀 일정"}
                       </div>
                       {score ? (
                         <div className={`pm-past-score ${resultClass}`}>
