@@ -3116,6 +3116,221 @@ input[type="datetime-local"].pm-input {
 }
 
 /* ─────────────────────────────────────────────────────────────
+ * MATCHES — Toolbar + New match form (시안 톤)
+ * ───────────────────────────────────────────────────────────── */
+.pm-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.pm-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.pm-toolbar-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: hsl(var(--foreground));
+}
+.pm-view-toggle {
+  display: inline-flex;
+  padding: 4px;
+  background: hsl(var(--background) / 0.6);
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+}
+.pm-view-toggle-opt {
+  border: 0;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  transition: background 200ms, color 200ms;
+}
+.pm-view-toggle-opt:hover { color: hsl(var(--foreground)); }
+.pm-view-toggle-opt.is-on {
+  background: hsl(var(--primary));
+  color: white;
+  box-shadow: 0 2px 8px hsl(var(--primary) / 0.28);
+}
+
+.pm-cta-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: hsl(var(--primary));
+  color: white;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  border: 0;
+  cursor: pointer;
+  box-shadow: 0 4px 14px hsl(var(--primary) / 0.32);
+  transition: transform 200ms, box-shadow 200ms;
+}
+.pm-cta-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px hsl(var(--primary) / 0.42); }
+.pm-cta-primary:disabled { opacity: 0.65; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.pm-mform {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 16px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 16px;
+  background: hsl(var(--card) / 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.pm-mform-grid2 { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 640px) {
+  .pm-mform-grid2 { grid-template-columns: 1fr 1fr; }
+}
+.pm-mform-grid3 { display: grid; gap: 12px; grid-template-columns: 1fr; }
+@media (min-width: 640px) {
+  .pm-mform-grid3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+.pm-typeseg {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.pm-typeseg-opt {
+  --hue: var(--primary);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 56px;
+  border-radius: 12px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background) / 0.6);
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  transition: border-color 200ms, background 200ms, color 200ms;
+}
+.pm-typeseg-opt-sub {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: hsl(var(--muted-foreground) / 0.8);
+}
+.pm-typeseg-opt:hover { border-color: hsl(var(--hue) / 0.4); color: hsl(var(--foreground)); }
+.pm-typeseg-opt.is-on {
+  border-color: hsl(var(--hue) / 0.55);
+  background: hsl(var(--hue) / 0.12);
+  color: hsl(var(--hue));
+  box-shadow: 0 4px 14px hsl(var(--hue) / 0.18);
+}
+.pm-typeseg-opt.is-on .pm-typeseg-opt-sub { color: hsl(var(--hue) / 0.75); }
+
+.pm-chip-pill {
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background) / 0.6);
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  transition: border-color 200ms, background 200ms, color 200ms;
+}
+.pm-chip-pill:hover { border-color: hsl(var(--primary) / 0.4); color: hsl(var(--foreground)); }
+.pm-chip-pill.is-on {
+  border-color: hsl(var(--primary) / 0.55);
+  background: hsl(var(--primary) / 0.14);
+  color: hsl(var(--primary));
+}
+
+.pm-mform-adv-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 0;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.pm-mform-adv-toggle:hover { color: hsl(var(--foreground)); }
+
+.pm-mform-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+  letter-spacing: -0.005em;
+  cursor: pointer;
+}
+.pm-mform-check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: hsl(var(--primary));
+}
+
+.pm-mform-submit {
+  margin-top: 4px;
+  width: 100%;
+  height: 52px;
+  border-radius: 14px;
+  background: hsl(var(--primary));
+  color: white;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  border: 0;
+  cursor: pointer;
+  box-shadow: 0 6px 18px hsl(var(--primary) / 0.36);
+  transition: transform 200ms, box-shadow 200ms;
+}
+.pm-mform-submit:hover { transform: translateY(-1px); box-shadow: 0 8px 22px hsl(var(--primary) / 0.46); }
+.pm-mform-submit:disabled { opacity: 0.65; cursor: not-allowed; transform: none; box-shadow: none; }
+.pm-mform-hint { font-size: 11px; color: hsl(var(--muted-foreground)); }
+.pm-mform-err { font-size: 11px; color: hsl(var(--destructive)); }
+
+.pm-mform-time {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pm-mform-time .pm-select { flex: 1; }
+.pm-mform-time-sep { color: hsl(var(--muted-foreground)); flex-shrink: 0; }
+.pm-mform-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ─────────────────────────────────────────────────────────────
  * Tight-width tuning (≤ 374px)
  * ───────────────────────────────────────────────────────────── */
 @media (max-width: 374px) {
@@ -3126,4 +3341,5 @@ input[type="datetime-local"].pm-input {
   .pm-pos { grid-template-columns: 38px 1fr 18px; padding: 9px 10px; }
   .pm-pos-code { font-size: 10px; }
   .pm-bdate-row { grid-template-columns: 1.2fr 1fr 1fr; gap: 5px; }
+  .pm-typeseg-opt { font-size: 12px; height: 52px; }
 }

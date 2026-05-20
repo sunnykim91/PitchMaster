@@ -14,12 +14,8 @@ import { SPORT_DEFAULTS } from "@/lib/types";
 import { cn, formatTime, formatDateTime, formatMatchDate } from "@/lib/utils";
 import { voteStyles } from "@/lib/voteStyles";
 import { toKoreanError } from "@/lib/errorMessages";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { shareVoteLink } from "@/lib/kakaoShare";
 import { EmptyState } from "@/components/EmptyState";
@@ -465,76 +461,65 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
 
   return (
     <div className="grid gap-5">
-      <Card className="rounded-md">
-        <CardHeader>
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">
-                경기 일정
-              </CardTitle>
-              <div className="flex rounded-lg bg-secondary/50 p-0.5">
-                <button
-                  type="button"
-                  onClick={() => setViewMode("list")}
-                  className={cn(
-                    "rounded-md px-3 py-1 text-xs font-semibold transition-colors",
-                    viewMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  목록
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("calendar")}
-                  className={cn(
-                    "rounded-md px-3 py-1 text-xs font-semibold transition-colors",
-                    viewMode === "calendar" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  캘린더
-                </button>
-              </div>
-            </div>
-            {isStaffOrAbove(role) && (
-              <Button
+      <div className="grid gap-3">
+        <div className="pm-toolbar">
+          <div className="pm-toolbar-left">
+            <h1 className="pm-toolbar-title">경기 일정</h1>
+            <div className="pm-view-toggle" role="tablist" aria-label="뷰 전환">
+              <button
                 type="button"
-                variant="default"
-                size="sm"
-                onClick={() => { setIsOpen((prev) => !prev); setFormErrors({}); }}
+                role="tab"
+                aria-selected={viewMode === "list"}
+                onClick={() => setViewMode("list")}
+                className={cn("pm-view-toggle-opt", viewMode === "list" && "is-on")}
               >
-                일정 등록하기
-              </Button>
-            )}
+                목록
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={viewMode === "calendar"}
+                onClick={() => setViewMode("calendar")}
+                className={cn("pm-view-toggle-opt", viewMode === "calendar" && "is-on")}
+              >
+                캘린더
+              </button>
+            </div>
           </div>
-        </CardHeader>
+          {isStaffOrAbove(role) && (
+            <button
+              type="button"
+              className="pm-cta-primary"
+              onClick={() => { setIsOpen((prev) => !prev); setFormErrors({}); }}
+            >
+              {isOpen ? "접기" : "일정 등록"}
+            </button>
+          )}
+        </div>
 
         {isOpen ? (
-          <CardContent ref={formRef}>
+          <div ref={formRef}>
             <form
-              className="grid gap-5 rounded-xl border border-border bg-card p-5"
+              className="pm-mform"
               action={(formData) => handleCreate(formData)}
             >
               {/* 경기 유형 — 최상단 */}
-              <div className="space-y-2">
-                <Label>경기 유형</Label>
-                <div className="flex gap-2">
+              <div className="pm-field">
+                <span className="pm-label">경기 유형</span>
+                <div className="pm-typeseg">
                   {([
-                    { type: "REGULAR" as const, label: "일반 경기", color: "success" },
-                    { type: "INTERNAL" as const, label: "자체전", color: "info" },
-                    { type: "EVENT" as const, label: "팀 일정", color: "accent" },
+                    { type: "REGULAR" as const, label: "일반 경기", sub: "상대팀과", hue: "atk" as const },
+                    { type: "INTERNAL" as const, label: "자체전", sub: "우리 팀끼리", hue: "def" as const },
+                    { type: "EVENT" as const, label: "팀 일정", sub: "MT · 회식", hue: "mid" as const },
                   ]).map((item) => (
                     <button
                       key={item.type}
                       type="button"
                       onClick={() => { setMatchType(item.type); if (item.type === "EVENT") setStatsIncluded(false); }}
-                      className={cn(
-                        "flex-1 min-h-[44px] rounded-xl border-2 px-2 text-xs font-bold transition-all sm:text-sm sm:px-3",
-                        matchType === item.type
-                          ? `border-[hsl(var(--${item.color}))] bg-[hsl(var(--${item.color}))]/15 text-[hsl(var(--${item.color}))] shadow-sm`
-                          : `border-[hsl(var(--${item.color}))]/20 bg-[hsl(var(--${item.color}))]/5 text-[hsl(var(--${item.color}))]/50 hover:border-[hsl(var(--${item.color}))]/40`
-                      )}
+                      className={cn("pm-typeseg-opt", `pm-hue--${item.hue}`, matchType === item.type && "is-on")}
                     >
-                      {item.label}
+                      <span>{item.label}</span>
+                      <span className="pm-typeseg-opt-sub">{item.sub}</span>
                     </button>
                   ))}
                 </div>
@@ -542,40 +527,36 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
 
               {/* 종목 선택 — 팀 일정(EVENT) 제외 */}
               {matchType !== "EVENT" && (
-                <div className="space-y-2">
-                  <Label>종목</Label>
-                  <div className="flex gap-2">
+                <div className="pm-field">
+                  <span className="pm-label">종목</span>
+                  <div className="pm-typeseg" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
                     {([
-                      { type: "SOCCER" as const, label: "⚽ 축구", sub: "11인", color: "primary" },
-                      { type: "FUTSAL" as const, label: "⚽ 풋살", sub: "5·6인", color: "info" },
+                      { type: "SOCCER" as const, label: "축구", sub: "11인제", hue: "atk" as const },
+                      { type: "FUTSAL" as const, label: "풋살", sub: "5·6인제", hue: "def" as const },
                     ]).map((item) => (
                       <button
                         key={item.type}
                         type="button"
                         onClick={() => {
                           setMatchSportType(item.type);
-                          // 종목 변경 시 인원 디폴트 즉시 적용
                           setPlayerCount(SPORT_DEFAULTS[item.type].playerCount);
                         }}
-                        className={cn(
-                          "flex-1 min-h-[52px] rounded-xl border-2 px-2 text-sm font-bold transition-all sm:px-3 flex flex-col items-center justify-center gap-0.5",
-                          matchSportType === item.type
-                            ? `border-[hsl(var(--${item.color}))] bg-[hsl(var(--${item.color}))]/15 text-[hsl(var(--${item.color}))] shadow-sm`
-                            : "border-border bg-secondary/40 text-muted-foreground hover:border-foreground/30"
-                        )}
+                        className={cn("pm-typeseg-opt", `pm-hue--${item.hue}`, matchSportType === item.type && "is-on")}
                       >
                         <span>{item.label}</span>
-                        <span className="text-[11px] font-medium opacity-80">{item.sub}</span>
+                        <span className="pm-typeseg-opt-sub">{item.sub}</span>
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="date">날짜 <span className="text-destructive">*</span></Label>
-                  <Input
+              <div className="pm-mform-grid2">
+                <div className="pm-field">
+                  <label className="pm-label" htmlFor="date">
+                    날짜 <span className="pm-pill pm-pill--req">필수</span>
+                  </label>
+                  <input
                     id="date"
                     name="date"
                     type="date"
@@ -595,15 +576,14 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                         setVoteDeadline(`${yyyy}-${mm}-${dd}T17:00`);
                       }
                     }}
-                    className={formErrors.matchDate ? "border-destructive" : ""}
+                    className={cn("pm-input", formErrors.matchDate && "is-error")}
                   />
-                  {formErrors.matchDate && <p className="text-xs text-destructive mt-1">{formErrors.matchDate}</p>}
+                  {formErrors.matchDate && <p className="pm-mform-err">{formErrors.matchDate}</p>}
                 </div>
-                <div className="space-y-2">
-                  <Label>{matchType === "EVENT" ? "시작 시간" : "시간"}</Label>
-                  {/* 우리 팀이 자주 쓰는 시간 — 기존 경기에서 빈도순 추출 (최대 5개) */}
+                <div className="pm-field">
+                  <span className="pm-label">{matchType === "EVENT" ? "시작 시간" : "시간"}</span>
                   {recentTimes.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="pm-mform-chips">
                       {recentTimes.map((t) => (
                         <button
                           key={t}
@@ -616,93 +596,97 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                               setMatchEndTime(`${endH}:${String(mm).padStart(2, "0")}`);
                             }
                           }}
-                          className={cn(
-                            "h-9 px-3 rounded-full text-sm font-medium border transition-colors",
-                            matchTime === t
-                              ? "bg-primary text-primary-foreground border-primary"
-                              : "bg-secondary text-foreground border-border hover:border-primary/50"
-                          )}
+                          className={cn("pm-chip-pill", matchTime === t && "is-on")}
                         >
                           {t}
                         </button>
                       ))}
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
-                    <select
-                      id="time"
-                      name="time"
-                      required
-                      value={matchTime}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setMatchTime(val);
-                        if (matchType !== "EVENT") {
-                          const [hh, mm] = val.split(":").map(Number);
-                          const endH = String((hh + 2) % 24).padStart(2, "0");
-                          setMatchEndTime(`${endH}:${String(mm).padStart(2, "0")}`);
-                        }
-                      }}
-                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    >
-                      {Array.from({ length: 48 }, (_, i) => {
-                        const h = String(Math.floor(i / 2)).padStart(2, "0");
-                        const m = i % 2 === 0 ? "00" : "30";
-                        return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
-                      })}
-                    </select>
+                  <div className="pm-mform-time">
+                    <div className="pm-select">
+                      <select
+                        id="time"
+                        name="time"
+                        required
+                        value={matchTime}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setMatchTime(val);
+                          if (matchType !== "EVENT") {
+                            const [hh, mm] = val.split(":").map(Number);
+                            const endH = String((hh + 2) % 24).padStart(2, "0");
+                            setMatchEndTime(`${endH}:${String(mm).padStart(2, "0")}`);
+                          }
+                        }}
+                      >
+                        {Array.from({ length: 48 }, (_, i) => {
+                          const h = String(Math.floor(i / 2)).padStart(2, "0");
+                          const m = i % 2 === 0 ? "00" : "30";
+                          return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
+                        })}
+                      </select>
+                      <ChevronDown width={14} height={14} aria-hidden />
+                    </div>
                     {matchType !== "EVENT" && (
                       <>
-                        <span className="text-muted-foreground shrink-0">~</span>
-                        <select
-                          id="endTime"
-                          name="endTime"
-                          value={matchEndTime}
-                          onChange={(e) => setMatchEndTime(e.target.value)}
-                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        >
-                          {Array.from({ length: 48 }, (_, i) => {
-                            const h = String(Math.floor(i / 2)).padStart(2, "0");
-                            const m = i % 2 === 0 ? "00" : "30";
-                            return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
-                          })}
-                        </select>
+                        <span className="pm-mform-time-sep">~</span>
+                        <div className="pm-select">
+                          <select
+                            id="endTime"
+                            name="endTime"
+                            value={matchEndTime}
+                            onChange={(e) => setMatchEndTime(e.target.value)}
+                          >
+                            {Array.from({ length: 48 }, (_, i) => {
+                              const h = String(Math.floor(i / 2)).padStart(2, "0");
+                              const m = i % 2 === 0 ? "00" : "30";
+                              return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>;
+                            })}
+                          </select>
+                          <ChevronDown width={14} height={14} aria-hidden />
+                        </div>
                       </>
                     )}
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="voteDeadline">투표 마감 <span className="text-xs font-normal text-muted-foreground">(기본: {matchType === "EVENT" ? "일정" : "경기"} 전날 17시)</span></Label>
-                  <Input
+                <div className="pm-field">
+                  <label className="pm-label" htmlFor="voteDeadline">
+                    투표 마감 <span style={{ fontSize: 11, fontWeight: 400, color: "hsl(var(--muted-foreground))", marginLeft: 4 }}>(기본: {matchType === "EVENT" ? "일정" : "경기"} 전날 17시)</span>
+                  </label>
+                  <input
                     id="voteDeadline"
                     name="voteDeadline"
                     type="datetime-local"
                     value={voteDeadline}
                     onChange={(e) => setVoteDeadline(e.target.value)}
+                    className="pm-input"
                   />
-                  <p className="text-xs text-muted-foreground">이 시간까지 참석 여부를 알려주세요</p>
+                  <p className="pm-mform-hint">이 시간까지 참석 여부를 알려주세요</p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="location">장소</Label>
-                  <Input
+                <div className="pm-field">
+                  <label className="pm-label" htmlFor="location">
+                    장소 <span className="pm-pill pm-pill--req">필수</span>
+                  </label>
+                  <input
                     id="location"
                     name="location"
                     required
                     value={location}
                     onChange={(e) => { setLocation(e.target.value); setFormErrors((prev) => ({ ...prev, location: "" })); }}
                     placeholder={recentLocations[0] ?? "예: 어린이대공원축구장"}
-                    className={formErrors.location ? "border-destructive" : ""}
+                    className={cn("pm-input", formErrors.location && "is-error")}
                   />
-                  {formErrors.location && <p className="text-xs text-destructive mt-1">{formErrors.location}</p>}
+                  {formErrors.location && <p className="pm-mform-err">{formErrors.location}</p>}
                   {recentLocations.length > 0 && !location && (
-                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                      <span className="text-xs text-muted-foreground mr-0.5">최근 장소:</span>
+                    <div className="pm-mform-chips" style={{ alignItems: "center", marginTop: 4 }}>
+                      <span className="pm-mform-hint" style={{ marginRight: 4 }}>최근:</span>
                       {recentLocations.slice(0, 5).map((loc) => (
                         <button
                           key={loc}
                           type="button"
                           onClick={() => setLocation(loc)}
-                          className="rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
+                          className="pm-chip-pill"
                         >
                           {loc}
                         </button>
@@ -712,158 +696,159 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 </div>
                 {matchType === "EVENT" ? (
                   <>
-                    <div className="space-y-2">
-                      <Label htmlFor="opponent">일정 제목 <span className="text-destructive">*</span></Label>
-                      <Input id="opponent" name="opponent" required placeholder="예: 연말 회식, MT, 유니폼 주문" />
+                    <div className="pm-field">
+                      <label className="pm-label" htmlFor="opponent">
+                        일정 제목 <span className="pm-pill pm-pill--req">필수</span>
+                      </label>
+                      <input id="opponent" name="opponent" required placeholder="예: 연말 회식, MT, 유니폼 주문" className="pm-input" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="multiDay"
-                        checked={showEndDate}
-                        onChange={(e) => setShowEndDate(e.target.checked)}
-                        className="h-4 w-4 rounded border-border accent-primary"
-                      />
-                      <Label htmlFor="multiDay" className="text-sm text-muted-foreground cursor-pointer">
-                        1박 이상 일정
-                      </Label>
+                    <div className="pm-field" style={{ justifyContent: "flex-end" }}>
+                      <label className="pm-mform-check">
+                        <input
+                          type="checkbox"
+                          id="multiDay"
+                          checked={showEndDate}
+                          onChange={(e) => setShowEndDate(e.target.checked)}
+                        />
+                        <span>1박 이상 일정</span>
+                      </label>
+                      {showEndDate && (
+                        <input id="endDate" name="endDate" type="date" className="pm-input" style={{ marginTop: 8 }} />
+                      )}
                     </div>
-                    {showEndDate && (
-                      <div className="space-y-2">
-                        <Label htmlFor="endDate">종료일</Label>
-                        <Input id="endDate" name="endDate" type="date" />
-                      </div>
-                    )}
                   </>
                 ) : matchType === "REGULAR" ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="opponent">상대팀</Label>
-                    <Input id="opponent" name="opponent" />
+                  <div className="pm-field">
+                    <label className="pm-label" htmlFor="opponent">상대팀</label>
+                    <input id="opponent" name="opponent" className="pm-input" placeholder="예: FC OOO" />
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="statsIncluded"
-                      checked={statsIncluded}
-                      onChange={(e) => setStatsIncluded(e.target.checked)}
-                      className="h-4 w-4 rounded border-border accent-primary"
-                    />
-                    <Label htmlFor="statsIncluded" className="text-sm text-muted-foreground cursor-pointer">
-                      개인 기록 통계에 반영
-                    </Label>
+                  <div className="pm-field" style={{ justifyContent: "flex-end" }}>
+                    <label className="pm-mform-check">
+                      <input
+                        type="checkbox"
+                        id="statsIncluded"
+                        checked={statsIncluded}
+                        onChange={(e) => setStatsIncluded(e.target.checked)}
+                      />
+                      <span>개인 기록 통계에 반영</span>
+                    </label>
                   </div>
                 )}
               </div>
               {matchType !== "EVENT" && (
-              <button
-                type="button"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {showAdvanced ? (
-                  <>상세 설정 접기 <ChevronUp className="inline h-3.5 w-3.5" aria-hidden="true" /></>
-                ) : (
-                  <>상세 설정 <ChevronDown className="inline h-3.5 w-3.5" aria-hidden="true" /></>
-                )}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="pm-mform-adv-toggle"
+                >
+                  {showAdvanced ? (
+                    <>상세 설정 접기 <ChevronUp className="inline h-3.5 w-3.5" aria-hidden="true" /></>
+                  ) : (
+                    <>상세 설정 <ChevronDown className="inline h-3.5 w-3.5" aria-hidden="true" /></>
+                  )}
+                </button>
               )}
               {showAdvanced && matchType !== "EVENT" && (
                 <div key={matchSportType} className="grid gap-3 animate-slide-down">
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="quarterCount">쿼터 수</Label>
-                      <Input
+                  <div className="pm-mform-grid3">
+                    <div className="pm-field">
+                      <label className="pm-label" htmlFor="quarterCount">쿼터 수</label>
+                      <input
                         id="quarterCount"
                         name="quarterCount"
                         type="number"
                         min={1}
                         max={12}
                         defaultValue={defaults.quarters}
+                        className="pm-input"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="quarterDuration">쿼터 시간 (분)</Label>
-                      <Input
+                    <div className="pm-field">
+                      <label className="pm-label" htmlFor="quarterDuration">쿼터 시간 (분)</label>
+                      <input
                         id="quarterDuration"
                         name="quarterDuration"
                         type="number"
                         min={10}
                         max={40}
                         defaultValue={defaults.duration}
+                        className="pm-input"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="breakDuration">휴식 시간 (분)</Label>
-                      <Input
+                    <div className="pm-field">
+                      <label className="pm-label" htmlFor="breakDuration">휴식 시간 (분)</label>
+                      <input
                         id="breakDuration"
                         name="breakDuration"
                         type="number"
                         min={0}
                         max={15}
                         defaultValue={defaults.breakTime}
+                        className="pm-input"
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="playerCount">참가 인원</Label>
-                    <NativeSelect
-                      id="playerCount"
-                      name="playerCount"
-                      value={String(playerCount)}
-                      onChange={(e) => setPlayerCount(Number(e.target.value))}
-                    >
-                      {(isFutsal ? [3, 4, 5, 6] : [8, 9, 10, 11]).map((n) => (
-                        <option key={n} value={n}>
-                          {n}:{n} (GK 포함 {n}명)
-                        </option>
-                      ))}
-                    </NativeSelect>
+                  <div className="pm-field">
+                    <label className="pm-label" htmlFor="playerCount">참가 인원</label>
+                    <div className="pm-select">
+                      <select
+                        id="playerCount"
+                        name="playerCount"
+                        value={String(playerCount)}
+                        onChange={(e) => setPlayerCount(Number(e.target.value))}
+                      >
+                        {(isFutsal ? [3, 4, 5, 6] : [8, 9, 10, 11]).map((n) => (
+                          <option key={n} value={n}>
+                            {n}:{n} (GK 포함 {n}명)
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown width={14} height={14} aria-hidden />
+                    </div>
                   </div>
                 </div>
               )}
-              <Button type="submit" variant="default" disabled={submitting} className="mt-2 w-full h-12 text-base font-bold rounded-xl">
+              <button type="submit" disabled={submitting} className="pm-mform-submit">
                 {submitting ? "저장 중..." : matchType === "EVENT" ? "일정 저장" : "경기 등록"}
-              </Button>
+              </button>
             </form>
-          </CardContent>
+          </div>
         ) : null}
-      </Card>
+      </div>
 
       {viewMode === "calendar" ? (
-        <Card className="rounded-md">
-          <CardContent className="p-4">
-            <MatchCalendar
-              matches={sortedMatches.map((m) => {
-                const matchVotes = Object.values(attendance[m.id] ?? {});
-                return {
-                  id: m.id,
-                  date: m.date,
-                  time: m.time,
-                  endTime: m.endTime,
-                  endDate: m.endDate,
-                  location: m.location,
-                  opponent: m.opponent,
-                  status: m.status,
-                  score: m.score,
-                  matchType: m.matchType,
-                  voteDeadline: m.voteDeadline ?? null,
-                  attendCount: matchVotes.filter((v) => v === "ATTEND").length,
-                  absentCount: matchVotes.filter((v) => v === "ABSENT").length,
-                  maybeCount: matchVotes.filter((v) => v === "MAYBE").length,
-                };
-              })}
-              myVotes={Object.fromEntries(
-                sortedMatches.map((m) => [m.id, (myMemberId ? attendance[m.id]?.[myMemberId] : undefined) ?? ""])
-                  .filter(([, v]) => v)
-              )}
-              onVote={handleVote}
-              votingMatchId={votingMatchId}
-              loadingVoteKey={loadingVoteKey}
-              shakeVoteKey={shakeVoteKey}
-            />
-          </CardContent>
-        </Card>
+        <div className="pm-mform" style={{ padding: 12 }}>
+          <MatchCalendar
+            matches={sortedMatches.map((m) => {
+              const matchVotes = Object.values(attendance[m.id] ?? {});
+              return {
+                id: m.id,
+                date: m.date,
+                time: m.time,
+                endTime: m.endTime,
+                endDate: m.endDate,
+                location: m.location,
+                opponent: m.opponent,
+                status: m.status,
+                score: m.score,
+                matchType: m.matchType,
+                voteDeadline: m.voteDeadline ?? null,
+                attendCount: matchVotes.filter((v) => v === "ATTEND").length,
+                absentCount: matchVotes.filter((v) => v === "ABSENT").length,
+                maybeCount: matchVotes.filter((v) => v === "MAYBE").length,
+              };
+            })}
+            myVotes={Object.fromEntries(
+              sortedMatches.map((m) => [m.id, (myMemberId ? attendance[m.id]?.[myMemberId] : undefined) ?? ""])
+                .filter(([, v]) => v)
+            )}
+            onVote={handleVote}
+            votingMatchId={votingMatchId}
+            loadingVoteKey={loadingVoteKey}
+            shakeVoteKey={shakeVoteKey}
+          />
+        </div>
       ) : (
       <section className="grid gap-4">
         {(sortedMatches.length === 0 || previewEmpty) && (
@@ -969,12 +954,40 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                     key={match.id}
                     className={`pm-match-card pm-hue--${meta.hue}`}
                   >
-                    {/* head — type 배지 + 상대편 우측 (D-N 등) */}
+                    {/* head — type 배지 + 우측: EVENT 라벨 또는 유니폼 dot */}
                     <header className="pm-mc-head">
                       <span className="pm-mc-type">{meta.label}</span>
-                      {match.matchType === "EVENT" && (
-                        <span className="pm-mc-rel">팀 일정</span>
-                      )}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        {match.matchType === "EVENT" && (
+                          <span className="pm-mc-rel">팀 일정</span>
+                        )}
+                        {match.matchType !== "EVENT" && (() => {
+                          const u = teamUniform?.uniforms;
+                          let primary: string, secondary: string, pattern: string;
+                          if (match.uniformType === "THIRD" && u?.third) {
+                            primary = u.third.primary; secondary = u.third.secondary; pattern = u.third.pattern;
+                          } else if (match.uniformType === "AWAY" && u?.away) {
+                            primary = u.away.primary; secondary = u.away.secondary; pattern = u.away.pattern;
+                          } else if (u?.home) {
+                            primary = u.home.primary; secondary = u.home.secondary; pattern = u.home.pattern;
+                          } else {
+                            primary = teamUniform?.primary ?? "hsl(var(--primary))";
+                            secondary = teamUniform?.secondary ?? "hsl(var(--muted-foreground))";
+                            pattern = teamUniform?.pattern ?? "SOLID";
+                          }
+                          return (
+                            <span
+                              className="h-6 w-5 shrink-0 border border-foreground/20 rounded-sm"
+                              style={{
+                                ...getUniformStyle(primary, secondary, pattern),
+                                clipPath:
+                                  "polygon(12% 12%, 30% 12%, 34% 0%, 66% 0%, 70% 12%, 88% 12%, 100% 34%, 86% 48%, 86% 100%, 14% 100%, 14% 48%, 0% 34%)",
+                              }}
+                              aria-label="유니폼"
+                            />
+                          );
+                        })()}
+                      </div>
                     </header>
 
                     {/* 클릭 영역 — 상세 페이지로 이동 */}
