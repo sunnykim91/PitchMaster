@@ -14,9 +14,8 @@ import { SPORT_DEFAULTS } from "@/lib/types";
 import { cn, formatTime, formatDateTime, formatMatchDate } from "@/lib/utils";
 import { voteStyles } from "@/lib/voteStyles";
 import { toKoreanError } from "@/lib/errorMessages";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Modal } from "@/components/ui/Modal";
 import { shareVoteLink } from "@/lib/kakaoShare";
 import { EmptyState } from "@/components/EmptyState";
 import { MatchCalendar } from "@/components/MatchCalendar";
@@ -415,44 +414,44 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
 
   if (matchesError) {
     return (
-      <Card className="p-6">
-        <div className="flex items-center justify-between">
-          <span className="text-destructive">오류: {toKoreanError(matchesError)}</span>
-          <Button variant="outline" size="sm" onClick={refetchMatches}>다시 시도</Button>
-        </div>
-      </Card>
+      <div className="pm-mform" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <span style={{ color: "hsl(var(--destructive))", fontSize: 14 }}>오류: {toKoreanError(matchesError)}</span>
+        <button
+          type="button"
+          className="pm-chip-pill"
+          onClick={refetchMatches}
+        >
+          다시 시도
+        </button>
+      </div>
     );
   }
 
   if (matchesLoading || attendanceLoading) {
     return (
       <div className="grid gap-5">
-        <Card className="rounded-md">
-          <CardHeader>
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="mt-1 h-7 w-32" />
-          </CardHeader>
-        </Card>
-        <div className="grid gap-4">
+        <div className="pm-toolbar">
+          <div className="pm-toolbar-left">
+            <Skeleton className="h-7 w-24" />
+            <Skeleton className="h-9 w-32 rounded-lg" />
+          </div>
+          <Skeleton className="h-9 w-24 rounded-lg" />
+        </div>
+        <div className="grid gap-2.5">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="rounded-md">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-2">
-                    <Skeleton className="h-5 w-10 rounded-full" />
-                    <Skeleton className="h-6 w-44" />
-                    <Skeleton className="h-4 w-32" />
-                  </div>
-                  <Skeleton className="h-8 w-20 rounded-md" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-3 md:grid-cols-[1.2fr_1fr]">
-                  <Skeleton className="h-16 rounded-md" />
-                  <Skeleton className="h-16 rounded-md" />
-                </div>
-              </CardContent>
-            </Card>
+            <div
+              key={i}
+              className="pm-match-card pm-hue--atk"
+              style={{ pointerEvents: "none" }}
+            >
+              <div className="pm-mc-head">
+                <Skeleton className="h-5 w-12 rounded" />
+                <Skeleton className="h-6 w-5 rounded-sm" />
+              </div>
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-4 w-44" />
+              <Skeleton className="h-2 w-full rounded-full" />
+            </div>
           ))}
         </div>
       </div>
@@ -1245,67 +1244,89 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
       )}
 
       {/* 1인 팀 초대 CTA 모달 — 경기 등록 직후 표시 */}
-      {inviteCtaMatchId && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm"
-          onClick={closeInviteCta}
-        >
-          <div
-            className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-lg">
-                🎉
-              </div>
-              <div className="min-w-0">
-                <p className="text-base font-bold text-foreground">경기가 등록되었어요!</p>
-                <p className="text-xs text-muted-foreground">이제 팀원들을 초대해볼까요?</p>
-              </div>
+      <Modal open={!!inviteCtaMatchId} onClose={closeInviteCta} ariaLabel="초대 안내">
+        <div className="pm-modal pm-page">
+          <div style={{ display: "flex", alignItems: "center", gap: 12, paddingBottom: 4 }}>
+            <div
+              style={{
+                width: 44, height: 44, borderRadius: 999,
+                background: "hsl(var(--primary) / 0.12)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 22,
+              }}
+              aria-hidden
+            >
+              🎉
             </div>
-
-            <div className="mb-4 rounded-lg bg-[hsl(var(--warning)/0.08)] border border-[hsl(var(--warning)/0.2)] p-3 text-sm">
-              <p className="font-medium text-foreground">팀원이 없으면 경기는 시뮬레이션만 돼요.</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                초대 링크를 공유하면 팀원들이 바로 참석 투표, 출석, 골 기록까지 할 수 있어요.
-              </p>
-            </div>
-
-            {inviteCode && (
-              <div className="mb-4 rounded-lg border border-border bg-secondary/50 p-3">
-                <p className="text-[12.5px] uppercase tracking-wide text-muted-foreground">초대 코드</p>
-                <p className="mt-0.5 font-mono text-base font-bold text-primary">{inviteCode}</p>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Button
-                type="button"
-                className="w-full gap-2"
-                onClick={handleKakaoInvite}
-              >
-                <Share2 className="h-4 w-4" />
-                초대 링크 공유하기
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={handleCopyInvite}
-              >
-                {inviteCopied ? "✓ 복사됨" : "링크 복사"}
-              </Button>
-              <button
-                type="button"
-                className="w-full py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                onClick={closeInviteCta}
-              >
-                나중에 할게요 →
-              </button>
+            <div style={{ minWidth: 0 }}>
+              <p className="pm-card-title" style={{ fontSize: 17 }}>경기가 등록되었어요</p>
+              <p className="pm-card-hint">이제 팀원들을 초대해볼까요?</p>
             </div>
           </div>
+
+          <div
+            style={{
+              padding: 12,
+              borderRadius: 12,
+              background: "hsl(var(--warning) / 0.08)",
+              border: "1px solid hsl(var(--warning) / 0.22)",
+            }}
+          >
+            <p style={{ fontSize: 13, fontWeight: 600, color: "hsl(var(--foreground))" }}>
+              팀원이 없으면 경기는 시뮬레이션만 돼요.
+            </p>
+            <p style={{ fontSize: 12, marginTop: 4, color: "hsl(var(--muted-foreground))", lineHeight: 1.5 }}>
+              초대 링크를 공유하면 팀원들이 바로 참석 투표, 출석, 골 기록까지 할 수 있어요.
+            </p>
+          </div>
+
+          {inviteCode && (
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 12,
+                border: "1px solid hsl(var(--border))",
+                background: "hsl(var(--background) / 0.5)",
+              }}
+            >
+              <p style={{ fontSize: 10.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontWeight: 600 }}>
+                초대 코드
+              </p>
+              <p style={{ marginTop: 2, fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 700, color: "hsl(var(--primary))", letterSpacing: "0.04em" }}>
+                {inviteCode}
+              </p>
+            </div>
+          )}
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+            <button
+              type="button"
+              className="pm-mform-submit"
+              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+              onClick={handleKakaoInvite}
+            >
+              <Share2 className="h-4 w-4" aria-hidden />
+              초대 링크 공유하기
+            </button>
+            <button
+              type="button"
+              className="pm-chip-pill"
+              style={{ height: 44, borderRadius: 12, fontSize: 14, fontWeight: 600 }}
+              onClick={handleCopyInvite}
+            >
+              {inviteCopied ? "✓ 복사됨" : "링크 복사"}
+            </button>
+            <button
+              type="button"
+              className="pm-mform-adv-toggle"
+              style={{ justifyContent: "center", padding: "8px 0" }}
+              onClick={closeInviteCta}
+            >
+              나중에 할게요 →
+            </button>
+          </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }
