@@ -109,6 +109,18 @@ function mapDbMatchToMatch(db: DbMatch): Match {
   };
 }
 
+// 시안 카드용 — matchType별 hue + 라벨 매핑
+function matchTypeMeta(type: Match["matchType"]): { label: string; hue: "atk" | "def" | "mid" } {
+  switch (type) {
+    case "INTERNAL":
+      return { label: "자체", hue: "def" };
+    case "EVENT":
+      return { label: "이벤트", hue: "mid" };
+    default:
+      return { label: "정규", hue: "atk" };
+  }
+}
+
 export type UniformSetInfo = { primary: string; secondary: string; pattern: string };
 type TeamUniform = { primary: string | null; secondary: string | null; pattern: string | null; uniforms?: { home?: UniformSetInfo; away?: UniformSetInfo; third?: UniformSetInfo | null } | null };
 
@@ -290,6 +302,18 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
       return (b.date + b.time).localeCompare(a.date + a.time);
     });
   }, [matches]);
+
+  // 시안 카드용 — 다가오는·지난 분리 (sortedMatches에서 derive)
+  const { upcomingMatches, pastMatches } = useMemo(() => {
+    const today = new Date().toISOString().split("T")[0];
+    const upcoming: Match[] = [];
+    const past: Match[] = [];
+    for (const m of sortedMatches) {
+      if (m.date < today || m.status === "COMPLETED") past.push(m);
+      else upcoming.push(m);
+    }
+    return { upcomingMatches: upcoming, pastMatches: past };
+  }, [sortedMatches]);
 
   async function handleCreate(formData: FormData) {
     const errors: Record<string, string> = {};
@@ -850,10 +874,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 <span className="pm-chip-dot" />
                 <span>경기 시작</span>
               </div>
-              <h2 className="pm-h1 pm-h1--hero">
-                첫 경기를<br />
-                만들어 보세요.
-              </h2>
+              <h2 className="pm-h1 pm-h1--hero">첫 경기를 만들어 보세요.</h2>
               <p className="pm-sub" style={{ marginBottom: 4 }}>
                 등록하면 팀원에게 자동으로<br />
                 참석 투표 알림이 갑니다.
@@ -924,164 +945,289 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
             </div>
           </div>
         )}
-        {sortedMatches.map((match) => {
-          const vote = myMemberId ? attendance[match.id]?.[myMemberId] : undefined;
-          const matchVotes = Object.values(attendance[match.id] ?? {});
-          const attendCount = matchVotes.filter((v) => v === "ATTEND").length;
-          const absentCount = matchVotes.filter((v) => v === "ABSENT").length;
-          const maybeCount = matchVotes.filter((v) => v === "MAYBE").length;
-          const isCompleted = match.status === "COMPLETED";
-          const isVoteClosed = match.voteDeadline
-            ? new Date(match.voteDeadline) <= new Date()
-            : false;
-          return (
-            <Card key={match.id} className={cn("rounded-xl overflow-hidden transition-all hover:border-border/80", isCompleted && "opacity-70")}>
-              {/* 메인: 클릭 → 상세 */}
-              <Link href={`/matches/${match.id}`} className="block p-4">
-                {/* 1줄: 시간+날짜 (좌) | 스코어 or 투표현황 + 꺽쇠 (우) */}
-                <div className="flex items-center justify-between gap-2">
-                  <p className="flex items-baseline gap-2 min-w-0">
-                    <span className={cn("text-lg font-bold", isCompleted ? "text-muted-foreground" : "text-primary")}>
-                      {formatTime(match.time)}
-                      {match.endTime && <span className={isCompleted ? "text-muted-foreground/50" : "text-primary/50"}> ~ {formatTime(match.endTime)}</span>}
-                    </span>
-                    <span className="text-sm text-muted-foreground">{formatMatchDate(match.date)}</span>
-                  </p>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {isCompleted && match.score ? (() => {
-                      const [left, right] = match.score.split(":").map((s) => parseInt(s.trim(), 10));
-                      const color = match.matchType === "INTERNAL" ? "text-foreground"
-                        : left > right ? "text-[hsl(var(--win))]" : left === right ? "text-muted-foreground" : "text-[hsl(var(--loss))]";
-                      const bgColor = left > right ? "bg-[hsl(var(--win))]/15 text-[hsl(var(--win))]" : left === right ? "bg-muted text-muted-foreground" : "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]";
-                      const label = match.matchType === "INTERNAL" ? "" : left > right ? "승" : left === right ? "무" : "패";
-                      return (
-                        <>
-                          <span className={cn("text-xl font-heading font-bold", color)}>{match.score}</span>
-                          {label && <span className={cn("rounded px-1.5 py-0.5 text-xs font-bold", bgColor)}>{label}</span>}
-                        </>
-                      );
-                    })() : null}
-                    <ChevronRight className="h-5 w-5 text-muted-foreground/70" aria-hidden="true" />
-                  </div>
-                </div>
+        {/* 다가오는 경기 — 시안 UpcomingCard */}
+        {upcomingMatches.length > 0 && (
+          <section className="pm-section">
+            <div className="pm-section-h">
+              <span>다가오는 경기</span>
+              <span className="pm-section-count">{upcomingMatches.length}</span>
+            </div>
+            <div className="pm-match-stack">
+              {upcomingMatches.map((match) => {
+                const meta = matchTypeMeta(match.matchType);
+                const vote = myMemberId ? attendance[match.id]?.[myMemberId] : undefined;
+                const matchVotes = Object.values(attendance[match.id] ?? {});
+                const attendCount = matchVotes.filter((v) => v === "ATTEND").length;
+                const absentCount = matchVotes.filter((v) => v === "ABSENT").length;
+                const maybeCount = matchVotes.filter((v) => v === "MAYBE").length;
+                const totalVotes = attendCount + absentCount + maybeCount;
+                const isVoteClosed = match.voteDeadline
+                  ? new Date(match.voteDeadline) <= new Date()
+                  : false;
+                return (
+                  <div
+                    key={match.id}
+                    className={`pm-match-card pm-hue--${meta.hue}`}
+                  >
+                    {/* head — type 배지 + 상대편 우측 (D-N 등) */}
+                    <header className="pm-mc-head">
+                      <span className="pm-mc-type">{meta.label}</span>
+                      {match.matchType === "EVENT" && (
+                        <span className="pm-mc-rel">팀 일정</span>
+                      )}
+                    </header>
 
-                {/* 2줄: 장소 · 상대 · 종목 뱃지 | 유니폼 dot (우측) */}
-                <div className="mt-1 flex items-center justify-between gap-2">
-                  <p className="text-sm text-muted-foreground truncate min-w-0 flex items-center gap-1.5">
-                    <span>📍</span>
-                    <span className="truncate">
-                      {match.location}
-                      {match.matchType === "EVENT" ? (match.opponent ? `  ·  ${match.opponent}` : "")
-                        : match.matchType === "INTERNAL" ? "  ·  자체전"
-                        : match.opponent ? `  ·  vs ${match.opponent}` : ""}
-                    </span>
-                    {match.matchType !== "EVENT" && match.sportType === "FUTSAL" && (
-                      <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[12px] font-bold tracking-tight bg-[hsl(var(--info))]/15 text-[hsl(var(--info))] border border-[hsl(var(--info))]/30">
-                        풋살
-                      </span>
-                    )}
-                  </p>
-                  {match.matchType !== "EVENT" && (() => {
-                    const u = teamUniform?.uniforms;
-                    let primary: string, secondary: string, pattern: string;
-                    if (match.uniformType === "THIRD" && u?.third) {
-                      primary = u.third.primary; secondary = u.third.secondary; pattern = u.third.pattern;
-                    } else if (match.uniformType === "AWAY" && u?.away) {
-                      primary = u.away.primary; secondary = u.away.secondary; pattern = u.away.pattern;
-                    } else if (u?.home) {
-                      primary = u.home.primary; secondary = u.home.secondary; pattern = u.home.pattern;
-                    } else {
-                      primary = teamUniform?.primary ?? "hsl(var(--primary))";
-                      secondary = teamUniform?.secondary ?? "hsl(var(--muted-foreground))";
-                      pattern = teamUniform?.pattern ?? "SOLID";
-                    }
-                    return (
-                      <span
-                        className="h-6 w-5 shrink-0 border border-foreground/20 rounded-sm"
-                        style={{
-                          ...getUniformStyle(primary, secondary, pattern),
-                          clipPath: "polygon(12% 12%, 30% 12%, 34% 0%, 66% 0%, 70% 12%, 88% 12%, 100% 34%, 86% 48%, 86% 100%, 14% 100%, 14% 48%, 0% 34%)",
-                        }}
-                      />
-                    );
-                  })()}
-                </div>
+                    {/* 클릭 영역 — 상세 페이지로 이동 */}
+                    <Link
+                      href={`/matches/${match.id}`}
+                      className="flex flex-col gap-3"
+                      style={{ textDecoration: "none", color: "inherit" }}
+                    >
+                      {/* when — 날짜 + 시간 */}
+                      <div className="pm-mc-when">
+                        <div className="pm-mc-day">{formatMatchDate(match.date)}</div>
+                        <div className="pm-mc-time">
+                          {formatTime(match.time)}
+                          {match.endTime && <> – {formatTime(match.endTime)}</>}
+                        </div>
+                      </div>
 
-                {/* 3줄: 예정 경기만 투표 현황 텍스트 */}
-                {!isCompleted && (
-                  <div className="mt-2 flex items-center gap-3 text-sm">
-                    <span className="text-[hsl(var(--success))]">참석 <strong>{attendCount}</strong></span>
-                    <span className="text-[hsl(var(--loss))]">불참 <strong>{absentCount}</strong></span>
-                    <span className="text-[hsl(var(--warning))]">미정 <strong>{maybeCount}</strong></span>
-                  </div>
-                )}
+                      {/* where — 상대팀 + 장소 + 풋살 배지 + 유니폼 */}
+                      <div className="pm-mc-where">
+                        {match.matchType === "REGULAR" && match.opponent && (
+                          <div className="pm-mc-opp">
+                            <span className="pm-mc-vs">vs</span>
+                            <span>{match.opponent}</span>
+                            {match.sportType === "FUTSAL" && (
+                              <span
+                                className="pm-mc-type"
+                                style={{
+                                  fontSize: 10,
+                                  marginLeft: 4,
+                                  padding: "2px 6px",
+                                }}
+                              >
+                                풋살
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {match.matchType === "INTERNAL" && (
+                          <div className="pm-mc-opp pm-mc-opp--mute">우리끼리 자체전</div>
+                        )}
+                        {match.matchType === "EVENT" && (
+                          <div className="pm-mc-opp pm-mc-opp--mute">
+                            {match.opponent || "팀 이벤트"}
+                          </div>
+                        )}
+                        {match.location && (
+                          <div className="pm-mc-venue">
+                            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden>
+                              <path
+                                d="M6 1c-2 0-3.5 1.5-3.5 3.4 0 2.4 3.5 6.6 3.5 6.6s3.5-4.2 3.5-6.6C9.5 2.5 8 1 6 1z"
+                                stroke="currentColor"
+                                strokeWidth="1.2"
+                                fill="none"
+                              />
+                              <circle cx="6" cy="4.5" r="1.3" stroke="currentColor" strokeWidth="1.1" fill="none" />
+                            </svg>
+                            <span>{match.location}</span>
+                          </div>
+                        )}
+                      </div>
 
-                {match.matchType === "EVENT" && (
-                  <p className="mt-1 text-xs font-semibold text-accent">팀 일정</p>
-                )}
-              </Link>
+                      {/* vote progress bar */}
+                      <div className="pm-vote">
+                        {totalVotes === 0 ? (
+                          <>
+                            <div className="pm-vote-bar pm-vote-bar--empty" />
+                            <div className="pm-vote-counts">
+                              <span className="pm-vote-empty">아직 투표가 없어요</span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="pm-vote-bar">
+                              <span
+                                className="pm-vote-yes"
+                                style={{ width: `${(attendCount / totalVotes) * 100}%` }}
+                              />
+                              <span
+                                className="pm-vote-no"
+                                style={{ width: `${(absentCount / totalVotes) * 100}%` }}
+                              />
+                              <span
+                                className="pm-vote-maybe"
+                                style={{ width: `${(maybeCount / totalVotes) * 100}%` }}
+                              />
+                            </div>
+                            <div className="pm-vote-counts">
+                              <span>
+                                <span className="pm-statusdot pm-statusdot--success" /> 참석 {attendCount}
+                              </span>
+                              <span>
+                                <span className="pm-statusdot pm-statusdot--muted" /> 불참 {absentCount}
+                              </span>
+                              <span>
+                                <span className="pm-statusdot pm-statusdot--info" /> 미정 {maybeCount}
+                              </span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </Link>
 
-              {/* 투표 버튼 + 공유 — 예정 경기만, 투표 마감 시엔 안내만 */}
-              {!isCompleted && (
-                <div className="px-4 pb-3">
-                  {isVoteClosed ? (
-                    <div className="flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary/40 py-2 text-sm text-muted-foreground">
-                      <span>투표 마감</span>
-                      {vote && (
-                        <span className="text-xs">
-                          · 내 투표: {vote === "ATTEND" ? "참석" : vote === "ABSENT" ? "불참" : "미정"}
-                        </span>
+                    {/* footer — inline 투표 버튼 + 공유 (기존 기능 보존) */}
+                    <div
+                      className="pm-mc-foot"
+                      style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}
+                    >
+                      {isVoteClosed ? (
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: "hsl(var(--muted-foreground))",
+                            textAlign: "center",
+                            padding: "8px 0",
+                          }}
+                        >
+                          투표 마감
+                          {vote && (
+                            <> · 내 투표: {vote === "ATTEND" ? "참석" : vote === "ABSENT" ? "불참" : "미정"}</>
+                          )}
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          {(
+                            [
+                              { value: "ATTEND" as const, label: "참석" },
+                              { value: "MAYBE" as const, label: "미정" },
+                              { value: "ABSENT" as const, label: "불참" },
+                            ]
+                          ).map((item) => {
+                            const isSelected = vote === item.value;
+                            const key = `${match.id}:${item.value}`;
+                            const isLoading = loadingVoteKey === key;
+                            const isShaking = shakeVoteKey === key;
+                            return (
+                              <button
+                                key={item.value}
+                                type="button"
+                                disabled={votingMatchId === match.id}
+                                className={cn(
+                                  "relative flex-1 rounded-lg py-1.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-1",
+                                  isSelected ? voteStyles[item.value].active : "border border-border text-muted-foreground hover:bg-secondary",
+                                  isShaking && "animate-shake ring-2 ring-destructive",
+                                )}
+                                onClick={() => handleVote(match.id, item.value)}
+                              >
+                                {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                                {item.label}
+                              </button>
+                            );
+                          })}
+                          <button
+                            type="button"
+                            className="shrink-0 rounded-lg border border-border p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                            onClick={() =>
+                              shareVoteLink({
+                                matchId: match.id,
+                                date: match.date,
+                                time: match.time,
+                                location: match.location,
+                                opponent: match.opponent,
+                                matchType: match.matchType,
+                              })
+                            }
+                            aria-label="공유"
+                          >
+                            <Share2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
+                      {match.voteDeadline && !isVoteClosed && (
+                        <div className="pm-mc-deadline" style={{ textAlign: "center" }}>
+                          투표 마감 · {formatMatchDate(match.voteDeadline.split("T")[0])}{" "}
+                          {match.voteDeadline.split("T")[1]?.slice(0, 5)}
+                        </div>
                       )}
                     </div>
-                  ) : (
-                  <div className="flex items-center gap-2">
-                    {([
-                      { value: "ATTEND" as const, label: "참석" },
-                      { value: "MAYBE" as const, label: "미정" },
-                      { value: "ABSENT" as const, label: "불참" },
-                    ]).map((item) => {
-                      const isSelected = vote === item.value;
-                      const key = `${match.id}:${item.value}`;
-                      const isLoading = loadingVoteKey === key;
-                      const isShaking = shakeVoteKey === key;
-                      return (
-                        <button
-                          key={item.value}
-                          type="button"
-                          disabled={votingMatchId === match.id}
-                          className={cn(
-                            "relative flex-1 rounded-lg py-1.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-1",
-                            isSelected ? voteStyles[item.value].active : "border border-border text-muted-foreground hover:bg-secondary",
-                            isShaking && "animate-shake ring-2 ring-destructive"
-                          )}
-                          onClick={() => handleVote(match.id, item.value)}
-                        >
-                          {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                          {item.label}
-                        </button>
-                      );
-                    })}
-                    <button
-                      type="button"
-                      className="shrink-0 rounded-lg border border-border p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                      onClick={() => shareVoteLink({
-                        matchId: match.id,
-                        date: match.date,
-                        time: match.time,
-                        location: match.location,
-                        opponent: match.opponent,
-                        matchType: match.matchType,
-                      })}
-                    >
-                      <Share2 className="h-4 w-4" />
-                    </button>
                   </div>
-                  )}
-                </div>
-              )}
-            </Card>
-          );
-        })}
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* 지난 경기 — 시안 PastCard */}
+        {pastMatches.length > 0 && (
+          <section className="pm-section">
+            <div className="pm-section-h">
+              <span>지난 경기</span>
+              <span className="pm-section-count">{pastMatches.length}</span>
+            </div>
+            <div className="pm-past-stack">
+              {pastMatches.map((match) => {
+                const meta = matchTypeMeta(match.matchType);
+                const score = match.score
+                  ? match.score.split(":").map((s) => parseInt(s.trim(), 10))
+                  : null;
+                const won = score && match.matchType !== "INTERNAL" && score[0] > score[1];
+                const drew = score && score[0] === score[1];
+                const resultClass = score
+                  ? match.matchType === "INTERNAL"
+                    ? ""
+                    : won
+                    ? "is-win"
+                    : drew
+                    ? "is-draw"
+                    : "is-loss"
+                  : "";
+                const resultMark = score
+                  ? match.matchType === "INTERNAL"
+                    ? ""
+                    : won
+                    ? "승"
+                    : drew
+                    ? "무"
+                    : "패"
+                  : "";
+                return (
+                  <Link
+                    key={match.id}
+                    href={`/matches/${match.id}`}
+                    className={`pm-past-card pm-hue--${meta.hue}`}
+                    style={{ textDecoration: "none" }}
+                  >
+                    <div className="pm-past-head">
+                      <span className="pm-past-type">{meta.label}</span>
+                      <span className="pm-past-date">{formatMatchDate(match.date)}</span>
+                    </div>
+                    <div className="pm-past-body">
+                      <div className="pm-past-opp">
+                        {match.matchType === "REGULAR" && match.opponent
+                          ? `vs ${match.opponent}`
+                          : match.matchType === "INTERNAL"
+                          ? "자체전"
+                          : match.opponent || "팀 이벤트"}
+                      </div>
+                      {score ? (
+                        <div className={`pm-past-score ${resultClass}`}>
+                          <span className="pm-past-num">{score[0]}</span>
+                          <span className="pm-past-dash">–</span>
+                          <span className="pm-past-num">{score[1]}</span>
+                          {resultMark && <span className="pm-past-mark">{resultMark}</span>}
+                        </div>
+                      ) : (
+                        <div className="pm-past-score pm-past-score--empty">결과 미기록</div>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </section>
       )}
 
