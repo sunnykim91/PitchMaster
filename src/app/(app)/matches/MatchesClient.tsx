@@ -453,33 +453,40 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     <div className="grid gap-5">
       <div className="pm-pagehead">
         <div className="pm-pagehead-row">
-          <h1 className="pm-toolbar-title">경기 일정</h1>
+          <div className="pm-pagehead-title-wrap">
+            <h1 className="pm-toolbar-title">경기 일정</h1>
+            <span className="pm-pagehead-total">{sortedMatches.length}</span>
+          </div>
           {isStaffOrAbove(role) && (
             <button
               type="button"
               className="pm-cta-primary"
               onClick={() => { setIsOpen(true); setFormErrors({}); }}
             >
+              <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
               일정 등록
             </button>
           )}
         </div>
-        <div className="pm-view-toggle" role="tablist" aria-label="뷰 전환">
+        <div className="pm-view-tabs" role="tablist" aria-label="뷰 전환">
           <button
             type="button"
             role="tab"
             aria-selected={viewMode === "list"}
             onClick={() => setViewMode("list")}
-            className={cn("pm-view-toggle-opt", viewMode === "list" && "is-on")}
+            className={cn("pm-view-tab", viewMode === "list" && "is-on")}
           >
             목록
+            <span className="pm-view-tab-count">{sortedMatches.length}</span>
           </button>
           <button
             type="button"
             role="tab"
             aria-selected={viewMode === "calendar"}
             onClick={() => setViewMode("calendar")}
-            className={cn("pm-view-toggle-opt", viewMode === "calendar" && "is-on")}
+            className={cn("pm-view-tab", viewMode === "calendar" && "is-on")}
           >
             캘린더
           </button>
@@ -604,7 +611,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
           <section className="pm-section">
             <div className="pm-section-h">
               <span>다가오는 경기</span>
-              <span className="pm-section-count">총 {upcomingMatches.length}건</span>
+              <span className="pm-section-count">{upcomingMatches.length}</span>
             </div>
             <div className="pm-match-stack">
               {upcomingMatches.map((match) => {
@@ -846,7 +853,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
           <section className="pm-section">
             <div className="pm-section-h">
               <span>지난 경기</span>
-              <span className="pm-section-count">총 {pastMatches.length}건</span>
+              <span className="pm-section-count">{pastMatches.length}</span>
             </div>
             <div className="pm-past-stack">
               {pastMatches.map((match) => {
