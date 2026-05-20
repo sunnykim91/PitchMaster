@@ -2690,9 +2690,14 @@
 }
 .pm-section-count {
   font-size: 11px;
-  font-weight: 500;
-  color: hsl(var(--muted-foreground));
+  font-weight: 600;
+  color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.14);
+  border: 1px solid hsl(var(--primary) / 0.3);
+  padding: 2px 8px;
+  border-radius: 999px;
   font-feature-settings: "tnum" 1;
+  letter-spacing: -0.005em;
 }
 
 /* MATCHES — Empty-state type cards row */
@@ -3134,23 +3139,21 @@ input[type="datetime-local"].pm-input {
 /* ─────────────────────────────────────────────────────────────
  * MATCHES — Toolbar + New match form (시안 톤)
  * ───────────────────────────────────────────────────────────── */
-.pm-toolbar {
+.pm-pagehead {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pm-pagehead-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  flex-wrap: wrap;
-}
-.pm-toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
 }
 .pm-toolbar-title {
   font-family: var(--font-display);
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: hsl(var(--foreground));
 }
@@ -3160,13 +3163,15 @@ input[type="datetime-local"].pm-input {
   background: hsl(var(--background) / 0.6);
   border: 1px solid hsl(var(--border));
   border-radius: 10px;
+  align-self: flex-start;
 }
 .pm-view-toggle-opt {
   border: 0;
   background: transparent;
   color: hsl(var(--muted-foreground));
   height: 30px;
-  padding: 0 12px;
+  min-width: 64px;
+  padding: 0 14px;
   border-radius: 7px;
   font-size: 12px;
   font-weight: 600;
