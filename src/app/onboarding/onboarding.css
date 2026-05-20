@@ -3188,15 +3188,34 @@ input[type="datetime-local"].pm-input {
   position: relative;
   display: inline-flex;
   align-items: center;
+  border-radius: 10px;
+  background:
+    radial-gradient(ellipse 80% 60% at 100% 0%, hsl(var(--primary) / 0.10), transparent 70%),
+    hsl(var(--card) / 0.7);
+  border: 1px solid hsl(var(--primary) / 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 200ms, background 200ms, box-shadow 200ms;
+}
+.pm-view-select:hover {
+  border-color: hsl(var(--primary) / 0.55);
+  background:
+    radial-gradient(ellipse 80% 60% at 100% 0%, hsl(var(--primary) / 0.16), transparent 70%),
+    hsl(var(--card) / 0.85);
+  box-shadow: 0 4px 14px hsl(var(--primary) / 0.18);
+}
+.pm-view-select:focus-within {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.18), 0 4px 14px hsl(var(--primary) / 0.22);
 }
 .pm-view-select select {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background: hsl(var(--background) / 0.6);
-  border: 1px solid hsl(var(--border));
+  background: transparent;
+  border: 0;
   border-radius: 10px;
-  padding: 0 30px 0 32px;
+  padding: 0 32px 0 34px;
   height: 36px;
   font-family: var(--font-display);
   font-size: 13px;
@@ -3205,33 +3224,31 @@ input[type="datetime-local"].pm-input {
   cursor: pointer;
   letter-spacing: -0.01em;
   outline: none;
-  transition: border-color 200ms, background 200ms;
 }
-.pm-view-select select:hover {
-  border-color: hsl(var(--primary) / 0.4);
-  background: hsl(var(--background) / 0.8);
-}
-.pm-view-select select:focus {
-  border-color: hsl(var(--primary) / 0.6);
-  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12);
+.pm-view-select select option {
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  font-weight: 600;
 }
 .pm-view-select-icon {
   position: absolute;
-  left: 10px;
+  left: 11px;
   top: 50%;
   transform: translateY(-50%);
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--primary));
   pointer-events: none;
   display: inline-flex;
 }
 .pm-view-select-caret {
   position: absolute;
-  right: 9px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--primary) / 0.8);
   pointer-events: none;
+  transition: transform 200ms;
 }
+.pm-view-select:focus-within .pm-view-select-caret { transform: translateY(-50%) rotate(180deg); }
 
 .pm-cta-primary {
   display: inline-flex;

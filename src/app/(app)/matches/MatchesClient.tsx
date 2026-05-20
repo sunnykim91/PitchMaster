@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApi, apiMutate } from "@/lib/useApi";
+import { useLocalStorage } from "@/lib/useLocalStorage";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { useToast } from "@/lib/ToastContext";
@@ -144,7 +145,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   const defaults = SPORT_DEFAULTS[matchSportType];
   const isFutsal = matchSportType === "FUTSAL";
 
-  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [viewMode, setViewMode] = useLocalStorage<"list" | "calendar">("pm:matches:viewMode", "list");
   const [isOpen, setIsOpen] = useState(searchParams.get("create") === "true");
   // 경기 등록 직후 1인 팀 초대 CTA 모달
   const [inviteCtaMatchId, setInviteCtaMatchId] = useState<string | null>(null);
