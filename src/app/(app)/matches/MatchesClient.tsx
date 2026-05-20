@@ -611,7 +611,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
           <section className="pm-section">
             <div className="pm-section-h">
               <span>다가오는 경기</span>
-              <span className="pm-section-count">{upcomingMatches.length}</span>
+              <span className="pm-section-count">{upcomingMatches.length}경기</span>
             </div>
             <div className="pm-match-stack">
               {upcomingMatches.map((match) => {
@@ -853,7 +853,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
           <section className="pm-section">
             <div className="pm-section-h">
               <span>지난 경기</span>
-              <span className="pm-section-count">{pastMatches.length}</span>
+              <span className="pm-section-count">{pastMatches.length}경기</span>
             </div>
             <div className="pm-past-stack">
               {pastMatches.map((match) => {
