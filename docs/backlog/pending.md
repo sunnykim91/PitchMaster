@@ -1,34 +1,102 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=106팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-05-15 (62차)
+last_updated: 2026-05-20 (66차)
 related: [completed-recent.md, reviews.md]
 ---
 
 # 미완료 백로그
+
+## 66차 신규 추가 (2026-05-20) — 대시보드 후속 정리·디자인 마이그 보류
+
+### getDashboardData recentResult fetch 제거 (LOW, 기술 부채)
+- **배경**: recentResult를 SSR에서 fetch하지만 클라이언트에서 사용 안 함. 불필요한 DB 조회.
+- [ ] getDashboardData에서 recentResult 관련 fetch 제거
+- [ ] 클라이언트 타입 정의 정리
+
+### teamGoalRank 동률 처리 라벨 검토 (LOW)
+- **배경**: 66차에서 "팀내 상위 N위"로 일괄 적용했으나 동률 시 정확한 라벨 필요.
+- [ ] 동률 발생 시나리오 확인 후 "N위 (공동)" 등 표기 방안 검토
+
+### 전술 미설정 chip 백엔드 squad info 추가 후 복구 (MEDIUM)
+- **배경**: 전술 미설정 chip 표시를 위해 getDashboardData에 squad 요약 정보가 필요. 현재 미구현.
+- [ ] getDashboardData에 squad 편성 여부 포함 (per upcoming match)
+- [ ] 대시보드 카드에 "전술 미설정" chip 노출
+
+### 디자인 마이그 보류 목록 (LOW, 사용자 명시 중단)
+- **배경**: 66차 대시보드+매치 마이그 완료 후 사용자가 "당분간 수정 안 함" 결정.
+- [ ] 매치 상세 6탭 (정보·투표·전술·출석·기록·후기) 시안 v2 마이그
+- [ ] 회비 페이지 시안 v2 마이그
+- [ ] 기록 페이지 시안 v2 마이그
+- [ ] 게시판 시안 v2 마이그
+- [ ] 선수 카드 / 더보기 시안 v2 마이그
+- [ ] ClientLayout 사이드바 폭 (시안 200 vs 현재 280) 조정
 
 우선순위 기준:
 - **HIGH**: 현재 100팀+ 운영에 직접 영향
 - **MEDIUM**: 팀 50개 이상 시
 - **LOW**: 팀 100개 이상 시 / nice-to-have
 
-## 62차 신규 추가 (2026-05-15) — 전술 영상 후속 + CLAUDE.md 정정
+## 65차 신규 추가 (2026-05-19) — 편집기 분리·인터페이스 마이그·온보딩·블로그 후속
 
-### 카테고리별 default 영상 지정 UI (MEDIUM, 다음 세션 이후)
-- **배경**: P2~P3 카테고리 enum 도입 완료. 현재 모든 영상 `is_default=false` → 매치 전술 탭에서 자동 노출 안 됨.
-- [ ] 영상 목록에서 카테고리별 "대표 영상" 지정 UI 추가 (star 토글 또는 라디오)
-- [ ] `is_default=true` 영상을 매치 전술 탭 자동 노출에 연결
-- 참고: P5(d951ede)에서 호환 레이어 적용 완료, DB 컬럼 존재 확인 후 진행
+### 블로그 5편 발행 후속 (HIGH, 5/20~21)
+- **배경**: 5편(휴면·부상 회비 자동 면제) 자체 도메인 완료. 채널 발행 대기.
+- [ ] 5/20: 5편 네이버 블로그 발행 (사용자 직접)
+- [ ] 5/21: 5편 티스토리 발행 (사용자 직접)
+- [ ] 5/19~21: 4편 GSC 색인 확인
+
+### 온보딩 분리 작업 완료 (MEDIUM, 다음 세션 초)
+- **배경**: be146cd에서 OnboardingClient.tsx + onboarding.css 분리 진행 중. `src/app/onboarding/page.tsx` + 신규 파일들 미커밋 상태.
+- [ ] 다음 세션 시작 시 `git status` 확인 → 미커밋 온보딩 파일 검토 후 커밋
+
+### 알파 운영 마감 점검 (HIGH, 5/25)
+- **배경**: 알파 5/11~5/25 20명 cap. 마감 시점 Play Console 프로덕션 신청 가능성 확인.
+- [ ] 5/25 알파 참가자 수·달성일 수 확인
+- [ ] 12명 14일 달성 시 Play Console 프로덕션 신청
+
+### retention 4차 조회 (HIGH, 5/21)
+- **배경**: 광고 4차 가입 팀(세븐스타·FC KS·FC한사바리) 5/21 이후 재추적 필요.
+- [ ] 5/21 Supabase 조회 — 멤버 모집·경기 생성 여부 확인 (61차 항목과 연동)
+
+### 50대 친화 패턴 잔여 5종 (LOW, 선택적)
+- **배경**: 65차에 패턴 3·7만 적용. 나머지 5종은 미선택.
+- [ ] 패턴 1: 용어 단순화 (전술판→전술 노트 등)
+- [ ] 패턴 2: 인라인 도움말 툴팁
+- [ ] 패턴 4: CoachMark 재진입 안내
+- [ ] 패턴 5: 빈 상태 GIF 안내
+- [ ] 패턴 6: 단계 축소
+
+## 64차 신규 추가 (2026-05-18) — 약관·방침 AI 표기 정정
+
+### 약관·개인정보처리방침 "AI 선수 시그니처" 표기 정정 (LOW)
+- **배경**: 64차에서 시그니처가 룰 기반 결정론적 패턴 선택임을 확인. 그러나 약관/방침에 "AI" 수식 그대로 박혀 있음.
+- 해당 위치 (grep 확인 필요, 아래는 추정):
+  - `src/app/(legal)/terms/page.tsx` 약 113, 182줄 근처
+  - `src/app/(legal)/privacy/page.tsx` 약 140, 184줄 근처
+- [ ] "AI 선수 시그니처" → "선수 시그니처 문구" 또는 "자동 생성 선수 코멘트" 로 변경
+- ⚠️ 실제 줄 번호는 다음 세션 시작 시 grep으로 재확인 필수
+
+## 62차 신규 추가 (2026-05-15) — 전술 영상 후속 + CLAUDE.md 정정
 
 ### AnimationEditorClient 추가 분리 (LOW, 기술 부채)
 - **배경**: P3 편집기 평면화 후 976줄. MetaCard·EditCanvas·StepList 등 분리 가능.
 - [ ] 600줄 기준 초과 구간 식별 후 컴포넌트 단위 분리
 - [ ] SortableStepChip은 b8db0f7에서 이미 분리됨 — 나머지 블록 추출
 
-### 잔여 호환 코드 제거 (LOW, 추후 안전망 확인 후)
-- **배경**: DB 평면화 100% 완료(58 영상). attack/defense 분기 코드는 현재 사용 안 됨.
-- [ ] `toLegacyMotionShape` 호출부 및 attack/defense 분기 grep 후 안전하게 제거
-- [ ] DB `motion_type` 컬럼 사용 여부 최종 확인
+### 잔여 호환 코드 제거 (LOW, 인터페이스 마이그 작업 필요 — 단순 제거 아님)
+- **배경**: DB 평면화 100% 완료(58 영상). 그러나 viewer/thumb/API validation/타입 정의가 여전히 `attack/defense` 인터페이스로 동작 중. `toLegacyMotionShape`는 평면 `steps` → `{attack, defense}` 변환 wrapper로 5곳 활성 사용 (63차 grep 검증).
+- 활성 호출부: MatchRoleGuide·AnimationEditorClient(3곳)·AnimationsListClient
+- attack/defense 인터페이스 직접 요구: FormationMotionViewer(mode 토글)·FormationMotionThumb·inferCategory·API route 2개·types.ts·dbTypes.ts·랜딩 FeaturesSection
+- ✅ DB `motion_type` 컬럼: 코드 사용 0건 확인 (63차)
+- ⚠️ `src/lib/positionRoles/`의 attack/defense는 다른 도메인(역할 가이드 텍스트) — 절대 건드리지 말 것
+- [ ] **인터페이스 마이그레이션 프로젝트**로 다뤄야 함 — 단순 dead code 제거 아님
+  - FormationMotionViewer가 평면 `steps[]` 직접 받도록 인터페이스 변경
+  - FormationMotionThumb 동일
+  - inferCategory 평면 우선 분기
+  - API validation 새 스펙 (attack/defense optional 또는 제거)
+  - TacticalAnimationData에서 attack/defense optional 또는 제거
+  - toLegacyMotionShape 호출 5곳 인라인 후 함수 제거
+  - 편집기 분리(위 항목)와 묶어 진행하면 효율적
 
 ### CLAUDE.md 라이트 모드 섹션 정정 (LOW, 다음 세션 초)
 - **배경**: c8f384f 커밋(CSS 토큰 단일 source 통합)으로 실제 구현은 `:root.light` 클래스 토글이나 CLAUDE.md에 구 서술 잔존 가능.
