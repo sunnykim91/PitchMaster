@@ -1409,12 +1409,10 @@
  * ───────────────────────────────────────────────────────────── */
 .pm-filters {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
   padding: 2px 0;
 }
-.pm-filters::-webkit-scrollbar { display: none; }
 .pm-filter {
   display: inline-flex;
   align-items: center;
