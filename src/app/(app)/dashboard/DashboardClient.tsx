@@ -767,7 +767,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
                       {vote.matchType === "INTERNAL"
                         ? " 자체전"
                         : vote.matchType === "EVENT"
-                          ? vote.opponentName && vote.opponentName.trim() ? ` ${vote.opponentName}` : " 팀 일정"
+                          ? vote.opponentName && vote.opponentName.trim() ? ` ${vote.opponentName}` : " 팀 이벤트"
                           : vote.opponentName && vote.opponentName.trim()
                             ? ` vs ${vote.opponentName}`
                             : " 팀 일정"}

@@ -2970,31 +2970,36 @@
   gap: 6px;
 }
 .pm-type-opt {
-  border: 1px solid hsl(var(--border));
-  background: hsl(var(--background) / 0.5);
+  --hue: var(--primary);
+  border: 1px solid hsl(var(--hue) / 0.45);
+  background: hsl(var(--hue) / 0.08);
   border-radius: 12px;
   padding: 10px 8px;
   text-align: center;
   cursor: pointer;
-  transition: background 200ms, border-color 200ms;
+  transition: background 200ms, border-color 200ms, transform 200ms;
 }
-.pm-type-opt:hover { background: hsl(var(--accent) / 0.5); }
+.pm-type-opt:hover {
+  background: hsl(var(--hue) / 0.14);
+  border-color: hsl(var(--hue) / 0.65);
+  transform: translateY(-1px);
+}
 .pm-type-opt.is-on {
-  background: hsl(var(--hue) / 0.10);
-  border-color: hsl(var(--hue) / 0.55);
+  background: hsl(var(--hue) / 0.22);
+  border-color: hsl(var(--hue));
+  box-shadow: 0 6px 18px hsl(var(--hue) / 0.3), inset 0 0 0 1px hsl(var(--hue) / 0.35);
 }
 .pm-type-opt-label {
   font-family: var(--font-display);
   font-size: 14px;
   font-weight: 600;
-  color: hsl(var(--foreground));
+  color: hsl(var(--hue));
   letter-spacing: -0.01em;
 }
-.pm-type-opt.is-on .pm-type-opt-label { color: hsl(var(--hue)); }
 .pm-type-opt-sub {
   margin-top: 3px;
   font-size: 11px;
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--hue) / 0.75);
   letter-spacing: -0.005em;
 }
 .pm-time-row {
