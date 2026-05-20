@@ -1176,22 +1176,25 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   <span className="pm-pill pm-pill--opt">선택</span>
                 </div>
                 <div className="pm-seg" role="radiogroup" aria-label="유니폼 선택">
-                  {([
-                    { v: "HOME" as const, label: "홈" },
-                    { v: "AWAY" as const, label: "어웨이" },
-                    { v: "THIRD" as const, label: "자유" },
-                  ]).map((o) => (
-                    <button
-                      key={o.v}
-                      type="button"
-                      role="radio"
-                      aria-checked={uniformType === o.v}
-                      className={cn("pm-seg-opt", uniformType === o.v && "is-on")}
-                      onClick={() => setUniformType(o.v)}
-                    >
-                      {o.label}
-                    </button>
-                  ))}
+                  {(() => {
+                    const opts: Array<{ v: "HOME" | "AWAY" | "THIRD"; label: string }> = [
+                      { v: "HOME", label: "홈" },
+                      { v: "AWAY", label: "어웨이" },
+                    ];
+                    if (teamUniform?.uniforms?.third) opts.push({ v: "THIRD", label: "서드" });
+                    return opts.map((o) => (
+                      <button
+                        key={o.v}
+                        type="button"
+                        role="radio"
+                        aria-checked={uniformType === o.v}
+                        className={cn("pm-seg-opt", uniformType === o.v && "is-on")}
+                        onClick={() => setUniformType(o.v)}
+                      >
+                        {o.label}
+                      </button>
+                    ));
+                  })()}
                 </div>
               </div>
             )}

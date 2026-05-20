@@ -2970,9 +2970,8 @@
   gap: 6px;
 }
 .pm-type-opt {
-  --hue: var(--primary);
-  border: 1.5px solid hsl(var(--hue) / 0.55);
-  background: hsl(var(--hue) / 0.14);
+  border: 2px solid hsl(var(--hue) / 0.65);
+  background: hsl(var(--hue) / 0.18);
   border-radius: 12px;
   padding: 10px 8px;
   text-align: center;
@@ -2980,27 +2979,30 @@
   transition: background 200ms, border-color 200ms, transform 200ms, box-shadow 200ms;
 }
 .pm-type-opt:hover {
-  background: hsl(var(--hue) / 0.22);
-  border-color: hsl(var(--hue) / 0.8);
+  background: hsl(var(--hue) / 0.28);
+  border-color: hsl(var(--hue) / 0.85);
   transform: translateY(-1px);
 }
 .pm-type-opt.is-on {
-  background: hsl(var(--hue) / 0.32);
+  background: hsl(var(--hue) / 0.4);
   border-color: hsl(var(--hue));
-  box-shadow: 0 8px 22px hsl(var(--hue) / 0.42), inset 0 0 0 1px hsl(var(--hue) / 0.5);
+  box-shadow: 0 8px 22px hsl(var(--hue) / 0.48), inset 0 0 0 1.5px hsl(var(--hue) / 0.6);
 }
 .pm-type-opt-label {
   font-family: var(--font-display);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: hsl(var(--hue));
   letter-spacing: -0.01em;
+  filter: brightness(1.15);
 }
 .pm-type-opt-sub {
   margin-top: 3px;
   font-size: 11px;
-  color: hsl(var(--hue) / 0.75);
+  font-weight: 500;
+  color: hsl(var(--hue) / 0.9);
   letter-spacing: -0.005em;
+  filter: brightness(1.1);
 }
 .pm-time-row {
   display: grid;
