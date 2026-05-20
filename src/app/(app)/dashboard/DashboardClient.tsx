@@ -710,6 +710,44 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
               </div>
             </div>
           ) : null}
+
+          {/* I · 시즌 전적 (PC main col 균형용) */}
+          {showRecord && (
+            <div className="pm-dash-record-wrap">
+              <section className="pm-section">
+                <div className="pm-section-h">
+                  <span>시즌 전적</span>
+                  <span className="pm-section-count">{recordTotal}경기</span>
+                </div>
+                <div className="pm-dash-record">
+                  <div className="pm-dash-wdl">
+                    <div className="pm-dash-wdl-col pm-hue--win">
+                      <div className="pm-dash-wdl-num">{teamRecord.wins}</div>
+                      <div className="pm-dash-wdl-label">승</div>
+                    </div>
+                    <div className="pm-dash-wdl-col pm-hue--draw">
+                      <div className="pm-dash-wdl-num">{teamRecord.draws}</div>
+                      <div className="pm-dash-wdl-label">무</div>
+                    </div>
+                    <div className="pm-dash-wdl-col pm-hue--loss">
+                      <div className="pm-dash-wdl-num">{teamRecord.losses}</div>
+                      <div className="pm-dash-wdl-label">패</div>
+                    </div>
+                  </div>
+                  {teamRecord.recent5.length > 0 && (
+                    <div className="pm-dash-recent">
+                      <span className="pm-dash-recent-label">최근 5경기</span>
+                      <div className="pm-dash-recent-dots">
+                        {teamRecord.recent5.map((r, i) => (
+                          <span key={i} className={`pm-dash-recent-dot pm-dash-recent-dot--${r}`}>{r}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+            </div>
+          )}
         </div>
 
         {/* Side rail · 액션 우선 순서: 미완료 → 회비 → 투표 → 시즌기록 → 시즌전적 */}
@@ -979,43 +1017,6 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
             </section>
           )}
 
-          {/* I · 시즌 전적 (PC only via CSS) */}
-          {showRecord && (
-            <div className="pm-dash-record-wrap">
-              <section className="pm-section">
-                <div className="pm-section-h">
-                  <span>시즌 전적</span>
-                  <span className="pm-section-count">{recordTotal}경기</span>
-                </div>
-                <div className="pm-dash-record">
-                  <div className="pm-dash-wdl">
-                    <div className="pm-dash-wdl-col pm-hue--win">
-                      <div className="pm-dash-wdl-num">{teamRecord.wins}</div>
-                      <div className="pm-dash-wdl-label">승</div>
-                    </div>
-                    <div className="pm-dash-wdl-col pm-hue--draw">
-                      <div className="pm-dash-wdl-num">{teamRecord.draws}</div>
-                      <div className="pm-dash-wdl-label">무</div>
-                    </div>
-                    <div className="pm-dash-wdl-col pm-hue--loss">
-                      <div className="pm-dash-wdl-num">{teamRecord.losses}</div>
-                      <div className="pm-dash-wdl-label">패</div>
-                    </div>
-                  </div>
-                  {teamRecord.recent5.length > 0 && (
-                    <div className="pm-dash-recent">
-                      <span className="pm-dash-recent-label">최근 5경기</span>
-                      <div className="pm-dash-recent-dots">
-                        {teamRecord.recent5.map((r, i) => (
-                          <span key={i} className={`pm-dash-recent-dot pm-dash-recent-dot--${r}`}>{r}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </section>
-            </div>
-          )}
         </div>
 
         {/* J · 빠른 이동 (full row) */}

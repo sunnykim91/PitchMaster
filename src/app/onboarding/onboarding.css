@@ -4453,10 +4453,10 @@ input[type="datetime-local"].pm-input {
     max-width: 1080px;
     padding: 28px 20px 28px;
     display: grid;
-    grid-template-columns: minmax(0, 700px) minmax(0, 320px);
-    column-gap: 20px;
+    grid-template-columns: minmax(0, 560px) minmax(0, 400px);
+    column-gap: 24px;
     row-gap: 18px;
-    margin: 0;                /* anchor to left, not centered floating */
+    margin: 0;
     align-items: start;
   }
 
