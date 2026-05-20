@@ -1,26 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Cake, Calendar, Check, ChevronRight, Copy, DollarSign, Link2, Loader2, Trophy, User, Users, Vote, X } from "lucide-react";
+import { ChevronRight, Loader2 } from "lucide-react";
 import { GA } from "@/lib/analytics";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role } from "@/lib/types";
 import { cn, formatTime, formatDateKo } from "@/lib/utils";
-import { voteStyles } from "@/lib/voteStyles";
 import { toKoreanError } from "@/lib/errorMessages";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/lib/ToastContext";
-import { EmptyState } from "@/components/EmptyState";
-import { shareTeamInvite } from "@/lib/kakaoShare";
-import { getUniformStyle } from "@/lib/uniformUtils";
 import AlphaTesterBanner from "@/components/AlphaTesterBanner";
 import WelcomeCard from "@/components/onboarding/WelcomeCard";
+import { shareTeamInvite } from "@/lib/kakaoShare";
+import "@/app/onboarding/onboarding.css";
 
 // TEMP: 디자인 검토용 — 김선휘만 ?previewWelcome=created로 시안 created 카드 노출. 작업 종료 후 제거.
 const DESIGN_PREVIEW_USER_ID = "7bc8a1b2-7844-41f3-b592-05a2c38f8085";
@@ -37,6 +35,7 @@ type UpcomingMatch = {
   myVote: "ATTEND" | "ABSENT" | "MAYBE" | null;
   myMemberId: string | null;
   uniform_type?: string | null;
+  matchType?: "REGULAR" | "INTERNAL" | "EVENT";
 };
 
 type RecentResult = {
@@ -96,7 +95,13 @@ type DashboardData = {
   totalMatches?: number;
   /** 실제 가입 완료한 팀원 수 */
   registeredMemberCount?: number;
-  mySeasonStats?: { matches: number; goals: number; attendanceRate: number } | null;
+  mySeasonStats?: {
+    matches: number;
+    goals: number;
+    attendanceRate: number;
+    teamGoalRank?: number | null;
+    totalCompletedMatches?: number;
+  } | null;
   noticePins?: {
     global: { id: string; title: string; createdAt: string } | null;
     team: { id: string; title: string; createdAt: string }[];
@@ -113,69 +118,37 @@ const emptyData: DashboardData = {
 
 function CardSkeleton() {
   return (
-    <div className="grid gap-4 stagger-children">
-      {/* Hero match card */}
-      <div className="card-featured">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-7 w-36" />
-          <Skeleton className="h-5 w-20" />
-        </div>
-        <div className="mt-4 space-y-2">
-          <Skeleton className="h-3 w-32" />
-          <Skeleton className="h-8 w-24" />
-          <Skeleton className="h-3 w-48" />
-          <Skeleton className="h-3 w-40" />
-          <div className="flex gap-2 pt-2">
-            <Skeleton className="h-8 w-16 rounded-full" />
-            <Skeleton className="h-8 w-16 rounded-full" />
-            <Skeleton className="h-8 w-16 rounded-full" />
-          </div>
-          <Skeleton className="mt-2 h-1.5 w-full rounded-full" />
-        </div>
-      </div>
-
-      {/* 2-col grid: votes + tasks */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-3">
-            <Skeleton className="h-7 w-40" />
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Skeleton className="h-14 rounded-md" />
-            <Skeleton className="h-14 rounded-md" />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <Skeleton className="h-7 w-32" />
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Skeleton className="h-10 rounded-md" />
-            <Skeleton className="h-10 rounded-md" />
-            <Skeleton className="h-10 rounded-md" />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Season record card */}
-      <Card>
-        <CardHeader className="pb-3">
-          <Skeleton className="h-7 w-28" />
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-4 gap-2 mb-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 rounded-md" />
-            ))}
-          </div>
-          <Skeleton className="h-16 rounded-md" />
-        </CardContent>
-      </Card>
+    <div className="pm-page pm-page--dashboard">
+      <main className="pm-main pm-main--dashboard">
+        <div className="pm-dash-skel pm-dash-skel--row" />
+        <div className="pm-dash-skel pm-dash-skel--match" />
+        <div className="pm-dash-skel pm-dash-skel--stat" />
+        <div className="pm-dash-skel pm-dash-skel--stat" />
+        <div className="pm-dash-skel pm-dash-skel--stat" />
+      </main>
     </div>
   );
 }
 
-export default function DashboardClient({ userId, userRole, initialData, inviteCode, teamName, teamId }: { userId: string; userRole?: Role; initialData?: DashboardData; inviteCode?: string; teamName?: string; teamId?: string }) {
+// 카운트다운 라벨 헬퍼 — 오늘 / 내일 / D-N / D+N
+function relativeDayLabel(dateStr: string): string {
+  const target = new Date(dateStr + "T00:00:00");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = Math.round((target.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+  if (diff === 0) return "오늘";
+  if (diff === 1) return "내일";
+  if (diff > 0) return `D-${diff}`;
+  return `D+${-diff}`;
+}
+
+const MATCH_TYPE_META = {
+  REGULAR: { label: "정규", hue: "atk" as const },
+  INTERNAL: { label: "자체", hue: "def" as const },
+  EVENT: { label: "이벤트", hue: "mid" as const },
+};
+
+export default function DashboardClient({ userId, userRole, userName, initialData, inviteCode, teamName, teamId }: { userId: string; userRole?: Role; userName?: string; initialData?: DashboardData; inviteCode?: string; teamName?: string; teamId?: string }) {
   const { data, loading, error, refetch } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
   const { showToast } = useToast();
   const searchParams = useSearchParams();
@@ -186,7 +159,6 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
   const [pendingVote, setPendingVote] = useState(false);
   const [loadingVote, setLoadingVote] = useState<"ATTEND" | "ABSENT" | "MAYBE" | null>(null);
   const [shakeVote, setShakeVote] = useState<"ATTEND" | "ABSENT" | "MAYBE" | null>(null);
-  const [inviteCopied, setInviteCopied] = useState(false);
   const [joinedWelcome, setJoinedWelcome] = useState<{ team: string } | null>(null);
   const [wizardDismissed, setWizardDismissed] = useState(false);
   const { effectiveRole } = useViewAsRole();
@@ -244,7 +216,7 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
     if (currentVote === vote) return;
     if (pendingVote) return;
 
-    // 이전 상태 저장 (롤백용) — optimisticVote 타입과 동일하게 유지
+    // 이전 상태 저장 (롤백용)
     const prevVote: "ATTEND" | "ABSENT" | "MAYBE" | null | undefined =
       optimisticVote !== undefined ? optimisticVote : (data.upcomingMatch?.myVote ?? null);
     const prevCounts = optimisticCounts ?? data.upcomingMatch?.voteCounts ?? { attend: 0, absent: 0, undecided: 0 };
@@ -261,16 +233,13 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
     setOptimisticVote(vote);
     setOptimisticCounts(newCounts);
 
-    // 연속 클릭 방지 (300ms)
     setPendingVote(true);
     setLoadingVote(vote);
     setTimeout(() => setPendingVote(false), 300);
 
-    // 백그라운드 API 호출
     const { error: err } = await apiMutate("/api/attendance", "POST", { matchId, vote });
     setLoadingVote(null);
     if (err) {
-      // 실패 시 롤백 + 흔들림
       setOptimisticVote(prevVote);
       setOptimisticCounts(prevCounts);
       setShakeVote(vote);
@@ -279,7 +248,6 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
     } else {
       GA.voteComplete(vote, "dashboard");
       showToast(vote === "ATTEND" ? "참석으로 투표했습니다." : vote === "ABSENT" ? "불참으로 투표했습니다." : "미정으로 투표했습니다.");
-      // 성공 시 백그라운드 refetch 후 낙관적 상태 초기화
       await refetch();
       setOptimisticVote(undefined);
       setOptimisticCounts(null);
@@ -290,24 +258,20 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
 
   // 낙관적 상태가 있으면 우선 사용
   const displayVote = optimisticVote !== undefined ? optimisticVote : upcomingMatch?.myVote;
-  // 투표 마감 여부 — vote_deadline 이 과거면 마감 (null 이면 마감 없음으로 간주)
+  // 투표 마감 여부
   const isVoteClosed = upcomingMatch?.vote_deadline
     ? new Date(upcomingMatch.vote_deadline) <= new Date()
     : false;
   // Attendance bar percentages
   const voteCounts = optimisticCounts ?? upcomingMatch?.voteCounts ?? { attend: 0, absent: 0, undecided: 0 };
   const voteTotal = voteCounts.attend + voteCounts.absent + voteCounts.undecided;
-  const attendPercent = voteTotal > 0 ? (voteCounts.attend / voteTotal) * 100 : 0;
-  const absentPercent = voteTotal > 0 ? (voteCounts.absent / voteTotal) * 100 : 0;
-
-  // 출석 바 스타일 메모이제이션 (인라인 객체 재생성 방지)
-  const attendBarStyle = useMemo(() => ({ width: `${attendPercent}%` }), [attendPercent]);
-  const absentBarStyle = useMemo(() => ({ width: `${absentPercent}%` }), [absentPercent]);
+  const attendPercent = voteTotal > 0 ? Math.round((voteCounts.attend / voteTotal) * 100) : 0;
+  const noneCount = Math.max(0, (data.registeredMemberCount ?? voteTotal) - voteTotal);
 
   // Team record totals
   const recordTotal = teamRecord.wins + teamRecord.draws + teamRecord.losses;
 
-  // 디자인 검토용 preview — 김선휘만 ?previewWelcome=created로 created 카드 강제 노출
+  // 디자인 검토용 preview
   const isPreviewWelcomeCreated =
     searchParams.get("previewWelcome") === "created" && userId === DESIGN_PREVIEW_USER_ID;
 
@@ -321,10 +285,6 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
       !recentResult &&
       recordTotal === 0);
 
-  // 경기 0건 넛지 카드: 위자드와 별개로, 한 번도 경기를 등록한 적 없는 팀에게 운영진에게만 표시
-  const showNoMatchNudge = !showWizard && isStaffOrAbove(role) && (data.totalMatches ?? 0) === 0;
-
-  // 위자드 닫기 핸들러 (preview 모드는 localStorage 박지 않음 — 새로고침으로 다시 확인 가능)
   function dismissWizard() {
     setWizardDismissed(true);
     if (!isPreviewWelcomeCreated && typeof window !== "undefined" && teamId) {
@@ -351,659 +311,814 @@ export default function DashboardClient({ userId, userRole, initialData, inviteC
     return <CardSkeleton />;
   }
 
-  async function handleCopyInviteCode() {
+  // 다가오는 경기 type meta
+  const upcomingType: "REGULAR" | "INTERNAL" | "EVENT" = upcomingMatch?.matchType ?? "REGULAR";
+  const upcomingTypeMeta = MATCH_TYPE_META[upcomingType];
+
+  // 인사 sub 라벨 + 요일 chip
+  const todayDate = new Date();
+  const todayStr = todayDate.toISOString().slice(0, 10);
+  const dayShortNames = ["일", "월", "화", "수", "목", "금", "토"];
+  const todayDayShort = dayShortNames[todayDate.getDay()];
+  const greetMeta = `${formatDateKo(todayStr)}${teamName ? ` · ${teamName}` : ""}${recordTotal > 0 ? ` · 시즌 ${recordTotal}경기째` : ""}`;
+  const upcomingRelLabel = upcomingMatch ? relativeDayLabel(upcomingMatch.match_date) : "";
+
+  // 공지 — 운영공지 + 팀공지 모두 노출 (최대 3개)
+  const notices: Array<{ id: string; label: string; title: string }> = [];
+  if (data.noticePins?.global) {
+    notices.push({ id: data.noticePins.global.id, label: "운영공지", title: data.noticePins.global.title });
+  }
+  for (const t of (data.noticePins?.team ?? []).slice(0, 2)) {
+    notices.push({ id: t.id, label: "팀공지", title: t.title });
+  }
+
+  // 회비 nudge 노출 조건 (회장+ + 회비 미설정 + 회원 5명+)
+  const showDuesNudge = isStaffOrAbove(role) && data.hasDuesSettings === false && (data.registeredMemberCount ?? 0) >= 5;
+  const showVoteStatus = isStaffOrAbove(role) && activeVotes.length > 0;
+  const showRecord = recordTotal > 0;
+  // 1인 팀(< 10명) invite nudge — 회장+ + 초대 코드 보유
+  const showInviteNudge = !showWizard && isStaffOrAbove(role) && !!inviteCode && (data.registeredMemberCount ?? 0) < 10;
+
+  async function handleInviteShare() {
+    if (!inviteCode) return;
+    await shareTeamInvite({ teamName: teamName || "우리 팀", inviteCode });
+  }
+  async function handleInviteCopy() {
     if (!inviteCode) return;
     try {
-      await navigator.clipboard.writeText(inviteCode);
-      setInviteCopied(true);
-      GA.inviteSent("copy_code");
-      showToast("초대 코드가 복사되었습니다.");
-      setTimeout(() => setInviteCopied(false), 2000);
+      const url = `${window.location.origin}/team?code=${inviteCode}`;
+      await navigator.clipboard.writeText(url);
+      GA.inviteSent("copy_link");
+      showToast("초대 링크가 복사되었습니다.");
     } catch {
-      showToast("복사에 실패했습니다. 설정에서 확인해주세요.", "error");
+      showToast("복사에 실패했습니다.", "error");
     }
   }
 
   return (
-    <div className="grid gap-3 stagger-children min-w-0">
-      {/* ── 내 프로필 바로가기 (최상단 한 줄) ── */}
-      <div className="flex justify-end -mb-1">
-        <Link
-          href={`/player/${userId}${teamId ? `?team=${teamId}` : ""}`}
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-        >
-          <User className="h-3.5 w-3.5" />
-          내 프로필 보기
-          <ChevronRight className="h-3.5 w-3.5" />
-        </Link>
-      </div>
-
-      {/* ── 알파 테스터 모집 배너 (Android 전용) ── */}
-      <AlphaTesterBanner />
-
-      {/* ── 공지 핀 (운영공지 + 팀공지) — 둘 다 없으면 자동 숨김. order로 최상단 고정 ── */}
-      {!showWizard && data.noticePins && (data.noticePins.global || data.noticePins.team.length > 0) && (
-        <div className="space-y-2" style={{ order: -10 }}>
-          {data.noticePins.global && (
-            <Link
-              href={`/board?post=${data.noticePins.global.id}`}
-              className="block rounded-xl border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/5 p-3 transition-colors hover:bg-[hsl(var(--warning))]/10"
-            >
-              <div className="flex items-center gap-2">
-                <span className="shrink-0 rounded-full bg-[hsl(var(--warning))]/15 px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--warning))]">
-                  🔔 운영공지
-                </span>
-                <p className="text-sm font-semibold truncate">{data.noticePins.global.title}</p>
-                <ChevronRight className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-              </div>
-            </Link>
-          )}
-          {data.noticePins.team.map((n) => (
-            <Link
-              key={n.id}
-              href={`/board?post=${n.id}`}
-              className="block rounded-xl border border-[hsl(var(--accent))]/30 bg-[hsl(var(--accent))]/5 p-3 transition-colors hover:bg-[hsl(var(--accent))]/10"
-            >
-              <div className="flex items-center gap-2">
-                <span className="shrink-0 rounded-full bg-[hsl(var(--accent))]/15 px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--accent))]">
-                  📢 팀공지
-                </span>
-                <p className="text-sm font-semibold truncate">{n.title}</p>
-                <ChevronRight className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {/* ── 내 시즌 기록 — 출전/골/출석률. 데이터 없으면 자동 숨김 ── */}
-      {!showWizard && data.mySeasonStats && (
-        <Link
-          href={`/player/${userId}${teamId ? `?team=${teamId}` : ""}`}
-          className="block rounded-xl border border-[hsl(var(--success))]/20 bg-[hsl(var(--success))]/5 p-4 transition-colors hover:bg-[hsl(var(--success))]/10"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(var(--success))]">내 시즌 기록</p>
-            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-foreground">{data.mySeasonStats.matches}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">출전</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-primary">{data.mySeasonStats.goals}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">골</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-foreground">{data.mySeasonStats.attendanceRate}%</p>
-              <p className="text-xs text-muted-foreground mt-0.5">출석률</p>
-            </div>
-          </div>
-        </Link>
-      )}
-
-      {/* ── 신규 가입자(팀원 합류) 환영 카드 — 시안 v2 ── */}
-      {joinedWelcome && (
-        <WelcomeCard
-          variant="joined"
-          teamName={joinedWelcome.team}
-          teamId={teamId ?? ""}
-          userId={userId}
-          nextMatch={
-            upcomingMatch
-              ? {
-                  id: upcomingMatch.id,
-                  when: `${formatDateKo(upcomingMatch.match_date)}${
-                    upcomingMatch.match_time ? ` ${formatTime(upcomingMatch.match_time)}` : ""
-                  }`,
-                  where: upcomingMatch.location ?? "장소 미정",
-                }
-              : null
-          }
-          onDismiss={() => setJoinedWelcome(null)}
-        />
-      )}
-
-      {/* ── Onboarding Wizard (new teams only) — 시안 v2 ── */}
-      {showWizard && inviteCode && (
-        <WelcomeCard
-          variant="created"
-          teamName={teamName || "우리 팀"}
-          teamId={teamId ?? ""}
-          inviteCode={inviteCode}
-          onDismiss={dismissWizard}
-        />
-      )}
-
-      {/* ── 경기 0건 넛지 카드 (운영진 전용, 한 번도 경기 등록 안 한 팀) ── */}
-      {showNoMatchNudge && (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardContent className="p-5 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 mb-3">
-              <Calendar className="h-6 w-6 text-primary" />
-            </div>
-            <p className="text-base font-bold">첫 경기를 등록해보세요!</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              경기를 등록하면 팀원에게 자동으로 참석 투표 알림이 갑니다.
-            </p>
-            <Button className="mt-4" asChild>
-              <Link href="/matches?create=true">경기 등록하러 가기</Link>
-            </Button>
-            <div className="mt-3">
+    <div className="pm-page pm-page--dashboard">
+      <main className="pm-main pm-main--dashboard">
+        {/* A · 인사 */}
+        <div className="pm-dash-greet">
+          <div className="pm-dash-greet-row">
+            <h1 className="pm-dash-greet-hello">
+              안녕하세요,<br />
+              <strong>{userName || "팀원"}</strong> 님.
+            </h1>
+            {upcomingMatch && (
               <Link
-                href="/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                href={`/matches/${upcomingMatch.id}`}
+                className="pm-dash-greet-next"
+                aria-label={`다음 경기 ${upcomingRelLabel}`}
               >
-                어떤 기능이 있는지 샘플 화면 미리보기 →
+                <span className="pm-dash-greet-next-dot" aria-hidden />
+                <span className="pm-dash-greet-next-sub">다음 경기</span>
+                <span>{upcomingRelLabel}</span>
               </Link>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* ── Birthday Card ── */}
-      {birthdayMembers && birthdayMembers.length > 0 && (
-        <div className="relative overflow-hidden rounded-xl border border-[hsl(var(--accent))]/20 bg-gradient-to-r from-[hsl(var(--accent))]/5 via-primary/5 to-[hsl(var(--info))]/5">
-          {/* Confetti decoration */}
-          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-            <div className="absolute -top-1 left-[10%] h-2 w-2 rotate-45 rounded-sm bg-primary/20" />
-            <div className="absolute -top-0.5 left-[30%] h-1.5 w-1.5 rounded-full bg-[hsl(var(--accent))]/25" />
-            <div className="absolute top-1 right-[20%] h-2 w-2 rotate-12 rounded-sm bg-[hsl(var(--info))]/20" />
-            <div className="absolute top-2 right-[40%] h-1.5 w-1.5 rounded-full bg-primary/15" />
-            <div className="absolute bottom-1 left-[25%] h-1.5 w-1.5 rotate-45 rounded-sm bg-[hsl(var(--accent))]/20" />
-            <div className="absolute bottom-2 right-[15%] h-2 w-2 rounded-full bg-[hsl(var(--info))]/15" />
+            )}
           </div>
-
-          <div className="relative px-4 py-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-[hsl(var(--accent))]/20">
-                <Cake className="h-5 w-5 text-primary" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-foreground">
-                  {birthdayMembers.length === 1
-                    ? `${birthdayMembers[0].name}님, 생일 축하합니다!`
-                    : `${birthdayMembers.map((m) => m.name).join(", ")}님, 생일 축하합니다!`}
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  오늘은 우리 팀원의 특별한 날이에요
-                </p>
-              </div>
-            </div>
+          <div className="pm-dash-greet-meta">
+            <span className="pm-dash-greet-day" aria-hidden>{todayDayShort}</span>
+            <span>{greetMeta}</span>
           </div>
         </div>
-      )}
 
-      {/* ── Hero: Next Match (공지 다음, 내 시즌 기록·생일 등보다 위) ── */}
-      <div className="card-featured" style={{ order: -5 }}>
-        <div className="flex items-center justify-between">
-          <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">다가오는 경기</CardTitle>
-          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
-            <Link href="/matches">전체 일정 &rarr;</Link>
-          </Button>
-        </div>
-        {upcomingMatch ? (
-          <>
-          <Link href={`/matches/${upcomingMatch.id}`} className="block mt-4">
-            {/* 1줄: 날짜 + 날씨 */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">{formatDateKo(upcomingMatch.match_date)}</span>
-              <DashboardWeather date={upcomingMatch.match_date} location={upcomingMatch.location} />
+        {/* 알파 테스터 배너 */}
+        <AlphaTesterBanner />
+
+        {/* WelcomeCard joined */}
+        {joinedWelcome && (
+          <WelcomeCard
+            variant="joined"
+            teamName={joinedWelcome.team}
+            teamId={teamId ?? ""}
+            userId={userId}
+            nextMatch={
+              upcomingMatch
+                ? {
+                    id: upcomingMatch.id,
+                    when: `${formatDateKo(upcomingMatch.match_date)}${
+                      upcomingMatch.match_time ? ` ${formatTime(upcomingMatch.match_time)}` : ""
+                    }`,
+                    where: upcomingMatch.location ?? "장소 미정",
+                  }
+                : null
+            }
+            onDismiss={() => setJoinedWelcome(null)}
+          />
+        )}
+
+        {/* WelcomeCard created (Onboarding Wizard) */}
+        {showWizard && inviteCode && (
+          <WelcomeCard
+            variant="created"
+            teamName={teamName || "우리 팀"}
+            teamId={teamId ?? ""}
+            inviteCode={inviteCode}
+            onDismiss={dismissWizard}
+          />
+        )}
+
+        {/* B · 공지 — 운영공지 + 팀공지 모두 노출 */}
+        {!showWizard && notices.map((n) => (
+          <Link key={n.id} href={`/board?post=${n.id}`} className="pm-dash-notice" style={{ textDecoration: "none" }}>
+            <span className="pm-dash-notice-icon" aria-hidden>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M4 4h7l3 3v7H4z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+                <path d="M11 4v3h3M6.5 9.5h5M6.5 12h3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              </svg>
+            </span>
+            <div className="pm-dash-notice-body">
+              <div className="pm-dash-notice-label">{n.label}</div>
+              <div className="pm-dash-notice-title">{n.title}</div>
             </div>
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+              <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </Link>
+        ))}
 
-            {/* 2줄: 시간 (큰 폰트, primary) */}
-            <p className="mt-1 text-3xl font-bold text-primary tracking-tight">
-              {upcomingMatch.match_time ? formatTime(upcomingMatch.match_time) : "시간 미정"}
-              {upcomingMatch.match_end_time && (
-                <span className="text-primary/60"> ~ {formatTime(upcomingMatch.match_end_time)}</span>
-              )}
-            </p>
-
-            {/* 3줄: 장소 + 상대 + 유니폼 */}
-            <div className="mt-2 flex items-center gap-3 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1 min-w-0 truncate">
-                <span className="text-xs shrink-0">📍</span>
-                <span className="truncate">
-                  {upcomingMatch.location ?? "장소 미정"}
-                  {upcomingMatch.opponent_name ? ` · vs ${upcomingMatch.opponent_name}` : ""}
-                </span>
-              </span>
+        {/* Main rail · D 또는 C empty hero */}
+        <div className="pm-dash-col pm-dash-col--main">
+          {!showWizard && upcomingMatch ? (
+            <section className="pm-section">
+              <div className="pm-section-h">
+                <span>다가오는 경기</span>
+                <Link href="/matches" className="pm-dash-section-link" style={{ textDecoration: "none" }}>
+                  전체 보기
+                  <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden>
+                    <path d="M3 2l3 3-3 3" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+                  </svg>
+                </Link>
+              </div>
               {(() => {
-                const uniformType = (upcomingMatch.uniform_type ?? "HOME") as "HOME" | "AWAY" | "THIRD";
-                const u = data.teamUniform;
-                const unis = u?.uniforms;
-                let primary: string, secondary: string, pattern: string, label: string;
-                if (uniformType === "THIRD" && unis?.third) {
-                  primary = unis.third.primary; secondary = unis.third.secondary; pattern = unis.third.pattern; label = "써드";
-                } else if (uniformType === "AWAY" && unis?.away) {
-                  primary = unis.away.primary; secondary = unis.away.secondary; pattern = unis.away.pattern; label = "원정";
-                } else if (unis?.home) {
-                  primary = unis.home.primary; secondary = unis.home.secondary; pattern = unis.home.pattern; label = "홈";
-                } else {
-                  primary = u?.uniformPrimary ?? "hsl(var(--primary))";
-                  secondary = u?.uniformSecondary ?? "hsl(var(--muted-foreground))";
-                  pattern = u?.uniformPattern ?? "SOLID";
-                  label = uniformType === "AWAY" ? "원정" : "홈";
+                // 큰 날짜 split layout 데이터 준비
+                const matchDate = new Date(upcomingMatch.match_date + "T00:00:00");
+                const dayNum = matchDate.getDate();
+                const monthNum = matchDate.getMonth() + 1;
+                const dayNames = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
+                const dayName = dayNames[matchDate.getDay()];
+                const relLabel = relativeDayLabel(upcomingMatch.match_date);
+                // 마감까지 N일
+                let deadlineLabel = "";
+                if (upcomingMatch.vote_deadline) {
+                  const diff = Math.ceil((new Date(upcomingMatch.vote_deadline).getTime() - new Date().getTime()) / (24 * 60 * 60 * 1000));
+                  if (diff > 0) deadlineLabel = `투표 마감까지 ${diff}일 남음`;
+                  else if (diff === 0) deadlineLabel = "오늘 마감";
+                  else deadlineLabel = "투표 마감됨";
                 }
+                const totalMembers = data.registeredMemberCount ?? voteTotal;
                 return (
-                  <span className="inline-flex items-center gap-1 shrink-0">
-                    <span
-                      className="h-4 w-3.5 border border-foreground/20 rounded-sm"
-                      style={{
-                        ...getUniformStyle(primary, secondary, pattern),
-                        clipPath: "polygon(12% 12%, 30% 12%, 34% 0%, 66% 0%, 70% 12%, 88% 12%, 100% 34%, 86% 48%, 86% 100%, 14% 100%, 14% 48%, 0% 34%)",
-                      }}
-                    />
-                    <span>{label}</span>
-                  </span>
+                  <div
+                    className={`pm-match-card pm-hue--${upcomingTypeMeta.hue}`}
+                    role="group"
+                    aria-label="다가오는 경기"
+                    style={{ position: "relative" }}
+                  >
+                    {/* Floating D-N chip 우상단 */}
+                    <span className="pm-mc-rel-floating" aria-hidden>
+                      <span className="pm-mc-rel-floating-dot" />
+                      {relLabel}
+                    </span>
+
+                    {/* Type 배지 좌상단 */}
+                    <header className="pm-mc-head">
+                      <span className="pm-mc-type">{upcomingTypeMeta.label}</span>
+                    </header>
+
+                    {/* Split: 큰 날짜 + divider + 정보 */}
+                    <Link href={`/matches/${upcomingMatch.id}`} style={{ textDecoration: "none", color: "inherit", display: "contents" }}>
+                      <div className="pm-mc-split">
+                        <div className="pm-mc-date-big">
+                          <span className="pm-mc-date-month">{monthNum}월</span>
+                          <span className="pm-mc-date-day">{dayNum}</span>
+                          <span className="pm-mc-date-dayname">{dayName}</span>
+                        </div>
+                        <div className="pm-mc-split-divider" aria-hidden />
+                        <div className="pm-mc-info">
+                          {upcomingType === "REGULAR" && upcomingMatch.opponent_name && (
+                            <>
+                              <span className="pm-mc-info-vs">vs</span>
+                              <div className="pm-mc-info-opp">{upcomingMatch.opponent_name}</div>
+                            </>
+                          )}
+                          {upcomingType === "INTERNAL" && (
+                            <div className="pm-mc-info-opp pm-mc-info-opp--mute">우리끼리 자체전</div>
+                          )}
+                          {upcomingType === "EVENT" && (
+                            <div className="pm-mc-info-opp pm-mc-info-opp--mute">{upcomingMatch.opponent_name || "팀 이벤트"}</div>
+                          )}
+                          {upcomingType === "REGULAR" && !upcomingMatch.opponent_name && (
+                            <div className="pm-mc-info-opp pm-mc-info-opp--mute">상대 미정</div>
+                          )}
+                          <div className="pm-mc-info-time">
+                            {upcomingMatch.match_time ? formatTime(upcomingMatch.match_time) : "시간 미정"}
+                            {upcomingMatch.match_end_time && ` – ${formatTime(upcomingMatch.match_end_time)}`}
+                            <DashboardWeather date={upcomingMatch.match_date} location={upcomingMatch.location} />
+                          </div>
+                          {upcomingMatch.location && (
+                            <div className="pm-mc-info-venue">
+                              <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden>
+                                <path d="M6 1c-2 0-3.5 1.5-3.5 3.4 0 2.4 3.5 6.6 3.5 6.6s3.5-4.2 3.5-6.6C9.5 2.5 8 1 6 1z" stroke="currentColor" strokeWidth="1.2" fill="none" />
+                                <circle cx="6" cy="4.5" r="1.3" stroke="currentColor" strokeWidth="1.1" fill="none" />
+                              </svg>
+                              <span>{upcomingMatch.location}</span>
+                            </div>
+                          )}
+                          {/* 전술 미설정 칩 — backend squad info 필요 (현재 false positive 위험으로 비활성) */}
+                        </div>
+                      </div>
+                    </Link>
+
+                    {/* 4-color stacked progress + 비율/투표수 헤더 */}
+                    <div className="pm-dash-progress-row">
+                      <div className="pm-dash-progress-row-head">
+                        <span className="pm-dash-progress-head-pct">참석 {attendPercent}%</span>
+                        <span className="pm-dash-progress-head-total">
+                          {voteTotal}/{totalMembers}명 투표
+                        </span>
+                      </div>
+                      <div className="pm-dash-progress-stacked" aria-label={`참석 ${attendPercent}%`}>
+                        {voteCounts.attend > 0 && (
+                          <div className="pm-dash-progress-cell pm-dash-progress-cell--yes" style={{ flex: voteCounts.attend }}>
+                            {voteCounts.attend}
+                          </div>
+                        )}
+                        {voteCounts.undecided > 0 && (
+                          <div className="pm-dash-progress-cell pm-dash-progress-cell--maybe" style={{ flex: voteCounts.undecided }}>
+                            {voteCounts.undecided}
+                          </div>
+                        )}
+                        {voteCounts.absent > 0 && (
+                          <div className="pm-dash-progress-cell pm-dash-progress-cell--no" style={{ flex: voteCounts.absent }}>
+                            {voteCounts.absent}
+                          </div>
+                        )}
+                        {noneCount > 0 && (
+                          <div className="pm-dash-progress-cell pm-dash-progress-cell--none" style={{ flex: noneCount }}>
+                            {noneCount}
+                          </div>
+                        )}
+                      </div>
+                      <div className="pm-dash-legend">
+                        <span><span className="pm-statusdot pm-statusdot--success" />참석</span>
+                        <span><span className="pm-statusdot" style={{ background: "hsl(var(--warning))" }} />미정</span>
+                        <span><span className="pm-statusdot" style={{ background: "hsl(var(--destructive))" }} />불참</span>
+                        <span><span className="pm-statusdot pm-statusdot--muted" />미투표</span>
+                      </div>
+                    </div>
+
+                    {/* 투표 버튼 — 마감 전에만 노출 */}
+                    {upcomingMatch.myMemberId && !isVoteClosed && (
+                      <div className="pm-dash-myvote" role="radiogroup" aria-label="내 투표">
+                        {([
+                          { value: "ATTEND" as const, label: "참석", cls: "pm-vote--yes" },
+                          { value: "MAYBE" as const, label: "미정", cls: "pm-vote--maybe" },
+                          { value: "ABSENT" as const, label: "불참", cls: "pm-vote--no" },
+                        ]).map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            disabled={pendingVote || !!loadingVote}
+                            aria-pressed={displayVote === opt.value}
+                            className={cn(
+                              "pm-dash-myvote-btn",
+                              opt.cls,
+                              displayVote === opt.value && "is-on",
+                              shakeVote === opt.value && "animate-shake",
+                            )}
+                            onClick={() => handleQuickVote(upcomingMatch.id, upcomingMatch.myMemberId!, opt.value)}
+                          >
+                            {loadingVote === opt.value && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                            <span className="pm-dash-myvote-dot" /> {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Footer — 마감 상태 + 내 투표 통합 표시 */}
+                    {(deadlineLabel || isVoteClosed) && (
+                      <footer className="pm-dash-mc-foot--v2">
+                        <span className="pm-dash-mc-foot--v2-left">
+                          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                            <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.3" fill="none" />
+                            <path d="M7 4v3l2 1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+                          </svg>
+                          {isVoteClosed
+                            ? `투표 마감됨${displayVote ? ` · 내 투표: ${displayVote === "ATTEND" ? "참석" : displayVote === "ABSENT" ? "불참" : "미정"}` : ""}`
+                            : deadlineLabel}
+                        </span>
+                        <span className="pm-dash-mc-foot--v2-right">{relLabel}</span>
+                      </footer>
+                    )}
+                  </div>
                 );
               })()}
-            </div>
-
-            {/* 4줄: 투표 현황 (dot + 숫자) + 프로그레스 바 */}
-            <div className="mt-3 flex items-center gap-4 text-xs">
-              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[hsl(var(--success))]" />참석 <strong className="text-[hsl(var(--success))]">{voteCounts.attend}</strong></span>
-              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[hsl(var(--loss))]" />불참 <strong className="text-[hsl(var(--loss))]">{voteCounts.absent}</strong></span>
-              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[hsl(var(--warning))]" />미정 <strong className="text-[hsl(var(--warning))]">{voteCounts.undecided}</strong></span>
-            </div>
-            <div className="mt-1.5 flex h-1.5 overflow-hidden rounded-full bg-secondary/50">
-              <div className="rounded-full bg-[hsl(var(--success))] transition-all duration-500" style={attendBarStyle} />
-              <div className="bg-[hsl(var(--loss))] transition-all duration-500" style={absentBarStyle} />
-              {voteCounts.undecided > 0 && <div className="bg-[hsl(var(--warning))] transition-all duration-500" style={{ width: `${voteTotal > 0 ? (voteCounts.undecided / voteTotal) * 100 : 0}%` }} />}
-            </div>
-          </Link>
-
-          {/* 투표 버튼 — 마감 전에만 노출, 마감 후엔 안내 메시지 */}
-          {upcomingMatch.myMemberId && (
-            isVoteClosed ? (
-              <div className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary/40 py-2 text-sm text-muted-foreground">
-                <span>이 경기의 투표는 마감되었습니다</span>
-                {displayVote && (
-                  <span className="text-xs">
-                    · 내 투표: {displayVote === "ATTEND" ? "참석" : displayVote === "ABSENT" ? "불참" : "미정"}
+            </section>
+          ) : !showWizard && isStaffOrAbove(role) && (data.totalMatches ?? 0) === 0 ? (
+            /* C · 첫 경기 hero — 한 번도 경기 등록 안 한 팀의 회장+ */
+            <div className="pm-paste-hero pm-dash-emptyhero">
+              <div className="pm-amb" aria-hidden />
+              <div className="pm-hero-inner">
+                <h2 className="pm-h1 pm-h1--hero">첫 경기를<br />만들어 보세요.</h2>
+                <p className="pm-sub" style={{ marginBottom: 4 }}>
+                  등록하면 팀원에게 자동으로<br />참석 투표 알림이 갑니다.
+                </p>
+                <div className="pm-empty-types">
+                  <div className="pm-empty-type pm-hue--atk">
+                    <div className="pm-empty-type-label">정규</div>
+                    <div className="pm-empty-type-desc">상대팀과의 경기</div>
+                  </div>
+                  <div className="pm-empty-type pm-hue--def">
+                    <div className="pm-empty-type-label">자체</div>
+                    <div className="pm-empty-type-desc">우리 팀 안에서</div>
+                  </div>
+                  <div className="pm-empty-type pm-hue--mid">
+                    <div className="pm-empty-type-label">이벤트</div>
+                    <div className="pm-empty-type-desc">MT · 회식 · 모임</div>
+                  </div>
+                </div>
+                <Link href="/matches" className="pm-paste-cta" style={{ textDecoration: "none" }}>
+                  <span className="pm-paste-cta-icon" aria-hidden>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <rect x="3.5" y="4.5" width="13" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                      <path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      <path d="M10 11v3M8.5 12.5h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                    </svg>
                   </span>
-                )}
+                  <div className="pm-paste-cta-body">
+                    <div className="pm-paste-cta-label">새 경기 만들기</div>
+                    <div className="pm-paste-cta-sub">투표 알림 자동 발송</div>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                    <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+          ) : !showWizard && isStaffOrAbove(role) ? (
+            /* 다음 경기 일정 등록 안내 — 회장+ + 과거 경기 있음 + 다가오는 경기 없음 */
+            <div
+              className="pm-empty pm-empty--soft"
+              style={{
+                marginTop: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                padding: 14,
+                borderRadius: 14,
+                border: "1px solid hsl(var(--primary) / 0.32)",
+                background: "hsl(var(--primary) / 0.06)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 22 }} aria-hidden>📅</span>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "hsl(var(--foreground))" }}>예정된 경기가 없어요</div>
+                  <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", marginTop: 2 }}>다음 경기를 등록해 보세요</div>
+                </div>
+              </div>
+              <Link
+                href="/matches"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  padding: "8px 14px",
+                  borderRadius: 10,
+                  background: "hsl(var(--primary))",
+                  color: "white",
+                  fontFamily: "var(--font-display)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  whiteSpace: "nowrap",
+                  boxShadow: "0 4px 12px hsl(var(--primary) / 0.32)",
+                }}
+              >
+                일정 등록
+              </Link>
+            </div>
+          ) : !showWizard ? (
+            /* 일반 회원 폴백 */
+            <div className="pm-empty pm-empty--soft" style={{ marginTop: 0 }}>
+              <span className="pm-empty-glyph" aria-hidden>📅</span>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "hsl(var(--foreground))" }}>예정된 경기가 없습니다</div>
+                <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", marginTop: 2 }}>회장이 일정을 올리면 알림으로 받아요</div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Side rail · 액션 우선 순서: 미완료 → 회비 → 투표 → 시즌기록 → 시즌전적 */}
+        <div className="pm-dash-col pm-dash-col--side">
+          {/* H · 미완료 항목 — 가장 위로 (액션 필요) */}
+          <section className="pm-section">
+            <div className="pm-section-h">
+              <span>미완료 항목</span>
+              {tasks.length > 0 ? (
+                <span className="pm-section-count">{tasks.length}건</span>
+              ) : (
+                <span className="pm-section-count" style={{ color: "hsl(var(--success))" }}>
+                  완료
+                </span>
+              )}
+            </div>
+            {tasks.length > 0 ? (
+              <div className="pm-dash-todo">
+                {tasks.map((t, i) => (
+                  <Link key={i} href={t.href} className="pm-dash-todo-item" style={{ textDecoration: "none" }}>
+                    <span className="pm-dash-todo-check" aria-hidden />
+                    <span className="pm-dash-todo-label">{t.label}</span>
+                    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                      <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </Link>
+                ))}
               </div>
             ) : (
-              <div className="mt-4 flex items-center gap-2">
-                {([
-                  { value: "ATTEND" as const, label: "참석" },
-                  { value: "MAYBE" as const, label: "미정" },
-                  { value: "ABSENT" as const, label: "불참" },
-                ]).map((opt) => {
-                  const isSelected = displayVote === opt.value;
-                  const isLoading = loadingVote === opt.value;
-                  const isShaking = shakeVote === opt.value;
+              <div className="pm-dash-todo-allclear" role="status">
+                <span className="pm-dash-todo-allclear-icon" aria-hidden>
+                  <svg width="16" height="16" viewBox="0 0 16 16">
+                    <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+                <div className="pm-dash-todo-allclear-body">
+                  <div className="pm-dash-todo-allclear-title">모두 완료하셨습니다</div>
+                  <div className="pm-dash-todo-allclear-sub">처리할 항목이 없어요</div>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* 1인 팀 invite nudge — 회장+ + 회원 < 10명 + 초대코드 */}
+          {showInviteNudge && (
+            <div
+              className="pm-dash-nudge"
+              role="status"
+              style={{
+                background:
+                  "radial-gradient(ellipse 80% 60% at 100% 0%, hsl(var(--info) / 0.10), transparent 60%), hsl(var(--info) / 0.06)",
+                borderColor: "hsl(var(--info) / 0.32)",
+              }}
+            >
+              <div className="pm-dash-nudge-head">
+                <span
+                  className="pm-dash-nudge-icon"
+                  aria-hidden
+                  style={{ background: "hsl(var(--info) / 0.16)", color: "hsl(var(--info))", borderColor: "hsl(var(--info) / 0.28)" }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <circle cx="6.5" cy="6.5" r="2.6" stroke="currentColor" strokeWidth="1.4" />
+                    <path d="M2.5 14.5c.7-2.4 2.6-3.7 4-3.7s3.3 1.3 4 3.7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                    <path d="M12 4v6M9 7h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  </svg>
+                </span>
+                <div className="pm-dash-nudge-body">
+                  <div className="pm-dash-nudge-title">팀원을 초대해 보세요</div>
+                  <div className="pm-dash-nudge-sub">현재 {data.registeredMemberCount ?? 1}명 · 초대 코드 {inviteCode}</div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button
+                  type="button"
+                  className="pm-dash-nudge-btn"
+                  style={{ background: "hsl(var(--info))", flex: 1 }}
+                  onClick={handleInviteShare}
+                >
+                  카카오 공유
+                </button>
+                <button
+                  type="button"
+                  className="pm-dash-nudge-btn"
+                  style={{ background: "transparent", color: "hsl(var(--info))", border: "1px solid hsl(var(--info) / 0.4)", flexShrink: 0, padding: "0 14px" }}
+                  onClick={handleInviteCopy}
+                >
+                  링크
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* F · 회비 nudge (회장+ + 미설정 + 5명+) */}
+          {showDuesNudge && (
+            <div className="pm-dash-nudge" role="status">
+              <div className="pm-dash-nudge-head">
+                <span className="pm-dash-nudge-icon" aria-hidden>
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <rect x="2.5" y="5.5" width="13" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+                    <circle cx="9" cy="10" r="1.6" stroke="currentColor" strokeWidth="1.3" fill="none" />
+                    <path d="M5 5.5V4M13 5.5V4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  </svg>
+                </span>
+                <div className="pm-dash-nudge-body">
+                  <div className="pm-dash-nudge-title">회비 규칙을 설정해 주세요</div>
+                  <div className="pm-dash-nudge-sub">팀원 {data.registeredMemberCount}명 · 미설정</div>
+                </div>
+              </div>
+              <Link href="/dues" className="pm-dash-nudge-btn" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                설정하기
+              </Link>
+            </div>
+          )}
+
+          {/* G · 투표 현황 (운영진+) */}
+          {showVoteStatus && (
+            <section className="pm-section">
+              <div className="pm-section-h">
+                <span>투표 현황</span>
+                <span className="pm-section-count">{activeVotes.length}건 진행</span>
+              </div>
+              <div className="pm-dash-votelist">
+                {activeVotes.map((v) => {
+                  const vMeta = MATCH_TYPE_META[v.matchType];
+                  const oppText =
+                    v.matchType === "INTERNAL" ? "자체전" :
+                    v.matchType === "EVENT" ? (v.opponentName || "팀 이벤트") :
+                    v.opponentName ? `vs ${v.opponentName}` : "팀 일정";
+                  const total = (data.registeredMemberCount ?? (v.voteCounts.attend + v.voteCounts.undecided + v.voteCounts.absent));
+                  const voted = v.voteCounts.attend + v.voteCounts.undecided + v.voteCounts.absent;
+                  const noneCount = Math.max(0, total - voted);
                   return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      disabled={pendingVote || !!loadingVote}
-                      aria-pressed={displayVote === opt.value}
-                      className={cn(
-                        "relative flex-1 rounded-lg py-1.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-1",
-                        isSelected ? voteStyles[opt.value].active : "border border-border text-muted-foreground hover:bg-secondary",
-                        isShaking && "animate-shake ring-2 ring-destructive"
-                      )}
-                      onClick={() => handleQuickVote(upcomingMatch.id, upcomingMatch.myMemberId!, opt.value)}
+                    <Link
+                      key={v.id}
+                      href={`/matches/${v.id}`}
+                      className={`pm-dash-voterow pm-hue--${vMeta.hue}`}
+                      style={{ textDecoration: "none" }}
                     >
-                      {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      {opt.label}
-                    </button>
+                      <div className="pm-dash-voterow-body">
+                        <div className="pm-dash-voterow-head">
+                          <span className="pm-dash-voterow-opp">{oppText}</span>
+                          <span className="pm-dash-voterow-when">
+                            {formatDateKo(v.matchDate)}{v.matchTime && ` ${formatTime(v.matchTime)}`}
+                          </span>
+                        </div>
+                        <div className="pm-dash-voterow-progress" aria-label="투표 진행">
+                          {v.voteCounts.attend > 0 && <span className="yes" style={{ flex: v.voteCounts.attend }} />}
+                          {v.voteCounts.undecided > 0 && <span className="maybe" style={{ flex: v.voteCounts.undecided }} />}
+                          {v.voteCounts.absent > 0 && <span className="no" style={{ flex: v.voteCounts.absent }} />}
+                          {noneCount > 0 && <span className="none" style={{ flex: noneCount }} />}
+                        </div>
+                        <div className="pm-dash-voterow-tallies">
+                          <span><span className="pm-statusdot pm-statusdot--success" />{v.voteCounts.attend}</span>
+                          <span><span className="pm-statusdot" style={{ background: "hsl(var(--warning))" }} />{v.voteCounts.undecided}</span>
+                          <span><span className="pm-statusdot" style={{ background: "hsl(var(--destructive))" }} />{v.voteCounts.absent}</span>
+                          <span><span className="pm-statusdot pm-statusdot--muted" />{noneCount}</span>
+                        </div>
+                      </div>
+                      <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                        <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </Link>
                   );
                 })}
               </div>
-            )
+            </section>
           )}
-          </>
-        ) : !showWizard ? (
-          <div className="mt-4">
-            <EmptyState
-              icon={Calendar}
-              title="예정된 경기가 없습니다"
-              description="새 경기를 등록해보세요."
-              action={
-                isStaffOrAbove(role) ? (
-                  <Button size="sm" asChild>
-                    <Link href="/matches">일정 등록하기</Link>
-                  </Button>
-                ) : undefined
-              }
-            />
-          </div>
-        ) : null}
-      </div>
 
-      {/* ── Invite card (staff/president only) ── */}
-      {isStaffOrAbove(role) && inviteCode && (data.registeredMemberCount ?? 0) < 10 && (
-        <Card className="border-[hsl(var(--accent))]/20 bg-[hsl(var(--accent))]/5">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 shrink-0 text-[hsl(var(--accent))]" />
-              <p className="text-sm font-semibold text-foreground">팀원을 초대하세요</p>
-            </div>
-            <div className="mt-2 flex items-center justify-between gap-2">
-              <p className="text-sm text-muted-foreground truncate">초대 코드를 공유하면 바로 가입</p>
-              <div className="flex gap-1.5 shrink-0">
-                <Button
-                  size="sm"
-                  className="gap-1 text-xs"
-                  onClick={() => shareTeamInvite({ teamName: teamName || "우리 팀", inviteCode: inviteCode! })}
-                >
-                  카카오톡 초대
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="px-2 border-[hsl(var(--accent))]/30 text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/10"
-                  onClick={() => {
-                    const inviteUrl = `${window.location.origin}/team?code=${inviteCode}`;
-                    navigator.clipboard.writeText(inviteUrl).then(() => {
-                      setInviteCopied(true);
-                      showToast("초대 링크가 복사되었습니다.");
-                      setTimeout(() => setInviteCopied(false), 2000);
-                    });
-                  }}
-                >
-                  {inviteCopied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* ── Dues nudge (회비 미설정 팀, 운영진 이상) ── */}
-      {isStaffOrAbove(role) && data.hasDuesSettings === false && !showWizard && (
-        <Card className="border-[hsl(var(--info))]/20 bg-[hsl(var(--info))]/5">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 shrink-0 text-[hsl(var(--info))]" />
-              <p className="text-sm font-semibold text-foreground">회비 관리를 시작해보세요</p>
-            </div>
-            <div className="mt-2 flex items-center justify-between gap-2">
-              <p className="text-sm text-muted-foreground">통장 캡쳐 한 장이면 회비가 자동 정리됩니다</p>
-              <Button size="sm" className="shrink-0 gap-1 text-xs" asChild>
-                <Link href="/dues?tab=settings">설정하기</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* ── Bento section: votes + tasks + season record (위자드 보일 때 숨김) ── */}
-      {!showWizard && (
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-        {/* Votes — 운영진 전용: 다가오는 경기 투표 현황 모니터링 */}
-        {isStaffOrAbove(role) && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <div>
-              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">투표 현황</CardTitle>
-            </div>
-            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
-              <Link href="/matches">경기 일정 &rarr;</Link>
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {activeVotes.length > 0 ? (
-              activeVotes.map((vote) => {
-                const total = vote.voteCounts.attend + vote.voteCounts.absent + vote.voteCounts.undecided;
-                const attendPct = total > 0 ? (vote.voteCounts.attend / total) * 100 : 0;
-                const absentPct = total > 0 ? (vote.voteCounts.absent / total) * 100 : 0;
-                const undecidedPct = total > 0 ? (vote.voteCounts.undecided / total) * 100 : 0;
-                return (
-                  <Link
-                    key={vote.id}
-                    href={`/matches/${vote.id}?tab=vote`}
-                    className="block rounded-lg border border-border/50 border-l-2 border-l-primary/40 bg-secondary/50 p-3 hover:bg-secondary/70 transition-colors"
-                  >
-                    <p className="truncate text-sm font-semibold">
-                      {vote.matchDate}
-                      {vote.matchTime ? ` ${vote.matchTime.slice(0, 5)}` : ""}
-                      {vote.matchType === "INTERNAL"
-                        ? " 자체전"
-                        : vote.matchType === "EVENT"
-                          ? vote.opponentName && vote.opponentName.trim() ? ` ${vote.opponentName}` : " 팀 이벤트"
-                          : vote.opponentName && vote.opponentName.trim()
-                            ? ` vs ${vote.opponentName}`
-                            : " 팀 일정"}
-                    </p>
-                    <div className="mt-2 flex items-center gap-3 text-[12.5px]">
-                      <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--success))]" />참석 <strong className="text-[hsl(var(--success))]">{vote.voteCounts.attend}</strong></span>
-                      <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--loss))]" />불참 <strong className="text-[hsl(var(--loss))]">{vote.voteCounts.absent}</strong></span>
-                      <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--warning))]" />미정 <strong className="text-[hsl(var(--warning))]">{vote.voteCounts.undecided}</strong></span>
-                    </div>
-                    <div className="mt-1.5 flex h-1.5 overflow-hidden rounded-full bg-secondary/70">
-                      {attendPct > 0 && <div className="bg-[hsl(var(--success))] transition-all duration-500" style={{ width: `${attendPct}%` }} />}
-                      {absentPct > 0 && <div className="bg-[hsl(var(--loss))] transition-all duration-500" style={{ width: `${absentPct}%` }} />}
-                      {undecidedPct > 0 && <div className="bg-[hsl(var(--warning))] transition-all duration-500" style={{ width: `${undecidedPct}%` }} />}
-                    </div>
-                  </Link>
-                );
-              })
-            ) : upcomingMatch ? (
-              // 다가오는 경기와 dedup된 정상 상태 — 짧은 인라인 안내로 영역 축소
-              <p className="py-3 text-center text-xs text-muted-foreground">
-                다가오는 경기는 위 카드에서 확인할 수 있어요.<br />
-                그 외 진행 중인 투표는 없습니다.
-              </p>
-            ) : (
-              <EmptyState
-                icon={Vote}
-                title="진행 중인 투표가 없습니다"
-                description="경기 일정이 등록되면 여기서 투표 현황을 확인할 수 있습니다."
-                action={
-                  <Button size="sm" asChild>
-                    <Link href="/matches">일정 등록하기</Link>
-                  </Button>
-                }
-              />
-            )}
-          </CardContent>
-        </Card>
-        )}
-
-        {/* Tasks */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="font-heading text-lg sm:text-2xl font-bold uppercase">미완료 항목</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {tasks.length > 0 ? (
-              tasks.map((task) => (
-                <Link
-                  key={task.label}
-                  href={task.href}
-                  className="block rounded-lg border border-[hsl(var(--warning)/0.2)] bg-[hsl(var(--warning)/0.05)] p-3 transition-colors hover:bg-[hsl(var(--warning)/0.1)]"
-                >
-                  <div className="flex items-center gap-3 text-sm font-medium text-foreground">
-                    <span className="h-2 w-2 shrink-0 rounded-full bg-[hsl(var(--warning))]" />
-                    <span className="flex-1">{task.label}</span>
-                    <span className="text-xs text-muted-foreground">→</span>
-                  </div>
+          {/* E · 내 시즌 기록 — 정보 (액션 X) */}
+          {data.mySeasonStats && (
+            <section className="pm-section">
+              <div className="pm-section-h">
+                <span>내 시즌 기록</span>
+                <Link href={`/player/${userId}${teamId ? `?team=${teamId}` : ""}`} className="pm-dash-section-link" style={{ textDecoration: "none" }}>
+                  내 카드
+                  <ChevronRight className="h-3 w-3" />
                 </Link>
-              ))
-            ) : (
-              <div className="flex items-center gap-3 rounded-lg bg-[hsl(var(--success)/0.1)] px-4 py-3">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--success))]" />
-                <p className="text-sm text-[hsl(var(--success))]">모든 할 일을 완료했습니다!</p>
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Recent Result + Season Record (통합) */}
-        <Card className="md:col-span-2 lg:col-span-1">
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <div>
-            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">시즌 전적</CardTitle>
-          </div>
-          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
-            <Link href="/records">전체 기록 &rarr;</Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {recordTotal === 0 && !recentResult ? (
-            <EmptyState
-              icon={Trophy}
-              title="아직 전적이 없습니다"
-              description="경기를 진행하면 시즌 전적이 집계됩니다"
-            />
-          ) : (
-            <>
-              {/* 시즌 전적 스탯 */}
-              {recordTotal > 0 && (
-                <div className="mb-4">
-                  <div className="grid grid-cols-4 gap-1.5">
-                    {[
-                      { label: "승", value: String(teamRecord.wins), color: "text-[hsl(var(--win))]", bg: "bg-[hsl(var(--win))]/8" },
-                      { label: "무", value: String(teamRecord.draws), color: "text-[hsl(var(--draw))]", bg: "" },
-                      { label: "패", value: String(teamRecord.losses), color: "text-[hsl(var(--loss))]", bg: "bg-[hsl(var(--loss))]/8" },
-                      { label: "승률", value: `${Math.round((teamRecord.wins / recordTotal) * 100)}%`, color: "text-primary", bg: "bg-primary/8" },
-                    ].map((stat) => (
-                      <div key={stat.label} className={cn("card-stat flex flex-col items-center justify-center", stat.bg)}>
-                        <div className={`text-base sm:text-lg font-bold font-[family-name:var(--font-display)] whitespace-nowrap ${stat.color}`}>{stat.value}</div>
-                        <div className="text-xs sm:text-xs font-semibold text-muted-foreground mt-0.5 whitespace-nowrap">{stat.label}</div>
+              <div className="pm-dash-stats">
+                {(() => {
+                  const stat = data.mySeasonStats!;
+                  const total = stat.totalCompletedMatches ?? 0;
+                  // 출전 trend: 본인 출전 / 전체 완료 경기 (출전률)
+                  const matchRate = total > 0 ? Math.round((stat.matches / total) * 100) : null;
+                  // 골 trend: 팀내 순위
+                  const rank = stat.teamGoalRank ?? null;
+                  return [
+                    {
+                      hue: "atk", label: "출전",
+                      value: stat.matches, unit: "경기",
+                      trendValue: matchRate, trendLabel: total > 0 ? `전체 ${total}경기 중` : "시즌 누적",
+                      trendSuffix: matchRate != null ? "%" : null,
+                    },
+                    {
+                      hue: "mid", label: "골",
+                      value: stat.goals, unit: "골",
+                      trendValue: rank, trendLabel: rank ? "팀내 상위" : "시즌 누적",
+                      trendSuffix: rank != null ? "위" : null,
+                      trendPrefix: rank != null ? null : null,
+                    },
+                    {
+                      hue: "def", label: "출석률",
+                      value: stat.attendanceRate, unit: "%",
+                      trendValue: null, trendLabel: "최근 10경기",
+                      trendSuffix: null,
+                    },
+                  ];
+                })().map((s) => (
+                  <div key={s.label} className={`pm-dash-stat pm-hue--${s.hue}`}>
+                    <div className="pm-dash-stat-meta">
+                      <div className="pm-dash-stat-label">{s.label}</div>
+                      <div className="pm-dash-stat-sub">
+                        {s.trendValue != null && (
+                          <span className="pm-dash-stat-trend">
+                            <span className="pm-dash-stat-trend-arrow">↑</span>
+                            {s.trendValue}{s.trendSuffix}
+                          </span>
+                        )}
+                        {s.trendLabel}
                       </div>
-                    ))}
+                    </div>
+                    <div className="pm-dash-stat-right">
+                      <div className="pm-dash-stat-num">{s.value}<span className="pm-dash-stat-unit">{s.unit}</span></div>
+                      <svg className="pm-dash-stat-spark" viewBox="0 0 100 22" preserveAspectRatio="none" aria-hidden>
+                        <polyline
+                          points="0,16 12,12 24,15 36,9 48,11 60,6 72,9 84,4 100,7"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
                   </div>
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    득점 {teamRecord.goalsFor} · 실점 {teamRecord.goalsAgainst} · 득실차 {teamRecord.goalsFor - teamRecord.goalsAgainst >= 0 ? "+" : ""}{teamRecord.goalsFor - teamRecord.goalsAgainst}
-                  </p>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* 생일 카드 — 데이터 있을 때만 */}
+          {(birthdayMembers ?? []).length > 0 && (
+            <section className="pm-section">
+              <div className="pm-section-h">
+                <span>이번 주 생일</span>
+                <span className="pm-section-count">{birthdayMembers!.length}명</span>
+              </div>
+              <div className="pm-dash-bday">
+                {birthdayMembers!.map((m) => {
+                  const md = m.birthDate?.slice(5).replace("-", "/") ?? "";
+                  return (
+                    <div key={`${m.name}-${m.birthDate}`} className="pm-dash-bday-row">
+                      <span className="pm-dash-bday-avatar" aria-hidden>
+                        {m.profileImageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={m.profileImageUrl} alt="" />
+                        ) : (
+                          <span className="pm-dash-bday-emoji">🎂</span>
+                        )}
+                      </span>
+                      <span className="pm-dash-bday-name">{m.name}</span>
+                      <span className="pm-dash-bday-date">{md}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* I · 시즌 전적 (PC only via CSS) */}
+          {showRecord && (
+            <div className="pm-dash-record-wrap">
+              <section className="pm-section">
+                <div className="pm-section-h">
+                  <span>시즌 전적</span>
+                  <span className="pm-section-count">{recordTotal}경기</span>
+                </div>
+                <div className="pm-dash-record">
+                  <div className="pm-dash-wdl">
+                    <div className="pm-dash-wdl-col pm-hue--win">
+                      <div className="pm-dash-wdl-num">{teamRecord.wins}</div>
+                      <div className="pm-dash-wdl-label">승</div>
+                    </div>
+                    <div className="pm-dash-wdl-col pm-hue--draw">
+                      <div className="pm-dash-wdl-num">{teamRecord.draws}</div>
+                      <div className="pm-dash-wdl-label">무</div>
+                    </div>
+                    <div className="pm-dash-wdl-col pm-hue--loss">
+                      <div className="pm-dash-wdl-num">{teamRecord.losses}</div>
+                      <div className="pm-dash-wdl-label">패</div>
+                    </div>
+                  </div>
                   {teamRecord.recent5.length > 0 && (
-                    <div className="mt-2 flex items-center gap-1">
-                      {teamRecord.recent5.map((r, i) => (
-                        <span
-                          key={i}
-                          className={cn(
-                            "flex h-6 w-6 items-center justify-center rounded text-xs font-bold",
-                            r === "W" && "bg-[hsl(var(--win)/0.15)] text-[hsl(var(--win))]",
-                            r === "D" && "bg-secondary text-muted-foreground",
-                            r === "L" && "bg-[hsl(var(--loss)/0.15)] text-[hsl(var(--loss))]"
-                          )}
-                        >
-                          {r === "W" ? "승" : r === "D" ? "무" : "패"}
-                        </span>
-                      ))}
+                    <div className="pm-dash-recent">
+                      <span className="pm-dash-recent-label">최근 5경기</span>
+                      <div className="pm-dash-recent-dots">
+                        {teamRecord.recent5.map((r, i) => (
+                          <span key={i} className={`pm-dash-recent-dot pm-dash-recent-dot--${r}`}>{r}</span>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
-              )}
-
-              {/* 최근 경기 결과 */}
-              {recentResult && (
-                <Link href={`/matches/${recentResult.id}`}>
-                  <Card className="mt-3 border border-border/50 bg-secondary/50 hover:bg-secondary/70 cursor-pointer transition-colors">
-                    <CardContent className="p-4">
-                      {(() => {
-                        const parts = recentResult.score?.split(":").map((s: string) => parseInt(s.trim(), 10));
-                        const isWin = parts && parts.length === 2 && parts[0] > parts[1];
-                        const isLoss = parts && parts.length === 2 && parts[0] < parts[1];
-                        const resultLabel = isWin ? "승" : isLoss ? "패" : "무";
-                        const resultColor = isWin ? "text-[hsl(var(--win))]" : isLoss ? "text-[hsl(var(--loss))]" : "text-muted-foreground";
-                        const resultBg = isWin ? "bg-[hsl(var(--win)/0.15)]" : isLoss ? "bg-[hsl(var(--loss)/0.15)]" : "bg-secondary";
-                        return (
-                          <div className="flex items-center gap-3">
-                            <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold", resultBg, resultColor)}>
-                              {resultLabel}
-                            </span>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-semibold text-foreground">{recentResult.opponent ?? "미정"}</span>
-                                <span className={cn("text-lg font-bold font-[family-name:var(--font-display)]", resultColor)}>{recentResult.score}</span>
-                              </div>
-                              <p className="text-xs text-muted-foreground">
-                                {formatDateKo(recentResult.date)}
-                                {recentResult.mvp && <> · MVP {recentResult.mvp}</>}
-                              </p>
-                            </div>
-                            <span className="text-muted-foreground shrink-0">&rarr;</span>
-                          </div>
-                        );
-                      })()}
-                    </CardContent>
-                  </Card>
-                </Link>
-              )}
-            </>
+              </section>
+            </div>
           )}
-        </CardContent>
-      </Card>
-      </div>
-      )}
+        </div>
 
-      {/* Quick Navigation — PC only */}
-      <div className="hidden lg:grid grid-cols-4 gap-2">
-        {[
-          { label: "경기 일정", href: "/matches", color: "text-primary", bg: "hover:bg-primary/5" },
-          { label: "내 기록", href: "/records", color: "text-[hsl(var(--accent))]", bg: "hover:bg-[hsl(var(--accent)/0.05)]" },
-          { label: "회비 관리", href: "/dues", color: "text-[hsl(var(--info))]", bg: "hover:bg-[hsl(var(--info)/0.05)]" },
-          { label: "회원 관리", href: "/members", color: "text-[hsl(var(--success))]", bg: "hover:bg-[hsl(var(--success)/0.05)]" },
-        ].map((nav) => (
-          <Link
-            key={nav.href}
-            href={nav.href}
-            className={`flex items-center justify-center gap-2 rounded-xl border border-border/30 bg-card py-3 text-sm font-semibold transition-colors ${nav.bg}`}
-          >
-            <span className={nav.color}>{nav.label}</span>
-            <span className="text-muted-foreground">&rarr;</span>
-          </Link>
-        ))}
-      </div>
-
+        {/* J · 빠른 이동 (full row) */}
+        <section className="pm-section pm-dash-full">
+          <div className="pm-section-h">
+            <span>빠른 이동</span>
+          </div>
+          <div className="pm-dash-nav">
+            {([
+              {
+                href: "/matches", label: "경기 일정",
+                sub: upcomingMatch ? `다음 ${relativeDayLabel(upcomingMatch.match_date)}` : "예정 없음",
+                hue: "atk",
+                icon: (
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <rect x="3" y="4.5" width="12" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+                    <path d="M3 7.5h12M6.5 3v2.5M11.5 3v2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  </svg>
+                ),
+              },
+              {
+                href: "/records", label: "내 기록",
+                sub: data.mySeasonStats ? `시즌 ${data.mySeasonStats.goals}골 / ${data.mySeasonStats.matches}경기` : "기록 보기",
+                hue: "mid",
+                icon: (
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path d="M3 14V8M8 14V4M13 14v-5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                  </svg>
+                ),
+              },
+              {
+                href: "/dues", label: isStaffOrAbove(role) ? "회비 관리" : "내 회비",
+                sub: data.hasDuesSettings === false ? "규칙 미설정" : "거래 내역",
+                hue: "def",
+                icon: (
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <rect x="2.5" y="5" width="13" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+                    <circle cx="9" cy="9.5" r="1.8" stroke="currentColor" strokeWidth="1.3" fill="none" />
+                  </svg>
+                ),
+              },
+              {
+                href: "/board", label: "게시판",
+                sub: "공지 · 자유",
+                hue: "gk",
+                icon: (
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <rect x="3" y="3.5" width="12" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+                    <path d="M5.5 7h7M5.5 9.5h7M5.5 12h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                  </svg>
+                ),
+              },
+            ]).map((n) => (
+              <Link key={n.href} href={n.href} className={`pm-dash-nav-item pm-hue--${n.hue}`} style={{ textDecoration: "none" }}>
+                <span className="pm-dash-nav-icon" aria-hidden>{n.icon}</span>
+                <span className="pm-dash-nav-body">
+                  <span className="pm-dash-nav-label">{n.label}</span>
+                  <span className="pm-dash-nav-sub">{n.sub}</span>
+                </span>
+                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                  <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Link>
+            ))}
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
 
-// ── 대시보드 날씨 컴포넌트 ──
+// ── 대시보드 날씨 chip — 다가오는 경기 시간 옆 inline ──
 function DashboardWeather({ date, location }: { date: string; location: string | null }) {
-  const [weather, setWeather] = useState<{
-    temp: number | null;
-    description: string;
-    icon: string;
-  } | null>(null);
-
+  const [weather, setWeather] = useState<{ temp: number | null; description: string; icon: string } | null>(null);
   useEffect(() => {
     if (!date) return;
     const params = new URLSearchParams({ date });
     if (location) params.set("location", location);
-
     fetch(`/api/weather?${params}`)
       .then((res) => res.json())
-      .then((data) => {
-        if (data && data.icon) setWeather(data);
-      })
+      .then((d) => { if (d && d.icon) setWeather(d); })
       .catch(() => {});
   }, [date, location]);
 
-  if (!weather) {
-    // 날씨 데이터 없음 = 5일 초과 또는 과거 경기
-    if (!date) return null;
-    const today = new Date().toISOString().slice(0, 10);
-    if (date <= today) return null;
-    const diff = Math.ceil((new Date(date).getTime() - new Date(today).getTime()) / 86400000);
-    if (diff > 5) {
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-muted/30 px-2.5 py-1 text-xs text-muted-foreground/60">
-          🌤️ D-5부터 날씨 확인
-        </span>
-      );
-    }
-    return null;
-  }
-
+  if (!weather) return null;
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-muted/50 px-2.5 py-1 text-xs text-muted-foreground">
-      <span className="text-sm">{weather.icon}</span>
-      {weather.temp != null ? (
-        <span className="font-semibold text-foreground">{weather.temp}°C</span>
-      ) : (
-        <span>{weather.description}</span>
-      )}
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 4,
+        marginLeft: 8,
+        padding: "1px 8px",
+        borderRadius: 999,
+        background: "hsl(var(--muted-foreground) / 0.10)",
+        border: "1px solid hsl(var(--border))",
+        fontSize: 11,
+        fontFeatureSettings: '"tnum" 1',
+        verticalAlign: "middle",
+      }}
+    >
+      <span style={{ fontSize: 12, lineHeight: 1 }}>{weather.icon}</span>
+      {weather.temp != null ? <span style={{ fontWeight: 600 }}>{weather.temp}°</span> : <span>{weather.description}</span>}
     </span>
   );
 }

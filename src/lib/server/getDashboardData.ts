@@ -68,6 +68,10 @@ export type DashboardData = {
     matches: number;
     goals: number;
     attendanceRate: number;
+    /** 팀 내 골 순위 (1=top). 본인 골이 0 또는 데이터 부족이면 null */
+    teamGoalRank: number | null;
+    /** 시즌 완료 경기 총수 (출전 분모) */
+    totalCompletedMatches: number;
   } | null;
   /** 홈 공지 노출 — 운영공지(전역) 최신 1건 + 팀공지 최근 핀 2건 */
   noticePins: {
@@ -539,10 +543,32 @@ export async function getDashboardData(
     }
 
     if (attendCount > 0 || myGoalCount > 0) {
+      // 팀내 골 순위 계산 — allGoals scorer_id 별 group count 후 본인보다 큰 사람 수 + 1
+      let teamGoalRank: number | null = null;
+      if (myGoalCount > 0) {
+        const goalsByScorer = new Map<string, number>();
+        for (const g of allGoals ?? []) {
+          if (g.scorer_id && !g.is_own_goal && g.scorer_id !== "OPPONENT") {
+            goalsByScorer.set(g.scorer_id, (goalsByScorer.get(g.scorer_id) ?? 0) + 1);
+          }
+        }
+        // 본인(user_id 또는 member_id 둘 다 가능) 골은 myGoalCount로 통합. 다른 scorer만 카운트
+        const myScorerSet = new Set<string>([userId]);
+        if (myTeamMemberId) myScorerSet.add(myTeamMemberId);
+        let higherCount = 0;
+        for (const [scorerId, c] of goalsByScorer.entries()) {
+          if (myScorerSet.has(scorerId)) continue;
+          if (c > myGoalCount) higherCount++;
+        }
+        teamGoalRank = higherCount + 1;
+      }
+
       mySeasonStats = {
         matches: attendCount,
         goals: myGoalCount,
         attendanceRate: Math.round((attendCount / completedMatchIds.length) * 100),
+        teamGoalRank,
+        totalCompletedMatches: completedMatchIds.length,
       };
     }
   }
