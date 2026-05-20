@@ -936,11 +936,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
             </button>
           </header>
 
-          <div className="pm-chip" style={{ marginTop: 2 }}>
-            <span className="pm-chip-dot" />
-            <span>CREATE · MATCH</span>
-          </div>
-          <h2 className="pm-modal-h">새 경기<br />만들기.</h2>
+          <h2 className="pm-modal-h">새 경기 만들기</h2>
           <p className="pm-sub">등록 즉시 팀원에게 참석 투표 알림이 자동으로 발송돼요.</p>
 
           <form className="pm-form" action={(formData) => handleCreate(formData)}>
@@ -965,6 +961,32 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 ))}
               </div>
             </div>
+
+            {/* 종목 — EVENT 제외 */}
+            {matchType !== "EVENT" && (
+              <div className="pm-field">
+                <div className="pm-label"><span>종목</span></div>
+                <div className="pm-type-row" style={{ gridTemplateColumns: "1fr 1fr" }}>
+                  {([
+                    { type: "SOCCER" as const, label: "축구", sub: "11인제", hue: "atk" as const },
+                    { type: "FUTSAL" as const, label: "풋살", sub: "5·6인제", hue: "def" as const },
+                  ]).map((item) => (
+                    <button
+                      key={item.type}
+                      type="button"
+                      onClick={() => {
+                        setMatchSportType(item.type);
+                        setPlayerCount(SPORT_DEFAULTS[item.type].playerCount);
+                      }}
+                      className={cn("pm-type-opt", `pm-hue--${item.hue}`, matchSportType === item.type && "is-on")}
+                    >
+                      <div className="pm-type-opt-label">{item.label}</div>
+                      <div className="pm-type-opt-sub">{item.sub}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* 날짜 */}
             <div className="pm-field">
@@ -1034,6 +1056,28 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   </>
                 ) : <div />}
               </div>
+              {recentTimes.length > 0 && (
+                <div className="pm-mform-chips" style={{ marginTop: 4 }}>
+                  <span className="pm-mform-hint" style={{ marginRight: 2 }}>자주:</span>
+                  {recentTimes.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => {
+                        setMatchTime(t);
+                        if (matchType !== "EVENT") {
+                          const [hh, mm] = t.split(":").map(Number);
+                          const endH = String((hh + 2) % 24).padStart(2, "0");
+                          setMatchEndTime(`${endH}:${String(mm).padStart(2, "0")}`);
+                        }
+                      }}
+                      className={cn("pm-chip-pill", matchTime === t && "is-on")}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* 상대팀 / 일정 제목 — INTERNAL 제외 노출 */}
@@ -1072,6 +1116,21 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                 className={cn("pm-input", formErrors.location && "is-error")}
               />
               {formErrors.location && <p className="pm-mform-err">{formErrors.location}</p>}
+              {recentLocations.length > 0 && (
+                <div className="pm-mform-chips" style={{ marginTop: 4 }}>
+                  <span className="pm-mform-hint" style={{ marginRight: 2 }}>자주:</span>
+                  {recentLocations.slice(0, 5).map((loc) => (
+                    <button
+                      key={loc}
+                      type="button"
+                      onClick={() => setLocation(loc)}
+                      className={cn("pm-chip-pill", location === loc && "is-on")}
+                    >
+                      {loc}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* 투표 마감 */}
@@ -1120,7 +1179,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   {([
                     { v: "HOME" as const, label: "홈" },
                     { v: "AWAY" as const, label: "어웨이" },
-                    { v: "THIRD" as const, label: "서드" },
+                    { v: "THIRD" as const, label: "자유" },
                   ]).map((o) => (
                     <button
                       key={o.v}
@@ -1171,73 +1230,6 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
             )}
             {showAdvanced && matchType !== "EVENT" && (
               <div key={matchSportType} className="pm-form animate-slide-down" style={{ marginTop: 0 }}>
-                {/* 종목 */}
-                <div className="pm-field">
-                  <div className="pm-label"><span>종목</span></div>
-                  <div className="pm-type-row" style={{ gridTemplateColumns: "1fr 1fr" }}>
-                    {([
-                      { type: "SOCCER" as const, label: "축구", sub: "11인제", hue: "atk" as const },
-                      { type: "FUTSAL" as const, label: "풋살", sub: "5·6인제", hue: "def" as const },
-                    ]).map((item) => (
-                      <button
-                        key={item.type}
-                        type="button"
-                        onClick={() => {
-                          setMatchSportType(item.type);
-                          setPlayerCount(SPORT_DEFAULTS[item.type].playerCount);
-                        }}
-                        className={cn("pm-type-opt", `pm-hue--${item.hue}`, matchSportType === item.type && "is-on")}
-                      >
-                        <div className="pm-type-opt-label">{item.label}</div>
-                        <div className="pm-type-opt-sub">{item.sub}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 최근 시간 chip */}
-                {recentTimes.length > 0 && (
-                  <div className="pm-field">
-                    <div className="pm-label"><span>최근 시간</span></div>
-                    <div className="pm-mform-chips">
-                      {recentTimes.map((t) => (
-                        <button
-                          key={t}
-                          type="button"
-                          onClick={() => {
-                            setMatchTime(t);
-                            const [hh, mm] = t.split(":").map(Number);
-                            const endH = String((hh + 2) % 24).padStart(2, "0");
-                            setMatchEndTime(`${endH}:${String(mm).padStart(2, "0")}`);
-                          }}
-                          className={cn("pm-chip-pill", matchTime === t && "is-on")}
-                        >
-                          {t}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 최근 장소 chip */}
-                {recentLocations.length > 0 && (
-                  <div className="pm-field">
-                    <div className="pm-label"><span>최근 장소</span></div>
-                    <div className="pm-mform-chips">
-                      {recentLocations.slice(0, 5).map((loc) => (
-                        <button
-                          key={loc}
-                          type="button"
-                          onClick={() => setLocation(loc)}
-                          className={cn("pm-chip-pill", location === loc && "is-on")}
-                        >
-                          {loc}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* 쿼터 수·시간·휴식 */}
                 <div className="pm-mform-grid3">
                   <div className="pm-field">
