@@ -1172,27 +1172,34 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   <span>유니폼</span>
                   <span className="pm-pill pm-pill--opt">선택</span>
                 </div>
-                <div className="pm-seg" role="radiogroup" aria-label="유니폼 선택">
-                  {(() => {
-                    const opts: Array<{ v: "HOME" | "AWAY" | "THIRD"; label: string }> = [
-                      { v: "HOME", label: "홈" },
-                      { v: "AWAY", label: "어웨이" },
-                    ];
-                    if (teamUniform?.uniforms?.third) opts.push({ v: "THIRD", label: "서드" });
-                    return opts.map((o) => (
-                      <button
-                        key={o.v}
-                        type="button"
-                        role="radio"
-                        aria-checked={uniformType === o.v}
-                        className={cn("pm-seg-opt", uniformType === o.v && "is-on")}
-                        onClick={() => setUniformType(o.v)}
-                      >
-                        {o.label}
-                      </button>
-                    ));
-                  })()}
-                </div>
+                {(() => {
+                  const opts: Array<{ v: "HOME" | "AWAY" | "THIRD"; label: string }> = [
+                    { v: "HOME", label: "홈" },
+                    { v: "AWAY", label: "어웨이" },
+                  ];
+                  if (teamUniform?.uniforms?.third) opts.push({ v: "THIRD", label: "서드" });
+                  return (
+                    <div
+                      className="pm-seg"
+                      role="radiogroup"
+                      aria-label="유니폼 선택"
+                      style={{ gridTemplateColumns: `repeat(${opts.length}, 1fr)` }}
+                    >
+                      {opts.map((o) => (
+                        <button
+                          key={o.v}
+                          type="button"
+                          role="radio"
+                          aria-checked={uniformType === o.v}
+                          className={cn("pm-seg-opt", uniformType === o.v && "is-on")}
+                          onClick={() => setUniformType(o.v)}
+                        >
+                          {o.label}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
