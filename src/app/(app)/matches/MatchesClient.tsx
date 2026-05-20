@@ -1,5 +1,6 @@
 "use client";
 
+import "@/app/onboarding/onboarding.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -270,6 +271,11 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     () => teamMembersData.members.find((m) => m.user_id === userId)?.id ?? null,
     [teamMembersData.members, userId],
   );
+
+  // TEMP: 디자인 검토용 — 김선휘만 ?previewEmpty=1로 빈 상태 hero 강제 노출
+  const DESIGN_PREVIEW_USER_ID = "7bc8a1b2-7844-41f3-b592-05a2c38f8085";
+  const previewEmpty =
+    searchParams.get("previewEmpty") === "1" && userId === DESIGN_PREVIEW_USER_ID;
 
   const sortedMatches = useMemo(() => {
     const today = new Date().toISOString().split("T")[0];
@@ -836,23 +842,87 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
         </Card>
       ) : (
       <section className="grid gap-4">
-        {sortedMatches.length === 0 && (
-          <Card className="rounded-md p-6">
-            <CardContent className="p-0">
-              <EmptyState
-                icon={Calendar}
-                title="등록된 일정이 없습니다"
-                description="일정 하나만 등록하면 참석 투표·라인업·MVP까지 자동으로 이어집니다."
-                action={
-                  isStaffOrAbove(role) ? (
-                    <Button size="sm" onClick={() => setIsOpen(true)}>
-                      일정 등록하기
-                    </Button>
-                  ) : undefined
-                }
-              />
-            </CardContent>
-          </Card>
+        {(sortedMatches.length === 0 || previewEmpty) && (
+          <div className="pm-paste-hero">
+            <div className="pm-amb" aria-hidden />
+            <div className="pm-hero-inner">
+              <div className="pm-chip" style={{ marginTop: 0 }}>
+                <span className="pm-chip-dot" />
+                <span>경기 시작</span>
+              </div>
+              <h2 className="pm-h1 pm-h1--hero">
+                첫 경기를<br />
+                만들어 보세요.
+              </h2>
+              <p className="pm-sub" style={{ marginBottom: 4 }}>
+                등록하면 팀원에게 자동으로<br />
+                참석 투표 알림이 갑니다.
+              </p>
+
+              <div className="pm-empty-types">
+                <div className="pm-empty-type pm-hue--atk">
+                  <div className="pm-empty-type-label">정규</div>
+                  <div className="pm-empty-type-desc">상대팀과의 경기</div>
+                </div>
+                <div className="pm-empty-type pm-hue--def">
+                  <div className="pm-empty-type-label">자체</div>
+                  <div className="pm-empty-type-desc">우리 팀 안에서</div>
+                </div>
+                <div className="pm-empty-type pm-hue--mid">
+                  <div className="pm-empty-type-label">이벤트</div>
+                  <div className="pm-empty-type-desc">MT · 회식 · 모임</div>
+                </div>
+              </div>
+
+              {isStaffOrAbove(role) && (
+                <button
+                  type="button"
+                  className="pm-paste-cta"
+                  onClick={() => setIsOpen(true)}
+                >
+                  <span className="pm-paste-cta-icon" aria-hidden>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <rect
+                        x="3.5"
+                        y="4.5"
+                        width="13"
+                        height="12"
+                        rx="2"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      />
+                      <path
+                        d="M3.5 8h13M7 3v3M13 3v3"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M10 11v3M8.5 12.5h3"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </span>
+                  <div className="pm-paste-cta-body">
+                    <div className="pm-paste-cta-label">새 경기 만들기</div>
+                    <div className="pm-paste-cta-sub">투표 알림 자동 발송</div>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                    <path
+                      d="M3 7h8M8 4l3 3-3 3"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
         )}
         {sortedMatches.map((match) => {
           const vote = myMemberId ? attendance[match.id]?.[myMemberId] : undefined;
