@@ -1,7 +1,7 @@
 "use client";
 
 import "@/app/onboarding/onboarding.css";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApi, apiMutate } from "@/lib/useApi";
@@ -146,6 +146,26 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   const isFutsal = matchSportType === "FUTSAL";
 
   const [viewMode, setViewMode] = useLocalStorage<"list" | "calendar">("pm:matches:viewMode", "list");
+  const [viewMenuOpen, setViewMenuOpen] = useState(false);
+  const viewMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!viewMenuOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (viewMenuRef.current && !viewMenuRef.current.contains(e.target as Node)) {
+        setViewMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setViewMenuOpen(false);
+    };
+    window.addEventListener("mousedown", onClick);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("mousedown", onClick);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [viewMenuOpen]);
   const [isOpen, setIsOpen] = useState(searchParams.get("create") === "true");
   // 경기 등록 직후 1인 팀 초대 CTA 모달
   const [inviteCtaMatchId, setInviteCtaMatchId] = useState<string | null>(null);
@@ -461,23 +481,49 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
             <span className="pm-pagehead-total">{sortedMatches.length}</span>
           </div>
           <div className="pm-pagehead-actions">
-            <div className="pm-view-select">
-              <span className="pm-view-select-icon" aria-hidden>
-                {viewMode === "list" ? (
-                  <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 3.5h10M2 7h10M2 10.5h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
-                ) : (
-                  <svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="3" width="10" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" fill="none" /><path d="M2 6h10M5 2v2M9 2v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
-                )}
-              </span>
-              <select
-                value={viewMode}
-                onChange={(e) => setViewMode(e.target.value as "list" | "calendar")}
-                aria-label="뷰 전환"
+            <div className="pm-view-select" ref={viewMenuRef} data-open={viewMenuOpen || undefined}>
+              <button
+                type="button"
+                className="pm-view-select-trigger"
+                aria-haspopup="listbox"
+                aria-expanded={viewMenuOpen}
+                onClick={() => setViewMenuOpen((o) => !o)}
               >
-                <option value="list">목록</option>
-                <option value="calendar">캘린더</option>
-              </select>
-              <ChevronDown width={14} height={14} className="pm-view-select-caret" aria-hidden />
+                <span className="pm-view-select-icon" aria-hidden>
+                  {viewMode === "list" ? (
+                    <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 3.5h10M2 7h10M2 10.5h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                  ) : (
+                    <svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="3" width="10" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" fill="none" /><path d="M2 6h10M5 2v2M9 2v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                  )}
+                </span>
+                <span>{viewMode === "list" ? "목록" : "캘린더"}</span>
+                <ChevronDown width={14} height={14} className="pm-view-select-caret" aria-hidden />
+              </button>
+              {viewMenuOpen && (
+                <div className="pm-view-menu" role="listbox" aria-label="뷰 전환">
+                  {([
+                    { v: "list" as const, label: "목록", icon: <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 3.5h10M2 7h10M2 10.5h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg> },
+                    { v: "calendar" as const, label: "캘린더", icon: <svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="3" width="10" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" fill="none" /><path d="M2 6h10M5 2v2M9 2v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg> },
+                  ]).map((opt) => (
+                    <button
+                      key={opt.v}
+                      type="button"
+                      role="option"
+                      aria-selected={viewMode === opt.v}
+                      className={cn("pm-view-menu-item", viewMode === opt.v && "is-on")}
+                      onClick={() => { setViewMode(opt.v); setViewMenuOpen(false); }}
+                    >
+                      <span className="pm-view-menu-item-icon" aria-hidden>{opt.icon}</span>
+                      <span>{opt.label}</span>
+                      {viewMode === opt.v && (
+                        <span className="pm-view-menu-item-check" aria-hidden>
+                          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 7l3 3 5-6" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             {isStaffOrAbove(role) && (
               <button
