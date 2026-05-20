@@ -424,9 +424,11 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
         <div className="pm-pagehead">
           <div className="pm-pagehead-row">
             <Skeleton className="h-7 w-24" />
-            <Skeleton className="h-9 w-24 rounded-lg" />
+            <div className="pm-pagehead-actions">
+              <Skeleton className="h-9 w-24 rounded-lg" />
+              <Skeleton className="h-9 w-24 rounded-lg" />
+            </div>
           </div>
-          <Skeleton className="h-9 w-32 rounded-lg" />
         </div>
         <div className="grid gap-2.5">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -457,39 +459,38 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
             <h1 className="pm-toolbar-title">경기 일정</h1>
             <span className="pm-pagehead-total">{sortedMatches.length}</span>
           </div>
-          {isStaffOrAbove(role) && (
-            <button
-              type="button"
-              className="pm-cta-primary"
-              onClick={() => { setIsOpen(true); setFormErrors({}); }}
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
-                <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-              일정 등록
-            </button>
-          )}
-        </div>
-        <div className="pm-view-tabs" role="tablist" aria-label="뷰 전환">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={viewMode === "list"}
-            onClick={() => setViewMode("list")}
-            className={cn("pm-view-tab", viewMode === "list" && "is-on")}
-          >
-            목록
-            <span className="pm-view-tab-count">{sortedMatches.length}</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={viewMode === "calendar"}
-            onClick={() => setViewMode("calendar")}
-            className={cn("pm-view-tab", viewMode === "calendar" && "is-on")}
-          >
-            캘린더
-          </button>
+          <div className="pm-pagehead-actions">
+            <div className="pm-view-select">
+              <span className="pm-view-select-icon" aria-hidden>
+                {viewMode === "list" ? (
+                  <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 3.5h10M2 7h10M2 10.5h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="3" width="10" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" fill="none" /><path d="M2 6h10M5 2v2M9 2v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                )}
+              </span>
+              <select
+                value={viewMode}
+                onChange={(e) => setViewMode(e.target.value as "list" | "calendar")}
+                aria-label="뷰 전환"
+              >
+                <option value="list">목록</option>
+                <option value="calendar">캘린더</option>
+              </select>
+              <ChevronDown width={14} height={14} className="pm-view-select-caret" aria-hidden />
+            </div>
+            {isStaffOrAbove(role) && (
+              <button
+                type="button"
+                className="pm-cta-primary"
+                onClick={() => { setIsOpen(true); setFormErrors({}); }}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                  <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+                일정 등록
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
