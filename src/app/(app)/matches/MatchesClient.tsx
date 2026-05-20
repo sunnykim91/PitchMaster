@@ -1066,10 +1066,10 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                                 <span className="pm-statusdot pm-statusdot--success" /> 참석 {attendCount}
                               </span>
                               <span>
-                                <span className="pm-statusdot pm-statusdot--muted" /> 불참 {absentCount}
+                                <span className="pm-statusdot pm-statusdot--destructive" /> 불참 {absentCount}
                               </span>
                               <span>
-                                <span className="pm-statusdot pm-statusdot--info" /> 미정 {maybeCount}
+                                <span className="pm-statusdot pm-statusdot--warning" /> 미정 {maybeCount}
                               </span>
                             </div>
                           </>

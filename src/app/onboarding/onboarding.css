@@ -1541,10 +1541,11 @@
   background: hsl(var(--muted-foreground));
   flex-shrink: 0;
 }
-.pm-statusdot--success { background: hsl(var(--success));     box-shadow: 0 0 6px hsl(var(--success) / 0.6); }
-.pm-statusdot--warning { background: hsl(var(--warning));     box-shadow: 0 0 6px hsl(var(--warning) / 0.6); }
-.pm-statusdot--info    { background: hsl(var(--info));        box-shadow: 0 0 6px hsl(var(--info) / 0.6);    }
-.pm-statusdot--muted   { background: hsl(var(--muted-foreground) / 0.6); }
+.pm-statusdot--success     { background: hsl(var(--success));     box-shadow: 0 0 6px hsl(var(--success) / 0.6);     }
+.pm-statusdot--warning     { background: hsl(var(--warning));     box-shadow: 0 0 6px hsl(var(--warning) / 0.6);     }
+.pm-statusdot--info        { background: hsl(var(--info));        box-shadow: 0 0 6px hsl(var(--info) / 0.6);        }
+.pm-statusdot--muted       { background: hsl(var(--muted-foreground) / 0.6); }
+.pm-statusdot--destructive { background: hsl(var(--destructive)); box-shadow: 0 0 6px hsl(var(--destructive) / 0.6); }
 
 /* ─────────────────────────────────────────────────────────────
  * MEMBERS — Modal shell (paste / review / done / detail)
@@ -2856,8 +2857,8 @@
   border: 1px dashed hsl(var(--border));
 }
 .pm-vote-yes   { background: hsl(var(--success)); }
-.pm-vote-no    { background: hsl(var(--muted-foreground) / 0.5); }
-.pm-vote-maybe { background: hsl(var(--info)); }
+.pm-vote-no    { background: hsl(var(--destructive)); }
+.pm-vote-maybe { background: hsl(var(--warning)); }
 .pm-vote-counts {
   display: flex;
   gap: 12px;
