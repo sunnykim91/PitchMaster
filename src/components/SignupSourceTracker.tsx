@@ -34,6 +34,20 @@ function simplifyHost(hostname: string): string | null {
   return `ref:${h.replace(/^www\./, "")}`;
 }
 
+function normalizeUtmSource(raw: string): string {
+  const v = raw.toLowerCase().trim();
+  if (v === "ig" || v === "insta" || v === "instagram") return "instagram";
+  if (v === "fb" || v === "facebook" || v === "meta") return "facebook";
+  if (v === "kakao" || v === "kakaotalk" || v === "kt") return "kakao";
+  if (v === "naver") return "naver";
+  if (v === "daum") return "daum";
+  if (v === "google") return "google";
+  if (v === "youtube" || v === "yt") return "youtube";
+  if (v === "tistory") return "tistory";
+  if (v === "velog") return "velog";
+  return v;
+}
+
 function hasCookie(name: string): boolean {
   if (typeof document === "undefined") return false;
   return document.cookie.split(";").some((c) => c.trim().startsWith(`${name}=`));
@@ -58,7 +72,7 @@ export function captureSignupSourceIfMissing() {
   let source: string | null = null;
 
   if (utmSource) {
-    source = utmSource;
+    source = normalizeUtmSource(utmSource);
   } else if (document.referrer) {
     try {
       const refUrl = new URL(document.referrer);

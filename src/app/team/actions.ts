@@ -45,9 +45,10 @@ export async function createTeam(formData: FormData) {
   }
 
   // Create team in DB
+  const defaultPlayerCount = sportType === "FUTSAL" ? 6 : 11;
   const { data: team, error: teamError } = await db
     .from("teams")
-    .insert({ name: teamName, invite_code: inviteCode, sport_type: sportType })
+    .insert({ name: teamName, invite_code: inviteCode, sport_type: sportType, default_player_count: defaultPlayerCount })
     .select()
     .single();
 
