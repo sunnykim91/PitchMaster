@@ -58,8 +58,8 @@ type Tester = {
   rewardedAt: string | null;
   notes: string | null;
   anchorDate: string | null; // 승인일 KST = D1
-  dayDates: string[]; // 14개 (anchor ~ anchor+13). 미승인이면 빈 배열
-  attendance: boolean[]; // 14개 — 미래 날짜는 false
+  dayDates: string[]; // 20개 (anchor ~ anchor+19). 미승인이면 빈 배열
+  attendance: boolean[]; // 20개 — 미래 날짜는 false
   totalDays: number;
   streak: number;
 };
@@ -78,7 +78,7 @@ type AlphaTestersResponse = {
 
 const empty: AlphaTestersResponse = {
   today: "",
-  windowDays: 14,
+  windowDays: 20,
   testers: [],
   summary: { total: 0, approved: 0, continuous14Count: 0, eligibleForProduction: false },
 };
@@ -200,7 +200,7 @@ export default function AlphaTestersClient() {
       <div>
         <h1 className="text-xl font-bold text-foreground">알파 테스터 관리</h1>
         <p className="mt-1 text-xs text-muted-foreground">
-          승인일(D1)부터 14일간 매일 출석. 12명이 14일 연속 도달하면 프로덕션 신청 가능
+          승인일(D1)부터 20일까지 출석 추적. 12명이 14일 연속 도달하면 프로덕션 신청 가능
         </p>
       </div>
 
@@ -353,7 +353,7 @@ export default function AlphaTestersClient() {
                         );
                       })}
                       <td className="px-2 py-2 text-center font-semibold">
-                        {noAnchor ? "—" : `${t.totalDays}/14`}
+                        {noAnchor ? "—" : `${t.totalDays}/20`}
                       </td>
                       <td
                         className={`px-2 py-2 text-center font-bold ${
@@ -419,7 +419,7 @@ export default function AlphaTestersClient() {
         <CardContent className="p-4 space-y-2 text-xs text-muted-foreground">
           <p>
             <span className="font-semibold text-foreground">D1 = 승인일.</span> 운영자가 Play
-            Console에 등록한 뒤 "승인" 버튼을 누른 시점부터 14일 카운트가 시작됩니다. 그 전까지는
+            Console에 등록한 뒤 "승인" 버튼을 누른 시점부터 20일 카운트가 시작됩니다. 그 전까지는
             그리드가 회색으로 표시되며 카운트되지 않습니다.
           </p>
           <p>
@@ -430,7 +430,7 @@ export default function AlphaTestersClient() {
           <p>
             <span className="font-semibold text-foreground">연속 출석:</span> 오늘부터 거꾸로 끊김
             없이 출석한 일수. D1부터 빠짐없이 출석하면 D14 시점에 14가 됩니다. 12명이 14에 도달하면
-            프로덕션 신청 가능
+            프로덕션 신청 가능 (그리드는 20일까지 추적해 D14 이후 추가 출석도 확인 가능)
           </p>
         </CardContent>
       </Card>

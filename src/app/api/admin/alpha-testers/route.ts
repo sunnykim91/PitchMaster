@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
-const WINDOW_DAYS = 14;
+const WINDOW_DAYS = 20;
+const PLAY_CONSOLE_REQUIRED_STREAK = 14;
 
 function todayKstDate(): Date {
   const now = new Date();
@@ -140,8 +141,8 @@ export async function GET() {
     };
   });
 
-  // 14일 연속 도달 = streak >= 14 (오늘까지 끊김 없이 출석)
-  const continuous14Count = testers.filter((t) => t.streak >= WINDOW_DAYS).length;
+  // 14일 연속 도달 = streak >= 14 (Play Console 프로덕션 신청 요건. 윈도우는 20일이지만 요건 자체는 14일 유지)
+  const continuous14Count = testers.filter((t) => t.streak >= PLAY_CONSOLE_REQUIRED_STREAK).length;
   const eligibleForProduction = continuous14Count >= 12;
 
   return NextResponse.json({
