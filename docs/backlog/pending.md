@@ -1,11 +1,29 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=106팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-05-20 (66차-B)
+last_updated: 2026-05-25 (67차)
 related: [completed-recent.md, reviews.md]
 ---
 
 # 미완료 백로그
+
+## 67차 신규 추가 (2026-05-25) — 코호트 재측정·카톡 공유 추적·알파 마감
+
+### WelcomeCard v2 코호트 재측정 (HIGH, 6/1~6/7)
+- **배경**: 67차 v2 이후 가입 표본 5팀 — 부족. 7~14일 더 쌓인 뒤 재측정 필요.
+- [ ] 6/1~6/7 Supabase 조회 — v2 이후 가입 팀 경기 등록률·멤버 수 재집계
+- [ ] 회장 혼자 비율 변화 여부 확인 (현재 80% 기준)
+
+### 카톡 공유 버튼 click 추적 이벤트 추가 (MEDIUM)
+- **배경**: WelcomeCard·위자드 Step 2의 "단톡방 공유" 버튼 클릭 수 및 전환률 측정 불가. "회장 혼자 80%" 누수 원인 분리 위해 필요.
+- [ ] `kakaoShare.shareTeamInvite` 호출 시 GA4 또는 Supabase 이벤트 로그 (`kakao_share_clicked`)
+- [ ] 클릭 후 D+3 멤버 합류 여부 연결 (팀 ID 기준)
+- 현재 공유 버튼 위치: WelcomeCard(대시보드) + 위자드 Step 2
+
+### 알파 D14 마감 점검 (HIGH, 5/25 오늘)
+- **배경**: 알파 5/11~5/25 20명 cap. 오늘(5/25) D14 마감일.
+- [ ] 어드민 `/admin/alpha-testers` 14일 달성 인원 확인
+- [ ] 12명 이상 14일 달성 시 Play Console 프로덕션 신청
 
 ## 66차-B 신규 추가 (2026-05-20) — ChatGPT 채널 추적·SEO 후속·블로그 6편·알파 D14
 
