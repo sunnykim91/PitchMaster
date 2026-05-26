@@ -74,7 +74,9 @@ export async function processMatchCompletedPush(
     const mvpPush = await sendTeamPush(match.team_id, {
       title: "🏆 MVP 투표 시작",
       body: `${teamPrefix}${dateLabel} vs ${opponent} MVP를 뽑아주세요!`,
-      url: `/matches/${match.id}?tab=record`,
+      // 50차에 MVP 투표 카드를 기록 탭 → 후기 탭(diary)으로 이동했으나 deep link 만 outdated.
+      // 사용자가 푸시 클릭 시 기록 탭으로 이동해 MVP 카드 못 찾음.
+      url: `/matches/${match.id}?tab=diary`,
     });
     mvpSent += mvpPush.sent;
 
