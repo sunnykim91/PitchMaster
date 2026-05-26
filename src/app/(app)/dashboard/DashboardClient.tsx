@@ -831,7 +831,7 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
                 <button
                   type="button"
                   className="pm-dash-nudge-btn"
-                  style={{ background: "transparent", color: "hsl(var(--info))", border: "1px solid hsl(var(--info) / 0.4)", flexShrink: 0, padding: "0 14px" }}
+                  style={{ background: "transparent", color: "hsl(var(--info))", border: "1px solid hsl(var(--info) / 0.4)", flex: "0 0 auto", width: "auto", padding: "0 18px" }}
                   onClick={handleInviteCopy}
                 >
                   링크
@@ -856,7 +856,7 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
                   <div className="pm-dash-nudge-sub">팀원 {data.registeredMemberCount}명 · 미설정</div>
                 </div>
               </div>
-              <Link href="/dues" className="pm-dash-nudge-btn" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+              <Link href="/dues" className="pm-dash-nudge-btn">
                 설정하기
               </Link>
             </div>
