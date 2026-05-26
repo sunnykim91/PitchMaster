@@ -3,9 +3,17 @@ import * as duesExemptionPolicy from "./posts/dues-exemption-policy";
 import * as futsalSplitTeams from "./posts/futsal-split-teams";
 import * as futsalTacticsApp from "./posts/futsal-tactics-app";
 import * as dormancyAutoExemption from "./posts/dormancy-auto-exemption";
+import * as soccerTeamExcelVsApp from "./posts/soccer-team-excel-vs-app";
 import type { GuidePost } from "./types";
 
-const all: GuidePost[] = [treasurerStart, duesExemptionPolicy, futsalSplitTeams, futsalTacticsApp, dormancyAutoExemption];
+const all: GuidePost[] = [
+  treasurerStart,
+  duesExemptionPolicy,
+  futsalSplitTeams,
+  futsalTacticsApp,
+  dormancyAutoExemption,
+  soccerTeamExcelVsApp,
+];
 
 export const guides = Object.fromEntries(all.map((g) => [g.meta.slug, g])) as Record<
   string,
