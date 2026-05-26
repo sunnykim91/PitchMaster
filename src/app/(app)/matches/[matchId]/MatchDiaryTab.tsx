@@ -441,7 +441,17 @@ function MatchDiaryTabInner({
       </Card>
 
       {/* ══ MVP 투표 — 완료된 경기에서만 노출 (기록 탭 → 후기 탭으로 이동, 50차) ══ */}
-      {match.status === "COMPLETED" && (
+      {match.status === "COMPLETED" && (() => {
+        /* MVP 후보 폴백 로직 (2026-05-27 fix).
+         * 정책상 후보 = 실제 출석(PRESENT/LATE) 멤버만.
+         * 단 운영진이 출석 체크를 안 했으면 mvpCandidates = [] 가 그대로 ?? 를 통과해
+         * 카드는 나오는데 후보 0명 = "MVP 투표 안 보임" 버그. 빈 배열일 땐 참석 투표(ATTEND)로 폴백.
+         * 출석 체크 후엔 정책대로 PRESENT/LATE 만 후보가 됨. */
+        const effectiveCandidates =
+          mvpCandidates && mvpCandidates.length > 0 ? mvpCandidates : attendingMembers;
+        const isAttendFallback =
+          (!mvpCandidates || mvpCandidates.length === 0) && attendingMembers.length > 0;
+        return (
         <Card className="rounded-xl border-border/30">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base font-bold">
@@ -450,6 +460,11 @@ function MatchDiaryTabInner({
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {isAttendFallback && (
+              <p className="mb-3 rounded-md bg-[hsl(var(--info))]/10 px-2.5 py-1.5 text-[12.5px] leading-snug text-[hsl(var(--info))]">
+                출석 체크가 아직 안 됐어요. 우선 참석 투표자로 후보를 띄웠습니다. 출석 탭에서 PRESENT/LATE 처리하면 실제 참석자만 후보로 좁혀집니다.
+              </p>
+            )}
             {/* 투표율 / 모드 안내 */}
             {(() => {
               const totalVotes = Object.keys(voteCounts).reduce((sum, id) => sum + (voteCounts[id] ?? 0), 0);
@@ -490,7 +505,7 @@ function MatchDiaryTabInner({
 
             {/* 현재 1위 */}
             {(() => {
-              const candidates = mvpCandidates ?? attendingMembers;
+              const candidates = effectiveCandidates;
               const topPlayer = candidates.reduce<{ id: string; name: string; count: number } | null>((top, p) => {
                 const count = voteCounts[p.id] ?? 0;
                 if (count > 0 && (!top || count > top.count)) return { id: p.id, name: p.name, count };
@@ -526,7 +541,7 @@ function MatchDiaryTabInner({
                   </div>
                 )}
                 <div className="grid grid-cols-3 gap-2">
-                  {(mvpCandidates ?? attendingMembers).map((player) => {
+                  {effectiveCandidates.map((player) => {
                     const isSelf = player.id === userId;
                     const isVoted = votes[userId] === player.id;
                     const count = voteCounts[player.id] ?? 0;
@@ -556,7 +571,7 @@ function MatchDiaryTabInner({
               </>
             ) : (
               <div className="grid grid-cols-3 gap-2">
-                {(mvpCandidates ?? attendingMembers).map((player) => {
+                {effectiveCandidates.map((player) => {
                   const count = voteCounts[player.id] ?? 0;
                   return (
                     <div
@@ -576,13 +591,15 @@ function MatchDiaryTabInner({
             )}
           </CardContent>
         </Card>
-      )}
+        );
+      })()}
 
-      {/* ══ 운영진 평점 — 토글 ON 팀 + 완료된 경기 한정 (FCO2 팀 요청 잠정 도입) ══ */}
+      {/* ══ 운영진 평점 — 토글 ON 팀 + 완료된 경기 한정 (FCO2 팀 요청 잠정 도입) ══
+       * 평점 후보도 MVP 와 동일 폴백 로직. 출석 체크 누락 시 ATTEND 로 폴백. */}
       {playerRatingEnabled && match.status === "COMPLETED" && (
         <PlayerRatingCard
           matchId={matchId}
-          candidates={(mvpCandidates ?? attendingMembers).map((p) => ({ id: p.id, name: p.name }))}
+          candidates={(mvpCandidates && mvpCandidates.length > 0 ? mvpCandidates : attendingMembers).map((p) => ({ id: p.id, name: p.name }))}
           viewerUserId={userId}
           canRate={canRatePlayers}
         />
