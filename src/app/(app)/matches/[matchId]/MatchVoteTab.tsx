@@ -1,29 +1,32 @@
 "use client";
 
 import { memo, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { GA } from "@/lib/analytics";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Users, HelpCircle, UserX, Check, Clock, Search, Lock, LockOpen, Loader2 } from "lucide-react";
+import { Users, HelpCircle, UserX, Check, Clock, Lock, LockOpen, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import type { Match, RosterPlayer } from "./matchDetailTypes";
-import { voteStyles as styles } from "@/lib/voteStyles";
 
 type ExemptionInfo = { type: string; reason: string | null; endDate: string | null };
-const DORMANT_LABEL: Record<string, string> = {
-  INJURED: "부상",
-  PERSONAL: "개인사정",
-  OTHER: "기타",
-};
-const DORMANT_ICON: Record<string, string> = {
-  INJURED: "🏥",
-  PERSONAL: "✈️",
-  OTHER: "❓",
-};
+
+/* 운영진/멤버 패널 — canManage 따라 한 쪽만 dynamic 로드.
+ * 멤버는 운영진의 검색·필터·정렬·미투표 알림 코드를 다운로드하지 않음. */
+const MatchVoteStaffPanel = dynamic(() => import("./MatchVoteStaffPanel"), {
+  ssr: false,
+  loading: () => <div className="py-6 text-center text-sm text-muted-foreground">관리 패널 불러오는 중...</div>,
+});
+const MatchVoteMemberPanel = dynamic(() => import("./MatchVoteMemberPanel"), {
+  ssr: false,
+  loading: () => <div className="py-6 text-center text-sm text-muted-foreground">투표 현황 불러오는 중...</div>,
+});
+
+export type VoteSortBy = "none" | "name-asc" | "name-desc" | "time-asc" | "time-desc";
+export type VoteFilter = "all" | "unvoted";
 
 export interface MatchVoteTabProps {
   matchId: string;
@@ -37,6 +40,13 @@ export interface MatchVoteTabProps {
   refetchVote: () => Promise<unknown>;
   handleProxyVote: (memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") => Promise<void>;
   exemptions?: Record<string, ExemptionInfo>;
+  /* 부모(MatchDetailClient)에서 보유 — 탭 unmount 후에도 검색/필터/정렬 유지용 */
+  voteSearch: string;
+  setVoteSearch: (v: string) => void;
+  voteFilter: VoteFilter;
+  setVoteFilter: (v: VoteFilter) => void;
+  voteSortBy: VoteSortBy;
+  setVoteSortBy: (v: VoteSortBy) => void;
 }
 
 function MatchVoteTabInner({
@@ -51,13 +61,15 @@ function MatchVoteTabInner({
   refetchVote,
   handleProxyVote,
   exemptions = {},
+  voteSearch,
+  setVoteSearch,
+  voteFilter,
+  setVoteFilter,
+  voteSortBy,
+  setVoteSortBy,
 }: MatchVoteTabProps) {
   const { showToast } = useToast();
   const [runDeadline, deadlineLoading] = useAsyncAction();
-  const [runNudge, nudgeLoading] = useAsyncAction();
-  const [voteSearch, setVoteSearch] = useState("");
-  const [voteFilter, setVoteFilter] = useState<"all" | "unvoted">("all");
-  const [voteSortBy, setVoteSortBy] = useState<"none" | "name-asc" | "name-desc" | "time-asc" | "time-desc">("none");
   // Optimistic UI: undefined = 서버 데이터 사용, null | 값 = 즉시 반영된 낙관적 상태
   const [optimisticMyVote, setOptimisticMyVote] = useState<"ATTEND" | "ABSENT" | "MAYBE" | null | undefined>(undefined);
   // 연속 클릭 방지용 (300ms)
@@ -66,9 +78,6 @@ function MatchVoteTabInner({
   const [loadingVote, setLoadingVote] = useState<"ATTEND" | "ABSENT" | "MAYBE" | null>(null);
   // 실패 시 흔들림 애니메이션 대상
   const [shakeVote, setShakeVote] = useState<"ATTEND" | "ABSENT" | "MAYBE" | null>(null);
-  // 대리 투표: 멤버별 로딩/흔들림 상태 (key = `${memberId}:${vote}`)
-  const [loadingProxy, setLoadingProxy] = useState<string | null>(null);
-  const [shakeProxy, setShakeProxy] = useState<string | null>(null);
 
   const myMember = baseRoster.find((m) => m.id === userId);
   const serverMyVote = myMember ? memberVoteMap[myMember.memberId] : undefined;
@@ -110,21 +119,6 @@ function MatchVoteTabInner({
     }
   }
 
-  // 대리 투표 래퍼: 로딩/실패 시각화 추가
-  async function handleProxyVoteWithFeedback(memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") {
-    const key = `${memberId}:${vote}`;
-    if (loadingProxy) return;
-    setLoadingProxy(key);
-    try {
-      await handleProxyVote(memberId, vote);
-    } catch (err) {
-      setShakeProxy(key);
-      setTimeout(() => setShakeProxy(null), 500);
-      showToast(err instanceof Error ? err.message : "대리 투표에 실패했습니다.", "error");
-    } finally {
-      setLoadingProxy(null);
-    }
-  }
   const [isExpired, setIsExpired] = useState(false);
   useEffect(() => {
     setIsExpired(match.voteDeadline ? new Date(match.voteDeadline) < new Date() : false);
@@ -258,177 +252,34 @@ function MatchVoteTabInner({
         </CardContent>
       </Card>
 
-      {/* ══ 투표 관리 (운영진) / 현황 (평회원) ══ */}
+      {/* ══ 투표 관리 (운영진) / 현황 (평회원) — dynamic split ══ */}
       {canManage ? (
-        <Card className="rounded-xl border-border/30">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-bold">{canManage ? "투표 관리" : "투표 현황"}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex h-11 items-center gap-2.5 rounded-lg border border-border bg-secondary/50 px-3">
-              <Search className="h-4 w-4 shrink-0 text-muted-foreground translate-y-[0.5px]" />
-              <input type="text" placeholder="이름 검색" value={voteSearch}
-                onChange={(e) => setVoteSearch(e.target.value)} autoComplete="off"
-                className="h-full w-full border-0 bg-transparent text-sm leading-none placeholder:text-muted-foreground focus:outline-none" />
-            </div>
-
-            <div className="flex items-center gap-2">
-              {([{ v: "all" as const, l: "전체" }, { v: "unvoted" as const, l: "미투표" }]).map(({ v, l }) => (
-                <Button key={v} variant={voteFilter === v ? "default" : "secondary"} size="sm" onClick={() => setVoteFilter(v)}
-                  className={cn("relative h-9 rounded-lg px-3 text-xs", voteFilter === v && "bg-primary text-primary-foreground")}>
-                  {l}
-                  {v === "unvoted" && noVote.length > 0 && (
-                    <Badge className="absolute -right-1.5 -top-1.5 bg-destructive text-destructive-foreground text-[12px] px-1.5 min-w-[18px] h-[18px]">{noVote.length}</Badge>
-                  )}
-                </Button>
-              ))}
-              {([
-                { key: "name", cycle: ["none", "name-asc", "name-desc"] as string[], labels: ["이름순", "이름 ↑", "이름 ↓"] },
-                { key: "time", cycle: ["none", "time-asc", "time-desc"] as string[], labels: ["투표순", "투표 ↑", "투표 ↓"] },
-              ]).map(({ key, cycle, labels }) => {
-                const idx = cycle.indexOf(voteSortBy);
-                const isActive = idx > 0;
-                return (
-                  <button key={key} type="button"
-                    onClick={() => { const next = idx < 0 ? 1 : (idx + 1) % 3; setVoteSortBy(cycle[next] as typeof voteSortBy); }}
-                    className={cn("h-9 rounded-lg px-3 text-xs font-medium transition-colors",
-                      isActive ? "bg-secondary text-foreground" : "bg-secondary/50 text-muted-foreground hover:text-foreground"
-                    )}>
-                    {isActive ? labels[idx] : labels[0]}
-                  </button>
-                );
-              })}
-            </div>
-
-            <ul className="max-h-[60vh] space-y-2 overflow-y-auto overscroll-contain" role="list">
-              {[...visibleRoster].filter((m) => {
-                if (exemptions[m.id]) return false; // 부상/면제도 별도 표시
-                if (voteSearch && !m.name.includes(voteSearch)) return false;
-                if (voteFilter === "unvoted" && memberVoteMap[m.memberId]) return false;
-                return true;
-              }).sort((a, b) => {
-                if (voteSortBy === "name-asc") return a.name.localeCompare(b.name, "ko");
-                if (voteSortBy === "name-desc") return b.name.localeCompare(a.name, "ko");
-                if (voteSortBy === "time-asc") return (memberVoteTimeMap?.[a.memberId] ?? "").localeCompare(memberVoteTimeMap?.[b.memberId] ?? "") || a.name.localeCompare(b.name, "ko");
-                if (voteSortBy === "time-desc") return (memberVoteTimeMap?.[b.memberId] ?? "").localeCompare(memberVoteTimeMap?.[a.memberId] ?? "") || a.name.localeCompare(b.name, "ko");
-                const order: Record<string, number> = { ATTEND: 0, MAYBE: 1, ABSENT: 2 };
-                const oA = memberVoteMap[a.memberId] ? (order[memberVoteMap[a.memberId]] ?? 3) : 4;
-                const oB = memberVoteMap[b.memberId] ? (order[memberVoteMap[b.memberId]] ?? 3) : 4;
-                return oA !== oB ? oA - oB : a.name.localeCompare(b.name, "ko");
-              }).map((member) => {
-                const currentVote = memberVoteMap[member.memberId];
-                return (
-                  <li key={member.id} className={cn("flex items-center justify-between rounded-xl p-3 transition-colors",
-                    !currentVote ? "bg-destructive/10 border border-destructive/30" : "bg-secondary/50"
-                  )}>
-                    <span className={cn("text-sm font-medium", !currentVote && "text-destructive")}>{member.name}</span>
-                    <div className="flex gap-1" role="radiogroup">
-                      {([{ value: "ATTEND" as const, label: "참석" }, { value: "MAYBE" as const, label: "미정" }, { value: "ABSENT" as const, label: "불참" }]).map((opt) => {
-                        const proxyKey = `${member.memberId}:${opt.value}`;
-                        const isLoading = loadingProxy === proxyKey;
-                        const isShaking = shakeProxy === proxyKey;
-                        return (
-                          <button key={opt.value} role="radio" aria-checked={currentVote === opt.value}
-                            disabled={!!loadingProxy}
-                            className={cn("min-h-[32px] rounded-lg px-3 py-1.5 text-xs font-medium transition-all inline-flex items-center gap-1",
-                              currentVote === opt.value ? styles[opt.value].active : styles[opt.value].inactive,
-                              loadingProxy && !isLoading && "opacity-50",
-                              isShaking && "animate-shake ring-2 ring-destructive"
-                            )}
-                            onClick={() => handleProxyVoteWithFeedback(member.memberId, opt.value)}>
-                            {isLoading && <Loader2 className="h-3 w-3 animate-spin" />}
-                            {opt.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-
-            {noVote.length > 0 && (
-              <Button
-                className="w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25 hover:bg-primary/90"
-                disabled={nudgeLoading}
-                onClick={() => runNudge(async () => {
-                  try {
-                    const res = await fetch("/api/push/vote-nudge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ matchId: match.id }) });
-                    const data = await res.json();
-                    showToast(`미투표자 ${data.unvoted ?? 0}명에게 알림을 보냈습니다`);
-                  } catch { showToast("알림 발송에 실패했습니다", "error"); }
-                })}
-              >
-                <Bell className="mr-2 h-4 w-4" />{nudgeLoading ? "발송 중..." : `미투표 ${noVote.length}명에게 알림 보내기`}
-              </Button>
-            )}
-            {/* 휴면 회원 (운영진 뷰) */}
-            {dormantIds.size > 0 && (
-              <div className="border-t border-border/30 pt-3">
-                <p className="text-xs font-medium text-muted-foreground mb-2">휴면 ({dormantIds.size}명)</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {baseRoster.filter((m) => dormantIds.has(m.id)).map((m) => {
-                    const info = exemptions[m.id];
-                    return (
-                      <Badge key={m.id} className="border-0 font-medium bg-secondary/50 text-muted-foreground/60">
-                        {DORMANT_ICON[info?.type] ?? ""} {m.name}
-                      </Badge>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <MatchVoteStaffPanel
+          match={match}
+          baseRoster={baseRoster}
+          visibleRoster={visibleRoster}
+          memberVoteMap={memberVoteMap}
+          memberVoteTimeMap={memberVoteTimeMap}
+          exemptions={exemptions}
+          noVoteCount={noVote.length}
+          handleProxyVote={handleProxyVote}
+          voteSearch={voteSearch}
+          setVoteSearch={setVoteSearch}
+          voteFilter={voteFilter}
+          setVoteFilter={setVoteFilter}
+          voteSortBy={voteSortBy}
+          setVoteSortBy={setVoteSortBy}
+        />
       ) : (
         visibleRoster.length > 0 && (
-          <Card className="rounded-xl border-border/30">
-            <CardContent className="space-y-5 p-5">
-              {([
-                { items: attend, label: "참석", color: "success" },
-                { items: maybe, label: "미정", color: "warning" },
-                { items: absent, label: "불참", color: "loss" },
-                { items: noVote, label: "미투표", color: null },
-              ]).filter(({ items }) => items.length > 0).map(({ items, label, color }) => (
-                <div key={label}>
-                  <div className="mb-2 flex items-center gap-2">
-                    {color && <div className={`h-2 w-2 rounded-full bg-[hsl(var(--${color}))]`} />}
-                    {!color && <div className="h-2 w-2 rounded-full bg-muted-foreground" />}
-                    <span className="text-sm font-semibold">{label}</span>
-                    <Badge variant="secondary" className="text-xs">{items.length}</Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {items.map((m) => (
-                      <Badge key={m.id} className={cn("border-0 font-medium",
-                        color ? `bg-[hsl(var(--${color}))]/15 text-[hsl(var(--${color}))]` : "bg-secondary text-muted-foreground"
-                      )}>{m.name}</Badge>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              {/* 휴면 회원 */}
-              {dormantIds.size > 0 && (
-                <div>
-                  <div className="mb-2 flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-muted-foreground/40" />
-                    <span className="text-sm font-semibold text-muted-foreground">휴면</span>
-                    <Badge variant="secondary" className="text-xs">{dormantIds.size}</Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {baseRoster.filter((m) => dormantIds.has(m.id)).map((m) => {
-                      const info = exemptions[m.id];
-                      return (
-                        <Badge key={m.id} className="border-0 font-medium bg-secondary/50 text-muted-foreground/60">
-                          {DORMANT_ICON[info?.type] ?? ""} {m.name}
-                          {info?.type && <span className="ml-1 text-[12px]">({DORMANT_LABEL[info.type] ?? "휴면"})</span>}
-                        </Badge>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <MatchVoteMemberPanel
+            baseRoster={baseRoster}
+            attend={attend}
+            absent={absent}
+            maybe={maybe}
+            noVote={noVote}
+            exemptions={exemptions}
+          />
         )
       )}
     </div>

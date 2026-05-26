@@ -350,22 +350,17 @@ select optgroup {
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
-/* Staggered children animation */
+/* Staggered children animation
+ * 모바일에서 12번째 항목까지 360ms 누적 = 답답함. 4번째까지만 stagger 유지, 5+ 즉시.
+ * 위쪽 viewport 카드 4개로 시각적 등장감 살리되 아래 항목은 즉시 노출. */
 .stagger-children > * {
-  animation: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fade-in-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
-.stagger-children > *:nth-child(3) { animation-delay: 90ms; }
-.stagger-children > *:nth-child(4) { animation-delay: 120ms; }
-.stagger-children > *:nth-child(5) { animation-delay: 150ms; }
-.stagger-children > *:nth-child(6) { animation-delay: 180ms; }
-.stagger-children > *:nth-child(7) { animation-delay: 210ms; }
-.stagger-children > *:nth-child(8) { animation-delay: 240ms; }
-.stagger-children > :nth-child(9) { animation-delay: 270ms; }
-.stagger-children > :nth-child(10) { animation-delay: 300ms; }
-.stagger-children > :nth-child(11) { animation-delay: 330ms; }
-.stagger-children > :nth-child(12) { animation-delay: 360ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 40ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 70ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 90ms; }
+/* 5번째부터는 동시에 표시 — 누적 딜레이 0 */
 
 .sidebar-atmosphere {
   background: linear-gradient(180deg, hsl(16 85% 58% / 0.03) 0%, transparent 40%);
