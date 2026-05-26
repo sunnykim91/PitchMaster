@@ -449,6 +449,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   }, [roster, assignedPlayers]);
 
   const captureRef = useRef<HTMLDivElement | null>(null);
+  const quarterMatrixRef = useRef<HTMLDivElement | null>(null);
   // 캡처 중에는 필드의 '적합' 표시(녹색 링·pill·상단 레전드) 숨김
   const [isCapturing, setIsCapturing] = useState(false);
 
@@ -1609,6 +1610,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
           <BarChart3 className="h-4 w-4" />
           쿼터별 출전 현황
         </SheetTitle>
+        <div ref={quarterMatrixRef} className="pb-2">
         {/* 범례 */}
         <div className="mt-3 flex flex-wrap gap-3 text-[12.5px] text-muted-foreground">
           <span className="flex items-center gap-1">
@@ -1683,6 +1685,20 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             </tbody>
           </table>
         </div>
+        </div>
+        <Button
+          type="button"
+          onClick={() => {
+            if (quarterMatrixRef.current) {
+              captureAndShare(quarterMatrixRef.current, "quarter-attendance.png");
+            }
+          }}
+          disabled={isCapturing}
+          className="mt-4 w-full gap-2"
+        >
+          <Share2 className="h-4 w-4" />
+          쿼터별 출전 카톡 공유
+        </Button>
       </SheetContent>
     </Sheet>
     </>
