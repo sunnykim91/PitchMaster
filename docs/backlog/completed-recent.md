@@ -1,12 +1,54 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~67차)
-summary: 2026-04-11~05-25 진행. 최근: 실사용 팀 활동 패턴 분석 4라운드 + WelcomeCard v2 코호트 효과 확인 (67차)
-sections: [67차 실사용 팀 활동 패턴 분석·본인팀 제외·전술영상·WelcomeCard v2 코호트, 66차-B 운영 데이터 조사·SEO 분석·블로그 5편 완주, 66차 매치 페이지 시안 v2 + 대시보드 풀 마이그 + hue cascade 버그 + 디자인 마이그 중단 결정, 65차 전술판 영상 평면화·알파 공지 게시물·블로그 4·5편·권한별UI·signup_source 3중망·종합점검, 64차 OVR 공식 재설계 + 시그니처 분기 보강 + AI 카피 라벨 정정 + 배지 제거, 63차 박제 정정 + pending.md outdated 항목 정리, 62차 전술 영상 편집기 전면 리팩토링 P1~P5 + DB 마이그레이션 + 게시판 linkify, 60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-05-25 (67차)
+title: 개선 백로그 — 최근 완료 (16~68차)
+summary: 2026-04-11~05-27 진행. 최근: 알파 5차 준비 + TWA referrer fix + UX 로딩 피드백 표준화 19파일 (68차)
+sections: [68차 알파 5차 준비·TWA referrer fix·UX 로딩 표준화 19파일·어드민 6팀 제외·블로그 6편, 67차 실사용 팀 활동 패턴 분석·본인팀 제외·전술영상·WelcomeCard v2 코호트, 66차-B 운영 데이터 조사·SEO 분석·블로그 5편 완주, 66차 매치 페이지 시안 v2 + 대시보드 풀 마이그 + hue cascade 버그 + 디자인 마이그 중단 결정, 65차 전술판 영상 평면화·알파 공지 게시물·블로그 4·5편·권한별UI·signup_source 3중망·종합점검, 64차 OVR 공식 재설계 + 시그니처 분기 보강 + AI 카피 라벨 정정 + 배지 제거, 63차 박제 정정 + pending.md outdated 항목 정리, 62차 전술 영상 편집기 전면 리팩토링 P1~P5 + DB 마이그레이션 + 게시판 linkify, 60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-05-27 (68차)
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~67차)
+# 최근 완료 (16~68차)
+
+## 68차 (2026-05-27, KST) — 알파 5차 준비 + UX 로딩 피드백 표준화
+
+**커밋**: f330ab8, 976a66c, 7009069, 50c0c6e, 8dba231, 7158400, 2a176f0, 1164990, 0bf3479, 9541905, 5b66303
+
+**알파 5차 신청 준비**
+- [x] 4차 반려(5/25) 분석 — streak 1명·출석 0일 3명·12명 미달 원인 정리
+- [x] 명단 재편성: 기존 streak 0 6명 제거, 신규 12명 확정 (D14=6/8)
+- [x] 운영 공지 UPDATE (posts.is_global=true 행 갱신)
+- [x] 메시지 톤 전환 — 이해관계자 + 보상 명확화 모델 권장 (부탁 모델 한계 박제)
+
+**TWA referrer fix (2a176f0, 3파일)**
+- [x] `TwaReferrerCapture.tsx` 신규 — 첫 진입 시 android-app:// 매칭 → sessionStorage `pm_twa=1`
+- [x] `AlphaTesterBanner.tsx` `isTwa()` sessionStorage 우선 체크
+- [x] `src/app/layout.tsx` TwaReferrerCapture mount
+
+**어드민 통계 6팀 제외 (7158400)**
+- [x] `EXCLUDED_TEAM_IDS` Set: 데모 + FCMZ·FCMZ풋살·FK Rebirth·fc jsy·에스케이디앤디
+- [x] stats API 7곳 일괄 변경
+
+**UX 로딩 피드백 표준화 (976a66c + f330ab8, 19파일)**
+- [x] Button 컴포넌트 `loading`/`loadingText` prop 추가
+- [x] SubmitButton 신규 (useFormStatus().pending) — form action 3곳 교체
+- [x] onClick 핸들러 15곳 표준화 (PostEditor·CommentSection·DuesRecordsTab·TeamSettings·MemberEditModal·DuesSettingsTab·DuesBulkTab OCR·PersonalSettings·MatchesClient·EditMatchInfoForm 외)
+- [x] 사이드 이펙트 3건 추가 fix (KickRow/LinkAccount boolean·CommentSection Enter·PostEditor uploading)
+
+**대시보드·기타 fix**
+- [x] 초대 nudge 버튼 깨짐 근본 fix — `pm-dash-nudge-btn` inline-flex+center (1164990)
+- [x] 생일 카드 compact 배너 이동 (8dba231)
+- [x] MVP vote task 다이어리 탭 딥링크 수정 (7009069)
+- [x] "가입 대기자 승인" task 팀설정 라우팅 수정 (50c0c6e)
+- [x] 쿼터별 출전 현황 카톡 공유 버튼 (0bf3479)
+- [x] root 타이틀/설명 SEO 개선 (9541905)
+- [x] 블로그 6편 자체 도메인 발행 (5b66303) + 네이버·티스토리 발행 완료
+
+**삽질·반복 사고**
+- 추천 전 grep 미실시 5차 재발 — Dormant 활성화 3개 추천 전부 이미 구현 완료
+- 코호트 시점 잘못 설정 — WelcomeCard v2 컷오프 5/19 기준 재정정
+- 가입 신청 처리 경로 오답 — 회원 탭이 아닌 설정→팀설정 (사용자 정정)
+- FCMZ·FK Rebirth 본인/지인 미제외 — 분석 초기 왜곡 후 정정
+
+---
 
 ## 67차 (2026-05-25, KST) — 실사용 팀 활동 패턴 분석 4라운드
 
