@@ -22,6 +22,7 @@ import { cn, compactKakaoImage } from "@/lib/utils";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import TeamLogo from "@/components/TeamLogo";
 import { initInstallPromptCapture, triggerInstall, getInstallPrompt, detectInstallMode, onPromptChange, type InstallMode } from "@/lib/pwaInstall";
+import { useApi } from "@/lib/useApi";
 
 type ClientLayoutProps = {
   session: Session;
@@ -266,6 +267,16 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
   const displayRole = viewAsRole ?? session.user.teamRole;
 
+  // 햄버거 "빠른 처리" 그룹 badge 카운트 (Phase 4 — 68차C).
+  // 운영진만 mount 시 1회 fetch. 평회원은 endpoint 가 0 반환 + 그룹 자체 안 보임.
+  // skip: !isStaffOrAbove — 평회원에게 불필요한 호출 회피.
+  const isStaffForBadge = isStaffOrAbove(displayRole);
+  const { data: staffCounts } = useApi<{ joinRequests: number; unpaidPenalties: number; attendanceMissing: number }>(
+    "/api/staff-counts",
+    { joinRequests: 0, unpaidPenalties: 0, attendanceMissing: 0 },
+    { skip: !isStaffForBadge },
+  );
+
   // 홈 단독 + 3그룹(운영 / 기록·소통 / 설정) 구조 — 햄버거 정보 위계 가시화
   const homeNavItem = useMemo(
     () => ({ href: "/dashboard", label: "홈", detail: "대시보드", icon: Home }),
@@ -312,11 +323,29 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
     // 가입 신청·벌금 관리는 매주 반복 작업인데 깊이가 깊어(설정·회비 안 카드) 사용자가 헤매기 쉬움.
     const staffActions = isStaff
       ? [
-          { href: "/settings?tab=team", label: "가입 신청 처리", detail: "팀 설정 안 카드", icon: UserPlus },
+          {
+            href: "/settings?tab=team",
+            label: "가입 신청 처리",
+            detail: "팀 설정 안 카드",
+            icon: UserPlus,
+            badge: staffCounts.joinRequests,
+          },
           // /dues?tab=penalty 는 penalty_rules 0건일 때 탭 자체가 안 보임(DuesClient show 조건).
           // 신규 팀 사용자가 클릭해도 다른 탭으로 fallback 되어 혼란 → settings 탭으로 보내 규칙 만들도록.
-          { href: "/dues?tab=settings", label: "벌금 관리", detail: "규칙 설정·지각·결석·미투표", icon: AlertCircle },
-          { href: "/matches", label: "출석 체크할 경기", detail: "완료 경기 출석 표시", icon: ClipboardCheck },
+          {
+            href: "/dues?tab=settings",
+            label: "벌금 관리",
+            detail: "규칙 설정·지각·결석·미투표",
+            icon: AlertCircle,
+            badge: staffCounts.unpaidPenalties,
+          },
+          {
+            href: "/matches",
+            label: "출석 체크할 경기",
+            detail: "완료 경기 출석 표시",
+            icon: ClipboardCheck,
+            badge: staffCounts.attendanceMissing,
+          },
         ]
       : [];
 
@@ -330,7 +359,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       groups.splice(1, 0, { title: "빠른 처리", items: staffActions });
     }
     return groups;
-  }, [displayRole, isOperator]);
+  }, [displayRole, isOperator, staffCounts.joinRequests, staffCounts.unpaidPenalties, staffCounts.attendanceMissing]);
 
   // 그룹 간 sibling prefix 충돌 방지 (예: /settings/animations 진입 시
   // '전술 영상'과 '설정' 동시 active) — 전체 nav items를 평탄화해

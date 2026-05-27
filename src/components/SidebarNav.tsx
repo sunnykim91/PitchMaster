@@ -12,6 +12,8 @@ type NavItem = {
   label: string;
   detail?: string;
   icon?: LucideIcon;
+  /** 우측 N건 badge — 운영진 빠른 처리 그룹용 (Phase 4, 68차C). 0/undefined 면 비표시. */
+  badge?: number;
 };
 
 type SidebarNavProps = {
@@ -64,11 +66,21 @@ function SidebarNav({ items, activeHref: externalActiveHref }: SidebarNavProps) 
                 )}
                 </span>
               </span>
-              {isActive ? (
-                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
-              ) : (
-                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-150" />
-              )}
+              <span className="ml-auto flex items-center gap-2">
+                {item.badge && item.badge > 0 ? (
+                  <span
+                    className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-destructive px-1.5 text-[11px] font-bold text-destructive-foreground"
+                    aria-label={`${item.badge}건 대기`}
+                  >
+                    {item.badge}
+                  </span>
+                ) : null}
+                {isActive ? (
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                ) : (
+                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-150" />
+                )}
+              </span>
             </Link>
           </Button>
         );
