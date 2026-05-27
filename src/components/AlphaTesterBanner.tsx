@@ -29,8 +29,19 @@ function isAndroid(): boolean {
  * referrer-only로 엄격 검증. false positive(PWA 통과) 차단 우선.
  */
 function isTwa(): boolean {
-  if (typeof document === "undefined") return false;
-  return /^android-app:\/\/app\.pitchmaster/i.test(document.referrer ?? "");
+  if (typeof window === "undefined") return false;
+  // OAuth 리다이렉트로 referrer 손실된 후에도 같은 TWA 세션임을 기억
+  // (TwaReferrerCapture 가 root layout 에서 첫 진입 시 저장)
+  try {
+    if (window.sessionStorage.getItem("pm_twa") === "1") return true;
+  } catch {
+    // sessionStorage 차단 환경
+  }
+  if (/^android-app:\/\/app\.pitchmaster/i.test(document.referrer ?? "")) {
+    try { window.sessionStorage.setItem("pm_twa", "1"); } catch {}
+    return true;
+  }
+  return false;
 }
 
 function isAlreadyShown(): boolean {
