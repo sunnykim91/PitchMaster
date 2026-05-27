@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import { apiMutate } from "@/lib/useApi";
 import { formatAmount } from "@/lib/formatters";
+import HintCard from "@/components/HintCard";
 
 /* ── 타입 정의 ── */
 
@@ -554,6 +555,11 @@ function DuesBulkTabInner({
 
   return (
     <div role="tabpanel" id="tabpanel-bulk" aria-labelledby="tab-bulk" className="space-y-4">
+      <HintCard
+        storageKey="hint:dues-bulk:v1"
+        title="통장 캡처 한 장이면 회비 자동 정리"
+        description="카카오뱅크·토스 거래 내역 화면을 캡처해서 올리면 AI가 날짜·이름·금액을 자동 추출해요. 운영진은 매칭만 확인하면 끝."
+      />
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-medium text-foreground">내역 올리기</h2>
         <button

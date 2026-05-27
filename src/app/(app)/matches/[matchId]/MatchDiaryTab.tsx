@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn, formatTime } from "@/lib/utils";
 import { shareMatchResult } from "@/lib/kakaoShare";
+import HintCard from "@/components/HintCard";
 import type {
   Match,
   MatchDiary,
@@ -441,6 +442,13 @@ function MatchDiaryTabInner({
       </Card>
 
       {/* ══ MVP 투표 — 완료된 경기에서만 노출 (기록 탭 → 후기 탭으로 이동, 50차) ══ */}
+      {match.status === "COMPLETED" && (
+        <HintCard
+          storageKey="hint:mvp-vote:v1"
+          title="MVP 투표는 여기서"
+          description="실제 출석(참석·지각)한 회원이 후보로 표시돼요. 본인은 투표 불가, 다른 회원 한 명에게 한 표."
+        />
+      )}
       {match.status === "COMPLETED" && (() => {
         /* MVP 후보 폴백 로직 (2026-05-27 fix).
          * 정책상 후보 = 실제 출석(PRESENT/LATE) 멤버만.

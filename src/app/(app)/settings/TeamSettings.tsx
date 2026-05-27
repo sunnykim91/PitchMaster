@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
 import { formationTemplates } from "@/lib/formations";
+import HintCard from "@/components/HintCard";
 import { cn } from "@/lib/utils";
 import { toKoreanError } from "@/lib/errorMessages";
 import TeamLogo from "@/components/TeamLogo";
@@ -658,14 +659,20 @@ function TeamSettingsComponent({
 
       {/* ── 가입 신청 관리 ── */}
       {canManageRequests && (
-        <Card>
-          <CardContent className="p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-bold">가입 신청</p>
-              {pendingRequests.length > 0 && (
-                <Badge variant="secondary">{pendingRequests.length}건 대기</Badge>
-              )}
-            </div>
+        <>
+          <HintCard
+            storageKey="hint:join-request:v1"
+            title="가입 신청 처리하는 곳이에요"
+            description="신청 카드의 [승인]·[거절] 버튼으로 즉시 처리. 승인하면 곧바로 팀원으로 등록되고, 거절은 가입 요청만 제거돼요."
+          />
+          <Card>
+            <CardContent className="p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-bold">가입 신청</p>
+                {pendingRequests.length > 0 && (
+                  <Badge variant="secondary">{pendingRequests.length}건 대기</Badge>
+                )}
+              </div>
 
             {requestsLoading ? (
               <p className="text-sm text-muted-foreground">로딩 중...</p>
@@ -708,8 +715,9 @@ function TeamSettingsComponent({
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </>
       )}
 
       {/* ── 팀 삭제 ── */}

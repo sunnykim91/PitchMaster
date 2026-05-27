@@ -3,6 +3,7 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { formationTemplates } from "@/lib/formations";
+import HintCard from "@/components/HintCard";
 import type { AttendingPlayer, GeneratedSquad } from "@/components/AutoFormationBuilder";
 import { apiMutate } from "@/lib/useApi";
 import { Button } from "@/components/ui/button";
@@ -302,6 +303,11 @@ function MatchTacticsTabInner({
 
   return (
     <div className="flex flex-col gap-5 min-w-0 overflow-x-hidden">
+      <HintCard
+        storageKey="hint:tactics:v1"
+        title="전술판 사용법"
+        description="자동 편성으로 참석자가 포메이션에 자동 배치돼요. 드래그로 위치 바꾸거나 [AI 코치 분석]으로 팀별 강약점 분석. 운영진만 수정 가능."
+      />
       {/* 자체전 팀 편성(최상단 고정) */}
       {isInternal && (
         <div style={{ order: -10 }} className="flex flex-col gap-5">

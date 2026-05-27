@@ -7,6 +7,7 @@ import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { useToast } from "@/lib/ToastContext";
+import HintCard from "@/components/HintCard";
 
 type AttendanceStatus = "PRESENT" | "ABSENT" | "LATE";
 
@@ -66,6 +67,11 @@ function MatchAttendanceTabInner({
 
   return (
     <section className="space-y-4 py-4">
+      <HintCard
+        storageKey="hint:attendance:v1"
+        title="출석 체크하는 곳이에요"
+        description="회원 옆 [참석]·[지각]·[불참] 버튼을 한 번 누르면 끝. 시즌 통산 출석률과 벌금이 자동으로 처리돼요. 운영진만 표시 가능합니다."
+      />
       <Card className="rounded-xl border-border/30">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <h3 className="text-base font-bold">출석 체크</h3>
