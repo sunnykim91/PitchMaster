@@ -1,12 +1,109 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~68차)
-summary: 2026-04-11~05-27 진행. 최근: 알파 5차 준비 + TWA referrer fix + UX 로딩 피드백 표준화 19파일 (68차)
-sections: [68차 알파 5차 준비·TWA referrer fix·UX 로딩 표준화 19파일·어드민 6팀 제외·블로그 6편, 67차 실사용 팀 활동 패턴 분석·본인팀 제외·전술영상·WelcomeCard v2 코호트, 66차-B 운영 데이터 조사·SEO 분석·블로그 5편 완주, 66차 매치 페이지 시안 v2 + 대시보드 풀 마이그 + hue cascade 버그 + 디자인 마이그 중단 결정, 65차 전술판 영상 평면화·알파 공지 게시물·블로그 4·5편·권한별UI·signup_source 3중망·종합점검, 64차 OVR 공식 재설계 + 시그니처 분기 보강 + AI 카피 라벨 정정 + 배지 제거, 63차 박제 정정 + pending.md outdated 항목 정리, 62차 전술 영상 편집기 전면 리팩토링 P1~P5 + DB 마이그레이션 + 게시판 linkify, 60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-05-27 (68차)
+title: 개선 백로그 — 최근 완료 (16~70차)
+summary: 2026-04-11~05-27 진행. 최근: 친절성·직관성·편의성 75→83 UX 대세션 (70차)
+sections: [70차 경기상세 hydration최적화·dashboard task overhaul·온보딩 체크리스트·HintCard·N badge·TWA SW update·핫픽스 4건, 69차+ 블로그 6편 전채널+7편 초안·네이버 자체 통계 분석, 68차 알파 5차 준비·TWA referrer fix·UX 로딩 표준화 19파일·어드민 6팀 제외·블로그 6편, 67차 실사용 팀 활동 패턴 분석·본인팀 제외·전술영상·WelcomeCard v2 코호트, 66차-B 운영 데이터 조사·SEO 분석·블로그 5편 완주, 66차 매치 페이지 시안 v2 + 대시보드 풀 마이그 + hue cascade 버그 + 디자인 마이그 중단 결정, 65차 전술판 영상 평면화·알파 공지 게시물·블로그 4·5편·권한별UI·signup_source 3중망·종합점검, 64차 OVR 공식 재설계 + 시그니처 분기 보강 + AI 카피 라벨 정정 + 배지 제거, 63차 박제 정정 + pending.md outdated 항목 정리, 62차 전술 영상 편집기 전면 리팩토링 P1~P5 + DB 마이그레이션 + 게시판 linkify, 60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-05-27 (70차)
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~68차)
+# 최근 완료 (16~70차)
+
+## 70차 (2026-05-27, KST) — 친절성·직관성·편의성 75→83 UX 대세션
+
+**커밋**: e0eae9a, c289b14, b28cc0d, c7b244d, 1bdb30e, 0d9daea, ddcda41, 8dba231, 9541905, 515f626, 568c576, 3854113, 7009069, 50c0c6e
+
+**알파 4차 강행 결정 + 5차 준비**
+- [x] 알파 4차 상태 분석 — streak 1명(본인), 출석 0일 3명, 12명 미달임에도 사용자 강행 결정
+- [x] 4차 반려 시 5차 준비: D14=6/8 일정 확정, TWA SW update prompt 배포로 백그라운드 보강
+- [x] 블로그 6편 관련 내용 정확성 검증: 카톡 투표 7일 한정 정정, 출석 체크 차이 서술 정정 (사용자 2회 재구성 지적)
+- [x] 벌금 시스템 reference_pitchmaster_penalty_system.md 박제
+
+**핫픽스 4건 + SEO**
+- [x] MVP 푸시 `?tab=record` → `?tab=diary` deep link 수정 (515f626)
+- [x] MVP 후보 빈 배열 폴백 누락: `?? attendingMembers` → `?.length ? : ` 수정 (568c576)
+- [x] 출석 hint "PRESENT/LATE" 영어 → 한글 정정 (3854113)
+- [x] dashboard task MVP vote href + 가입 대기자 href 수정 (7009069, 50c0c6e)
+- [x] root title 한글 prefix + description "조기축구·풋살" SEO 개선 (9541905)
+
+**TWA SW update prompt (ddcda41)**
+- [x] `updatefound` + `statechange=installed` 감지 → 배너 + reload 버튼
+- [x] sw.js CACHE_NAME v4→v5
+- [x] 5분 polling + `visibilitychange` 트리거
+
+**생일 카드 compact banner 이동 (8dba231)**
+- [x] main column 끝 → 공지 바로 아래, wiggle 애니메이션 + chip
+- [x] 라벨 "이번 주" → "오늘" (로직과 일치)
+
+**경기 상세 hydration 최적화 (e0eae9a)**
+- [x] info/vote/attendance 탭 hidden → 진짜 조건부 렌더
+- [x] EditMatchInfoForm, MatchVoteTab 패널 dynamic import 분리
+- [x] MatchAttendanceTab 신규 파일 분리
+- [x] voteSearch/Filter/SortBy state 부모 lift (탭 unmount 후 유지)
+- [x] stagger-children 12 → 4 단축
+- [x] 813 vitest 통과
+
+**Dashboard task overhaul + 햄버거 빠른 처리 (c289b14)**
+- [x] DashboardTask 타입 urgency·icon·description 확장
+- [x] 기존 6 + 신규 6 task (출석·시즌·회비·일정·회원·벌금)
+- [x] urgency 정렬 + 5건 접기
+- [x] 햄버거 "빠른 처리" 그룹 신설 (STAFF+ 3개)
+
+**CSS grid → flex fix (b28cc0d)**
+- [x] `.pm-dash-todo-item` grid + align-items:center + multi-line body sandwich → flex + min-width:0 수정
+- [x] 햄버거 "벌금 관리" href `/dues?tab=penalty` → `/dues?tab=settings`
+
+**WelcomeCard 5단계 온보딩 체크리스트 (c7b244d)**
+- [x] created variant 5단계 자동 감지 (경기·멤버·투표·회비·공유)
+- [x] 진행 바 + 체크 + struck-through + localStorage 공유 확인
+
+**HintCard 5곳 (1bdb30e)**
+- [x] 재사용 컴포넌트 신규 130줄 (라이브러리 없이)
+- [x] 출석·전술·회비 OCR·후기 MVP·가입 신청 5곳
+
+**햄버거 N건 badge (0d9daea)**
+- [x] `/api/staff-counts` 신규 (가입신청·미납벌금·미출석체크 경기)
+- [x] SidebarNav badge prop + MEMBER skip
+
+**삽질·반복 수정**
+- `?? 빈 배열` 폴백 미작동 사고 (568c576): `mvpCandidates ?? attendingMembers`에서 빈 배열 통과 → 0명 카드 노출
+- 기능 이동 후 deep link outdated 2건: 50차 record→diary 이동 후 푸시·dashboard 방치
+- CSS grid + align-items:center + multi-line body sandwich (b28cc0d): reviewer 발견 후 수정
+
+---
+
+## 69차+ (2026-05-27, KST) — 블로그 6편 전채널 + 7편 초안 + 네이버 자체 통계 분석
+
+**코드 커밋 없음 (7편 자체 도메인 미커밋·미푸시 상태) — 분석·콘텐츠 세션**
+
+**네이버 블로그 자체 통계 분석 (5/18~5/24, 1주)**
+- [x] 총 19방문, 통합검색 89.47%(모바일 52.63 + PC 36.84), 블로그 검색 10.52% 실측
+- [x] 17개 유입 키워드 분류: 풋살(6), 엑셀/수기 대체(4), 조기축구 회비(2), 포지션/전술(3), 3파전(2), 카톡 투표(1)
+- [x] 분석 결과: 블로그 채널이 자체 도메인보다 단기 SEO 유입에서 훨씬 효율적
+- [x] 6편 주제("축구팀 엑셀 vs 앱") 실측 키워드 4개로 사후 검증 완료
+
+**블로그 6편 전채널 완료**
+- [x] 자체 도메인: 5b66303 (5/26) — `/guide/soccer-team-excel-vs-app`
+- [x] 네이버 블로그: 5/27 발행 완료 (사용자 보고)
+- [x] 티스토리: 5/27 발행 완료 (사용자 보고)
+- [x] 6편 자체 도메인 서치어드바이저 수집 요청 + GSC URL 색인 요청 완료 (사용자 보고)
+
+**블로그 7편 초안 작성 (커밋·푸시 X, 발행 5/28~5/29 예정)**
+- [x] 주제 결정: "동호회 카톡 투표 vs 앱 비교" (3파전 심화편은 3편 카니발리제이션으로 reject)
+- [x] 선정 근거: 블로그 자체 통계 "동네 카톡투표방식" 1건 실측
+- [x] 자체 도메인 초안: `src/lib/guides/posts/kakao-vote-vs-app.tsx` (publishedAt 2026-05-27)
+- [x] `src/lib/guides/registry.ts` — 7편 import + all 배열 등록
+- [x] 네이버 초안: `docs/blog-guide-kakao-vote-vs-app-naver.md` (5/28 발행 예정)
+- [x] 티스토리 초안: `docs/blog-guide-kakao-vote-vs-app-tistory.md` (5/29 발행 예정)
+- [x] 타입체크 통과 (7편 관련 파일 에러 0개)
+- 5가지 차이 정리: 7일 한정/단톡방 도배/결과 옮겨 적기/미투표 손 카운트/휘발성
+- 한 줄 요약: "단톡방이 다시 친목 채널로 돌아온다"
+
+**메모리·문서 반영**
+- [x] `reference_naver_blog_self_stats.md` 신규 — 블로그 자체 통계 vs 서치어드바이저 구분 + 5/18~5/24 실측
+- [x] `feedback_blog_keyword_to_topic.md` 신규 — 블로그 키워드 → 글 주제 선정 패턴
+- [x] `project_blog_publishing_cadence.md` — 7편 작성 완료·커밋·발행 예정 갱신
+
+---
 
 ## 68차 (2026-05-27, KST) — 알파 5차 준비 + UX 로딩 피드백 표준화
 

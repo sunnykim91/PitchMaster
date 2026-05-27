@@ -1,11 +1,50 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=106팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-05-27 (68차)
+last_updated: 2026-05-27 (70차)
 related: [completed-recent.md, reviews.md]
 ---
 
 # 미완료 백로그
+
+## 70차 신규 추가 (2026-05-27) — 알파 4차 결과 + TWA 검증 + UX 후속
+
+### 알파 4차 결과 분기 처리 (HIGH, 검토 완료 시)
+- **배경**: 4차 신청 강행 — 반려 가능성 매우 높음 (streak 1명, 출석 0일 3명, 12명 미달). 결과 확인 후 분기 처리 필요.
+- [ ] 4차 통과 시: 프로덕션 배포 절차 진행
+- [ ] 4차 반려 시: 반려 사유 기록 후 5차(D14=6/8) 집중
+
+### TWA SW update prompt 실측 검증 (HIGH, 다음 hotfix 배포 후)
+- **배경**: ddcda41 배포 완료. 다음 hotfix 배포 시 TWA 앱 환경에서 배너 실제 노출 여부 확인 필요.
+- [ ] TWA 앱 실행 중 서버 배포 → 배너 노출 여부 확인
+- [ ] 5분 polling 및 visibilitychange 트리거 둘 다 확인
+- 참고: `feat(twa): surface SW update with a reload prompt` (ddcda41)
+
+### HintCard localStorage 활용 효과 측정 (MEDIUM, 2주 후)
+- **배경**: 1bdb30e에서 5곳 HintCard 적용. 실제 혼란 감소 여부 측정 기준 없음.
+- [ ] 출석·전술·회비 OCR·후기 MVP·가입 신청 5곳 이탈률 변화 확인 (2주 후 Supabase)
+- [ ] HintCard 닫기 빈도 추적 이벤트 추가 여부 사용자 결정 후 진행
+
+---
+
+## 69차+ 신규 추가 (2026-05-27) — 블로그 7편 발행 후속
+
+### 블로그 7편 자체 도메인 커밋·푸시·후속 작업 (HIGH, 5/28 우선)
+- **배경**: 7편 `kakao-vote-vs-app.tsx` + registry.ts 로컬에만 존재. 미커밋·미푸시 상태.
+- [ ] `src/lib/guides/posts/kakao-vote-vs-app.tsx` + `src/lib/guides/registry.ts` git add + commit + push
+- [ ] 자체 도메인 `/guide/kakao-vote-vs-app` 발행 확인
+- [ ] 자체 도메인 서치어드바이저 수집 요청 + GSC URL 검사 색인 요청 (자체 도메인이므로 필수)
+
+### 블로그 7편 네이버·티스토리 발행 (HIGH, 5/28~5/29)
+- **배경**: 초안 `docs/blog-guide-kakao-vote-vs-app-naver.md` / `…-tistory.md` 작성 완료.
+- [ ] 5/28 네이버 블로그 발행 (`docs/blog-guide-kakao-vote-vs-app-naver.md` 기준)
+- [ ] 5/29 티스토리 발행 (`docs/blog-guide-kakao-vote-vs-app-tistory.md` 기준)
+
+### 네이버 SEO 재진단 (MEDIUM, 5/27~6/3 시점 도래)
+- **배경**: 5/9 변곡점 14~21일 후 재진단 시점 (reference_naver_seo_2026_05_20.md 박제).
+- [ ] 서치어드바이저 색인 수·노출 키워드·클릭 변화 재측정
+- [ ] 클릭 0인 8개 잠재 키워드 중 클릭 발생 여부 확인
+- [ ] favicon.ico 재크롤 요청 효과 확인
 
 ## 68차 신규 추가 (2026-05-27) — 알파 5차 D14·TWA 검증·블로그 7편
 
@@ -16,13 +55,12 @@ related: [completed-recent.md, reviews.md]
 - [ ] 6/8 D14 달성 시 Play Console 프로덕션 5번째 신청
 - [ ] 헤비 회장 7명 1:1 카톡 발송 (사용자가 직접)
 
-### 블로그 7편 주제 결정 및 발행 (HIGH, 다음 세션 우선)
-- **배경**: 6편 "축구팀 엑셀 vs 앱" 전채널 완료(5/27). 7편 후보: "동호회 카톡 투표 방식 vs 앱 비교" (실측 "동네 카톡투표방식" 1건) 또는 "3파전 팀나누기 완전 가이드 심화편" (실측 "3파전 팀나누기"·"풋살 3파전" 2건).
-- [ ] 7편 주제 최종 결정 (사용자 승인)
-- [ ] 자체 도메인 `/guide/[slug]` 작성·발행
-- [ ] 네이버 블로그 발행 (자체 도메인 다음 날)
-- [ ] 티스토리 발행 (네이버 다음 날)
-- [ ] 6편 자체 도메인 GSC URL 색인 요청 (서치어드바이저 수집 요청 포함)
+### ~~블로그 7편 주제 결정 및 발행~~ (부분 완료 — 69차+)
+- [x] 7편 주제 결정: "동호회 카톡 투표 vs 앱 비교" (3파전 심화편 reject)
+- [x] 자체 도메인 초안 `src/lib/guides/posts/kakao-vote-vs-app.tsx` 작성 완료 (미커밋·미푸시)
+- [x] 네이버·티스토리 초안 작성 완료
+- [x] 6편 자체 도메인 GSC URL 색인 요청 + 서치어드바이저 수집 요청 완료 (5/27)
+- [ ] 7편 커밋·푸시·발행 → 69차+ 신규 항목으로 이동
 
 ### FCO2 회장 가입 대기 처리 (HIGH, 즉시)
 - **배경**: 강진성·이연 가입 대기 6일 이상. FCO2 회장(성원창) 카톡 안내 필요.
