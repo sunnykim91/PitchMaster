@@ -14,6 +14,16 @@ export async function GET() {
   }
 
   const DEMO_TEAM_ID = "192127c0-e2be-46b4-b340-7583730467da";
+  // 어드민 통계에서 제외할 팀 — 데모 + 본인/지인/테스트 팀
+  // (참고: memory/reference_internal_team_exclusion.md)
+  const EXCLUDED_TEAM_IDS = new Set<string>([
+    DEMO_TEAM_ID,
+    "c743835e-a3c5-4949-98d4-90aee30d4ff5", // FCMZ (본인)
+    "020db2ac-531c-4c74-916b-48eb45fe9a98", // FCMZ 풋살 (본인)
+    "f1678029-1b44-4a80-93fc-0a6036bbaba2", // FK Rebirth (지인)
+    "b55ba657-b8bb-4e07-aead-72d265b51247", // fc jsy (알파 테스트 더미)
+    "dc022d7e-5952-48f2-9db9-35708e6fb075", // 에스케이디앤디 (알파 테스트 더미)
+  ]);
   const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
@@ -35,8 +45,8 @@ export async function GET() {
       db.from("users").select("id", { count: "exact" }).gte("created_at", sevenDaysAgo),
       // 전체 멤버 한 번에 조회 (BANNED 제외)
       db.from("team_members").select("team_id, status").in("status", ["ACTIVE", "DORMANT"]),
-      // 데모 멤버
-      db.from("team_members").select("user_id").eq("team_id", DEMO_TEAM_ID).not("user_id", "is", null),
+      // 제외 대상 팀(데모+본인+지인+테스트) 멤버 — activeUsers/totalUsers 카운트에서 빼기 위함
+      db.from("team_members").select("user_id").in("team_id", Array.from(EXCLUDED_TEAM_IDS)).not("user_id", "is", null),
       // 최근 투표 (14일) — voted_at 사용. user_id null이면 member_id로 보완
       db.from("match_attendance").select("match_id, user_id, member_id").gte("voted_at", fourteenDaysAgo),
       // 최근 골 기록 (14일) — scorer_id는 team_members.id, recorded_by는 user_id
@@ -51,20 +61,20 @@ export async function GET() {
       db.from("team_members").select("id, user_id"),
     ]);
 
-  // 데모 제외
-  const demoMemberIds = new Set<string>();
-  for (const m of demoMembersRes.data ?? []) if (m.user_id) demoMemberIds.add(m.user_id);
+  // 제외 대상 팀 멤버의 user_id (전체 통계에서 빼기)
+  const excludedMemberIds = new Set<string>();
+  for (const m of demoMembersRes.data ?? []) if (m.user_id) excludedMemberIds.add(m.user_id);
 
-  const teams = (teamsRes.data ?? []).filter((t) => t.id !== DEMO_TEAM_ID);
-  const users = (usersRes.data ?? []).filter((u: { id: string }) => !demoMemberIds.has(u.id));
-  const matches = (matchesRes.data ?? []).filter((m: { team_id: string }) => m.team_id !== DEMO_TEAM_ID);
+  const teams = (teamsRes.data ?? []).filter((t) => !EXCLUDED_TEAM_IDS.has(t.id));
+  const users = (usersRes.data ?? []).filter((u: { id: string }) => !excludedMemberIds.has(u.id));
+  const matches = (matchesRes.data ?? []).filter((m: { team_id: string }) => !EXCLUDED_TEAM_IDS.has(m.team_id));
   const posts = postsRes.data ?? [];
   const pendingRequests = joinReqRes.data ?? [];
 
   // 팀별 멤버 수 (1번 쿼리로 집계)
   const memberCounts: Record<string, number> = {};
   for (const m of membersRes.data ?? []) {
-    if (m.status === "ACTIVE" && m.team_id !== DEMO_TEAM_ID) {
+    if (m.status === "ACTIVE" && !EXCLUDED_TEAM_IDS.has(m.team_id)) {
       memberCounts[m.team_id] = (memberCounts[m.team_id] ?? 0) + 1;
     }
   }
@@ -101,7 +111,7 @@ export async function GET() {
     if (m.user_id) memberToUser.set(m.id, m.user_id);
   }
   const addActiveUser = (uid: string | null | undefined) => {
-    if (uid && !demoMemberIds.has(uid)) activeUserIds.add(uid);
+    if (uid && !excludedMemberIds.has(uid)) activeUserIds.add(uid);
   };
 
   // 투표 활동 (팀 + 유저). user_id null이면 member_id → user_id 변환
@@ -130,10 +140,10 @@ export async function GET() {
   }
   // 경기 등록 활동 (등록자)
   for (const m of (recentMatchesByCreatorRes.data ?? []) as { team_id: string; created_by: string | null }[]) {
-    if (m.team_id === DEMO_TEAM_ID) continue;
+    if (EXCLUDED_TEAM_IDS.has(m.team_id)) continue;
     addActiveUser(m.created_by);
   }
-  activeTeamIds.delete(DEMO_TEAM_ID);
+  for (const id of EXCLUDED_TEAM_IDS) activeTeamIds.delete(id);
 
   // 팀 상태: 활성 / 휴면 / 미사용
   function getTeamStatus(teamId: string): "active" | "dormant" | "unused" {
@@ -180,7 +190,7 @@ export async function GET() {
       .select("user_id, teams:team_id(name)")
       .in("user_id", userIds)
       .in("status", ["ACTIVE", "DORMANT"])
-      .neq("team_id", DEMO_TEAM_ID);
+      .not("team_id", "in", `(${Array.from(EXCLUDED_TEAM_IDS).join(",")})`);
     for (const row of (userTeams ?? []) as { user_id: string; teams: { name: string } | { name: string }[] | null }[]) {
       const teamName = Array.isArray(row.teams) ? row.teams[0]?.name : row.teams?.name;
       if (teamName && !userTeamMap[row.user_id]) userTeamMap[row.user_id] = teamName;
