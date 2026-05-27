@@ -381,7 +381,8 @@ function PersonalSettingsComponent({
                   <Button
                     type="button"
                     size="sm"
-                    disabled={jerseySaving}
+                    loading={jerseySaving}
+                    loadingText="저장 중..."
                     onClick={async () => {
                       setJerseySaving(true);
                       const num = jerseyNumber.trim() === "" ? null : Number(jerseyNumber);
@@ -396,7 +397,7 @@ function PersonalSettingsComponent({
                       setTimeout(() => setMessage(null), 2000);
                     }}
                   >
-                    {jerseySaving ? "저장 중..." : "저장"}
+                    저장
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">0~999 사이 숫자, 팀 내 중복 불가</p>
@@ -494,8 +495,8 @@ function PersonalSettingsComponent({
             </div>
           </div>
 
-          <Button type="submit" disabled={saving} className="w-full">
-            {saving ? "저장 중..." : "저장"}
+          <Button type="submit" loading={saving} loadingText="저장 중..." className="w-full">
+            저장
           </Button>
         </form>
 

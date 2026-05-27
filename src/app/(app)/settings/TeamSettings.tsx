@@ -245,6 +245,7 @@ function TeamSettingsComponent({
   const [pendingRequests, setPendingRequests] = useState<JoinRequest[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [processingAction, setProcessingAction] = useState<"APPROVED" | "REJECTED" | null>(null);
 
   const fetchJoinRequests = useCallback(async () => {
     if (!canManageRequests) return;
@@ -270,6 +271,7 @@ function TeamSettingsComponent({
 
   async function handleRequestAction(reqId: string, action: "APPROVED" | "REJECTED") {
     setProcessingId(reqId);
+    setProcessingAction(action);
     try {
       const res = await fetch(`/api/teams/join-requests/${reqId}`, {
         method: "PATCH",
@@ -288,6 +290,7 @@ function TeamSettingsComponent({
       setMessage("오류: 네트워크 오류");
     }
     setProcessingId(null);
+    setProcessingAction(null);
     setTimeout(() => setMessage(null), 2000);
   }
 
@@ -645,8 +648,8 @@ function TeamSettingsComponent({
             </div>
 
             {canEditTeam && (
-              <Button type="submit" disabled={saving} className="w-full">
-                {saving ? "저장 중..." : "저장"}
+              <Button type="submit" loading={saving} loadingText="저장 중..." className="w-full">
+                저장
               </Button>
             )}
           </form>
@@ -685,7 +688,8 @@ function TeamSettingsComponent({
                     <div className="ml-3 flex shrink-0 gap-2">
                       <Button
                         size="sm"
-                        disabled={processingId === req.id}
+                        loading={processingId === req.id && processingAction === "APPROVED"}
+                        disabled={processingId === req.id && processingAction !== "APPROVED"}
                         onClick={() => handleRequestAction(req.id, "APPROVED")}
                       >
                         승인
@@ -693,7 +697,8 @@ function TeamSettingsComponent({
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={processingId === req.id}
+                        loading={processingId === req.id && processingAction === "REJECTED"}
+                        disabled={processingId === req.id && processingAction !== "REJECTED"}
                         onClick={() => handleRequestAction(req.id, "REJECTED")}
                       >
                         거절
@@ -1019,11 +1024,12 @@ function LogoUpload({
           <Button
             type="button"
             size="sm"
-            disabled={uploading}
+            loading={uploading}
+            loadingText="저장 중..."
             onClick={handleCropConfirm}
             className="flex-1"
           >
-            {uploading ? "저장 중..." : "이 영역으로 저장"}
+            이 영역으로 저장
           </Button>
           <Button
             type="button"
@@ -1054,12 +1060,14 @@ function LogoUpload({
           type="button"
           variant="outline"
           size="sm"
-          disabled={disabled || uploading}
+          loading={uploading}
+          loadingText="저장 중..."
+          disabled={disabled}
           onClick={() => fileRef.current?.click()}
           className="gap-1.5"
         >
           <Camera className="h-3.5 w-3.5" />
-          {uploading ? "저장 중..." : logoUrl ? "로고 변경" : "로고 등록"}
+          {logoUrl ? "로고 변경" : "로고 등록"}
         </Button>
         {logoUrl && (
           <Button

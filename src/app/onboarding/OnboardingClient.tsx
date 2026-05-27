@@ -4,6 +4,7 @@ import "./onboarding.css";
 import { motion, useReducedMotion, type Easing } from "framer-motion";
 import { useState, useMemo, type CSSProperties, type ReactNode } from "react";
 import { completeOnboarding } from "@/app/onboarding/actions";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 const EASE: Easing = [0.16, 1, 0.3, 1];
 
@@ -489,7 +490,7 @@ export default function OnboardingClient({
           </Reveal>
 
           <Reveal delay={380} className="pm-cta-wrap">
-            <button type="submit" className="pm-cta" disabled={isDesignPreview}>
+            <SubmitButton className="pm-cta" disabled={isDesignPreview} pendingText="저장 중...">
               {isDesignPreview ? "미리보기 모드 (제출 비활성화)" : "다음 단계로"}
               {!isDesignPreview && (
                 <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
@@ -503,7 +504,7 @@ export default function OnboardingClient({
                   />
                 </svg>
               )}
-            </button>
+            </SubmitButton>
             <p className="pm-cta-sub">다음 단계에서 팀에 합류하거나 새로 만들 수 있어요.</p>
           </Reveal>
         </form>

@@ -425,9 +425,10 @@ function DuesRecordsTabInner({
                         <Button
                           type="submit"
                           className="w-full h-10 rounded-lg active:scale-[0.97] transition-transform"
-                          disabled={saving}
+                          loading={saving}
+                          loadingText="저장 중..."
                         >
-                          {saving ? "저장 중..." : "저장"}
+                          저장
                         </Button>
                       </div>
                     </div>
@@ -435,9 +436,10 @@ function DuesRecordsTabInner({
                     <Button
                       type="submit"
                       className="w-full h-10 rounded-lg active:scale-[0.97] transition-transform"
-                      disabled={saving}
+                      loading={saving}
+                      loadingText="저장 중..."
                     >
-                      {saving ? "저장 중..." : "저장"}
+                      저장
                     </Button>
                   )}
 

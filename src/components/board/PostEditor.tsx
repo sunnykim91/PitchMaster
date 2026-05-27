@@ -268,8 +268,8 @@ export const PostEditor = memo(function PostEditor({
 
           {/* Actions */}
           <div className="flex items-center gap-2 pt-1">
-            <Button type="submit" size="sm" disabled={submitting || uploading} className="px-6">
-              {submitting ? "등록 중..." : editingPostId ? "수정" : "등록"}
+            <Button type="submit" size="sm" loading={submitting} loadingText="등록 중..." disabled={uploading} className="px-6">
+              {editingPostId ? "수정" : "등록"}
             </Button>
             {editingPostId && (
               <Button type="button" variant="ghost" size="sm" onClick={onCancel}>

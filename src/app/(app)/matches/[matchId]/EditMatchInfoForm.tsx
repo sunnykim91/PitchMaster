@@ -133,7 +133,7 @@ export default function EditMatchInfoForm({
         </div>
         <div className="flex gap-3 pt-1">
           <Button type="button" variant="outline" className="flex-1 h-12 rounded-xl" onClick={onClose}>취소</Button>
-          <Button type="submit" className="flex-1 h-12 rounded-xl" disabled={saving}>{saving ? "저장 중..." : "저장"}</Button>
+          <Button type="submit" className="flex-1 h-12 rounded-xl" loading={saving} loadingText="저장 중...">저장</Button>
         </div>
       </div>
     </form>

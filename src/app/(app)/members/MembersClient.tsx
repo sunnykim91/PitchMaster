@@ -4,6 +4,7 @@ import "@/app/onboarding/onboarding.css";
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
@@ -924,18 +925,28 @@ function SingleAddModal({
           className="pm-cta"
           onClick={onSubmit}
           disabled={submitting || !name.trim()}
+          aria-busy={submitting || undefined}
         >
-          {submitting ? "등록 중…" : "등록하기"}
-          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
-            <path
-              d="M3 8 L13 8 M9 4 L13 8 L9 12"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          {submitting ? (
+            <>
+              <Loader2 className="inline-block animate-spin" width={16} height={16} aria-hidden />
+              {" 등록 중…"}
+            </>
+          ) : (
+            <>
+              등록하기
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
+                <path
+                  d="M3 8 L13 8 M9 4 L13 8 L9 12"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </>
+          )}
         </button>
       </div>
     </div>,

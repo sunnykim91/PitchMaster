@@ -576,8 +576,14 @@ function DuesBulkTabInner({
 
         {/* 메인: Clova OCR */}
         <Card
-          className="border-dashed border-white/10 bg-card py-5 cursor-pointer hover:border-white/20 transition-colors active:scale-[0.99]"
-          onClick={() => ocrFileInputRef.current?.click()}
+          className={`border-dashed border-white/10 bg-card py-5 hover:border-white/20 transition-colors active:scale-[0.99] ${
+            ocrLoading ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+          }`}
+          onClick={() => {
+            if (ocrLoading) return;
+            ocrFileInputRef.current?.click();
+          }}
+          aria-busy={ocrLoading || undefined}
         >
           <CardContent className="flex flex-col items-center gap-3 px-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -595,13 +601,14 @@ function DuesBulkTabInner({
               variant="outline"
               size="sm"
               className="active:scale-[0.97] transition-transform"
-              disabled={ocrLoading}
+              loading={ocrLoading}
+              loadingText="처리 중..."
               onClick={(e) => {
                 e.stopPropagation();
                 ocrFileInputRef.current?.click();
               }}
             >
-              {ocrLoading ? "처리 중..." : "사진 선택"}
+              사진 선택
             </Button>
           </CardContent>
         </Card>

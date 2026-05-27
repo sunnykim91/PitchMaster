@@ -12,6 +12,7 @@ import {
 } from "react";
 import { useSearchParams } from "next/navigation";
 import { createTeam, joinTeam } from "@/app/team/actions";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { GA } from "@/lib/analytics";
 import DemoButton from "@/app/login/DemoButton";
 
@@ -320,7 +321,7 @@ function CreateTeamForm() {
         </div>
       </div>
 
-      <button type="submit" className="pm-cta" disabled={submitDisabled}>
+      <SubmitButton className="pm-cta" disabled={submitDisabled} pendingText="팀 만드는 중...">
         팀 만들고 시작하기
         <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
           <path
@@ -332,7 +333,7 @@ function CreateTeamForm() {
             strokeLinejoin="round"
           />
         </svg>
-      </button>
+      </SubmitButton>
     </form>
   );
 }
@@ -370,7 +371,7 @@ function InviteCodeForm({ defaultValue = "" }: { defaultValue?: string }) {
         />
       </div>
 
-      <button type="submit" className="pm-cta" disabled={code.length < 4}>
+      <SubmitButton className="pm-cta" disabled={code.length < 4} pendingText="합류 중...">
         팀 합류하기
         <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
           <path
@@ -382,7 +383,7 @@ function InviteCodeForm({ defaultValue = "" }: { defaultValue?: string }) {
             strokeLinejoin="round"
           />
         </svg>
-      </button>
+      </SubmitButton>
     </form>
   );
 }

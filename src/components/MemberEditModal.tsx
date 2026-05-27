@@ -19,6 +19,7 @@
 import "@/app/onboarding/onboarding.css";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { Loader2 } from "lucide-react";
 import type { Role } from "@/lib/types";
 import { formatPhone } from "@/lib/utils";
 
@@ -699,8 +700,20 @@ function LinkAccountSection({
 // ─────────────────────────────────────────────────────────────
 // Kick row — 2-tap destructive confirm
 // ─────────────────────────────────────────────────────────────
-function KickRow({ name, onKick }: { name: string; onKick: () => void }) {
+function KickRow({ name, onKick }: { name: string; onKick: () => void | Promise<void> }) {
   const [armed, setArmed] = useState(false);
+  const [pending, setPending] = useState(false);
+
+  const handleKick = async () => {
+    if (pending) return;
+    setPending(true);
+    try {
+      await onKick();
+    } finally {
+      setPending(false);
+    }
+  };
+
   return (
     <div className="pm-kick-row">
       {!armed ? (
@@ -718,15 +731,29 @@ function KickRow({ name, onKick }: { name: string; onKick: () => void }) {
             </div>
           </div>
           <div className="pm-confirm-actions">
-            <button type="button" className="pm-confirm-cancel" onClick={() => setArmed(false)}>
+            <button
+              type="button"
+              className="pm-confirm-cancel"
+              onClick={() => setArmed(false)}
+              disabled={pending}
+            >
               취소
             </button>
             <button
               type="button"
               className="pm-confirm-ok pm-confirm-ok--destructive"
-              onClick={onKick}
+              onClick={handleKick}
+              disabled={pending}
+              aria-busy={pending || undefined}
             >
-              제명
+              {pending ? (
+                <>
+                  <Loader2 className="inline-block animate-spin" width={14} height={14} aria-hidden />
+                  {" 제명 중..."}
+                </>
+              ) : (
+                "제명"
+              )}
             </button>
           </div>
         </div>

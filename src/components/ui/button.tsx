@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
@@ -36,17 +37,34 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  /** true 면 자동으로 disabled + Loader2 스피너 prepend (asChild 시 무시) */
+  loading?: boolean;
+  /** loading 중 표시할 텍스트. 없으면 children 그대로 */
+  loadingText?: React.ReactNode;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, loading = false, loadingText, disabled, children, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
+    // Slot 은 단일 child 만 허용 — loading 합성은 일반 button 일 때만 활성
+    const showLoading = loading && !asChild;
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        disabled={disabled || showLoading}
+        aria-busy={showLoading || undefined}
         {...props}
-      />
+      >
+        {showLoading ? (
+          <>
+            <Loader2 className="animate-spin" aria-hidden />
+            {loadingText ?? children}
+          </>
+        ) : (
+          children
+        )}
+      </Comp>
     );
   }
 );

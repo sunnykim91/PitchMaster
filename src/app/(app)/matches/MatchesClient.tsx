@@ -1342,8 +1342,13 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
             )}
 
             {/* CTA */}
-            <button type="submit" disabled={submitting} className="pm-cta">
-              {submitting ? "저장 중..." : (
+            <button type="submit" disabled={submitting} className="pm-cta" aria-busy={submitting || undefined}>
+              {submitting ? (
+                <>
+                  <Loader2 className="inline-block animate-spin" width={16} height={16} aria-hidden />
+                  {" 저장 중..."}
+                </>
+              ) : (
                 <>
                   경기 등록 · 투표 알림 발송
                   <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>

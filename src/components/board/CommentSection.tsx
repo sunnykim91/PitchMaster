@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { X, Send } from "lucide-react";
+import { X, Send, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { relativeTime } from "@/lib/utils";
 import { useConfirm } from "@/lib/ConfirmContext";
@@ -114,8 +114,13 @@ export const CommentSection = memo(function CommentSection({
             onClick={() => onSubmit(postId)}
             disabled={commentingPostId === postId || !commentInput?.trim()}
             className="text-primary disabled:text-muted-foreground/40 transition-colors p-0.5"
+            aria-busy={commentingPostId === postId || undefined}
           >
-            <Send className="h-4 w-4" />
+            {commentingPostId === postId ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </button>
         </div>
       </div>

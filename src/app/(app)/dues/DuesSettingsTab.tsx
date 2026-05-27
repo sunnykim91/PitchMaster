@@ -412,9 +412,11 @@ function DuesSettingsTabInner({
                       size="sm"
                       className="flex-1 h-10 active:scale-[0.97] transition-transform"
                       type="submit"
-                      disabled={savingSetting || !newMemberType || !newMonthlyAmount}
+                      loading={savingSetting}
+                      loadingText="추가 중..."
+                      disabled={!newMemberType || !newMonthlyAmount}
                     >
-                      {savingSetting ? "추가 중..." : "추가"}
+                      추가
                     </Button>
                   </div>
                 </form>
@@ -497,8 +499,8 @@ function LeaveDuesSetting({ refetchSummary }: { refetchSummary: () => Promise<vo
           className="h-10 w-32 text-sm"
         />
         <span className="text-sm text-muted-foreground">원</span>
-        <Button size="sm" className="h-10" disabled={saving} onClick={handleSave}>
-          {saving ? "저장 중..." : settingId ? "수정" : "설정"}
+        <Button size="sm" className="h-10" loading={saving} loadingText="저장 중..." onClick={handleSave}>
+          {settingId ? "수정" : "설정"}
         </Button>
       </div>
     </div>
