@@ -64,10 +64,12 @@ export interface MemberEditModalProps {
   onRoleChange: (memberId: string, role: Role) => Promise<void>;
   onSetDormant: (memberId: string, type: string, until: string, reason: string) => Promise<void>;
   onUnsetDormant: (memberId: string) => Promise<void>;
-  onKick?: (memberId: string) => Promise<void>;
+  /** 성공 시 true, 실패 시 false 반환 — 모달 닫기 분기에 사용 */
+  onKick?: (memberId: string) => Promise<boolean | void>;
   // 계정 연결 (미가입 회원 → 카카오 가입자 user_id 매칭). PRESIDENT만
   signupPool?: SignupCandidate[];
-  onLink?: (memberId: string, userId: string) => Promise<void>;
+  /** 성공 시 true, 실패 시 false 반환 — 모달 닫기 분기에 사용 */
+  onLink?: (memberId: string, userId: string) => Promise<boolean | void>;
 }
 
 const ROLE_META: Record<Role, { label: string; hue: "atk" | "def" | "neutral" }> = {
@@ -965,8 +967,9 @@ export function MemberEditModal({
             memberName={member.name}
             signupPool={signupPool ?? []}
             onLink={async (userId) => {
-              await onLink!(member.id, userId);
-              onClose();
+              const ok = await onLink!(member.id, userId);
+              // 실패 시 모달 유지 — 사용자가 다시 시도하거나 다른 옵션 선택 가능
+              if (ok !== false) onClose();
             }}
           />
         )}
@@ -975,8 +978,8 @@ export function MemberEditModal({
           <KickRow
             name={member.name}
             onKick={async () => {
-              await onKick!(member.id);
-              onClose();
+              const ok = await onKick!(member.id);
+              if (ok !== false) onClose();
             }}
           />
         )}

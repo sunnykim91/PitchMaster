@@ -101,12 +101,14 @@ export const CommentSection = memo(function CommentSection({
             value={commentInput}
             onChange={(e) => onInputChange(e.target.value)}
             placeholder="댓글 작성..."
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
+            disabled={commentingPostId === postId}
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60 disabled:opacity-60 disabled:cursor-not-allowed"
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                onSubmit(postId);
-              }
+              if (e.key !== "Enter") return;
+              e.preventDefault();
+              // 이중 제출 가드 — 처리 중이거나 빈 입력이면 무시
+              if (commentingPostId === postId || !commentInput?.trim()) return;
+              onSubmit(postId);
             }}
           />
           <button

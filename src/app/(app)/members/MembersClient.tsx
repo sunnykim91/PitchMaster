@@ -195,17 +195,18 @@ export default function MembersClient({
     await doRoleChange(memberId, newRole);
   }
 
-  async function handleKick(memberId: string) {
-    if (!canKick) return;
+  async function handleKick(memberId: string): Promise<boolean> {
+    if (!canKick) return false;
     setKickingId(memberId);
     try {
       const { error: err } = await apiMutate(`/api/members?memberId=${memberId}`, "DELETE");
       if (!err) {
         showToast("멤버가 제거되었습니다.");
         await refetch();
-      } else {
-        showToast(typeof err === "string" ? err : "제명에 실패했습니다.", "error");
+        return true;
       }
+      showToast(typeof err === "string" ? err : "제명에 실패했습니다.", "error");
+      return false;
     } finally {
       setKickingId(null);
     }
@@ -339,7 +340,7 @@ export default function MembersClient({
       }));
   }, [membersData.members]);
 
-  async function handleLink(memberId: string, userId: string) {
+  async function handleLink(memberId: string, userId: string): Promise<boolean> {
     const { error: err } = await apiMutate("/api/members", "POST", {
       action: "link",
       memberId,
@@ -348,9 +349,10 @@ export default function MembersClient({
     if (!err) {
       showToast("계정이 연결되었습니다.");
       await refetch();
-    } else {
-      showToast(typeof err === "string" ? err : "연결에 실패했습니다.", "error");
+      return true;
     }
+    showToast(typeof err === "string" ? err : "연결에 실패했습니다.", "error");
+    return false;
   }
 
   const counts = useMemo(() => {
