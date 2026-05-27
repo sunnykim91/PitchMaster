@@ -1,4 +1,4 @@
-const CACHE_NAME = "pitchmaster-v4";
+const CACHE_NAME = "pitchmaster-v5";
 const PRECACHE_URLS = ["/dashboard", "/offline"];
 
 self.addEventListener("install", (event) => {
