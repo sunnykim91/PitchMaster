@@ -438,6 +438,29 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
           </Link>
         ))}
 
+        {/* B-1 · 오늘 생일 — 공지 바로 아래 컴팩트 배너 + 아바타 chip (27차C UI fix) */}
+        {!showWizard && (birthdayMembers ?? []).length > 0 && (
+          <div className="pm-dash-bday-banner" role="group" aria-label={`오늘 생일 ${birthdayMembers!.length}명`}>
+            <span className="pm-dash-bday-banner-emoji" aria-hidden>🎂</span>
+            <span className="pm-dash-bday-banner-label">오늘 생일</span>
+            <div className="pm-dash-bday-banner-chips">
+              {birthdayMembers!.map((m, i) => (
+                <span key={`${m.name}-${i}`} className="pm-dash-bday-chip">
+                  <span className="pm-dash-bday-chip-avatar" aria-hidden>
+                    {m.profileImageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={m.profileImageUrl} alt="" />
+                    ) : (
+                      <span className="pm-dash-bday-chip-initial">{(m.name ?? "?").slice(0, 1)}</span>
+                    )}
+                  </span>
+                  <span className="pm-dash-bday-chip-name">{m.name}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Main rail · D 또는 C empty hero */}
         <div className="pm-dash-col pm-dash-col--main">
           {!showWizard && upcomingMatch ? (
@@ -988,34 +1011,7 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
             </section>
           )}
 
-          {/* 생일 카드 — 데이터 있을 때만 */}
-          {(birthdayMembers ?? []).length > 0 && (
-            <section className="pm-section">
-              <div className="pm-section-h">
-                <span>이번 주 생일</span>
-                <span className="pm-section-count">{birthdayMembers!.length}명</span>
-              </div>
-              <div className="pm-dash-bday">
-                {birthdayMembers!.map((m) => {
-                  const md = m.birthDate?.slice(5).replace("-", "/") ?? "";
-                  return (
-                    <div key={`${m.name}-${m.birthDate}`} className="pm-dash-bday-row">
-                      <span className="pm-dash-bday-avatar" aria-hidden>
-                        {m.profileImageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={m.profileImageUrl} alt="" />
-                        ) : (
-                          <span className="pm-dash-bday-emoji">🎂</span>
-                        )}
-                      </span>
-                      <span className="pm-dash-bday-name">{m.name}</span>
-                      <span className="pm-dash-bday-date">{md}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
+          {/* 생일 카드는 공지 바로 아래 컴팩트 banner 로 이동 (27차C UI fix). 큰 카드 제거. */}
 
         </div>
 
