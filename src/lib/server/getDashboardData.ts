@@ -451,7 +451,8 @@ export async function getDashboardData(
     tasks.push({ label: "다음 경기 참석 투표 완료하기", href: `/matches/${upcomingMatch.id}?tab=vote` });
   }
   if (recentMatch && !myMvpVoteRes.data) {
-    tasks.push({ label: "최근 경기 MVP 투표 완료하기", href: `/matches/${recentMatch.id}?tab=record` });
+    // MVP 투표는 50차에 기록 탭 → 후기(diary) 탭으로 이동. 오늘 cron push deep link 도 함께 정정.
+    tasks.push({ label: "최근 경기 MVP 투표 완료하기", href: `/matches/${recentMatch.id}?tab=diary` });
   }
   if (profileRow && profileRow.is_profile_complete === false) {
     tasks.push({ label: "프로필 완성하기", href: "/settings" });
