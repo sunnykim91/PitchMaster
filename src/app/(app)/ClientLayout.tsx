@@ -15,7 +15,7 @@ import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from 
 import { Separator } from "@/components/ui/separator";
 import { InAppBrowserBanner } from "@/components/InAppBrowserBanner";
 import { OnboardingCoachMark } from "@/components/OnboardingCoachMark";
-import { Check, Copy, Link2, Menu, ChevronDown, ChevronRight, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Share, Sun, Moon, LogOut, Film, Megaphone } from "lucide-react";
+import { Check, Copy, Link2, Menu, ChevronDown, ChevronRight, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Share, Sun, Moon, LogOut, Film, Megaphone, UserPlus, AlertCircle, ClipboardCheck } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { cn, compactKakaoImage } from "@/lib/utils";
@@ -308,11 +308,26 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
         ? [{ href: "/admin/notice", label: "운영공지 관리", detail: "PitchMaster 운영자 전용", icon: Megaphone }]
         : []),
     ];
-    return [
+    // 운영진(STAFF+) 전용 "빠른 처리" 그룹 — dashboard task 와 별개로 햄버거에서도 직접 진입 가능.
+    // 가입 신청·벌금 관리는 매주 반복 작업인데 깊이가 깊어(설정·회비 안 카드) 사용자가 헤매기 쉬움.
+    const staffActions = isStaff
+      ? [
+          { href: "/settings?tab=team", label: "가입 신청 처리", detail: "팀 설정 안 카드", icon: UserPlus },
+          { href: "/dues?tab=penalty", label: "벌금 관리", detail: "지각·결석·미투표", icon: AlertCircle },
+          { href: "/matches", label: "출석 체크할 경기", detail: "완료 경기 PRESENT/LATE 표시", icon: ClipboardCheck },
+        ]
+      : [];
+
+    const groups = [
       { title: "운영", items: operations },
       { title: "기록 · 소통", items: recordsAndSocial },
       { title: "설정", items: settings },
     ];
+    if (staffActions.length > 0) {
+      // 운영진 그룹은 "운영" 다음(2번째 위치)에 — 자주 쓰는 액션을 위쪽에 모음.
+      groups.splice(1, 0, { title: "빠른 처리", items: staffActions });
+    }
+    return groups;
   }, [displayRole, isOperator]);
 
   // 그룹 간 sibling prefix 충돌 방지 (예: /settings/animations 진입 시

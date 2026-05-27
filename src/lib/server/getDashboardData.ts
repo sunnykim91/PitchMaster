@@ -85,7 +85,16 @@ export type DashboardData = {
  * - 일반 task 는 href 로 이동
  * - 모든 task 는 단순 Link 형태 (45차 동료평가 UI 비활성화 후속)
  */
-export type DashboardTask = { label: string; href: string };
+export type DashboardTask = {
+  label: string;
+  href: string;
+  /** 시급도 — UI 색상·정렬에 사용. high=긴급(빨강), medium=권장(노랑), low=옵션(회색) */
+  urgency?: "high" | "medium" | "low";
+  /** lucide 아이콘 이름 (DashboardClient 에서 매핑). 없으면 기본 체크 ○ */
+  icon?: "check" | "vote" | "trophy" | "user" | "wallet" | "upload" | "userPlus" | "calendar" | "clipboard" | "settings" | "users" | "alertCircle";
+  /** 왜 해야 하는지 한 줄 부가 설명 (선택). 50대 운영진 친화. */
+  description?: string;
+};
 
 const DUES_CUTOFF_DAY = 10;
 
@@ -305,6 +314,7 @@ export async function getDashboardData(
     paidCountRes,
     pendingJoinCountRes,
     completedMatchesRes,
+    penaltyRulesCountRes,
   ] = await Promise.all([
     allVoteFetchMatchIds.length > 0
       ? db.from("match_attendance").select("match_id, vote, user_id, member_id").in("match_id", allVoteFetchMatchIds)
@@ -343,6 +353,10 @@ export async function getDashboardData(
       ? db.from("team_join_requests").select("id", { count: "exact", head: true }).eq("team_id", teamId).eq("status", "PENDING")
       : Promise.resolve({ count: 0 }),
     completedMatchesQuery,
+    // 벌금 규칙 카운트 — task "벌금 규칙 미설정" 노출 판정
+    isStaff
+      ? db.from("penalty_rules").select("id", { count: "exact", head: true }).eq("team_id", teamId).eq("is_active", true)
+      : Promise.resolve({ count: 0 }),
   ]);
 
   // upcomingMatch 조립
@@ -444,18 +458,37 @@ export async function getDashboardData(
     voteCounts: voteCountsByMatch[m.id] ?? { attend: 0, absent: 0, undecided: 0 },
   }));
 
-  // tasks 조립
+  // tasks 조립 — 50대 운영진도 "지금 뭘 해야 할지" 한눈에 보이도록 urgency/icon/description 메타 동반.
+  // 정렬 우선순위: high(긴급) → medium(권장) → low(옵션).
   const tasks: DashboardTask[] = [];
 
+  // ─── 본인 액션 (모든 사용자) ───────────────────────────────
   if (upcomingMatch && !myUpcomingVoteRes.data) {
-    tasks.push({ label: "다음 경기 참석 투표 완료하기", href: `/matches/${upcomingMatch.id}?tab=vote` });
+    tasks.push({
+      label: "다음 경기 참석 투표하기",
+      href: `/matches/${upcomingMatch.id}?tab=vote`,
+      urgency: "high",
+      icon: "vote",
+      description: "팀원들이 내 참석 여부를 기다리고 있어요",
+    });
   }
   if (recentMatch && !myMvpVoteRes.data) {
-    // MVP 투표는 50차에 기록 탭 → 후기(diary) 탭으로 이동. 오늘 cron push deep link 도 함께 정정.
-    tasks.push({ label: "최근 경기 MVP 투표 완료하기", href: `/matches/${recentMatch.id}?tab=diary` });
+    tasks.push({
+      label: "최근 경기 MVP 투표하기",
+      href: `/matches/${recentMatch.id}?tab=diary`,
+      urgency: "medium",
+      icon: "trophy",
+      description: "오늘의 활약상을 한 명에게",
+    });
   }
   if (profileRow && profileRow.is_profile_complete === false) {
-    tasks.push({ label: "프로필 완성하기", href: "/settings" });
+    tasks.push({
+      label: "내 프로필 완성하기",
+      href: "/settings",
+      urgency: "medium",
+      icon: "user",
+      description: "포지션·연락처를 채우면 자동 편성이 더 정확해져요",
+    });
   }
 
   const myStatus = (myPaymentRes.data as { status?: string } | null)?.status ?? null;
@@ -463,27 +496,118 @@ export async function getDashboardData(
   const hasActiveExemption = myExemptions.some((ex) => ex.start_date <= monthEnd && (ex.end_date === null || ex.end_date >= monthStart));
   const isPaidOrExempt = myStatus === "PAID" || myStatus === "EXEMPT" || hasActiveExemption;
   if (hasDuesSettings && myTeamMemberId && todayDay >= DUES_CUTOFF_DAY && !isPaidOrExempt) {
-    tasks.push({ label: "이번 달 회비 납부 확인", href: "/dues?tab=status" });
+    tasks.push({
+      label: "이번 달 회비 납부 확인",
+      href: "/dues?tab=status",
+      urgency: "high",
+      icon: "wallet",
+      description: "통장으로 보낸 회비가 등록됐는지 확인",
+    });
   }
 
-  if (isStaff && hasDuesSettings && todayDay >= DUES_CUTOFF_DAY) {
-    const monthRecordCount = monthRecordCountRes.count ?? 0;
-    const memberCount = allMembers.length; // ACTIVE + DORMANT (이전 동작 유지)
-    const paidCount = paidCountRes.count ?? 0;
-    const paidRatio = memberCount > 0 ? paidCount / memberCount : 0;
-    if (monthRecordCount === 0 || paidRatio < 0.5) {
-      tasks.push({ label: "회비 영수증 업로드", href: "/dues?tab=bulk" });
-    }
-  }
-
+  // ─── 운영진 액션 (STAFF+) ───────────────────────────────
   if (isStaff) {
+    // 1) 가입 신청 대기
     const pendingCount = pendingJoinCountRes.count ?? 0;
     if (pendingCount > 0) {
-      // 가입 신청 처리 UI 는 /members 가 아니라 TeamSettings("/settings?tab=team") 안의 카드.
-      // 이전엔 /members 로 보내서 운영진이 회원 페이지에서 못 찾고 헤매는 사고.
-      tasks.push({ label: `가입 대기자 ${pendingCount}명 승인`, href: "/settings?tab=team" });
+      tasks.push({
+        label: `가입 대기자 ${pendingCount}명 승인`,
+        href: "/settings?tab=team",
+        urgency: "high",
+        icon: "userPlus",
+        description: "팀 설정에서 승인·거절 처리",
+      });
+    }
+
+    // 2) 가장 최근 완료 경기 출석 체크 누락 — MVP 후보 0명 사고 방지 (2026-05-27 사고 기반)
+    const recentAttendCount = (recentAttRes.data ?? []).length;
+    if (recentMatch && recentAttendCount === 0) {
+      tasks.push({
+        label: "최근 경기 출석 체크",
+        href: `/matches/${recentMatch.id}?tab=attendance`,
+        urgency: "high",
+        icon: "clipboard",
+        description: "참석·지각·불참을 표시해야 MVP·벌금이 자동 처리돼요",
+      });
+    }
+
+    // 3) 회비 영수증 업로드 (기존)
+    if (hasDuesSettings && todayDay >= DUES_CUTOFF_DAY) {
+      const monthRecordCount = monthRecordCountRes.count ?? 0;
+      const memberCount = allMembers.length;
+      const paidCount = paidCountRes.count ?? 0;
+      const paidRatio = memberCount > 0 ? paidCount / memberCount : 0;
+      if (monthRecordCount === 0 || paidRatio < 0.5) {
+        tasks.push({
+          label: "회비 영수증 업로드",
+          href: "/dues?tab=bulk",
+          urgency: "medium",
+          icon: "upload",
+          description: "통장 캡처 한 장이면 OCR 로 자동 정리",
+        });
+      }
+    }
+
+    // 4) 시즌 미설정 (신규 — 통계 누적 못 함)
+    if (seasonList.length === 0) {
+      tasks.push({
+        label: "시즌 만들기",
+        href: "/settings?tab=season",
+        urgency: "medium",
+        icon: "calendar",
+        description: "시즌이 있어야 경기·통계가 쌓여요",
+      });
+    }
+
+    // 5) 회비 설정 미완료 (신규)
+    if (!hasDuesSettings) {
+      tasks.push({
+        label: "회비 설정하기",
+        href: "/dues?tab=settings",
+        urgency: "medium",
+        icon: "settings",
+        description: "월 회비·휴면 정책을 한 번 정하면 매월 자동",
+      });
+    }
+
+    // 6) 예정 경기 없음 (신규)
+    if (!upcomingMatch) {
+      tasks.push({
+        label: "다음 경기 일정 등록",
+        href: "/matches",
+        urgency: "medium",
+        icon: "calendar",
+        description: "일정을 미리 만들면 투표·알림이 자동",
+      });
+    }
+
+    // 7) 회원 5명 미만 — 회장만 (신규)
+    if (myRole === "PRESIDENT" && registeredMemberCount > 0 && registeredMemberCount < 5) {
+      tasks.push({
+        label: `회원 ${registeredMemberCount}명 — 더 초대하기`,
+        href: "/settings?tab=team",
+        urgency: "medium",
+        icon: "users",
+        description: "초대 링크를 단톡방에 공유하면 끝",
+      });
+    }
+
+    // 8) 벌금 규칙 미설정 (신규, 옵션)
+    const penaltyRulesCount = penaltyRulesCountRes.count ?? 0;
+    if (penaltyRulesCount === 0 && hasDuesSettings) {
+      tasks.push({
+        label: "벌금 규칙 설정 (선택)",
+        href: "/dues?tab=settings",
+        urgency: "low",
+        icon: "alertCircle",
+        description: "지각·결석·미투표 자동 청구를 켜둘 수 있어요",
+      });
     }
   }
+
+  // 시급도 정렬: high → medium → low (같은 등급은 push 순서 유지)
+  const urgencyOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
+  tasks.sort((a, b) => (urgencyOrder[a.urgency ?? "medium"] ?? 1) - (urgencyOrder[b.urgency ?? "medium"] ?? 1));
 
   // ── Stage 3: completedMatches 의존 — 시즌 전적 + 본인 시즌 통계 병렬 ──
   // getRecordsData 와 동일 기준 사용:

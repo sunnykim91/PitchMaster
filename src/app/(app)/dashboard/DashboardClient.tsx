@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ChevronRight, Loader2 } from "lucide-react";
+import { ChevronRight, Loader2, Vote, Trophy, User, Wallet, Upload, UserPlus, Calendar, ClipboardCheck, Settings, Users, AlertCircle, CheckCircle2, ChevronDown as ChevronDownIcon } from "lucide-react";
 import { GA } from "@/lib/analytics";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
@@ -80,7 +80,13 @@ type BirthdayMember = {
   profileImageUrl: string | null;
 };
 
-type DashboardTask = { label: string; href: string };
+type DashboardTask = {
+  label: string;
+  href: string;
+  urgency?: "high" | "medium" | "low";
+  icon?: "check" | "vote" | "trophy" | "user" | "wallet" | "upload" | "userPlus" | "calendar" | "clipboard" | "settings" | "users" | "alertCircle";
+  description?: string;
+};
 
 type DashboardData = {
   upcomingMatch: UpcomingMatch | null;
@@ -775,10 +781,11 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
 
         {/* Side rail · 액션 우선 순서: 미완료 → 회비 → 투표 → 시즌기록 → 시즌전적 */}
         <div className="pm-dash-col pm-dash-col--side">
-          {/* H · 미완료 항목 — 가장 위로 (액션 필요) */}
+          {/* H · 미완료 항목 — 가장 위로 (액션 필요)
+           * 50대 운영진 친화: 시급도 색상(빨강/노랑/회색) + 아이콘 + 1줄 설명 + 5건 초과 시 접기. */}
           <section className="pm-section">
             <div className="pm-section-h">
-              <span>미완료 항목</span>
+              <span>해야 할 일</span>
               {tasks.length > 0 ? (
                 <span className="pm-section-count">{tasks.length}건</span>
               ) : (
@@ -788,17 +795,7 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
               )}
             </div>
             {tasks.length > 0 ? (
-              <div className="pm-dash-todo">
-                {tasks.map((t, i) => (
-                  <Link key={i} href={t.href} className="pm-dash-todo-item" style={{ textDecoration: "none" }}>
-                    <span className="pm-dash-todo-check" aria-hidden />
-                    <span className="pm-dash-todo-label">{t.label}</span>
-                    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
-                      <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </Link>
-                ))}
-              </div>
+              <TasksList tasks={tasks} />
             ) : (
               <div className="pm-dash-todo-allclear" role="status">
                 <span className="pm-dash-todo-allclear-icon" aria-hidden>
@@ -1117,5 +1114,67 @@ function DashboardWeather({ date, location }: { date: string; location: string |
       <span style={{ fontSize: 12, lineHeight: 1 }}>{weather.icon}</span>
       {weather.temp != null ? <span style={{ fontWeight: 600 }}>{weather.temp}°</span> : <span>{weather.description}</span>}
     </span>
+  );
+}
+
+/* ─── Tasks list (50대 운영진 친화 강화 UI) ───
+ * 시급도 색상(빨강/노랑/회색) + 아이콘 + 1줄 설명. 5건 초과는 기본 접고 "더 보기" 토글. */
+const ICON_MAP = {
+  check: CheckCircle2, vote: Vote, trophy: Trophy, user: User, wallet: Wallet,
+  upload: Upload, userPlus: UserPlus, calendar: Calendar, clipboard: ClipboardCheck,
+  settings: Settings, users: Users, alertCircle: AlertCircle,
+} as const;
+const URGENCY_COLOR = {
+  high: "hsl(var(--destructive))",
+  medium: "hsl(var(--warning))",
+  low: "hsl(var(--muted-foreground))",
+} as const;
+const COLLAPSE_THRESHOLD = 5;
+
+function TasksList({ tasks }: { tasks: DashboardTask[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const visible = expanded || tasks.length <= COLLAPSE_THRESHOLD ? tasks : tasks.slice(0, COLLAPSE_THRESHOLD);
+  const hidden = Math.max(0, tasks.length - COLLAPSE_THRESHOLD);
+
+  return (
+    <div className="pm-dash-todo">
+      {visible.map((t, i) => {
+        const Icon = ICON_MAP[t.icon ?? "check"];
+        const color = URGENCY_COLOR[t.urgency ?? "medium"];
+        return (
+          <Link
+            key={`${t.href}-${i}`}
+            href={t.href}
+            className="pm-dash-todo-item"
+            style={{ textDecoration: "none", borderLeft: `3px solid ${color}` }}
+          >
+            <span
+              className="pm-dash-todo-icon"
+              aria-hidden
+              style={{ color, display: "inline-flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0 }}
+            >
+              <Icon className="h-4 w-4" />
+            </span>
+            <span className="pm-dash-todo-body" style={{ minWidth: 0, flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+              <span className="pm-dash-todo-label" style={{ fontWeight: 600, fontSize: 13.5 }}>{t.label}</span>
+              {t.description && (
+                <span style={{ fontSize: 11.5, color: "hsl(var(--muted-foreground))", lineHeight: 1.3 }}>{t.description}</span>
+              )}
+            </span>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+          </Link>
+        );
+      })}
+      {hidden > 0 && !expanded && (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="flex items-center justify-center gap-1 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronDownIcon className="h-3.5 w-3.5" />
+          {hidden}건 더 보기
+        </button>
+      )}
+    </div>
   );
 }
