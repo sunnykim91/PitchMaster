@@ -478,7 +478,9 @@ export async function getDashboardData(
   if (isStaff) {
     const pendingCount = pendingJoinCountRes.count ?? 0;
     if (pendingCount > 0) {
-      tasks.push({ label: `가입 대기자 ${pendingCount}명 승인`, href: "/members" });
+      // 가입 신청 처리 UI 는 /members 가 아니라 TeamSettings("/settings?tab=team") 안의 카드.
+      // 이전엔 /members 로 보내서 운영진이 회원 페이지에서 못 찾고 헤매는 사고.
+      tasks.push({ label: `가입 대기자 ${pendingCount}명 승인`, href: "/settings?tab=team" });
     }
   }
 
