@@ -4228,10 +4228,14 @@ input[type="datetime-local"].pm-input {
   gap: 4px;
 }
 .pm-dash-todo-item {
-  display: grid;
-  grid-template-columns: 20px 1fr 14px;
-  gap: 12px;
+  /* 68차C: grid(20·1fr·14) → flex 전환.
+   * 새 task UI 는 (아이콘 + body(label+description) + chevron) 3컬럼이고,
+   * body 안에 두 줄(label/description) 이 들어가야 함. grid 의 align-items:center 가
+   * body 전체를 세로 중앙으로 묶어 label/description 정렬이 어색해지는 문제 회피.
+   * align-items:center + body 내부 flex column 으로 시각적 베이스라인 일치. */
+  display: flex;
   align-items: center;
+  gap: 10px;
   padding: 11px 12px;
   border-radius: 10px;
   background: hsl(var(--background) / 0.5);
@@ -4241,6 +4245,14 @@ input[type="datetime-local"].pm-input {
   width: 100%;
   transition: background 200ms;
 }
+/* 새 task body — 라벨 + 설명 두 줄 column. min-width:0 으로 라벨 ellipsis/잘림 방지. */
+.pm-dash-todo-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
 .pm-dash-todo-item:hover { background: hsl(var(--accent) / 0.5); }
 .pm-dash-todo-check {
   width: 20px; height: 20px;
@@ -4248,6 +4260,8 @@ input[type="datetime-local"].pm-input {
   border: 1.5px solid hsl(var(--primary) / 0.5);
   background: hsl(var(--primary) / 0.16);
   position: relative;
+  flex-shrink: 0;
+  margin-top: 1px; /* lucide 아이콘 line-height 보정 — 라벨 첫 줄과 시각 정렬 */
 }
 .pm-dash-todo-check::after {
   content: '';
@@ -4344,9 +4358,11 @@ input[type="datetime-local"].pm-input {
   font-weight: 500;
   color: hsl(var(--foreground));
   letter-spacing: -0.005em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* 68차C: nowrap+ellipsis → normal 줄바꿈. 새 task 라벨이 description 과 함께 노출되어
+   * 길이 잘림이 시각 사고. 한글은 word-break:keep-all 로 단어 단위 줄바꿈. */
+  white-space: normal;
+  word-break: keep-all;
+  line-height: 1.35;
 }
 .pm-dash-todo-meta {
   font-family: var(--font-display);

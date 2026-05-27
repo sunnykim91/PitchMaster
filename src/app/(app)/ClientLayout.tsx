@@ -313,8 +313,10 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
     const staffActions = isStaff
       ? [
           { href: "/settings?tab=team", label: "가입 신청 처리", detail: "팀 설정 안 카드", icon: UserPlus },
-          { href: "/dues?tab=penalty", label: "벌금 관리", detail: "지각·결석·미투표", icon: AlertCircle },
-          { href: "/matches", label: "출석 체크할 경기", detail: "완료 경기 PRESENT/LATE 표시", icon: ClipboardCheck },
+          // /dues?tab=penalty 는 penalty_rules 0건일 때 탭 자체가 안 보임(DuesClient show 조건).
+          // 신규 팀 사용자가 클릭해도 다른 탭으로 fallback 되어 혼란 → settings 탭으로 보내 규칙 만들도록.
+          { href: "/dues?tab=settings", label: "벌금 관리", detail: "규칙 설정·지각·결석·미투표", icon: AlertCircle },
+          { href: "/matches", label: "출석 체크할 경기", detail: "완료 경기 출석 표시", icon: ClipboardCheck },
         ]
       : [];
 
