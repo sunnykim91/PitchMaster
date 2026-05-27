@@ -462,7 +462,7 @@ function MatchDiaryTabInner({
           <CardContent>
             {isAttendFallback && (
               <p className="mb-3 rounded-md bg-[hsl(var(--info))]/10 px-2.5 py-1.5 text-[12.5px] leading-snug text-[hsl(var(--info))]">
-                출석 체크가 아직 안 됐어요. 우선 참석 투표자로 후보를 띄웠습니다. 출석 탭에서 PRESENT/LATE 처리하면 실제 참석자만 후보로 좁혀집니다.
+                출석 체크가 아직 안 됐어요. 일단 참석 투표한 분으로 후보를 띄웠습니다. 출석 탭에서 처리하면 실제 참석한 분으로 후보가 좁혀집니다.
               </p>
             )}
             {/* 투표율 / 모드 안내 */}
