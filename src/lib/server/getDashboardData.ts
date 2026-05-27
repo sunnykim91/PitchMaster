@@ -78,6 +78,20 @@ export type DashboardData = {
     global: { id: string; title: string; createdAt: string } | null;
     team: { id: string; title: string; createdAt: string }[];
   };
+  /** 신규 회장 5단계 온보딩 — Phase 2 (68차C).
+   *  각 step 의 done 여부는 SSR 에서 계산. 5/5 완료 시 위자드 자동 dismiss 처리는 클라이언트. */
+  onboardingSteps: OnboardingStep[];
+};
+
+export type OnboardingStep = {
+  key: "team_created" | "members_invited" | "first_match" | "dues_setup" | "shared_to_chat";
+  label: string;
+  description: string;
+  done: boolean;
+  /** 행동 버튼 href (done=true 면 무시) */
+  href?: string;
+  /** 카카오 공유 같은 액션 — href 대신 클라이언트에서 처리. 'kakaoShare' 등 */
+  action?: "kakaoShare";
 };
 
 /**
@@ -130,6 +144,7 @@ export async function getDashboardData(
     hasDuesSettings: false, totalMatches: 0, registeredMemberCount: 0,
     mySeasonStats: null,
     noticePins: { global: null, team: [] },
+    onboardingSteps: [],
   };
 
   const nowIso = new Date().toISOString();
@@ -719,6 +734,46 @@ export async function getDashboardData(
     team: teamNoticeRows.map((r) => ({ id: r.id, title: r.title, createdAt: r.created_at })),
   };
 
+  // ─── 신규 회장 5단계 온보딩 (Phase 2, 68차C) ───
+  // 각 단계 자동 감지 — DB·기존 변수만 사용 (추가 쿼리 0).
+  // "단톡방 공유"는 서버에서 알 수 없어 done=false 고정, 클라이언트에서 localStorage 로 마지막 단계만 보강.
+  const onboardingSteps: OnboardingStep[] = [
+    {
+      key: "team_created",
+      label: "팀 만들기",
+      description: "팀이 생성되었어요",
+      done: true, // 이 SSR이 도달했다는 건 팀 이미 존재
+    },
+    {
+      key: "members_invited",
+      label: "회원 3명 이상 초대",
+      description: `현재 ${registeredMemberCount}명${registeredMemberCount >= 3 ? "" : " — 단톡방 초대 코드 공유"}`,
+      done: registeredMemberCount >= 3,
+      action: "kakaoShare",
+    },
+    {
+      key: "first_match",
+      label: "첫 경기 일정 등록",
+      description: totalMatches > 0 ? `${totalMatches}개 등록됨` : "다음 경기를 만들면 자동 투표가 시작돼요",
+      done: totalMatches > 0,
+      href: "/matches",
+    },
+    {
+      key: "dues_setup",
+      label: "회비 설정",
+      description: hasDuesSettings ? "설정 완료" : "월 회비·휴면 정책 한 번만 정해두면 매월 자동",
+      done: hasDuesSettings,
+      href: "/dues?tab=settings",
+    },
+    {
+      key: "shared_to_chat",
+      label: "단톡방에 앱 공유",
+      description: "회원들이 알림을 받으려면 한 번 공유해주세요",
+      done: false, // 클라이언트 localStorage 에서 덮어씀
+      action: "kakaoShare",
+    },
+  ];
+
   return {
     upcomingMatch,
     recentResult,
@@ -732,5 +787,6 @@ export async function getDashboardData(
     registeredMemberCount,
     mySeasonStats,
     noticePins,
+    onboardingSteps,
   };
 }

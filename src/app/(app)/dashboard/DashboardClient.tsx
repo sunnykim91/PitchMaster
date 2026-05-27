@@ -112,6 +112,8 @@ type DashboardData = {
     global: { id: string; title: string; createdAt: string } | null;
     team: { id: string; title: string; createdAt: string }[];
   };
+  /** 신규 회장 5단계 온보딩 (Phase 2 — 68차C) */
+  onboardingSteps?: import("@/components/onboarding/WelcomeCard").OnboardingStep[];
 };
 
 const emptyData: DashboardData = {
@@ -414,13 +416,14 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
           />
         )}
 
-        {/* WelcomeCard created (Onboarding Wizard) */}
+        {/* WelcomeCard created (Onboarding Wizard) — Phase 2 (68차C): SSR onboardingSteps 전달. */}
         {showWizard && inviteCode && (
           <WelcomeCard
             variant="created"
             teamName={teamName || "우리 팀"}
             teamId={teamId ?? ""}
             inviteCode={inviteCode}
+            steps={data.onboardingSteps}
             onDismiss={dismissWizard}
           />
         )}

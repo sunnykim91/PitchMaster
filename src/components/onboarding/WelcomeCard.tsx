@@ -2,7 +2,7 @@
 
 import "@/app/onboarding/onboarding.css";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { shareTeamInvite } from "@/lib/kakaoShare";
 
 export type WelcomeMatch = {
@@ -11,12 +11,24 @@ export type WelcomeMatch = {
   where: string;
 };
 
+/** Phase 2 (68차C) — 신규 회장 5단계 온보딩 step.
+ * getDashboardData.OnboardingStep 과 동일 구조. 별도 type 정의는 import 의존 회피용. */
+export type OnboardingStep = {
+  key: "team_created" | "members_invited" | "first_match" | "dues_setup" | "shared_to_chat";
+  label: string;
+  description: string;
+  done: boolean;
+  href?: string;
+  action?: "kakaoShare";
+};
+
 export type WelcomeCardProps =
   | {
       variant: "created";
       teamName: string;
       teamId: string;
       inviteCode: string;
+      steps?: OnboardingStep[];
       onDismiss: () => void;
     }
   | {
@@ -62,16 +74,45 @@ function Chip() {
   );
 }
 
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+      <path
+        d="M3 7l3 3 5-6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function WelcomeCreated({
   teamName,
   inviteCode,
+  steps,
   onDismiss,
+  teamId,
 }: {
   teamName: string;
   inviteCode: string;
+  steps?: OnboardingStep[];
   onDismiss: () => void;
+  teamId: string;
 }) {
   const [copied, setCopied] = useState(false);
+  // 단톡방 공유는 서버에서 추적 불가 → 클라이언트 localStorage 로 마지막 단계만 보강
+  const [sharedToChat, setSharedToChat] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !teamId) return;
+    try {
+      if (localStorage.getItem(`team_shared_to_chat:${teamId}`) === "1") {
+        setSharedToChat(true);
+      }
+    } catch { /* localStorage 차단 환경 무시 */ }
+  }, [teamId]);
 
   const onCopy = () => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
@@ -83,7 +124,20 @@ function WelcomeCreated({
 
   const onShare = () => {
     shareTeamInvite({ teamName: teamName || "우리 팀", inviteCode });
+    // 공유 버튼 클릭 = "단톡방 공유" 단계 완료로 간주
+    if (typeof window !== "undefined" && teamId) {
+      try { localStorage.setItem(`team_shared_to_chat:${teamId}`, "1"); } catch {}
+    }
+    setSharedToChat(true);
   };
+
+  // SSR steps 와 클라이언트 sharedToChat 머지
+  const effectiveSteps: OnboardingStep[] = (steps ?? []).map((s) =>
+    s.key === "shared_to_chat" ? { ...s, done: s.done || sharedToChat } : s
+  );
+  const doneCount = effectiveSteps.filter((s) => s.done).length;
+  const totalCount = effectiveSteps.length;
+  const progress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
   return (
     <div className="pm-welcome">
@@ -140,26 +194,58 @@ function WelcomeCreated({
         </div>
       </div>
 
-      <div className="pm-next">
-        <div className="pm-next-label">다음 할 일</div>
-        <div className="pm-next-actions">
-          <Link className="pm-next-action" href="/members">
-            <span className="pm-next-num">01</span>
-            <span>회원 일괄 등록</span>
-            <ArrowSm />
-          </Link>
-          <Link className="pm-next-action" href="/matches">
-            <span className="pm-next-num">02</span>
-            <span>첫 경기 만들기</span>
-            <ArrowSm />
-          </Link>
-          <Link className="pm-next-action" href="/rules">
-            <span className="pm-next-num">03</span>
-            <span>회칙 작성</span>
-            <ArrowSm />
-          </Link>
+      {/* 5단계 체크리스트 (Phase 2 — 68차C) */}
+      {effectiveSteps.length > 0 && (
+        <div className="pm-steps">
+          <div className="pm-steps-h">
+            <span className="pm-steps-label">운영 시작 체크리스트</span>
+            <span className="pm-steps-count">{doneCount}/{totalCount}</span>
+          </div>
+          <div className="pm-steps-progress" aria-hidden>
+            <div className="pm-steps-progress-bar" style={{ width: `${progress}%` }} />
+          </div>
+          <ul className="pm-steps-list">
+            {effectiveSteps.map((step, i) => {
+              const inner = (
+                <>
+                  <span className={`pm-steps-check ${step.done ? "pm-steps-check--done" : ""}`} aria-hidden>
+                    {step.done ? <CheckIcon /> : <span className="pm-steps-num">{i + 1}</span>}
+                  </span>
+                  <span className="pm-steps-body">
+                    <span className={`pm-steps-title ${step.done ? "pm-steps-title--done" : ""}`}>{step.label}</span>
+                    <span className="pm-steps-desc">{step.description}</span>
+                  </span>
+                  {!step.done && <ArrowSm />}
+                </>
+              );
+
+              if (step.done) {
+                return (
+                  <li key={step.key} className="pm-steps-item pm-steps-item--done">
+                    {inner}
+                  </li>
+                );
+              }
+              if (step.action === "kakaoShare") {
+                return (
+                  <li key={step.key}>
+                    <button type="button" className="pm-steps-item" onClick={onShare}>
+                      {inner}
+                    </button>
+                  </li>
+                );
+              }
+              return (
+                <li key={step.key}>
+                  <Link className="pm-steps-item" href={step.href ?? "#"}>
+                    {inner}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -242,7 +328,9 @@ export default function WelcomeCard(props: WelcomeCardProps) {
       <div className="pm-welcome-wrap">
         <WelcomeCreated
           teamName={props.teamName}
+          teamId={props.teamId}
           inviteCode={props.inviteCode}
+          steps={props.steps}
           onDismiss={props.onDismiss}
         />
       </div>
