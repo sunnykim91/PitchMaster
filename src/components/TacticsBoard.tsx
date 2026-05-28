@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formationTemplates, getFormationsForSportAndCount, getFutsalFieldCounts } from "@/lib/formations";
 import { useApi, apiMutate } from "@/lib/useApi";
-import type { DetailedPosition, SportType } from "@/lib/types";
+import type { DetailedPosition } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,94 +15,20 @@ import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { RotateCcw, Coffee, Share2, Copy, BarChart3, ChevronDown } from "lucide-react";
+import type {
+  Player,
+  Placement,
+  BoardState,
+  TeamSettings,
+  TacticsBoardProps,
+  SquadRow,
+  SquadsApiResponse,
+  TeamApiResponse,
+} from "./TacticsBoard.types";
+import { SAVE_DEBOUNCE_MS, clamp, isPositionMatched } from "./TacticsBoard.utils";
 
-type Player = {
-  id: string;
-  name: string;
-  role: DetailedPosition;
-  /** 멤버 프로필의 전체 선호 포지션 배열 (슬롯 포지션 매칭 표시용) */
-  preferredPositions?: DetailedPosition[];
-};
-
-/** DetailedPosition → 카테고리(GK/DF/MF/FW) */
-function positionCategory(role: DetailedPosition): "GK" | "DF" | "MF" | "FW" {
-  if (role === "GK") return "GK";
-  if (["RB", "RCB", "CB", "LCB", "LB", "RWB", "LWB"].includes(role)) return "DF";
-  if (["RDM", "LDM", "CDM", "RCM", "CM", "LCM", "CAM", "RAM", "LAM", "RM", "LM", "MF"].includes(role)) return "MF";
-  return "FW"; // RW, LW, CF, ST, RS, LS, FW
-}
-
-/** 선수의 선호 포지션 중 하나라도 슬롯 포지션과 같은 카테고리면 true */
-function isPositionMatched(player: Player | null | undefined, slotRole: DetailedPosition): boolean {
-  if (!player) return false;
-  const prefs = player.preferredPositions && player.preferredPositions.length > 0
-    ? player.preferredPositions
-    : [player.role];
-  const slotCat = positionCategory(slotRole);
-  return prefs.some((p) => positionCategory(p) === slotCat);
-}
-
-type TacticsBoardProps = {
-  matchId: string;
-  roster: Player[];
-  quarterCount: number;
-  sportType?: SportType;
-  /** 경기별 참가 인원 (축구 8/9/10/11, 풋살 3~6). 미지정 시 11(축구) 또는 기존 풋살 UI */
-  playerCount?: number;
-  teamSettings?: TeamSettings;
-  initialSquads?: SquadRow[]; // 외부에서 주입 시 API fetch skip
-  defaultFormationId?: string; // 팀 기본 포메이션
-  readOnly?: boolean; // MEMBER: 조회만 가능
-  side?: "A" | "B"; // 자체전 팀 구분
-};
-
-type Placement = {
-  playerId: string;
-  x: number;
-  y: number;
-  secondPlayerId?: string; // 0.5Q 후반 선수
-};
-
-type BoardState = {
-  formationId: string;
-  placements: Record<string, Placement | null>;
-};
-
-export type UniformSet = { primary: string; secondary: string; pattern: string };
-export type TeamSettings = {
-  uniformPrimary: string;
-  uniformSecondary: string;
-  uniformPattern?: "SOLID" | "STRIPES_VERTICAL" | "STRIPES_HORIZONTAL" | "STRIPES_DIAGONAL";
-  uniforms?: { home?: UniformSet; away?: UniformSet; third?: UniformSet | null } | null;
-};
-
-type SquadRow = {
-  id: string;
-  match_id: string;
-  quarter_number: number;
-  formation: string;
-  positions: Record<string, Placement | null>;
-};
-
-type SquadsApiResponse = {
-  squads: SquadRow[];
-};
-
-type TeamApiResponse = {
-  team: {
-    name: string;
-    logo_url: string;
-    invite_code: string;
-    uniform_primary: string;
-    uniform_secondary: string;
-    uniform_pattern: TeamSettings["uniformPattern"];
-    uniforms?: TeamSettings["uniforms"];
-  };
-};
-
-const SAVE_DEBOUNCE_MS = 300;
-
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+// 외부 사용자(MatchTacticsTab)가 TeamSettings를 default import에서 같이 받을 수 있게 re-export
+export type { TeamSettings, UniformSet } from "./TacticsBoard.types";
 
 export default function TacticsBoard({ matchId, roster, quarterCount, sportType = "SOCCER", playerCount, teamSettings: teamSettingsProp, initialSquads, defaultFormationId: teamDefaultFormationId, readOnly = false, side }: TacticsBoardProps) {
   const confirm = useConfirm();
