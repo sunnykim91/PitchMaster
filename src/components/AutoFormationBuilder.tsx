@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   getFormationsForSportAndCount,
   formationTemplates,
@@ -836,6 +836,87 @@ function scheduleQuarters(
   return results;
 }
 
+/* ── Player Row (memoized) ── */
+// 50명 팀에서 쿼터 +/- 클릭마다 50개 카드 전체 re-render되던 비용 fix.
+// player·idx·quarterCount·gksLength·handler reference 동일하면 자식 re-render skip.
+
+type PlayerAssignmentRowProps = {
+  player: PlayerAssignment;
+  idx: number;
+  quarterCount: number;
+  gksLength: number;
+  onToggleGK: (id: string) => void;
+  onChangeQuarters: (id: string, q: number) => void;
+};
+
+const PlayerAssignmentRow = memo(function PlayerAssignmentRow({
+  player, idx, quarterCount, gksLength, onToggleGK, onChangeQuarters,
+}: PlayerAssignmentRowProps) {
+  const positions = player.preferredPositions ?? [player.preferredPosition];
+  return (
+    <div
+      className={cn("rounded-xl p-3 transition-colors", idx % 2 === 0 ? "bg-secondary/30" : "bg-secondary/15")}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center gap-2">
+            <span className="truncate text-sm font-semibold">{player.name}</span>
+            {positions.includes("GK" as PreferredPosition) && (
+              <button
+                type="button"
+                onClick={() => onToggleGK(player.id)}
+                className={cn(
+                  "flex items-center gap-1 rounded-md px-2 py-0.5 text-[12px] font-bold transition-all",
+                  player.isGK
+                    ? "bg-amber-500/30 text-amber-700 dark:text-amber-400"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                )}
+              >
+                🥅 GK
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {positions.filter((pos) => pos !== "GK").map((pos) => (
+              <Badge key={pos} className={cn("text-[12px] px-1.5 py-0 border-0", POS_COLOR[pos])}>
+                {POS_LABEL[pos] ?? pos}
+              </Badge>
+            ))}
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {player.isGK ? (
+            <span className="min-w-[52px] text-center text-xs font-semibold text-amber-700 dark:text-amber-400">
+              {gksLength <= 1 ? `${quarterCount}Q` : `${Math.ceil(quarterCount / gksLength)}Q`}
+            </span>
+          ) : (
+            <>
+              <button type="button"
+                onClick={() => onChangeQuarters(player.id, Math.max(0, player.quarters - 0.5))}
+                disabled={player.quarters <= 0}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/50 text-sm text-muted-foreground transition-colors hover:bg-secondary disabled:opacity-30"
+              >−</button>
+              <div className={cn("flex h-8 w-14 shrink-0 items-center justify-center rounded-lg text-sm font-bold",
+                player.quarters === quarterCount ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]" :
+                player.quarters === 0 ? "bg-muted text-muted-foreground" :
+                player.quarters >= quarterCount * 0.75 ? "bg-primary/20 text-primary" :
+                "bg-[hsl(var(--accent))]/20 text-[hsl(var(--accent))]"
+              )}>
+                {player.quarters}Q
+              </div>
+              <button type="button"
+                onClick={() => onChangeQuarters(player.id, Math.min(quarterCount, player.quarters + 0.5))}
+                disabled={player.quarters >= quarterCount}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/50 text-sm text-muted-foreground transition-colors hover:bg-secondary disabled:opacity-30"
+              >+</button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
 /* ── Component ── */
 
 export default function AutoFormationBuilder({
@@ -1100,14 +1181,15 @@ export default function AutoFormationBuilder({
     [quarterCount],
   );
 
-  function setPlayerQuarters(id: string, q: number) {
+  // useCallback으로 안정화 — PlayerAssignmentRow memo 효과를 위해 prop reference 유지
+  const setPlayerQuarters = useCallback((id: string, q: number) => {
     setAssignments((prev) =>
       prev.map((a) => (a.id === id ? { ...a, quarters: q } : a)),
     );
     setResults(null);
-  }
+  }, []);
 
-  function toggleGK(id: string) {
+  const toggleGK = useCallback((id: string) => {
     setAssignments((prev) =>
       prev.map((a) => {
         if (a.id !== id) return a;
@@ -1125,7 +1207,7 @@ export default function AutoFormationBuilder({
       }),
     );
     setResults(null);
-  }
+  }, [quarterCount]);
 
   async function generate() {
     // 이미 전술판에 편성이 있으면 덮어쓰기 확인
@@ -1564,68 +1646,15 @@ export default function AutoFormationBuilder({
         {/* ── ⑤ Player list ── */}
         <div className="space-y-1">
           {sortedAssignments.map((player, idx) => (
-            <div
+            <PlayerAssignmentRow
               key={player.id}
-              className={cn("rounded-xl p-3 transition-colors", idx % 2 === 0 ? "bg-secondary/30" : "bg-secondary/15")}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex items-center gap-2">
-                    <span className="truncate text-sm font-semibold">{player.name}</span>
-                    {(player.preferredPositions ?? [player.preferredPosition]).includes("GK" as PreferredPosition) && (
-                      <button
-                        type="button"
-                        onClick={() => toggleGK(player.id)}
-                        className={cn(
-                          "flex items-center gap-1 rounded-md px-2 py-0.5 text-[12px] font-bold transition-all",
-                          player.isGK
-                            ? "bg-amber-500/30 text-amber-700 dark:text-amber-400"
-                            : "bg-muted text-muted-foreground hover:bg-muted/80"
-                        )}
-                      >
-                        🥅 GK
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {(player.preferredPositions ?? [player.preferredPosition]).filter((pos) => pos !== "GK").map((pos) => (
-                      <Badge key={pos} className={cn("text-[12px] px-1.5 py-0 border-0", POS_COLOR[pos])}>
-                        {POS_LABEL[pos] ?? pos}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                {/* Quarter +/- buttons */}
-                <div className="flex shrink-0 items-center gap-1.5">
-                  {player.isGK ? (
-                    <span className="min-w-[52px] text-center text-xs font-semibold text-amber-700 dark:text-amber-400">
-                      {gks.length <= 1 ? `${quarterCount}Q` : `${Math.ceil(quarterCount / gks.length)}Q`}
-                    </span>
-                  ) : (
-                    <>
-                      <button type="button"
-                        onClick={() => setPlayerQuarters(player.id, Math.max(0, player.quarters - 0.5))}
-                        disabled={player.quarters <= 0}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/50 text-sm text-muted-foreground transition-colors hover:bg-secondary disabled:opacity-30"
-                      >−</button>
-                      <div className={cn("flex h-8 w-14 shrink-0 items-center justify-center rounded-lg text-sm font-bold",
-                        player.quarters === quarterCount ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]" :
-                        player.quarters === 0 ? "bg-muted text-muted-foreground" :
-                        player.quarters >= quarterCount * 0.75 ? "bg-primary/20 text-primary" :
-                        "bg-[hsl(var(--accent))]/20 text-[hsl(var(--accent))]"
-                      )}>
-                        {player.quarters}Q
-                      </div>
-                      <button type="button"
-                        onClick={() => setPlayerQuarters(player.id, Math.min(quarterCount, player.quarters + 0.5))}
-                        disabled={player.quarters >= quarterCount}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/50 text-sm text-muted-foreground transition-colors hover:bg-secondary disabled:opacity-30"
-                      >+</button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
+              player={player}
+              idx={idx}
+              quarterCount={quarterCount}
+              gksLength={gks.length}
+              onToggleGK={toggleGK}
+              onChangeQuarters={setPlayerQuarters}
+            />
           ))}
 
           {assignments.length === 0 && (
