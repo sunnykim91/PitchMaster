@@ -56,7 +56,7 @@ export const CommentSection = memo(function CommentSection({
               <div key={comment.id} className="flex items-start gap-2 py-1.5 group">
                 <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5 overflow-hidden ring-1 ring-border">
                   {comment.authorProfileImage ? (
-                    <img src={comment.authorProfileImage} alt="" className="h-full w-full object-cover" />
+                    <img src={comment.authorProfileImage} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                   ) : (
                     <span className="text-xs font-bold text-muted-foreground">
                       {comment.authorName?.charAt(0) || "?"}

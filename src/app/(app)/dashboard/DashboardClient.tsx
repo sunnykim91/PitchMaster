@@ -458,7 +458,7 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
                   <span className="pm-dash-bday-chip-avatar" aria-hidden>
                     {m.profileImageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={m.profileImageUrl} alt="" />
+                      <img src={m.profileImageUrl} alt="" loading="lazy" decoding="async" />
                     ) : (
                       <span className="pm-dash-bday-chip-initial">{(m.name ?? "?").slice(0, 1)}</span>
                     )}

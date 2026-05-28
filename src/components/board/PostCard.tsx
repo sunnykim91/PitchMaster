@@ -87,7 +87,7 @@ export const PostCard = memo(function PostCard({
             {/* Avatar */}
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-border">
               {post.authorProfileImage ? (
-                <img src={post.authorProfileImage} alt="" className="h-full w-full object-cover" />
+                <img src={post.authorProfileImage} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
               ) : (
                 <span className="text-xs font-bold text-primary">
                   {post.author?.charAt(0) || "?"}
