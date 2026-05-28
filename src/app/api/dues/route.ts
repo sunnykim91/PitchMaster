@@ -7,6 +7,7 @@ import {
 } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
+import { validateFreeText } from "@/lib/validators/safeText";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -48,6 +49,11 @@ export async function POST(request: NextRequest) {
   }
   if (body.type !== "INCOME" && body.type !== "EXPENSE") {
     return apiError("type은 INCOME 또는 EXPENSE여야 합니다");
+  }
+
+  if (body.description) {
+    const descCheck = validateFreeText(body.description, { maxLength: 200, fieldLabel: "내용" });
+    if (!descCheck.ok) return apiError(descCheck.reason);
   }
 
   const recordedAtValue = body.recordedAt ? `${body.recordedAt}T${body.recordedTime || "00:00"}:00+09:00` : new Date().toISOString();
@@ -170,6 +176,11 @@ export async function PUT(request: NextRequest) {
   // amount가 전달된 경우 양수 검증
   if (amount !== undefined && (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0)) {
     return apiError("금액은 0보다 큰 숫자여야 합니다");
+  }
+
+  if (description !== undefined && description !== null && description !== "") {
+    const descCheck = validateFreeText(description, { maxLength: 200, fieldLabel: "내용" });
+    if (!descCheck.ok) return apiError(descCheck.reason);
   }
 
   const updates: Record<string, unknown> = {};

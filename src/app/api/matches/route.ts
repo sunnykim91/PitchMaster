@@ -5,6 +5,7 @@ import { PERMISSIONS } from "@/lib/permissions";
 import { sendTeamPush } from "@/lib/server/sendPush";
 import { autoCompleteTeamMatches } from "@/lib/server/autoCompleteMatches";
 import { invalidateTeamStats } from "@/lib/server/aiTeamStats";
+import { validateFreeText } from "@/lib/validators/safeText";
 
 /** datetime-local 값("2026-04-02T17:00")에 KST 오프셋이 없으면 붙여줌 */
 function toKSTTimestamp(v: string): string {
@@ -138,6 +139,11 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  if (body.opponent) {
+    const oppCheck = validateFreeText(body.opponent, { maxLength: 50, fieldLabel: "상대팀 이름" });
+    if (!oppCheck.ok) return apiError(oppCheck.reason);
+  }
+
   const { data, error } = await db
     .from("matches")
     .insert({
@@ -223,6 +229,11 @@ export async function PUT(request: NextRequest) {
     if (current?.status === "COMPLETED") {
       return apiError("완료된 경기는 예정 상태로 되돌릴 수 없습니다");
     }
+  }
+
+  if (body.opponent !== undefined && body.opponent !== null && body.opponent !== "") {
+    const oppCheck = validateFreeText(body.opponent, { maxLength: 50, fieldLabel: "상대팀 이름" });
+    if (!oppCheck.ok) return apiError(oppCheck.reason);
   }
 
   const updates: Record<string, unknown> = {};
