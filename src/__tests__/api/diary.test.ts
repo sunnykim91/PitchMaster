@@ -49,7 +49,7 @@ describe("GET /api/diary", () => {
   it("400: matchId 누락", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest());
     expect(res.status).toBe(400);
@@ -70,7 +70,7 @@ describe("GET /api/diary", () => {
       ["matches", { id: "m1" }],
       ["match_diaries", mockDiary],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
     expect(res.status).toBe(200);
@@ -84,7 +84,7 @@ describe("GET /api/diary", () => {
       ["matches", { id: "m1" }],
       ["match_diaries", null],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
     expect(res.status).toBe(200);
@@ -98,7 +98,7 @@ describe("GET /api/diary", () => {
       ["matches", { id: "m1" }],
       ["match_diaries", null, { message: "DB error" }],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
     expect(res.status).toBe(400);
@@ -158,7 +158,7 @@ describe("POST /api/diary", () => {
       ["matches", { id: "m1" }],
       ["match_diaries", mockDiary],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(diaryBody));
     expect(res.status).toBe(201);
@@ -174,7 +174,7 @@ describe("POST /api/diary", () => {
       ["matches", { id: "m1" }],
       ["match_diaries", minimalDiary],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ matchId: "m1" }));
     expect(res.status).toBe(201);
@@ -188,7 +188,7 @@ describe("POST /api/diary", () => {
       ["matches", { id: "m1" }],
       ["match_diaries", null, { message: "upsert failed" }],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(diaryBody));
     expect(res.status).toBe(400);

@@ -37,7 +37,7 @@ describe("GET /api/notification-settings", () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const settings = { user_id: "user-member-001", push: true };
     const db = createMockDb(["notification_settings", settings]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -48,7 +48,7 @@ describe("GET /api/notification-settings", () => {
   it("200: 설정 레코드 없는 경우 기본값 반환 (push:true)", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["notification_settings", null]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -59,7 +59,7 @@ describe("GET /api/notification-settings", () => {
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["notification_settings", null, { message: "DB error" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(400);
@@ -107,7 +107,7 @@ describe("PUT /api/notification-settings", () => {
       ["notification_settings", { id: "existing-id" }],
       ["notification_settings", updated]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ push: false }));
     expect(res.status).toBe(200);
@@ -123,7 +123,7 @@ describe("PUT /api/notification-settings", () => {
       ["notification_settings", null],
       ["notification_settings", inserted]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ push: true }));
     expect(res.status).toBe(200);
@@ -138,7 +138,7 @@ describe("PUT /api/notification-settings", () => {
       ["notification_settings", null],
       ["notification_settings", null, { message: "insert failed" }]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ push: true }));
     expect(res.status).toBe(400);

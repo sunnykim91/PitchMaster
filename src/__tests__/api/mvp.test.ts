@@ -42,7 +42,7 @@ describe("GET /api/mvp", () => {
   it("400: matchId 누락", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest());
     expect(res.status).toBe(400);
@@ -63,7 +63,7 @@ describe("GET /api/mvp", () => {
       ["matches", { id: "m1" }],
       ["match_mvp_votes", mockVotes],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
     expect(res.status).toBe(200);
@@ -77,7 +77,7 @@ describe("GET /api/mvp", () => {
       ["matches", { id: "m1" }],
       ["match_mvp_votes", null, { message: "DB connection failed" }],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
     expect(res.status).toBe(400);
@@ -118,7 +118,7 @@ describe("POST /api/mvp", () => {
   it("400: matchId 누락", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ candidateId: "u2" }));
     expect(res.status).toBe(400);
@@ -129,7 +129,7 @@ describe("POST /api/mvp", () => {
   it("400: candidateId 누락", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ matchId: "m1" }));
     expect(res.status).toBe(400);
@@ -152,7 +152,7 @@ describe("POST /api/mvp", () => {
       ["teams", { mvp_vote_staff_only: false }],
       ["match_attendance", { vote: "ABSENT" }]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(voteBody));
     expect(res.status).toBe(403);
@@ -168,7 +168,7 @@ describe("POST /api/mvp", () => {
       ["teams", { mvp_vote_staff_only: false }],
       ["match_attendance", null]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(voteBody));
     expect(res.status).toBe(403);
@@ -188,7 +188,7 @@ describe("POST /api/mvp", () => {
       ["match_attendance", { vote: "ATTEND" }],
       ["match_mvp_votes", voteData]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(voteBody));
     expect(res.status).toBe(200);
@@ -211,7 +211,7 @@ describe("POST /api/mvp", () => {
       ["match_attendance", { vote: "ATTEND" }],
       ["match_mvp_votes", updatedVote]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ matchId: "m1", candidateId: "u3" }));
     expect(res.status).toBe(200);
@@ -227,7 +227,7 @@ describe("POST /api/mvp", () => {
       ["match_attendance", { vote: "ATTEND" }],
       ["match_mvp_votes", null, { message: "upsert failed" }]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(voteBody));
     expect(res.status).toBe(400);

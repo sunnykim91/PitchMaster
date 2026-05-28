@@ -51,7 +51,7 @@ describe("GET /api/matches", () => {
       ["matches", mockMatches],   // 3rd: select matches
       ["match_goals", []],        // 4th: goals for score calc
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -69,7 +69,7 @@ describe("GET /api/matches", () => {
       ["matches", null],                                    // 2nd: auto-complete update (today)
       ["matches", null, { message: "DB connection failed" }], // 3rd: select error
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(400);
@@ -118,7 +118,7 @@ describe("POST /api/matches", () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const newMatch = { id: "m-new", match_date: "2025-04-01", status: "SCHEDULED" };
     const db = createMockDb(["matches", newMatch]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(matchBody));
     expect(res.status).toBe(201);
@@ -130,7 +130,7 @@ describe("POST /api/matches", () => {
     vi.mocked(auth).mockResolvedValue(presidentSession);
     const newMatch = { id: "m-new2", match_date: "2025-04-02", status: "SCHEDULED" };
     const db = createMockDb(["matches", newMatch]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ ...matchBody, date: "2025-04-02" }));
     expect(res.status).toBe(201);
@@ -139,7 +139,7 @@ describe("POST /api/matches", () => {
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb(["matches", null, { message: "insert failed" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(matchBody));
     expect(res.status).toBe(400);

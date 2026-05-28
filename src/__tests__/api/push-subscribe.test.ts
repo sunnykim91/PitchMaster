@@ -40,7 +40,7 @@ describe("POST /api/push/subscribe", () => {
   it("400: endpoint 없는 경우", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["push_subscriptions", null]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({}));
     expect(res.status).toBe(400);
@@ -54,7 +54,7 @@ describe("POST /api/push/subscribe", () => {
       ["push_subscriptions", null],  // delete
       ["push_subscriptions", null]   // insert
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(
       makeRequest({
@@ -74,7 +74,7 @@ describe("POST /api/push/subscribe", () => {
       ["push_subscriptions", null],  // delete
       ["push_subscriptions", null, { message: "insert failed" }]  // insert
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(
       makeRequest({ endpoint: "https://push.example.com/sub" })
@@ -115,7 +115,7 @@ describe("DELETE /api/push/subscribe", () => {
   it("400: endpoint 없는 경우", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["push_subscriptions", null]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await DELETE(makeRequest({}));
     expect(res.status).toBe(400);
@@ -126,7 +126,7 @@ describe("DELETE /api/push/subscribe", () => {
   it("200: 구독 삭제 성공", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["push_subscriptions", null]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await DELETE(makeRequest({ endpoint: "https://push.example.com/sub" }));
     expect(res.status).toBe(200);

@@ -60,7 +60,7 @@ describe("GET /api/ai/tactics", () => {
   it("404: match not found (row null)", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["matches", null]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     const res = await GET(makeRequest("match-001"));
     expect(res.status).toBe(404);
     const json = await res.json();
@@ -75,7 +75,7 @@ describe("GET /api/ai/tactics", () => {
       ai_coach_model: "claude-haiku-4-5",
     };
     const db = createMockDb(["matches", matchRow]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     const res = await GET(makeRequest("match-001"));
     expect(res.status).toBe(200);
     const json = await res.json();
@@ -92,7 +92,7 @@ describe("GET /api/ai/tactics", () => {
       ai_coach_model: null,
     };
     const db = createMockDb(["matches", matchRow]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     const res = await GET(makeRequest("match-001"));
     expect(res.status).toBe(200);
     const json = await res.json();
@@ -140,7 +140,7 @@ describe("POST /api/ai/tactics", () => {
   it("400: invalid_payload (formationName 없음)", async () => {
     vi.mocked(auth).mockResolvedValue(kimSession);
     const db = createMockDb(["teams", { sport_type: "SOCCER" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     vi.mocked(checkRateLimit).mockResolvedValue({ allowed: true });
     const res = await POST(makeRequest({ attendees: [] }));
     expect(res.status).toBe(400);
@@ -151,7 +151,7 @@ describe("POST /api/ai/tactics", () => {
   it("400: invalid_payload (attendees 없음)", async () => {
     vi.mocked(auth).mockResolvedValue(kimSession);
     const db = createMockDb(["teams", { sport_type: "SOCCER" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     vi.mocked(checkRateLimit).mockResolvedValue({ allowed: true });
     const res = await POST(makeRequest({ formationName: "4-3-3" }));
     expect(res.status).toBe(400);
@@ -162,7 +162,7 @@ describe("POST /api/ai/tactics", () => {
   it("429: rate_limited", async () => {
     vi.mocked(auth).mockResolvedValue(kimSession);
     const db = createMockDb(["teams", { sport_type: "SOCCER" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     vi.mocked(checkRateLimit).mockResolvedValue({
       allowed: false,
       reason: "match_used",
@@ -180,7 +180,7 @@ describe("POST /api/ai/tactics", () => {
   it("200: 성공 — text/event-stream 반환", async () => {
     vi.mocked(auth).mockResolvedValue(kimSession);
     const db = createMockDb(["teams", { sport_type: "SOCCER" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     vi.mocked(checkRateLimit).mockResolvedValue({ allowed: true });
     const res = await POST(makeRequest(validBody));
     expect(res.status).toBe(200);

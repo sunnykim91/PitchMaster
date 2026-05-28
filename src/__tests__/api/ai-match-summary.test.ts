@@ -31,6 +31,8 @@ function makeParams(matchId: string) {
 }
 
 // ─── POST /api/ai/match-summary/[matchId] ─────────────────────────────────────
+// 71차: 풋살 팀 차단 코드 삭제 — 자동 생성은 풋살도 받는 마당에 재생성만 403은 무의미.
+// 따라서 teams 조회/풋살 분기 관련 테스트 케이스 3건 제거 후 mockReturnValue 흐름 단순화.
 describe("POST /api/ai/match-summary/[matchId]", () => {
   beforeEach(() => vi.clearAllMocks());
 
@@ -42,43 +44,9 @@ describe("POST /api/ai/match-summary/[matchId]", () => {
     expect(json.error).toBe("unauthorized");
   });
 
-  it("503: team_lookup_failed (teams 조회 에러)", async () => {
+  it("503: db_unavailable (getSupabaseAdmin null)", async () => {
     vi.mocked(auth).mockResolvedValue(presidentSession);
-    const db = createMockDb(["teams", null, { message: "DB error" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
-    const res = await POST(makeRequest(MATCH_ID), makeParams(MATCH_ID));
-    expect(res.status).toBe(503);
-    const json = await res.json();
-    expect(json.error).toBe("team_lookup_failed");
-  });
-
-  it("503: team_lookup_failed (team row null)", async () => {
-    vi.mocked(auth).mockResolvedValue(presidentSession);
-    const db = createMockDb(["teams", null]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
-    const res = await POST(makeRequest(MATCH_ID), makeParams(MATCH_ID));
-    expect(res.status).toBe(503);
-    const json = await res.json();
-    expect(json.error).toBe("team_lookup_failed");
-  });
-
-  it("403: FUTSAL 팀 차단", async () => {
-    vi.mocked(auth).mockResolvedValue(presidentSession);
-    const db = createMockDb(["teams", { sport_type: "FUTSAL" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
-    const res = await POST(makeRequest(MATCH_ID), makeParams(MATCH_ID));
-    expect(res.status).toBe(403);
-    const json = await res.json();
-    expect(json.error).toBe("ai_not_available_for_futsal");
-  });
-
-  it("503: db_unavailable (두 번째 getSupabaseAdmin null)", async () => {
-    vi.mocked(auth).mockResolvedValue(presidentSession);
-    // 첫 번째 호출(teams 체크): null → db 없으므로 체크 건너뜀
-    // 두 번째 호출(matches 조회): null → 503
-    vi.mocked(getSupabaseAdmin)
-      .mockReturnValueOnce(null)  // teams 체크 — null이면 체크 통과
-      .mockReturnValueOnce(null); // matches 조회 — 503
+    vi.mocked(getSupabaseAdmin).mockReturnValue(null);
     const res = await POST(makeRequest(MATCH_ID), makeParams(MATCH_ID));
     expect(res.status).toBe(503);
     const json = await res.json();
@@ -87,11 +55,8 @@ describe("POST /api/ai/match-summary/[matchId]", () => {
 
   it("404: match_not_found", async () => {
     vi.mocked(auth).mockResolvedValue(presidentSession);
-    // teams 체크 db: null → 건너뜀. matches 조회 db: 유효 db, match row null
     const db = createMockDb(["matches", null]);
-    vi.mocked(getSupabaseAdmin)
-      .mockReturnValueOnce(null)
-      .mockReturnValueOnce(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     const res = await POST(makeRequest(MATCH_ID), makeParams(MATCH_ID));
     expect(res.status).toBe(404);
     const json = await res.json();
@@ -109,9 +74,7 @@ describe("POST /api/ai/match-summary/[matchId]", () => {
       match_date: "2026-04-22",
     };
     const db = createMockDb(["matches", matchRow]);
-    vi.mocked(getSupabaseAdmin)
-      .mockReturnValueOnce(null)
-      .mockReturnValueOnce(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     const res = await POST(makeRequest(MATCH_ID, { regenerate: true }), makeParams(MATCH_ID));
     expect(res.status).toBe(429);
     const json = await res.json();
@@ -128,8 +91,6 @@ describe("POST /api/ai/match-summary/[matchId]", () => {
       player_count: 11,
       match_date: "2026-04-22",
     };
-    // teams: null(건너뜀), matches: matchRow, then Promise.all 4개 + team_members(error)
-    // createMockDb 큐 순서: matches → match_goals → match_mvp_votes → match_attendance → match_guests → team_members(error)
     const db = createMockDb(
       ["matches", matchRow],
       ["match_goals", []],
@@ -138,9 +99,7 @@ describe("POST /api/ai/match-summary/[matchId]", () => {
       ["match_guests", []],
       ["team_members", null, { message: "DB error" }],
     );
-    vi.mocked(getSupabaseAdmin)
-      .mockReturnValueOnce(null)
-      .mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     const res = await POST(makeRequest(MATCH_ID), makeParams(MATCH_ID));
     expect(res.status).toBe(503);
     const json = await res.json();
@@ -166,15 +125,13 @@ describe("POST /api/ai/match-summary/[matchId]", () => {
       ["team_members", [{ id: "mem-1", user_id: "user-1", pre_name: null, users: { name: "홍길동" } }]],
       ["matches", null], // update
     );
-    vi.mocked(getSupabaseAdmin)
-      .mockReturnValueOnce(null)
-      .mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     const res = await POST(makeRequest(MATCH_ID), makeParams(MATCH_ID));
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toContain("text/event-stream");
   });
 
-  it("200: teamId 없는 세션 — 팀 조회 건너뜀 후 db 조회 직행", async () => {
+  it("200: teamId 없는 세션도 정상 처리", async () => {
     vi.mocked(auth).mockResolvedValue(noTeamSession);
     const matchRow = {
       id: MATCH_ID,
@@ -184,8 +141,6 @@ describe("POST /api/ai/match-summary/[matchId]", () => {
       player_count: 11,
       match_date: "2026-04-22",
     };
-    // noTeamSession은 teamId 없어 teams 체크 if 블록 자체를 건너뜀.
-    // 첫 번째 getSupabaseAdmin()이 matches 조회에 사용됨.
     const db = createMockDb(
       ["matches", matchRow],
       ["match_goals", []],
@@ -195,7 +150,7 @@ describe("POST /api/ai/match-summary/[matchId]", () => {
       ["team_members", []],
       ["matches", null],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     const res = await POST(makeRequest(MATCH_ID), makeParams(MATCH_ID));
     expect(res.status).toBe(200);
   });

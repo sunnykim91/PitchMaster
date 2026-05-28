@@ -69,7 +69,7 @@ describe("POST /api/ai/full-plan", () => {
   it("400: invalid_payload (formationName 없음)", async () => {
     vi.mocked(auth).mockResolvedValue(kimSession);
     const db = createMockDb(["teams", { sport_type: "SOCCER" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     vi.mocked(checkRateLimit).mockResolvedValue({ allowed: true });
     const res = await POST(makeRequest({ attendees: [], quarterCount: 4 }));
     expect(res.status).toBe(400);
@@ -80,7 +80,7 @@ describe("POST /api/ai/full-plan", () => {
   it("400: invalid_payload (attendees 없음)", async () => {
     vi.mocked(auth).mockResolvedValue(kimSession);
     const db = createMockDb(["teams", { sport_type: "SOCCER" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     vi.mocked(checkRateLimit).mockResolvedValue({ allowed: true });
     const res = await POST(makeRequest({ formationName: "4-3-3", quarterCount: 4 }));
     expect(res.status).toBe(400);
@@ -91,7 +91,7 @@ describe("POST /api/ai/full-plan", () => {
   it("400: invalid_payload (quarterCount 없음)", async () => {
     vi.mocked(auth).mockResolvedValue(kimSession);
     const db = createMockDb(["teams", { sport_type: "SOCCER" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     vi.mocked(checkRateLimit).mockResolvedValue({ allowed: true });
     const res = await POST(makeRequest({ formationName: "4-3-3", attendees: [] }));
     expect(res.status).toBe(400);
@@ -102,7 +102,7 @@ describe("POST /api/ai/full-plan", () => {
   it("429: rate_limited", async () => {
     vi.mocked(auth).mockResolvedValue(kimSession);
     const db = createMockDb(["teams", { sport_type: "SOCCER" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     vi.mocked(checkRateLimit).mockResolvedValue({
       allowed: false,
       reason: "monthly_team_cap",
@@ -120,7 +120,7 @@ describe("POST /api/ai/full-plan", () => {
   it("200: 성공 — plans, coaching, source 필드 반환", async () => {
     vi.mocked(auth).mockResolvedValue(kimSession);
     const db = createMockDb(["teams", { sport_type: "SOCCER" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     vi.mocked(checkRateLimit).mockResolvedValue({ allowed: true });
     vi.mocked(generateAiFullPlan).mockResolvedValue({
       plans: [{ quarter: 1, formation: "4-3-3", placement: [] }],
@@ -139,7 +139,7 @@ describe("POST /api/ai/full-plan", () => {
   it("200: rule fallback 결과도 정상 반환", async () => {
     vi.mocked(auth).mockResolvedValue(kimSession);
     const db = createMockDb(["teams", { sport_type: "SOCCER" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     vi.mocked(checkRateLimit).mockResolvedValue({ allowed: true });
     vi.mocked(generateAiFullPlan).mockResolvedValue({
       plans: [],

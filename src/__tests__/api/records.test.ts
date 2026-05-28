@@ -70,7 +70,7 @@ describe("GET /api/records", () => {
       ["team_members", teamMembers],
       ["matches", []] // 완료된 경기 없음
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest());
     expect(res.status).toBe(200);
@@ -117,7 +117,7 @@ describe("GET /api/records", () => {
       ["match_attendance", attendanceData],   // vote=ATTEND 쿼리
       ["match_attendance", actualAttendData], // attendance_status=PRESENT/LATE 쿼리
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest());
     expect(res.status).toBe(200);
@@ -157,7 +157,7 @@ describe("GET /api/records", () => {
       ["match_attendance", []],
       ["match_attendance", []]  // actual attendance (PRESENT/LATE)
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest({ seasonId: "season-001" }));
     expect(res.status).toBe(200);
@@ -177,7 +177,7 @@ describe("GET /api/records", () => {
       ["match_attendance", []],
       ["match_attendance", []]  // actual attendance (PRESENT/LATE)
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest({ startDate: "2026-01-01", endDate: "2026-03-31" }));
     expect(res.status).toBe(200);
@@ -200,7 +200,7 @@ describe("GET /api/records", () => {
       ["match_attendance", []],
       ["match_attendance", []]  // actual attendance (PRESENT/LATE)
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest({ seasonId: "season-001", startDate: "2026-01-01", endDate: "2026-06-30" }));
     expect(res.status).toBe(200);
@@ -233,7 +233,7 @@ describe("GET /api/records", () => {
       ["match_attendance", attendanceData],
       ["match_attendance", []]  // actual attendance (PRESENT/LATE)
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest());
     const json = await res.json();
@@ -263,7 +263,7 @@ describe("GET /api/records", () => {
       // match_attendance (실제 5경기 참석)
       ["match_attendance", Array.from({ length: 5 }, () => ({ user_id: "user-1", member_id: "mem-1" }))],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest({ mode: "all" }));
     expect(res.status).toBe(200);
@@ -288,7 +288,7 @@ describe("GET /api/records", () => {
       ]],
       ["matches", []], // 실제 경기 없음
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest({ mode: "all" }));
     const json = await res.json();

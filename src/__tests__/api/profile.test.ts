@@ -49,7 +49,7 @@ describe("GET /api/profile", () => {
   it("200: MEMBER — 프로필 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["users", profileData]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -61,7 +61,7 @@ describe("GET /api/profile", () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const staffProfile = { ...profileData, id: "user-staff-001", name: "운영진" };
     const db = createMockDb(["users", staffProfile]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -72,7 +72,7 @@ describe("GET /api/profile", () => {
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["users", null, { message: "user not found" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(400);
@@ -134,7 +134,7 @@ describe("PUT /api/profile", () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     vi.mocked(updateSession).mockResolvedValue(undefined);
     const db = createMockDb(["users", updatedProfile]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest(updateBody));
     expect(res.status).toBe(200);
@@ -146,7 +146,7 @@ describe("PUT /api/profile", () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     vi.mocked(updateSession).mockResolvedValue(undefined);
     const db = createMockDb(["users", updatedProfile]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     await PUT(makeRequest(updateBody));
     expect(updateSession).toHaveBeenCalledOnce();
@@ -160,7 +160,7 @@ describe("PUT /api/profile", () => {
     vi.mocked(updateSession).mockResolvedValue(undefined);
     const partialProfile = { ...updatedProfile, name: "이름변경" };
     const db = createMockDb(["users", partialProfile]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ name: "이름변경" }));
     expect(res.status).toBe(200);
@@ -173,7 +173,7 @@ describe("PUT /api/profile", () => {
     vi.mocked(updateSession).mockResolvedValue(undefined);
     const clearedProfile = { ...updatedProfile, profile_image_url: null };
     const db = createMockDb(["users", clearedProfile]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ profileImageUrl: "" }));
     expect(res.status).toBe(200);
@@ -184,7 +184,7 @@ describe("PUT /api/profile", () => {
     vi.mocked(updateSession).mockResolvedValue(undefined);
     const staffProfile = { ...updatedProfile, id: "user-staff-001", name: "운영진새이름" };
     const db = createMockDb(["users", staffProfile]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ name: "운영진새이름" }));
     expect(res.status).toBe(200);
@@ -194,7 +194,7 @@ describe("PUT /api/profile", () => {
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["users", null, { message: "update failed" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest(updateBody));
     expect(res.status).toBe(400);
@@ -205,7 +205,7 @@ describe("PUT /api/profile", () => {
   it("400: DB 에러 시 updateSession 미호출", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["users", null, { message: "update failed" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     await PUT(makeRequest(updateBody));
     expect(updateSession).not.toHaveBeenCalled();

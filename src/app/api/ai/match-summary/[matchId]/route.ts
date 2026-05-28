@@ -24,23 +24,6 @@ export async function POST(
   if (!session?.user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  // 풋살 팀 AI 차단 (API 레벨)
-  if (session.user.teamId) {
-    const dbCheck = getSupabaseAdmin();
-    if (dbCheck) {
-      const { data: team, error: teamErr } = await dbCheck
-        .from("teams")
-        .select("sport_type")
-        .eq("id", session.user.teamId)
-        .single();
-      if (teamErr || !team) {
-        return NextResponse.json({ error: "team_lookup_failed" }, { status: 503 });
-      }
-      if (team.sport_type === "FUTSAL") {
-        return NextResponse.json({ error: "ai_not_available_for_futsal" }, { status: 403 });
-      }
-    }
-  }
 
   // 재생성 여부 파악
   let isRegenerate = false;

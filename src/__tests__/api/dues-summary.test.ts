@@ -57,7 +57,7 @@ describe("GET /api/dues/summary", () => {
       ["penalty_rules", penaltyRules],
       ["penalty_records", penaltyRecords]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -80,7 +80,7 @@ describe("GET /api/dues/summary", () => {
       ["penalty_rules", penaltyRules],
       ["penalty_records", penaltyRecords]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -95,7 +95,7 @@ describe("GET /api/dues/summary", () => {
       ["penalty_rules", []],
       ["penalty_records", []]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -118,7 +118,7 @@ describe("GET /api/dues/summary", () => {
       ["penalty_rules", []],
       ["penalty_records", []]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);

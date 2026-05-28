@@ -43,7 +43,7 @@ describe("GET /api/goals", () => {
   it("400: matchId 누락", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     const res = await GET(makeRequest());
     expect(res.status).toBe(400);
     const json = await res.json();
@@ -60,7 +60,7 @@ describe("GET /api/goals", () => {
   it("200: 골 목록 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["matches", { id: "m1" }], ["match_goals", mockGoals]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
     expect(res.status).toBe(200);
@@ -71,7 +71,7 @@ describe("GET /api/goals", () => {
   it("400: DB 에러 발생시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["matches", { id: "m1" }], ["match_goals", null, { message: "DB connection failed" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest("m1"));
     expect(res.status).toBe(400);
@@ -124,7 +124,7 @@ describe("POST /api/goals", () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const newGoal = { id: "g-new", match_id: "m1", quarter_number: 1, minute: 15, scorer_id: "u1" };
     const db = createMockDb(["matches", { id: "m1" }], ["match_goals", newGoal]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(goalBody));
     expect(res.status).toBe(201);
@@ -135,7 +135,7 @@ describe("POST /api/goals", () => {
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["matches", { id: "m1" }], ["match_goals", null, { message: "insert failed" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(goalBody));
     expect(res.status).toBe(400);
@@ -180,7 +180,7 @@ describe("PUT /api/goals", () => {
   it("400: id 누락", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ quarter: 2, minute: 20 }));
     expect(res.status).toBe(400);
@@ -200,7 +200,7 @@ describe("PUT /api/goals", () => {
     const updatedGoal = { id: "g1", match_id: "m1", quarter_number: 2, minute: 20, scorer_id: "u1" };
     // First match_goals call: goalCheck, second: update result
     const db = createMockDb(["match_goals", { id: "g1" }], ["match_goals", updatedGoal]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest(updateBody));
     expect(res.status).toBe(200);
@@ -213,7 +213,7 @@ describe("PUT /api/goals", () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     // First match_goals call: goalCheck succeeds, second: update fails
     const db = createMockDb(["match_goals", { id: "g1" }], ["match_goals", null, { message: "update failed" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest(updateBody));
     expect(res.status).toBe(400);
@@ -248,7 +248,7 @@ describe("DELETE /api/goals", () => {
   it("400: id 누락", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await DELETE(makeRequest());
     expect(res.status).toBe(400);
@@ -267,7 +267,7 @@ describe("DELETE /api/goals", () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     // First match_goals call: goalCheck, second: delete (no data returned)
     const db = createMockDb(["match_goals", { id: "g1" }], ["match_goals", null]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await DELETE(makeRequest("g1"));
     expect(res.status).toBe(200);
@@ -279,7 +279,7 @@ describe("DELETE /api/goals", () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     // First match_goals call: goalCheck succeeds, second: delete fails
     const db = createMockDb(["match_goals", { id: "g1" }], ["match_goals", null, { message: "delete failed" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await DELETE(makeRequest("g1"));
     expect(res.status).toBe(400);
@@ -306,7 +306,7 @@ describe("/api/goals — stats_recording_staff_only 권한 게이트", () => {
     const db = createMockDb(
       ["teams", { stats_recording_staff_only: true }],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const req = new NextRequest("http://localhost/api/goals", {
       method: "POST",
@@ -327,7 +327,7 @@ describe("/api/goals — stats_recording_staff_only 권한 게이트", () => {
       ["matches", { id: "m1" }],
       ["match_goals", newGoal],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const req = new NextRequest("http://localhost/api/goals", {
       method: "POST",
@@ -346,7 +346,7 @@ describe("/api/goals — stats_recording_staff_only 권한 게이트", () => {
       ["matches", { id: "m1" }],
       ["match_goals", newGoal],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const req = new NextRequest("http://localhost/api/goals", {
       method: "POST",
@@ -362,7 +362,7 @@ describe("/api/goals — stats_recording_staff_only 권한 게이트", () => {
     const db = createMockDb(
       ["teams", { stats_recording_staff_only: true }],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const req = new NextRequest("http://localhost/api/goals", {
       method: "PUT",
@@ -378,7 +378,7 @@ describe("/api/goals — stats_recording_staff_only 권한 게이트", () => {
     const db = createMockDb(
       ["teams", { stats_recording_staff_only: true }],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const req = new NextRequest("http://localhost/api/goals?id=g1", {
       method: "DELETE",

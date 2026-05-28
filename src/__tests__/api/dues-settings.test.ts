@@ -41,7 +41,7 @@ describe("GET /api/dues-settings", () => {
   it("200: 설정 목록 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["dues_settings", settingsData]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -52,7 +52,7 @@ describe("GET /api/dues-settings", () => {
   it("200: 설정 없을 때 빈 배열 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["dues_settings", []]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -63,7 +63,7 @@ describe("GET /api/dues-settings", () => {
   it("200: STAFF 권한으로도 조회 가능", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb(["dues_settings", settingsData]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -103,7 +103,7 @@ describe("POST /api/dues-settings", () => {
   it("403: MEMBER 권한으로 POST 거부", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(newSettingBody));
     expect(res.status).toBe(403);
@@ -127,7 +127,7 @@ describe("POST /api/dues-settings", () => {
       description: "정기 회원",
     };
     const db = createMockDb(["dues_settings", newSetting]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(newSettingBody));
     expect(res.status).toBe(201);
@@ -147,7 +147,7 @@ describe("POST /api/dues-settings", () => {
       description: null,
     };
     const db = createMockDb(["dues_settings", newSetting]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ memberType: "STUDENT", monthlyAmount: 5000 }));
     expect(res.status).toBe(201);
@@ -163,7 +163,7 @@ describe("POST /api/dues-settings", () => {
       description: null,
     };
     const db = createMockDb(["dues_settings", newSetting]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ memberType: "REGULAR", monthlyAmount: 10000 }));
     expect(res.status).toBe(201);

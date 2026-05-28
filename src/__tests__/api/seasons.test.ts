@@ -45,7 +45,7 @@ describe("GET /api/seasons", () => {
   it("200: 시즌 목록 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["seasons", mockSeasons]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -56,7 +56,7 @@ describe("GET /api/seasons", () => {
   it("200: 시즌 없는 경우 빈 배열 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["seasons", []]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -67,7 +67,7 @@ describe("GET /api/seasons", () => {
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["seasons", null, { message: "DB error" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(400);
@@ -119,7 +119,7 @@ describe("POST /api/seasons", () => {
   it("403: MEMBER 권한 — 시즌 생성 거부", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(seasonBody));
     expect(res.status).toBe(403);
@@ -136,7 +136,7 @@ describe("POST /api/seasons", () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     // isActive false → 1번 insert만
     const db = createMockDb(["seasons", newSeason]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(seasonBody));
     expect(res.status).toBe(201);
@@ -153,7 +153,7 @@ describe("POST /api/seasons", () => {
       ["seasons", null],        // deactivate all existing seasons
       ["seasons", activeSeason] // insert new active season
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ ...seasonBody, isActive: true }));
     expect(res.status).toBe(201);
@@ -164,7 +164,7 @@ describe("POST /api/seasons", () => {
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb(["seasons", null, { message: "insert failed" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest(seasonBody));
     expect(res.status).toBe(400);
@@ -200,7 +200,7 @@ describe("PUT /api/seasons", () => {
   it("403: MEMBER 권한 — 시즌 활성화 거부", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ id: "s1" }));
     expect(res.status).toBe(403);
@@ -209,7 +209,7 @@ describe("PUT /api/seasons", () => {
   it("400: id 누락", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({}));
     expect(res.status).toBe(400);
@@ -231,7 +231,7 @@ describe("PUT /api/seasons", () => {
       ["seasons", null], // deactivate all
       ["seasons", null]  // activate s1
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ id: "s1" }));
     expect(res.status).toBe(200);
@@ -245,7 +245,7 @@ describe("PUT /api/seasons", () => {
       ["seasons", null],                              // deactivate all — ok
       ["seasons", null, { message: "update failed" }] // activate — error
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ id: "s1" }));
     expect(res.status).toBe(400);

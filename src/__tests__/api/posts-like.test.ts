@@ -50,7 +50,7 @@ describe("POST /api/posts/like", () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     // DB is irrelevant — route returns 400 before querying
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({}));
     expect(res.status).toBe(400);
@@ -66,7 +66,7 @@ describe("POST /api/posts/like", () => {
       ["post_likes", { id: "like1" }],
       ["post_likes", null],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ postId: "p1" }));
     expect(res.status).toBe(200);
@@ -82,7 +82,7 @@ describe("POST /api/posts/like", () => {
       ["post_likes", null],
       ["post_likes", null],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ postId: "p1" }));
     expect(res.status).toBe(201);
@@ -98,7 +98,7 @@ describe("POST /api/posts/like", () => {
       ["post_likes", null],
       ["post_likes", null, { message: "insert failed" }],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ postId: "p1" }));
     expect(res.status).toBe(400);

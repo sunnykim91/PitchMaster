@@ -45,7 +45,7 @@ describe("GET /api/notifications", () => {
   it("200: 알림 목록 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["notifications", mockNotifications]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -56,7 +56,7 @@ describe("GET /api/notifications", () => {
   it("200: 알림 없는 경우 빈 배열 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["notifications", []]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -67,7 +67,7 @@ describe("GET /api/notifications", () => {
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["notifications", null, { message: "DB error" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(400);
@@ -110,7 +110,7 @@ describe("PUT /api/notifications", () => {
   it("200: markAllRead:true — 전체 읽음 처리", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["notifications", null]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ markAllRead: true }));
     expect(res.status).toBe(200);
@@ -121,7 +121,7 @@ describe("PUT /api/notifications", () => {
   it("200: all:true — 전체 읽음 처리", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["notifications", null]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ all: true }));
     expect(res.status).toBe(200);
@@ -132,7 +132,7 @@ describe("PUT /api/notifications", () => {
   it("200: id 지정 — 단일 알림 읽음 처리", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["notifications", null]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ id: "n1" }));
     expect(res.status).toBe(200);
@@ -143,7 +143,7 @@ describe("PUT /api/notifications", () => {
   it("400: DB 에러 시 에러 반환 (전체 읽음)", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["notifications", null, { message: "update failed" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ markAllRead: true }));
     expect(res.status).toBe(400);
@@ -154,7 +154,7 @@ describe("PUT /api/notifications", () => {
   it("400: DB 에러 시 에러 반환 (단일 읽음)", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["notifications", null, { message: "update failed" }]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ id: "n1" }));
     expect(res.status).toBe(400);
@@ -165,7 +165,7 @@ describe("PUT /api/notifications", () => {
   it("200: body가 빈 객체인 경우 ok:true 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({}));
     expect(res.status).toBe(200);

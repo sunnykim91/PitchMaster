@@ -56,7 +56,7 @@ describe("GET /api/dues/payment-status", () => {
       { id: "ps-2", member_id: "mem-2", month: "2026-03", status: "UNPAID" },
     ];
     const db = createMockDb(["dues_payment_status", statusRecords]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest({ month: "2026-03" }));
     expect(res.status).toBe(200);
@@ -92,7 +92,7 @@ describe("POST /api/dues/payment-status", () => {
   it("400: 필수 필드 누락 (memberId, month, status)", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ memberId: "m1" }));
     expect(res.status).toBe(400);
@@ -103,7 +103,7 @@ describe("POST /api/dues/payment-status", () => {
   it("400: 유효하지 않은 status 값", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ memberId: "m1", month: "2026-03", status: "INVALID" }));
     expect(res.status).toBe(400);
@@ -123,7 +123,7 @@ describe("POST /api/dues/payment-status", () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const upserted = { id: "ps-1", member_id: "m1", month: "2026-03", status: "PAID", paid_amount: 50000 };
     const db = createMockDb(["dues_payment_status", upserted]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ memberId: "m1", month: "2026-03", status: "PAID", paidAmount: 50000 }));
     expect(res.status).toBe(200);
@@ -135,7 +135,7 @@ describe("POST /api/dues/payment-status", () => {
     vi.mocked(auth).mockResolvedValue(presidentSession);
     const upserted = { id: "ps-2", member_id: "m2", month: "2026-03", status: "EXEMPT" };
     const db = createMockDb(["dues_payment_status", upserted]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ memberId: "m2", month: "2026-03", status: "EXEMPT" }));
     expect(res.status).toBe(200);
@@ -199,7 +199,7 @@ describe("PUT /api/dues/payment-status", () => {
       ["dues_payment_status", null],
       ["dues_payment_status", null]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ month: "2026-03", matches }));
     expect(res.status).toBe(200);
@@ -213,7 +213,7 @@ describe("PUT /api/dues/payment-status", () => {
       { memberId: "m1", amount: 50000, status: "EXEMPT" },
     ];
     const db = createMockDb(["dues_payment_status", null]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ month: "2026-03", matches }));
     expect(res.status).toBe(200);
@@ -234,7 +234,7 @@ describe("PUT /api/dues/payment-status", () => {
       ["dues_payment_status", null, { message: "upsert failed" }],
       ["dues_payment_status", null]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await PUT(makeRequest({ month: "2026-03", matches }));
     expect(res.status).toBe(200);

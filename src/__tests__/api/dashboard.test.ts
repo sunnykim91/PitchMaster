@@ -86,7 +86,7 @@ describe("GET /api/dashboard", () => {
       // Stage 2 — completedMatches (다른 쿼리는 upcoming/recent null 이라 spinned but 결과 무시)
       ["matches", []],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -154,7 +154,7 @@ describe("GET /api/dashboard", () => {
       // isStaff false → dues_records, paid count, team_join_requests 스킵
       ["matches", []],              // completedMatches
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -223,7 +223,7 @@ describe("GET /api/dashboard", () => {
       // Stage 3
       ["match_goals", goals],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);
@@ -266,7 +266,7 @@ describe("GET /api/dashboard", () => {
       // myTeamMemberId 없음 (roster 비어있음) → payment/exemption 스킵
       ["matches", []],                 // completedMatches
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET();
     expect(res.status).toBe(200);

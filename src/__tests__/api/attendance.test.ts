@@ -42,7 +42,7 @@ describe("GET /api/attendance", () => {
   it("200: matchId로 특정 경기 출석 조회", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["matches", { id: "11111111-1111-4111-8111-111111111111" }], ["match_attendance", attendanceData]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest({ matchId: "11111111-1111-4111-8111-111111111111" }));
     expect(res.status).toBe(200);
@@ -56,7 +56,7 @@ describe("GET /api/attendance", () => {
       ["matches", [{ id: "11111111-1111-4111-8111-111111111111" }, { id: "22222222-2222-4222-8222-222222222222" }]],
       ["match_attendance", attendanceData]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest());
     expect(res.status).toBe(200);
@@ -67,7 +67,7 @@ describe("GET /api/attendance", () => {
   it("200: 경기 없으면 빈 배열 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["matches", []]);
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await GET(makeRequest());
     expect(res.status).toBe(200);
@@ -97,7 +97,7 @@ describe("POST /api/attendance", () => {
   it("400: matchId 누락", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ vote: "ATTEND" }));
     expect(res.status).toBe(400);
@@ -108,7 +108,7 @@ describe("POST /api/attendance", () => {
   it("400: vote 누락", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb();
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ matchId: "11111111-1111-4111-8111-111111111111" }));
     expect(res.status).toBe(400);
@@ -138,7 +138,7 @@ describe("POST /api/attendance", () => {
       ["match_attendance", existingAttendance], // 기존 기록 확인
       ["match_attendance", insertedAttendance]  // insert 결과
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ matchId: "11111111-1111-4111-8111-111111111111", vote: "ATTEND" }));
     expect(res.status).toBe(200);
@@ -157,7 +157,7 @@ describe("POST /api/attendance", () => {
       ["matches", matchData],
       ["team_members", memberData]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ matchId: "11111111-1111-4111-8111-111111111111", vote: "ATTEND" }));
     expect(res.status).toBe(400);
@@ -185,7 +185,7 @@ describe("POST /api/attendance", () => {
       ["match_attendance", existingAttendance],
       ["match_attendance", updatedAttendance]
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makeRequest({ matchId: "11111111-1111-4111-8111-111111111111", vote: "ABSENT" }));
     expect(res.status).toBe(200);
@@ -204,7 +204,7 @@ describe("POST /api/attendance", () => {
       ["matches", matchData],
       ["team_members", callerMember],
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     // targetUserId가 자신과 다름 → 대리 투표
     const res = await POST(
@@ -237,7 +237,7 @@ describe("POST /api/attendance", () => {
       ["match_attendance", existingRecord], // 4) 기존 기록 없음
       ["match_attendance", insertResult]    // 5) insert
     );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(
       makeRequest({ matchId: "11111111-1111-4111-8111-111111111111", vote: "ATTEND", targetUserId: "55555555-5555-4555-8555-555555555555" })
