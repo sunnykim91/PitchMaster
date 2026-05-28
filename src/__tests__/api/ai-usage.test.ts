@@ -63,7 +63,7 @@ describe("GET /api/ai/usage", () => {
         finally: vi.fn().mockReturnThis(),
       })),
     };
-    vi.mocked(getSupabaseAdmin).mockReturnValue(mockDb as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(mockDb as unknown as ReturnType<typeof getSupabaseAdmin>);
     const res = await GET(makeRequest({ feature: "tactics-coach", matchId: "match-001" }));
     expect(res.status).toBe(200);
     const json = await res.json();
@@ -75,7 +75,7 @@ describe("GET /api/ai/usage", () => {
 
   it("200: feature=match_summary, matchId 포함 — regenerateCount 반환", async () => {
     vi.mocked(auth).mockResolvedValue(presidentSession);
-    vi.mocked(getMonthlyTeamUsage).mockResolvedValue({ count: 1, cap: null });
+    vi.mocked(getMonthlyTeamUsage).mockResolvedValue({ count: 1, cap: null as unknown as number });
     const matchRow = { ai_summary_regenerate_count: 1 };
     // ai_usage_log count + matches select 두 번
     const mockDb = {
@@ -102,7 +102,7 @@ describe("GET /api/ai/usage", () => {
         };
       }),
     };
-    vi.mocked(getSupabaseAdmin).mockReturnValue(mockDb as ReturnType<typeof getSupabaseAdmin>);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(mockDb as unknown as ReturnType<typeof getSupabaseAdmin>);
     const res = await GET(makeRequest({ feature: "match_summary", matchId: "match-001" }));
     expect(res.status).toBe(200);
     const json = await res.json();

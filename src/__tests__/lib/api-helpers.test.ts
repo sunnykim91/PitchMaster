@@ -11,6 +11,7 @@ describe("requireRole", () => {
       userId: "u1",
       teamId: "t1",
       teamRole: role,
+      isDemo: false,
     };
   }
 

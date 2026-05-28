@@ -12,7 +12,7 @@ import { POST } from "@/app/api/dues/excel/route";
 /** 엑셀 버퍼를 FormData NextRequest로 변환 */
 function makeExcelRequest(buffer: Buffer): NextRequest {
   // vitest 환경에서 Blob + append(..., name)는 파일명을 보존하지 않으므로 File 사용
-  const file = new File([buffer], "test.xlsx", {
+  const file = new File([new Uint8Array(buffer)], "test.xlsx", {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
   const formData = new FormData();
