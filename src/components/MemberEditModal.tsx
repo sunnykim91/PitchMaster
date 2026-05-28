@@ -860,6 +860,8 @@ export function MemberEditModal({
               <img
                 src={member.profileImageUrl}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 className="pm-mrow-av-img"
                 referrerPolicy="no-referrer"
               />

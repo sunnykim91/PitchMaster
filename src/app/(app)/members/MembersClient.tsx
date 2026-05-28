@@ -753,6 +753,8 @@ function MemberRow({ m, onClick }: { m: Member; onClick: () => void }) {
           <img
             src={m.profileImageUrl}
             alt=""
+            loading="lazy"
+            decoding="async"
             className="pm-mrow-av-img"
             referrerPolicy="no-referrer"
           />

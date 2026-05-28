@@ -42,6 +42,7 @@ export type UsageLogEntry = {
 export const MONTHLY_TEAM_CAPS: Partial<Record<AiFeature, number>> = {
   "tactics-plan": 20,   // 8경기 × 3회 기준
   "tactics-coach": 30,  // 8경기 × 4회 기준
+  "ocr": 100,           // 회비 일괄등록 8경기 × 10~15장 + 재시도 여유
 };
 
 /** 경기당 허용 횟수 (동일 match_id에서 source='ai'로 기록된 건수 기준) */

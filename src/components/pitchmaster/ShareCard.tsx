@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { toPng } from "html-to-image";
 import { cn } from "@/lib/utils";
 import { PlayerCard, type PlayerCardProps } from "./PlayerCard";
 
@@ -471,6 +470,7 @@ export function ShareModal({
       height: target.offsetHeight,
     };
 
+    const { toPng } = await import("html-to-image");
     let dataUrl: string;
     try {
       dataUrl = await toPng(target, captureOpts);

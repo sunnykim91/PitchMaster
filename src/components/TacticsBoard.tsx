@@ -2,7 +2,6 @@
 /* v0-design-v2 */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toPng } from "html-to-image";
 import { formationTemplates, getFormationsForSportAndCount, getFutsalFieldCounts } from "@/lib/formations";
 import { useApi, apiMutate } from "@/lib/useApi";
 import type { DetailedPosition, SportType } from "@/lib/types";
@@ -479,6 +478,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     }
 
     try {
+      const { toPng } = await import("html-to-image");
       const bgColor = getComputedStyle(document.documentElement).getPropertyValue("--background").trim();
       const captureBackground = bgColor ? `hsl(${bgColor})` : "#0a0e14";
       const dataUrl = await toPng(target, {
