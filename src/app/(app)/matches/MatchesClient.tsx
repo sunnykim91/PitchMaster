@@ -23,102 +23,19 @@ import { MatchCalendar } from "@/components/MatchCalendar";
 import { Calendar, ChevronDown, ChevronRight, ChevronUp, Loader2, Share2 } from "lucide-react";
 import { getUniformStyle } from "@/lib/uniformUtils";
 
-type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
-type AttendanceVote = "ATTEND" | "ABSENT" | "MAYBE";
+import type {
+  MatchStatus,
+  AttendanceVote,
+  Match,
+  DbMatch,
+  DbAttendance,
+  AttendanceState,
+  TeamUniform,
+} from "./MatchesClient.types";
+import { mapDbMatchToMatch, matchTypeMeta } from "./MatchesClient.utils";
 
-type Match = {
-  id: string;
-  date: string;
-  time: string;
-  endTime?: string | null;
-  endDate?: string | null;
-  location: string;
-  opponent?: string;
-  quarterCount: number;
-  quarterDuration: number;
-  breakDuration: number;
-  status: MatchStatus;
-  voteDeadline?: string;
-  score?: string | null;
-  uniformType: "HOME" | "AWAY" | "THIRD";
-  matchType: "REGULAR" | "INTERNAL" | "EVENT";
-  sportType?: "SOCCER" | "FUTSAL" | null;
-  playerCount?: number;
-  statsIncluded: boolean;
-};
-
-type DbMatch = {
-  id: string;
-  team_id: string;
-  opponent_name: string;
-  match_date: string;
-  match_time: string;
-  match_end_time: string | null;
-  match_end_date: string | null;
-  location: string;
-  quarter_count: number;
-  quarter_duration: number;
-  break_duration: number;
-  status: MatchStatus;
-  vote_deadline: string | null;
-  score?: string | null;
-  uniform_type?: string | null;
-  match_type?: string | null;
-  sport_type?: string | null;
-  player_count?: number | null;
-  stats_included?: boolean | null;
-  created_by: string;
-  created_at: string;
-};
-
-type DbAttendance = {
-  match_id: string;
-  user_id: string | null;
-  member_id: string | null;
-  vote: AttendanceVote;
-  users: { name: string } | null;
-  member?: { id: string; user_id: string | null } | null;
-};
-
-type AttendanceState = Record<string, Record<string, AttendanceVote>>;
-
-function mapDbMatchToMatch(db: DbMatch): Match {
-  return {
-    id: db.id,
-    date: db.match_date,
-    time: db.match_time,
-    endTime: db.match_end_time,
-    endDate: db.match_end_date,
-    location: db.location,
-    opponent: db.opponent_name || undefined,
-    quarterCount: db.quarter_count,
-    quarterDuration: db.quarter_duration,
-    breakDuration: db.break_duration,
-    status: db.status,
-    voteDeadline: db.vote_deadline || undefined,
-    score: db.score ?? null,
-    uniformType: (db.uniform_type === "THIRD" ? "THIRD" : db.uniform_type === "AWAY" ? "AWAY" : "HOME") as "HOME" | "AWAY" | "THIRD",
-    matchType: (db.match_type === "INTERNAL" ? "INTERNAL" : db.match_type === "EVENT" ? "EVENT" : "REGULAR") as "REGULAR" | "INTERNAL" | "EVENT",
-    sportType: (db.sport_type === "FUTSAL" ? "FUTSAL" : db.sport_type === "SOCCER" ? "SOCCER" : null) as "SOCCER" | "FUTSAL" | null,
-    playerCount: db.player_count ?? undefined,
-    statsIncluded: db.stats_included ?? true,
-  };
-}
-
-// 시안 카드용 — matchType별 hue + 라벨 매핑
-function matchTypeMeta(type: Match["matchType"]): { label: string; hue: "atk" | "def" | "mid" } {
-  switch (type) {
-    case "INTERNAL":
-      return { label: "자체", hue: "def" };
-    case "EVENT":
-      return { label: "이벤트", hue: "mid" };
-    default:
-      return { label: "정규", hue: "atk" };
-  }
-}
-
-export type UniformSetInfo = { primary: string; secondary: string; pattern: string };
-type TeamUniform = { primary: string | null; secondary: string | null; pattern: string | null; uniforms?: { home?: UniformSetInfo; away?: UniformSetInfo; third?: UniformSetInfo | null } | null };
+// 외부 사용자(page.tsx)가 default 옆에서 UniformSetInfo를 같이 받을 수 있게 re-export
+export type { UniformSetInfo } from "./MatchesClient.types";
 
 export default function MatchesClient({ userId, userRole, initialMatches, sportType = "SOCCER", teamUniform, inviteCode = "", teamName = "", registeredMemberCount = 0, teamDefaultPlayerCount }: { userId: string; userRole?: Role; initialMatches?: { matches: DbMatch[] }; sportType?: SportType; teamUniform?: TeamUniform; inviteCode?: string; teamName?: string; registeredMemberCount?: number; teamDefaultPlayerCount?: number }) {
   const { effectiveRole } = useViewAsRole();
