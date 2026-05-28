@@ -10,7 +10,7 @@ import {
 } from "@/lib/formations";
 import { apiMutate } from "@/lib/useApi";
 import type { Position, PreferredPosition, SportType } from "@/lib/types";
-import { PREF_TO_POSITION, PREF_POSITION_SHORT } from "@/lib/types";
+import { PREF_POSITION_SHORT, PREF_TO_POSITION } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,210 +23,24 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { Zap, Sparkles, Loader2, Palette } from "lucide-react";
+import type {
+  AttendingPlayer,
+  PlayerAssignment,
+  SlotAssignment,
+  QuarterResult,
+  GeneratedSquad,
+  AutoFormationBuilderProps,
+} from "./AutoFormationBuilder.types";
+import {
+  fuzzyMatchPlayer,
+  getSlotSubPosition,
+  getSlotCategory,
+  POS_LABEL,
+  POS_COLOR,
+} from "./AutoFormationBuilder.utils";
 
-/* ── Fuzzy player matching (AI 한글 hallucination 폴백) ── */
-// AI가 "테스트피벗1" → "테스트피벳1" 같이 받침/자모 1글자 변형해서 응답하는 케이스 자동 복구
-function levenshtein(a: string, b: string): number {
-  if (a === b) return 0;
-  const al = a.length, bl = b.length;
-  if (al === 0) return bl;
-  if (bl === 0) return al;
-  const prev = new Array(bl + 1);
-  const curr = new Array(bl + 1);
-  for (let j = 0; j <= bl; j++) prev[j] = j;
-  for (let i = 1; i <= al; i++) {
-    curr[0] = i;
-    for (let j = 1; j <= bl; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
-    }
-    for (let j = 0; j <= bl; j++) prev[j] = curr[j];
-  }
-  return prev[bl];
-}
-
-function fuzzyMatchPlayer<T extends { id: string; name: string }>(
-  target: string,
-  candidates: T[],
-  used: Set<string>,
-): T | null {
-  // 짧은 이름(3자 이하)은 fuzzy 미적용 — "김선휘" vs "김선화" 오매칭 위험
-  if (target.length < 4) return null;
-  let bestDist = Infinity;
-  let bestList: T[] = [];
-  for (const c of candidates) {
-    if (used.has(c.id)) continue;
-    if (Math.abs(c.name.length - target.length) > 1) continue;
-    const dist = levenshtein(c.name, target);
-    if (dist > 1) continue;
-    if (dist < bestDist) {
-      bestDist = dist;
-      bestList = [c];
-    } else if (dist === bestDist) {
-      bestList.push(c);
-    }
-  }
-  // 후보 1명일 때만 허용 (모호하면 거부)
-  return bestList.length === 1 ? bestList[0] : null;
-}
-
-/* ── Types ── */
-
-export type AttendingPlayer = {
-  /** 표시용 메인 id — 연동 회원은 users.id, 미연동·용병은 team_members.id / match_guests.id */
-  id: string;
-  name: string;
-  preferredPosition: PreferredPosition; // 주 포지션 (하위 호환)
-  preferredPositions?: PreferredPosition[]; // 복수 선호 포지션
-  /** 용병 여부 — AI 프롬프트에 전달해 실력 불확실성 반영 */
-  isGuest?: boolean;
-  /**
-   * 연동 회원의 users.id — squad가 user_id 또는 member_id 어느 쪽으로 저장돼도 매칭하기 위해 별도 보존.
-   * 회원: id === userId 일 수 있고 그 경우 memberId도 있음. 미연동/용병은 undefined.
-   */
-  userId?: string;
-  /**
-   * team_members.id — 연동 회원이면 user_id 외에도 함께 보존. 미연동 회원은 id === memberId.
-   */
-  memberId?: string;
-};
-
-type PlayerAssignment = AttendingPlayer & {
-  quarters: number; // 0, 0.5, 1, ... quarterCount
-  isGK: boolean;
-};
-
-type SlotAssignment = {
-  slotId: string;
-  slotLabel: string;
-  playerId: string;
-  playerName: string;
-  type: "full" | "first_half" | "second_half";
-};
-
-type QuarterResult = {
-  quarter: number;
-  assignments: SlotAssignment[];
-  /** 쿼터별 다른 포메이션 사용 시 (AI 풀 플랜 적용). 없으면 상위 formation 사용 */
-  formationId?: string;
-};
-
-export type GeneratedSquad = {
-  quarter_number: number;
-  formation: string;
-  positions: Record<string, { playerId: string; x: number; y: number; secondPlayerId?: string }>;
-};
-
-type Props = {
-  matchId: string;
-  quarterCount: number;
-  attendingPlayers: AttendingPlayer[];
-  sportType?: SportType;
-  /** 경기별 참가 인원 (축구 8/9/10/11, 풋살 3~6) */
-  playerCount?: number;
-  defaultFormationId?: string;
-  side?: "A" | "B";
-  /** 이미 전술판에 편성이 저장된 상태인지 — 덮어쓰기 확인 다이얼로그 표시 기준 */
-  hasExistingFormation?: boolean;
-  /**
-   * DB 에 저장된 쿼터별 편성 원본 — 새로고침·재진입 후 빌더 UI 복원용.
-   * MatchTacticsTab 이 /api/squads 에서 fetch 해둔 dbSquads 를 그대로 전달.
-   */
-  initialSquads?: Array<{
-    quarter_number: number;
-    formation: string;
-    positions: Record<string, { playerId: string; x: number; y: number; secondPlayerId?: string } | null>;
-  }>;
-  onGenerated?: (squads: GeneratedSquad[]) => void;
-  /** AI 풀 플랜 응답의 coaching 본문을 상위에 전달 — AiCoachAnalysisCard 즉시 갱신용 */
-  onAiCoachingReady?: (payload: { analysis: string; source: "ai" | "rule" }) => void;
-  /** 자동 편성 결과가 바뀔 때 AI 코치 분석에 필요한 컨텍스트를 상위에 제공 */
-  onAnalysisContextReady?: (ctx: {
-    placement: Array<{ slot: string; playerName: string }>;
-    quarterPlacements: Array<{ quarter: number; assignments: Array<{ slot: string; playerName: string }> }>;
-    /** 쿼터별 포메이션 이름 — AI 가 가짜 포메이션 창작 방지용 */
-    quarterFormations: Array<{ quarter: number; formation: string }>;
-    attendees: Array<{ name: string; preferredPosition?: string | null; isGuest?: boolean }>;
-    formationName: string;
-    quarterCount: number;
-    allSlotsFilled: boolean;
-    /**
-     * 편성을 어떤 방식으로 생성했는지 — AI 코치 어투 분기용.
-     * - "rule": 팀 기본 포메이션 + 규칙 기반 배치 (AI가 포메이션 고른 것 아님)
-     * - "ai-fixed": 팀 포메이션 고정, 배치만 AI 최적화
-     * - "ai-free": AI 가 쿼터별로 포메이션을 직접 설계 (풀 플랜)
-     * - "manual": DB 복원·수동 편집 케이스 (이번 세션에서 생성 버튼 안 누름)
-     */
-    generationMode: "rule" | "ai-fixed" | "ai-free" | "manual";
-  } | null) => void;
-  /** AI 코치 분석 버튼 표시 여부 (김선휘 Feature Flag) */
-  enableAi?: boolean;
-  /** 분석에 전달할 경기 맥락 */
-  matchContext?: {
-    matchType: "REGULAR" | "INTERNAL" | "EVENT";
-    opponent: string | null;
-  };
-};
-
-/* ── Position helpers ── */
-
-/** 포메이션 슬롯 → 세분화 포지션 매핑 */
-function getSlotSubPosition(slot: FormationSlot): PreferredPosition {
-  if (slot.role === "GK") return "GK";
-  if (["CB", "LCB", "RCB"].includes(slot.role)) return "CB";
-  if (["LB", "LWB"].includes(slot.role)) return "LB";
-  if (["RB", "RWB"].includes(slot.role)) return "RB";
-  if (["CDM", "LDM", "RDM"].includes(slot.role)) return "CDM";
-  if (["CM", "LCM", "RCM"].includes(slot.role)) return "CM";
-  if (slot.role === "LM") return "LW";
-  if (slot.role === "RM") return "RW";
-  if (slot.role === "CAM") return "CAM";
-  if (slot.role === "LAM") return "LW";
-  if (slot.role === "RAM") return "RW";
-  if (slot.role === "LW") return "LW";
-  if (slot.role === "RW") return "RW";
-  // 풋살 slot — DetailedPosition 풋살 코드 매핑 (41차 풋살 활성화 후속)
-  if (slot.role === "FIXO") return "FIXO";
-  if (slot.role === "ALA") return "ALA";
-  if (slot.role === "PIVO") return "PIVO";
-  return "ST"; // ST, CF, LS, RS
-}
-
-/** 포메이션 슬롯 → 상위 4분류 */
-function getSlotCategory(slot: FormationSlot): Position {
-  return PREF_TO_POSITION[getSlotSubPosition(slot)];
-}
-
-const POS_LABEL: Record<PreferredPosition, string> = {
-  GK: "GK",
-  CB: "CB",
-  LB: "LB",
-  RB: "RB",
-  CDM: "CDM",
-  CM: "CM",
-  CAM: "CAM",
-  LW: "LW",
-  RW: "RW",
-  ST: "ST",
-  FIXO: "FIXO",
-  ALA: "ALA",
-  PIVO: "PIVO",
-};
-const POS_COLOR: Record<PreferredPosition, string> = {
-  GK: "bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/30",
-  CB: "bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30",
-  LB: "bg-sky-500/20 text-sky-700 dark:text-sky-400 border-sky-500/30",
-  RB: "bg-sky-500/20 text-sky-700 dark:text-sky-400 border-sky-500/30",
-  CDM: "bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30",
-  CM: "bg-teal-500/20 text-teal-700 dark:text-teal-400 border-teal-500/30",
-  CAM: "bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 border-cyan-500/30",
-  LW: "bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-500/30",
-  RW: "bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-500/30",
-  ST: "bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-500/30",
-  FIXO: "bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30",
-  ALA: "bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 border-cyan-500/30",
-  PIVO: "bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-500/30",
-};
+// 외부 사용자(MatchTacticsTab·MatchDetailClient)가 default import 옆에서 함께 받을 수 있게 re-export
+export type { AttendingPlayer, GeneratedSquad } from "./AutoFormationBuilder.types";
 
 /* ── Distribution calculator ── */
 
@@ -934,7 +748,7 @@ export default function AutoFormationBuilder({
   onAnalysisContextReady,
   enableAi = false,
   matchContext,
-}: Props) {
+}: AutoFormationBuilderProps) {
   const confirm = useConfirm();
   // 경기 인원 수에 맞는 포메이션만 필터 (미지정 시 축구 11, 풋살 5 기본)
   // 풋살 한국 아마추어 표준 6:6 (GK 포함 6명) — 5인제는 변형
