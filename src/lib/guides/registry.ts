@@ -4,6 +4,7 @@ import * as futsalSplitTeams from "./posts/futsal-split-teams";
 import * as futsalTacticsApp from "./posts/futsal-tactics-app";
 import * as dormancyAutoExemption from "./posts/dormancy-auto-exemption";
 import * as soccerTeamExcelVsApp from "./posts/soccer-team-excel-vs-app";
+import * as kakaoVoteVsApp from "./posts/kakao-vote-vs-app";
 import type { GuidePost } from "./types";
 
 const all: GuidePost[] = [
@@ -13,6 +14,7 @@ const all: GuidePost[] = [
   futsalTacticsApp,
   dormancyAutoExemption,
   soccerTeamExcelVsApp,
+  kakaoVoteVsApp,
 ];
 
 export const guides = Object.fromEntries(all.map((g) => [g.meta.slug, g])) as Record<

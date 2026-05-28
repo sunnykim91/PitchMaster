@@ -166,6 +166,11 @@ docs/portfolio.md
 
 # v0 design export (참조용)
 v0card/
+dsahboard/
+landing/
+
+# Claude 세션 메모리 (별도 private repo로 관리: sunnykim91/pitchmaster-memory)
+memory/
 
 # 일회성 fix·migration 스크립트 (실행 후 의미 없음)
 scripts/fix-*.mjs
