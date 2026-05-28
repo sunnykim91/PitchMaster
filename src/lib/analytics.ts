@@ -38,4 +38,10 @@ export const GA = {
   pushSubscribe: (enabled: boolean) => trackEvent("push_toggle", { enabled }),
   /** PWA 설치 */
   pwaInstall: () => trackEvent("pwa_install"),
+
+  // ── 온보딩·안내 효과 측정 ──
+  /** HintCard 표시(첫 진입). storage_key로 5곳 구분: 출석·전술·OCR·후기 MVP·가입 신청 */
+  hintShown: (storageKey: string) => trackEvent("hint_shown", { hint_key: storageKey }),
+  /** HintCard 닫기. 닫기 빈도 = 안내 효과 측정 신호 (즉시 닫기율↑ = 안내 무용) */
+  hintDismissed: (storageKey: string) => trackEvent("hint_dismissed", { hint_key: storageKey }),
 };

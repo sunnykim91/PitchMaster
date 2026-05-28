@@ -15,12 +15,16 @@ export async function GET(request: NextRequest) {
   const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
   const today = kstNow.toISOString().split("T")[0];
 
-  // 오늘 COMPLETED된 경기 중 result_pushed 안 된 것
+  // 22시 cron + result_pushed=false 멱등성. 22시 이후 종료 경기 다음날 fix용 7일 가드.
+  const sevenDaysAgo = new Date(kstNow.getTime() - 7 * 24 * 60 * 60 * 1000)
+    .toISOString().split("T")[0];
+
   const { data: matches } = await db
     .from("matches")
     .select("id, team_id, opponent_name, match_date, match_type")
     .eq("status", "COMPLETED")
-    .eq("match_date", today)
+    .gte("match_date", sevenDaysAgo)
+    .lte("match_date", today)
     .eq("result_pushed", false)
     .eq("stats_included", true);
 

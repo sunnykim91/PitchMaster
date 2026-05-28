@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { X, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { GA } from "@/lib/analytics";
 
 /**
  * 첫 진입 안내 카드 — Phase 6 (68차C, 사용자 점수 친절성↑·직관성↑ 목표).
@@ -57,7 +58,10 @@ export default function HintCard({
     if (typeof window === "undefined") return;
     try {
       const seen = localStorage.getItem(storageKey);
-      if (!seen) setVisible(true);
+      if (!seen) {
+        setVisible(true);
+        GA.hintShown(storageKey);
+      }
     } catch {
       // localStorage 차단 환경 — 안 보여줌 (오작동보다 안전)
     }
@@ -65,6 +69,7 @@ export default function HintCard({
 
   function dismiss() {
     setVisible(false);
+    GA.hintDismissed(storageKey);
     if (forceShow) return;
     if (typeof window === "undefined") return;
     try {
