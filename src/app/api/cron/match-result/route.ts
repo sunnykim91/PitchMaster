@@ -21,19 +21,34 @@ export async function GET(request: NextRequest) {
 
   const { data: matches } = await db
     .from("matches")
-    .select("id, team_id, opponent_name, match_date, match_type")
+    .select("id, team_id, opponent_name, match_date, match_type, teams(name)")
     .eq("status", "COMPLETED")
     .gte("match_date", sevenDaysAgo)
     .lte("match_date", today)
     .eq("result_pushed", false)
     .eq("stats_included", true);
 
+  // 진단용 로그: 어떤 매치가 SELECT 가드를 통과했는지 추적.
+  // 2026-05-28 FCMZ vs HOLD FC 경기 결과 푸시가 2일 lag 발송된 원인 추적용 —
+  // 5/27 cron이 1매치만 보고 5/28 cron이 7매치 일괄 처리한 패턴의 정체 파악.
+  console.log("[match-result] window", { today, sevenDaysAgo, candidates: matches?.length ?? 0 });
+  if (matches && matches.length > 0) {
+    console.log("[match-result] candidates", matches.map((m) => ({
+      id: m.id,
+      date: m.match_date,
+      type: m.match_type,
+      opp: m.opponent_name,
+    })));
+  }
+
   if (!matches || matches.length === 0) {
-    return NextResponse.json({ message: "No results to push", sent: 0 });
+    return NextResponse.json({ message: "No results to push", sent: 0, candidates: 0 });
   }
 
   let totalSent = 0;
   let processed = 0;
+  let skippedNoGoals = 0;
+  let skippedAlreadyClaimed = 0;
 
   for (const match of matches) {
     const isInternal = match.match_type === "INTERNAL";
@@ -44,7 +59,11 @@ export async function GET(request: NextRequest) {
       .select("scorer_id, is_own_goal")
       .eq("match_id", match.id);
 
-    if (!goals || goals.length === 0) continue; // 골 기록 없으면 스킵
+    if (!goals || goals.length === 0) {
+      skippedNoGoals++;
+      console.log("[match-result] skip (no goals)", match.id, match.match_date);
+      continue;
+    }
 
     let ourGoals = 0;
     let oppGoals = 0;
@@ -97,9 +116,15 @@ export async function GET(request: NextRequest) {
     const emoji = result === "승" ? "⚽" : result === "무" ? "🤝" : "💪";
 
     // 메시지 생성
+    // 카피: 팀명·날짜 prefix 필수 — cron 지연 시 "어떤 경기?" 헷갈림 방지 (다중 팀 멤버 포함)
+    // MVP/역할 가이드 푸시와 동일한 prefix 규칙
     const opponent = isInternal ? "자체전" : (match.opponent_name ?? "상대팀");
+    const teamObj = Array.isArray(match.teams) ? match.teams[0] : match.teams;
+    const teamName = (teamObj as { name?: string } | null)?.name ?? "";
+    const teamPrefix = teamName ? `[${teamName}] ` : "";
+    const dateLabel = match.match_date.slice(5); // "MM-DD"
     const title = `${emoji} 경기 결과`;
-    const scoreLine = `vs ${opponent} ${ourGoals}:${oppGoals} ${result}!`;
+    const scoreLine = `${teamPrefix}${dateLabel} vs ${opponent} ${ourGoals}:${oppGoals} ${result}!`;
     const scorersLine = scorerNames.length > 0 ? `\n득점: ${scorerNames.join(", ")}` : "";
     const body = `${scoreLine}${scorersLine}`;
 
@@ -113,7 +138,11 @@ export async function GET(request: NextRequest) {
       .select("id")
       .maybeSingle();
 
-    if (!claimed) continue; // 이미 다른 실행에서 처리됨
+    if (!claimed) {
+      skippedAlreadyClaimed++;
+      console.log("[match-result] skip (already claimed)", match.id);
+      continue;
+    }
 
     const pushResult = await sendTeamPush(match.team_id, {
       title,
@@ -125,5 +154,18 @@ export async function GET(request: NextRequest) {
     processed++;
   }
 
-  return NextResponse.json({ matches: processed, sent: totalSent });
+  console.log("[match-result] done", {
+    candidates: matches.length,
+    processed,
+    sent: totalSent,
+    skippedNoGoals,
+    skippedAlreadyClaimed,
+  });
+  return NextResponse.json({
+    candidates: matches.length,
+    matches: processed,
+    sent: totalSent,
+    skippedNoGoals,
+    skippedAlreadyClaimed,
+  });
 }
