@@ -361,17 +361,24 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
     return groups;
   }, [displayRole, isOperator, staffCounts.joinRequests, staffCounts.unpaidPenalties, staffCounts.attendanceMissing]);
 
-  // 그룹 간 sibling prefix 충돌 방지 (예: /settings/animations 진입 시
-  // '전술 영상'과 '설정' 동시 active) — 전체 nav items를 평탄화해
-  // 가장 긴 prefix 매치 하나를 결정, 모든 SidebarNav 인스턴스에 동일 전달.
-  const globalActiveHref = useMemo(() => {
-    const all = [homeNavItem, ...navGroups.flatMap((g) => g.items)];
-    const matches = all.filter(
-      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+  // 그룹 간 sibling prefix 충돌 방지 (55차 박제: /settings/animations 진입 시
+  // '전술 영상'과 '설정' 동시 active). 추가로 71차: 같은 href 항목이 여러 그룹에
+  // 있을 때(예: 운영 "경기 일정" + 빠른 처리 "출석 체크할 경기" 둘 다 "/matches")
+  // 양쪽 SidebarNav가 같은 activeHref 받아 둘 다 active 되는 버그도 같이 해소.
+  // 가장 긴 prefix 매치 그룹+href 한 쌍을 결정해 해당 그룹 SidebarNav 에만 전달.
+  const HOME_GROUP_KEY = "__home__";
+  const globalActiveLocation = useMemo(() => {
+    type Loc = { groupKey: string; href: string };
+    const flat: Loc[] = [
+      { groupKey: HOME_GROUP_KEY, href: homeNavItem.href },
+      ...navGroups.flatMap((g) => g.items.map((it) => ({ groupKey: g.title, href: it.href }))),
+    ];
+    const matches = flat.filter(
+      (loc) => pathname === loc.href || pathname.startsWith(`${loc.href}/`),
     );
     if (matches.length === 0) return null;
     matches.sort((a, b) => b.href.length - a.href.length);
-    return matches[0].href;
+    return matches[0];
   }, [pathname, homeNavItem, navGroups]);
 
   const roleLabel =
@@ -497,13 +504,19 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
         </div>
       )}
       <Separator className="my-4" />
-      <SidebarNav items={[homeNavItem]} activeHref={globalActiveHref} />
+      <SidebarNav
+        items={[homeNavItem]}
+        activeHref={globalActiveLocation?.groupKey === HOME_GROUP_KEY ? globalActiveLocation.href : null}
+      />
       {navGroups.map((group) => (
         <div key={group.title} className="mt-4 border-t border-border/30 pt-3">
           <p className="px-3 pb-1 text-[12px] font-semibold uppercase tracking-widest text-muted-foreground/50">
             {group.title}
           </p>
-          <SidebarNav items={group.items} activeHref={globalActiveHref} />
+          <SidebarNav
+            items={group.items}
+            activeHref={globalActiveLocation?.groupKey === group.title ? globalActiveLocation.href : null}
+          />
         </div>
       ))}
       <div className="mt-4 space-y-0.5">
