@@ -12,19 +12,46 @@ export async function getBoardData(teamId: string, userId?: string) {
   const db = getSupabaseAdmin();
   if (!db) return { posts: [] };
 
-  // ── Stage 1: posts (likes/comments count 포함) ──
-  const { data } = await db
-    .from("posts")
-    .select("*, author:author_id(name, profile_image_url), post_likes(count), post_comments(count)")
-    .eq("team_id", teamId)
-    .order("is_pinned", { ascending: false })
-    .order("created_at", { ascending: false });
+  // ── Stage 1: 운영공지(is_global=true) + 우리 팀 글을 분리 fetch 후 id 기준 dedupe ──
+  // /api/posts GET 과 동일 로직 — SSR initialData 가 global 공지를 누락해
+  // 팀 글 0개 팀에서 빈 게시판으로 보이던 버그 방지 (feedback_data_flow_dual_check)
+  const [teamRes, globalRes] = await Promise.all([
+    db.from("posts")
+      .select("*, author:author_id(name, profile_image_url), post_likes(count), post_comments(count)")
+      .eq("team_id", teamId)
+      .order("is_pinned", { ascending: false })
+      .order("created_at", { ascending: false }),
+    db.from("posts")
+      .select("*, author:author_id(name, profile_image_url), post_likes(count), post_comments(count)")
+      .eq("is_global", true)
+      .order("created_at", { ascending: false }),
+  ]);
 
   type PostRow = Record<string, unknown> & {
+    id: string;
+    is_pinned?: boolean;
+    is_global?: boolean;
+    created_at?: string;
     post_likes?: { count: number }[];
     post_comments?: { count: number }[];
   };
-  const rows = (data ?? []) as PostRow[];
+  const seen = new Set<string>();
+  const rows: PostRow[] = [];
+  for (const row of [...(globalRes.data ?? []), ...(teamRes.data ?? [])] as PostRow[]) {
+    if (seen.has(row.id)) continue;
+    seen.add(row.id);
+    rows.push(row);
+  }
+  // 정렬: 운영공지 최상단 → 팀 핀 → created_at desc
+  rows.sort((a, b) => {
+    const aGlobal = a.is_global ? 1 : 0;
+    const bGlobal = b.is_global ? 1 : 0;
+    if (aGlobal !== bGlobal) return bGlobal - aGlobal;
+    const aPinned = a.is_pinned ? 1 : 0;
+    const bPinned = b.is_pinned ? 1 : 0;
+    if (aPinned !== bPinned) return bPinned - aPinned;
+    return (b.created_at ?? "").localeCompare(a.created_at ?? "");
+  });
   const postIds = rows.map((r) => r.id as string);
   const posts = rows.map((row) => ({
     ...row,
