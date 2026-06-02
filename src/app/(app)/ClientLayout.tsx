@@ -142,15 +142,13 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const markAllRead = async () => {
     const unread = notifications.filter((n) => !n.is_read);
     if (unread.length === 0) return;
-    await Promise.all(
-      unread.map((n) =>
-        fetch("/api/notifications", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: n.id, is_read: true }),
-        })
-      )
-    );
+    // 서버의 일괄 분기(markAllRead) 사용 — 알림 수만큼 PUT 쏘던 N요청을 1요청으로.
+    // (기존 per-id 요청은 is_read/isRead 필드명 불일치를 API의 `?? true` 기본값에 의존)
+    await fetch("/api/notifications", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ markAllRead: true }),
+    });
     fetchNotifications();
   };
 

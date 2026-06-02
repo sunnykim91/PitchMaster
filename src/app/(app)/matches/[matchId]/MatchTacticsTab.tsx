@@ -323,10 +323,11 @@ function MatchTacticsTabInner({
           const newMap = { ...teamMap };
           if (side === null) delete newMap[playerId]; else newMap[playerId] = side;
           setSavingTeams(true);
-          await apiMutate("/api/internal-teams", "POST", {
+          const { error } = await apiMutate("/api/internal-teams", "POST", {
             matchId, teams: { A: Object.entries(newMap).filter(([, s]) => s === "A").map(([id]) => id), B: Object.entries(newMap).filter(([, s]) => s === "B").map(([id]) => id) },
           });
           setSavingTeams(false);
+          if (error) { showToast("팀 배정에 실패했어요. 다시 시도해주세요.", "error"); return; }
           refetchInternalTeams?.();
         }
 
@@ -334,10 +335,12 @@ function MatchTacticsTabInner({
           const shuffled = [...attendingPlayers].sort(() => Math.random() - 0.5);
           const half = Math.ceil(shuffled.length / 2);
           setSavingTeams(true);
-          await apiMutate("/api/internal-teams", "POST", {
+          const { error } = await apiMutate("/api/internal-teams", "POST", {
             matchId, teams: { A: shuffled.slice(0, half).map((m) => m.id), B: shuffled.slice(half).map((m) => m.id) },
           });
           setSavingTeams(false);
+          // 실패해도 '편성 완료' 토스트를 띄우던 false-success 수정
+          if (error) { showToast("랜덤 팀 편성에 실패했어요. 다시 시도해주세요.", "error"); return; }
           showToast("랜덤 팀 편성 완료");
           // 결과 즉시 확인할 수 있도록 편성 영역 자동 펼침
           setShowTeamSplit(true);

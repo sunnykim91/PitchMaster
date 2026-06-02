@@ -309,6 +309,8 @@ function DuesBulkTabInner({
   const handleBulkImageChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    // 중복 OCR 가드는 트리거 측에 이미 존재 (카드 onClick if(ocrLoading)return + '사진 선택' 버튼 loading-disabled).
+    // 여기서 ocrLoading 을 읽으면 frozen deps([refetchSummary]) 때문에 stale 이라 무의미.
 
     const imageUrl = URL.createObjectURL(file);
     setBulkImage(imageUrl);

@@ -181,6 +181,7 @@ function MatchDiaryTabInner({
   }
 
   async function handleRegenerateAi() {
+    if (regenerating) return; // 더블클릭/동시요청 가드 — AI 재생성 한도 레이스 방지
     setRegenerating(true);
     setRegenerateError(null);
     setCurrentAiSummary(""); // 스트리밍 시작 — 빈 문자열로 초기화해 progressive 렌더

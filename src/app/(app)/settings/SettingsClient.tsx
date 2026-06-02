@@ -273,10 +273,17 @@ export default function SettingsClient({
   }
 
   async function handleDeleteTeam() {
+    // 삭제 성공 시에만 이동 — 실패해도 /login 으로 보내 '삭제됨'으로 오인하던 버그 수정
     try {
-      await fetch("/api/teams", { method: "DELETE" });
+      const res = await fetch("/api/teams", { method: "DELETE" });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setMessage(j.error ? `팀 삭제 실패: ${j.error}` : "팀 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
     } catch {
-      // ignore
+      setMessage("팀 삭제 중 네트워크 오류가 발생했습니다.");
+      return;
     }
     router.push("/login");
   }
