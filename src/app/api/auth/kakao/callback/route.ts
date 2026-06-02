@@ -92,7 +92,19 @@ export async function GET(request: NextRequest) {
       // 초대 코드
       redirectUrl = `/?inviteCode=${encodeURIComponent(stateDecoded)}`;
     }
-    return NextResponse.redirect(new URL(redirectUrl, request.url));
+    // 오픈 리다이렉트 방지 — 같은 origin 의 내부 경로만 허용.
+    // (https://evil.com, //evil.com, /\evil.com 등 외부 유도 모두 차단)
+    let safeRedirect = "/";
+    try {
+      const base = new URL(request.url);
+      const target = new URL(redirectUrl, base);
+      if (target.origin === base.origin) {
+        safeRedirect = target.pathname + target.search;
+      }
+    } catch {
+      safeRedirect = "/";
+    }
+    return NextResponse.redirect(new URL(safeRedirect, request.url));
   } catch {
     return NextResponse.redirect(new URL("/login?error=auth_fail", request.url));
   }

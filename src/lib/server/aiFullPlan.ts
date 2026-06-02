@@ -679,7 +679,7 @@ export async function generateAiFullPlan(input: TacticsAnalysisInput): Promise<F
 
     // matches.ai_coach_analysis 에 저장 — AiCoachAnalysisCard가 mount 시 자동 로드
     if (input.matchId && coaching) {
-      await persistCoachAnalysis(input.matchId, coaching, coaching === rawCoaching ? MODEL : "rule");
+      await persistCoachAnalysis(input.matchId, input.teamId, coaching, coaching === rawCoaching ? MODEL : "rule");
     }
 
     // quarterCount >= 4인데 1가지 formation만 쓴 경우 경고 기록만

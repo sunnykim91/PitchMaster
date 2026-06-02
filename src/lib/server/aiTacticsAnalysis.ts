@@ -12,13 +12,15 @@ import { sanitizePromptObject, sanitizePromptText } from "@/lib/server/aiPromptS
  */
 export async function persistCoachAnalysis(
   matchId: string | null | undefined,
+  teamId: string | null | undefined,
   text: string,
   model: string,
 ): Promise<void> {
-  if (!matchId || !text) return;
+  if (!matchId || !teamId || !text) return;
   try {
     const db = getSupabaseAdmin();
     if (!db) return;
+    // team_id 스코프 — 타팀 경기 분석 덮어쓰기 차단 (다른 팀 matchId 주입 방어)
     await db
       .from("matches")
       .update({
@@ -26,7 +28,8 @@ export async function persistCoachAnalysis(
         ai_coach_generated_at: new Date().toISOString(),
         ai_coach_model: model,
       })
-      .eq("id", matchId);
+      .eq("id", matchId)
+      .eq("team_id", teamId);
   } catch (err) {
     console.error("[aiTacticsAnalysis] coach analysis 저장 실패:", err);
   }
@@ -959,13 +962,13 @@ export async function* generateAiTacticsAnalysisStream(
       yield { type: "replace", text: ruleText, source: "rule", reason: "low_quality" };
       yield { type: "done", source: "rule", model: MODEL };
       await recordAiUsage({ ...logBase, source: "rule", model: MODEL, ...tokens, latencyMs: Date.now() - started, errorReason: "low_quality" });
-      await persistCoachAnalysis(input.matchId, ruleText, "rule");
+      await persistCoachAnalysis(input.matchId, input.teamId, ruleText, "rule");
       return;
     }
 
     yield { type: "done", source: "ai", model: MODEL };
     await recordAiUsage({ ...logBase, source: "ai", model: MODEL, ...tokens, latencyMs: Date.now() - started });
-    await persistCoachAnalysis(input.matchId, cleaned, MODEL);
+    await persistCoachAnalysis(input.matchId, input.teamId, cleaned, MODEL);
   } catch (err) {
     console.error("[aiTacticsAnalysis stream] 호출 실패:", err);
     // 에러 세부 분류 — 사용자/운영자가 원인 파악 가능하게
@@ -987,7 +990,7 @@ export async function* generateAiTacticsAnalysisStream(
       errorReason: `${errorReason}: ${errMsg}`,
     });
     // 에러 폴백도 rule text 로 저장해 재조회 가능하게 (사용자는 어쨌든 본 텍스트이므로)
-    await persistCoachAnalysis(input.matchId, ruleText, "rule");
+    await persistCoachAnalysis(input.matchId, input.teamId, ruleText, "rule");
   }
 }
 

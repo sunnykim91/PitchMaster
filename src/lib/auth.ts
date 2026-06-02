@@ -109,7 +109,7 @@ export async function auth(): Promise<Session | null> {
           .eq("user_id", session.user.id)
           .eq("team_id", session.user.teamId)
           .eq("status", "ACTIVE")
-          .single(),
+          .maybeSingle(),
         db.from("users")
           .select("profile_image_url")
           .eq("id", session.user.id)
@@ -118,6 +118,15 @@ export async function auth(): Promise<Session | null> {
       const membership = membershipRes.data;
 
       let needSync = false;
+
+      // 강퇴(BANNED)/제거된 멤버십 — 세션의 팀 권한 즉시 제거.
+      // 옛 teamRole='STAFF'/'PRESIDENT'가 남으면 service_role API 전체를 우회하므로 차단.
+      // transient DB 오류(membershipRes.error)는 제외 — 정상 회원을 잘못 강등시키지 않음.
+      if (!membershipRes.error && !membership) {
+        session.user.teamId = undefined;
+        session.user.teamRole = undefined;
+        needSync = true;
+      }
 
       // 프로필 이미지 동기화
       const dbProfileImage = (userRes.data as { profile_image_url: string | null } | null)?.profile_image_url ?? null;
@@ -150,8 +159,10 @@ export async function auth(): Promise<Session | null> {
           }
         }
       }
-      // DB sync 완료 — 60초 동안 같은 user+team 조합은 캐시 hit으로 DB skip
-      rememberAuthSync(cacheKey);
+      // DB sync 완료 — 60초 동안 같은 user+team 조합은 캐시 hit으로 DB skip.
+      // 단, membership 확인된 경우에만 캐시 — 강퇴(null)/DB오류 시엔 다음 요청에서 재검증
+      // (쿠키 set 실패 경로에서 강퇴 후에도 옛 권한이 60초간 남는 창 차단).
+      if (membership) rememberAuthSync(cacheKey);
     }
   }
 

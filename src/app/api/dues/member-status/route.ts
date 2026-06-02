@@ -21,6 +21,10 @@ export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
 
+  // 면제·선납·휴회·부상 목록 → 운영진 전용 (설정 탭 staffOnly와 일치)
+  const roleCheck = requireRole(ctx, PERMISSIONS.DUES_RECORD_ADD);
+  if (roleCheck) return roleCheck;
+
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
@@ -224,6 +228,9 @@ async function getCandidates(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
 
+  const roleCheck = requireRole(ctx, PERMISSIONS.DUES_RECORD_ADD);
+  if (roleCheck) return roleCheck;
+
   const exemptionId = request.nextUrl.searchParams.get("candidates");
   if (!exemptionId) return apiError("candidates(exemptionId) 파라미터 필요", 400);
 
@@ -265,6 +272,9 @@ async function getCandidates(request: NextRequest) {
 async function getMemberRecentIncomes(request: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
+
+  const roleCheck = requireRole(ctx, PERMISSIONS.DUES_RECORD_ADD);
+  if (roleCheck) return roleCheck;
 
   const teamMemberId = request.nextUrl.searchParams.get("memberCandidates");
   if (!teamMemberId) return apiError("memberCandidates 파라미터 필요", 400);

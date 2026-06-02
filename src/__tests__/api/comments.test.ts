@@ -165,7 +165,7 @@ describe("POST /api/comments", () => {
   it("201: MEMBER — 댓글 작성 성공", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const newComment = { id: "c-new", post_id: "p1", content: "새 댓글 내용", author: { name: "일반 멤버" } };
-    const db = createMockDb(["post_comments", newComment]);
+    const db = createMockDb(["posts", { id: "p1" }], ["post_comments", newComment]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makePostRequest(commentBody));
@@ -178,16 +178,26 @@ describe("POST /api/comments", () => {
   it("201: STAFF — 댓글 작성 성공", async () => {
     vi.mocked(auth).mockResolvedValue(staffSession);
     const newComment = { id: "c-staff", post_id: "p1", content: "운영진 댓글", author: { name: "운영진" } };
-    const db = createMockDb(["post_comments", newComment]);
+    const db = createMockDb(["posts", { id: "p1" }], ["post_comments", newComment]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makePostRequest({ postId: "p1", content: "운영진 댓글" }));
     expect(res.status).toBe(201);
   });
 
+  it("404: 다른 팀 게시글에는 댓글 작성 불가 (크로스팀 차단)", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+    // posts 시드 없음 → 팀 소속 검증 실패 (postCheck null)
+    const db = createMockDb(["post_comments", { id: "c-x" }]);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await POST(makePostRequest({ postId: "other-team-post", content: "침투 댓글" }));
+    expect(res.status).toBe(404);
+  });
+
   it("400: DB 에러 시 에러 반환", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
-    const db = createMockDb(["post_comments", null, { message: "insert failed" }]);
+    const db = createMockDb(["posts", { id: "p1" }], ["post_comments", null, { message: "insert failed" }]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
     const res = await POST(makePostRequest(commentBody));

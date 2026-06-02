@@ -39,6 +39,10 @@ export async function POST(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  // 크로스팀 삽입 차단 — 본인 팀 게시글에만 댓글 가능 (GET/DELETE와 동일 검증)
+  const { data: postCheck } = await db.from("posts").select("id").eq("id", body.postId).eq("team_id", ctx.teamId).single();
+  if (!postCheck) return apiError("Post not found", 404);
+
   const { data, error } = await db
     .from("post_comments")
     .insert({

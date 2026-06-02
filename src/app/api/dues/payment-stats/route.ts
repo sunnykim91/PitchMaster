@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
-import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
+import { getApiContext, apiError, apiSuccess, requireRole } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { PERMISSIONS } from "@/lib/permissions";
 
-/** 납부 통계 — 최근 6개월 납부율 추이 + 장기 미납자 */
+/** 납부 통계 — 최근 6개월 납부율 추이 + 장기 미납자 (운영진 전용) */
 export async function GET() {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
+
+  // 납부율 추이·장기 미납자 명단 → 운영진 전용 (납부현황 탭 staffOnly와 일치)
+  const roleCheck = requireRole(ctx, PERMISSIONS.DUES_RECORD_ADD);
+  if (roleCheck) return roleCheck;
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);

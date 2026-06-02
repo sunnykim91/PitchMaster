@@ -22,17 +22,18 @@ export async function GET(request: NextRequest) {
   let teamName = "PitchMaster";
 
   if (db) {
+    // 본인 팀 경기로 스코프 — 타팀 스코어·득점자·MVP 노출 차단
     const { data: match } = await db
       .from("matches")
       .select("*")
       .eq("id", matchId)
-      .single();
-    if (match) {
-      matchDate = match.match_date;
-      matchTime = match.match_time || "";
-      location = match.location || "";
-      opponent = match.opponent_name || "상대팀";
-    }
+      .eq("team_id", ctx.teamId)
+      .maybeSingle();
+    if (!match) return apiError("Match not found", 404);
+    matchDate = match.match_date;
+    matchTime = match.match_time || "";
+    location = match.location || "";
+    opponent = match.opponent_name || "상대팀";
 
     const { data: goals } = await db
       .from("match_goals")

@@ -136,6 +136,10 @@ export async function PUT(req: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
 
+  // 일괄 자동 매칭은 운영진 전용 (POST/DELETE와 동일 가드 — 누락 보안 수정)
+  const roleCheck = requireRole(ctx, PERMISSIONS.DUES_RECORD_ADD);
+  if (roleCheck) return roleCheck;
+
   const body = await req.json();
   const { month, matches } = body as { month: string; matches: { memberId: string; amount: number; status?: string }[] };
 
