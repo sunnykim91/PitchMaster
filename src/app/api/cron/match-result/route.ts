@@ -47,7 +47,6 @@ export async function GET(request: NextRequest) {
 
   let totalSent = 0;
   let processed = 0;
-  let skippedNoGoals = 0;
   let skippedAlreadyClaimed = 0;
 
   for (const match of matches) {
@@ -59,17 +58,15 @@ export async function GET(request: NextRequest) {
       .select("scorer_id, is_own_goal")
       .eq("match_id", match.id);
 
-    if (!goals || goals.length === 0) {
-      skippedNoGoals++;
-      console.log("[match-result] skip (no goals)", match.id, match.match_date);
-      continue;
-    }
+    // 골 0건 = 0:0 무승부(정상 결과) → skip 하지 않고 그대로 푸시.
+    // (예전엔 skip + claim 누락으로 0:0 경기가 영영 푸시 안 되고 7일간 재쿼리됐음)
+    const goalList = goals ?? [];
 
     let ourGoals = 0;
     let oppGoals = 0;
     const scorerCounts: Record<string, number> = {};
 
-    for (const g of goals) {
+    for (const g of goalList) {
       if (g.scorer_id === "OPPONENT" || g.is_own_goal) {
         oppGoals++;
       } else {
@@ -158,14 +155,12 @@ export async function GET(request: NextRequest) {
     candidates: matches.length,
     processed,
     sent: totalSent,
-    skippedNoGoals,
     skippedAlreadyClaimed,
   });
   return NextResponse.json({
     candidates: matches.length,
     matches: processed,
     sent: totalSent,
-    skippedNoGoals,
     skippedAlreadyClaimed,
   });
 }

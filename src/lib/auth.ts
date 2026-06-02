@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import type { Session, SessionUser } from "@/lib/types";
+import type { Session, SessionUser, Role } from "@/lib/types";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { signSession, verifySession, isSessionSigningConfigured } from "@/lib/sessionSign";
 import { sanitizeKakaoNickname } from "@/lib/validators/safeText";
@@ -105,24 +105,26 @@ export async function auth(): Promise<Session | null> {
     if (db) {
       const [membershipRes, userRes] = await Promise.all([
         db.from("team_members")
-          .select("role, teams(logo_url)")
+          .select("role, status, teams(logo_url)")
           .eq("user_id", session.user.id)
           .eq("team_id", session.user.teamId)
-          .eq("status", "ACTIVE")
           .maybeSingle(),
         db.from("users")
           .select("profile_image_url")
           .eq("id", session.user.id)
           .single(),
       ]);
-      const membership = membershipRes.data;
+      const membership = membershipRes.data as { role: Role; status?: string; teams?: unknown } | null;
+      // 접근 허용 상태만 유효 멤버십 (ACTIVE·DORMANT 휴면 포함). BANNED(강퇴)는 제외.
+      // 강퇴는 row 삭제가 아니라 status='BANNED' (members/route.ts) 이므로 status로 판정.
+      const validMembership = membership && membership.status !== "BANNED" ? membership : null;
 
       let needSync = false;
 
       // 강퇴(BANNED)/제거된 멤버십 — 세션의 팀 권한 즉시 제거.
       // 옛 teamRole='STAFF'/'PRESIDENT'가 남으면 service_role API 전체를 우회하므로 차단.
-      // transient DB 오류(membershipRes.error)는 제외 — 정상 회원을 잘못 강등시키지 않음.
-      if (!membershipRes.error && !membership) {
+      // transient DB 오류(membershipRes.error)는 제외 — 정상/휴면 회원을 잘못 강등시키지 않음.
+      if (!membershipRes.error && !validMembership) {
         session.user.teamId = undefined;
         session.user.teamRole = undefined;
         needSync = true;
@@ -135,14 +137,14 @@ export async function auth(): Promise<Session | null> {
         needSync = true;
       }
 
-      if (membership && membership.role !== session.user.teamRole) {
-        session.user.teamRole = membership.role;
+      if (validMembership && validMembership.role !== session.user.teamRole) {
+        session.user.teamRole = validMembership.role;
         needSync = true;
       }
-      const teamsRaw = membership?.teams as unknown;
+      const teamsRaw = validMembership?.teams as unknown;
       const teamData = Array.isArray(teamsRaw) ? teamsRaw[0] as { logo_url: string | null } | undefined : teamsRaw as { logo_url: string | null } | null;
       const dbLogoUrl = teamData?.logo_url ?? null;
-      if (membership && dbLogoUrl !== (session.user.teamLogoUrl ?? null)) {
+      if (validMembership && dbLogoUrl !== (session.user.teamLogoUrl ?? null)) {
         session.user.teamLogoUrl = dbLogoUrl;
         needSync = true;
       }
@@ -160,9 +162,9 @@ export async function auth(): Promise<Session | null> {
         }
       }
       // DB sync 완료 — 60초 동안 같은 user+team 조합은 캐시 hit으로 DB skip.
-      // 단, membership 확인된 경우에만 캐시 — 강퇴(null)/DB오류 시엔 다음 요청에서 재검증
+      // 단, 유효 멤버십일 때만 캐시 — 강퇴(BANNED/null)·DB오류 시엔 다음 요청에서 재검증
       // (쿠키 set 실패 경로에서 강퇴 후에도 옛 권한이 60초간 남는 창 차단).
-      if (membership) rememberAuthSync(cacheKey);
+      if (validMembership) rememberAuthSync(cacheKey);
     }
   }
 
