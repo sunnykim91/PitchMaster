@@ -202,7 +202,7 @@ const effectiveEnableAi = enableAi;
 | 경기 후기 | 경기 일지 탭 | **전체 공개 (축구·풋살). 단 LLM 아닌 결정론적 템플릿 (25차 이후)** | — |
 | AI 코치 분석 | 전술 탭 | **전체 공개 (STAFF+, 축구·풋살)** | Haiku 4.5 |
 | AI Full Plan | 자동편성 빌더 | **전체 공개 (STAFF+, 축구·풋살)** | Haiku 4.5 |
-| OCR 거래 파싱 | 회비 일괄등록 | **전체 공개 (rate limit: user 20/team 100/day + 이미지 해시 캐시)** | Haiku 4.5 Vision |
+| OCR 거래 파싱 | 회비 일괄등록 | **전체 공개 (rate limit: 팀 월 100회 + 이미지 해시 캐시. per-user/일 캡 없음)** | Haiku 4.5 Vision |
 
 > ⚠️ 단 하나의 풋살 차단: `/api/ai/match-summary/[matchId]` POST 재생성만 403. 자동 생성은 풋살도 받음 → 실질 무의미. 정리 후보.
 

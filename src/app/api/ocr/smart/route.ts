@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Phase B: Feature Flag 해제 — 모든 팀에 AI OCR 공개.
-  // 레이트리밋(user 20/team 100 per day) + 이미지 해시 캐시로 비용 안전권.
+  // 실제 한도: 팀당 월 100회(MONTHLY_TEAM_CAPS.ocr) + 이미지 해시 캐시(같은 사진 재청구 안 함).
+  // (per-user/일 단위 캡은 미구현 — 현재 사용량이 월 1~2건 수준이라 월 100이면 충분)
 
   // 레이트리밋 체크
   const rate = await checkRateLimit("ocr", session.user.id, session.user.teamId ?? null);

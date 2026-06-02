@@ -260,6 +260,11 @@ function DuesBulkTabInner({
     const res = await fetch("/api/ocr/smart", { method: "POST", body: formData });
     const json = await res.json();
     if (!res.ok) {
+      // 한도 초과(429)는 사용자에게 명확히 안내 — 예전엔 console.warn 으로만 묻혀 '왜 안 되지' 했음.
+      // 안내 후 기본 OCR 로 폴백(아래 호출자)되므로 인식 자체는 계속 가능.
+      if (res.status === 429) {
+        showToast(json.message ?? "이번 달 AI OCR 한도를 모두 사용했어요. 기본 OCR로 처리합니다.", "info");
+      }
       console.warn("[AI OCR] failed:", json.error ?? res.status);
       return null;
     }

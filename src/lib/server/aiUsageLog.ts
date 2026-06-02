@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
  * 한도 정책 (마이그레이션 00033):
  *   - tactics-plan: 경기당 3회 + 팀당 월 20회 / tactics-coach: 경기당 4회 + 팀당 월 30회
  *   - 경기 후기: 자동생성 1회(ai_summary_generated_at) + 재생성 1회(ai_summary_regenerate_count)
- *   - OCR: 제한 없음 (이미지 해시 캐시로 중복 방지)
+ *   - OCR: 팀당 월 100회(MONTHLY_TEAM_CAPS.ocr) + 이미지 해시 캐시 (per-user/일 캡은 미구현)
  *   - 선수 카드: 기존 유지
  *
  * 테이블 없어도 graceful하게 동작 — 로그 실패가 AI 기능을 막지 않음.
