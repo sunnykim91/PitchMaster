@@ -799,12 +799,15 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                           </button>
                         </div>
                       )}
-                      {match.voteDeadline && !isVoteClosed && (
-                        <div className="pm-mc-deadline" style={{ textAlign: "center" }}>
-                          투표 마감 · {formatMatchDate(match.voteDeadline.split("T")[0])}{" "}
-                          {match.voteDeadline.split("T")[1]?.slice(0, 5)}
-                        </div>
-                      )}
+                      {match.voteDeadline && !isVoteClosed && (() => {
+                        // vote_deadline 은 UTC(timestamptz) → KST(+9h, 한국 DST 없음)로 변환해 표시
+                        const kst = new Date(new Date(match.voteDeadline).getTime() + 9 * 3600 * 1000).toISOString();
+                        return (
+                          <div className="pm-mc-deadline" style={{ textAlign: "center" }}>
+                            투표 마감 · {formatMatchDate(kst.slice(0, 10))} {kst.slice(11, 16)}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 );

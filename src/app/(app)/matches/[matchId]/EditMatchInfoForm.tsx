@@ -128,7 +128,8 @@ export default function EditMatchInfoForm({
           </div>
           <div>
             <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">투표 마감</p>
-            <input type="datetime-local" name="voteDeadline" defaultValue={match.voteDeadline?.slice(0, 16) ?? ""} className="relative h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+            {/* vote_deadline 은 UTC(timestamptz) → datetime-local(naive=KST) 표시용으로 +9h 보정. 저장 시 toKSTTimestamp 가 다시 +09:00 부여 → 왕복 안정 */}
+            <input type="datetime-local" name="voteDeadline" defaultValue={match.voteDeadline ? new Date(new Date(match.voteDeadline).getTime() + 9 * 3600 * 1000).toISOString().slice(0, 16) : ""} className="relative h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
           </div>
         </div>
         <div className="flex gap-3 pt-1">
