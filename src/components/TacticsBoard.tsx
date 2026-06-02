@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useConfirm } from "@/lib/ConfirmContext";
+import { useToast } from "@/lib/ToastContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
@@ -32,6 +33,7 @@ export type { TeamSettings, UniformSet } from "./TacticsBoard.types";
 
 export default function TacticsBoard({ matchId, roster, quarterCount, sportType = "SOCCER", playerCount, teamSettings: teamSettingsProp, initialSquads, defaultFormationId: teamDefaultFormationId, readOnly = false, side }: TacticsBoardProps) {
   const confirm = useConfirm();
+  const { showToast } = useToast();
   const isMobile = useIsMobile();
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [quarterMatrixOpen, setQuarterMatrixOpen] = useState(false);
@@ -165,13 +167,20 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
 
   const saveToApi = useCallback(async (state: BoardState, quarterNum: number) => {
     setSaving(true);
-    await apiMutate("/api/squads", "POST", {
+    // apiMutate 는 throw 안 함 — 반환 error 를 직접 확인해야 함.
+    // 실패 시 로컬 낙관적 동기화/이벤트 발행을 막아 'DB엔 없는데 저장됨'으로 보이는 걸 방지.
+    const { error } = await apiMutate("/api/squads", "POST", {
       matchId,
       quarterNumber: quarterNum,
       formation: state.formationId,
       positions: state.placements,
       side: side ?? null,
     });
+    if (error) {
+      setSaving(false);
+      showToast("전술판 저장에 실패했어요. 잠시 후 다시 시도해주세요.", "error");
+      return;
+    }
     // 로컬 squadsData도 동기화 (쿼터 전환 시 즉시 반영)
     setSquadsApiData((prev) => {
       const existing = prev.squads.filter((s) => s.quarter_number !== quarterNum);
@@ -195,7 +204,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       );
     }
     setSaving(false);
-  }, [matchId, side, setSquadsApiData]);
+  }, [matchId, side, setSquadsApiData, showToast]);
 
   /** Pending save에 쿼터 번호도 함께 저장 */
   const pendingQuarterRef = useRef(activeQuarter);

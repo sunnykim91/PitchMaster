@@ -44,6 +44,8 @@ export async function subscribeToPush(): Promise<PushSubscription | null> {
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     console.error("[Push] 서버 구독 실패:", err);
+    // 서버 미등록인데 non-null 을 반환하면 호출자가 '켜짐'으로 오인 → throw 로 실패 전파
+    throw new Error((err as { error?: string })?.error || "푸시 서버 등록에 실패했습니다");
   }
 
   return subscription;

@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/lib/ConfirmContext";
+import { useToast } from "@/lib/ToastContext";
 import { Zap, Sparkles, Loader2, Palette } from "lucide-react";
 import type {
   AttendingPlayer,
@@ -750,6 +751,7 @@ export default function AutoFormationBuilder({
   matchContext,
 }: AutoFormationBuilderProps) {
   const confirm = useConfirm();
+  const { showToast } = useToast();
   // 경기 인원 수에 맞는 포메이션만 필터 (미지정 시 축구 11, 풋살 5 기본)
   // 풋살 한국 아마추어 표준 6:6 (GK 포함 6명) — 5인제는 변형
   const effectiveFieldCount = playerCount ?? (sportType === "FUTSAL" ? 6 : 11);
@@ -1079,15 +1081,18 @@ export default function AutoFormationBuilder({
 
     // 생성된 스쿼드를 API에 저장 (나갔다 들어와도 유지)
     // positions가 비어있는 쿼터는 전술판을 초기화할 수 있으므로 건너뜀
+    // apiMutate 는 throw 안 함 — 반환 error 를 누적해 실패를 표면화.
+    let saveError: string | null = null;
     for (const sq of squads) {
       if (Object.keys(sq.positions).length === 0) continue;
-      await apiMutate("/api/squads", "POST", {
+      const { error } = await apiMutate("/api/squads", "POST", {
         matchId, quarterNumber: sq.quarter_number,
         formation: sq.formation, positions: sq.positions,
         side: side ?? null,
       });
+      if (error) { saveError = error; break; }
     }
-    // 역할 가이드 등 외부 구독자에게 저장 완료 알림
+    // 역할 가이드 등 외부 구독자에게 알림 — 성공/실패 무관하게 DB 최신 상태로 갱신
     if (typeof window !== "undefined") {
       window.dispatchEvent(
         new CustomEvent("match-squads-saved", { detail: { matchId } })
@@ -1095,6 +1100,14 @@ export default function AutoFormationBuilder({
     }
 
     setSaving(false);
+
+    if (saveError) {
+      showToast("자동 편성 저장에 실패했어요. 잠시 후 다시 시도해주세요.", "error");
+      // 일부만 저장됐을 수 있으므로 DB 기준으로 다시 읽게 빈 배열 전달
+      onGenerated?.([]);
+      return;
+    }
+
     // positions가 비어있는 쿼터는 TacticsBoard에 전달하지 않음.
     // 빈 positions를 initialSquads로 넘기면 TacticsBoard가 해당 쿼터를 빈 화면으로 표시함.
     const validSquads = squads.filter((sq) => Object.keys(sq.positions).length > 0);

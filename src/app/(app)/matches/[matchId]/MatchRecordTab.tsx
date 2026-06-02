@@ -294,9 +294,10 @@ function MatchRecordTabInner({
                   </>
                 ) : (
                   <>
-                    <span className="text-foreground">{goals.filter((g) => g.scorerId !== "OPPONENT" && !g.isOwnGoal).length}</span>
+                    {/* 자책골 규칙: 상대 자책골(OPPONENT+isOwnGoal)=우리 득점, 우리 자책골=상대 득점 (MatchDetailClient와 동일) */}
+                    <span className="text-foreground">{goals.filter((g) => g.scorerId !== "OPPONENT" && !g.isOwnGoal).length + goals.filter((g) => g.scorerId === "OPPONENT" && g.isOwnGoal).length}</span>
                     <span className="mx-3 text-muted-foreground">:</span>
-                    <span className="text-muted-foreground">{goals.filter((g) => g.scorerId === "OPPONENT" || g.isOwnGoal).length}</span>
+                    <span className="text-muted-foreground">{goals.filter((g) => g.scorerId === "OPPONENT" && !g.isOwnGoal).length + goals.filter((g) => g.scorerId !== "OPPONENT" && g.isOwnGoal).length}</span>
                   </>
                 )}
               </div>

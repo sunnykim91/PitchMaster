@@ -36,10 +36,13 @@ export const PollBlock = memo(function PollBlock({ poll, onVote, onClosePoll, is
     setDetailLoading(true);
     try {
       const res = await fetch(`/api/posts/vote/detail?pollId=${poll.id}`);
+      // 403/500 응답 바디는 { error } 라 options 가 없음 → detail.options.map() crash 방지
+      if (!res.ok) { setDetail(null); return; }
       const data = await res.json();
+      if (!data || !Array.isArray(data.options)) { setDetail(null); return; }
       setDetail(data);
     } catch {
-      // ignore
+      setDetail(null);
     } finally {
       setDetailLoading(false);
     }

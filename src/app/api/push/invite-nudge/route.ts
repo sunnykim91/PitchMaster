@@ -33,15 +33,6 @@ export async function POST() {
 
     if ((count ?? 0) > 1) continue; // 이미 팀원이 있으면 스킵
 
-    // 최근 24시간 내 같은 팀에 넛지 발송 이력 체크 (중복 방지)
-    const { count: recentNoti } = await db
-      .from("notifications")
-      .select("id", { count: "exact", head: true })
-      .eq("title", "팀원을 초대해보세요!")
-      .gte("created_at", oneDayAgo);
-
-    if ((recentNoti ?? 0) > 0) continue;
-
     // 회장 user_id 조회
     const { data: president } = await db
       .from("team_members")
@@ -51,6 +42,18 @@ export async function POST() {
       .single();
 
     if (!president?.user_id) continue;
+
+    // 최근 24시간 내 같은 회장에게 넛지 발송 이력 체크 (중복 방지).
+    // user_id 필터 필수 — 없으면 다른 팀 회장이 받은 알림 하나로 모든 팀 넛지가 스킵됨
+    // (match-nudge route 와 동일 패턴).
+    const { count: recentNoti } = await db
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", president.user_id)
+      .eq("title", "팀원을 초대해보세요!")
+      .gte("created_at", oneDayAgo);
+
+    if ((recentNoti ?? 0) > 0) continue;
 
     await sendTeamPush(team.id, {
       title: "팀원을 초대해보세요!",

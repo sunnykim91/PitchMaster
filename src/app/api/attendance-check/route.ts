@@ -121,18 +121,19 @@ async function generatePenalty(db: any, teamId: string, matchId: string, targetU
     // DORMANT/PENDING/BANNED 회원이면 벌금 생성 안 함 (ACTIVE 만 대상)
     const { data: memberRow } = await db
       .from("team_members")
-      .select("status")
+      .select("id, status")
       .eq("team_id", teamId)
       .eq("user_id", targetUserId)
       .maybeSingle();
     if (!memberRow || memberRow.status !== "ACTIVE") return;
 
-    // 면제/휴회/부상 회원이면 벌금 생성 안 함
+    // 면제/휴회/부상 회원이면 벌금 생성 안 함.
+    // member_dues_exemptions.member_id 는 team_members.id (penalty_records 와 달리 users.id 아님).
     const { data: exemption } = await db
       .from("member_dues_exemptions")
       .select("id")
       .eq("team_id", teamId)
-      .eq("member_id", targetUserId)
+      .eq("member_id", memberRow.id)
       .eq("is_active", true)
       .limit(1)
       .maybeSingle();
