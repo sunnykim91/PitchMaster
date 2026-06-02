@@ -55,9 +55,6 @@ export async function POST(request: NextRequest) {
     return apiError("자체전 경기만 팀 편성이 가능합니다", 400);
   }
 
-  // 기존 편성 삭제 후 새로 삽입
-  await db.from("match_internal_teams").delete().eq("match_id", matchId);
-
   const rows: { match_id: string; side: string; player_id: string }[] = [];
   for (const playerId of teams.A ?? []) {
     rows.push({ match_id: matchId, side: "A", player_id: playerId });
@@ -66,9 +63,23 @@ export async function POST(request: NextRequest) {
     rows.push({ match_id: matchId, side: "B", player_id: playerId });
   }
 
+  // 기존 편성 백업 → 삭제 → 삽입. 비원자적(트랜잭션 아님)이라 insert 실패 시 백업으로 복구해 편성 유실 방지.
+  const { data: prevRows } = await db
+    .from("match_internal_teams")
+    .select("match_id, side, player_id")
+    .eq("match_id", matchId);
+
+  await db.from("match_internal_teams").delete().eq("match_id", matchId);
+
   if (rows.length > 0) {
     const { error } = await db.from("match_internal_teams").insert(rows);
-    if (error) return apiError(error.message);
+    if (error) {
+      // 복구: 방금 삭제한 기존 편성 되돌림 (유실 방지)
+      if (prevRows && prevRows.length > 0) {
+        await db.from("match_internal_teams").insert(prevRows);
+      }
+      return apiError(error.message);
+    }
   }
 
   return apiSuccess({ ok: true, count: rows.length });

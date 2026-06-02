@@ -69,10 +69,11 @@ export async function GET(req: NextRequest) {
           existing.paid_amount = 0;
         }
       } else {
-        await db.from("dues_payment_status").insert({
+        // upsert(onConflict) — GET 동시/이중 호출(StrictMode) 시 중복 INSERT 충돌 방지 (POST와 동일 키)
+        await db.from("dues_payment_status").upsert({
           team_id: ctx.teamId, member_id: memberId, month, status: "EXEMPT",
           paid_amount: 0, note, updated_at: new Date().toISOString(),
-        });
+        }, { onConflict: "team_id,member_id,month" });
         data.push({ team_id: ctx.teamId, member_id: memberId, month, status: "EXEMPT", paid_amount: 0, note });
       }
     }

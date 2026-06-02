@@ -82,6 +82,9 @@ export async function autoCompleteTeamMatches(
 ): Promise<void> {
   const today = getKstToday(nowMs);
   const nowTime = getKstTimeOfDay(nowMs);
+  // 7일 하한 — 장기 비활성 팀 진입 시 아주 오래된 SCHEDULED 경기를 한꺼번에 완료해
+  // MVP 투표/OVR 변동 푸시가 폭탄처럼 나가는 것 방지 (cron match-result 의 7일 가드와 동일 취지).
+  const sevenDaysAgo = getKstToday(nowMs - 7 * 24 * 60 * 60 * 1000);
   const completedIds: string[] = [];
 
   // 1·2) 두 UPDATE 는 독립적이라 병렬 실행 (이전 직렬 → ~30ms 절감)
@@ -92,6 +95,7 @@ export async function autoCompleteTeamMatches(
       .eq("team_id", teamId)
       .eq("status", "SCHEDULED")
       .lt("match_date", today)
+      .gte("match_date", sevenDaysAgo)
       .select("id"),
     db
       .from("matches")

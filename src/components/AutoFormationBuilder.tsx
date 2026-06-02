@@ -968,7 +968,8 @@ export default function AutoFormationBuilder({
       }),
     );
     setResults(null);
-  }, [attendingPlayers, quarterCount, formationId]);
+    // filteredFormations·sportType 도 슬롯 수/분배에 쓰이므로 deps 포함 (없으면 stale closure)
+  }, [attendingPlayers, quarterCount, formationId, filteredFormations, sportType]);
 
   const gks = useMemo(
     () => assignments.filter((a) => a.isGK),

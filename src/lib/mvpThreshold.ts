@@ -52,11 +52,18 @@ export function pickStaffDecision(
   options: PickStaffDecisionOptions = {}
 ): string | null {
   const applyBackfillHealing = options.applyBackfillHealing ?? true;
+  // staff 지정으로 인정되는 후보들을 모아 '최다 득표' 후보를 선택.
+  // (예전엔 첫 row 를 반환해, 운영진이 서로 다른 후보를 찍으면 DB row 순서에 따라
+  //  결과가 달라지는 비결정론이 있었음 — 같은 경기를 두 번 집계하면 MVP가 바뀔 수 있었음)
+  const staffCounts = new Map<string, number>();
   for (const v of votes) {
-    if (v.is_staff_decision) return v.candidate_id;
-    if (applyBackfillHealing && staffVoterIds.has(v.voter_id)) return v.candidate_id;
+    if (!v.candidate_id) continue;
+    const isStaffPick = v.is_staff_decision || (applyBackfillHealing && staffVoterIds.has(v.voter_id));
+    if (isStaffPick) staffCounts.set(v.candidate_id, (staffCounts.get(v.candidate_id) ?? 0) + 1);
   }
-  return null;
+  if (staffCounts.size === 0) return null;
+  // 최다 득표 → 동률 시 candidate_id 사전순으로 결정론적 tiebreak
+  return [...staffCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0];
 }
 
 /**

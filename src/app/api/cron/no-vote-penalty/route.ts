@@ -42,11 +42,15 @@ export async function GET(request: NextRequest) {
   const todayEnd = `${todayStr}T23:59:59`;
 
   // vote_deadline이 오늘이거나, vote_deadline 없이 경기일이 오늘인 경기
+  // status 를 SCHEDULED 로만 거르면, 마감일 당일에 이미 경기가 끝나 COMPLETED 로
+  // 자동 전환된 경기의 미투표자 벌금이 누락됨 → SCHEDULED/IN_PROGRESS/COMPLETED 모두 포함.
+  // (중복 벌금은 아래 existingSet + onConflict upsert 로 방지)
+  const PENALTY_MATCH_STATUSES = ["SCHEDULED", "IN_PROGRESS", "COMPLETED"];
   const { data: deadlineMatches } = await db
     .from("matches")
     .select("id, team_id, match_date, opponent_name")
     .in("team_id", teamIds)
-    .eq("status", "SCHEDULED")
+    .in("status", PENALTY_MATCH_STATUSES)
     .gte("vote_deadline", todayStart)
     .lte("vote_deadline", todayEnd);
 
@@ -54,7 +58,7 @@ export async function GET(request: NextRequest) {
     .from("matches")
     .select("id, team_id, match_date, opponent_name")
     .in("team_id", teamIds)
-    .eq("status", "SCHEDULED")
+    .in("status", PENALTY_MATCH_STATUSES)
     .eq("match_date", todayStr)
     .is("vote_deadline", null);
 
