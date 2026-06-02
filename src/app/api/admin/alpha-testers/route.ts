@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { isPlatformAdmin } from "@/lib/admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 const WINDOW_DAYS = 20;
@@ -33,7 +34,7 @@ function addDays(dateKeyStr: string, days: number): string {
 
 export async function GET() {
   const session = await auth();
-  if (!session || session.user.name !== "김선휘") {
+  if (!session || !isPlatformAdmin(session.user.id)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
@@ -160,7 +161,7 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   const session = await auth();
-  if (!session || session.user.name !== "김선휘") {
+  if (!session || !isPlatformAdmin(session.user.id)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
@@ -206,7 +207,7 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   const session = await auth();
-  if (!session || session.user.name !== "김선휘") {
+  if (!session || !isPlatformAdmin(session.user.id)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
   const url = new URL(req.url);

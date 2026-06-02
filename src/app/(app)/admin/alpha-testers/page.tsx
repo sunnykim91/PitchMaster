@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { isPlatformAdmin } from "@/lib/admin";
 import AlphaTestersClient from "./AlphaTestersClient";
 
 export const metadata: Metadata = {
@@ -10,6 +11,6 @@ export const metadata: Metadata = {
 
 export default async function AlphaTestersAdminPage() {
   const session = await auth();
-  if (!session || session.user.name !== "김선휘") redirect("/dashboard");
+  if (!session || !isPlatformAdmin(session.user.id)) redirect("/dashboard");
   return <AlphaTestersClient />;
 }

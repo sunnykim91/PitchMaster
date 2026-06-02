@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { isPlatformAdmin } from "@/lib/admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import AdminNoticeClient, { type GlobalNoticeRow } from "./AdminNoticeClient";
 
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
 export default async function AdminNoticePage() {
   const session = await auth();
   if (!session) redirect("/login");
-  if (session.user.name !== "김선휘") redirect("/dashboard");
+  if (!isPlatformAdmin(session.user.id)) redirect("/dashboard");
 
   const db = getSupabaseAdmin();
   const recent: GlobalNoticeRow[] = [];

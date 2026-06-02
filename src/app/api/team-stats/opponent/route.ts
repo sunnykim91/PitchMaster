@@ -18,6 +18,8 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
  * 정확한 opponent_name 일치 + 같은 team_id 만.
  */
 export async function GET(request: NextRequest) {
+  // 역할 게이트 없음(의도) — ctx.teamId 로 스코프된 '우리 팀'의 상대 전적이라
+  // 기록 탭과 동일하게 모든 팀원(MEMBER+)에게 공개. 타팀 데이터 노출 없음.
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
 

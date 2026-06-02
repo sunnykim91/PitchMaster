@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isStaffOrAbove } from "@/lib/permissions";
+import { isPlatformAdmin } from "@/lib/admin";
 import { validateFreeText } from "@/lib/validators/safeText";
 
 export async function GET(request: NextRequest) {
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
   if (requestedCategory === "NOTICE" && !isStaffOrAbove(ctx.teamRole)) {
     return apiError("팀공지는 운영진만 작성할 수 있어요.", 403);
   }
-  if (requestedIsGlobal && ctx.session.user.name !== "김선휘") {
+  if (requestedIsGlobal && !isPlatformAdmin(ctx.session.user.id)) {
     return apiError("운영공지는 PitchMaster 운영자만 작성할 수 있어요.", 403);
   }
 

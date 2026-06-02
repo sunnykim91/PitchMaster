@@ -18,6 +18,7 @@ import { OnboardingCoachMark } from "@/components/OnboardingCoachMark";
 import { Check, Copy, Link2, Menu, ChevronDown, ChevronRight, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Share, Sun, Moon, LogOut, Film, Megaphone, UserPlus, AlertCircle, ClipboardCheck } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
+import { isPlatformAdmin } from "@/lib/admin";
 import { cn, compactKakaoImage } from "@/lib/utils";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import TeamLogo from "@/components/TeamLogo";
@@ -30,7 +31,7 @@ type ClientLayoutProps = {
 };
 
 export default function ClientLayout({ session, children }: ClientLayoutProps) {
-  const canSwitchRole = session.user.name === "김선휘";
+  const canSwitchRole = isPlatformAdmin(session.user.id);
 
   return (
     <ThemeProvider>
@@ -69,7 +70,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
     }
   }, [pathname]);
   const { viewAsRole, setViewAsRole } = useViewAsRole();
-  const canSwitchRole = session.user.name === "김선휘";
+  const canSwitchRole = isPlatformAdmin(session.user.id);
   const [copied, setCopied] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
@@ -282,7 +283,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
     [],
   );
 
-  const isOperator = session.user.name === "김선휘"; // PitchMaster 운영자 — 운영공지 admin 진입
+  const isOperator = isPlatformAdmin(session.user.id); // PitchMaster 운영자 — 운영공지 admin 진입
 
   const navGroups = useMemo(() => {
     // 권한별 라벨·detail 단순화 — 회원에겐 "관리" 단어가 부담스럽고 권한 오해 소지.

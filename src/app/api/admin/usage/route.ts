@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { isPlatformAdmin } from "@/lib/admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 /**
@@ -16,7 +17,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
  */
 export async function GET() {
   const session = await auth();
-  if (!session || session.user.name !== "김선휘") {
+  if (!session || !isPlatformAdmin(session.user.id)) {
     return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
   }
 

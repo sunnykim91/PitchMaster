@@ -7,6 +7,7 @@ import { MessageSquare, Plus, X, Images } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
 import { isStaffOrAbove } from "@/lib/permissions";
+import { isPlatformAdmin } from "@/lib/admin";
 import { toKoreanError } from "@/lib/errorMessages";
 import type { Role } from "@/lib/types";
 
@@ -135,7 +136,7 @@ export default function BoardClient({
   const { showToast } = useToast();
   const searchParams = useSearchParams();
   const isStaff = isStaffOrAbove(userRole);
-  const isOperator = userName === "김선휘"; // PitchMaster 운영자 — 운영공지 작성 권한
+  const isOperator = isPlatformAdmin(userId); // PitchMaster 운영자 — 운영공지 작성 권한 (이름 아닌 userId)
 
   // 탭 상태 (URL ?tab=gallery 또는 기본값 posts)
   const [activeTab, setActiveTab] = useState<"posts" | "gallery">(
