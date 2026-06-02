@@ -200,7 +200,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     // 역할 가이드 등 외부 구독자에게 저장 완료 알림
     if (typeof window !== "undefined") {
       window.dispatchEvent(
-        new CustomEvent("match-squads-saved", { detail: { matchId } })
+        new CustomEvent("match-squads-saved", { detail: { matchId, source: "tactics-board" } })
       );
     }
     setSaving(false);
@@ -511,6 +511,10 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   const updateBoardStateRef = useRef(updateBoardState);
   useEffect(() => { updateBoardStateRef.current = updateBoardState; }, [updateBoardState]);
 
+  // pointerup 의 swap-on-drop 계산용 — 드래그 effect 가 빈 deps 라 ref 로 최신 formation 참조
+  const formationRef = useRef(formation);
+  useEffect(() => { formationRef.current = formation; }, [formation]);
+
   useEffect(() => {
     function handlePointerMove(event: Event) {
       if (!dragRef.current || !boardRef.current) return;
@@ -534,7 +538,56 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     }
 
     function handlePointerUp() {
+      const drag = dragRef.current;
       dragRef.current = null;
+      if (!drag) return;
+      const sourceId = drag.slotId;
+      // 메타 슬롯(주심/부심/촬영)은 스왑 대상 아님 — 좌표만 유지
+      if (sourceId.startsWith("__")) return;
+
+      updateBoardStateRef.current((prev) => {
+        const slots = formationRef.current.slots;
+        const src = prev.placements[sourceId];
+        if (!src) return prev;
+
+        // 드롭 위치(=드래그로 갱신된 src.x/y)에서 가장 가까운 정규 슬롯 탐색
+        let nearest: (typeof slots)[number] | null = null;
+        let best = Infinity;
+        for (const s of slots) {
+          const dx = s.x - (src.x ?? 0);
+          const dy = s.y - (src.y ?? 0);
+          const d = dx * dx + dy * dy;
+          if (d < best) { best = d; nearest = s; }
+        }
+        // 자기 슬롯 근처면 미세조정으로 간주 — move 핸들러가 갱신한 좌표 그대로 유지
+        if (!nearest || nearest.id === sourceId) return prev;
+
+        const srcSlot = slots.find((s) => s.id === sourceId);
+        if (!srcSlot) return prev;
+
+        // 다른 슬롯으로: 점유돼 있으면 두 선수 슬롯 배정을 스왑, 비어 있으면 이동.
+        // 좌표는 각 슬롯의 정규 좌표로 정렬, 반쿼터(secondPlayerId)는 선수와 함께 이동.
+        const target = prev.placements[nearest.id];
+        const toTarget: Placement = {
+          playerId: src.playerId,
+          x: nearest.x,
+          y: nearest.y,
+          ...(src.secondPlayerId ? { secondPlayerId: src.secondPlayerId } : {}),
+        };
+        const toSource: Placement | null = target
+          ? {
+              playerId: target.playerId,
+              x: srcSlot.x,
+              y: srcSlot.y,
+              ...(target.secondPlayerId ? { secondPlayerId: target.secondPlayerId } : {}),
+            }
+          : null;
+
+        return {
+          ...prev,
+          placements: { ...prev.placements, [sourceId]: toSource, [nearest.id]: toTarget },
+        };
+      });
     }
 
     const options = { passive: false } as AddEventListenerOptions;

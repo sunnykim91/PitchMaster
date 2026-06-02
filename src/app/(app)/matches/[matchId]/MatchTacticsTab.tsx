@@ -166,9 +166,15 @@ function MatchTacticsTabInner({
   useEffect(() => {
     if (typeof window === "undefined") return;
     const handler = (e: Event) => {
-      const detail = (e as CustomEvent<{ matchId?: string }>).detail;
+      const detail = (e as CustomEvent<{ matchId?: string; source?: string }>).detail;
       if (!detail || detail.matchId === matchId) {
         setSquadsRefetchToken((n) => n + 1);
+        // 전술판 수동 편집(tactics-board)이면 풀플랜 자동 컨텍스트를 폐기 →
+        // effectiveAiCoachContext 가 dbAiCoachContext(편집 반영본)로 폴백되어 AI 코치 분석이 최신화됨.
+        // 풀플랜(AutoFormationBuilder) 저장은 source 없음 → 풍부한 자동 컨텍스트 유지.
+        if (detail?.source === "tactics-board") {
+          setAiCoachContext(null);
+        }
       }
     };
     window.addEventListener("match-squads-saved", handler);
