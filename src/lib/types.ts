@@ -88,17 +88,20 @@ export type DetailedPosition =
   | "FIXO" | "ALA" | "PIVO";
 
 export type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
-export type MatchType = "REGULAR" | "FRIENDLY" | "TOURNAMENT" | "INTERNAL" | "EVENT";
+// 실제 생성 가능한 match_type 은 3종뿐 (경기 생성 폼 기준): REGULAR(상대전)·INTERNAL(자체전)·EVENT(행사).
+// FRIENDLY/TOURNAMENT 는 과거 스키마 enum 잔재로 UI에서 생성 불가 (DB 0건).
+export type MatchType = "REGULAR" | "INTERNAL" | "EVENT";
 
 /**
- * 팀 공식 전적(승/무/패)에 포함되는 경기 유형 — 정기·친선·대회.
- * 자체전(INTERNAL, A vs B라 팀 전적 무의미)·행사(EVENT, 결과 없음)는 제외.
- * match_type 이 null 인 레거시 경기는 REGULAR 로 간주해 포함.
- * 단일 소스 — getDashboardData / getRecordsData 둘 다 이 헬퍼로 전적을 계산해야 일관성 유지.
+ * 팀 공식 전적(승/무/패)에서 제외할 경기 유형.
+ * - INTERNAL: A vs B 자체전 — 팀 전적 무의미 (OPPONENT 골이 없어 무조건 승으로 집계되던 버그도 차단)
+ * - EVENT: 점수 없는 행사/일정
+ * 그 외(REGULAR, 그리고 match_type null 인 레거시 경기)는 모두 상대전으로 보고 전적에 포함.
+ * 단일 소스 — getDashboardData / getRecordsData 둘 다 이 헬퍼로 전적을 계산해 일관성 유지.
  */
-export const TEAM_RECORD_MATCH_TYPES: readonly string[] = ["REGULAR", "FRIENDLY", "TOURNAMENT"];
+export const TEAM_RECORD_EXCLUDED_MATCH_TYPES: readonly string[] = ["INTERNAL", "EVENT"];
 export function isTeamRecordMatch(matchType: string | null | undefined): boolean {
-  return TEAM_RECORD_MATCH_TYPES.includes(matchType ?? "REGULAR");
+  return !TEAM_RECORD_EXCLUDED_MATCH_TYPES.includes(matchType ?? "REGULAR");
 }
 export type AttendanceVote = "ATTEND" | "ABSENT" | "MAYBE";
 export type DuesType = "INCOME" | "EXPENSE";

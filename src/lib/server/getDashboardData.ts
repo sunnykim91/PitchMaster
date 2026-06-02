@@ -305,7 +305,7 @@ export async function getDashboardData(
   ];
 
   // completedMatches 쿼리 (시즌 범위 내) — match_type 은 코드에서 isTeamRecordMatch 로 필터
-  // (정기·친선·대회만 전적/시즌통계에 포함, 자체전·행사 제외. records와 동일 기준)
+  // (상대전(REGULAR)만 전적/시즌통계에 포함, 자체전(INTERNAL)·행사(EVENT) 제외. records와 동일 기준)
   let completedMatchesQuery = db.from("matches")
     .select("id, match_type")
     .eq("team_id", teamId)
@@ -630,7 +630,7 @@ export async function getDashboardData(
   //   - 출전 = vote='ATTEND' 카운트 (user_id 또는 member_id 매칭, match_id dedupe)
   //   - 골   = scorer_id 가 user_id 또는 member_id (records가 ids.reduce로 둘 다 합산)
   //   - 출석률 = attended / completedMatchIds.length (시즌 전체 경기 분모)
-  // 정기·친선·대회만 (자체전·행사 제외) — 팀 전적·시즌 통계 공통 기준
+  // 상대전(REGULAR)만 (자체전·행사 제외) — 팀 전적·시즌 통계 공통 기준
   const completedMatchIds = (completedMatchesRes.data ?? [])
     .filter((m) => isTeamRecordMatch((m as { match_type?: string | null }).match_type))
     .map((m) => m.id);

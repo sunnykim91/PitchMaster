@@ -55,13 +55,18 @@
 
 ## match_type 종류
 
-| 값 | 의미 |
-|----|------|
-| `REGULAR` | 정기 경기 |
-| `FRIENDLY` | 친선 경기 |
-| `TOURNAMENT` | 대회 |
-| `INTERNAL` | 자체전 (`stats_included` 컬럼으로 스탯 분리 제어) |
-| `EVENT` | 팀 행사/일정 |
+⚠️ **실제 생성 가능한 건 3종뿐** (경기 생성 폼 `matchType: "REGULAR" | "INTERNAL" | "EVENT"`).
+`FRIENDLY`·`TOURNAMENT`는 과거 스키마 enum 잔재로 **UI에서 생성 불가 · DB 0건**. 전적 로직 등에서 고려할 필요 없음.
+
+| 값 | 의미 | 사용 |
+|----|------|------|
+| `REGULAR` | 상대전 (vs 상대팀) | ✅ |
+| `INTERNAL` | 자체전 (A vs B, `stats_included`로 스탯 분리 제어) | ✅ |
+| `EVENT` | 팀 행사/일정 (점수 없음) | ✅ |
+| `FRIENDLY` | 친선 경기 | ❌ 미사용(스키마 잔재) |
+| `TOURNAMENT` | 대회 | ❌ 미사용(스키마 잔재) |
+
+**팀 전적(W/D/L)**: `isTeamRecordMatch()`([lib/types.ts](src/lib/types.ts)) — INTERNAL·EVENT 제외, 나머지(REGULAR·null)는 상대전으로 집계. dashboard·records 공통 소스.
 
 ## stats_included 컬럼 (migration 00010)
 

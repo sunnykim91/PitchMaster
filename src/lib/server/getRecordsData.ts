@@ -66,7 +66,7 @@ export async function getRecordsData(teamId: string) {
 
   const matches = matchesRes.data ?? [];
   const matchIds = matches.map((m) => m.id);
-  // 팀 전적(W/D/L) 전용 — 정기·친선·대회만 (자체전·행사 제외). 선수 통계는 matchIds(전체) 유지.
+  // 팀 전적(W/D/L) 전용 — 상대전(REGULAR)만 (자체전·행사 제외). 선수 통계는 matchIds(전체) 유지.
   const recordMatchIds = matches
     .filter((m) => isTeamRecordMatch((m as { match_type?: string | null }).match_type))
     .map((m) => m.id);
@@ -248,7 +248,7 @@ export async function getRecordsData(teamId: string) {
     if (g.scorer_id === "OPPONENT" || g.is_own_goal) s.opp++;
     else s.our++;
   }
-  // 팀 전적은 recordMatchIds(정기·친선·대회)만 집계 — 자체전(A vs B, OPPONENT 골 없어 무조건 승 처리되던 버그)·행사 제외
+  // 팀 전적은 recordMatchIds(상대전 REGULAR)만 집계 — 자체전(A vs B, OPPONENT 골 없어 무조건 승 처리되던 버그)·행사 제외
   for (const mid of recordMatchIds) {
     const s = matchScores.get(mid) ?? { our: 0, opp: 0 };
     gf += s.our;
