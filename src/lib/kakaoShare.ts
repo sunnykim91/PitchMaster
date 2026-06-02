@@ -21,7 +21,11 @@ function loadKakaoSdk(): Promise<boolean> {
     script.src = "https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js";
     script.async = true;
     script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
+    script.onerror = () => {
+      // 로드 실패 시 캐시 리셋 — 안 그러면 false-promise 가 박혀 다음 시도가 영영 재로드 안 함
+      sdkLoading = null;
+      resolve(false);
+    };
     document.head.appendChild(script);
   });
   return sdkLoading;
