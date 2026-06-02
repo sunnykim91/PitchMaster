@@ -190,8 +190,10 @@ function DuesRecordsTabInner({
     if (!ok) return;
     setBulkDeleting(true);
     const ids = [...selectedIds];
+    let failed = 0;
     for (const id of ids) {
-      await apiMutate(`/api/dues?id=${id}`, "DELETE");
+      const { error } = await apiMutate(`/api/dues?id=${id}`, "DELETE");
+      if (error) failed++;
     }
     // 해당 월 납부 현황 초기화 (PAID/UNPAID 삭제, EXEMPT 유지)
     await fetch(`/api/dues/payment-status?month=${monthFilter}`, { method: "DELETE", credentials: "include" });
@@ -200,7 +202,9 @@ function DuesRecordsTabInner({
     setSelectMode(false);
     await refetchSummary();
     await syncPaymentStatus();
-    showToast(`${count}건 삭제 + 납부 현황 초기화 완료`);
+    // 일부 실패 시 성공으로 오인시키지 않음
+    if (failed > 0) showToast(`${count - failed}건 삭제, ${failed}건 실패`, "error");
+    else showToast(`${count}건 삭제 + 납부 현황 초기화 완료`);
   }, [selectedIds, confirm, refetchSummary, syncPaymentStatus, showToast, monthFilter]);
 
   const [y, m] = monthFilter.split("-").map(Number);
@@ -574,7 +578,7 @@ function DuesRecordsTabInner({
                             type="button"
                             onClick={async () => {
                               const ok = await confirm({ title: "이 내역을 삭제할까요?", variant: "destructive", confirmLabel: "삭제" });
-                              if (ok) handleDeleteRecord(record.id);
+                              if (ok) await handleDeleteRecord(record.id);
                             }}
                             className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors active:scale-95"
                             aria-label="삭제"

@@ -76,6 +76,13 @@ export async function POST(
     db.from("match_guests").select("id, name").eq("match_id", matchId),
   ]);
 
+  // 집계 쿼리 실패를 묵살하면 '기록 없음'처럼 보이는 빈 후기가 저장됨 → 중단.
+  // (guests 는 이름 매핑 보조라 실패해도 graceful degrade)
+  if (goalsRes.error || mvpRes.error || attendanceRes.error) {
+    console.error("[/api/ai/match-summary] 집계 쿼리 실패:", goalsRes.error ?? mvpRes.error ?? attendanceRes.error);
+    return NextResponse.json({ error: "aggregation_failed" }, { status: 503 });
+  }
+
   // scorer_id / assist_id / candidate_id는 users.id, team_members.id, match_guests.id 중 하나
   const members = await db
     .from("team_members")

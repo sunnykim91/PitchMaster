@@ -296,8 +296,12 @@ function MatchDiaryTabInner({
     if (diary.memo) lines.push(``, `📝 ${diary.memo}`);
     lines.push(``, `👉 https://www.pitch-master.app/matches/${matchId}`);
 
-    await navigator.clipboard.writeText(lines.join("\n"));
-    setShareMessage("경기 결과가 복사되었습니다.");
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"));
+      setShareMessage("경기 결과가 복사되었습니다.");
+    } catch {
+      setShareMessage("복사에 실패했습니다. 직접 복사해주세요.");
+    }
     setTimeout(() => setShareMessage(null), 2000);
   }
 

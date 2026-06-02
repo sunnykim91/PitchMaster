@@ -385,11 +385,11 @@ function PaymentStats({ monthFilter, duesStatus }: {
 
   useEffect(() => {
     fetch(`/api/dues/payment-stats`)
-      .then((r) => r.json())
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (data.longTermUnpaid) setLongTermUnpaid(data.longTermUnpaid);
+        if (data?.longTermUnpaid) setLongTermUnpaid(data.longTermUnpaid);
       })
-      .catch(() => {});
+      .catch((e) => console.warn("[DuesStatusTab] payment-stats 로드 실패:", e));
   }, [monthFilter]);
 
   // 현재 월 납부율

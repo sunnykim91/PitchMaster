@@ -89,7 +89,10 @@ export default function MoreClient({
 
   async function handleLogout() {
     setLoggingOut(true);
-    await fetch("/api/auth/logout", { method: "POST" });
+    // 네트워크 실패해도 로그인 페이지로 이동 — uncaught rejection + loggingOut 고착 방지
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch { /* ignore */ }
     router.push("/login");
   }
 

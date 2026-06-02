@@ -192,6 +192,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const fetchTeams = useCallback(async () => {
     try {
       const res = await fetch("/api/teams/my-teams");
+      if (!res.ok) return; // 에러 응답 바디({error})를 teams로 오인하지 않도록
       const data = await res.json();
       if (data.teams) setTeams(data.teams);
     } catch { /* ignore */ }

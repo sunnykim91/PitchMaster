@@ -525,8 +525,9 @@ function DuesBulkTabInner({
 
     let saved = 0;
     let skipped = 0;
+    let failed = 0;
     for (const row of validRows) {
-      const { data } = await apiMutate<{ duplicate?: boolean }>("/api/dues", "POST", {
+      const { data, error } = await apiMutate<{ duplicate?: boolean }>("/api/dues", "POST", {
         type: row.type,
         amount: Number(row.amount),
         description: row.description,
@@ -534,7 +535,9 @@ function DuesBulkTabInner({
         recordedAt: row.date || undefined,
         recordedTime: row.time || undefined,
       });
-      if (data?.duplicate) {
+      if (error) {
+        failed++; // 실패를 저장으로 오인 카운트하던 버그 수정
+      } else if (data?.duplicate) {
         skipped++;
       } else {
         saved++;
@@ -545,11 +548,11 @@ function DuesBulkTabInner({
     setBulkRows([{ date: "", time: "", type: "INCOME", amount: "", description: "", memberName: "" }]);
     setBulkImage(null);
     if (saved > 0) GA.duesRecordAdd("ocr");
-    if (skipped > 0) {
-      showToast(`${saved}건 저장, ${skipped}건 중복 스킵`, "info");
-    } else {
-      showToast(`${saved}건 저장되었습니다.`);
-    }
+    const parts: string[] = [];
+    if (saved > 0) parts.push(`${saved}건 저장`);
+    if (skipped > 0) parts.push(`${skipped}건 중복 스킵`);
+    if (failed > 0) parts.push(`${failed}건 실패`);
+    showToast(parts.join(", ") || "처리할 항목이 없습니다", failed > 0 ? "error" : skipped > 0 ? "info" : "success");
   }, [bulkRows, refetchSummary, showToast]);
 
   /* ── 유효한 OCR 행 수 ── */

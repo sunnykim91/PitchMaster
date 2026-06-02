@@ -517,9 +517,9 @@ function PenaltyRulesSection({ refetchSummary }: { refetchSummary: () => Promise
   // 규칙 로드
   React.useEffect(() => {
     fetch("/api/dues/penalty-rules")
-      .then((r) => r.json())
-      .then((data) => { if (data.rules) setRules(data.rules); setLoaded(true); })
-      .catch(() => setLoaded(true));
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.rules) setRules(data.rules); setLoaded(true); })
+      .catch((e) => { console.warn("[DuesSettingsTab] penalty-rules 로드 실패:", e); setLoaded(true); });
   }, []);
 
   async function handleAdd(formData: FormData) {

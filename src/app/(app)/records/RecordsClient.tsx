@@ -266,6 +266,7 @@ export default function RecordsClient({
       if (isAllTime) { /* 전체 통합은 시즌 필터 없이 */ }
       else if (seasonId) params.set("seasonId", seasonId);
       const res = await fetch(`/api/records/detail?${params}`, { credentials: "include" });
+      if (!res.ok) { setDetailData([]); return; } // 4xx/5xx 를 빈 목록으로 조용히 처리하지 않음
       const json = await res.json();
       setDetailData(json.details ?? []);
     } catch {
@@ -1050,10 +1051,14 @@ function PlayerCardButton({ userId, seasonId }: { userId: string; seasonId: stri
           variant="outline"
           size="sm"
           className="flex-1 gap-2"
-          onClick={() => {
+          onClick={async () => {
             const url = `${window.location.origin}/player/${userId}`;
-            navigator.clipboard.writeText(url);
-            setMessage("프로필 링크가 복사되었습니다");
+            try {
+              await navigator.clipboard.writeText(url);
+              setMessage("프로필 링크가 복사되었습니다");
+            } catch {
+              setMessage("복사에 실패했습니다. 주소를 직접 복사해주세요.");
+            }
           }}
         >
           <Share2 className="h-4 w-4" />
