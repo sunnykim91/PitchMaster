@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { isStaffOrAbove } from "@/lib/permissions";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type { MatchSummaryInput } from "@/lib/server/aiMatchSummary";
 import { generateMatchSummaryFromTemplate } from "@/lib/server/matchSummaryTemplate";
@@ -31,6 +32,12 @@ export async function POST(
     const body = await req.json().catch(() => ({}));
     isRegenerate = body?.regenerate === true;
   } catch { /* empty body */ }
+
+  // 재생성(덮어쓰기 + 1회 카운터 소진)은 운영진 전용.
+  // 초기 자동 생성(regenerate=false)은 결정론적 템플릿·멱등이라 모든 회원 허용 (mount 시 자동 호출).
+  if (isRegenerate && !isStaffOrAbove(session.user.teamRole)) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
 
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: "db_unavailable" }, { status: 503 });

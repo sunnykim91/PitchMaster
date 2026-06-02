@@ -41,6 +41,7 @@ export default async function SettingsPage() {
         defaultPlayerCount: (t?.default_player_count as number | undefined) ?? undefined,
       }}
       userRole={session.user.teamRole}
+      userId={session.user.id}
       initialData={initialData}
     />
   );

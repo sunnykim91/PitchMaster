@@ -111,12 +111,20 @@ export async function POST() {
       .eq("user_id", userId);
 
     // 3. 푸시·알림·MVP 투표 즉시 삭제 (개인 식별 가능 데이터)
-    await Promise.all([
+    // match_mvp_votes 는 voter_id / candidate_id 모두 user 로 참조 →
+    // 낸 투표(voter)뿐 아니라 후보로 받은 투표(candidate)도 삭제해야
+    // 탈퇴자가 익명 상태로 MVP 집계에 남지 않음.
+    const cleanupResults = await Promise.all([
       db.from("push_subscriptions").delete().eq("user_id", userId),
       db.from("notifications").delete().eq("user_id", userId),
-      // match_mvp_votes 는 voter_id / candidate_id 모두 user 로 참조
       db.from("match_mvp_votes").delete().eq("voter_id", userId),
+      db.from("match_mvp_votes").delete().eq("candidate_id", userId),
     ]);
+    // 개인정보 삭제 실패를 조용히 넘기지 않음 — 최소 로깅으로 가시화 (탈퇴 본체는 익명화 완료된 상태)
+    const cleanupErrors = cleanupResults.filter((r) => r.error).map((r) => r.error?.message);
+    if (cleanupErrors.length > 0) {
+      console.error("[/api/account/withdraw] 개인정보 삭제 일부 실패:", cleanupErrors);
+    }
 
     // 4. 감사 로그 (best-effort, 실패해도 탈퇴는 성공 처리)
     await db

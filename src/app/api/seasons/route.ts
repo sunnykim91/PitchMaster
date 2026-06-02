@@ -49,10 +49,12 @@ export async function POST(request: NextRequest) {
 
   // If marking as active, deactivate others first
   if (body.isActive) {
-    await db
+    const { error: deactivateErr } = await db
       .from("seasons")
       .update({ is_active: false })
       .eq("team_id", ctx.teamId);
+    // 비활성화 실패를 무시하면 is_active=true 시즌이 2개 생길 수 있음 → 중단
+    if (deactivateErr) return apiError(deactivateErr.message);
   }
 
   const { data, error } = await db
@@ -85,10 +87,12 @@ export async function PUT(request: NextRequest) {
   if (!db) return apiError("Database not available", 503);
 
   // Deactivate all, then activate the selected one
-  await db
+  const { error: deactivateErr } = await db
     .from("seasons")
     .update({ is_active: false })
     .eq("team_id", ctx.teamId);
+  // 비활성화 실패 무시 시 기존 활성 시즌 + 신규 = is_active 2개 → 중단
+  if (deactivateErr) return apiError(deactivateErr.message);
   const { error } = await db
     .from("seasons")
     .update({ is_active: true })

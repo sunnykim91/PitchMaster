@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess, requireRole } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
+import { validateSafeName } from "@/lib/validators/safeText";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -52,11 +53,15 @@ export async function POST(request: NextRequest) {
     .single();
   if (!matchCheck) return apiError("Match not found", 404);
 
+  // 용병 이름 필수·안전성 검증 (빈/null 이름·인젝션 차단)
+  const nameCheck = validateSafeName(body.name, { maxLength: 20, fieldLabel: "용병 이름", requireMeaningful: true });
+  if (!nameCheck.ok) return apiError(nameCheck.reason);
+
   const { data, error } = await db
     .from("match_guests")
     .insert({
       match_id: body.matchId,
-      name: body.name,
+      name: nameCheck.value,
       position: body.position || null,
       phone: body.phone || null,
       note: body.note || null,
@@ -90,7 +95,11 @@ export async function PUT(request: NextRequest) {
   if (!check) return apiError("Guest not found", 404);
 
   const updates: Record<string, unknown> = {};
-  if (body.name !== undefined) updates.name = body.name;
+  if (body.name !== undefined) {
+    const nameCheck = validateSafeName(body.name, { maxLength: 20, fieldLabel: "용병 이름", requireMeaningful: true });
+    if (!nameCheck.ok) return apiError(nameCheck.reason);
+    updates.name = nameCheck.value;
+  }
   if (body.position !== undefined) updates.position = body.position || null;
   if (body.phone !== undefined) updates.phone = body.phone || null;
   if (body.note !== undefined) updates.note = body.note || null;

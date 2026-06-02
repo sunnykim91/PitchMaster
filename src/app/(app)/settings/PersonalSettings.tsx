@@ -42,6 +42,8 @@ interface PersonalSettingsProps {
   profileSyncedRef: React.MutableRefObject<boolean>;
   onLogout: () => void;
   sportType?: SportType;
+  /** 현재 사용자 id (users.id) — 등번호 본인 식별용 (동명이인 안전) */
+  userId?: string;
 }
 
 function PersonalSettingsComponent({
@@ -54,6 +56,7 @@ function PersonalSettingsComponent({
   profileSyncedRef,
   onLogout,
   sportType,
+  userId,
 }: PersonalSettingsProps) {
   const isFutsal = sportType === "FUTSAL";
   const posGroups = isFutsal ? FUTSAL_POSITION_GROUPS : POSITION_GROUPS;
@@ -161,31 +164,22 @@ function PersonalSettingsComponent({
       .catch(() => {});
   }, []);
 
-  // 등번호 로드
+  // 등번호 로드 — user_id로 본인 식별 (이름 매칭은 동명이인에 타인 등번호 덮어쓰던 버그)
   useEffect(() => {
+    if (!userId) return;
     fetch("/api/members", { credentials: "include" })
       .then((r) => r.json())
       .then((j) => {
-        const me = j.members?.find((m: { user_id: string; jersey_number?: number }) =>
-          m.user_id && j.members.some(() => true) // find my member row
+        const me = (j.members ?? []).find(
+          (m: { id: string; user_id?: string; jersey_number?: number }) => m.user_id === userId
         );
-        // userId 기반으로 본인 찾기 — profile API에서 user_id를 얻을 수 없으므로
-        // 모든 멤버에서 jersey_number를 가진 내 row를 찾는 대안
-        for (const m of j.members ?? []) {
-          // PersonalSettings는 본인만 수정 → user_id가 있는 row 중 하나
-          if (m.user_id) {
-            // API context의 userId와 비교 불가 → 대신 내 이름으로 매칭
-            const userName = m.users?.name ?? m.pre_name;
-            if (userName === profile.name) {
-              setMyMemberId(m.id);
-              setJerseyNumber(m.jersey_number != null ? String(m.jersey_number) : "");
-              break;
-            }
-          }
+        if (me) {
+          setMyMemberId(me.id);
+          setJerseyNumber(me.jersey_number != null ? String(me.jersey_number) : "");
         }
       })
       .catch(() => {});
-  }, [profile.name]);
+  }, [userId]);
 
   async function handleProfileSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

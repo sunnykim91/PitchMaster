@@ -104,11 +104,13 @@ export default function SettingsClient({
   sessionProfile,
   sessionTeam,
   userRole,
+  userId,
   initialData,
 }: {
   sessionProfile: Profile;
   sessionTeam: TeamSettingsData;
   userRole?: Role;
+  userId?: string;
   initialData?: InitialData;
 }) {
   const router = useRouter();
@@ -334,6 +336,7 @@ export default function SettingsClient({
       <div className={activeTab === "personal" ? "" : "hidden"}>
         <PersonalSettings
           profile={profile}
+          userId={userId}
           setProfile={setProfile}
           saving={saving}
           setSaving={setSaving}

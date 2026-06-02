@@ -143,8 +143,16 @@ export async function PUT(request: NextRequest) {
   const updGoalType = body.goalType ?? "NORMAL";
   const updIsOwnGoal = updGoalType === "OWN_GOAL" || (body.isOwnGoal ?? false);
 
+  // POST와 동일 검증 — quarter 0~10 정수(0=쿼터 모름→null), scorerId 필수
   const updQuarter = Number(body.quarter ?? 0);
+  if (!Number.isInteger(updQuarter) || updQuarter < 0 || updQuarter > 10) {
+    return apiError("쿼터 번호가 올바르지 않습니다");
+  }
   const updQuarterValue = updQuarter === 0 ? null : updQuarter;
+
+  if (!body.scorerId || typeof body.scorerId !== "string") {
+    return apiError("득점자 정보가 필요합니다");
+  }
 
   const { data, error } = await db
     .from("match_goals")

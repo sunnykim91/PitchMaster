@@ -1,5 +1,5 @@
-import { NextRequest } from "next/server";
-import { apiError, apiSuccess } from "@/lib/api-helpers";
+import { NextRequest, NextResponse } from "next/server";
+import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getCoords } from "@/lib/server/getCoords";
 
 // 기본 좌표 (좌표 미해결 시 폴백): 서울 시청
@@ -69,6 +69,11 @@ function getFallbackWeather(date: string, location: string) {
 }
 
 export async function GET(request: NextRequest) {
+  // 로그인+팀 사용자만 — 미인증 호출로 OPENWEATHERMAP/카카오 좌표 API 키 소진 방지
+  // (대시보드·경기 정보 탭에서만 호출되므로 영향 없음)
+  const ctx = await getApiContext();
+  if (ctx instanceof NextResponse) return ctx;
+
   const { searchParams } = request.nextUrl;
   const date = searchParams.get("date");
   const location = searchParams.get("location") ?? "";
