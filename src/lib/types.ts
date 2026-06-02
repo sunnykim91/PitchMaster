@@ -88,6 +88,18 @@ export type DetailedPosition =
   | "FIXO" | "ALA" | "PIVO";
 
 export type MatchStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
+export type MatchType = "REGULAR" | "FRIENDLY" | "TOURNAMENT" | "INTERNAL" | "EVENT";
+
+/**
+ * 팀 공식 전적(승/무/패)에 포함되는 경기 유형 — 정기·친선·대회.
+ * 자체전(INTERNAL, A vs B라 팀 전적 무의미)·행사(EVENT, 결과 없음)는 제외.
+ * match_type 이 null 인 레거시 경기는 REGULAR 로 간주해 포함.
+ * 단일 소스 — getDashboardData / getRecordsData 둘 다 이 헬퍼로 전적을 계산해야 일관성 유지.
+ */
+export const TEAM_RECORD_MATCH_TYPES: readonly string[] = ["REGULAR", "FRIENDLY", "TOURNAMENT"];
+export function isTeamRecordMatch(matchType: string | null | undefined): boolean {
+  return TEAM_RECORD_MATCH_TYPES.includes(matchType ?? "REGULAR");
+}
 export type AttendanceVote = "ATTEND" | "ABSENT" | "MAYBE";
 export type DuesType = "INCOME" | "EXPENSE";
 export type PostCategory = "FREE" | "GALLERY"; // legacy, category 구분 제거됨

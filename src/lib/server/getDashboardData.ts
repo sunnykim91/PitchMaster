@@ -1,6 +1,7 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { autoCompleteTeamMatches, getKstToday } from "@/lib/server/autoCompleteMatches";
 import { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
+import { isTeamRecordMatch } from "@/lib/types";
 
 export type TeamRecord = {
   wins: number;
@@ -303,12 +304,12 @@ export async function getDashboardData(
     ...voteMatchIds,
   ];
 
-  // completedMatches 쿼리 (시즌 범위 내)
+  // completedMatches 쿼리 (시즌 범위 내) — match_type 은 코드에서 isTeamRecordMatch 로 필터
+  // (정기·친선·대회만 전적/시즌통계에 포함, 자체전·행사 제외. records와 동일 기준)
   let completedMatchesQuery = db.from("matches")
-    .select("id")
+    .select("id, match_type")
     .eq("team_id", teamId)
     .eq("status", "COMPLETED")
-    .eq("match_type", "REGULAR")
     .neq("stats_included", false)
     .order("match_date", { ascending: false });
   if (seasonStart && seasonEnd) {
@@ -629,7 +630,10 @@ export async function getDashboardData(
   //   - 출전 = vote='ATTEND' 카운트 (user_id 또는 member_id 매칭, match_id dedupe)
   //   - 골   = scorer_id 가 user_id 또는 member_id (records가 ids.reduce로 둘 다 합산)
   //   - 출석률 = attended / completedMatchIds.length (시즌 전체 경기 분모)
-  const completedMatchIds = (completedMatchesRes.data ?? []).map((m) => m.id);
+  // 정기·친선·대회만 (자체전·행사 제외) — 팀 전적·시즌 통계 공통 기준
+  const completedMatchIds = (completedMatchesRes.data ?? [])
+    .filter((m) => isTeamRecordMatch((m as { match_type?: string | null }).match_type))
+    .map((m) => m.id);
   let teamRecord = EMPTY_RECORD;
   let mySeasonStats: DashboardData["mySeasonStats"] = null;
   if (completedMatchIds.length > 0) {
