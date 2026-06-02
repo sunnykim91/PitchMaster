@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Modal } from "@/components/ui/Modal";
 import { apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
+import { useConfirm } from "@/lib/ConfirmContext";
 import type { PlayerRating } from "./types";
 
 interface Props {
@@ -28,6 +29,7 @@ export default function PlayerRatingDialog({
   onClose,
 }: Props) {
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const [score, setScore] = useState<number>(existing?.score ?? 7.0);
   const [comment, setComment] = useState<string>(existing?.comment ?? "");
   const [saving, setSaving] = useState(false);
@@ -52,7 +54,9 @@ export default function PlayerRatingDialog({
 
   async function handleDelete() {
     if (!existing) return;
-    if (!window.confirm(`${rateeName} 평점을 삭제할까요?`)) return;
+    // window.confirm 대신 useConfirm — PWA/인앱브라우저에서 window.confirm 이 무음 차단될 수 있음
+    const ok = await confirm({ title: `${rateeName} 평점을 삭제할까요?`, variant: "destructive", confirmLabel: "삭제" });
+    if (!ok) return;
     setSaving(true);
     const { error } = await apiMutate(`/api/player-ratings/${existing.id}`, "DELETE");
     setSaving(false);

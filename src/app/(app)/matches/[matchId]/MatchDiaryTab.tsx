@@ -7,6 +7,7 @@ import { ImageLightbox } from "@/components/ImageLightbox";
 import PlayerRatingCard from "@/components/playerRating/PlayerRatingCard";
 import { apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
+import { useConfirm } from "@/lib/ConfirmContext";
 import { useItemAction } from "@/lib/useAsyncAction";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -209,6 +210,7 @@ function MatchDiaryTabInner({
     }
   }
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const [isDiaryEditing, setIsDiaryEditing] = useState(false);
   const diaryFormRef = useRef<HTMLFormElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -414,7 +416,7 @@ function MatchDiaryTabInner({
                 {canManage && (
                   <button
                     type="button"
-                    onClick={(e) => { e.stopPropagation(); if (window.confirm("이 사진을 삭제하시겠습니까?")) handleRemovePhoto(url); }}
+                    onClick={async (e) => { e.stopPropagation(); const ok = await confirm({ title: "이 사진을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" }); if (ok) handleRemovePhoto(url); }}
                     className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-background/90 text-destructive shadow-sm"
                     aria-label="사진 삭제"
                   >
