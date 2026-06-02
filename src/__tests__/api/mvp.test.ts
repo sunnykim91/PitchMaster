@@ -144,11 +144,27 @@ describe("POST /api/mvp", () => {
     expect(res.status).toBe(503);
   });
 
+  it("400: 후보가 우리 팀 멤버가 아닌 경우 — 투표 불가", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+    // team_members 조회 null → 후보가 팀 멤버 아님
+    const db = createMockDb(
+      ["matches", { id: "m1", status: "COMPLETED" }],
+      ["team_members", null]
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await POST(makeRequest(voteBody));
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain("팀 멤버");
+  });
+
   it("403: 해당 경기 미참석자 — 투표 불가", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     // attendance.vote가 ATTEND가 아님
     const db = createMockDb(
       ["matches", { id: "m1", status: "COMPLETED" }],
+      ["team_members", { id: "tm-u2" }],
       ["teams", { mvp_vote_staff_only: false }],
       ["match_attendance", { vote: "ABSENT" }]
     );
@@ -165,6 +181,7 @@ describe("POST /api/mvp", () => {
     // attendance null (single()이 null 반환)
     const db = createMockDb(
       ["matches", { id: "m1", status: "COMPLETED" }],
+      ["team_members", { id: "tm-u2" }],
       ["teams", { mvp_vote_staff_only: false }],
       ["match_attendance", null]
     );
@@ -184,6 +201,7 @@ describe("POST /api/mvp", () => {
     };
     const db = createMockDb(
       ["matches", { id: "m1", status: "COMPLETED" }],
+      ["team_members", { id: "tm-u2" }],
       ["teams", { mvp_vote_staff_only: false }],
       ["match_attendance", { vote: "ATTEND" }],
       ["match_mvp_votes", voteData]
@@ -207,6 +225,7 @@ describe("POST /api/mvp", () => {
     };
     const db = createMockDb(
       ["matches", { id: "m1", status: "COMPLETED" }],
+      ["team_members", { id: "tm-u2" }],
       ["teams", { mvp_vote_staff_only: false }],
       ["match_attendance", { vote: "ATTEND" }],
       ["match_mvp_votes", updatedVote]
@@ -223,6 +242,7 @@ describe("POST /api/mvp", () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(
       ["matches", { id: "m1", status: "COMPLETED" }],
+      ["team_members", { id: "tm-u2" }],
       ["teams", { mvp_vote_staff_only: false }],
       ["match_attendance", { vote: "ATTEND" }],
       ["match_mvp_votes", null, { message: "upsert failed" }]

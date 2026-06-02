@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { PlayerCard, type PlayerCardProps } from "./PlayerCard";
 import { ShareModal } from "./ShareCard";
@@ -396,6 +396,7 @@ export function PlayerProfilePage({
   const [showShareModal, setShowShareModal] = useState(false);
   const [showImageShareModal, setShowImageShareModal] = useState(false);
   const [shareToast, setShareToast] = useState<string | null>(null);
+  const shareToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { name, teamName, teamPrimaryColor, positions, preferredFoot, jerseyNumber, teamRole, seasonName, signature, playerCardProps, stats, bestMoments, recentMatches, attendanceHistory } = profile;
 
   function handleBack() {
@@ -406,7 +407,9 @@ export function PlayerProfilePage({
 
   function showShareToast(msg: string) {
     setShareToast(msg);
-    setTimeout(() => setShareToast(null), 2000);
+    // 이전 타이머 정리 — 빠른 연속 호출 시 새 토스트가 조기에 사라지던 것 방지
+    if (shareToastTimerRef.current) clearTimeout(shareToastTimerRef.current);
+    shareToastTimerRef.current = setTimeout(() => setShareToast(null), 2000);
   }
 
   async function handleCopyUrl() {
@@ -572,13 +575,15 @@ export function PlayerProfilePage({
             </div>
           )}
 
-          {/* Signature Statement - Primary Color, Italic */}
-          <p
-            className="text-lg sm:text-xl italic font-medium max-w-lg mx-auto leading-relaxed"
-            style={{ color: teamPrimaryColor }}
-          >
-            &ldquo;{signature}&rdquo;
-          </p>
+          {/* Signature Statement - Primary Color, Italic. 빈 문자열이면 빈 인용부호("") 노출 방지 */}
+          {signature && (
+            <p
+              className="text-lg sm:text-xl italic font-medium max-w-lg mx-auto leading-relaxed"
+              style={{ color: teamPrimaryColor }}
+            >
+              &ldquo;{signature}&rdquo;
+            </p>
+          )}
         </div>
 
         {/* Scroll Cue - Bottom Center */}

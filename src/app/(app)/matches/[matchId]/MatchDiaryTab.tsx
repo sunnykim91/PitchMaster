@@ -280,8 +280,6 @@ function MatchDiaryTabInner({
     const topId = Object.entries(voteCounts).sort(([, a], [, b]) => b - a)[0]?.[0];
     const mvpName = topId ? fullRoster.find((p) => p.id === topId)?.name : null;
 
-    // 득점자 정보
-    const scorers = fullRoster.filter((p) => voteCounts[p.id]).map((p) => `${p.name} (${voteCounts[p.id]}표)`);
 
     const lines = [
       `⚽ PitchMaster 경기 결과`,

@@ -72,6 +72,16 @@ export async function POST(request: NextRequest) {
     return apiError("완료된 경기에만 MVP 투표가 가능합니다", 400);
   }
 
+  // 후보가 우리 팀 멤버인지 검증 — 타팀/임의 UUID 에 투표하는 것 차단
+  const { data: candidateMember } = await db
+    .from("team_members")
+    .select("id")
+    .eq("team_id", ctx.teamId)
+    .eq("user_id", candidateId)
+    .in("status", ["ACTIVE", "DORMANT"])
+    .maybeSingle();
+  if (!candidateMember) return apiError("MVP 후보가 우리 팀 멤버가 아닙니다", 400);
+
   // 팀 MVP 투표 설정 조회 (운영진 전용 여부)
   const { data: teamSettings } = await db
     .from("teams")

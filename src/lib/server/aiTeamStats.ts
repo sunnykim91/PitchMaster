@@ -1,4 +1,9 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import {
+  resolveValidMvp as resolveValidMvpForAi,
+  pickStaffDecision as pickStaffDecisionForAi,
+  shouldApplyNewMvpPolicy as shouldApplyNewMvpPolicyForAi,
+} from "@/lib/mvpThreshold";
 
 /**
  * AI 코치 분석용 팀 통계 (Phase D + E).
@@ -382,7 +387,7 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
   // MVP 수상 횟수 집계 — 기록 페이지와 동일 정책으로 통일:
   //   1) 운영진 지정(is_staff_decision 또는 현재 STAFF+ voter) → 즉시 확정
   //   2) 그 외엔 참석자 70% 이상 투표 통과 + 최다득표자
-  const { resolveValidMvp: resolveValidMvpForAi, pickStaffDecision: pickStaffDecisionForAi, shouldApplyNewMvpPolicy: shouldApplyNewMvpPolicyForAi } = await import("@/lib/mvpThreshold");
+  // (mvpThreshold 는 상단에서 정적 import — 매 호출 dynamic import 제거)
   type MvpRow = { match_id: string; voter_id: string; candidate_id: string; is_staff_decision: boolean | null };
   const mvpAggByMatch = new Map<string, { votes: string[]; rows: MvpRow[] }>();
   for (const v of (mvpVotes ?? []) as MvpRow[]) {

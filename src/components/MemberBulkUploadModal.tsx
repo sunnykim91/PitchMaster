@@ -192,6 +192,7 @@ export function MemberBulkUploadModal({
   };
 
   async function submit() {
+    if (submitting) return; // 더블클릭 중복 제출 가드
     if (rows.length === 0) {
       showToast("등록할 회원이 없습니다", "error");
       return;
