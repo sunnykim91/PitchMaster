@@ -91,12 +91,12 @@ export default function MatchDetailClient({
   const {
     data: goalsData,
     refetch: refetchGoals,
-  } = useApi<{ goals: GoalRow[] }>(`/api/goals?matchId=${matchId}`, initialData?.goals ?? { goals: [] }, { skip: !!initialData?.goals });
+  } = useApi<{ goals: GoalRow[] }>(`/api/goals?matchId=${matchId}`, initialData?.goals ?? { goals: [] }); // SWR — stale 캐시로 골 중복 등록 방지
 
   const {
     data: mvpData,
     refetch: refetchMvp,
-  } = useApi<{ votes: MvpVoteRow[] }>(`/api/mvp?matchId=${matchId}`, initialData?.mvp ?? { votes: [] }, { skip: !!initialData?.mvp });
+  } = useApi<{ votes: MvpVoteRow[] }>(`/api/mvp?matchId=${matchId}`, initialData?.mvp ?? { votes: [] }); // SWR — MVP 투표 stale 방지
 
   const {
     data: attendanceData,
@@ -131,7 +131,7 @@ export default function MatchDetailClient({
 
   const {
     data: membersData,
-  } = useApi<{ members: MemberRow[] }>("/api/members", initialData?.members ?? { members: [] }, { skip: !!initialData?.members });
+  } = useApi<{ members: MemberRow[] }>("/api/members", initialData?.members ?? { members: [] }); // SWR — 회원관리에서 추가한 새 멤버 stale 방지
 
   // team 데이터는 SSR initialData 가 비어있는 케이스가 있어 skip 강제 해제 — client 에서 실제 값 덮어쓰기 보장.
   // (일정 목록은 서버에서 teamUniform prop 직접 전달해 정상이지만 여기는 useApi 경유)
@@ -171,7 +171,8 @@ export default function MatchDetailClient({
   } = useApi<{ attendance: AttendanceVoteRow[] }>(
     `/api/attendance?matchId=${matchId}`,
     initialData?.vote ?? { attendance: [] },
-    { skip: !!initialData?.vote },
+    // skip 없음 — SSR initialData 즉시 표시 + 마운트 시 백그라운드 재조회(SWR).
+    // 홈에서 투표 후 prefetch 된 stale 상세를 열면 "미투표"로 보이던 버그 방지.
   );
 
   /* ── Map API data to client types ── */
