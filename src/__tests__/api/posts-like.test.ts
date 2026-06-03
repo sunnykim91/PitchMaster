@@ -63,6 +63,7 @@ describe("POST /api/posts/like", () => {
     // 1st call: maybeSingle() returns existing like record
     // 2nd call: delete (no meaningful return value needed)
     const db = createMockDb(
+      ["posts", { id: "p1" }],
       ["post_likes", { id: "like1" }],
       ["post_likes", null],
     );
@@ -79,6 +80,7 @@ describe("POST /api/posts/like", () => {
     // 1st call: maybeSingle() returns null (no existing like)
     // 2nd call: insert
     const db = createMockDb(
+      ["posts", { id: "p1" }],
       ["post_likes", null],
       ["post_likes", null],
     );
@@ -95,6 +97,7 @@ describe("POST /api/posts/like", () => {
     // 1st call: maybeSingle() returns null (not yet liked)
     // 2nd call: insert with error
     const db = createMockDb(
+      ["posts", { id: "p1" }],
       ["post_likes", null],
       ["post_likes", null, { message: "insert failed" }],
     );
@@ -104,5 +107,15 @@ describe("POST /api/posts/like", () => {
     expect(res.status).toBe(400);
     const json = await res.json();
     expect(json.error).toBe("insert failed");
+  });
+
+  it("404: 다른 팀 게시글에는 좋아요 불가 (크로스팀 차단)", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+    // posts 시드 없음 → 팀 소속 검증 실패
+    const db = createMockDb(["post_likes", null]);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await POST(makeRequest({ postId: "other-team-post" }));
+    expect(res.status).toBe(404);
   });
 });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
+import { getApiContext, requireRole, apiError, apiSuccess } from "@/lib/api-helpers";
+import { PERMISSIONS } from "@/lib/permissions";
 import * as XLSX from "xlsx";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -7,6 +8,9 @@ import * as XLSX from "xlsx";
 export async function POST(req: NextRequest) {
   const ctx = await getApiContext();
   if (ctx instanceof NextResponse) return ctx;
+  // 운영진 전용 — 회비 일괄 업로드는 DuesBulkTab(staffOnly). MEMBER 의 10MB xlsx 파싱 남용 차단.
+  const roleCheck = requireRole(ctx, PERMISSIONS.DUES_RECORD_ADD);
+  if (roleCheck) return roleCheck;
 
   try {
     const formData = await req.formData();

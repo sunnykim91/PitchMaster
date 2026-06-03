@@ -115,6 +115,8 @@ export async function POST(request: NextRequest) {
   if (body.manual) {
     const { memberId, amount, note } = body;
     if (!memberId || !amount) return apiError("memberId and amount required");
+    const amt = Number(amount);
+    if (!Number.isFinite(amt) || amt <= 0) return apiError("벌금 금액이 올바르지 않습니다", 400);
 
     const db = getSupabaseAdmin();
     if (!db) return apiError("Database not available", 503);
@@ -126,7 +128,7 @@ export async function POST(request: NextRequest) {
         member_id: memberId,
         rule_id: null,
         match_id: null,
-        amount: Number(amount),
+        amount: amt,
         date: new Date().toISOString().slice(0, 10),
         note: note || "수동 추가",
         status: "UNPAID",

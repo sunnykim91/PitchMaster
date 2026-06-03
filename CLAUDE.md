@@ -172,7 +172,9 @@ UI/UX 부채 잔존 (CLAUDE.md 알려진 이슈 참조)
 - AI 캐시: `src/lib/server/aiTeamStats.ts` (24h TTL)
 - 실시간 UI: `MatchRecordTab.tsx`의 "현재 1위" 표시는 확정 정책과 별개 (건드리지 말 것)
 
-**설정 토글**: 팀 설정 `mvp_vote_staff_only` — 일반 팀원 투표를 막는 게이트. 운영진이 투표할 땐 **자동으로 `is_staff_decision=true`** 저장되므로, 토글 OFF 상태에서도 운영진 투표는 즉시 확정됨.
+**설정 토글**: 팀 설정 `mvp_vote_staff_only` — 일반 팀원 투표를 막는 게이트.
+
+**운영진 즉시 확정은 (a) 토글 ON 이거나 (b) 경기일이 `STAFF_DECISION_POLICY_CUTOFF`(2026-05-04) 이전일 때만** 작동. 2026-05-04 이후 + 토글 OFF 팀에선 **운영진 투표도 일반 표로 처리(70% 룰 적용)** — `mvp/route.ts`의 `isStaffDecision = mvpVoteStaffOnly && isStaff`, 집계는 `shouldApplyNewMvpPolicy(matchDate, mvpVoteStaffOnly)` + `applyBackfillHealing: !newPolicy`로 분기. (CUTOFF는 과거 경기 MVP 결과 보존용.)
 
 **UI 안내**: MVP 투표 카드에 threshold 미달 시 "참석자 70% 이상이 투표해야 공식 MVP로 확정됩니다. 미달 시 운영진이 직접 지정할 수 있어요." 문구 자동 노출.
 

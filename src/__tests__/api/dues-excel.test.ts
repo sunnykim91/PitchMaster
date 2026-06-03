@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { memberSession, noTeamSession } from "../helpers/auth";
+import { memberSession, staffSession, noTeamSession } from "../helpers/auth";
 import * as XLSX from "xlsx";
 
 vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
@@ -53,8 +53,15 @@ describe("POST /api/dues/excel", () => {
     expect(res.status).toBe(403);
   });
 
-  it("400: 파일 없는 경우", async () => {
+  it("403: MEMBER 권한 — 운영진 전용 게이트", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
+    const buffer = createKakaoBankExcel([]);
+    const res = await POST(makeExcelRequest(buffer));
+    expect(res.status).toBe(403);
+  });
+
+  it("400: 파일 없는 경우", async () => {
+    vi.mocked(auth).mockResolvedValue(staffSession);
     // FormData 없이 빈 요청
     const formData = new FormData();
     const req = new NextRequest("http://localhost/api/dues/excel", {
@@ -68,7 +75,7 @@ describe("POST /api/dues/excel", () => {
   });
 
   it("200: 카카오뱅크 형식 엑셀 파싱 — 입금/출금 감지", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     const rows = [
       ["2026.03.01 10:00:00", "입금", 50000, 150000, "홍길동", "월회비"],
       ["2026.03.05 14:30:00", "출금", -20000, 130000, "장비구매", ""],
@@ -93,7 +100,7 @@ describe("POST /api/dues/excel", () => {
   });
 
   it("200: 날짜가 Date 객체인 경우에도 파싱", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     const dateObj = new Date("2026-03-15T09:00:00Z");
     const rows = [
       [dateObj, "입금", 30000, 200000, "김철수", ""],
@@ -107,7 +114,7 @@ describe("POST /api/dues/excel", () => {
   });
 
   it("200: 잔액(lastBalance) 반환", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     const rows = [
       ["2026.03.01 10:00:00", "입금", 100000, 500000, "입금", ""],
       ["2026.03.02 11:00:00", "출금", -30000, 470000, "출금", ""],
@@ -120,7 +127,7 @@ describe("POST /api/dues/excel", () => {
   });
 
   it("400: 거래일시 헤더 없는 엑셀", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     const ws = XLSX.utils.aoa_to_sheet([
       ["날짜", "금액"],
       ["2026.03.01", 50000],
@@ -134,7 +141,7 @@ describe("POST /api/dues/excel", () => {
   });
 
   it("400: 데이터 행이 없는 경우 (헤더만 존재)", async () => {
-    vi.mocked(auth).mockResolvedValue(memberSession);
+    vi.mocked(auth).mockResolvedValue(staffSession);
     const buffer = createKakaoBankExcel([]);
     const res = await POST(makeExcelRequest(buffer));
     expect(res.status).toBe(400);

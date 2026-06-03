@@ -13,6 +13,10 @@ export async function POST(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  // 본인 팀 게시글인지 검증 — service_role 이 RLS 우회하므로 타팀 게시글 좋아요 차단
+  const { data: postCheck } = await db.from("posts").select("id").eq("id", postId).eq("team_id", ctx.teamId).single();
+  if (!postCheck) return apiError("Post not found", 404);
+
   // Check if already liked
   const { data: existing } = await db
     .from("post_likes")
