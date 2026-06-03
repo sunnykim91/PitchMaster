@@ -25,6 +25,10 @@ export async function POST(
   if (!session?.user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  // 팀 없는 세션 명시 차단 — auto-trigger(regenerate=false)는 역할 게이트가 없어 teamId! 가 undefined 통과하던 갭
+  if (!session.user.teamId) {
+    return NextResponse.json({ error: "no_team" }, { status: 403 });
+  }
 
   // 재생성 여부 파악
   let isRegenerate = false;

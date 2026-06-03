@@ -9,7 +9,13 @@ const DEMO_TEAM_NAME = "FC DEMO";
  *  - FC DEMO 제외
  *  - 24시간 내 동일 타이틀 알림 이미 발송한 팀 제외
  */
-export async function POST() {
+export async function POST(request: Request) {
+  // 외부 임의 POST 로 전 팀에 푸시 폭탄 발송되는 것 방지 — /api/cron/* 와 동일하게 CRON_SECRET 검사
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: "DB not available" }, { status: 503 });
 

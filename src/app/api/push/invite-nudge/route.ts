@@ -5,7 +5,13 @@ import { sendTeamPush } from "@/lib/server/sendPush";
 const DEMO_TEAM_NAME = "FC DEMO";
 
 /** Cron: 1명(회장만) 팀에게 팀원 초대 넛지 푸시 발송 */
-export async function POST() {
+export async function POST(request: Request) {
+  // 외부 임의 POST 로 전 팀에 푸시 폭탄 발송되는 것 방지 — /api/cron/* 와 동일하게 CRON_SECRET 검사
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: "DB not available" }, { status: 503 });
 

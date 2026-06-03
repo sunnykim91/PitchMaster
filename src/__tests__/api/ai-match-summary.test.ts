@@ -131,27 +131,10 @@ describe("POST /api/ai/match-summary/[matchId]", () => {
     expect(res.headers.get("Content-Type")).toContain("text/event-stream");
   });
 
-  it("200: teamId 없는 세션도 정상 처리", async () => {
+  it("403: teamId 없는 세션 — 팀 없으면 후기 생성 차단 (auth strip 가드)", async () => {
+    // 팀 없는 세션(BANNED/LEFT strip 등)은 차단. 실사용자는 (app)layout이 팀을 강제.
     vi.mocked(auth).mockResolvedValue(noTeamSession);
-    const matchRow = {
-      id: MATCH_ID,
-      match_type: "EVENT",
-      ai_summary_regenerate_count: 0,
-      opponent_name: null,
-      player_count: 11,
-      match_date: "2026-04-22",
-    };
-    const db = createMockDb(
-      ["matches", matchRow],
-      ["match_goals", []],
-      ["match_mvp_votes", []],
-      ["match_attendance", [{ user_id: "user-1", member_id: "mem-1", actually_attended: true, attendance_status: "PRESENT" }]],
-      ["match_guests", []],
-      ["team_members", []],
-      ["matches", null],
-    );
-    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     const res = await POST(makeRequest(MATCH_ID), makeParams(MATCH_ID));
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(403);
   });
 });

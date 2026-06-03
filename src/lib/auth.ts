@@ -115,9 +115,10 @@ export async function auth(): Promise<Session | null> {
           .single(),
       ]);
       const membership = membershipRes.data as { role: Role; status?: string; teams?: unknown } | null;
-      // 접근 허용 상태만 유효 멤버십 (ACTIVE·DORMANT 휴면 포함). BANNED(강퇴)는 제외.
-      // 강퇴는 row 삭제가 아니라 status='BANNED' (members/route.ts) 이므로 status로 판정.
-      const validMembership = membership && membership.status !== "BANNED" ? membership : null;
+      // 접근 박탈 상태(강퇴 BANNED·탈퇴 LEFT)는 유효 멤버십 아님 → 세션 권한 strip.
+      // ACTIVE·DORMANT(휴면)는 유지. 강퇴/탈퇴는 row 삭제가 아니라 status 변경(members/withdraw)이라 status로 판정.
+      const REVOKED_STATUSES = ["BANNED", "LEFT"];
+      const validMembership = membership && !REVOKED_STATUSES.includes(membership.status ?? "") ? membership : null;
 
       let needSync = false;
 
@@ -130,11 +131,14 @@ export async function auth(): Promise<Session | null> {
         needSync = true;
       }
 
-      // 프로필 이미지 동기화
-      const dbProfileImage = (userRes.data as { profile_image_url: string | null } | null)?.profile_image_url ?? null;
-      if (dbProfileImage !== (session.user.profileImageUrl ?? null)) {
-        session.user.profileImageUrl = dbProfileImage ?? undefined;
-        needSync = true;
+      // 프로필 이미지 동기화 — userRes.error 시엔 건너뜀.
+      // (transient DB 오류로 data=null 일 때 멀쩡한 프로필 이미지를 세션에서 지우던 버그 방지)
+      if (!userRes.error) {
+        const dbProfileImage = (userRes.data as { profile_image_url: string | null } | null)?.profile_image_url ?? null;
+        if (dbProfileImage !== (session.user.profileImageUrl ?? null)) {
+          session.user.profileImageUrl = dbProfileImage ?? undefined;
+          needSync = true;
+        }
       }
 
       if (validMembership && validMembership.role !== session.user.teamRole) {
@@ -264,11 +268,13 @@ export async function findOrCreateKakaoUser(kakaoProfile: {
     }
 
     // Load team memberships (여러 팀 가능 — 첫 번째를 활성 팀으로)
+    // ACTIVE + DORMANT(휴면) 포함 — 휴면 회원이 재로그인 시 팀 컨텍스트를 잃고 /team 으로 튕기던 락아웃 방지.
+    // (auth() sync 의 BANNED/LEFT 만 제외하는 정책과 일치)
     const { data: memberships } = await db
       .from("team_members")
       .select("team_id, role, teams(id, name, invite_code, logo_url)")
       .eq("user_id", existing.id)
-      .eq("status", "ACTIVE")
+      .in("status", ["ACTIVE", "DORMANT"])
       .order("joined_at", { ascending: true });
 
     const firstMembership = memberships?.[0];

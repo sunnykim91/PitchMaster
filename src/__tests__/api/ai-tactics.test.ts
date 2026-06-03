@@ -187,13 +187,11 @@ describe("POST /api/ai/tactics", () => {
     expect(res.headers.get("Content-Type")).toContain("text/event-stream");
   });
 
-  it("200: teamId 없는 세션 — 팀 조회 건너뜀 후 rate limit 통과 시 스트림 반환", async () => {
-    // name="김선휘" + teamId 없는 조합으로 feature flag 통과 + 팀 조회 스킵 경로 검증
+  it("403: teamId 없는 세션 — 팀 없으면 AI 분석 차단 (auth strip 가드)", async () => {
+    // 팀 없는 세션(BANNED/LEFT strip 등)은 AI 생성 불가. 실사용자는 (app)layout이 팀을 강제하므로 정상 흐름 영향 없음.
     const kimNoTeamSession = { ...kimSession, user: { ...kimSession.user, teamId: undefined } };
     vi.mocked(auth).mockResolvedValue(kimNoTeamSession);
-    vi.mocked(checkRateLimit).mockResolvedValue({ allowed: true });
     const res = await POST(makeRequest(validBody));
-    expect(res.status).toBe(200);
-    expect(res.headers.get("Content-Type")).toContain("text/event-stream");
+    expect(res.status).toBe(403);
   });
 });

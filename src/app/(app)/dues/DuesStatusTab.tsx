@@ -74,7 +74,14 @@ function DuesStatusTabInner({
   async function handleUnpaidNudge() {
     const unpaidMembers = duesStatus.filter((m) => m.status === "UNPAID");
     if (unpaidMembers.length === 0) return;
-    const unpaidMemberIds = unpaidMembers.map((m) => m.memberId);
+    // 푸시는 users.id 기준(push_subscriptions.user_id) — m.id(users.id) 사용.
+    // (예전 m.memberId=team_members.id 라 매칭 0건 발송 실패 + 잘못된 user_id notification 삽입)
+    // 미연동(unlinked_) 회원은 계정/구독이 없어 제외.
+    const unpaidMemberIds = unpaidMembers.map((m) => m.id).filter((id) => !id.startsWith("unlinked_"));
+    if (unpaidMemberIds.length === 0) {
+      showToast?.("푸시 알림을 받을 수 있는 미납 회원이 없습니다.", "info");
+      return;
+    }
     setSendingNudge(true);
     const { error } = await apiMutate("/api/push/send", "POST", {
       title: "회비 납부 안내",
@@ -86,7 +93,7 @@ function DuesStatusTabInner({
     if (error) {
       showToast?.("알림 발송에 실패했습니다.", "error");
     } else {
-      showToast?.(`미납자 ${unpaidMembers.length}명에게 알림을 보냈습니다.`);
+      showToast?.(`미납자 ${unpaidMemberIds.length}명에게 알림을 보냈습니다.`);
     }
   }
 

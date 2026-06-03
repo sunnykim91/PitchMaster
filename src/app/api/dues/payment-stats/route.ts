@@ -65,7 +65,9 @@ export async function GET() {
   const unpaidCounts = new Map<string, number>();
 
   for (const m of members ?? []) {
-    const memberId = m.user_id ?? m.id;
+    // dues_payment_status·member_dues_exemptions 의 member_id 는 team_members.id 이므로 m.id 로 통일.
+    // (예전 m.user_id ?? m.id 는 users.id 라 항상 mismatch → 전원 미납 오판 + 면제자 노출)
+    const memberId = m.id;
     if (exemptMemberIds.has(memberId)) continue; // 면제 회원 스킵
     let consecutive = 0;
     for (const month of recentMonths) {

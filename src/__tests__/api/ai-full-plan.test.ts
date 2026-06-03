@@ -152,17 +152,11 @@ describe("POST /api/ai/full-plan", () => {
     expect(json.source).toBe("rule");
   });
 
-  it("200: teamId 없는 세션 — 팀 조회 건너뜀 후 성공", async () => {
-    // name="김선휘" + teamId 없는 조합으로 feature flag 통과 + 팀 조회 스킵 경로 검증
+  it("403: teamId 없는 세션 — 팀 없으면 Full Plan 차단 (auth strip 가드)", async () => {
+    // 팀 없는 세션(BANNED/LEFT strip 등)은 AI 생성 불가. 실사용자는 (app)layout이 팀을 강제.
     const kimNoTeamSession = { ...kimSession, user: { ...kimSession.user, teamId: undefined } };
     vi.mocked(auth).mockResolvedValue(kimNoTeamSession);
-    vi.mocked(checkRateLimit).mockResolvedValue({ allowed: true });
-    vi.mocked(generateAiFullPlan).mockResolvedValue({
-      plans: [],
-      coaching: "",
-      source: "rule",
-    });
     const res = await POST(makeRequest(validBody));
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(403);
   });
 });

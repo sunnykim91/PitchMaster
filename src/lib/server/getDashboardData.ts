@@ -35,6 +35,7 @@ export type DashboardData = {
     opponent_name: string | null;
     location: string | null;
     uniform_type: string | null;
+    matchType: "REGULAR" | "INTERNAL" | "EVENT";
     voteCounts: { attend: number; absent: number; undecided: number };
     myVote: "ATTEND" | "ABSENT" | "MAYBE" | null;
     myMemberId: string | null;
@@ -403,7 +404,9 @@ export async function getDashboardData(
     const myVoteRow = upcomingVotes.find((v) => v.user_id === userId || v.member_id === myTeamMemberId);
     const myVote = myVoteRow ? (myVoteRow.vote as "ATTEND" | "ABSENT" | "MAYBE") : null;
     const guestCount = (upcomingGuestsRes.data ?? []).length;
-    upcomingMatch = { ...upcomingRaw, voteCounts, myVote, myMemberId: myTeamMemberId, guestCount };
+    // matchType(camel) 매핑 필수 — upcomingRaw 엔 match_type(snake)만 있어, 빠지면 클라가 항상 'REGULAR' fallback (INTERNAL/EVENT 오표시)
+    const matchType = (upcomingRaw.match_type === "INTERNAL" ? "INTERNAL" : upcomingRaw.match_type === "EVENT" ? "EVENT" : "REGULAR") as "REGULAR" | "INTERNAL" | "EVENT";
+    upcomingMatch = { ...upcomingRaw, matchType, voteCounts, myVote, myMemberId: myTeamMemberId, guestCount };
   }
 
   // recentResult 조립

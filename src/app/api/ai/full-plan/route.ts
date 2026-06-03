@@ -20,6 +20,9 @@ export async function POST(req: NextRequest) {
   if (!session?.user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  if (!session.user.teamId) {
+    return NextResponse.json({ error: "no_team" }, { status: 403 });
+  }
   // 운영진(STAFF+) 전용 — UI 게이트에 더해 API 레벨에서도 차단 (직접 호출 방어)
   if (!isStaffOrAbove(session.user.teamRole)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
