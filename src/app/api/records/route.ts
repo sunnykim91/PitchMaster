@@ -208,10 +208,13 @@ export async function GET(request: NextRequest) {
     db.from("team_members").select("user_id").eq("team_id", ctx.teamId).in("role", ["STAFF", "PRESIDENT"]).not("user_id", "is", null),
   ]);
 
-  // 카운트 맵 빌드
+  // 카운트 맵 빌드 — OPPONENT/UNKNOWN/MERCENARY 는 실 선수 ID 아닌 sentinel 이라 제외 (유령 키 방지)
+  const GOAL_SENTINELS = new Set(["OPPONENT", "UNKNOWN", "MERCENARY"]);
   const goalMap = new Map<string, number>();
   for (const row of goalsRes.data ?? []) {
-    if (row.scorer_id) goalMap.set(row.scorer_id, (goalMap.get(row.scorer_id) ?? 0) + 1);
+    if (row.scorer_id && !GOAL_SENTINELS.has(row.scorer_id)) {
+      goalMap.set(row.scorer_id, (goalMap.get(row.scorer_id) ?? 0) + 1);
+    }
   }
 
   const assistMap = new Map<string, number>();

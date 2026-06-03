@@ -259,13 +259,14 @@ export async function PUT(request: NextRequest) {
     const db = getSupabaseAdmin();
     if (!db) return apiError("Database not available", 503);
 
-    // 기존 동일 역할 해제
+    // 기존 동일 역할 해제 — 실패를 무시하면 새 역할 부여 후 동일 역할(주장/부주장)이 2명 남음 → 오류 시 중단
     if (teamRole) {
-      await db
+      const { error: clearErr } = await db
         .from("team_members")
         .update({ team_role: null })
         .eq("team_id", ctx.teamId)
         .eq("team_role", teamRole);
+      if (clearErr) return apiError(clearErr.message);
     }
 
     const { error } = await db

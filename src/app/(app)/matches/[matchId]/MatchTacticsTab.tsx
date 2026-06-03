@@ -812,8 +812,10 @@ function MatchTacticsTabInner({
         />
       </div>
 
-      {/* AI 코치 분석 — 항상 렌더, 전술판 채움 여부로 버튼 활성화 제어 */}
-      {canManage && (
+      {/* AI 코치 분석 — 전술판 채움 여부로 버튼 활성화 제어.
+          자체전(INTERNAL)은 A vs B 구조라 "우리 팀 단일 포메이션" 분석이 무의미 → 카드 미노출
+          (안 그러면 dbSquads가 side IS NULL만 봐서 allSlotsFilled=false로 비활성 버튼만 영구 노출됨) */}
+      {canManage && !isInternal && (
         <div style={{ order: 40 }}>
           <AiCoachAnalysisCard
             allSlotsFilled={effectiveAiCoachContext?.allSlotsFilled ?? false}

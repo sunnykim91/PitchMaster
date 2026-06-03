@@ -151,7 +151,6 @@ export async function getDashboardData(
 
   const nowIso = new Date().toISOString();
   const today = getKstToday();
-  const todayDateOnly = nowIso.split("T")[0];
   const kstNowDate = new Date(Date.now() + 9 * 60 * 60 * 1000);
   const currentMonth = `${kstNowDate.getUTCFullYear()}-${String(kstNowDate.getUTCMonth() + 1).padStart(2, "0")}`;
   const todayDay = kstNowDate.getUTCDate();
@@ -179,7 +178,7 @@ export async function getDashboardData(
       .select("id, match_date, match_time, match_end_time, vote_deadline, opponent_name, status, location, uniform_type, match_type")
       .eq("team_id", teamId)
       .eq("status", "SCHEDULED")
-      .gte("match_date", todayDateOnly)
+      .gte("match_date", today)
       .order("match_date", { ascending: true })
       .limit(1)
       .maybeSingle(),

@@ -113,11 +113,24 @@ export async function POST(req: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  // selfReport 는 memberId=users.id 로 들어옴 → dues_payment_status.member_id(team_members.id)로 변환.
+  // (변환 안 하면 team_members.id 로 조회하는 납부현황 맵과 불일치해 본인 신고가 화면에 안 뜸)
+  let storedMemberId = resolvedMemberId;
+  if (selfReport && memberId === ctx.userId) {
+    const { data: tm } = await db
+      .from("team_members")
+      .select("id")
+      .eq("team_id", ctx.teamId)
+      .eq("user_id", ctx.userId)
+      .maybeSingle();
+    if (tm) storedMemberId = tm.id;
+  }
+
   const { data, error } = await db
     .from("dues_payment_status")
     .upsert({
       team_id: ctx.teamId,
-      member_id: resolvedMemberId,
+      member_id: storedMemberId,
       month,
       status,
       paid_amount: paidAmount ?? 0,

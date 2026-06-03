@@ -69,7 +69,9 @@ export async function POST(request: NextRequest) {
     .select("match_id, side, player_id")
     .eq("match_id", matchId);
 
-  await db.from("match_internal_teams").delete().eq("match_id", matchId);
+  // delete 실패를 무시하면 insert 가 기존 행 위에 더해져 편성이 중복됨 → 오류 시 중단
+  const { error: deleteErr } = await db.from("match_internal_teams").delete().eq("match_id", matchId);
+  if (deleteErr) return apiError(deleteErr.message);
 
   if (rows.length > 0) {
     const { error } = await db.from("match_internal_teams").insert(rows);

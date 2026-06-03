@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: "DB unavailable" }, { status: 500 });
 
-  const today = new Date().toISOString().slice(0, 10);
+  // KST 기준 오늘 — UTC 날짜를 쓰면 KST 00:00 실행 시점(UTC 전날)이라 복귀가 하루 늦어짐
+  const today = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
   // dormant_until이 오늘 이전이고 아직 DORMANT인 멤버 → ACTIVE 전환
   const { data: expired, error } = await db

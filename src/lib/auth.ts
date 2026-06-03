@@ -7,6 +7,18 @@ import { sanitizeKakaoNickname } from "@/lib/validators/safeText";
 const SESSION_COOKIE = "pm_session";
 
 /**
+ * 접근 박탈 상태 — 강퇴(BANNED)·탈퇴(LEFT)는 유효 멤버십 아님.
+ * 강퇴/탈퇴는 row 삭제가 아니라 status 변경(members·account/withdraw)이라 status로 판정.
+ * ACTIVE·DORMANT(휴면)는 유효 멤버십으로 유지 — 휴면 회원도 로그인·세션 권한 정상.
+ */
+const REVOKED_MEMBERSHIP_STATUSES = new Set(["BANNED", "LEFT"]);
+
+/** 멤버십 status 가 접근 박탈 상태(BANNED·LEFT)면 true. null/ACTIVE/DORMANT 는 false. */
+export function isMembershipRevoked(status: string | null | undefined): boolean {
+  return REVOKED_MEMBERSHIP_STATUSES.has(status ?? "");
+}
+
+/**
  * auth() DB sync 결과 in-memory 캐시.
  *
  * Why: 매 SSR/API 요청마다 team_members + users 2회 SELECT 발생 → Disk IO 큰 부담.
@@ -115,10 +127,8 @@ export async function auth(): Promise<Session | null> {
           .single(),
       ]);
       const membership = membershipRes.data as { role: Role; status?: string; teams?: unknown } | null;
-      // 접근 박탈 상태(강퇴 BANNED·탈퇴 LEFT)는 유효 멤버십 아님 → 세션 권한 strip.
-      // ACTIVE·DORMANT(휴면)는 유지. 강퇴/탈퇴는 row 삭제가 아니라 status 변경(members/withdraw)이라 status로 판정.
-      const REVOKED_STATUSES = ["BANNED", "LEFT"];
-      const validMembership = membership && !REVOKED_STATUSES.includes(membership.status ?? "") ? membership : null;
+      // 접근 박탈 상태(강퇴 BANNED·탈퇴 LEFT)는 유효 멤버십 아님 → 세션 권한 strip. (isMembershipRevoked 참고)
+      const validMembership = membership && !isMembershipRevoked(membership.status) ? membership : null;
 
       let needSync = false;
 
