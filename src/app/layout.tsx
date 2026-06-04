@@ -125,13 +125,20 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "FAQPage",
               "mainEntity": [
-                { "@type": "Question", "name": "정말 무료인가요?", "acceptedAnswer": { "@type": "Answer", "text": "네, 현재는 무료입니다. 인원 제한도 없습니다. 추후 운영에 따라 변동이 있을 수 있습니다." } },
-                { "@type": "Question", "name": "우리 팀 데이터는 안전한가요?", "acceptedAnswer": { "@type": "Answer", "text": "한국 서울 리전에 암호화 저장됩니다. 카카오 로그인만 사용하며, 별도 비밀번호를 보관하지 않습니다." } },
-                { "@type": "Question", "name": "축구와 풋살 둘 다 되나요?", "acceptedAnswer": { "@type": "Answer", "text": "네, 팀 생성 시 종목을 선택하면 포지션·전술판·코트 비율이 자동으로 맞춰집니다. 풋살은 3인제부터 8인제까지 완전 지원합니다." } },
-                { "@type": "Question", "name": "조기축구 총무를 처음 맡았는데 어디서부터 시작하나요?", "acceptedAnswer": { "@type": "Answer", "text": "팀 생성 → 초대 링크로 팀원 등록 → 첫 경기 일정 등록, 세 단계면 됩니다. 회비는 통장 캡처 한 장으로 자동 정리되고, 참석 투표는 카카오톡 공유 한 번으로 끝납니다." } },
-                { "@type": "Question", "name": "통장 캡처로 회비 정리가 어떻게 되나요?", "acceptedAnswer": { "@type": "Answer", "text": "카카오뱅크·토스 등 거래 내역 화면을 캡처해 올리면 AI가 날짜·이름·금액을 자동 추출해 표로 만들어줍니다. 총무는 납부자 매칭만 확인하면 됩니다." } },
-                { "@type": "Question", "name": "PC에서도 쓸 수 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "네, PWA 기반이라 PC·태블릿·폰 어디서나 바로 사용합니다. 앱 설치 없이 브라우저로 접속 가능합니다." } },
-                { "@type": "Question", "name": "AI 라인업 자동 편성은 어떻게 작동하나요?", "acceptedAnswer": { "@type": "Answer", "text": "참석자와 포메이션만 있으면 AI가 쿼터별 배치와 감독 작전 브리핑까지 같이 생성합니다. 팀 과거 이력·선수별 스탯·상대팀 맞대결 기록을 모두 반영합니다." } },
+                { "@type": "Question", "name": "정말 무료인가요?", "acceptedAnswer": { "@type": "Answer", "text": "네, 현재는 모든 기능이 무료입니다. 광고도 없습니다." } },
+                { "@type": "Question", "name": "어떻게 시작하나요?", "acceptedAnswer": { "@type": "Answer", "text": "카카오로 1분 안에 가입 → 팀 만들기 → 초대 링크 공유. 팀원은 가입 없이도 링크로 참석 투표가 가능합니다." } },
+                { "@type": "Question", "name": "네이버 밴드나 단톡방을 꼭 끊어야 하나요?", "acceptedAnswer": { "@type": "Answer", "text": "아니요. 밴드·단톡방은 그대로 두고, 매주 반복되는 운영(출석 투표·회비 정산·라인업·기록)만 PitchMaster로 옮기는 팀이 많습니다. 사진·잡담·공지 같은 소통은 익숙한 단톡방에서 계속하고, 총무를 가장 힘들게 하는 운영 업무만 자동으로 처리하는 보조 운영툴로 쓰는 게 가장 부담이 없습니다." } },
+                { "@type": "Question", "name": "기존 팀 데이터를 옮길 수 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "엑셀·시트로 정리된 회비/명단은 한 번에 import 가능합니다. 카톡 출석 기록은 자동 변환은 어렵고 처음부터 PitchMaster에서 쌓는 걸 추천드립니다." } },
+                { "@type": "Question", "name": "AI 라인업은 어떻게 동작하나요?", "acceptedAnswer": { "@type": "Answer", "text": "참석자 명단·선호 포지션·과거 경기 기록·상대팀 이력을 분석해 포메이션과 쿼터별 출전을 자동 추천합니다. 이건 다른 운영 앱에 없는 기능입니다." } },
+                { "@type": "Question", "name": "우리 팀만의 전술 영상도 만들 수 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "네, 운영진이 선수 위치를 직접 그려 우리 팀 빌드업·수비 흐름을 영상처럼 만들 수 있습니다. 만든 영상은 경기 역할 가이드에서 팀원들이 자동으로 보게 됩니다. 축구 11명·풋살 5~8명 모두 지원합니다." } },
+                { "@type": "Question", "name": "회비 OCR이 정확한가요?", "acceptedAnswer": { "@type": "Answer", "text": "은행 앱 캡처를 올리면 입금자명·금액을 자동 인식해 명단과 매칭합니다. 휴면·부상 회원은 자동 면제 처리됩니다." } },
+                { "@type": "Question", "name": "축구뿐 아니라 풋살도 되나요?", "acceptedAnswer": { "@type": "Answer", "text": "네, 풋살 전용 포지션·전술판·역할 가이드가 별도로 지원됩니다. 주로 5·6인제에 최적화되어 있고, 다른 인원수도 운영 가능합니다. 한 팀에서 축구·풋살을 같이 운영하는 경우도 OK입니다." } },
+                { "@type": "Question", "name": "팀원이 카카오 계정이 없으면요?", "acceptedAnswer": { "@type": "Answer", "text": "초대 링크는 가입 없이도 참석 투표가 가능합니다. 다만 기록·MVP 등 개인 페이지는 카카오 계정으로 로그인해야 보입니다." } },
+                { "@type": "Question", "name": "벌금은 자동으로 부과되나요?", "acceptedAnswer": { "@type": "Answer", "text": "지각·불참 자동 차감 규칙을 회칙에 명시하면, 매번 묻지 않아도 자동으로 회비에서 차감됩니다." } },
+                { "@type": "Question", "name": "월별 결산은 어떻게 보나요?", "acceptedAnswer": { "@type": "Answer", "text": "월별 수입·지출·잔고가 자동 집계되어 한 화면에 보입니다. 팀원 공유용 요약 카드는 이미지로 저장하거나 카톡으로 바로 공유할 수 있습니다." } },
+                { "@type": "Question", "name": "여러 팀을 동시에 운영할 수 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "한 카카오 계정으로 여러 팀을 만들고 전환할 수 있습니다. 회장이 두 팀 운영하는 경우도 흔해서 초기부터 지원합니다." } },
+                { "@type": "Question", "name": "PC에서도 쓸 수 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "PitchMaster는 브라우저로 동작합니다. 설치 앱이 아니어서 PC·모바일 어디서든 동일하게 쓸 수 있습니다." } },
+                { "@type": "Question", "name": "우리 팀 데이터는 안전한가요?", "acceptedAnswer": { "@type": "Answer", "text": "출석·회비·경기 기록은 한국 서울 리전에 암호화되어 보관되고, 권한이 있는 운영진만 접근할 수 있습니다. 카카오 로그인만 사용해 별도 비밀번호는 저장하지 않습니다. 월별 결산은 PDF·이미지로 저장해 앱과 별개로도 기록을 남길 수 있습니다." } }
               ]
             })
           }}

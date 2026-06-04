@@ -147,7 +147,7 @@ export default function TestimonialsSection({
           className="text-[15.5px] lg:text-[17px] leading-[1.55] max-w-[680px]"
           style={{ color: "hsl(var(--muted-foreground))", textWrap: "pretty" }}
         >
-          이미 {teamCount}개 팀, {memberCount.toLocaleString("ko-KR")}+명이 매주 PitchMaster를 켭니다.
+          이미 {teamCount}개 팀, {memberCount.toLocaleString("ko-KR")}+명이 함께하고 있어요.
         </p>
       </div>
 

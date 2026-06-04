@@ -347,7 +347,7 @@ export default function HeroSection({
               <span>
                 현재{" "}
                 <NumTip label={`${teamCount}개 팀`} tip={`${teamSampleNames.join(" · ")} · …외 ${Math.max(0, teamCount - teamSampleNames.length)}팀`} />{" "}
-                · <b className="font-bold text-foreground">{memberCount.toLocaleString("ko-KR")}명</b>이 사용 중
+                · <b className="font-bold text-foreground">{memberCount.toLocaleString("ko-KR")}명</b>이 함께하고 있어요
               </span>
               <LiveBadge />
             </motion.div>
