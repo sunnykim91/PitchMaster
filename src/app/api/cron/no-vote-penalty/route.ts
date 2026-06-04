@@ -6,8 +6,8 @@ import { getActiveExemptions } from "@/lib/server/getActiveExemptions";
  * 미투표 벌금 자동 생성 크론 (매일 KST 23:00 실행)
  *
  * 1. NO_VOTE 규칙이 활성화된 팀만 대상
- * 2. 오늘 투표 마감인 경기 (vote_deadline 기준)
- * 3. 투표 안 한 활성 멤버에게 벌금 생성
+ * 2. 최근 7일 내 투표 마감이 지난 경기 (vote_deadline 기준, UTC 비교 + 백필)
+ * 3. 투표 안 한 활성 멤버에게 벌금 생성 (중복은 existingSet+upsert 로 방지)
  */
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -35,32 +35,39 @@ export async function GET(request: NextRequest) {
   }
   const teamIds = [...teamRuleMap.keys()];
 
-  // 2. KST 기준 오늘 마감인 경기 조회
-  const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
-  const todayStr = kstNow.toISOString().split("T")[0];
-  const todayStart = `${todayStr}T00:00:00`;
-  const todayEnd = `${todayStr}T23:59:59`;
+  // 2. 마감이 지난(최근 7일) 경기 조회 — 백필 포함.
+  //    ⚠️ vote_deadline 은 timestamptz(UTC) 이므로 반드시 UTC ISO 로 비교.
+  //    (이전 버그: KST 날짜 naive 문자열 `todayStr+"T00:00:00"` 을 UTC 컬럼과 비교 →
+  //     KST 00:00~08:59 마감인 경기는 UTC 상 전날이라 그 날 윈도우 밖으로 빠져 영영 누락됐음.)
+  //    "오늘"만 보던 것을 "최근 7일 내 지난 마감"으로 넓혀 cron 1회 누락·마감 사후수정도 자동 복구.
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const sevenDaysAgoIso = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  // 마감 없는 경기는 match_date(DATE, tz 무관) 기준 KST 날짜 윈도우 사용
+  const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const todayStrKst = kstNow.toISOString().split("T")[0];
+  const sevenAgoStrKst = new Date(kstNow.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-  // vote_deadline이 오늘이거나, vote_deadline 없이 경기일이 오늘인 경기
-  // status 를 SCHEDULED 로만 거르면, 마감일 당일에 이미 경기가 끝나 COMPLETED 로
-  // 자동 전환된 경기의 미투표자 벌금이 누락됨 → SCHEDULED/IN_PROGRESS/COMPLETED 모두 포함.
-  // (중복 벌금은 아래 existingSet + onConflict upsert 로 방지)
+  // status 를 SCHEDULED 로만 거르면 마감일 당일 종료돼 COMPLETED 자동전환된 경기가 누락됨 → 3종 모두 포함.
   const PENALTY_MATCH_STATUSES = ["SCHEDULED", "IN_PROGRESS", "COMPLETED"];
+  // 마감이 이미 지난(<= now) + 최근 7일 이내인 경기
   const { data: deadlineMatches } = await db
     .from("matches")
     .select("id, team_id, match_date, opponent_name")
     .in("team_id", teamIds)
     .in("status", PENALTY_MATCH_STATUSES)
-    .gte("vote_deadline", todayStart)
-    .lte("vote_deadline", todayEnd);
+    .gte("vote_deadline", sevenDaysAgoIso)
+    .lte("vote_deadline", nowIso);
 
+  // 마감 없이 경기일이 지난(최근 7일) 경기
   const { data: noDeadlineMatches } = await db
     .from("matches")
     .select("id, team_id, match_date, opponent_name")
     .in("team_id", teamIds)
     .in("status", PENALTY_MATCH_STATUSES)
-    .eq("match_date", todayStr)
-    .is("vote_deadline", null);
+    .is("vote_deadline", null)
+    .gte("match_date", sevenAgoStrKst)
+    .lte("match_date", todayStrKst);
 
   const seenIds = new Set<string>();
   const matches = [...(deadlineMatches ?? []), ...(noDeadlineMatches ?? [])].filter((m) => {
@@ -70,7 +77,7 @@ export async function GET(request: NextRequest) {
   });
 
   if (matches.length === 0) {
-    return NextResponse.json({ message: "No matches with deadline today", created: 0 });
+    return NextResponse.json({ message: "No recently-closed matches", created: 0 });
   }
 
   // 3. 경기별 미투표자 벌금 생성
@@ -131,12 +138,18 @@ export async function GET(request: NextRequest) {
       }));
 
     if (newPenalties.length > 0) {
-      // 레이스 컨디션 방지: UNIQUE(match_id, member_id, rule_id) 제약이 있으면 중복 무시
+      // ⚠️ (match_id, member_id, rule_id) UNIQUE 제약이 DB에 없어 onConflict upsert 가 항상 에러났음
+      // (NO_VOTE 벌금이 전역 0건이던 주원인). existingSet 으로 이미 중복 제거했고 cron 은
+      // 단일 일일 실행이라 plain insert 로 충분. 에러는 삼키지 말고 로그.
       const { data: inserted, error } = await db
         .from("penalty_records")
-        .upsert(newPenalties, { onConflict: "match_id,member_id,rule_id", ignoreDuplicates: true })
+        .insert(newPenalties)
         .select("id");
-      if (!error) totalCreated += inserted?.length ?? 0;
+      if (error) {
+        console.error(`[no-vote-penalty] insert 실패 (match ${match.id}):`, error.message);
+      } else {
+        totalCreated += inserted?.length ?? 0;
+      }
     }
   }
 
