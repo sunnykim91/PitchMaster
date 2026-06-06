@@ -34,6 +34,8 @@ export type AiCoachAnalysisCardProps = {
   sportType?: "SOCCER" | "FUTSAL";
   /** 김선휘 Feature Flag — false면 렌더 안 함 */
   enableAi: boolean;
+  /** 운영진 여부 — false(회원)면 읽기 전용: 생성·재생성·사용량 버튼 숨김, 저장된 분석 없으면 카드 자체 미노출 */
+  canManage?: boolean;
   /**
    * AI 풀 플랜 응답에서 받은 coaching 을 상위에서 직접 주입 — 이벤트/네트워크 경로 우회.
    * `version` 은 같은 내용 재생성 시에도 재반영되도록 단조증가 카운터.
@@ -65,6 +67,7 @@ export function AiCoachAnalysisCard({
   sportType,
   enableAi,
   overrideAnalysis,
+  canManage = true,
 }: AiCoachAnalysisCardProps) {
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [source, setSource] = useState<"ai" | "rule" | null>(null);
@@ -188,6 +191,8 @@ export function AiCoachAnalysisCard({
   }
 
   if (!enableAi) return null;
+  // 회원(읽기 전용): 저장된 분석이 없으면 카드 자체를 숨김 — 생성 UI(전술판 채우면 활성화 등)가 회원에게 노출되지 않게.
+  if (!canManage && analysis === null && !loading) return null;
 
   const isMonthlyExhausted = monthlyCap != null && monthlyCount != null && monthlyCount >= monthlyCap;
 
@@ -195,7 +200,7 @@ export function AiCoachAnalysisCard({
     <Card className="rounded-xl border-border/30 overflow-hidden">
       <CardContent className="p-4">
         {/* 월 사용량 배지 */}
-        {monthlyCap != null && monthlyCount != null && (
+        {canManage && monthlyCap != null && monthlyCount != null && (
           <div className="mb-3 flex items-center justify-between">
             <AiBadge variant="ai" label="AI 코치 분석" size="sm" />
             <span className={cn(
@@ -204,6 +209,11 @@ export function AiCoachAnalysisCard({
             )}>
               이번 달 {monthlyCount} / {monthlyCap}회
             </span>
+          </div>
+        )}
+        {!canManage && (
+          <div className="mb-3">
+            <AiBadge variant="ai" label="AI 코치 분석" size="sm" />
           </div>
         )}
         {analysis === null && !loading ? (
@@ -281,7 +291,7 @@ export function AiCoachAnalysisCard({
               <p className="mt-2 text-[12.5px] text-muted-foreground/70">
                 AI 분석이 실패해 자동 생성본을 보여드립니다. 이 경기는 재생성할 수 없습니다.
               </p>
-            ) : !loading && source === "ai" && matchCap != null && matchUsedCount < matchCap && !isMonthlyExhausted && allSlotsFilled && (
+            ) : canManage && !loading && source === "ai" && matchCap != null && matchUsedCount < matchCap && !isMonthlyExhausted && allSlotsFilled && (
               <div className="mt-3 flex flex-col gap-1">
                 <p className="text-[12.5px] text-muted-foreground/70 text-center">
                   현재 전술판 기준으로 AI 코칭을 재생성합니다
