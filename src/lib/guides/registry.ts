@@ -7,6 +7,7 @@ import * as soccerTeamExcelVsApp from "./posts/soccer-team-excel-vs-app";
 import * as kakaoVoteVsApp from "./posts/kakao-vote-vs-app";
 import * as futsalSelfMatchLineup from "./posts/futsal-self-match-lineup";
 import * as soccerDuesManagement from "./posts/soccer-dues-management";
+import * as soccerTeamPenaltyRules from "./posts/soccer-team-penalty-rules";
 import type { GuidePost } from "./types";
 
 const all: GuidePost[] = [
@@ -19,6 +20,7 @@ const all: GuidePost[] = [
   kakaoVoteVsApp,
   futsalSelfMatchLineup,
   soccerDuesManagement,
+  soccerTeamPenaltyRules,
 ];
 
 export const guides = Object.fromEntries(all.map((g) => [g.meta.slug, g])) as Record<
