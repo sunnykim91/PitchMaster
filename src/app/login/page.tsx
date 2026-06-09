@@ -12,6 +12,8 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { Button } from "@/components/ui/button";
 import { LandingViewTracker } from "@/components/LandingViewTracker";
 import { KakaoLoginLink } from "@/components/KakaoLoginLink";
+import { InAppBrowserBanner } from "@/components/InAppBrowserBanner";
+import { LoginHelp } from "@/components/LoginHelp";
 import DemoButton from "./DemoButton";
 import HeroSection from "./sections/HeroSection";
 import SiteHeader from "./sections/SiteHeader";
@@ -82,6 +84,7 @@ export default async function LoginPage({
     <main className="relative min-h-screen overflow-hidden bg-background pb-20 lg:pb-0">
       <LandingViewTracker />
       <SiteHeader kakaoEnabled={kakaoEnabled} kakaoHref={kakaoHref} />
+      <InAppBrowserBanner context="login" />
       <HeroSection
         teamCount={teamCount}
         memberCount={memberCount}
@@ -100,6 +103,7 @@ export default async function LoginPage({
         demoButton={<Suspense fallback={<div className="h-10" />}><DemoButton /></Suspense>}
         teamCount={teamCount}
       />
+      <LoginHelp />
       <FooterSection />
 
       {/* Sticky Mobile CTA */}
