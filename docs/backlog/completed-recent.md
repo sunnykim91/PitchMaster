@@ -1,12 +1,389 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~70차)
-summary: 2026-04-11~05-27 진행. 최근: 친절성·직관성·편의성 75→83 UX 대세션 (70차)
-sections: [70차 경기상세 hydration최적화·dashboard task overhaul·온보딩 체크리스트·HintCard·N badge·TWA SW update·핫픽스 4건, 69차+ 블로그 6편 전채널+7편 초안·네이버 자체 통계 분석, 68차 알파 5차 준비·TWA referrer fix·UX 로딩 표준화 19파일·어드민 6팀 제외·블로그 6편, 67차 실사용 팀 활동 패턴 분석·본인팀 제외·전술영상·WelcomeCard v2 코호트, 66차-B 운영 데이터 조사·SEO 분석·블로그 5편 완주, 66차 매치 페이지 시안 v2 + 대시보드 풀 마이그 + hue cascade 버그 + 디자인 마이그 중단 결정, 65차 전술판 영상 평면화·알파 공지 게시물·블로그 4·5편·권한별UI·signup_source 3중망·종합점검, 64차 OVR 공식 재설계 + 시그니처 분기 보강 + AI 카피 라벨 정정 + 배지 제거, 63차 박제 정정 + pending.md outdated 항목 정리, 62차 전술 영상 편집기 전면 리팩토링 P1~P5 + DB 마이그레이션 + 게시판 linkify, 60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-05-27 (70차)
+title: 개선 백로그 — 최근 완료 (16~79차)
+summary: 2026-04-11~06-09 진행. 최근: G2 미투표 벌금 가이드 커밋·발행(e6f1308) + 알파 5차 프로덕션 신청 접수 (79차)
+sections: [79차(2026-06-09) G2가이드커밋발행·알파5차프로덕션신청접수, 78차(2026-06-08) 카카오로그인실패진단·LoginHelp신설·InAppBrowserBanner감지확대(미커밋), 77차(2026-06-03~06-08) 미투표벌금cron버그·랜딩FAQ정직화·AI코치회원노출·가이드G1발행·참석자출석카드·사업다각도분석, 76차(2026-06-06) 랜딩GEO+FAQ개선·GEO진단·가이드#1발행·가이드#2미커밋, 75차(2026-06-06) ChatGPT 유입 누적 6명 확인·FC DGS·FC YUSIN 신규 가입 분석, 74차(2026-06-06) 이력서 원티드 작업·AI dead code 검증·Supabase 실측·이력서 재작성, 73차(2026-06-03) 2차 리뷰 보안·정합성 패치·auth 회귀 수정·자체전 AI 미노출, 72차 추가(2026-06-03) 투표마감 UTC→KST 핫픽스·cleanup, 72차 사업분석·잔존진단·알파 vc9 빌드·useApi SWR화·전술판 드래그·보안패치 13커밋·블로그 8편, 71차 게시판 SSR is_global 누락 버그 수정, 70차 경기상세 hydration최적화·dashboard task overhaul·온보딩 체크리스트·HintCard·N badge·TWA SW update·핫픽스 4건, 69차+ 블로그 6편 전채널+7편 초안·네이버 자체 통계 분석, 68차 알파 5차 준비·TWA referrer fix·UX 로딩 표준화 19파일·어드민 6팀 제외·블로그 6편, 67차 실사용 팀 활동 패턴 분석·본인팀 제외·전술영상·WelcomeCard v2 코호트, 66차-B 운영 데이터 조사·SEO 분석·블로그 5편 완주, 66차 매치 페이지 시안 v2 + 대시보드 풀 마이그 + hue cascade 버그 + 디자인 마이그 중단 결정, 65차 전술판 영상 평면화·알파 공지 게시물·블로그 4·5편·권한별UI·signup_source 3중망·종합점검, 64차 OVR 공식 재설계 + 시그니처 분기 보강 + AI 카피 라벨 정정 + 배지 제거, 63차 박제 정정 + pending.md outdated 항목 정리, 62차 전술 영상 편집기 전면 리팩토링 P1~P5 + DB 마이그레이션 + 게시판 linkify, 60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-06-09 (79차)
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~70차)
+# 최근 완료 (16~79차)
+
+## 79차 (2026-06-09, KST) — G2 가이드 커밋·발행 + 알파 5차 프로덕션 신청 접수
+
+**커밋**: e6f1308 (push 완료)
+
+### G2 미투표 벌금 규칙 가이드 커밋·발행 (e6f1308)
+
+- [x] `/guide/soccer-team-penalty-rules` 자체 도메인 push. Vercel 자동 배포 완료.
+- [x] 4개 파일 선택 스테이징 (가이드 tsx·registry·naver md·tistory md). 78차 로컬 미커밋 3파일 제외.
+- [x] tsc 0 + 클린 빌드 통과 후 push.
+- [x] 사용자 네이버·티스토리 발행 완료 보고.
+- [x] 네이버 수집요청 현황 확인: 자체 도메인 8편+인덱스+G1(6/8) 제출 완료, G2만 미제출이었음 확인.
+- 후속 (사용자 직접): GSC URL 검사 + 네이버 서치어드바이저 `/guide/soccer-team-penalty-rules` 수집 요청. G1 GSC 확인도 병행.
+
+### 알파 5차 Play Console 프로덕션 신청 접수 (사용자 직접 접수)
+
+- [x] Supabase alpha_tester_daily_log 직접 조회 → 13명 각자 14일 이상 연속 TWA 진입 확인.
+  - 날짜별: 5/27~6/9 매일 13명 (5/26만 11명). 개인별 streak 14~30일 범위.
+  - 4차 실패 사유("streak 1명")를 정면 해결.
+- [x] 빌드: v1.0.6 / versionCode 10. ~42시간 전 업로드됨 → 새 빌드 불필요.
+- [x] 신청서 5답변 작성·검토. 사용자 최종 접수 완료.
+  - 모집 방법·참여도·피드백 요약 / 주요 대상·제공 가치·첫해 설치수(0~1만) / 비공개→프로덕션 변경 / 이번에 다른 점.
+  - 모집 난이도 MC="보통". 버전은 Play Console 실제 기록(v1.0.5→v1.0.6)만 기재.
+- 검토 기간: 1~3일, 길면 7일.
+- 검토 중 액션: 13명 테스터 매일 앱 진입 유지 필수 (rolling 14일 윈도우).
+
+**삽질·반복 수정**
+
+- 알파 출석을 날짜별 합계로 봐서 "5/26 11명 → 14일 하루 부족" 오판 → 사용자 지적 → 개인별 streak 기준으로 재집계해 정정. Play Console 요건은 **개인별 연속 기준**.
+- README 90팀·700명 수치를 검증 없이 인용 → 사용자 지적("120팀 넘는데") → Supabase 직접 조회로 131팀/627명 정정. CLAUDE.md 외부 수치 직접 조회 의무 재확인.
+- 신청서 초안 가짜 버전 시퀀스(1.0.1→1.0.3)·미배포 기능(LoginHelp) 포함 → 수정.
+
+**메모리 반영**
+
+- `domain_alpha_tester_system.md` 5차 제출 완료 + 출석 개인별 streak 기준 + 신청서 교훈 4항 기록
+- `project_blog_publishing_cadence.md` G2 발행 완료 상태 갱신 (이미 반영)
+- `project_session_2026_06_09_79.md` 신규 생성
+
+---
+
+## 78차 (2026-06-08, KST) — 카카오 로그인 실패 진단 + 로그인 도움말 신설 (미커밋)
+
+**커밋 없음** (로컬 변경만. 빌드·커밋·푸시 사용자 결정 대기)
+
+### 카카오 로그인 실패 제보 진단
+
+- [x] 사용자 제보: iOS 인앱 브라우저에서 카카오 "접속 정보를 확인해 주세요" 화면 출현
+- [x] 진단: `accounts.kakao.com` 직접 차단 — 우리 앱 버그 아님. iCloud+ 비공개 릴레이·VPN이 OAuth 왕복 중 IP 변경 → 카카오 이상접근 차단
+- [x] "자꾸 풀림" 추가 제보 → `src/lib/auth.ts` + `src/lib/sessionSign.ts` 직접 확인
+  - `pm_session` 쿠키 30일, IP 바인딩 없음, HMAC 서명만 검증, 짧은 TTL 없음
+  - IP 바뀌어도 강제 로그아웃 안 함 → 환경 요인(인앱 브라우저 쿠키 비유지/VPN·릴레이 OAuth 콜백 훼손)
+- [x] 근본 해결 방향 확인: 사파리/크롬 + "홈 화면에 추가"(PWA 설치)
+
+### 로그인 도움말 신설 (tsc 통과, 미커밋)
+
+- [x] 신규 `src/components/LoginHelp.tsx` — 랜딩 하단 접이식 도움말 5상황 (카카오 차단·인앱 브라우저·로그인 자꾸 풀림·알림 안 옴·팀 안 보임). id="login-help"
+- [x] 수정 `src/components/InAppBrowserBanner.tsx` — 감지 확대(카톡 → 카톡·인스타·페북·네이버·밴드·라인·다음 7종). `context="app"|"login"` prop 추가. 카카오 원탭 외부열기 유지, 그 외 주소복사 폴백
+- [x] 수정 `src/app/login/page.tsx` — InAppBrowserBanner(context="login") + LoginHelp 연결
+- [x] `npx tsc --noEmit` 통과 (에러 0)
+
+**다음**: 커밋·배포 사용자 결정 시 → 빌드 + 커밋 + 푸시 3파일 일괄
+
+---
+
+## 77차 (2026-06-03~06-08, KST) — 미투표벌금 cron 버그 + 랜딩 정직화 + AI 코치 회원 노출 + 가이드 G1 + 출석 카드 + 사업 분석
+
+**커밋**: 96f43af, 5ea8968, 8741bb5, a960c14, 4132189, 196c0c7 (push 완료)
+
+### 미투표 벌금 cron 전역 미생성 버그 수정 (96f43af)
+
+- [x] `NO_VOTE` 미투표 벌금이 특정 팀에만 생성되고 전역 생성 안 되는 버그 수정
+- [x] cron 쿼리 조건 오류가 원인. 정정 후 push 완료.
+
+### 랜딩 FAQ 구조화 데이터 동기화 + 정직화 (5ea8968, 8741bb5)
+
+- [x] FAQ JSON-LD structured data를 화면 FAQ 항목과 1:1 동기화 (Google markup=visible 정책 준수)
+- [x] trust/positioning 카피를 LLM 가시성 기준으로 정비 (5ea8968)
+- [x] "가입 없이 투표" 거짓 문구 → "카카오 로그인 필요" 사실 안내로 수정 (8741bb5)
+  - 코드는 로그인 강제인데 UI는 "누구나" 안내하던 거짓 문구. FaqSection.tsx + layout.tsx JSON-LD 동시 수정.
+
+### AI 코치 분석 회원 읽기 전용 노출 (a960c14)
+
+- [x] 기존: STAFF+ 전용(`canManage` 조건). 변경: 일반 회원도 결과 열람 가능
+- [x] 수동 재생성 버튼은 STAFF+만 유지. 서버 API는 원래 회원 읽기 허용 구조.
+
+### 가이드 G1 — 조기축구 회비 관리 완전 가이드 (4132189)
+
+- [x] `/guide/soccer-dues-management` 자체 도메인 발행
+- [x] 네이버·티스토리 초안 커밋 + 사용자 발행 완료 보고
+- G2 `/guide/soccer-team-penalty-rules` tsx 작성 완료(tsc 통과), **미커밋 상태 잔존**
+
+### 참석자 최근 출석 카드 신규 (196c0c7)
+
+- [x] 전술 탭 상단 배치. 운영진(STAFF+)만 노출. 기본 접힘.
+- [x] 참석 투표자별 최근 4경기 출석 색 점 (출석=초록/지각=주황/결석=빨강, 왼쪽=최신) + N/4 표시
+- [x] 신규 API `/api/attendance/recent` (staff-only) + `MatchAttendanceGlanceCard.tsx` 신규 컴포넌트
+- [x] 스쿼드 편성 시 최근 출석 참고 용도
+
+### 사업 다각도 분석 (코드 변경 없음)
+
+- [x] PitchMaster 완성도·시장·경쟁·유료화·마케팅·잔존 6축 분석
+- [x] 경쟁사 1차 출처 검증: 조기싸커·축구고·동네축구·FootballLab·FM조축. **5곳 모두 AI 없음** 확인.
+- [x] 정정된 사실: "무설치 웹 우위" 과장(조기싸커·FootballLab도 웹), AI 외부 실사용 OCR 15회뿐(코치/풀플랜 ≈ 0), 전술영상 외부 7팀 실사용
+- [x] 전략 방향: "방향 전환 아닌 유지+무게중심 이동" — 회비 OCR=획득 훅, AI 실사용+회원 참여=강점 축
+- [x] plan 파일: `C:\Users\온유아빠\.claude\plans\delightful-petting-meteor.md`
+
+### 신규 가입 데이터 조회 (코드 변경 없음)
+
+- [x] 김경구: naver 유입 → 회장 생성 (SEO 결실). 이성무·김영헌: direct 유입 → 온보딩 이탈
+- [x] FCMZ 6/8 참석자 최근 출석률 분석, 푸시 알림 분석 (vote-reminder)
+
+**삽질·반복 수정**
+
+- 시그니처·후기를 "AI"라 소개 간헐적 재발 (실제 룰/템플릿) → `domain_ai_release_state.md` 강화
+- 이미 구현된 기능 재추천: 첫 경기 hero·상대 전적 카드·결과 푸시·시그니처·총무 가이드 → `feedback_plan_verify_before_recommend` 6+차 재발
+- "무설치 웹 우위" 과장 → 경쟁사 1차 출처 검증으로 정정
+- 분석 언어 과장(해자·PMF 등) → `feedback_plain_language.md` 신규 박제
+
+**메모리 반영**
+
+- `feedback_plain_language.md` 신규 생성 (어려운 말·전문용어 금지, 쉬운 우리말)
+- `reference_infra.md` 서울 리전 사실 박제
+- `project_session_2026_06_07_77.md` 세션 회고 파일 생성
+
+---
+
+## 76차 (2026-06-06, KST) — 랜딩 GEO 개선 + GEO 진단 + 가이드 #1 발행
+
+**커밋**: 8741bb5, 5ea8968, 4132189, a960c14 (push 완료)
+
+### 랜딩 GEO 작업 (5ea8968, 8741bb5)
+
+- [x] FAQ JSON-LD 7→14개로 화면 FAQ와 1:1 동기화 (Google markup=visible 정책 준수)
+- [x] FaqSection에 "밴드 병행(보조 운영툴)" 포지셔닝 Q + "데이터 안전" Q 신규 추가 (19→21개)
+- [x] 데이터 안전 답변: 서울 리전 암호화 + 카카오 only/비번 미저장 (사용자가 서울 리전 확인)
+- [x] 소셜프루프 동사 정정: "사용 중" → "함께하고 있어요" (memberCount는 ACTIVE+DORMANT 멤버십 합산이라 distinct 계정보다 큰 수치 → overclaim 방지)
+- [x] FAQ '가입 없이 투표' 거짓 문구 수정 — 카카오 로그인 필요 사실대로 안내 (8741bb5)
+
+### GEO 진단 (코드 변경 없음)
+
+- [x] ChatGPT/Gemini 클린(시크릿+로그아웃) vs 개인화 테스트. Lv1~4 구체성 사다리 기법 확립.
+- [x] 결론: "Findable(named) O / Recommended(default) X" — cold 질의(Lv1~3) 미노출, named/비교(Lv4)에서만 #1
+- [x] 5/20 "1순위"는 개인화 결과였음 (정정)
+- [x] 경쟁자 실존 검증: FootballLab·클루보 실존 확정, 팀스푼 미확인(환각 의심)
+- [x] `project_chatgpt_traffic_channel.md` GEO 진단 결과 반영 (이미 갱신됨)
+
+### AI 코치 분석 회원 읽기 전용 노출 (a960c14)
+
+- [x] 기존: STAFF+ 전용. 변경: 일반 회원도 AI 코치 분석 읽기 전용으로 볼 수 있게 (`canManage` 조건 완화)
+- [x] 회원은 수동 재생성 버튼 없음, 결과 열람만 가능
+
+### 가이드 #1 — 조기축구 회비 관리 완전 가이드 (4132189)
+
+- [x] `/guide/soccer-dues-management` 자체 도메인 발행 (6-step 실전 가이드)
+- [x] 주제 선정 근거: 네이버 서치어드바이저 실측 "조기축구 회비" #1 키워드 (10노출)
+- [x] 회원 수 표현 정직 표현 통일: "120여 팀이 함께하고 있어요"
+- [x] `docs/blog-guide-soccer-dues-management-naver.md` + `…-tistory.md` 초안 완료
+- [x] 사용자가 네이버·티스토리 발행 완료 보고
+
+### 가이드 #2 — 미투표 벌금 규칙 (미커밋, 내일 발행 예정)
+
+- [x] `/guide/soccer-team-penalty-rules` tsx 작성 완료. tsc 통과.
+- [x] 네이버·티스토리 md 초안 완료
+- [ ] 커밋·푸시·네이버·티스토리 발행 예정 (내일)
+
+### 랜딩 수치 — 내가 틀렸던 것 (중요 교훈)
+
+- 내가 여러 턴에 걸쳐 "랜딩 수치 stale/하드코딩, 빌드 필요" 단정
+- 실제로는 `src/app/login/page.tsx`의 `getSocialProof()`가 이미 동적 라이브 카운트(1h 캐시, 데모 제외) 사용 중
+- page.tsx 안 읽고 단정한 게 원인. `feedback_verify_before_ask.md`에 사례 추가 (76차)
+
+**삽질·반복 수정**
+
+- 랜딩 수치 stale 단정 flip-flop: 여러 턴 주장 → 실제 코드 확인 후 철회. page.tsx Read 선행 원칙 재확인.
+- GEO 진단 flip-flop: "organic 추천 검증됨" 흥분 → "named만"으로 정정. 클린 vs 개인화 테스트 구분 미흡이 원인.
+
+**메모리 반영**
+
+- `reference_guide_publishing_workflow.md` 신규 생성 (가이드 3종 세트·slug 규칙·회원수 표현·알려진 갭)
+- `project_blog_publishing_cadence.md` G1·G2 행 추가, 상태 갱신
+- `feedback_verify_before_ask.md` "수치 stale 단정 금지" 케이스 추가
+- MEMORY.md 블로그 페이스 인덱스 갱신
+
+---
+
+## 75차 (2026-06-06, KST) — ChatGPT 유입 채널 분석 (코드 변경 없음)
+
+**커밋 없음 — 순수 Supabase 데이터 조회 세션**
+
+### FC DGS·FC YUSIN 신규 가입 유입 경로 분석
+
+- [x] FC YUSIN (황동현): 가입 6/6 12:51 KST, signup_source=chatgpt.com, 38초 뒤 팀 생성. 멤버 1인.
+- [x] FC DGS (정해인): 가입 6/6 14:00 KST, signup_source=google, 56초 뒤 팀 생성. 멤버 1인.
+- 둘 다 당일 막 생긴 1인 팀 → 활성/잔존 판단 불가.
+
+### ChatGPT 유입 누적 6명 확인 (5/19~6/6)
+
+- [x] 박현진(5/19), 김범준(5/20), 이현정(5/26), 최찬규(6/3), 김선빈(6/5), 황동현(6/6) 순차 유입 확인
+- [x] 5월 말부터 거의 매주 1~2명 꾸준히 유입 → 일회성 아닌 채널로 정착 중
+- [x] 최근 14일(38명) 분포: direct 29 / chatgpt.com 4 / naver 3 / google 2
+
+### DB 스키마 probe 교훈
+
+- [x] users 테이블: `signup_completed_at` 없음 → `is_profile_complete` 사용. `select '*'` probe로 확인.
+- [x] team_members 테이블: `created_at` 없음 → `joined_at` 사용. probe 먼저 한 게 정답.
+
+**삽질·교훈**
+
+- 없음. probe 선행으로 컬럼 오류 없이 진행.
+
+**메모리 반영**
+
+- `project_chatgpt_traffic_channel.md` — 유입 사례 표 6명으로 갱신. 추적 항목 최신화.
+
+## 74차 (2026-06-06, KST) — 이력서 원티드 작업 (코드 변경 없음)
+
+**커밋 없음 — 이력서 텍스트 + 검증 세션**
+
+### AI 기능 실제 구현 상태 코드 검증
+
+- [x] 경기 후기: 25차에 LLM 제거됨. 라이브 라우트는 `generateMatchSummaryFromTemplate()` 결정론적 템플릿만 호출. `aiMatchSummary.ts`/`aiMatchSummaryCache.ts`는 dead code (호출처 없음)
+- [x] 선수 시그니처: `aiSignatureCache.ts:42-45` AI 경로 완전 비활성화. `generateRuleBasedSignature()` 룰 기반만 반환. 의도적 회귀(품질·비용·속도 모두 우위).
+- [x] OCR 실제 흐름 확인: Claude Haiku Vision 1순위(`/api/ocr/smart`), Clova OCR 폴백(`/api/ocr`). `DuesBulkTab.tsx:589` 주석 "Clova 기본, AI 폴백"은 stale — 실제 로직과 반대.
+- [x] LLM 실제 호출 기능 = 3종 확정: AI 코치 분석·AI Full Plan·OCR Vision. "AI 5종" 표기는 라벨 기준이며 부정확.
+
+### Supabase 라이브 수치 실측 (2026-06-06)
+
+- [x] 등록 팀: 126 / 가입 계정(distinct users): 608 / team_members 멤버십: 940
+- [x] 총 경기: 327 (완료 286) / 최근 30일 활동 팀: 30, 경기: 83 / 최근 7일: 팀 16, 경기 35
+- [x] it/test 호출 814개, describe 128, 파일 50개 (CLAUDE.md "615+" outdated)
+- [x] 이력서 "800+명 매주 사용" → 과장. distinct 608, 주간 활동 16팀으로 보수적 수정
+
+### 검증된 프론트 서술 포인트 (코드 확인)
+
+- [x] 투표 낙관적 UI 롤백: `MatchVoteTab.tsx:96-118` — `optimisticMyVote` 즉시 반영 → 실패 시 `prevVote` 롤백 + shake
+- [x] RLS initPlan 최적화 실재: 마이그 00039·00056·00057
+
+### 이력서 작업 결과
+
+- [x] 원본 이력서 틀린 내용 검증 완료 (AI 기능 수 과장, 수치 혼합 인용)
+- [x] 프론트엔드 주도 + 백엔드/인프라 폭(breadth) 방향으로 재작성
+- [x] 원티드 평문 포맷으로 최종 변환
+
+**삽질·교훈**
+
+- 메모리 "AI 5종 전체 공개" 박제 → 코드 grep하자 후기·시그니처가 LLM 아님 발견. 메모리 박제와 실제 코드 괴리 재확인.
+- CLAUDE.md 테스트 수 "615+" vs 실제 814 — 문서 수치는 항상 outdated 신호로 취급, grep 우선.
+
+**메모리 반영**
+
+- `feedback_resume_metric_overclaim.md` — 74차 3층 구분 사례 + 라이브 수치 박제
+- `domain_ai_release_state.md` — LLM 실제 3종/룰 회귀 2종 정정. dead code + OCR stale 주석 박제
+- MEMORY.md 인덱스 두 항목 갱신
+
+---
+
+## 73차 (2026-06-03, KST) — 전체 소스 2차 리뷰 기반 보안·정합성 패치
+
+**커밋**: b2b34b3, 75b81ad, 96df294 (push 완료)
+
+**전체 소스 1차·2차 멀티에이전트 리뷰 → Medium 항목까지 수정 완료**
+
+- 1차 리뷰(116개 발견) → Critical/High/보안 항목 배치 수정 (72차 포함)
+- 2차 리뷰(79개 발견, 11개는 1차 패치 회귀) → 잔여 Medium 항목 추가 수정
+
+**b2b34b3 — 1차 패치 회귀 수정**
+- [x] `auth.ts`: DORMANT 로그인 잠김 회귀 수정 (`.eq("status","ACTIVE")` → DORMANT 포함)
+- [x] `auth.ts`: LEFT 미처리 누락 수정 — BANNED/LEFT만 strip하는 `isMembershipRevoked()` predicate 사전 추출 (96df294에서 단위 테스트 추가)
+- [x] push-cron open 쿼리 권한 차단
+
+**75b81ad — role/team gates + amount validation**
+- [x] 역할·팀 게이트 누락 API 다수 보강
+- [x] 금액 입력 검증 강화
+
+**96df294 — Medium 정합성·안전성 수정 9건**
+- [x] `members/route.ts`: 주장 임명 시 이전 주장 역할 원자적 해제 (동시 주장 2명 방지)
+- [x] `dues/payment-status/route.ts`: selfReport `users.id` → `team_members.id` 변환 — 본인 납부 신고 화면 미반영 버그 수정
+- [x] `internal-teams/route.ts`: delete 오류 시 insert 전 중단 (편성 중복 방지)
+- [x] `records/route.ts`: goalMap에서 OPPONENT/UNKNOWN/MERCENARY sentinel 제외 (유령 키 방지)
+- [x] `cron/exemption-expiry/route.ts`: UTC → KST 날짜 (휴면 자동복귀 하루 늦던 버그)
+- [x] `getDashboardData.ts`: upcoming 쿼리 KST today + matchType 필드 추가
+- [x] `auth.ts`: `isMembershipRevoked()` 단위 테스트 신규 (`src/__tests__/lib/auth-membership.test.ts`, 6케이스)
+- [x] `MatchTacticsTab.tsx`: 자체전(INTERNAL) AI 코치 카드 미노출 (`canManage && !isInternal`) — A vs B 단일 포메이션 분석 무의미 + 영구 비활성 버튼 노출 제거
+
+검증: tsc + 820 vitest passed (+6) + rm -rf .next 클린 빌드 exit 0
+
+**삽질·교훈**
+- 1차 auth.ts 수정에서 DORMANT 잠김 + LEFT 미처리 두 회귀 발생 → 2차 리뷰가 잡아냄. 단위 테스트가 없으면 auth predicate 회귀는 조용히 live로 나감
+- Bash 도구 커밋 메시지에 PowerShell here-string(`@'...'@`) 사용 → `@` 문자 오염, amend 수정 → `feedback_bash_heredoc_syntax.md` 신규 박제
+- 0-0 스코어를 "late-entry 의도 설계"로 수정 보류했다가 사용자 지적 → 추측 보류 금지 재확인
+
+---
+
+## 72차 추가 (2026-06-03, KST) — 투표 마감 시각 UTC→KST 핫픽스
+
+**커밋**: 70aed23, 95dfda0, 1a3992d (push 완료)
+
+- [x] `70aed23` — `vote_deadline` 표시 시 `.split("T")` 슬라이스 → KST 변환(`+9h`) 후 slice로 수정 (MatchesClient.tsx, EditMatchInfoForm.tsx). 수정폼 defaultValue의 재저장 손상 위험도 해소. tsc + 클린빌드 통과.
+- [x] `95dfda0` — 저우선순위 리뷰 항목: dead code, N+1, 가드, 메모리 누수 정리
+- [x] `1a3992d` — 카카오 SDK retry + 프로필 이미지 orphan cleanup
+
+---
+
+## 72차 (2026-06-02, KST) — 사업 분석·잔존 진단·알파 vc9·버그 수정·보안 패치
+
+**커밋**: a7e468c, 7a3c93b, f7f9d57, 24f0987, fa30cf8, eb29b48, 3630c0c, af89798, c21bc62, 86242ef, 3fadc25, c709153, 9d4bb29 (+ 블로그 58230b2는 5/29)
+
+**사업 다각도 분석 + 잔존 진단 (코드 없음)**
+- [x] 외부 118팀 실측 — 성숙 코호트(35일+) 잔존 9~13%, AI 외부 채택 거의 0 (외부팀 3개만 써봄)
+- [x] 핵심 발견: 명단 등록 필수지만 충분조건 아님. 진짜 레버 = "매주 경기 cadence"
+  - 반증: 용왕FC(40명·2경기·65일째 정지), FC Blue(38명·1경기) 등 대형 로스터 이탈 다수
+  - 잔존 B팀은 전부 경기 20개+ (제니스22·시즌24·LINEOUT21·LIBRE B24)
+- [x] 사업 결론: PMF 미증명. 유료화/유료광고 시기상조. SEO/LLM 유기 채널만 유지.
+- [x] 설문 4세그먼트 설계 완료 (A이탈38·C세팅후이탈33·B잔존10·D신규6). CSV: `C:/Users/온유아빠/retention-survey-list.csv`. **발송 보류**
+- [x] `project_retention_diagnosis.md` 신규 생성
+
+**알파 TWA vc9(v1.0.5) 빌드 + Play Console 업로드**
+- [x] bubblewrap 대화형 한계 → gradle bundleRelease + jarsigner 비대화형 절차 확립
+- [x] versionCode 9 / v1.0.5 빌드 완료. 서명·검증 OK
+- [x] 사용자가 Play Console 비공개테스트 업로드 + 검토 전송 완료
+- [x] `domain_alpha_tester_system.md`에 빌드 절차 + iteration 필요성 박제
+
+**버그 수정 2건 (push 완료)**
+- [x] `a7e468c` — useApi SWR화: 투표·골·MVP·members skip:!!initialData 제거
+  - 증상: 홈 빠른투표 후 경기 상세에서 "미투표"로 표시 (prefetch stale 캐시)
+  - 811 테스트 + 클린빌드 통과
+- [x] `7a3c93b` — 전술판 드래그 swap-on-drop + 수동편집 시 AI 코치 컨텍스트 갱신
+  - 증상: 드래그가 x/y 좌표만 옮겨 배치 해제 시 원래 슬롯으로 복귀
+  - match-squads-saved에 source 표식 추가. tsc + 클린빌드 통과
+
+**소스 코드 전수 리뷰 기반 보안·안정성 패치 (13커밋)**
+- [x] f7f9d57 — 서버사이드 authz 취약점 수정
+- [x] 24f0987 — 인증·검증 갭 보강
+- [x] fa30cf8 + eb29b48 — 데이터 정합성·silent failure 수정
+- [x] 3630c0c — 팀 W/D/L 집계 match_type 통일 (REGULAR+FRIENDLY+TOURNAMENT)
+- [x] af89798 — AI 중복 제출 가드 + 실패 표면화
+- [x] c21bc62 — 삼킨 에러·false-success 처리
+- [x] 86242ef — 팀 기록 필터 match_type 반영
+- [x] 3fadc25 — 플랫폼 어드민 게이팅 표시명→user_id 전환
+- [x] c709153 — 결정론·race-safety·벌금 누락 수정
+- [x] 9d4bb29 — window.confirm → useConfirm (PWA-safe)
+
+**블로그 8편 발행**
+- [x] 자체 도메인: 58230b2 (5/29) `/guide/futsal-self-match-lineup`
+- [x] 네이버·티스토리: 6/1 발행 완료 (사용자 보고)
+- [x] 7편 네이버·티스토리 보류 — 8편 효과 측정 후 재결정
+
+**삽질·반복 수정**
+- 조기싸커 "확인 불가" 오판 — 메모리 박제 데이터 있었음. grep 없이 fetch 결과로 단정. `feedback_verify_first_or_silence` + `feedback_agent_result_spot_check` 재발
+- "활성화 온보딩 새로 만들자" 추천 — 이미 구현 완료. `feedback_plan_verify_before_recommend` 6차 재발
+- 활성도 분석 내부팀 미제외 — 재집계로 정정
+- 알파 "새 빌드 불필요" 단정 — 프로덕션 승인 iteration 정책 망각. 정정됨
+
+**메모리 반영**
+- `project_retention_diagnosis.md` 신규 생성
+- `domain_alpha_tester_system.md` 빌드 절차·iteration 박제
+- `project_blog_publishing_cadence.md` 8편 완료 갱신
+- `reference_competitor_jogisoccer.md` 포지셔닝·ELO 확인 내용 추가 (세션 中)
+
+---
+
+## 71차 (2026-05-31, KST) — 게시판 SSR is_global 누락 버그 수정
+
+**커밋**: ad95786
+
+**버그 수정**
+- [x] `getBoardData` SSR에서 `is_global=true` 운영공지 누락 → 빈 게시판 표시 (ad95786)
+  - 원인: `.eq("team_id", teamId)` 단일 필터 → 운영공지 제외
+  - 클라이언트 fetch가 살리지 못한 이유: `useApi("/api/posts", initialData, { skip: !!initialData })` — SSR initialData 항상 존재 → skip=true → API 호출 자체 없음
+  - 수정: 팀 글 + `is_global=true` 병렬 조회 → id dedupe → "운영공지 최상단 → 핀 → created_at desc" 정렬. `/api/posts` GET과 동일한 로직
+- [x] skip:!!initialData 패턴 SSR↔API 쌍 7개 전수 비교 (members/rules/records/matches/dues/dashboard/matchDetail) → 게시판만 크로스팀 데이터(is_global) 보유 → 단일 케이스 확인
+- [x] vitest 810개 통과 · rm -rf .next 클린 빌드 · main 푸시
+
+**메모리 반영**
+- `feedback_data_flow_dual_check.md` 보강 — SSR 필터 vs API 필터 불일치(크로스팀 데이터) 변형 패턴 추가
+
+---
 
 ## 70차 (2026-05-27, KST) — 친절성·직관성·편의성 75→83 UX 대세션
 
