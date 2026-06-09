@@ -229,21 +229,16 @@ function MatchRecordTabInner({
     setEditingGoalId(goal.id);
     setEditingIsOpponent(goal.scorerId === "OPPONENT" && !isInternal);
     setShowDetailForm(true);
-    // 쿼터는 selectedQuarter state(useEffect에서 goal.quarter로 세팅)가 담당 — 여기선 goalType/자책 + 스크롤만
-    const setFormValues = () => {
+    // scorerId/assistId·goalType·quarter 모두 key 리마운트 / state로 자동 적용 — 여기선 폼 스크롤만
+    const scrollToForm = () => {
       const form = formRef.current;
       if (!form) return false;
-      // PlayerPicker(scorerId/assistId)는 key prop 리마운트로 defaultValue 자동 적용 — 외부 set 불필요
-      const ownGoalInput = form.elements.namedItem("isOwnGoal") as HTMLInputElement | null;
-      if (ownGoalInput) ownGoalInput.checked = !!goal.isOwnGoal;
-      const goalTypeSelect = form.elements.namedItem("goalType") as HTMLSelectElement | null;
-      if (goalTypeSelect) goalTypeSelect.value = goal.goalType ?? "NORMAL";
       form.scrollIntoView({ behavior: "smooth", block: "center" });
       return true;
     };
     let attempts = 0;
     const trySet = () => {
-      if (setFormValues() || ++attempts >= 5) return;
+      if (scrollToForm() || ++attempts >= 5) return;
       setTimeout(trySet, 100);
     };
     setTimeout(trySet, 100);
@@ -524,7 +519,7 @@ function MatchRecordTabInner({
 
                     <div className="space-y-1.5">
                       <p className="text-[12.5px] font-medium text-muted-foreground">골 유형</p>
-                      <select name="goalType" defaultValue={editingGoal?.goalType ?? "NORMAL"} className="h-12 w-full appearance-none rounded-xl border border-border bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+                      <select key={`gtype-${editingGoalId ?? "new"}`} name="goalType" defaultValue={editingGoal?.goalType ?? "NORMAL"} className="h-12 w-full appearance-none rounded-xl border border-border bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
                         <option value="NORMAL">일반</option>
                         <option value="PK">페널티킥 (PK)</option>
                         <option value="FK">프리킥 (FK)</option>
