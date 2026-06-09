@@ -13,6 +13,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { apiMutate } from "@/lib/useApi";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { formatAmount } from "@/lib/formatters";
 import type { Role } from "@/lib/types";
@@ -74,6 +75,7 @@ function DuesRecordsTabInner({
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [editingRecord, setEditingRecord] = useState<DuesRecord | null>(null);
+  const [runUpdateRecord, updatingRecord] = useAsyncAction();
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
@@ -471,7 +473,7 @@ function DuesRecordsTabInner({
             editingRecord?.id === record.id ? (
               <Card key={record.id} data-edit-id={record.id} className="border-primary/30 bg-card py-2">
                 <CardContent className="px-4 pb-0">
-                  <form className="space-y-3" action={(fd) => handleUpdateRecord(fd)}>
+                  <form className="space-y-3" action={(fd) => runUpdateRecord(() => handleUpdateRecord(fd))}>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <Label className="text-[12.5px] text-muted-foreground">유형</Label>
@@ -501,7 +503,7 @@ function DuesRecordsTabInner({
                     </div>
                     <div className="flex justify-end gap-2">
                       <Button type="button" variant="outline" size="sm" onClick={() => setEditingRecord(null)}>취소</Button>
-                      <Button type="submit" size="sm">저장</Button>
+                      <Button type="submit" size="sm" disabled={updatingRecord}>{updatingRecord ? "저장 중..." : "저장"}</Button>
                     </div>
                   </form>
                 </CardContent>

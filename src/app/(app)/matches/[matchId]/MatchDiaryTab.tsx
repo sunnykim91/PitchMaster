@@ -8,7 +8,7 @@ import PlayerRatingCard from "@/components/playerRating/PlayerRatingCard";
 import { apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
 import { useConfirm } from "@/lib/ConfirmContext";
-import { useItemAction } from "@/lib/useAsyncAction";
+import { useAsyncAction, useItemAction } from "@/lib/useAsyncAction";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -87,14 +87,17 @@ function MatchDiaryTabInner({
   canRatePlayers = false,
 }: MatchDiaryTabProps) {
   const [runMvpVote, mvpVotingId] = useItemAction();
+  const [runSaveDiary, savingDiary] = useAsyncAction();
 
   /* ── MVP handlers ── */
   async function handleMvpVote(candidateId: string) {
-    await apiMutate("/api/mvp", "POST", { matchId, candidateId });
+    const { error } = await apiMutate("/api/mvp", "POST", { matchId, candidateId });
+    if (error) { showToast(error, "error"); return; }
     await refetchMvp();
   }
   async function handleCancelMvpVote() {
-    await apiMutate(`/api/mvp?matchId=${encodeURIComponent(matchId)}`, "DELETE");
+    const { error } = await apiMutate(`/api/mvp?matchId=${encodeURIComponent(matchId)}`, "DELETE");
+    if (error) { showToast(error, "error"); return; }
     await refetchMvp();
   }
 
@@ -261,13 +264,14 @@ function MatchDiaryTabInner({
     const condition = String(formData.get("condition") || "") || undefined;
     const memo = String(formData.get("memo") || "") || undefined;
 
-    await apiMutate("/api/diary", "POST", {
+    const { error } = await apiMutate("/api/diary", "POST", {
       matchId,
       weather,
       condition,
       memo,
       photos,
     });
+    if (error) { showToast(error, "error"); return; }
     setIsDiaryEditing(false);
     await refetchDiary();
   }
@@ -796,7 +800,7 @@ function MatchDiaryTabInner({
           {isDiaryEditing ? (
             <form
               ref={diaryFormRef}
-              action={(formData) => handleSaveDiary(formData)}
+              action={(formData) => runSaveDiary(() => handleSaveDiary(formData))}
               className="space-y-5"
             >
               {/* 날씨 — 5개 버튼 */}
@@ -851,8 +855,8 @@ function MatchDiaryTabInner({
                 />
               </div>
 
-              <Button type="submit" className="w-full min-h-[48px] rounded-xl font-semibold">
-                저장
+              <Button type="submit" disabled={savingDiary} className="w-full min-h-[48px] rounded-xl font-semibold disabled:opacity-60">
+                {savingDiary ? "저장 중..." : "저장"}
               </Button>
             </form>
           ) : diary.memo || diary.weather || diary.condition ? (

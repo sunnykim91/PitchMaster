@@ -58,6 +58,7 @@ function DuesSettingsTabInner({
   const [savingSetting, setSavingSetting] = useState(false);
   const [editingSetting, setEditingSetting] = useState<DuesSetting | null>(null);
   const [settingFormState, setSettingFormState] = useState({ memberType: "", monthlyAmount: "", description: "" });
+  const [runUpdateSetting, updatingSetting] = useAsyncAction();
 
   /* ── 금액 인라인 편집 state ── */
   const [editingAmountId, setEditingAmountId] = useState<string | null>(null);
@@ -115,20 +116,22 @@ function DuesSettingsTabInner({
   async function handleUpdateSetting(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editingSetting) return;
-    const { error } = await apiMutate("/api/dues-settings", "PUT", {
-      id: editingSetting.id,
-      memberType: settingFormState.memberType,
-      monthlyAmount: Number(settingFormState.monthlyAmount),
-      description: settingFormState.description,
+    await runUpdateSetting(async () => {
+      const { error } = await apiMutate("/api/dues-settings", "PUT", {
+        id: editingSetting.id,
+        memberType: settingFormState.memberType,
+        monthlyAmount: Number(settingFormState.monthlyAmount),
+        description: settingFormState.description,
+      });
+      if (error) {
+        showToast(error, "error");
+        return;
+      }
+      showToast("회비 기준이 수정되었습니다.");
+      await refetchSummary();
+      setEditingSetting(null);
+      setSettingFormState({ memberType: "", monthlyAmount: "", description: "" });
     });
-    if (error) {
-      showToast(error, "error");
-      return;
-    }
-    showToast("회비 기준이 수정되었습니다.");
-    await refetchSummary();
-    setEditingSetting(null);
-    setSettingFormState({ memberType: "", monthlyAmount: "", description: "" });
   }
 
   async function handleDeleteSetting(id: string) {
@@ -274,8 +277,9 @@ function DuesSettingsTabInner({
                         size="sm"
                         className="flex-1 h-10 active:scale-[0.97] transition-transform"
                         type="submit"
+                        disabled={updatingSetting}
                       >
-                        저장
+                        {updatingSetting ? "저장 중..." : "저장"}
                       </Button>
                     </div>
                   </form>
@@ -513,6 +517,7 @@ function PenaltyRulesSection({ refetchSummary }: { refetchSummary: () => Promise
   const [loaded, setLoaded] = useState(false);
   const [adding, setAdding] = useState(false);
   const confirm = useConfirm();
+  const [runAddRule, addingRule] = useAsyncAction();
 
   // 규칙 로드
   React.useEffect(() => {
@@ -614,7 +619,7 @@ function PenaltyRulesSection({ refetchSummary }: { refetchSummary: () => Promise
       {/* 추가 폼 */}
       {adding && (
         <Card className="border-primary/20 bg-card p-3">
-          <form action={handleAdd} className="space-y-2">
+          <form action={(fd) => runAddRule(() => handleAdd(fd))} className="space-y-2">
             <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1">
                 <Label className="text-[12.5px] text-muted-foreground">규칙 이름</Label>
@@ -636,7 +641,7 @@ function PenaltyRulesSection({ refetchSummary }: { refetchSummary: () => Promise
             </div>
             <div className="flex gap-2 justify-end">
               <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(false)}>취소</Button>
-              <Button type="submit" size="sm">저장</Button>
+              <Button type="submit" size="sm" disabled={addingRule}>{addingRule ? "저장 중..." : "저장"}</Button>
             </div>
           </form>
         </Card>

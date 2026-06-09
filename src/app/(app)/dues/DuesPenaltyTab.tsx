@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Trash2, RefreshCw, Plus } from "lucide-react";
 import { apiMutate } from "@/lib/useApi";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { useToast } from "@/lib/ToastContext";
@@ -46,6 +47,7 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
   const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
   const confirm = useConfirm();
   const { showToast } = useToast();
+  const [runAddPenalty, addingPenalty] = useAsyncAction();
 
   // 멤버 목록 (수동 추가용)
   useEffect(() => {
@@ -270,7 +272,7 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
       {/* 수동 추가 폼 */}
       {adding && (
         <Card className="border-primary/20 bg-card p-3">
-          <form action={handleManualAdd} className="space-y-2">
+          <form action={(fd) => runAddPenalty(() => handleManualAdd(fd))} className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label className="text-[12.5px] text-muted-foreground">멤버</Label>
@@ -290,7 +292,7 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
             </div>
             <div className="flex gap-2 justify-end">
               <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(false)}>취소</Button>
-              <Button type="submit" size="sm">추가</Button>
+              <Button type="submit" size="sm" disabled={addingPenalty}>{addingPenalty ? "추가 중..." : "추가"}</Button>
             </div>
           </form>
         </Card>

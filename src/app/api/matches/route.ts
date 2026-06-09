@@ -45,9 +45,11 @@ export async function GET() {
     for (const matchId of completedIds) {
       const matchGoals = (goals ?? []).filter((g) => g.match_id === matchId);
       if (internalIds.has(matchId)) {
-        // 자체전: A팀 vs B팀 스코어
-        const a = matchGoals.filter((g) => g.side === "A").length;
-        const b = matchGoals.filter((g) => g.side === "B").length;
+        // 자체전: A팀 vs B팀 스코어 (자책골은 side=범한 팀이므로 상대 사이드 득점으로 집계)
+        const a = matchGoals.filter((g) => g.side === "A" && !g.is_own_goal).length
+          + matchGoals.filter((g) => g.side === "B" && g.is_own_goal).length;
+        const b = matchGoals.filter((g) => g.side === "B" && !g.is_own_goal).length
+          + matchGoals.filter((g) => g.side === "A" && g.is_own_goal).length;
         map[matchId] = `${a} : ${b}`;
       } else {
         // 일반 경기: 우리팀 vs 상대팀
