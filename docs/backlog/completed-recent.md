@@ -1,7 +1,7 @@
 ---
 title: 개선 백로그 — 최근 완료 (16~79차)
-summary: 2026-04-11~06-09 진행. 최근: G2 미투표 벌금 가이드 커밋·발행(e6f1308) + 알파 5차 프로덕션 신청 접수 (79차)
-sections: [79차(2026-06-09) G2가이드커밋발행·알파5차프로덕션신청접수, 78차(2026-06-08) 카카오로그인실패진단·LoginHelp신설·InAppBrowserBanner감지확대(미커밋), 77차(2026-06-03~06-08) 미투표벌금cron버그·랜딩FAQ정직화·AI코치회원노출·가이드G1발행·참석자출석카드·사업다각도분석, 76차(2026-06-06) 랜딩GEO+FAQ개선·GEO진단·가이드#1발행·가이드#2미커밋, 75차(2026-06-06) ChatGPT 유입 누적 6명 확인·FC DGS·FC YUSIN 신규 가입 분석, 74차(2026-06-06) 이력서 원티드 작업·AI dead code 검증·Supabase 실측·이력서 재작성, 73차(2026-06-03) 2차 리뷰 보안·정합성 패치·auth 회귀 수정·자체전 AI 미노출, 72차 추가(2026-06-03) 투표마감 UTC→KST 핫픽스·cleanup, 72차 사업분석·잔존진단·알파 vc9 빌드·useApi SWR화·전술판 드래그·보안패치 13커밋·블로그 8편, 71차 게시판 SSR is_global 누락 버그 수정, 70차 경기상세 hydration최적화·dashboard task overhaul·온보딩 체크리스트·HintCard·N badge·TWA SW update·핫픽스 4건, 69차+ 블로그 6편 전채널+7편 초안·네이버 자체 통계 분석, 68차 알파 5차 준비·TWA referrer fix·UX 로딩 표준화 19파일·어드민 6팀 제외·블로그 6편, 67차 실사용 팀 활동 패턴 분석·본인팀 제외·전술영상·WelcomeCard v2 코호트, 66차-B 운영 데이터 조사·SEO 분석·블로그 5편 완주, 66차 매치 페이지 시안 v2 + 대시보드 풀 마이그 + hue cascade 버그 + 디자인 마이그 중단 결정, 65차 전술판 영상 평면화·알파 공지 게시물·블로그 4·5편·권한별UI·signup_source 3중망·종합점검, 64차 OVR 공식 재설계 + 시그니처 분기 보강 + AI 카피 라벨 정정 + 배지 제거, 63차 박제 정정 + pending.md outdated 항목 정리, 62차 전술 영상 편집기 전면 리팩토링 P1~P5 + DB 마이그레이션 + 게시판 linkify, 60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+summary: 2026-04-11~06-09 진행. 최근: G2 미투표 벌금 가이드 커밋·발행(e6f1308) + 알파 5차 프로덕션 신청 접수 (79차). 78차: 로그인 도움말+온보딩 미리보기 커밋 완료(c772a27·7bd0500)
+sections: [79차(2026-06-09) G2가이드커밋발행·알파5차프로덕션신청접수, 78차(2026-06-08~09) 카카오로그인진단Q&A심화·LoginHelp신설·InAppBrowserBanner감지확대·온보딩미리보기·포지션힌트수정(커밋완료), 77차(2026-06-03~06-08) 미투표벌금cron버그·랜딩FAQ정직화·AI코치회원노출·가이드G1발행·참석자출석카드·사업다각도분석, 76차(2026-06-06) 랜딩GEO+FAQ개선·GEO진단·가이드#1발행·가이드#2미커밋, 75차(2026-06-06) ChatGPT 유입 누적 6명 확인·FC DGS·FC YUSIN 신규 가입 분석, 74차(2026-06-06) 이력서 원티드 작업·AI dead code 검증·Supabase 실측·이력서 재작성, 73차(2026-06-03) 2차 리뷰 보안·정합성 패치·auth 회귀 수정·자체전 AI 미노출, 72차 추가(2026-06-03) 투표마감 UTC→KST 핫픽스·cleanup, 72차 사업분석·잔존진단·알파 vc9 빌드·useApi SWR화·전술판 드래그·보안패치 13커밋·블로그 8편, 71차 게시판 SSR is_global 누락 버그 수정, 70차 경기상세 hydration최적화·dashboard task overhaul·온보딩 체크리스트·HintCard·N badge·TWA SW update·핫픽스 4건, 69차+ 블로그 6편 전채널+7편 초안·네이버 자체 통계 분석, 68차 알파 5차 준비·TWA referrer fix·UX 로딩 표준화 19파일·어드민 6팀 제외·블로그 6편, 67차 실사용 팀 활동 패턴 분석·본인팀 제외·전술영상·WelcomeCard v2 코호트, 66차-B 운영 데이터 조사·SEO 분석·블로그 5편 완주, 66차 매치 페이지 시안 v2 + 대시보드 풀 마이그 + hue cascade 버그 + 디자인 마이그 중단 결정, 65차 전술판 영상 평면화·알파 공지 게시물·블로그 4·5편·권한별UI·signup_source 3중망·종합점검, 64차 OVR 공식 재설계 + 시그니처 분기 보강 + AI 카피 라벨 정정 + 배지 제거, 63차 박제 정정 + pending.md outdated 항목 정리, 62차 전술 영상 편집기 전면 리팩토링 P1~P5 + DB 마이그레이션 + 게시판 linkify, 60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
 last_updated: 2026-06-09 (79차)
 related: [completed-archive.md, pending.md]
 ---
@@ -47,11 +47,11 @@ related: [completed-archive.md, pending.md]
 
 ---
 
-## 78차 (2026-06-08, KST) — 카카오 로그인 실패 진단 + 로그인 도움말 신설 (미커밋)
+## 78차 (2026-06-08~06-09, KST) — 카카오 로그인 진단·Q&A + 로그인 도움말 + 온보딩 미리보기
 
-**커밋 없음** (로컬 변경만. 빌드·커밋·푸시 사용자 결정 대기)
+**커밋**: c772a27, 7bd0500, 4d541f9 (push 완료, 6/9 20:46 KST)
 
-### 카카오 로그인 실패 제보 진단
+### 카카오 로그인 실패 제보 진단 + Q&A 심화
 
 - [x] 사용자 제보: iOS 인앱 브라우저에서 카카오 "접속 정보를 확인해 주세요" 화면 출현
 - [x] 진단: `accounts.kakao.com` 직접 차단 — 우리 앱 버그 아님. iCloud+ 비공개 릴레이·VPN이 OAuth 왕복 중 IP 변경 → 카카오 이상접근 차단
@@ -59,15 +59,36 @@ related: [completed-archive.md, pending.md]
   - `pm_session` 쿠키 30일, IP 바인딩 없음, HMAC 서명만 검증, 짧은 TTL 없음
   - IP 바뀌어도 강제 로그아웃 안 함 → 환경 요인(인앱 브라우저 쿠키 비유지/VPN·릴레이 OAuth 콜백 훼손)
 - [x] 근본 해결 방향 확인: 사파리/크롬 + "홈 화면에 추가"(PWA 설치)
+- [x] VPN Q&A 심화: 회사 VPN 필수 사용자는 로그인 순간만 끄면 됨. 세션은 IP 바인딩 없어 재활성 후 30일 유지. 제보자 복붙 메시지 작성 완료.
 
-### 로그인 도움말 신설 (tsc 통과, 미커밋)
+### 로그인 도움말 신설 + 인앱 감지 확대 (c772a27)
 
 - [x] 신규 `src/components/LoginHelp.tsx` — 랜딩 하단 접이식 도움말 5상황 (카카오 차단·인앱 브라우저·로그인 자꾸 풀림·알림 안 옴·팀 안 보임). id="login-help"
 - [x] 수정 `src/components/InAppBrowserBanner.tsx` — 감지 확대(카톡 → 카톡·인스타·페북·네이버·밴드·라인·다음 7종). `context="app"|"login"` prop 추가. 카카오 원탭 외부열기 유지, 그 외 주소복사 폴백
 - [x] 수정 `src/app/login/page.tsx` — InAppBrowserBanner(context="login") + LoginHelp 연결
-- [x] `npx tsc --noEmit` 통과 (에러 0)
+- [x] tsc 통과 + 클린 빌드 통과 후 push
 
-**다음**: 커밋·배포 사용자 결정 시 → 빌드 + 커밋 + 푸시 3파일 일괄
+### 온보딩 전체 흐름 리뷰 + 2단계 팀선택 미리보기 (7bd0500)
+
+- [x] 콜백→루트 page→onboarding→team→WelcomeCard 전체 흐름 코드 read. 결론: 큰 구멍 없음.
+- [x] 포지션 힌트 문구 수정 — "그룹을 펼쳐 선택하세요" → "여러 개 선택할 수 있어요 · 비워둬도 괜찮아요" (defaultOpen 상태와 모순 해소)
+- [x] `src/app/team/page.tsx`: DESIGN_PREVIEW_USER_ID(김선휘, DB 확인) 게이트 + `?preview=1` → hasExistingTeam=false 강제, isPreview 전달
+- [x] `src/app/team/TeamClient.tsx`: isPreview prop — 제출 차단·버튼 disabled·SearchPanel joinTeam 차단·데모 버튼 숨김·배너 노출
+- [x] WelcomeJoined "프로필 보완하기" `/player/${userId}` 링크 정상 확인 (page.tsx:55 user_id·member_id 둘 다 허용)
+
+**발견하고 백로그 처리한 것**:
+- `teams.name` DB UNIQUE 없음 (invite_code만 unique) → 동시 생성 race 가능. 미수정, 백로그 LOW.
+- `joinTeam` 기존멤버 체크에 status 필터 없음 (LEFT/BANNED row 재진입 시 이상 역할 순간 노출. 직후 auth strip). 미수정, 낮은 위험.
+
+**삽질·반복 수정**
+
+- 빌드 중 orphan next build 프로세스 충돌("Another next build process is already running") → rm -rf .next 후 재빌드로 해소
+- 다른 편집 세션(Cursor 등)이 MatchDetailClient.tsx·MatchRecordTab.tsx·PlayerPicker.tsx 실시간 작업 중 → 해당 파일 이번 커밋 의도적 제외
+
+**메모리 반영**
+
+- `reference_kakao_login_failures.md` VPN 사후 재사용 가능 인사이트 추가
+- `project_session_2026_06_08_78.md` 후속 섹션 추가 (주제 3~6)
 
 ---
 

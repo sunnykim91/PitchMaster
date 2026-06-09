@@ -1,7 +1,7 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=131팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-06-09 (79차)
+last_updated: 2026-06-09 (78차 회고 후속)
 related: [completed-recent.md, reviews.md]
 ---
 
@@ -20,11 +20,31 @@ related: [completed-recent.md, reviews.md]
 - [ ] GSC URL 검사 → 색인 요청
 - [ ] G1(`/guide/soccer-dues-management`) GSC 확인도 병행
 
-### 🟡 78차 미커밋 3파일 커밋·배포 (MEDIUM, 사용자 결정 대기)
-- **배경**: 78차 tsc 통과 상태로 로컬에만 존재. 커밋·배포 여부 사용자 미결정.
-- 수정 대상: `src/components/LoginHelp.tsx` (신규), `src/components/InAppBrowserBanner.tsx`, `src/app/login/page.tsx`
-- [ ] 배포 결정 시: `npm run build` 확인 → git add 3파일 → commit → push
-- 참고: `reference_kakao_login_failures.md`
+### ✅ 78차 미커밋 3파일 커밋·배포 → 완료 (c772a27, 6/9 20:46)
+- LoginHelp.tsx·InAppBrowserBanner.tsx·login/page.tsx 3파일 + 온보딩 미리보기 포함 push 완료.
+
+---
+
+## 78차 신규 백로그 (2026-06-09) — 온보딩 리뷰 발견
+
+### 팀명 DB UNIQUE 부재 — 동시 생성 race 가능 (LOW)
+- **배경**: `teams.name`이 DB UNIQUE 없음 (마이그 00001 확인. invite_code만 unique). 동시 요청으로 동일 팀명 2개 생성 가능. 앱레벨 `.single()` 체크만 존재.
+- **위험도**: 낮음 (동시 생성 빈도 극히 낮음). 현재 131팀 운영 중 미발생.
+- [ ] 선택지 A: Supabase `teams` 테이블 `name` 컬럼에 UNIQUE 제약 추가 + 앱 에러 핸들링. 선택지 B: 현행 유지.
+- 사용자 결정 대기.
+
+### joinTeam 기존멤버 status 필터 누락 (LOW)
+- **배경**: `joinTeam` 함수에서 기존 멤버십 체크 시 status 필터 없음. LEFT/BANNED row가 존재하면 재가입 시 옛 역할로 세션 일시 세팅될 수 있음. 직후 auth 동기화가 이상 role을 strip하므로 실질 피해 낮음.
+- [ ] `team/actions.ts` joinTeam — 기존멤버 조회 쿼리에 `.eq('status','ACTIVE')` 조건 추가 (또는 ACTIVE/DORMANT 포함 명시)
+- 낮은 위험. 미착수.
+
+### /team/page.tsx DESIGN_PREVIEW_USER_ID 하드코딩 정리 (LOW)
+- **배경**: `src/app/team/page.tsx`에 `DESIGN_PREVIEW_USER_ID = '...'` 하드코딩. 김선휘 본인 user_id가 노출됨. 미리보기 기능 자체는 의도된 것이나 ID 하드코딩은 임시 구현.
+- [ ] 선택지: 어드민 플래그(`users.is_admin` 등)로 교체하거나, 환경 변수로 이동.
+
+### 온보딩 포지션 카드 기본 접힘 재검토 (LOW, 보류)
+- **배경**: 포지션 그룹이 기본 펼침(defaultOpen)인 상태. 사용자가 이번 세션에서 접힘으로 전환 보류 결정(접힘 시 그룹 존재 자체를 모를 수 있음).
+- [ ] 재검토 조건: 온보딩 이탈률 지표 확인 후. 현행 유지.
 
 ---
 
