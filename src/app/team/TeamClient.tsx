@@ -24,6 +24,7 @@ type PathKey = "create" | "invite" | "search";
 type Props = {
   hasExistingTeam?: boolean;
   currentTeamName?: string;
+  isPreview?: boolean;
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -247,7 +248,7 @@ function SportPick({
   );
 }
 
-function CreateTeamForm() {
+function CreateTeamForm({ isPreview = false }: { isPreview?: boolean }) {
   const [name, setName] = useState("");
   const [status, setStatus] = useState<NameStatus>("idle");
   const [sport, setSport] = useState<"SOCCER" | "FUTSAL">("SOCCER");
@@ -279,10 +280,14 @@ function CreateTeamForm() {
     };
   }, [name]);
 
-  const submitDisabled = status === "taken" || status === "checking" || status === "idle" || status === "invalid";
+  const submitDisabled = isPreview || status === "taken" || status === "checking" || status === "idle" || status === "invalid";
 
   return (
-    <form action={createTeam} className="pm-card">
+    <form
+      action={createTeam}
+      className="pm-card"
+      onSubmit={(e) => { if (isPreview) e.preventDefault(); }}
+    >
       <div className="pm-card-head">
         <div className="pm-card-chip">새 팀 만들기</div>
         <div className="pm-card-title">새 팀 만들기</div>
@@ -341,10 +346,14 @@ function CreateTeamForm() {
 // ─────────────────────────────────────────────────────────────
 // InviteCodeForm
 // ─────────────────────────────────────────────────────────────
-function InviteCodeForm({ defaultValue = "" }: { defaultValue?: string }) {
+function InviteCodeForm({ defaultValue = "", isPreview = false }: { defaultValue?: string; isPreview?: boolean }) {
   const [code, setCode] = useState(defaultValue);
   return (
-    <form action={joinTeam} className="pm-card">
+    <form
+      action={joinTeam}
+      className="pm-card"
+      onSubmit={(e) => { if (isPreview) e.preventDefault(); }}
+    >
       <div className="pm-card-head">
         <div className="pm-card-chip">초대 코드로 합류</div>
         <div className="pm-card-title">초대 코드로 합류</div>
@@ -371,7 +380,7 @@ function InviteCodeForm({ defaultValue = "" }: { defaultValue?: string }) {
         />
       </div>
 
-      <SubmitButton className="pm-cta" disabled={code.length < 4} pendingText="합류 중...">
+      <SubmitButton className="pm-cta" disabled={isPreview || code.length < 4} pendingText="합류 중...">
         팀 합류하기
         <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
           <path
@@ -399,7 +408,7 @@ type SearchResult = {
   hasPendingRequest: boolean;
 };
 
-function SearchPanel() {
+function SearchPanel({ isPreview = false }: { isPreview?: boolean }) {
   const [q, setQ] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -433,6 +442,10 @@ function SearchPanel() {
   }, [q]);
 
   async function handleJoin(teamId: string) {
+    if (isPreview) {
+      setErr("미리보기 모드에서는 가입 신청이 비활성화돼요.");
+      return;
+    }
     setJoiningId(teamId);
     setErr(null);
     try {
@@ -574,6 +587,7 @@ function AlreadyInTeamBanner({ teamName }: { teamName: string }) {
 export default function TeamClient({
   hasExistingTeam = false,
   currentTeamName = "",
+  isPreview = false,
 }: Props) {
   const searchParams = useSearchParams();
   const codeFromUrl = searchParams.get("code") ?? "";
@@ -675,6 +689,11 @@ export default function TeamClient({
           {headSub}
         </Reveal>
 
+        {isPreview && (
+          <div className="pm-notice pm-notice--info">
+            👁️ 미리보기 모드 — 신규 가입자가 보는 “팀 선택” 화면이에요. 제출 버튼은 비활성화돼 있어요.
+          </div>
+        )}
         {errorMessage && <div className="pm-notice pm-notice--err">{errorMessage}</div>}
         {pending && (
           <div className="pm-notice pm-notice--info">
@@ -690,12 +709,12 @@ export default function TeamClient({
           </Reveal>
 
           <Reveal delay={320} keyOverride={active}>
-            {active === "create" && <CreateTeamForm />}
-            {active === "invite" && <InviteCodeForm defaultValue={codeFromUrl} />}
-            {active === "search" && <SearchPanel />}
+            {active === "create" && <CreateTeamForm isPreview={isPreview} />}
+            {active === "invite" && <InviteCodeForm defaultValue={codeFromUrl} isPreview={isPreview} />}
+            {active === "search" && <SearchPanel isPreview={isPreview} />}
           </Reveal>
 
-          {branch !== "invite" && (
+          {branch !== "invite" && !isPreview && (
             <Reveal delay={360} className="pm-demo">
               <DemoButton compact />
               <p className="pm-demo-sub">

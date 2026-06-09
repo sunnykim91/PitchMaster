@@ -481,9 +481,7 @@ export default function OnboardingClient({
                 <span className="pm-card-mode">{isFutsal ? "풋살" : "축구"}</span>
               </div>
               <div className="pm-card-hint">
-                {isFutsal
-                  ? "복수 선택 가능 · 비워둬도 괜찮아요"
-                  : "그룹을 펼쳐 선택하세요 · 비워둬도 괜찮아요"}
+                여러 개 선택할 수 있어요 · 비워둬도 괜찮아요
               </div>
             </div>
             <Positions isFutsal={isFutsal} />
