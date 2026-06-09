@@ -453,8 +453,11 @@ export default function MatchDetailClient({
 
   const score = useMemo(() => {
     if (match.matchType === "INTERNAL") {
-      const aGoals = goals.filter((g) => g.side === "A").length;
-      const bGoals = goals.filter((g) => g.side === "B").length;
+      // 자책골은 side=범한 팀이므로 상대 사이드 득점으로 집계
+      const aGoals = goals.filter((g) => g.side === "A" && !g.isOwnGoal).length
+        + goals.filter((g) => g.side === "B" && g.isOwnGoal).length;
+      const bGoals = goals.filter((g) => g.side === "B" && !g.isOwnGoal).length
+        + goals.filter((g) => g.side === "A" && g.isOwnGoal).length;
       return `${aGoals} : ${bGoals}`;
     }
     const ourGoals = goals.filter((g) => g.scorerId !== "OPPONENT" && !g.isOwnGoal).length

@@ -75,6 +75,7 @@ function MatchRecordTabInner({
 
   const confirm = useConfirm();
   const [runAddGoal, addingGoal] = useAsyncAction();
+  const [runDetailGoal, submittingDetail] = useAsyncAction();
   const [runDeleteGoal, deletingGoalId] = useItemAction();
 
   /* ── Local UI state ── */
@@ -85,14 +86,18 @@ function MatchRecordTabInner({
   const [showAssistPicker, setShowAssistPicker] = useState(false);
   // 자체전 A/B팀 토글 (수정 시 기존 side로 초기화, 새 등록은 null)
   const [selectedSide, setSelectedSide] = useState<"A" | "B" | null>(null);
-  // 폼 진입/리셋 시 어시 펼침 + side state reset
+  // 쿼터 선택 (0 = 모름). controlled state로 관리해 stale 하이라이트·초기화 버그 방지
+  const [selectedQuarter, setSelectedQuarter] = useState(0);
+  // 폼 진입/리셋 시 어시 펼침 + side·쿼터 state reset
   useEffect(() => {
     setShowAssistPicker(false);
     if (editingGoalId) {
       const g = goals.find((g) => g.id === editingGoalId);
       setSelectedSide(g?.side ?? null);
+      setSelectedQuarter(g?.quarter ?? 0);
     } else {
       setSelectedSide(null);
+      setSelectedQuarter(0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingGoalId, showDetailForm]);
@@ -224,28 +229,15 @@ function MatchRecordTabInner({
     setEditingGoalId(goal.id);
     setEditingIsOpponent(goal.scorerId === "OPPONENT" && !isInternal);
     setShowDetailForm(true);
+    // 쿼터는 selectedQuarter state(useEffect에서 goal.quarter로 세팅)가 담당 — 여기선 goalType/자책 + 스크롤만
     const setFormValues = () => {
       const form = formRef.current;
       if (!form) return false;
       // PlayerPicker(scorerId/assistId)는 key prop 리마운트로 defaultValue 자동 적용 — 외부 set 불필요
-      const quarterInput = form.elements.namedItem("quarter") as HTMLInputElement | null;
-      if (!quarterInput) return false;
       const ownGoalInput = form.elements.namedItem("isOwnGoal") as HTMLInputElement | null;
-      if (quarterInput) quarterInput.value = String(goal.quarter ?? 0);
       if (ownGoalInput) ownGoalInput.checked = !!goal.isOwnGoal;
       const goalTypeSelect = form.elements.namedItem("goalType") as HTMLSelectElement | null;
       if (goalTypeSelect) goalTypeSelect.value = goal.goalType ?? "NORMAL";
-      const quarterBtns = quarterInput?.parentElement?.querySelectorAll("button");
-      quarterBtns?.forEach((btn) => {
-        btn.classList.remove("bg-primary", "text-primary-foreground", "shadow-sm");
-        btn.classList.add("text-muted-foreground");
-      });
-      // null/0 = 모름 → index 0 (모름 버튼), 1~N = 해당 쿼터 버튼
-      const targetIdx = goal.quarter ?? 0;
-      if (quarterBtns && quarterBtns[targetIdx]) {
-        quarterBtns[targetIdx].classList.remove("text-muted-foreground");
-        quarterBtns[targetIdx].classList.add("bg-primary", "text-primary-foreground", "shadow-sm");
-      }
       form.scrollIntoView({ behavior: "smooth", block: "center" });
       return true;
     };
@@ -288,9 +280,10 @@ function MatchRecordTabInner({
               <div className="text-6xl font-black tabular-nums tracking-tighter">
                 {isInternal ? (
                   <>
-                    <span className="text-foreground">{goals.filter((g) => g.side === "A").length}</span>
+                    {/* 자체전 자책골 규칙: side=범한 팀이므로 자책골은 상대 사이드 득점으로 집계 */}
+                    <span className="text-foreground">{goals.filter((g) => g.side === "A" && !g.isOwnGoal).length + goals.filter((g) => g.side === "B" && g.isOwnGoal).length}</span>
                     <span className="mx-3 text-muted-foreground">:</span>
-                    <span className="text-muted-foreground">{goals.filter((g) => g.side === "B").length}</span>
+                    <span className="text-muted-foreground">{goals.filter((g) => g.side === "B" && !g.isOwnGoal).length + goals.filter((g) => g.side === "A" && g.isOwnGoal).length}</span>
                   </>
                 ) : (
                   <>
@@ -394,7 +387,7 @@ function MatchRecordTabInner({
             <form
               ref={formRef}
               className="mb-4 grid gap-3"
-              action={(formData) => handleAddGoal(formData)}
+              action={(formData) => runDetailGoal(() => handleAddGoal(formData))}
             >
               <Card className="border-0 bg-secondary shadow-none">
                 <CardContent className="p-4">
@@ -543,48 +536,38 @@ function MatchRecordTabInner({
                     );
                   })()}
 
-                  {/* 쿼터 UI — 득점/실점 수정 모두 표시 */}
+                  {/* 쿼터 UI — 득점/실점 수정 모두 표시 (controlled state) */}
                   <div className={cn("space-y-1.5", !editingIsOpponent && "mt-4")}>
                     <p className="text-[12.5px] font-medium text-muted-foreground">쿼터</p>
                     <div className="flex gap-1 rounded-lg bg-secondary p-1">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          const input = e.currentTarget.parentElement?.querySelector("input[name=quarter]") as HTMLInputElement;
-                          if (input) input.value = "0";
-                          e.currentTarget.parentElement?.querySelectorAll("button").forEach((btn) => { btn.classList.remove("bg-primary", "text-primary-foreground", "shadow-sm"); btn.classList.add("text-muted-foreground"); });
-                          e.currentTarget.classList.remove("text-muted-foreground"); e.currentTarget.classList.add("bg-primary", "text-primary-foreground", "shadow-sm");
-                        }}
-                        className="flex-1 rounded-md py-2 text-sm font-medium bg-primary text-primary-foreground shadow-sm"
-                      >
-                        모름
-                      </button>
-                      {Array.from({ length: match.quarterCount }, (_, i) => i + 1).map((q) => (
-                        <button
-                          key={q}
-                          type="button"
-                          onClick={(e) => {
-                            const input = e.currentTarget.parentElement?.querySelector("input[name=quarter]") as HTMLInputElement;
-                            if (input) input.value = String(q);
-                            e.currentTarget.parentElement?.querySelectorAll("button").forEach((btn) => { btn.classList.remove("bg-background", "text-foreground", "shadow-sm"); btn.classList.add("text-muted-foreground"); });
-                            e.currentTarget.classList.remove("text-muted-foreground"); e.currentTarget.classList.add("bg-background", "text-foreground", "shadow-sm");
-                          }}
-                          className="flex-1 rounded-md py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
-                        >
-                          Q{q}
-                        </button>
-                      ))}
-                      <input name="quarter" type="hidden" defaultValue="0" />
+                      {[0, ...Array.from({ length: match.quarterCount }, (_, i) => i + 1)].map((q) => {
+                        const active = selectedQuarter === q;
+                        return (
+                          <button
+                            key={q}
+                            type="button"
+                            onClick={() => setSelectedQuarter(q)}
+                            aria-pressed={active}
+                            className={cn(
+                              "flex-1 rounded-md py-2 text-sm font-medium transition-colors",
+                              active ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                            )}
+                          >
+                            {q === 0 ? "모름" : `Q${q}`}
+                          </button>
+                        );
+                      })}
+                      <input name="quarter" type="hidden" value={String(selectedQuarter)} readOnly />
                     </div>
                   </div>
                   <input name="minute" type="hidden" value="0" />
 
                   <div className="mt-4 flex gap-2">
-                    <Button type="submit" className="flex-1 min-h-[48px] rounded-xl font-semibold">
-                      {editingGoalId ? "수정 완료" : "기록 추가"}
+                    <Button type="submit" disabled={submittingDetail} className="flex-1 min-h-[48px] rounded-xl font-semibold disabled:opacity-60">
+                      {submittingDetail ? "처리 중..." : editingGoalId ? "수정 완료" : "기록 추가"}
                     </Button>
                     {editingGoalId && (
-                      <Button type="button" variant="outline" className="min-h-[48px] rounded-xl px-6" onClick={handleCancelEdit}>
+                      <Button type="button" variant="outline" disabled={submittingDetail} className="min-h-[48px] rounded-xl px-6" onClick={handleCancelEdit}>
                         취소
                       </Button>
                     )}

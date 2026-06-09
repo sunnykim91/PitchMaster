@@ -15,8 +15,8 @@
  * 외부에서 defaultValue 변경 시 key prop으로 리마운트 트리거 권장.
  */
 
-import { useState } from "react";
-import { Search, X, Check, ChevronDown } from "lucide-react";
+import { useRef, useState } from "react";
+import { Search, X, Check, ChevronDown, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type PlayerPickerOption = { id: string; name: string };
@@ -57,6 +57,16 @@ export function PlayerPicker({
   const [query, setQuery] = useState("");
   // 미선택 상태에서는 펼침, 선택됐으면 접힘
   const [expanded, setExpanded] = useState(!defaultValue);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // "변경" 등 사용자가 직접 펼칠 때만 살짝 스크롤해 칩 그리드를 화면에 보여줌
+  // (초기 마운트·key 리마운트에는 호출 안 함 — 폼 진입 시 자동 스크롤 방지)
+  const expand = () => {
+    setExpanded(true);
+    requestAnimationFrame(() => {
+      containerRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  };
 
   const handleSelect = (value: string) => {
     setSelected(value);
@@ -90,7 +100,7 @@ export function PlayerPicker({
         <input type="hidden" name={name} value={selected} />
         <ChipButton
           selected
-          onClick={() => setExpanded(true)}
+          onClick={expand}
           tone={selectedName.tone}
         >
           <Check className="w-3.5 h-3.5 mr-1 inline" />
@@ -98,9 +108,10 @@ export function PlayerPicker({
         </ChipButton>
         <button
           type="button"
-          onClick={() => setExpanded(true)}
-          className="text-xs font-medium text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+          onClick={expand}
+          className="inline-flex items-center gap-1 h-9 px-3.5 rounded-full border border-border bg-secondary text-xs font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground active:scale-[0.97]"
         >
+          <Pencil className="h-3 w-3" />
           변경
         </button>
       </div>
@@ -109,7 +120,7 @@ export function PlayerPicker({
 
   // 펼침 상태: 검색 + 칩 그리드
   return (
-    <div className={cn("space-y-3", className)}>
+    <div ref={containerRef} className={cn("space-y-3", className)}>
       <input type="hidden" name={name} value={selected} />
 
       <div className="relative">
