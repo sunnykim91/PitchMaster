@@ -178,6 +178,12 @@ function MatchRecordTabInner({
       scorerId = "UNKNOWN";
     }
 
+    // 득점자와 어시스트가 같은 선수면 거부 (자기 어시스트 방지)
+    if (assistId && assistId === scorerId) {
+      showToast("득점자와 어시스트는 같은 선수일 수 없어요.", "error");
+      return;
+    }
+
     // 자체전: 득점자의 소속팀(side) 결정
     let side: "A" | "B" | null = null;
     const formSide = String(formData.get("side") || "");
@@ -366,19 +372,21 @@ function MatchRecordTabInner({
           </CardContent>
         </Card>
 
-        {/* ── 골 기록 추가 (아코디언) ── */}
+        {/* ── 골 기록 추가 (아코디언) ── 기록 권한 있을 때만 노출 (일반 회원은 목록만 읽기) ── */}
         <Card className="rounded-xl border-border/30 overflow-hidden">
-          <button type="button" onClick={() => setShowDetailForm((prev) => !prev)}
-            className="flex w-full items-center justify-between px-5 py-4 hover:bg-secondary/30 transition-colors">
-            <span className="flex items-center gap-2 text-base font-bold">
-              <Target className="h-4 w-4 text-primary" />
-              골 기록 추가
-            </span>
-            <ChevronDown className={cn("h-5 w-5 text-muted-foreground transition-transform duration-200", showDetailForm && "rotate-180")} />
-          </button>
+          {canRecord && (
+            <button type="button" onClick={() => setShowDetailForm((prev) => !prev)}
+              className="flex w-full items-center justify-between px-5 py-4 hover:bg-secondary/30 transition-colors">
+              <span className="flex items-center gap-2 text-base font-bold">
+                <Target className="h-4 w-4 text-primary" />
+                골 기록 추가
+              </span>
+              <ChevronDown className={cn("h-5 w-5 text-muted-foreground transition-transform duration-200", showDetailForm && "rotate-180")} />
+            </button>
+          )}
 
           <CardContent>
-            {showDetailForm && (
+            {canRecord && showDetailForm && (
             <form
               ref={formRef}
               className="mb-4 grid gap-3"
@@ -428,7 +436,7 @@ function MatchRecordTabInner({
                     const teamB = isInt ? attendingMembers.filter((p) => internalTeams!.find((t) => t.playerId === p.id)?.side === "B") : [];
                     const unassigned = isInt ? attendingMembers.filter((p) => !internalTeams!.find((t) => t.playerId === p.id)) : [];
 
-                    const buildPlayerGroups = (forAssist: boolean): PlayerPickerGroup[] => {
+                    const buildPlayerGroups = (forAssist: boolean, selectedId?: string): PlayerPickerGroup[] => {
                       const groups: PlayerPickerGroup[] = [];
                       if (isInt) {
                         if (teamA.length) groups.push({ label: "🔵 A팀", players: teamA.map((p) => ({ id: p.id, name: p.name })), tone: "default" });
@@ -447,11 +455,20 @@ function MatchRecordTabInner({
                           : [{ id: "OWN_GOAL", name: "⚽ 자책골" }, ...specialPlayers.map((sp) => ({ id: sp.id, name: sp.name }))],
                         tone: "special",
                       });
+                      // 기록된 선수가 참석 목록·용병·기타에 없으면(불참 처리 등) 칩이 사라지지 않도록 보강
+                      const reserved = ["", "UNKNOWN", "OPPONENT", "OWN_GOAL"];
+                      if (selectedId && !reserved.includes(selectedId) && !groups.some((g) => g.players.some((p) => p.id === selectedId))) {
+                        const rosterPlayer = fullRoster.find((p) => p.id === selectedId);
+                        const name = rosterPlayer
+                          ? (guestIds.has(selectedId) ? `${rosterPlayer.name}(용병)` : rosterPlayer.name)
+                          : "기록된 선수";
+                        groups.push({ label: "기록된 선수", players: [{ id: selectedId, name }], tone: "muted" });
+                      }
                       return groups;
                     };
 
-                    const scorerGroups = buildPlayerGroups(false);
-                    const assistGroups = buildPlayerGroups(true);
+                    const scorerGroups = buildPlayerGroups(false, editingGoal?.scorerId);
+                    const assistGroups = buildPlayerGroups(true, editingGoal?.assistId ?? undefined);
                     const hasAssist = !!editingGoal?.assistId;
                     return (
                   <div className="space-y-5">
@@ -574,7 +591,7 @@ function MatchRecordTabInner({
 
             <div className="space-y-2">
               {orderedGoals.length === 0 ? (
-                <EmptyState icon={Target} title="아직 기록이 없습니다" description="위의 +득점 버튼으로 골을 기록하세요" />
+                <EmptyState icon={Target} title="아직 기록이 없습니다" description={canRecord ? "위의 +득점 버튼으로 골을 기록하세요" : "기록된 골이 없어요"} />
               ) : (() => {
                 // 5골 이하: 평면 / 6골 이상: 쿼터별 자동 그룹핑
                 const useGrouping = orderedGoals.length >= 6;
