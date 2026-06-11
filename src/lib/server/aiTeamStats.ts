@@ -4,6 +4,27 @@ import {
   pickStaffDecision as pickStaffDecisionForAi,
   shouldApplyNewMvpPolicy as shouldApplyNewMvpPolicyForAi,
 } from "@/lib/mvpThreshold";
+import type { Placement } from "@/components/TacticsBoard.types";
+
+/**
+ * match_squads.positions(JSONB)에서 (slot, playerId) 추출.
+ * 실제 저장 형식은 Placement 객체 — { "gk": { x, y, playerId, secondPlayerId? }, ... }.
+ * (이전 코드는 Record<string,string>로 잘못 가정해 전부 skip → 포지션·커리어 통계가 비어 있었음)
+ * __ prefix 메타슬롯(주심/부심/촬영) 제외. 반쿼터 secondPlayerId 포함.
+ * playerId 는 users.id / team_members.id / 게스트 id 가 섞여 있어 호출부에서 정규화 필요.
+ */
+function parsePositionPlayers(positions: unknown): Array<{ slot: string; playerId: string }> {
+  if (!positions || typeof positions !== "object") return [];
+  const out: Array<{ slot: string; playerId: string }> = [];
+  for (const [slot, raw] of Object.entries(positions as Record<string, unknown>)) {
+    if (slot.startsWith("__")) continue;
+    if (!raw || typeof raw !== "object") continue;
+    const p = raw as Placement;
+    if (p.playerId) out.push({ slot, playerId: p.playerId });
+    if (p.secondPlayerId) out.push({ slot, playerId: p.secondPlayerId });
+  }
+  return out;
+}
 
 /**
  * AI 코치 분석용 팀 통계 (Phase D + E).
@@ -248,17 +269,37 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
   }
   const formationStats = [...formationMap.values()].sort((a, b) => b.played - a.played);
 
-  // 선수 포지션별 통계 — squad.positions JSONB에서 (slot, member_id) 추출
-  // positions 형식: { "GK": "memberId1", "CB": "memberId2", ... } 가정
-  // 안전하게 string-string 매핑으로 처리
-  const memberPosCount = new Map<string, Map<string, number>>(); // memberId → position → count
+  // 팀 로스터 정규화 맵 — positions.playerId(users.id / team_members.id / 게스트 id 혼재)를
+  // team_members.id 로 통일한다. 골 scorer_id·MVP 브릿지·nameMap 이 모두 team_members.id 기준이라
+  // 포지션·커리어 통계도 같은 키로 맞춰야 골/어시/MVP 가 올바르게 병합된다.
+  const nameMap = new Map<string, string>();          // team_members.id → 이름
+  const memberIdByUserId = new Map<string, string>(); // users.id → team_members.id (MVP 브릿지)
+  const resolveTmId = new Map<string, string>();      // users.id 또는 team_members.id → team_members.id
+  {
+    const { data: roster } = await db
+      .from("team_members")
+      .select("id, pre_name, users(id, name)")
+      .eq("team_id", teamId);
+    for (const mb of (roster ?? []) as Array<{ id: string; pre_name: string | null; users: { id: string; name: string } | { id: string; name: string }[] | null }>) {
+      const u = Array.isArray(mb.users) ? mb.users[0] : mb.users;
+      nameMap.set(mb.id, u?.name ?? mb.pre_name ?? "선수");
+      resolveTmId.set(mb.id, mb.id);
+      if (u?.id) {
+        memberIdByUserId.set(u.id, mb.id);
+        resolveTmId.set(u.id, mb.id);
+      }
+    }
+  }
 
+  // 선수 포지션별 통계 — squad.positions(Placement 객체)에서 (slot, playerId) 추출 후 team_members.id 정규화.
+  // 로스터에 없는 id(게스트 등)는 제외.
+  const memberPosCount = new Map<string, Map<string, number>>(); // team_members.id → position → count
   for (const sq of squads ?? []) {
-    const positions = (sq.positions as Record<string, string> | null) ?? {};
-    for (const [slot, memberId] of Object.entries(positions)) {
-      if (!memberId || typeof memberId !== "string") continue;
-      // slot 라벨에서 숫자 제거 (LW1 → LW)
-      const cleanSlot = slot.replace(/[0-9]/g, "");
+    for (const { slot, playerId } of parsePositionPlayers(sq.positions)) {
+      const memberId = resolveTmId.get(playerId);
+      if (!memberId) continue;
+      // slot 라벨 정규화 (lw1 → LW)
+      const cleanSlot = slot.replace(/[0-9]/g, "").toUpperCase();
       let posMap = memberPosCount.get(memberId);
       if (!posMap) {
         posMap = new Map();
@@ -269,38 +310,26 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
   }
 
   // 선수별 골/어시 (총계 + 경기별 — 최근 폼 계산용)
+  // scorer_id/assist_id 는 users.id / team_members.id / 게스트 id 가 혼재(실측 96:34:24)하므로
+  // 포지션·커리어 통계(team_members.id 키)와 병합되도록 resolveTmId 로 정규화. 로스터 밖(게스트)은 raw 유지.
   const memberGoals = new Map<string, number>();
   const memberAssists = new Map<string, number>();
-  const matchMemberGoals = new Map<string, Map<string, number>>(); // matchId → memberId → goals
+  const matchMemberGoals = new Map<string, Map<string, number>>(); // matchId → team_members.id → goals
   const matchMemberAssists = new Map<string, Map<string, number>>();
   for (const g of goals ?? []) {
     if (g.scorer_id && g.scorer_id !== "OPPONENT" && !g.is_own_goal) {
-      memberGoals.set(g.scorer_id, (memberGoals.get(g.scorer_id) ?? 0) + 1);
+      const sid = resolveTmId.get(g.scorer_id) ?? g.scorer_id;
+      memberGoals.set(sid, (memberGoals.get(sid) ?? 0) + 1);
       if (!matchMemberGoals.has(g.match_id)) matchMemberGoals.set(g.match_id, new Map());
       const mm = matchMemberGoals.get(g.match_id)!;
-      mm.set(g.scorer_id, (mm.get(g.scorer_id) ?? 0) + 1);
+      mm.set(sid, (mm.get(sid) ?? 0) + 1);
     }
     if (g.assist_id) {
-      memberAssists.set(g.assist_id, (memberAssists.get(g.assist_id) ?? 0) + 1);
+      const aid = resolveTmId.get(g.assist_id) ?? g.assist_id;
+      memberAssists.set(aid, (memberAssists.get(aid) ?? 0) + 1);
       if (!matchMemberAssists.has(g.match_id)) matchMemberAssists.set(g.match_id, new Map());
       const mm = matchMemberAssists.get(g.match_id)!;
-      mm.set(g.assist_id, (mm.get(g.assist_id) ?? 0) + 1);
-    }
-  }
-
-  // 멤버 이름 매핑
-  const memberIds = [...memberPosCount.keys()];
-  const nameMap = new Map<string, string>();
-  const memberIdByUserId = new Map<string, string>(); // users.id → team_members.id (MVP 브릿지)
-  if (memberIds.length > 0) {
-    const { data: members } = await db
-      .from("team_members")
-      .select("id, pre_name, users(id, name)")
-      .in("id", memberIds);
-    for (const mb of members ?? []) {
-      const u = Array.isArray(mb.users) ? mb.users[0] : mb.users;
-      nameMap.set(mb.id, u?.name ?? mb.pre_name ?? "선수");
-      if (u?.id) memberIdByUserId.set(u.id, mb.id);
+      mm.set(aid, (mm.get(aid) ?? 0) + 1);
     }
   }
 
@@ -374,12 +403,12 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
   }
   quarterStats.sort((a, b) => a.quarter - b.quarter);
 
-  // 선수별 커리어 통계 — 포지션 통계에서 재활용 (중복 집계 방지: 경기별 1회만 카운트)
-  const memberMatchSet = new Map<string, Set<string>>(); // memberId → 출전 경기 Set
+  // 선수별 커리어 통계 — 출전 경기 Set (Placement 파싱 + team_members.id 정규화, 경기별 1회만 카운트)
+  const memberMatchSet = new Map<string, Set<string>>(); // team_members.id → 출전 경기 Set
   for (const sq of squads ?? []) {
-    const positions = (sq.positions as Record<string, string> | null) ?? {};
-    for (const memberId of Object.values(positions)) {
-      if (!memberId || typeof memberId !== "string") continue;
+    for (const { playerId } of parsePositionPlayers(sq.positions)) {
+      const memberId = resolveTmId.get(playerId);
+      if (!memberId) continue;
       if (!memberMatchSet.has(memberId)) memberMatchSet.set(memberId, new Set());
       memberMatchSet.get(memberId)!.add(sq.match_id);
     }
@@ -496,7 +525,8 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
     for (const g of goals ?? []) {
       if (g.match_id !== m.id) continue;
       if (!g.scorer_id || g.scorer_id === "OPPONENT" || g.scorer_id === "UNKNOWN" || g.is_own_goal) continue;
-      scorerCount.set(g.scorer_id, (scorerCount.get(g.scorer_id) ?? 0) + 1);
+      const sid = resolveTmId.get(g.scorer_id) ?? g.scorer_id; // team_members.id 정규화 (nameMap 키와 일치)
+      scorerCount.set(sid, (scorerCount.get(sid) ?? 0) + 1);
     }
     let topScorer: string | null = null;
     let topScorerGoals = 0;
