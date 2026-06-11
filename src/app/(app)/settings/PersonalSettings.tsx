@@ -211,7 +211,7 @@ function PersonalSettingsComponent({
         const hasPM = "PushManager" in window;
         const hasNoti = typeof Notification !== "undefined";
         if (!hasSW || !hasPM || !hasNoti) {
-          setMessage("홈 화면에 추가(앱 설치) 후 푸시 알림을 사용할 수 있습니다");
+          setMessage("앱 설치 후 푸시 알림을 사용할 수 있습니다 (안드로이드: Google Play 앱 / 아이폰: 홈 화면에 추가)");
           setPushLoading(false);
           setTimeout(() => setMessage(null), 4000);
           return;

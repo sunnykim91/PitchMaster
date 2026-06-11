@@ -22,7 +22,7 @@ import { isPlatformAdmin } from "@/lib/admin";
 import { cn, compactKakaoImage } from "@/lib/utils";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import TeamLogo from "@/components/TeamLogo";
-import { initInstallPromptCapture, triggerInstall, getInstallPrompt, detectInstallMode, onPromptChange, type InstallMode } from "@/lib/pwaInstall";
+import { initInstallPromptCapture, triggerInstall, getInstallPrompt, detectInstallMode, onPromptChange, PLAY_STORE_URL, type InstallMode } from "@/lib/pwaInstall";
 import { useApi } from "@/lib/useApi";
 
 type ClientLayoutProps = {
@@ -103,6 +103,10 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
   async function handlePwaInstall() {
     setMoreSheetOpen(false);
+    if (installMode === "playstore") {
+      window.open(PLAY_STORE_URL, "_blank", "noopener,noreferrer");
+      return;
+    }
     if (installMode === "inapp") {
       const url = window.location.origin + "/dashboard";
       if (/Android/i.test(navigator.userAgent)) {
@@ -853,7 +857,11 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                     className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-primary hover:bg-secondary transition-colors"
                   >
                     {installMode === "inapp" ? <ExternalLink className="h-5 w-5" /> : <Smartphone className="h-5 w-5" />}
-                    {installMode === "inapp" ? "브라우저에서 열기" : "홈 화면에 추가"}
+                    {installMode === "inapp"
+                      ? "브라우저에서 열기"
+                      : installMode === "playstore"
+                        ? "Play 스토어에서 앱 받기"
+                        : "홈 화면에 추가"}
                   </button>
                 </>
               )}

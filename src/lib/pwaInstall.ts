@@ -44,13 +44,16 @@ function notifyListeners() {
   listeners.forEach((fn) => fn());
 }
 
+/** Google Play 스토어 앱 페이지 (TWA 정식 출시, 2026-06-11) */
+export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=app.pitchmaster";
+
 /** OS/브라우저 감지 */
-export type InstallMode = "prompt" | "ios" | "inapp" | "none";
+export type InstallMode = "prompt" | "playstore" | "ios" | "inapp" | "none";
 
 export function detectInstallMode(): InstallMode {
   if (typeof window === "undefined") return "none";
 
-  // 이미 PWA로 실행 중
+  // 이미 PWA(또는 TWA)로 실행 중
   if (window.matchMedia("(display-mode: standalone)").matches) return "none";
   if (window.matchMedia("(display-mode: fullscreen)").matches) return "none";
   // @ts-expect-error -- navigator.standalone은 iOS Safari 전용
@@ -61,9 +64,13 @@ export function detectInstallMode(): InstallMode {
   // 인앱 브라우저
   if (/KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line/i.test(ua)) return "inapp";
 
-  // iOS
+  // iOS — 별도 앱 없음, 홈 화면 추가(PWA) 안내
   if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) return "ios";
 
+  // 안드로이드 — Google Play 정식 앱으로 유도 (홈 화면 추가 PWA 대신)
+  if (/Android/i.test(ua)) return "playstore";
+
+  // 데스크톱 등 — beforeinstallprompt 기반 PWA 설치
   return "prompt";
 }
 

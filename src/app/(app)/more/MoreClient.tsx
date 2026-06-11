@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, MessageSquare, Bell, BookOpen, Settings, ExternalLink, Share, Smartphone, HelpCircle, LogOut } from "lucide-react";
+import { PLAY_STORE_URL } from "@/lib/pwaInstall";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -19,7 +20,7 @@ const menuItems = [
   { href: "/notifications", label: "알림", desc: "알림 센터", icon: Bell, color: "text-[hsl(var(--warning))]" },
   { href: "/rules", label: "회칙", desc: "팀 규정 관리", icon: BookOpen, color: "text-[hsl(var(--accent))]" },
   { href: "/settings", label: "설정", desc: "프로필 · 팀 설정", icon: Settings, color: "text-muted-foreground" },
-  { href: "/guide.html", label: "사용 가이드", desc: "기능 안내 · FAQ", icon: HelpCircle, color: "text-[hsl(var(--info))]" },
+  { href: "/guide", label: "사용 가이드", desc: "기능 안내 · FAQ", icon: HelpCircle, color: "text-[hsl(var(--info))]" },
 ];
 
 const roleLabels: Record<string, string> = {
@@ -43,6 +44,7 @@ export default function MoreClient({
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIos, setIsIos] = useState(false);
   const [isInApp, setIsInApp] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -54,6 +56,10 @@ export default function MoreClient({
     } else if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsIos(true);
+    } else if (/Android/i.test(ua)) {
+      // 안드로이드 — Google Play 정식 앱으로 유도
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsAndroid(true);
     }
 
     const handler = (e: Event) => {
@@ -72,6 +78,10 @@ export default function MoreClient({
       } else {
         window.open(url, "_blank");
       }
+      return;
+    }
+    if (isAndroid) {
+      window.open(PLAY_STORE_URL, "_blank", "noopener,noreferrer");
       return;
     }
     if (isIos) {
@@ -141,7 +151,7 @@ export default function MoreClient({
           );
         })}
 
-        {/* 홈 화면에 추가 */}
+        {/* 앱 설치 안내 — 안드로이드는 Play 스토어, iOS·데스크톱은 홈 화면 추가(PWA) */}
         <button onClick={handleInstall}>
           <Card className="transition-colors hover:bg-secondary/50 border-primary/20">
             <CardContent className="flex items-center gap-4 p-4">
@@ -150,10 +160,14 @@ export default function MoreClient({
               </div>
               <div className="text-left">
                 <p className="text-sm font-bold text-foreground">
-                  {isInApp ? "브라우저에서 열기" : "홈 화면에 추가"}
+                  {isInApp ? "브라우저에서 열기" : isAndroid ? "Play 스토어에서 앱 받기" : "홈 화면에 추가"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {isInApp ? "외부 브라우저에서 열면 앱 설치가 가능해요" : "앱처럼 바로 접속하고 푸시 알림도 받을 수 있어요"}
+                  {isInApp
+                    ? "외부 브라우저에서 열면 앱 설치가 가능해요"
+                    : isAndroid
+                      ? "Google Play에서 정식 앱을 받아 홈 화면에서 바로 실행하세요"
+                      : "앱처럼 바로 접속하고 푸시 알림도 받을 수 있어요"}
                 </p>
               </div>
             </CardContent>
