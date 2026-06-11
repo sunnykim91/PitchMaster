@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { isTeamRecordMatch } from "@/lib/types";
+import { aggregateGkCleanSheets, buildGkAttendeesByMatch, isGkPreferred, type GkSquadRow, type GkGoalRow, type GkRosterMember } from "@/lib/server/getGoalkeeperStats";
 
 type MemberRow = {
   id: string;
@@ -128,7 +130,7 @@ export async function GET(request: NextRequest) {
   if (!members) return apiSuccess({ records: [] });
 
   // Get matches: 시즌 날짜 범위 또는 직접 날짜로 필터 (stats_included=false 제외)
-  let matchQuery = db.from("matches").select("id, match_date").eq("team_id", ctx.teamId).eq("status", "COMPLETED").neq("stats_included", false);
+  let matchQuery = db.from("matches").select("id, match_date, quarter_count, match_type").eq("team_id", ctx.teamId).eq("status", "COMPLETED").neq("stats_included", false);
   if (startDate && endDate) {
     // 직접 날짜 범위 지정 (기간 필터)
     matchQuery = matchQuery.gte("match_date", startDate).lte("match_date", endDate);
@@ -198,15 +200,48 @@ export async function GET(request: NextRequest) {
   }
 
   // Bulk 쿼리 — 전체 데이터 한번에 조회
-  const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes, staffMembersRes] = await Promise.all([
+  const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes, staffMembersRes, gkSquadsRes, concededGoalsRes] = await Promise.all([
     db.from("match_goals").select("scorer_id").in("match_id", matchIds).eq("is_own_goal", false),
     db.from("match_goals").select("assist_id").in("match_id", matchIds).not("assist_id", "is", null),
     db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision").in("match_id", matchIds),
-    db.from("match_attendance").select("user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
+    db.from("match_attendance").select("match_id, user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
     db.from("match_attendance").select("match_id").in("match_id", matchIds).in("attendance_status", ["PRESENT", "LATE"]),
     // is_staff_decision 백필 누락 치유 — 현재 STAFF+ voter의 과거 투표를 동적으로 확정 취급
     db.from("team_members").select("user_id").eq("team_id", ctx.teamId).in("role", ["STAFF", "PRESIDENT"]).not("user_id", "is", null),
+    // 키퍼 클린시트용 — 전술판(쿼터별 GK 배정) + 실점 골(is_own_goal 필터 없이 전부)
+    db.from("match_squads").select("match_id, quarter_number, positions, side").in("match_id", matchIds),
+    db.from("match_goals").select("match_id, quarter_number, scorer_id, is_own_goal, side").in("match_id", matchIds),
   ]);
+
+  // 골키퍼 무실점 쿼터 — ① 전술판 쿼터별 ② 전술판 없으면 GK선호 참석자 경기→쿼터 환산 (SSR getRecordsData 와 동일 로직)
+  const gkMembers: GkRosterMember[] = typedMembers
+    .map((m) => {
+      const user = Array.isArray(m.users) ? m.users[0] : m.users;
+      return {
+        canonicalId: m.user_id ?? m.id,
+        ids: m.user_id ? [m.user_id, m.id] : [m.id],
+        isGk: isGkPreferred(user?.preferred_positions),
+      };
+    })
+    .filter((m) => m.isGk);
+  // 폴백 출석 기준 = vote=ATTEND (기록 페이지 '출전' 정의와 동일)
+  const gkAttendeesByMatch = buildGkAttendeesByMatch(gkMembers, attendanceRes.data ?? []);
+  // 클린시트는 상대전(REGULAR)만 — 자체전(INTERNAL)·행사(EVENT) 무실점 오판 방지 (SSR getRecordsData 와 동일)
+  const regularSet = new Set(
+    ((matches ?? []) as Array<{ id: string; match_type?: string | null }>)
+      .filter((m) => isTeamRecordMatch(m.match_type))
+      .map((m) => m.id)
+  );
+  const matchQuarterCounts = new Map<string, number>(
+    ((matches ?? []) as Array<{ id: string; quarter_count?: number | null }>)
+      .filter((m) => regularSet.has(m.id))
+      .map((m) => [m.id, m.quarter_count ?? 4])
+  );
+  const gkMap = aggregateGkCleanSheets(
+    ((gkSquadsRes.data ?? []) as GkSquadRow[]).filter((s) => regularSet.has(s.match_id)),
+    (concededGoalsRes.data ?? []) as GkGoalRow[],
+    { fallback: { matchQuarterCounts, gkAttendeesByMatch } }
+  );
 
   // 카운트 맵 빌드 — OPPONENT/UNKNOWN/MERCENARY 는 실 선수 ID 아닌 sentinel 이라 제외 (유령 키 방지)
   const GOAL_SENTINELS = new Set(["OPPONENT", "UNKNOWN", "MERCENARY"]);
@@ -304,6 +339,16 @@ export async function GET(request: NextRequest) {
     const ratingCount =
       playerRatingEnabledForRecords && ratingAgg ? ratingAgg.count : undefined;
 
+    // 키퍼 클린시트 — gkMap 키는 users.id 라 lookupIds(userId 포함)로 합산
+    const gk = lookupIds.reduce(
+      (acc, id) => {
+        const v = gkMap.get(id);
+        if (v) { acc.cleanSheets += v.cleanSheets; acc.quarters += v.quarters; }
+        return acc;
+      },
+      { cleanSheets: 0, quarters: 0 }
+    );
+
     return {
       memberId: userId ?? memberId,
       name,
@@ -317,6 +362,7 @@ export async function GET(request: NextRequest) {
       teamRole: m.team_role ?? null,
       ...(avgRating !== undefined && { avgRating }),
       ...(ratingCount !== undefined && { ratingCount }),
+      ...(gk.quarters > 0 && { gkCleanSheets: gk.cleanSheets, gkQuarters: gk.quarters }),
     };
   });
 

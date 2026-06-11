@@ -146,6 +146,111 @@ describe("GET /api/records", () => {
     expect(doHun.attendanceRate).toBe(0);
   });
 
+  it("200: 키퍼 클린시트(무실점 쿼터) 집계 — 전술판 GK 배정 + 쿼터별 실점 매칭", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+
+    // 이준혁(user-2)이 match-a Q1·Q2 GK. Q1만 실점 → 무실점 1쿼터 / 키퍼 2쿼터
+    const squadsData = [
+      { match_id: "match-a", quarter_number: 1, positions: { gk: { x: 50, y: 92, playerId: "user-2" }, st: { x: 50, y: 10, playerId: "user-1" } }, side: null },
+      { match_id: "match-a", quarter_number: 2, positions: { gk: { x: 50, y: 92, playerId: "user-2" } }, side: null },
+    ];
+    // 실점 골 쿼리(3번째 match_goals, is_own_goal 필터 없음) — Q1 상대 득점 1
+    const concededData = [
+      { match_id: "match-a", quarter_number: 1, scorer_id: "OPPONENT", is_own_goal: false, side: null },
+    ];
+
+    const db = createMockDb(
+      ["team_members", teamMembers],   // 초기 멤버 조회
+      ["team_members", []],            // staff voter 조회
+      ["matches", [{ id: "match-a" }]],
+      ["match_goals", []],             // scorer (is_own_goal=false)
+      ["match_goals", []],             // assist
+      ["match_goals", concededData],   // conceded (키퍼 클린시트용)
+      ["match_mvp_votes", []],
+      ["match_attendance", []],        // vote=ATTEND
+      ["match_attendance", []],        // PRESENT/LATE
+      ["match_squads", squadsData],
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    const json = await res.json();
+
+    const keeper = json.records.find((r: { name: string }) => r.name === "이준혁");
+    expect(keeper.gkCleanSheets).toBe(1);
+    expect(keeper.gkQuarters).toBe(2);
+
+    // 필드 선수(김민준)는 GK 배정이 없어 gkQuarters 필드 자체가 없음
+    const striker = json.records.find((r: { name: string }) => r.name === "김민준");
+    expect(striker.gkQuarters).toBeUndefined();
+    expect(striker.gkCleanSheets).toBeUndefined();
+  });
+
+  it("200: 키퍼 클린시트 폴백 — 전술판 없는 팀, GK선호 참석자에 경기→쿼터 환산", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+
+    // 이준혁(user-2)은 선호포지션 GK. 전술판(match_squads) 없음. match-a 참석투표(ATTEND) + 무실점 + 4쿼터
+    const attendData = [
+      { match_id: "match-a", user_id: "user-2", member_id: "mem-2" },
+    ];
+
+    const db = createMockDb(
+      ["team_members", teamMembers],
+      ["team_members", []],
+      ["matches", [{ id: "match-a", quarter_count: 4 }]],
+      ["match_goals", []],   // scorer
+      ["match_goals", []],   // assist
+      ["match_goals", []],   // conceded (무실점)
+      ["match_mvp_votes", []],
+      ["match_attendance", attendData],  // vote=ATTEND (폴백 참석자)
+      ["match_attendance", []],          // PRESENT/LATE
+      ["match_squads", []],              // 전술판 없음 → 폴백 경로
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    const json = await res.json();
+
+    const keeper = json.records.find((r: { name: string }) => r.name === "이준혁");
+    // 무실점 4쿼터 경기 → 4쿼터 환산
+    expect(keeper.gkCleanSheets).toBe(4);
+    expect(keeper.gkQuarters).toBe(4);
+
+    // 비-GK(김민준)는 폴백 대상 아님
+    const striker = json.records.find((r: { name: string }) => r.name === "김민준");
+    expect(striker.gkQuarters).toBeUndefined();
+  });
+
+  it("200: 키퍼 클린시트 폴백 — 자체전(INTERNAL)은 제외(무실점 오판 방지)", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+
+    // 이준혁(GK선호) ATTEND + 무실점이지만 INTERNAL 경기 → 클린시트 잡히면 안 됨
+    const attendData = [{ match_id: "match-int", user_id: "user-2", member_id: "mem-2" }];
+    const db = createMockDb(
+      ["team_members", teamMembers],
+      ["team_members", []],
+      ["matches", [{ id: "match-int", quarter_count: 4, match_type: "INTERNAL" }]],
+      ["match_goals", []],
+      ["match_goals", []],
+      ["match_goals", []],
+      ["match_mvp_votes", []],
+      ["match_attendance", attendData],
+      ["match_attendance", []],
+      ["match_squads", []],
+    );
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    const keeper = json.records.find((r: { name: string }) => r.name === "이준혁");
+    // INTERNAL 경기는 폴백 대상 아님 → gkQuarters 필드 없음
+    expect(keeper.gkQuarters).toBeUndefined();
+    expect(keeper.gkCleanSheets).toBeUndefined();
+  });
+
   it("200: seasonId 파라미터로 특정 시즌 필터", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(

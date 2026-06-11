@@ -61,6 +61,9 @@ type RecordStat = {
   /** 토글 ON 팀에만 채워짐. OFF면 undefined */
   avgRating?: number;
   ratingCount?: number;
+  /** 키퍼 클린시트(무실점 쿼터) — 전술판에 GK로 배정된 쿼터가 있을 때만 채워짐 */
+  gkCleanSheets?: number;
+  gkQuarters?: number;
 };
 
 function mapSeason(raw: Record<string, unknown>): Season {
@@ -91,6 +94,8 @@ function mapRecord(raw: Record<string, unknown>): RecordStat {
     teamRole: (raw.teamRole as string) ?? null,
     avgRating: typeof raw.avgRating === "number" ? Number(raw.avgRating) : undefined,
     ratingCount: typeof raw.ratingCount === "number" ? Number(raw.ratingCount) : undefined,
+    gkCleanSheets: typeof raw.gkCleanSheets === "number" ? Number(raw.gkCleanSheets) : undefined,
+    gkQuarters: typeof raw.gkQuarters === "number" ? Number(raw.gkQuarters) : undefined,
   };
 }
 
@@ -281,6 +286,15 @@ export default function RecordsClient({
   const topGoals = useMemo(() => [...stats].sort((a, b) => b.goals - a.goals).slice(0, 3), [stats]);
   const topAssists = useMemo(() => [...stats].sort((a, b) => b.assists - a.assists).slice(0, 3), [stats]);
   const topMvp = useMemo(() => [...stats].sort((a, b) => b.mvp - a.mvp).slice(0, 3), [stats]);
+  // 키퍼 클린시트(무실점 쿼터) 랭킹 — 전술판에 GK로 선 쿼터가 있는 선수만
+  const topCleanSheets = useMemo(
+    () =>
+      stats
+        .filter((s) => (s.gkQuarters ?? 0) > 0)
+        .sort((a, b) => (b.gkCleanSheets ?? 0) - (a.gkCleanSheets ?? 0))
+        .slice(0, 3),
+    [stats]
+  );
 
   const [sortKey, setSortKey] = useState<"points" | "goals" | "assists" | "mvp" | "attendanceRate" | "avgRating">("points");
   const allStats = useMemo(() => {
@@ -447,6 +461,7 @@ export default function RecordsClient({
         <CardContent>
           {(() => {
             const showRating = myStats.avgRating !== undefined;
+            const showGkCleanSheet = (myStats.gkQuarters ?? 0) > 0;
             const points = myStats.goals + myStats.assists;
             const attendancePercent = Math.round(myStats.attendanceRate * 100);
 
@@ -494,6 +509,16 @@ export default function RecordsClient({
                     ? `출석률 ${attendancePercent}%`
                     : undefined,
               },
+              ...(showGkCleanSheet
+                ? [{
+                    label: "무실점 쿼터",
+                    value: myStats.gkCleanSheets ?? 0,
+                    color: "text-violet-400",
+                    bg: "bg-violet-500/10",
+                    rank: null as number | null,
+                    sub: `키퍼로 ${myStats.gkQuarters}쿼터 출전`,
+                  } as Item]
+                : []),
               ...(showRating
                 ? [{
                     label: `평점 (${myStats.ratingCount ?? 0}회)`,
@@ -504,7 +529,11 @@ export default function RecordsClient({
                   } as Item]
                 : []),
             ];
-            const gridCols = showRating ? "grid-cols-2 md:grid-cols-5" : "grid-cols-2 md:grid-cols-4";
+            const extraCols = (showRating ? 1 : 0) + (showGkCleanSheet ? 1 : 0);
+            const gridCols =
+              extraCols === 2 ? "grid-cols-2 md:grid-cols-6"
+              : extraCols === 1 ? "grid-cols-2 md:grid-cols-5"
+              : "grid-cols-2 md:grid-cols-4";
             if (loadingRecords) {
               return (
                 <div className={cn("grid gap-3", gridCols)}>
@@ -524,7 +553,8 @@ export default function RecordsClient({
               myStats.assists === 0 &&
               myStats.mvp === 0 &&
               myStats.matches === 0 &&
-              !showRating;
+              !showRating &&
+              !showGkCleanSheet;
 
             return (
               <>
@@ -653,12 +683,17 @@ export default function RecordsClient({
           ) : (
             <div className="grid gap-3 md:grid-cols-3">
               {[{
-                title: "득점왕", list: topGoals, key: "goals" as const, color: "#22c55e",
+                title: "득점왕", list: topGoals, getValue: (s: RecordStat) => s.goals, color: "#22c55e",
               }, {
-                title: "어시스트왕", list: topAssists, key: "assists" as const, color: "#38bdf8",
+                title: "어시스트왕", list: topAssists, getValue: (s: RecordStat) => s.assists, color: "#38bdf8",
               }, {
-                title: "MVP왕", list: topMvp, key: "mvp" as const, color: "#f59e0b",
-              }].map((group) => (
+                title: "MVP왕", list: topMvp, getValue: (s: RecordStat) => s.mvp, color: "#f59e0b",
+              },
+              // 키퍼 클린시트 — 전술판에 GK로 선 선수가 있을 때만 노출
+              ...(topCleanSheets.length > 0 ? [{
+                title: "무실점 쿼터", list: topCleanSheets, getValue: (s: RecordStat) => s.gkCleanSheets ?? 0, color: "#a78bfa",
+              }] : []),
+              ].map((group) => (
                 <Card key={group.title} className="bg-secondary border-0 p-4">
                   <p className="text-sm font-bold">{group.title}</p>
                   <div className="mt-3 space-y-2">
@@ -679,17 +714,17 @@ export default function RecordsClient({
                           <span className={cn("truncate", index === 0 && "font-bold text-foreground")}>{item.memberName ?? "-"}</span>
                         </span>
                         <span className="shrink-0 text-lg font-bold font-[family-name:var(--font-display)] text-foreground">
-                          {item[group.key]}
+                          {group.getValue(item)}
                         </span>
                       </div>
                     ))}
                   </div>
-                  {group.list.some((item) => item[group.key] > 0) && (
+                  {group.list.some((item) => group.getValue(item) > 0) && (
                     <div className="mt-3">
                       <BarRankingChart
                         data={group.list
-                          .filter((item) => item[group.key] > 0)
-                          .map((item) => ({ name: item.memberName ?? "-", value: item[group.key] }))}
+                          .filter((item) => group.getValue(item) > 0)
+                          .map((item) => ({ name: item.memberName ?? "-", value: group.getValue(item) }))}
                         color={group.color}
                       />
                     </div>

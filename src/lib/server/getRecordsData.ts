@@ -1,6 +1,7 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
 import { isTeamRecordMatch } from "@/lib/types";
+import { aggregateGkCleanSheets, buildGkAttendeesByMatch, isGkPreferred, type GkSquadRow, type GkGoalRow, type GkRosterMember } from "@/lib/server/getGoalkeeperStats";
 
 type SeasonRow = { id: string; is_active: boolean; start_date: string; end_date: string; [key: string]: unknown };
 type MemberRow = {
@@ -47,7 +48,7 @@ export async function getRecordsData(teamId: string) {
   // ── Stage 2: matches + members 병렬 ──
   let matchQuery = db
     .from("matches")
-    .select("id, match_date, match_type")
+    .select("id, match_date, match_type, quarter_count")
     .eq("team_id", teamId)
     .eq("status", "COMPLETED")
     .neq("stats_included", false);
@@ -135,19 +136,46 @@ export async function getRecordsData(teamId: string) {
   // ── Stage 3: 통계 raw 데이터 일괄 (이전 6개 + allGoals 별도 → 5개로 통합) ──
   // match_goals 한 번에 가져와 goalMap·matchScores 양쪽 사용 (이전 중복 fetch 제거)
   // 평점은 토글 ON 팀에만 추가 쿼리 (FCO2 팀 잠정 도입, 2026-05-12)
-  const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes, ratingsRes] = await Promise.all([
-    db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", matchIds),
+  const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes, ratingsRes, squadsRes] = await Promise.all([
+    db.from("match_goals").select("match_id, scorer_id, is_own_goal, quarter_number, side").in("match_id", matchIds),
     db.from("match_goals").select("assist_id").in("match_id", matchIds).not("assist_id", "is", null),
     db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision").in("match_id", matchIds),
-    db.from("match_attendance").select("user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
+    db.from("match_attendance").select("match_id, user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
     db.from("match_attendance").select("match_id").in("match_id", matchIds).in("attendance_status", ["PRESENT", "LATE"]),
     playerRatingEnabled
       ? db.from("player_ratings").select("ratee_id, score").eq("team_id", teamId).in("match_id", matchIds)
       : Promise.resolve({ data: null }),
+    db.from("match_squads").select("match_id, quarter_number, positions, side").in("match_id", matchIds),
   ]);
 
-  type GoalRow = { match_id: string; scorer_id: string; is_own_goal: boolean };
+  type GoalRow = { match_id: string; scorer_id: string; is_own_goal: boolean; quarter_number: number | null; side: string | null };
   const goalRows = (goalsRes.data ?? []) as GoalRow[];
+
+  // 골키퍼 무실점 쿼터 집계 — ① 전술판 있으면 쿼터별 정밀, ② 없으면 GK선호 참석자에 경기→쿼터 환산(폴백)
+  const gkMembers: GkRosterMember[] = typedMembers
+    .map((m) => {
+      const user = Array.isArray(m.users) ? m.users[0] : m.users;
+      return {
+        canonicalId: m.user_id ?? m.id,
+        ids: m.user_id ? [m.user_id, m.id] : [m.id],
+        isGk: isGkPreferred(user?.preferred_positions),
+      };
+    })
+    .filter((m) => m.isGk);
+  // 폴백 출석 기준 = vote=ATTEND (기록 페이지 '출전' 정의와 동일. attendance_status 실제참석은 11%만 기록됨)
+  const gkAttendeesByMatch = buildGkAttendeesByMatch(gkMembers, attendanceRes.data ?? []);
+  // 클린시트는 상대전(REGULAR)만 — 자체전(INTERNAL, 골 side A/B)·행사(EVENT, 골 0)는 무실점 오판 방지.
+  const regularSet = new Set(recordMatchIds);
+  const matchQuarterCounts = new Map<string, number>(
+    matches
+      .filter((m) => regularSet.has(m.id))
+      .map((m) => [m.id, (m as { quarter_count?: number | null }).quarter_count ?? 4])
+  );
+  const gkMap = aggregateGkCleanSheets(
+    ((squadsRes.data ?? []) as GkSquadRow[]).filter((s) => regularSet.has(s.match_id)),
+    goalRows as GkGoalRow[],
+    { fallback: { matchQuarterCounts, gkAttendeesByMatch } }
+  );
 
   const goalMap = new Map<string, number>();
   for (const row of goalRows) {
@@ -222,6 +250,16 @@ export async function getRecordsData(teamId: string) {
     const ratingCount =
       playerRatingEnabled && ratingAgg ? ratingAgg.count : undefined;
 
+    // 키퍼 클린시트 — gkMap 키는 users.id 라 ids(userId 포함)로 합산
+    const gk = ids.reduce(
+      (acc, id) => {
+        const v = gkMap.get(id);
+        if (v) { acc.cleanSheets += v.cleanSheets; acc.quarters += v.quarters; }
+        return acc;
+      },
+      { cleanSheets: 0, quarters: 0 }
+    );
+
     return {
       memberId: userId ?? memberId,
       name: user?.name ?? m.pre_name ?? "",
@@ -235,6 +273,7 @@ export async function getRecordsData(teamId: string) {
       teamRole: m.team_role ?? null,
       ...(avgRating !== undefined && { avgRating }),
       ...(ratingCount !== undefined && { ratingCount }),
+      ...(gk.quarters > 0 && { gkCleanSheets: gk.cleanSheets, gkQuarters: gk.quarters }),
     };
   });
 
