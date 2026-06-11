@@ -390,6 +390,27 @@ export default function HeroSection({
                 <b className="font-extrabold">₩0</b> · 광고·결제 없이 현재 무료로 운영 중
               </span>
             </motion.div>
+
+            {/* Google Play 배지 */}
+            <motion.a
+              variants={fadeUp}
+              custom={1.0}
+              initial="hidden"
+              animate="show"
+              href="https://play.google.com/store/apps/details?id=app.pitchmaster"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Google Play에서 다운로드"
+              className="mt-4 inline-block transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.97]"
+            >
+              <Image
+                src="/google-play-badge.png"
+                alt="Google Play에서 다운로드"
+                width={646}
+                height={250}
+                className="h-[52px] w-auto"
+              />
+            </motion.a>
           </div>
 
           {/* ── VISUAL COLUMN ── */}

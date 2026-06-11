@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/lib/ToastContext";
-import AlphaTesterBanner from "@/components/AlphaTesterBanner";
+import PlayStoreInstallBanner from "@/components/PlayStoreInstallBanner";
 import WelcomeCard from "@/components/onboarding/WelcomeCard";
 import { shareTeamInvite } from "@/lib/kakaoShare";
 import "@/app/onboarding/onboarding.css";
@@ -391,8 +391,8 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
           </div>
         </div>
 
-        {/* 알파 테스터 배너 */}
-        <AlphaTesterBanner />
+        {/* Play 스토어 설치 안내 배너 */}
+        <PlayStoreInstallBanner />
 
         {/* WelcomeCard joined */}
         {joinedWelcome && (
