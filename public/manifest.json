@@ -12,6 +12,13 @@
   "lang": "ko",
   "categories": ["sports", "utilities"],
   "prefer_related_applications": false,
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "app.pitchmaster",
+      "url": "https://play.google.com/store/apps/details?id=app.pitchmaster"
+    }
+  ],
   "icons": [
     {
       "src": "/icons/icon-192.png",

@@ -332,7 +332,7 @@ export default function HeroSection({
             </h1>
             {/* SEO 보조 h2 */}
             <h2 className="sr-only">
-              피치마스터 PitchMaster — 조기축구 · 풋살 팀 관리 웹앱. 참석 투표, 회비 관리, AI 라인업 자동 배치, 전술판, 전술 영상 편집(전술 애니메이션), 경기 기록, MVP 투표를 한 곳에서. 축구 11인제·풋살 5·6인제 모두 지원.
+              피치마스터 PitchMaster — 조기축구 · 풋살 팀 관리 웹·안드로이드 앱(Google Play 출시). 참석 투표, 회비 관리, AI 라인업 자동 배치, 전술판, 전술 영상 편집(전술 애니메이션), 경기 기록, MVP 투표를 한 곳에서. 축구 11인제·풋살 5·6인제 모두 지원.
             </h2>
 
             <motion.div

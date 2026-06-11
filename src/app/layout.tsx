@@ -111,10 +111,12 @@ export default function RootLayout({
               "@type": "SoftwareApplication",
               "name": "PitchMaster",
               "applicationCategory": "SportsApplication",
-              "operatingSystem": "Web",
+              "operatingSystem": "Android, Web",
               "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" },
               "description": "조기축구·풋살 팀 관리 서비스 — 참석 투표, 회비 관리, AI 라인업",
-              "url": "https://pitch-master.app"
+              "url": "https://pitch-master.app",
+              "downloadUrl": "https://play.google.com/store/apps/details?id=app.pitchmaster",
+              "installUrl": "https://play.google.com/store/apps/details?id=app.pitchmaster"
             })
           }}
         />
@@ -137,7 +139,8 @@ export default function RootLayout({
                 { "@type": "Question", "name": "벌금은 자동으로 부과되나요?", "acceptedAnswer": { "@type": "Answer", "text": "지각·불참 자동 차감 규칙을 회칙에 명시하면, 매번 묻지 않아도 자동으로 회비에서 차감됩니다." } },
                 { "@type": "Question", "name": "월별 결산은 어떻게 보나요?", "acceptedAnswer": { "@type": "Answer", "text": "월별 수입·지출·잔고가 자동 집계되어 한 화면에 보입니다. 팀원 공유용 요약 카드는 이미지로 저장하거나 카톡으로 바로 공유할 수 있습니다." } },
                 { "@type": "Question", "name": "여러 팀을 동시에 운영할 수 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "한 카카오 계정으로 여러 팀을 만들고 전환할 수 있습니다. 회장이 두 팀 운영하는 경우도 흔해서 초기부터 지원합니다." } },
-                { "@type": "Question", "name": "PC에서도 쓸 수 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "PitchMaster는 브라우저로 동작합니다. 설치 앱이 아니어서 PC·모바일 어디서든 동일하게 쓸 수 있습니다." } },
+                { "@type": "Question", "name": "안드로이드(갤럭시) 앱이 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "네, Google Play 스토어에 정식 출시됐습니다. '피치마스터'를 검색하거나 스토어 링크로 설치하면 홈 화면 아이콘으로 바로 실행할 수 있습니다. 아이폰은 아직 별도 앱이 없지만, 사파리에서 '홈 화면에 추가'를 하면 앱처럼 사용할 수 있습니다. 어느 쪽이든 카카오 로그인이 같아 데이터는 그대로 유지됩니다." } },
+                { "@type": "Question", "name": "PC에서도 쓸 수 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "PC는 브라우저로 바로 쓸 수 있고, 휴대폰은 앱으로도 쓸 수 있습니다. 안드로이드(갤럭시 등)는 Google Play에서 '피치마스터'를 설치하면 되고, 아이폰은 홈 화면에 추가하면 앱처럼 사용됩니다. 어느 쪽이든 같은 계정·데이터로 이어집니다." } },
                 { "@type": "Question", "name": "우리 팀 데이터는 안전한가요?", "acceptedAnswer": { "@type": "Answer", "text": "출석·회비·경기 기록은 한국 서울 리전에 암호화되어 보관되고, 권한이 있는 운영진만 접근할 수 있습니다. 카카오 로그인만 사용해 별도 비밀번호는 저장하지 않습니다. 월별 결산은 PDF·이미지로 저장해 앱과 별개로도 기록을 남길 수 있습니다." } }
               ]
             })

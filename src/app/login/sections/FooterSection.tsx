@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Shield } from "lucide-react";
 
 export default function FooterSection() {
@@ -10,6 +11,23 @@ export default function FooterSection() {
           </div>
           <span className="font-heading text-sm font-bold uppercase tracking-[0.2em]">PitchMaster</span>
         </div>
+
+        {/* Google Play 배지 — 갤럭시 등 안드로이드 앱 설치 유도 */}
+        <a
+          href="https://play.google.com/store/apps/details?id=app.pitchmaster"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Google Play에서 다운로드"
+          className="transition-transform duration-200 hover:-translate-y-0.5"
+        >
+          <Image
+            src="/google-play-badge.png"
+            alt="Google Play에서 다운로드"
+            width={646}
+            height={250}
+            className="h-12 w-auto"
+          />
+        </a>
         <div className="flex flex-wrap justify-center gap-5 text-xs text-muted-foreground/60">
           <a href="/privacy" className="transition hover:text-foreground">개인정보처리방침</a>
           <span>·</span>

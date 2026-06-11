@@ -76,8 +76,20 @@ const ITEMS: HelpItem[] = [
     icon: Bell,
     q: "알림(푸시)이 안 와요",
     intro:
-      "알림은 휴대폰에 ‘앱처럼’ 설치돼 있어야 와요. 카톡·인스타 같은 인앱 브라우저나 그냥 띄운 웹 화면에선 안 옵니다.",
+      "알림은 휴대폰에 ‘앱처럼’ 설치돼 있어야 와요. 안드로이드(갤럭시)는 Google Play 앱으로, 아이폰은 ‘홈 화면에 추가’로 설치하면 됩니다. 카톡·인스타 같은 인앱 브라우저나 그냥 띄운 웹 화면에선 안 옵니다.",
     steps: [
+      <>
+        안드로이드(갤럭시): <b>Google Play에서 “피치마스터” 앱을 설치</b>하면 알림이 가장
+        안정적으로 와요 →{" "}
+        <a
+          href="https://play.google.com/store/apps/details?id=app.pitchmaster"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline underline-offset-2"
+        >
+          앱 설치하기
+        </a>
+      </>,
       <>
         아이폰: 사파리에서 연 뒤 <b>공유 버튼 → “홈 화면에 추가”</b> → 홈 화면 아이콘으로 실행해야
         알림을 받아요

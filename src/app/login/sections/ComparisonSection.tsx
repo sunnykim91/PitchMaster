@@ -58,8 +58,8 @@ const comparisonData: {
   },
   {
     feature: "PC·모바일",
-    pm: "브라우저로 어디서나, 설치 없이",
-    other: "앱 전용",
+    pm: "PC 웹 + 갤럭시 앱(Google Play), 아이폰은 홈 화면 추가 — 어디서나",
+    other: "모바일 앱 위주",
     isHighlight: false,
   },
   {

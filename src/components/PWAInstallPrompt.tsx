@@ -16,6 +16,10 @@ export default function PWAInstallPrompt() {
 
     const detected = detectInstallMode();
     if (detected === "none") return;
+    // 안드로이드는 Google Play 앱 설치로 통일 (PlayStoreInstallBanner가 담당)
+    // → PWA '홈 화면에 추가' 프롬프트는 숨김. 데스크톱(prompt)·iOS(홈화면추가)·
+    //   인앱 브라우저(외부 열기) 안내는 그대로 유지.
+    if (detected === "prompt" && /Android/i.test(navigator.userAgent)) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMode(detected);
 
