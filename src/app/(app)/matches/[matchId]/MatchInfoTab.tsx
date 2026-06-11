@@ -228,8 +228,11 @@ function MatchInfoTabInner({
   const scoreData = useMemo(() => {
     if (!goalsProp || goalsProp.length === 0) return null;
     if (isInternal) {
-      const left = goalsProp.filter((g) => g.side === "A" && g.scorerId !== "OPPONENT").length;
-      const right = goalsProp.filter((g) => g.side === "B" && g.scorerId !== "OPPONENT").length;
+      // 자책골은 side=범한 팀이므로 상대 사이드 득점으로 집계 (MatchDetailClient 스코어보드와 동일 규칙)
+      const left = goalsProp.filter((g) => g.side === "A" && !g.isOwnGoal).length
+        + goalsProp.filter((g) => g.side === "B" && g.isOwnGoal).length;
+      const right = goalsProp.filter((g) => g.side === "B" && !g.isOwnGoal).length
+        + goalsProp.filter((g) => g.side === "A" && g.isOwnGoal).length;
       return { left, right, result: left > right ? "승" : left === right ? "무" : "패" };
     }
     const left = goalsProp.filter((g) => g.scorerId !== "OPPONENT" && !g.isOwnGoal).length

@@ -34,8 +34,11 @@ export async function sendTeamPush(
   if (targetUserIds.length === 0) return { sent: 0, failed: 0 };
 
   // 인앱 알림 생성 (url 도 같이 저장 — 알림 카드 클릭 시 라우팅)
+  // team_id 필수: cron(match-nudge 등)의 팀 단위 중복 발송 방지 조회가 이 컬럼으로 거름.
+  // (2026-06-10 수정 전까지 미기록 — 13,044행 중 19행만 team_id 존재, dedup 전면 무력화 상태였음)
   const notifications = targetUserIds.map((uid) => ({
     user_id: uid,
+    team_id: teamId,
     type: "PUSH",
     title: opts.title,
     message: opts.body,
@@ -66,7 +69,10 @@ export async function sendTeamPush(
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.keys?.p256dh, auth: sub.keys?.auth } },
-          payload
+          payload,
+          // urgency high: 단말 절전(doze) 중에도 즉시 표시 — 밤 발송 푸시가 새벽에 몰려 뜨는 문제 방지.
+          // 모든 팀 푸시(MVP·결과·역할·넛지)가 시간 민감이라 일괄 적용 (2026-06-10)
+          { urgency: "high" }
         );
         sent++;
       } catch (err: unknown) {

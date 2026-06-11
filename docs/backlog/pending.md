@@ -1,11 +1,43 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=131팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-06-09 (78차 회고 후속)
+last_updated: 2026-06-09 (80차)
 related: [completed-recent.md, reviews.md]
 ---
 
 # 미완료 백로그
+
+## 82차 신규 추가 (2026-06-10) — 크론 전수조사 후속
+
+### 종료시각 미등록 경기 → 자정 MVP 푸시 (LOW)
+- `match_end_time` null인 당일 경기는 당일에 자동 완료 안 되고 KST 자정(00:00~00:05) 크론에서 COMPLETED → MVP 투표 푸시가 새벽 0시 발송
+- urgency high(82차 적용)로 단말 지연은 사라졌지만 자정 발송 자체는 남음
+- 후보: 자정~아침 9시 완료 경기의 MVP 푸시를 9시까지 지연(quiet hours), 또는 경기 등록 폼에서 종료시각 입력 유도
+- [ ] 발생 빈도(종료시각 null 비율) 측정 후 결정
+
+### match-result 크론 C안 업그레이드 (LOW, 보류)
+- 현행 A안(9시·22시 2회)으로 해소. 낮 경기까지 "종료 2시간 후 즉시" 받으려면 15분 크론 + 야간 금지창 필요
+- [ ] 보류 — 팀들의 골 입력 속도(종료→첫 골 기록 간격) 데이터 확인 후 0:0 오발송 리스크 판단
+
+## 80차 신규 추가 (2026-06-09) — 골 기록 버그 스윕 보류 항목
+
+### #5 상대 자책골(OPPONENT+자책골) 크레딧 규칙 불일치 (LOW, 보류)
+- **배경**: ~15 집계 경로에 두 가지 규칙 분산. 자체전 자책골(실버그, 생성 가능)은 80차에 수정. 상대 자책골(OPPONENT+ownGoal flag)은 **UI 생성 불가·실데이터 0건** 확인.
+- **판단 근거**: `feedback_verify_actual_usage_not_schema.md` — 스키마 enum≠실제 사용.
+- 정 통일하려면 공유 헬퍼 리팩토링 (15파일). 실데이터 발생 또는 사용자 명시 요청 시 착수.
+- 참고: `reference_goal_score_aggregation_dual_rule.md`
+
+### #6 season-awards 시즌 W/D/L에 INTERNAL 경기 포함 (MEDIUM, 미해결)
+- **배경**: `isTeamRecordMatch` 필터 누락으로 자체전(INTERNAL)이 시즌 전적에 포함됨.
+- 80차에 사용자가 "이번엔 건드리지 말 것" 명시 → 미해결 유지.
+- [ ] 다음 세션에서 재논의 후 수정 여부 결정
+- 수정 방향(안): season-awards API에 `matches.match_type != 'INTERNAL'` 필터 추가
+
+### #7d MemberEditModal 휴면 버튼 fire-and-forget (LOW, 보류)
+- **배경**: `onSet: () => void` prop 계약상 가드하려면 부모 컴포넌트 prop 타입 변경 필요. idempotent 작업이라 실질 위험 낮음.
+- [ ] 보류 유지 — 재논의 시 prop 계약 변경 범위 확인 후 결정
+
+---
 
 ## 79차 신규 추가 (2026-06-09) — 알파 5차 검토 대기·G2 후속·78차 미커밋
 

@@ -117,7 +117,9 @@ describe("POST /api/push/send", () => {
     expect(vi.mocked(webpush.sendNotification)).toHaveBeenCalledTimes(2);
     expect(vi.mocked(webpush.sendNotification)).toHaveBeenCalledWith(
       expect.objectContaining({ endpoint: mockSubscriptions[0].endpoint }),
-      expect.stringContaining("공지")
+      expect.stringContaining("공지"),
+      // urgency high — 절전 단말 즉시 표시 (2026-06-10 sendPush 변경)
+      expect.objectContaining({ urgency: "high" })
     );
   });
 

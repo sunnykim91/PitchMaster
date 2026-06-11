@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
+import { checkRateLimit, recordAiUsage } from "@/lib/server/aiUsageLog";
 
 const CLOVA_OCR_URL = process.env.CLOVA_OCR_INVOKE_URL;
 const CLOVA_OCR_SECRET = process.env.CLOVA_OCR_SECRET_KEY;
@@ -12,6 +13,14 @@ export async function POST(request: NextRequest) {
     return apiError("OCR 서비스가 설정되지 않았습니다", 503);
   }
 
+  // 레이트리밋 — smart(Haiku Vision) 경로와 동일한 팀 월 캡(MONTHLY_TEAM_CAPS.ocr) 공유.
+  // Clova 폴백도 유료 호출이므로 같은 한도에 합산 (2026-06-10 추가 — 기존엔 이 경로만 무제한)
+  const rate = await checkRateLimit("ocr", ctx.userId, ctx.teamId ?? null);
+  if (!rate.allowed) {
+    return apiError(rate.message ?? "OCR 한도를 초과했습니다.", 429);
+  }
+
+  const startedAt = Date.now();
   try {
     const formData = await request.formData();
     const file = formData.get("image") as File;
@@ -89,6 +98,16 @@ export async function POST(request: NextRequest) {
         f.inferText + (f.lineBreak ? "\n" : " ")
       )
       .join("");
+
+    // 사용량 기록 — source "ai"만 checkRateLimit 집계 대상. model 로 Clova/Haiku 구분.
+    recordAiUsage({
+      feature: "ocr",
+      source: "ai",
+      model: "clova-ocr",
+      userId: ctx.userId,
+      teamId: ctx.teamId ?? null,
+      latencyMs: Date.now() - startedAt,
+    }).catch(() => {});
 
     return apiSuccess({ text, fields });
   } catch (err) {
