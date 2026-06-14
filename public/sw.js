@@ -34,7 +34,7 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(data.title, {
       body: data.body,
       icon: baseUrl + "/icons/icon-192.png",
-      badge: baseUrl + "/icons/icon-192.png",
+      badge: baseUrl + "/icons/badge-96.png",
       tag: "pitchmaster-" + Date.now(),
       renotify: true,
       vibrate: [200, 100, 200],
