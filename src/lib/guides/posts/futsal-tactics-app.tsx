@@ -23,7 +23,7 @@ export const meta: GuideMeta = {
   publishedAt: "2026-05-16",
   updatedAt: "2026-05-16",
   readingMinutes: 7,
-  related: ["futsal-split-teams", "treasurer-start"],
+  related: ["futsal-split-teams", "futsal-self-match-lineup", "treasurer-start"],
 };
 
 export default function Content() {

@@ -25,7 +25,7 @@ export const meta: GuideMeta = {
   publishedAt: "2026-05-14",
   updatedAt: "2026-05-14",
   readingMinutes: 8,
-  related: ["treasurer-start"],
+  related: ["futsal-self-match-lineup", "treasurer-start"],
 };
 
 export default function Content() {

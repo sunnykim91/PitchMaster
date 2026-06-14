@@ -21,7 +21,7 @@ export const meta: GuideMeta = {
   publishedAt: "2026-05-12",
   updatedAt: "2026-05-12",
   readingMinutes: 7,
-  related: ["treasurer-start"],
+  related: ["treasurer-start", "soccer-team-penalty-rules"],
 };
 
 export default function Content() {

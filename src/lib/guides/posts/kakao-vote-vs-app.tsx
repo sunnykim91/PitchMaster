@@ -22,7 +22,7 @@ export const meta: GuideMeta = {
   publishedAt: "2026-05-27",
   updatedAt: "2026-05-27",
   readingMinutes: 7,
-  related: ["soccer-team-excel-vs-app", "treasurer-start"],
+  related: ["soccer-team-excel-vs-app", "soccer-team-penalty-rules", "treasurer-start"],
 };
 
 export default function Content() {

@@ -47,6 +47,10 @@ export default async function GuidePostPage({ params }: Props) {
   const Content = post.default;
   const { meta } = post;
 
+  const relatedPosts = (meta.related ?? [])
+    .map((s) => getGuide(s)?.meta)
+    .filter((m): m is NonNullable<typeof m> => Boolean(m));
+
   // JSON-LD Article 구조화 데이터
   const jsonLd = {
     "@context": "https://schema.org",
@@ -107,6 +111,32 @@ export default async function GuidePostPage({ params }: Props) {
         <article className="guide-prose">
           <Content />
         </article>
+
+        {relatedPosts.length > 0 && (
+          <section className="mt-12 border-t border-border/40 pt-8">
+            <h2 className="text-sm font-semibold text-foreground">관련 가이드</h2>
+            <ul className="mt-4 flex flex-col gap-1">
+              {relatedPosts.map((r) => (
+                <li key={r.slug}>
+                  <Link
+                    href={`/guide/${r.slug}`}
+                    className="group -mx-2 flex items-start gap-2.5 rounded-lg px-2 py-2 hover:bg-secondary/40 transition-colors"
+                  >
+                    <span className="mt-0.5 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                      {r.category}
+                    </span>
+                    <span className="flex-1 text-sm leading-snug text-foreground transition-colors group-hover:text-primary">
+                      {r.title}
+                    </span>
+                    <span className="mt-0.5 shrink-0 text-xs text-muted-foreground">
+                      {r.readingMinutes}분
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <footer className="mt-12 border-t border-border/40 pt-8">
           <div className="rounded-2xl bg-secondary/30 p-5">
