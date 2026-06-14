@@ -22,7 +22,7 @@ export const meta: GuideMeta = {
   publishedAt: "2026-05-11",
   updatedAt: "2026-05-11",
   readingMinutes: 8,
-  related: [],
+  related: ["soccer-dues-management", "dues-exemption-policy", "dormancy-auto-exemption"],
 };
 
 export default function Content() {
@@ -83,6 +83,12 @@ export default function Content() {
       <p>
         "불공평하다"는 의견이 나올 수 있지만 운영 시간을 화폐로 환산한 일반적 관행입니다. 첫 회의에서
         명문화하고 회칙에 박아두세요. 나중에 논쟁 막는 가장 확실한 방법.
+      </p>
+      <p>
+        회비 관리 실무(통장 입금 대조·미납 관리·월별 결산 공개)를 단계별로 더 깊게 보려면{" "}
+        <a href="/guide/soccer-dues-management">조기축구 회비 관리하는 법</a>을, 회장·총무 면제
+        기준을 다른 팀 사례로 비교하려면{" "}
+        <a href="/guide/dues-exemption-policy">회장·총무 회비 면제 정책</a> 글을 함께 참고하세요.
       </p>
 
       <h2>2단계 — 출석 관리 시스템 정하기</h2>
@@ -167,7 +173,7 @@ export default function Content() {
       <p>
         <a href="/login">PitchMaster</a>는 위 항목을 한 곳에서 처리하는 무료 운영 도구입니다.
         통장 캡처 회비 정리, 카톡 공유로 출석 투표, AI 자동 라인업 편성, 경기 기록·MVP 투표까지
-        100+ 팀, 800+ 명이 사용 중입니다. 자세한 사용법은{" "}
+        130여 팀이 무료로 사용 중입니다. 자세한 사용법은{" "}
         <a href="/guide">사용 가이드 페이지</a>에서 확인하세요.
       </p>
 
