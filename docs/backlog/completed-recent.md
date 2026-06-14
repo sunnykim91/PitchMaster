@@ -1,12 +1,213 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~80차)
-summary: 2026-04-11~06-09 진행. 최근: 골 기록 수정 UX·버그 + 전 서비스 중복제출·점수집계·silent fail 스윕 (80차, d84635b~8c05553). 79차: G2 가이드 커밋·발행(e6f1308) + 알파 5차 프로덕션 신청.
-sections: [80차(2026-06-09) 골기록수정UX버그·전서비스버그스윕, 79차(2026-06-09) G2가이드커밋발행·알파5차프로덕션신청접수, 78차(2026-06-08~09) 카카오로그인진단Q&A심화·LoginHelp신설·InAppBrowserBanner감지확대·온보딩미리보기·포지션힌트수정(커밋완료), 77차(2026-06-03~06-08) 미투표벌금cron버그·랜딩FAQ정직화·AI코치회원노출·가이드G1발행·참석자출석카드·사업다각도분석, 76차(2026-06-06) 랜딩GEO+FAQ개선·GEO진단·가이드#1발행·가이드#2미커밋, 75차(2026-06-06) ChatGPT 유입 누적 6명 확인·FC DGS·FC YUSIN 신규 가입 분석, 74차(2026-06-06) 이력서 원티드 작업·AI dead code 검증·Supabase 실측·이력서 재작성, 73차(2026-06-03) 2차 리뷰 보안·정합성 패치·auth 회귀 수정·자체전 AI 미노출, 72차 추가(2026-06-03) 투표마감 UTC→KST 핫픽스·cleanup, 72차 사업분석·잔존진단·알파 vc9 빌드·useApi SWR화·전술판 드래그·보안패치 13커밋·블로그 8편, 71차 게시판 SSR is_global 누락 버그 수정, 70차 경기상세 hydration최적화·dashboard task overhaul·온보딩 체크리스트·HintCard·N badge·TWA SW update·핫픽스 4건, 69차+ 블로그 6편 전채널+7편 초안·네이버 자체 통계 분석, 68차 알파 5차 준비·TWA referrer fix·UX 로딩 표준화 19파일·어드민 6팀 제외·블로그 6편, 67차 실사용 팀 활동 패턴 분석·본인팀 제외·전술영상·WelcomeCard v2 코호트, 66차-B 운영 데이터 조사·SEO 분석·블로그 5편 완주, 66차 매치 페이지 시안 v2 + 대시보드 풀 마이그 + hue cascade 버그 + 디자인 마이그 중단 결정, 65차 전술판 영상 평면화·알파 공지 게시물·블로그 4·5편·권한별UI·signup_source 3중망·종합점검, 64차 OVR 공식 재설계 + 시그니처 분기 보강 + AI 카피 라벨 정정 + 배지 제거, 63차 박제 정정 + pending.md outdated 항목 정리, 62차 전술 영상 편집기 전면 리팩토링 P1~P5 + DB 마이그레이션 + 게시판 linkify, 60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-06-09 (80차)
+title: 개선 백로그 — 최근 완료 (16~84차)
+summary: 2026-04-11~06-14 진행. 최근: 알림 아이콘 흰 네모 버그 수정·TWA v1.0.7 Play 제출 (84차). 83차: 크론 전수조사·메모리 2단 인덱스 대개편. 82차: Google Play 정식 출시(v1.0.6).
+sections: [84차(2026-06-14) 알림아이콘흰네모버그수정·badge-96.svg흰실루엣·TWA5밀도ic_notification_icon·v1.0.7vc11Play제출(0f52569), 83차(2026-06-11) 크론전수조사·push urgency·MatchInfoTab자체전·OCR캡합산·메모리2단인덱스, 82차후속(2026-06-11) /guide허브신설·Android Play스토어안내보정·SEO마케팅점검(a886661·cdf31b8), 82차(2026-06-11) GooglePlay정식출시v1.0.6·알파정리·Play배너·블로그출시후기, 80차(2026-06-09) 골기록수정UX버그·전서비스버그스윕, 79차(2026-06-09) G2가이드커밋발행·알파5차프로덕션신청접수, 78차(2026-06-08~09) 카카오로그인진단Q&A심화·LoginHelp신설·InAppBrowserBanner감지확대·온보딩미리보기·포지션힌트수정(커밋완료), 77차(2026-06-03~06-08) 미투표벌금cron버그·랜딩FAQ정직화·AI코치회원노출·가이드G1발행·참석자출석카드·사업다각도분석, 76차(2026-06-06) 랜딩GEO+FAQ개선·GEO진단·가이드#1발행·가이드#2미커밋, 75차(2026-06-06) ChatGPT 유입 누적 6명 확인·FC DGS·FC YUSIN 신규 가입 분석, 74차(2026-06-06) 이력서 원티드 작업·AI dead code 검증·Supabase 실측·이력서 재작성, 73차(2026-06-03) 2차 리뷰 보안·정합성 패치·auth 회귀 수정·자체전 AI 미노출, 72차 추가(2026-06-03) 투표마감 UTC→KST 핫픽스·cleanup, 72차 사업분석·잔존진단·알파 vc9 빌드·useApi SWR화·전술판 드래그·보안패치 13커밋·블로그 8편, 71차 게시판 SSR is_global 누락 버그 수정, 70차 경기상세 hydration최적화·dashboard task overhaul·온보딩 체크리스트·HintCard·N badge·TWA SW update·핫픽스 4건, 69차+ 블로그 6편 전채널+7편 초안·네이버 자체 통계 분석, 68차 알파 5차 준비·TWA referrer fix·UX 로딩 표준화 19파일·어드민 6팀 제외·블로그 6편, 67차 실사용 팀 활동 패턴 분석·본인팀 제외·전술영상·WelcomeCard v2 코호트, 66차-B 운영 데이터 조사·SEO 분석·블로그 5편 완주, 66차 매치 페이지 시안 v2 + 대시보드 풀 마이그 + hue cascade 버그 + 디자인 마이그 중단 결정, 65차 전술판 영상 평면화·알파 공지 게시물·블로그 4·5편·권한별UI·signup_source 3중망·종합점검, 64차 OVR 공식 재설계 + 시그니처 분기 보강 + AI 카피 라벨 정정 + 배지 제거, 63차 박제 정정 + pending.md outdated 항목 정리, 62차 전술 영상 편집기 전면 리팩토링 P1~P5 + DB 마이그레이션 + 게시판 linkify, 60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-06-14 (84차)
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~80차)
+# 최근 완료 (16~84차)
+
+## 84차 (2026-06-14, KST) — 알림 아이콘 흰 네모 버그 수정 + TWA v1.0.7 Play 제출
+
+**커밋**: 0f52569 (PitchMaster main 푸시 완료, Vercel 자동배포)
+**TWA**: versionCode 11 / v1.0.7 → Play Console 프로덕션 심사 제출 완료
+
+### 알림 아이콘 흰 네모 버그 근본 수정
+
+**증상**: 안드로이드 상단바 알림 아이콘이 흰 배경에 흰 네모로만 표시됨.
+
+**근본 원인**: 안드로이드 알림 소형 아이콘(badge/SMALL_ICON)은 알파 채널만 사용해 흰색으로 렌더하는 OS 정책. 기존 아이콘(icon-192.png)이 불투명(alphaMin=alphaMax=255)이라 전체가 흰 블록으로 표시된 것. sharp `stats()`로 진단 확정.
+
+**수정 1 — 웹푸시 badge (0f52569)**
+- [x] `public/icons/badge-96.svg` 신규 — 투명 배경 + 흰색 굵은 축구공 실루엣 (stroke-width 5.5, 중앙 펜타곤 fill, 24px에서도 가독)
+- [x] `public/icons/badge-96.png` 신규 — badge-96.svg에서 sharp로 생성 (96x96)
+- [x] `public/sw.js` push 핸들러: `badge: '/icons/icon-192.png'` → `badge: '/icons/badge-96.png'` 교체
+- [x] 3파일만 선택 스테이징 커밋 (docs/backlog 미커밋 변경 제외)
+
+**수정 2 — TWA SMALL_ICON (c:\dev\pitchmaster-twa)**
+- [x] 핵심 발견: TWA 설치 앱 웹푸시는 웹 badge가 아닌 AndroidManifest.xml `android.support.customtabs.trusted.SMALL_ICON = @drawable/ic_notification_icon`을 사용
+- [x] `app/src/main/res/drawable-{mdpi,hdpi,xhdpi,xxhdpi,xxxhdpi}/ic_notification_icon.png` 5개 전부 교체 (24·36·48·72·96px, badge-96.svg에서 sharp로 생성)
+
+### TWA v1.0.7 (versionCode 11) 빌드 + Play Console 제출
+
+- [x] 버전 숫자 3곳 동기화: `app/build.gradle`(versionCode 10→11, versionName 1.0.6→1.0.7) + `twa-manifest.json`(appVersionCode·appVersionName·appVersion 3개)
+- [x] `JAVA_HOME=C:\dev\bw\jdk\jdk-17.0.11+9`, `ANDROID_HOME=C:\dev\bw\android_sdk`
+- [x] `gradlew.bat clean bundleRelease --no-daemon` → unsigned AAB 생성
+- [x] 키스토어 비번: `c:\dev\pitchmaster-twa\build-log.txt`(UTF-16) 참조 (메모리에 값 미기재)
+- [x] `jarsigner -sigalg SHA256withRSA -digestalg SHA-256` → "jar signed." → "-verify jar verified."
+- [x] 루트 `app-release-bundle.aab` 복사 완료
+- [x] 사용자가 Play Console 프로덕션 → 새 버전 만들기 → 업로드 → 검토 제출 완료
+
+Google 심사 1~3일 대기 중.
+
+**삽질·교훈**
+
+- 삽질 없음. 진단(sharp stats) → 원인 확정 → 두 군데 수정 → 빌드 → 제출 직선 진행.
+- 학습: 안드로이드 알림 아이콘은 반드시 투명 배경 + 흰 실루엣. TWA 설치 앱은 웹 badge가 아닌 `@drawable/ic_notification_icon` 5밀도 PNG가 실제 원인. `reference_android_notification_icon.md` 신규 생성.
+
+---
+
+## 83차 (2026-06-11, KST) — 크론 전수조사 + 전 서비스 정밀 분석 + 메모리 대개편
+
+**커밋**: 220c9fe (push 완료, Vercel 배포 완료)
+
+### 크론 전수조사 — 경기 결과 푸시 지각 버그 수정 (220c9fe)
+
+**원인 규명**
+
+- match-result 크론 일 1회 22:00 KST → 저녁 경기(22시 이후 종료)는 다음날 22시 발송 (최대 23h 지각)
+- webpush urgency 미지정 → 단말 절전 시 배달 보류 → 새벽 일괄 표시
+- 실측 검증: FCMZ 6/8 21~23시 경기 — MVP 푸시 6/8 23:00:41(정상), 결과 푸시 6/9 22:00:50(지각)
+
+**수정 내용**
+
+- [x] `sendPush.ts`: notifications INSERT에 `team_id` 추가 (13,044행 중 19행 team_id=null, match-nudge cron dedup 무력화 근본 수정)
+- [x] `sendPush.ts`: `webpush.sendNotification()` 3번째 인자에 `urgency: "high"` 추가 (단말 즉시 배달)
+- [x] `vercel.json`: match-result 크론 09:00 KST(`0 0 * * *` UTC) 추가 — 기존 22:00 KST 유지. 멱등성 claim 검증 완료.
+- [x] `MatchInfoTab.tsx`: 자체전 자책골 상대 side 집계 통일 (80차 3곳 수정 당시 누락된 4번째 경로)
+- [x] `api/ocr/route.ts`: `checkRateLimit` + `recordAiUsage(model:"clova-ocr")` 추가 — Clova 폴백도 `/api/ocr/smart`(Claude Vision)와 동일 월 100회 캡 합산
+
+**테스트 수정**
+
+- [x] `push-send.test.ts`: urgency 3번째 인자 검증 갱신 → 820/820 통과
+- [x] tsc --noEmit 0 · rm -rf .next 클린빌드 exit 0
+
+### 전 서비스 정밀 분석 (코드 변경 별도)
+
+- **라이브 실측**: 131팀/629명 (6/11 기준)
+- **성숙 잔존**: 외부 89팀 중 12팀 13% (6/2 진단 10팀 대비 +2팀 개선)
+- **회비 외부 도입 5팀 신규**: MOMOMO·LINEOUT·노끼·FC화곡동교회·데프스피릿
+- **ChatGPT 유입**: 최근 21일 5명, 가속 추세
+- **AI 외부 누적**: 16회 (여전히 극소)
+- 코드 상태: vitest 820/820 · tsc 0 · MVP 집계 11경로 드리프트 0 확인
+- 약점 확인: 600줄+ 파일 20개, cron 테스트 0개
+
+### 메모리 2단 인덱스 대개편 (2026-06-10 완료)
+
+- MEMORY.md 289줄/25.4KB → 144줄/14.2KB 압축 핵심판
+- INDEX_full.md 신설 (230+개 전체 목록 무손실 보존 + 고아 3개 복구)
+- frontmatter 정비: name 빈 22개 채움 + frontmatter 없던 33개 생성 (전 229파일 완비)
+- 망각 규칙 4단계 session-reviewer 지침에 추가 (이번 회고가 첫 적용)
+- verify: 필드 8개 파일 추가 (코드 사실 메모리 검증 경로)
+
+**삽질·교훈**
+
+- `dues_transactions` 없는 테이블 조회 → 조용한 0건 반환 → `select '*'` probe로 `dues_records` + `recorded_at` 확인 후 정정. supabase_column_verify 규칙 재확인 사례.
+- ~/.claude/settings.json self-modification 가드 → 사용자 직접 수정 중 docs/settings.json(텔레그램 토큰)이 repo에 잠시 생성됐다 삭제. 커밋 안 됨, 유출 없음.
+- CLAUDE.md·domain_ai_release_state rate limit 수치가 aiUsageLog.ts 실제 값(coach 4/30, plan 3/20, ocr 100)과 불일치 → 코드 단일 source 원칙으로 정정.
+
+---
+
+## 82차 후속 (2026-06-11, KST) — /guide 허브 + Android Play 스토어 안내 + SEO·마케팅 점검
+
+**추가 커밋**: a886661, cdf31b8 (push 완료. 이 세션 총 커밋 5개)
+
+### /guide 허브 페이지 신규 생성 (a886661)
+
+- [x] `src/app/guide/page.tsx` 신규 — sitemap.ts 제출 /guide URL이 404이던 문제 해소. 발행된 가이드 목록 카드 + CollectionPage JSON-LD.
+- [x] `FooterSection.tsx` 레거시 `/guide.html` 링크 → `/guide` 교정.
+- [x] 76차 pending.md "허브 페이지 신설" 항목 완료 처리.
+
+### 안드로이드 "홈 화면에 추가" → Play 스토어 안내 보정 (cdf31b8)
+
+- [x] `pwaInstall.ts` "playstore" 모드 추가 (안드로이드 → Play 스토어, 데스크톱만 native prompt).
+- [x] `PLAY_STORE_URL` 상수 신규.
+- [x] 5개 파일 수정: pwaInstall.ts · PWAInstallPrompt.tsx · ClientLayout.tsx · MoreClient.tsx · PersonalSettings.tsx.
+- [x] iOS·데스크톱·인앱 동작 불변. 안드로이드는 "Play 스토어에서 앱 받기"로 이동.
+- [x] MoreClient.tsx에서 레거시 `/guide.html` → `/guide` 링크도 함께 교정.
+
+### SEO·경쟁·마케팅 종합 점검 (코드 변경 없음)
+
+- [x] 출시 후 SEO 부채·경쟁앱 대비 변화 점검.
+- [x] 인스타 마케팅 계획 수립 — Meta Pixel 미설치 상태 확인, 설치 선행 필요. 사용자가 실행 나중으로 미룸.
+- [x] KPI=신규 회장 수, UTM 필수, 리뷰 쌓인 2~3주 후 집행 권장 확정.
+
+**주의 — 미커밋 워킹트리**
+
+- 골키퍼 쿼터별 클린시트 통계: `src/lib/server/getGoalkeeperStats.ts`(신규) + RecordsClient·api/records/route·getRecordsData 수정. 사용자 진행 중. 빌드·테스트 통과 확인됨. 다음 세션에서 커밋 예정.
+
+---
+
+## 82차 (2026-06-11, KST) — Google Play 정식 출시 완료 (v1.0.6)
+
+**커밋**: 2d69370, fa3622a, 1446a4a (push 완료)
+
+### Google Play 정식 출시 승인 (5차 시도)
+
+- [x] Play Console 프로덕션 심사 통과 (v1.0.6, versionCode 10). 6/11 출시 완료.
+- [x] 알파 테스터 시스템 정리 (`domain_alpha_tester_system.md` 출시 완료로 갱신)
+- [x] TWA 앱 Play Store 공개 링크 확인 완료
+
+### 서비스 문구 출시 반영 + Play 배너 (2d69370, fa3622a)
+
+- [x] 랜딩 Play Store 배지 추가 + 설치 배너 신규
+- [x] "알파 테스터 모집" 문구 → "Play Store 출시" 문구로 전체 교체
+- [x] iOS 홈 화면 추가 안내 유지
+
+### 블로그 출시 후기 2편 (1446a4a)
+
+- [x] 네이버 + 티스토리 Play Store 출시 후기 포스트 작성·발행
+
+**삽질·교훈**
+
+- outdated 수치(README·CLAUDE.md) 직접 인용 금지 재확인 — 외부 수치는 Supabase 직접 조회
+
+---
+
+## 82차 (2026-06-11, KST) — Google Play 정식 출시 + 후속 처리
+
+**커밋**: 2d69370, fa3622a, 1446a4a (push 완료)
+
+### Google Play 정식 출시 완료
+
+- [x] 5차 신청(6/9 제출) 6/11 승인. 프로덕션 버전 10(v1.0.6) 전송 → 즉시 심사 통과 → 게시 완료.
+- [x] 첫 신청(5/11)부터 4번 반려 끝에 정확히 1개월 만에 출시. 출시 국가 대한민국 1개.
+
+### 전 팀 운영공지 발행
+
+- [x] posts id `5660d2ae` (is_global+핀 고정). 링크 중심 + "영문 pitchmaster 검색" 안내.
+- [x] 게시판 본문 마크다운 미지원 확인 → plain text + URL 자동링크 방식.
+
+### 테스터 기프티콘 발송 + rewarded_at 기록
+
+- [x] 13명 기프티콘 발송 (사용자 직접, 총 약 3만원). 쿠폰·리뷰 부탁 문단 분리 (대가성 리뷰 정책 위반 방지).
+- [x] `alpha_testers.rewarded_at` 13명 전원 DB UPDATE 완료 (6/11).
+
+### 알파 시스템 정리 + Play 설치 배너 전환 (2d69370)
+
+- [x] AlphaTesterBanner·어드민 alpha-testers 페이지·API 3종 삭제. DB 테이블·마이그레이션 00067은 보존.
+- [x] 신규 `PlayStoreInstallBanner.tsx` — 안드로이드 && !TWA && 미노출 1회 모달. `?playstore=1` 강제표시.
+- [x] 랜딩 히어로에 공식 Google Play 배지 (`public/google-play-badge.png` 646×250) 추가.
+- [x] TwaReferrerCapture 유지.
+
+### 서비스 전반 문구 출시 반영 (fa3622a)
+
+- [x] 아이폰 홈 화면 추가 유지, 안드로이드 Play 앱 링크로 통일.
+- [x] FAQ "안드로이드 앱 있나요?" 신규 (FaqSection + layout JSON-LD FAQPage 양쪽).
+- [x] layout SoftwareApplication JSON-LD operatingSystem "Android, Web" + downloadUrl, manifest related_applications.
+- [x] PWAInstallPrompt 안드로이드 prompt 숨김 (Play 배너와 중복 방지). FooterSection Play 배지 추가.
+- [x] LoginHelp 알림 안내에 안드로이드 Play 설치 step+링크 추가.
+
+### 스토어 등록정보 초안 정정
+
+- [x] outdated 수치 ("84팀·647명(4월)") → Supabase 직접 조회(132팀/632명/활성멤버십 855)로 정정.
+- [x] "PWA 설치 없이"(출시와 모순), "AI 경기 후기"(룰 기반), "카테고리 최초"(검증 불가) 모두 정정·삭제.
+- [x] 앱 이름 "피치마스터 PitchMaster - 풋살·축구 팀관리" (영어 브랜드 포함) 권장 확정.
+
+### 출시 후기 블로그 2편 발행 (1446a4a)
+
+- [x] `docs/blog-playstore-launch-naver.md`, `docs/blog-playstore-launch-tistory.md` 커밋.
+- [x] 네이버·티스토리 6/11 발행 완료. "4번 떨어지고 5번째 출시" 스토리.
+
+**삽질·교훈**
+
+- 테스터 공개 리뷰 첫 답변 부정확: "트랙 일시중지 = 자연 전환" → 공식 문서 확인 결과 **각 테스터 직접 옵트아웃 필수** (베타 나가기 → 앱 삭제 → 재설치). 추측 답변 금지 재확인.
+- outdated 수치 위험: 스토어 설명 "84팀·647명(4월)" 박혀있던 것 Supabase 직접 조회로 정정. 외부 콘텐츠 수치는 항상 직접 조회 원칙 재확인.
+- rewarded_at 권한 분류기 거부 경험 → 사용자 명시 확인 후 진행.
+- 워킹트리 이전 세션 미커밋 변경분 잔존 (CLAUDE.md, MatchInfoTab.tsx, ocr route.ts, sendPush.ts, 백로그 문서) — 이번 세션에서 손대지 않음.
+
+---
 
 ## 80차 (2026-06-09, KST) — 골 기록 수정 UX·버그 + 전 서비스 버그 스윕
 
