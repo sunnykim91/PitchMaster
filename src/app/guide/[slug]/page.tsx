@@ -114,7 +114,7 @@ export default async function GuidePostPage({ params }: Props) {
               조기축구·풋살 동호회 운영을 한 곳에서
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              회비 OCR · 출석 투표 · AI 자동 라인업 · 전술판 · 경기 기록 — 90+ 팀이 무료로
+              회비 OCR · 출석 투표 · AI 자동 라인업 · 전술판 · 경기 기록 — 130여 팀이 무료로
               사용합니다.
             </p>
             <Link
