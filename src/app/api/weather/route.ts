@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getCoords } from "@/lib/server/getCoords";
+import { fetchWithTimeout } from "@/lib/server/fetchWithTimeout";
 
 // 기본 좌표 (좌표 미해결 시 폴백): 서울 시청
 const DEFAULT_COORDS = { lat: 37.5665, lon: 126.978 };
@@ -122,8 +123,8 @@ export async function GET(request: NextRequest) {
     };
 
     if (queryDiffDays === 0) {
-      // Current weather
-      const res = await fetch(
+      // Current weather (타임아웃 2.5s — 느린 OpenWeather 가 라우트를 무한 점유하지 않도록)
+      const res = await fetchWithTimeout(
         `https://api.openweathermap.org/data/2.5/weather?lat=${coords.lat}&lon=${coords.lon}&appid=${apiKey}&units=metric&lang=kr`,
         { next: { revalidate: 3600 } }
       );
@@ -141,8 +142,8 @@ export async function GET(request: NextRequest) {
         icon: ICON_MAP[main] ?? "\u2600\uFE0F",
       };
     } else {
-      // 5-day forecast (3시간 간격)
-      const res = await fetch(
+      // 5-day forecast (3시간 간격, 타임아웃 2.5s)
+      const res = await fetchWithTimeout(
         `https://api.openweathermap.org/data/2.5/forecast?lat=${coords.lat}&lon=${coords.lon}&appid=${apiKey}&units=metric&lang=kr`,
         { next: { revalidate: 3600 } }
       );

@@ -17,6 +17,7 @@
  */
 
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { fetchWithTimeout } from "@/lib/server/fetchWithTimeout";
 
 export type Coords = {
   lat: number;
@@ -34,7 +35,8 @@ async function searchKakao(query: string): Promise<Coords | null> {
 
   try {
     const url = `${KAKAO_LOCAL_API}?query=${encodeURIComponent(query)}&size=1`;
-    const res = await fetch(url, {
+    // 타임아웃 2.5s — 카카오가 느릴 때 호출부(날씨)가 무한 대기하지 않도록. 초과 시 abort → catch → null.
+    const res = await fetchWithTimeout(url, {
       headers: { Authorization: `KakaoAK ${apiKey}` },
       // 카카오는 변경 거의 없으므로 응답 캐싱 (1시간)
       next: { revalidate: 3600 },
