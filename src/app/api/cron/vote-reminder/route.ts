@@ -51,6 +51,8 @@ export async function GET(request: NextRequest) {
   }
 
   let totalSent = 0;
+  // 같은 팀이 같은 날 여러 경기를 가지면 getActiveExemptions 가 매 경기 반복 호출됨 → 팀별 1회 캐싱 (86차 perf)
+  const exemptionsByTeam = new Map<string, Awaited<ReturnType<typeof getActiveExemptions>>>();
 
   for (const match of matches) {
     // 미투표자만 대상
@@ -62,8 +64,12 @@ export async function GET(request: NextRequest) {
       .not("user_id", "is", null);
 
     const allIdsRaw = (members ?? []).map((m) => m.user_id).filter(Boolean) as string[];
-    // 면제/휴회/부상 회원 제외
-    const exemptions = await getActiveExemptions(match.team_id);
+    // 면제/휴회/부상 회원 제외 (팀별 1회만 조회)
+    let exemptions = exemptionsByTeam.get(match.team_id);
+    if (!exemptions) {
+      exemptions = await getActiveExemptions(match.team_id);
+      exemptionsByTeam.set(match.team_id, exemptions);
+    }
     const allIds = allIdsRaw.filter((uid) => !exemptions.has(uid));
 
     const { data: voted } = await db

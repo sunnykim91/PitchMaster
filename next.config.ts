@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),
   },
   experimental: {
-    optimizePackageImports: ["lucide-react", "recharts", "@radix-ui/react-dialog", "@radix-ui/react-select", "@radix-ui/react-tabs"],
+    optimizePackageImports: ["lucide-react", "recharts", "framer-motion", "@radix-ui/react-dialog", "@radix-ui/react-select", "@radix-ui/react-tabs"],
   },
   images: {
     formats: ["image/avif", "image/webp"],

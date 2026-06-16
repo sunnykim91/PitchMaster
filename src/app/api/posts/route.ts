@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
     db.from("posts")
       .select("*, author:author_id(name), post_likes(count), post_comments(count)")
       .eq("is_global", true)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(20), // 운영공지는 소수(관리자 작성) — 전역 무제한 스캔 방지. 최신 20건이면 충분.
   ]);
 
   if (teamRes.error) return apiError(teamRes.error.message);

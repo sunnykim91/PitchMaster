@@ -368,16 +368,21 @@ export async function GET(request: NextRequest) {
     }));
 
     // 9-2. 멤버별 골/어시/MVP 집계 (이미 로드된 데이터 재사용)
+    // id(user_id·member_id) → agg 인덱스. 이전엔 row마다 memberAggs.find() → O(rows×members) (86차 perf).
+    // id 는 멤버 간 유일하므로 .find 첫 매칭과 동일 결과.
+    const aggById = new Map<string, MemberLookup>();
+    for (const agg of memberAggs) for (const id of agg.ids) aggById.set(id, agg);
+
     for (const row of goalsRes.data ?? []) {
-      const agg = memberAggs.find((m) => m.ids.includes(row.scorer_id));
+      const agg = aggById.get(row.scorer_id);
       if (agg) agg.goals++;
     }
     for (const row of assistsRes.data ?? []) {
-      const agg = memberAggs.find((m) => m.ids.includes(row.assist_id));
+      const agg = aggById.get(row.assist_id);
       if (agg) agg.assists++;
     }
     for (const row of mvpRes.data ?? []) {
-      const agg = memberAggs.find((m) => m.ids.includes(row.candidate_id));
+      const agg = aggById.get(row.candidate_id);
       if (agg) agg.mvp++;
     }
 

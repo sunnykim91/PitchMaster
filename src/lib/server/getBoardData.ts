@@ -24,7 +24,8 @@ export async function getBoardData(teamId: string, userId?: string) {
     db.from("posts")
       .select("*, author:author_id(name, profile_image_url), post_likes(count), post_comments(count)")
       .eq("is_global", true)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(20), // 운영공지는 소수(관리자 작성) — 전역 무제한 스캔 방지. 최신 20건이면 충분.
   ]);
 
   type PostRow = Record<string, unknown> & {

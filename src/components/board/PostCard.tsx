@@ -6,7 +6,7 @@ import { MessageSquare, Heart, Pin, ChevronDown, ChevronUp, Pencil, Trash2, Shar
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { relativeTime } from "@/lib/utils";
+import { relativeTime, compactKakaoImage } from "@/lib/utils";
 import { PollBlock } from "@/components/board/PollBlock";
 import { CommentSection } from "@/components/board/CommentSection";
 import { useConfirm } from "@/lib/ConfirmContext";
@@ -87,7 +87,7 @@ export const PostCard = memo(function PostCard({
             {/* Avatar */}
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-border">
               {post.authorProfileImage ? (
-                <img src={post.authorProfileImage} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                <img src={compactKakaoImage(post.authorProfileImage, 110)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
               ) : (
                 <span className="text-xs font-bold text-primary">
                   {post.author?.charAt(0) || "?"}

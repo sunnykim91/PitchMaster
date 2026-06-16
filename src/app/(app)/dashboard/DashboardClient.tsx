@@ -9,7 +9,7 @@ import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role } from "@/lib/types";
-import { cn, formatTime, formatDateKo } from "@/lib/utils";
+import { cn, formatTime, formatDateKo, compactKakaoImage } from "@/lib/utils";
 import { toKoreanError } from "@/lib/errorMessages";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -469,7 +469,7 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
                   <span className="pm-dash-bday-chip-avatar" aria-hidden>
                     {m.profileImageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={m.profileImageUrl} alt="" loading="lazy" decoding="async" />
+                      <img src={compactKakaoImage(m.profileImageUrl, 110)} alt="" loading="lazy" decoding="async" />
                     ) : (
                       <span className="pm-dash-bday-chip-initial">{(m.name ?? "?").slice(0, 1)}</span>
                     )}
