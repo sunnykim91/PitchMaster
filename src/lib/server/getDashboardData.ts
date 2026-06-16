@@ -59,22 +59,11 @@ export type DashboardData = {
     voteCounts: { attend: number; absent: number; undecided: number };
   }[];
   tasks: DashboardTask[];
-  teamRecord: TeamRecord;
   teamUniform: TeamUniformInfo | null;
   birthdayMembers: BirthdayMember[];
   hasDuesSettings: boolean;
   totalMatches: number;
   registeredMemberCount: number;
-  /** 본인 시즌 기록 — 활성 시즌 범위 내 출석/골/출석률. 시즌 없거나 멤버 아니면 null */
-  mySeasonStats: {
-    matches: number;
-    goals: number;
-    attendanceRate: number;
-    /** 팀 내 골 순위 (1=top). 본인 골이 0 또는 데이터 부족이면 null */
-    teamGoalRank: number | null;
-    /** 시즌 완료 경기 총수 (출전 분모) */
-    totalCompletedMatches: number;
-  } | null;
   /** 홈 공지 노출 — 운영공지(전역) 최신 1건 + 팀공지 최근 핀 2건 */
   noticePins: {
     global: { id: string; title: string; createdAt: string } | null;
@@ -142,9 +131,8 @@ export async function getDashboardData(
   const db = getSupabaseAdmin();
   if (!db) return {
     upcomingMatch: null, recentResult: null, activeVotes: [], tasks: [],
-    teamRecord: EMPTY_RECORD, teamUniform: null, birthdayMembers: [],
+    teamUniform: null, birthdayMembers: [],
     hasDuesSettings: false, totalMatches: 0, registeredMemberCount: 0,
-    mySeasonStats: null,
     noticePins: { global: null, team: [] },
     onboardingSteps: [],
   };
@@ -249,7 +237,6 @@ export async function getDashboardData(
   const allMembers = (membersRes.data ?? []) as ActiveMemberRow[];
   const teamSettings = teamRes.data ?? null;
   const seasonList = (seasonsRes.data ?? []) as { start_date: string; end_date: string; is_active: boolean }[];
-  const activeSeason = seasonList.find((s) => s.is_active) ?? seasonList[0] ?? null;
   const totalMatches = totalMatchesRes.count ?? 0;
   const profileRow = profileRes.data ?? null;
   const hasDuesSettings = (duesSettingsRes.count ?? 0) > 0;
@@ -295,26 +282,11 @@ export async function getDashboardData(
     .slice(0, 3) as { id: string; match_date: string; match_time: string | null; vote_deadline: string; opponent_name: string | null; match_type: string | null }[];
   const voteMatchIds = voteMatchRows.map((m) => m.id);
 
-  const seasonStart = activeSeason?.start_date ?? null;
-  const seasonEnd = activeSeason?.end_date ?? null;
-
   // matchAttendance 쿼리는 upcoming + activeVotes 의 모든 match_id 한 번에 묶음
   const allVoteFetchMatchIds = [
     ...(upcomingRaw ? [upcomingRaw.id] : []),
     ...voteMatchIds,
   ];
-
-  // completedMatches 쿼리 (시즌 범위 내) — match_type 은 코드에서 isTeamRecordMatch 로 필터
-  // (상대전(REGULAR)만 전적/시즌통계에 포함, 자체전(INTERNAL)·행사(EVENT) 제외. records와 동일 기준)
-  let completedMatchesQuery = db.from("matches")
-    .select("id, match_type")
-    .eq("team_id", teamId)
-    .eq("status", "COMPLETED")
-    .neq("stats_included", false)
-    .order("match_date", { ascending: false });
-  if (seasonStart && seasonEnd) {
-    completedMatchesQuery = completedMatchesQuery.gte("match_date", seasonStart).lte("match_date", seasonEnd);
-  }
 
   const [
     voteAttendanceRes,
@@ -329,7 +301,6 @@ export async function getDashboardData(
     monthRecordCountRes,
     paidCountRes,
     pendingJoinCountRes,
-    completedMatchesRes,
     penaltyRulesCountRes,
   ] = await Promise.all([
     allVoteFetchMatchIds.length > 0
@@ -368,7 +339,6 @@ export async function getDashboardData(
     isStaff
       ? db.from("team_join_requests").select("id", { count: "exact", head: true }).eq("team_id", teamId).eq("status", "PENDING")
       : Promise.resolve({ count: 0 }),
-    completedMatchesQuery,
     // 벌금 규칙 카운트 — task "벌금 규칙 미설정" 노출 판정
     isStaff
       ? db.from("penalty_rules").select("id", { count: "exact", head: true }).eq("team_id", teamId).eq("is_active", true)
@@ -627,100 +597,6 @@ export async function getDashboardData(
   const urgencyOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
   tasks.sort((a, b) => (urgencyOrder[a.urgency ?? "medium"] ?? 1) - (urgencyOrder[b.urgency ?? "medium"] ?? 1));
 
-  // ── Stage 3: completedMatches 의존 — 시즌 전적 + 본인 시즌 통계 병렬 ──
-  // getRecordsData 와 동일 기준 사용:
-  //   - 출전 = vote='ATTEND' 카운트 (user_id 또는 member_id 매칭, match_id dedupe)
-  //   - 골   = scorer_id 가 user_id 또는 member_id (records가 ids.reduce로 둘 다 합산)
-  //   - 출석률 = attended / completedMatchIds.length (시즌 전체 경기 분모)
-  // 상대전(REGULAR)만 (자체전·행사 제외) — 팀 전적·시즌 통계 공통 기준
-  const completedMatchIds = (completedMatchesRes.data ?? [])
-    .filter((m) => isTeamRecordMatch((m as { match_type?: string | null }).match_type))
-    .map((m) => m.id);
-  let teamRecord = EMPTY_RECORD;
-  let mySeasonStats: DashboardData["mySeasonStats"] = null;
-  if (completedMatchIds.length > 0) {
-    const [allGoalsRes, myAttByUserRes, myAttByMemberRes] = await Promise.all([
-      db.from("match_goals")
-        .select("match_id, scorer_id, is_own_goal")
-        .in("match_id", completedMatchIds),
-      db.from("match_attendance")
-        .select("match_id")
-        .in("match_id", completedMatchIds)
-        .eq("vote", "ATTEND")
-        .eq("user_id", userId),
-      myTeamMemberId
-        ? db.from("match_attendance")
-            .select("match_id")
-            .in("match_id", completedMatchIds)
-            .eq("vote", "ATTEND")
-            .eq("member_id", myTeamMemberId)
-        : Promise.resolve({ data: [] as { match_id: string }[] }),
-    ]);
-    const allGoals = allGoalsRes.data;
-    const matchScores = new Map<string, { our: number; opp: number }>();
-    for (const g of allGoals ?? []) {
-      if (!matchScores.has(g.match_id)) matchScores.set(g.match_id, { our: 0, opp: 0 });
-      const s = matchScores.get(g.match_id)!;
-      if (g.scorer_id === "OPPONENT" || g.is_own_goal) s.opp++;
-      else s.our++;
-    }
-    let wins = 0, draws = 0, losses = 0, gf = 0, ga = 0;
-    const results: ("W" | "D" | "L")[] = [];
-    for (const mid of completedMatchIds) {
-      const s = matchScores.get(mid) ?? { our: 0, opp: 0 };
-      gf += s.our;
-      ga += s.opp;
-      if (s.our > s.opp) { wins++; results.push("W"); }
-      else if (s.our === s.opp) { draws++; results.push("D"); }
-      else { losses++; results.push("L"); }
-    }
-    teamRecord = { wins, draws, losses, goalsFor: gf, goalsAgainst: ga, recent5: results.slice(0, 5) };
-
-    // 본인 출전 — vote='ATTEND' row 합집합 (user_id 또는 member_id), match_id 기준 dedupe
-    const attMatchSet = new Set<string>();
-    for (const r of (myAttByUserRes.data ?? [])) attMatchSet.add(r.match_id);
-    for (const r of (myAttByMemberRes.data ?? [])) attMatchSet.add(r.match_id);
-    const attendCount = attMatchSet.size;
-
-    // 본인 골 — scorer_id 가 userId 또는 myTeamMemberId 일 수 있어 둘 다 매칭
-    const myScorerIds = new Set<string>([userId]);
-    if (myTeamMemberId) myScorerIds.add(myTeamMemberId);
-    let myGoalCount = 0;
-    for (const g of allGoals ?? []) {
-      if (g.scorer_id && !g.is_own_goal && myScorerIds.has(g.scorer_id)) myGoalCount++;
-    }
-
-    if (attendCount > 0 || myGoalCount > 0) {
-      // 팀내 골 순위 계산 — allGoals scorer_id 별 group count 후 본인보다 큰 사람 수 + 1
-      let teamGoalRank: number | null = null;
-      if (myGoalCount > 0) {
-        const goalsByScorer = new Map<string, number>();
-        for (const g of allGoals ?? []) {
-          if (g.scorer_id && !g.is_own_goal && g.scorer_id !== "OPPONENT") {
-            goalsByScorer.set(g.scorer_id, (goalsByScorer.get(g.scorer_id) ?? 0) + 1);
-          }
-        }
-        // 본인(user_id 또는 member_id 둘 다 가능) 골은 myGoalCount로 통합. 다른 scorer만 카운트
-        const myScorerSet = new Set<string>([userId]);
-        if (myTeamMemberId) myScorerSet.add(myTeamMemberId);
-        let higherCount = 0;
-        for (const [scorerId, c] of goalsByScorer.entries()) {
-          if (myScorerSet.has(scorerId)) continue;
-          if (c > myGoalCount) higherCount++;
-        }
-        teamGoalRank = higherCount + 1;
-      }
-
-      mySeasonStats = {
-        matches: attendCount,
-        goals: myGoalCount,
-        attendanceRate: Math.round((attendCount / completedMatchIds.length) * 100),
-        teamGoalRank,
-        totalCompletedMatches: completedMatchIds.length,
-      };
-    }
-  }
-
   const teamUniform: TeamUniformInfo | null = teamSettings
     ? {
         uniformPrimary: teamSettings.uniform_primary ?? null,
@@ -785,14 +661,160 @@ export async function getDashboardData(
     recentResult,
     activeVotes,
     tasks,
-    teamRecord,
     teamUniform,
     birthdayMembers,
     hasDuesSettings,
     totalMatches,
     registeredMemberCount,
-    mySeasonStats,
     noticePins,
     onboardingSteps,
   };
+}
+
+/**
+ * 대시보드 시즌 통계 (팀 전적 + 본인 시즌 기록) — getDashboardData 에서 분리 (2026-06-16).
+ *
+ * Why: 이 집계는 시즌 전체 완료경기의 골·출석을 스캔해 SSR 의 마지막 3번째 wave 를 늦췄다.
+ *      홈 진입 시 급한 카드(다음경기·할일·투표)만 먼저 그리고, 전적·시즌기록 카드는 클라이언트가
+ *      /api/dashboard/season-stats 로 따로 불러와 채운다 (DashboardClient).
+ *      ⚠️ 집계 SQL·로직은 기존 stage 3 와 100% 동일 — 위치만 이동(숫자 회귀 0).
+ */
+export type DashboardSeasonStats = {
+  teamRecord: TeamRecord;
+  mySeasonStats: {
+    matches: number;
+    goals: number;
+    attendanceRate: number;
+    teamGoalRank: number | null;
+    totalCompletedMatches: number;
+  } | null;
+};
+
+export async function getDashboardSeasonStats(
+  teamId: string,
+  userId: string,
+): Promise<DashboardSeasonStats> {
+  const db = getSupabaseAdmin();
+  if (!db) return { teamRecord: EMPTY_RECORD, mySeasonStats: null };
+
+  // 활성 시즌 범위 + 본인 team_member id (병렬) — getDashboardData stage 1 과 동일 소스.
+  const [seasonsRes, myMemberRes] = await Promise.all([
+    db.from("seasons")
+      .select("start_date, end_date, is_active")
+      .eq("team_id", teamId)
+      .order("start_date", { ascending: false }),
+    db.from("team_members")
+      .select("id")
+      .eq("team_id", teamId)
+      .eq("user_id", userId)
+      .in("status", ["ACTIVE", "DORMANT"])
+      .maybeSingle(),
+  ]);
+  const seasonList = (seasonsRes.data ?? []) as { start_date: string; end_date: string; is_active: boolean }[];
+  const activeSeason = seasonList.find((s) => s.is_active) ?? seasonList[0] ?? null;
+  const seasonStart = activeSeason?.start_date ?? null;
+  const seasonEnd = activeSeason?.end_date ?? null;
+  const myTeamMemberId = (myMemberRes.data as { id: string } | null)?.id ?? null;
+
+  // completedMatches 쿼리 (시즌 범위 내) — 기존 stage 2/3 와 동일 SQL (stats_included NULL 처리 포함).
+  let completedMatchesQuery = db.from("matches")
+    .select("id, match_type")
+    .eq("team_id", teamId)
+    .eq("status", "COMPLETED")
+    .neq("stats_included", false)
+    .order("match_date", { ascending: false });
+  if (seasonStart && seasonEnd) {
+    completedMatchesQuery = completedMatchesQuery.gte("match_date", seasonStart).lte("match_date", seasonEnd);
+  }
+  const completedMatchesRes = await completedMatchesQuery;
+
+  const completedMatchIds = (completedMatchesRes.data ?? [])
+    .filter((m) => isTeamRecordMatch((m as { match_type?: string | null }).match_type))
+    .map((m) => m.id);
+
+  let teamRecord = EMPTY_RECORD;
+  let mySeasonStats: DashboardSeasonStats["mySeasonStats"] = null;
+  if (completedMatchIds.length > 0) {
+    const [allGoalsRes, myAttByUserRes, myAttByMemberRes] = await Promise.all([
+      db.from("match_goals")
+        .select("match_id, scorer_id, is_own_goal")
+        .in("match_id", completedMatchIds),
+      db.from("match_attendance")
+        .select("match_id")
+        .in("match_id", completedMatchIds)
+        .eq("vote", "ATTEND")
+        .eq("user_id", userId),
+      myTeamMemberId
+        ? db.from("match_attendance")
+            .select("match_id")
+            .in("match_id", completedMatchIds)
+            .eq("vote", "ATTEND")
+            .eq("member_id", myTeamMemberId)
+        : Promise.resolve({ data: [] as { match_id: string }[] }),
+    ]);
+    const allGoals = allGoalsRes.data;
+    const matchScores = new Map<string, { our: number; opp: number }>();
+    for (const g of allGoals ?? []) {
+      if (!matchScores.has(g.match_id)) matchScores.set(g.match_id, { our: 0, opp: 0 });
+      const s = matchScores.get(g.match_id)!;
+      if (g.scorer_id === "OPPONENT" || g.is_own_goal) s.opp++;
+      else s.our++;
+    }
+    let wins = 0, draws = 0, losses = 0, gf = 0, ga = 0;
+    const results: ("W" | "D" | "L")[] = [];
+    for (const mid of completedMatchIds) {
+      const s = matchScores.get(mid) ?? { our: 0, opp: 0 };
+      gf += s.our;
+      ga += s.opp;
+      if (s.our > s.opp) { wins++; results.push("W"); }
+      else if (s.our === s.opp) { draws++; results.push("D"); }
+      else { losses++; results.push("L"); }
+    }
+    teamRecord = { wins, draws, losses, goalsFor: gf, goalsAgainst: ga, recent5: results.slice(0, 5) };
+
+    // 본인 출전 — vote='ATTEND' row 합집합 (user_id 또는 member_id), match_id 기준 dedupe
+    const attMatchSet = new Set<string>();
+    for (const r of (myAttByUserRes.data ?? [])) attMatchSet.add(r.match_id);
+    for (const r of (myAttByMemberRes.data ?? [])) attMatchSet.add(r.match_id);
+    const attendCount = attMatchSet.size;
+
+    // 본인 골 — scorer_id 가 userId 또는 myTeamMemberId 일 수 있어 둘 다 매칭
+    const myScorerIds = new Set<string>([userId]);
+    if (myTeamMemberId) myScorerIds.add(myTeamMemberId);
+    let myGoalCount = 0;
+    for (const g of allGoals ?? []) {
+      if (g.scorer_id && !g.is_own_goal && myScorerIds.has(g.scorer_id)) myGoalCount++;
+    }
+
+    if (attendCount > 0 || myGoalCount > 0) {
+      // 팀내 골 순위 — allGoals scorer_id 별 group count 후 본인보다 큰 사람 수 + 1
+      let teamGoalRank: number | null = null;
+      if (myGoalCount > 0) {
+        const goalsByScorer = new Map<string, number>();
+        for (const g of allGoals ?? []) {
+          if (g.scorer_id && !g.is_own_goal && g.scorer_id !== "OPPONENT") {
+            goalsByScorer.set(g.scorer_id, (goalsByScorer.get(g.scorer_id) ?? 0) + 1);
+          }
+        }
+        const myScorerSet = new Set<string>([userId]);
+        if (myTeamMemberId) myScorerSet.add(myTeamMemberId);
+        let higherCount = 0;
+        for (const [scorerId, c] of goalsByScorer.entries()) {
+          if (myScorerSet.has(scorerId)) continue;
+          if (c > myGoalCount) higherCount++;
+        }
+        teamGoalRank = higherCount + 1;
+      }
+
+      mySeasonStats = {
+        matches: attendCount,
+        goals: myGoalCount,
+        attendanceRate: Math.round((attendCount / completedMatchIds.length) * 100),
+        teamGoalRank,
+        totalCompletedMatches: completedMatchIds.length,
+      };
+    }
+  }
+
+  return { teamRecord, mySeasonStats };
 }

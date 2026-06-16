@@ -34,10 +34,9 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
  *   dues_records (month record count, if isStaff)
  *   dues_payment_status (paid count, if isStaff)
  *   team_join_requests (pending count, if isStaff)
- *   matches × 1 (completedMatches)
  *
- * Stage 3 (조건부):
- *   match_goals (allGoals for completedIds, if non-empty)
+ * (시즌 전적·본인 시즌기록 집계는 2026-06-16 /api/dashboard/season-stats 로 분리됨 —
+ *  getDashboardSeasonStats. /api/dashboard 응답엔 더 이상 teamRecord/mySeasonStats 가 없다.)
  */
 describe("GET /api/dashboard", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -83,8 +82,6 @@ describe("GET /api/dashboard", () => {
       ["seasons", []],
       ["users", null],
       ["dues_settings", null],
-      // Stage 2 — completedMatches (다른 쿼리는 upcoming/recent null 이라 spinned but 결과 무시)
-      ["matches", []],
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
@@ -95,7 +92,8 @@ describe("GET /api/dashboard", () => {
     expect(json.recentResult).toBeNull();
     expect(json.activeVotes).toEqual([]);
     expect(json.tasks).toEqual([]);
-    expect(json.teamRecord).toBeDefined();
+    // 시즌 전적은 /api/dashboard/season-stats 로 분리 — 여기엔 없어야 함
+    expect(json.teamRecord).toBeUndefined();
   });
 
   it("200: 다가오는 경기 있을 때 투표 현황 포함", async () => {
@@ -152,7 +150,6 @@ describe("GET /api/dashboard", () => {
       ["dues_payment_status", null], // my payment
       ["member_dues_exemptions", []], // my exemptions
       // isStaff false → dues_records, paid count, team_join_requests 스킵
-      ["matches", []],              // completedMatches
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
@@ -218,10 +215,6 @@ describe("GET /api/dashboard", () => {
       ["match_mvp_votes", { id: "v1" }], // my MVP vote check
       ["dues_payment_status", null],
       ["member_dues_exemptions", []],
-      // Stage 2 completedMatches
-      ["matches", [recentMatch]],
-      // Stage 3
-      ["match_goals", goals],
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
 
@@ -232,7 +225,8 @@ describe("GET /api/dashboard", () => {
     expect(json.recentResult.score).toBe("2 : 1");
     expect(json.recentResult.mvp).toBe("김선수");
     expect(json.recentResult.opponent).toBe("상대팀");
-    expect(json.teamRecord).toBeDefined();
+    // 시즌 전적은 /api/dashboard/season-stats 로 분리 — 여기엔 없어야 함
+    expect(json.teamRecord).toBeUndefined();
   });
 
   it("200: 활성 투표 목록 반환", async () => {

@@ -66,6 +66,16 @@ type TeamRecord = {
   recent5: ("W" | "D" | "L")[];
 };
 
+type MySeasonStats = {
+  matches: number;
+  goals: number;
+  attendanceRate: number;
+  teamGoalRank?: number | null;
+  totalCompletedMatches?: number;
+};
+/** /api/dashboard/season-stats 응답 (전적 + 본인 시즌기록). SSR 렌더 경로에서 분리 — 클라가 따로 fetch. */
+type SeasonStats = { teamRecord: TeamRecord; mySeasonStats: MySeasonStats | null };
+
 type UniformSet = { primary: string; secondary: string; pattern: string };
 type TeamUniform = {
   uniformPrimary: string | null;
@@ -93,7 +103,6 @@ type DashboardData = {
   recentResult: RecentResult | null;
   activeVotes: ActiveVote[];
   tasks: DashboardTask[];
-  teamRecord: TeamRecord;
   teamUniform?: TeamUniform | null;
   birthdayMembers?: BirthdayMember[];
   hasDuesSettings?: boolean;
@@ -101,13 +110,6 @@ type DashboardData = {
   totalMatches?: number;
   /** 실제 가입 완료한 팀원 수 */
   registeredMemberCount?: number;
-  mySeasonStats?: {
-    matches: number;
-    goals: number;
-    attendanceRate: number;
-    teamGoalRank?: number | null;
-    totalCompletedMatches?: number;
-  } | null;
   noticePins?: {
     global: { id: string; title: string; createdAt: string } | null;
     team: { id: string; title: string; createdAt: string }[];
@@ -121,8 +123,9 @@ const emptyData: DashboardData = {
   recentResult: null,
   activeVotes: [],
   tasks: [],
-  teamRecord: { wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, recent5: [] },
 };
+
+const EMPTY_RECORD: TeamRecord = { wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, recent5: [] };
 
 function CardSkeleton() {
   return (
@@ -158,6 +161,13 @@ const MATCH_TYPE_META = {
 
 export default function DashboardClient({ userId, userRole, userName, initialData, inviteCode, teamName, teamId }: { userId: string; userRole?: Role; userName?: string; initialData?: DashboardData; inviteCode?: string; teamName?: string; teamId?: string }) {
   const { data, loading, error, refetch } = useApi<DashboardData>("/api/dashboard", initialData ?? emptyData, { skip: !!initialData });
+  // 시즌 통계(전적·내 시즌기록)는 무거워서 SSR 렌더 경로에서 분리(2026-06-16). 화면이 먼저 뜨고
+  // 이 카드만 뒤이어 채워진다. 서버 집계 로직은 기존 stage 3 와 100% 동일.
+  const { data: seasonStats, loading: seasonLoading } = useApi<SeasonStats | null>("/api/dashboard/season-stats", null);
+  const teamRecord: TeamRecord = seasonStats?.teamRecord ?? EMPTY_RECORD;
+  const mySeasonStats: MySeasonStats | null = seasonStats?.mySeasonStats ?? null;
+  // 시즌 통계 fetch 완료 여부(성공/실패 무관). 완료 전엔 전적 카드 스켈레톤.
+  const seasonStatsReady = !seasonLoading;
   const { showToast } = useToast();
   const searchParams = useSearchParams();
   // Optimistic UI: null = 서버 데이터 사용, 값 있으면 즉시 반영된 낙관적 상태
@@ -203,7 +213,7 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
 
   // 첫 경기 완료 발견 유도 토스트 (팀 누적 완료 1건일 때 1회만)
   const firstCompleteRecordTotal =
-    (data.teamRecord?.wins ?? 0) + (data.teamRecord?.draws ?? 0) + (data.teamRecord?.losses ?? 0);
+    teamRecord.wins + teamRecord.draws + teamRecord.losses;
   useEffect(() => {
     if (loading) return;
     if (firstCompleteRecordTotal !== 1) return;
@@ -262,7 +272,7 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
     }
   }
 
-  const { upcomingMatch, activeVotes, tasks, recentResult, teamRecord, birthdayMembers } = data;
+  const { upcomingMatch, activeVotes, tasks, recentResult, birthdayMembers } = data;
 
   // 낙관적 상태가 있으면 우선 사용
   const displayVote = optimisticVote !== undefined ? optimisticVote : upcomingMatch?.myVote;
@@ -343,7 +353,8 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
   // 회비 nudge 노출 조건 (회장+ + 회비 미설정 + 회원 5명+)
   const showDuesNudge = isStaffOrAbove(role) && data.hasDuesSettings === false && (data.registeredMemberCount ?? 0) >= 5;
   const showVoteStatus = isStaffOrAbove(role) && activeVotes.length > 0;
-  const showRecord = recordTotal > 0;
+  // 시즌 통계 로딩 중엔(완료경기 있는 팀이면) 자리 확보용 스켈레톤. 로드 후엔 전적 있을 때만.
+  const showRecord = seasonStatsReady ? recordTotal > 0 : !!recentResult;
   // 1인 팀(< 10명) invite nudge — 회장+ + 초대 코드 보유
   const showInviteNudge = !showWizard && isStaffOrAbove(role) && !!inviteCode && (data.registeredMemberCount ?? 0) < 10;
 
@@ -747,6 +758,17 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
           {showRecord && (
             <div className="pm-dash-record-wrap">
               <section className="pm-section">
+                {!seasonStatsReady ? (
+                  <>
+                    <div className="pm-section-h">
+                      <span>시즌 전적</span>
+                    </div>
+                    <div className="pm-dash-record">
+                      <Skeleton className="h-16 w-full rounded-xl" />
+                    </div>
+                  </>
+                ) : (
+                <>
                 <div className="pm-section-h">
                   <span>시즌 전적</span>
                   <span className="pm-section-count">{recordTotal}경기</span>
@@ -777,6 +799,8 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
                     </div>
                   )}
                 </div>
+                </>
+                )}
               </section>
             </div>
           )}
@@ -940,7 +964,7 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
           )}
 
           {/* E · 내 시즌 기록 — 정보 (액션 X) */}
-          {data.mySeasonStats && (
+          {mySeasonStats && (
             <section className="pm-section">
               <div className="pm-section-h">
                 <span>내 시즌 기록</span>
@@ -951,7 +975,7 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
               </div>
               <div className="pm-dash-stats">
                 {(() => {
-                  const stat = data.mySeasonStats!;
+                  const stat = mySeasonStats!;
                   const total = stat.totalCompletedMatches ?? 0;
                   // 출전 trend: 본인 출전 / 전체 완료 경기 (출전률)
                   const matchRate = total > 0 ? Math.round((stat.matches / total) * 100) : null;
@@ -1035,7 +1059,7 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
               },
               {
                 href: "/records", label: "내 기록",
-                sub: data.mySeasonStats ? `시즌 ${data.mySeasonStats.goals}골 / ${data.mySeasonStats.matches}경기` : "기록 보기",
+                sub: mySeasonStats ? `시즌 ${mySeasonStats.goals}골 / ${mySeasonStats.matches}경기` : "기록 보기",
                 hue: "mid",
                 icon: (
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
