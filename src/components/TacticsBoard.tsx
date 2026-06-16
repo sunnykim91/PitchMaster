@@ -516,6 +516,28 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   useEffect(() => { formationRef.current = formation; }, [formation]);
 
   useEffect(() => {
+    // 드래그 좌표 갱신을 rAF 로 프레임당 1회로 묶음(coalesce). 이전엔 pointermove 마다 setState →
+    // 1694줄 컴포넌트 전체가 초당 수십~수백 번 리렌더돼 드래그가 버벅임. (86차 perf)
+    let rafId: number | null = null;
+    let latest: { x: number; y: number } | null = null;
+
+    function flush() {
+      rafId = null;
+      const drag = dragRef.current;
+      const pos = latest;
+      if (!drag || !pos) return;
+      const slotId = drag.slotId;
+      updateBoardStateRef.current((prev) => {
+        const current = prev.placements[slotId];
+        if (!current) return prev;
+        if (current.x === pos.x && current.y === pos.y) return prev;
+        return {
+          ...prev,
+          placements: { ...prev.placements, [slotId]: { ...current, x: pos.x, y: pos.y } },
+        };
+      });
+    }
+
     function handlePointerMove(event: Event) {
       if (!dragRef.current || !boardRef.current) return;
       const pointerEvent = event as PointerEvent;
@@ -523,53 +545,54 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       const rect = boardRef.current.getBoundingClientRect();
       const x = clamp(((pointerEvent.clientX - rect.left) / rect.width) * 100, 5, 95);
       const y = clamp(((pointerEvent.clientY - rect.top) / rect.height) * 100, 6, 94);
-      const slotId = dragRef.current.slotId;
-      updateBoardStateRef.current((prev) => {
-        const current = prev.placements[slotId];
-        if (!current) return prev;
-        return {
-          ...prev,
-          placements: {
-            ...prev.placements,
-            [slotId]: { ...current, x, y },
-          },
-        };
-      });
+      latest = { x, y };
+      if (rafId === null) rafId = requestAnimationFrame(flush);
     }
 
     function handlePointerUp() {
+      if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
       const drag = dragRef.current;
       dragRef.current = null;
+      const pos = latest;
+      latest = null;
       if (!drag) return;
       const sourceId = drag.slotId;
-      // 메타 슬롯(주심/부심/촬영)은 스왑 대상 아님 — 좌표만 유지
-      if (sourceId.startsWith("__")) return;
 
       updateBoardStateRef.current((prev) => {
-        const slots = formationRef.current.slots;
         const src = prev.placements[sourceId];
         if (!src) return prev;
+        // 최종 드롭 좌표 — rAF 가 마지막 프레임을 아직 반영 못 했을 수 있어 latest 우선, 없으면 state 좌표.
+        const dropX = pos?.x ?? src.x ?? 0;
+        const dropY = pos?.y ?? src.y ?? 0;
 
-        // 드롭 위치(=드래그로 갱신된 src.x/y)에서 가장 가까운 정규 슬롯 탐색
+        // 메타 슬롯(주심/부심/촬영)은 스왑 대상 아님 — 좌표만 최종 반영
+        if (sourceId.startsWith("__")) {
+          return { ...prev, placements: { ...prev.placements, [sourceId]: { ...src, x: dropX, y: dropY } } };
+        }
+
+        const slots = formationRef.current.slots;
+        // 드롭 위치에서 가장 가까운 정규 슬롯 탐색
         let nearest: (typeof slots)[number] | null = null;
         let best = Infinity;
         for (const s of slots) {
-          const dx = s.x - (src.x ?? 0);
-          const dy = s.y - (src.y ?? 0);
+          const dx = s.x - dropX;
+          const dy = s.y - dropY;
           const d = dx * dx + dy * dy;
           if (d < best) { best = d; nearest = s; }
         }
-        // 자기 슬롯 근처면 미세조정으로 간주 — move 핸들러가 갱신한 좌표 그대로 유지
-        if (!nearest || nearest.id === sourceId) return prev;
 
         // 스왑/이동 판정 반경 — 드롭 위치가 대상 슬롯 중심에서 이 거리(보드 0~100 % 단위) 안일 때만
-        // 스왑. 밖이면 자유 이동(드롭한 좌표 유지)으로 처리해, 근처만 가도 바뀌던 과민 스왑 방지.
+        // 스왑. 자기 슬롯이 가장 가깝거나 반경 밖이면 그냥 드롭 좌표로 자유 배치(근처만 가도 바뀌던 과민 스왑 방지).
         // best 는 거리의 제곱이라 반경도 제곱으로 비교. 값을 줄이면 더 정확히 겹쳐야 바뀜(튜닝 포인트).
         const SWAP_RADIUS = 9;
-        if (best > SWAP_RADIUS * SWAP_RADIUS) return prev;
+        if (!nearest || nearest.id === sourceId || best > SWAP_RADIUS * SWAP_RADIUS) {
+          return { ...prev, placements: { ...prev.placements, [sourceId]: { ...src, x: dropX, y: dropY } } };
+        }
 
         const srcSlot = slots.find((s) => s.id === sourceId);
-        if (!srcSlot) return prev;
+        if (!srcSlot) {
+          return { ...prev, placements: { ...prev.placements, [sourceId]: { ...src, x: dropX, y: dropY } } };
+        }
 
         // 다른 슬롯으로: 점유돼 있으면 두 선수 슬롯 배정을 스왑, 비어 있으면 이동.
         // 좌표는 각 슬롯의 정규 좌표로 정렬, 반쿼터(secondPlayerId)는 선수와 함께 이동.
@@ -600,6 +623,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     window.addEventListener("pointermove", handlePointerMove, options);
     window.addEventListener("pointerup", handlePointerUp);
     return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
       window.removeEventListener("pointermove", handlePointerMove, options);
       window.removeEventListener("pointerup", handlePointerUp);
     };
@@ -1464,6 +1488,10 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       ref={allQuartersRef}
       style={{ position: "absolute", left: "-9999px", top: 0, width: 800, backgroundColor: "hsl(var(--background))", padding: 16 }}
     >
+      {/* 무거운 전체-쿼터 매트릭스(쿼터 전부 × 슬롯 전부)는 캡처 중(isCapturing)에만 렌더 — 평소·드래그
+          렌더 비용 제거(86차 perf). 바깥 div(ref)는 항상 유지: captureAndShare 가 setIsCapturing(true)
+          +2프레임 대기 후 내용을 캡처하므로 캡처 동작은 그대로. */}
+      {isCapturing && (<>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <span style={{ fontSize: 18, fontWeight: 700, color: "hsl(var(--foreground))" }}>
           전체 라인업 · {formation.name}
@@ -1595,6 +1623,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
           );
         })}
       </div>
+      </>)}
     </div>
 
     {/* 쿼터별 출전 현황 매트릭스 */}
