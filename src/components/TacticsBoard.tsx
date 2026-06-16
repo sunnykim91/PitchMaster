@@ -767,6 +767,132 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     setActiveSlotId(null);
   }
 
+  // 전체 쿼터 캡처 카드 — 저장된 스쿼드(squadsData) 기반이라 드래그(boardState.placements 변경) 중엔 입력 불변.
+  // useMemo 로 같은 엘리먼트 배열을 재사용 → 드래그 매 프레임 리렌더에서 이 무거운 매트릭스는 스킵. (86차 perf)
+  const quarterCaptureCards = useMemo(() => quarters.map((q) => {
+          const row = squadsData.squads.find((s) => s.quarter_number === q);
+          const qFormation = row
+            ? formationTemplates.find((f) => f.id === row.formation) ?? defaultFormation
+            : defaultFormation;
+          const qPlacements: Record<string, Placement | null> = {};
+          qFormation.slots.forEach((slot) => {
+            qPlacements[slot.id] = row?.positions?.[slot.id] ?? null;
+          });
+
+          const capUniforms = resolvedTeamSettings.uniforms;
+          let capPrimary: string, capSecondary: string, capPattern: string;
+          if (uniformMode === "THIRD" && capUniforms?.third) {
+            capPrimary = capUniforms.third.primary; capSecondary = capUniforms.third.secondary; capPattern = capUniforms.third.pattern;
+          } else if (uniformMode === "AWAY" && capUniforms?.away) {
+            capPrimary = capUniforms.away.primary; capSecondary = capUniforms.away.secondary; capPattern = capUniforms.away.pattern;
+          } else if (capUniforms?.home) {
+            capPrimary = capUniforms.home.primary; capSecondary = capUniforms.home.secondary; capPattern = capUniforms.home.pattern;
+          } else {
+            const hp = resolvedTeamSettings.uniformPrimary || "#2563eb";
+            const hs = resolvedTeamSettings.uniformSecondary || "#f97316";
+            capPrimary = uniformMode === "HOME" ? hp : hs; capSecondary = uniformMode === "HOME" ? hs : hp;
+            capPattern = resolvedTeamSettings.uniformPattern || "SOLID";
+          }
+          const uStyle = getJerseyStyle(capPrimary, capSecondary, capPattern);
+
+          // 쉬는 선수 계산
+          const assignedIds = new Set<string>();
+          Object.values(qPlacements).forEach((p) => {
+            if (p) {
+              assignedIds.add(p.playerId);
+              if (p.secondPlayerId) assignedIds.add(p.secondPlayerId);
+            }
+          });
+          const qResting = roster.filter((r) => !assignedIds.has(r.id));
+
+          return (
+            <div key={q} style={{ backgroundColor: "hsl(var(--card))", borderRadius: 12, overflow: "hidden" }}>
+              <div style={{ padding: "8px 12px", fontSize: 13, fontWeight: 700, color: "hsl(var(--foreground))" }}>
+                {q}쿼터
+              </div>
+              <div
+                style={{
+                  position: "relative",
+                  aspectRatio: isFutsal ? "3/2" : "4/5",
+                  width: "100%",
+                  background: "hsl(var(--pitch))",
+                  backgroundImage: [
+                    "repeating-linear-gradient(180deg, rgba(255,255,255,0) 0px, rgba(255,255,255,0) 38px, rgba(255,255,255,0.06) 38px, rgba(255,255,255,0.06) 76px)",
+                    "radial-gradient(ellipse at 50% 50%, rgba(34,197,94,0.15) 0%, transparent 70%)",
+                  ].join(", "),
+                }}
+              >
+                {/* 하프라인 */}
+                <div style={{ position: "absolute", top: "50%", left: "5%", right: "5%", height: 2, backgroundColor: "rgba(255,255,255,0.35)" }} />
+                <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 60, height: 60, border: "2px solid rgba(255,255,255,0.35)", borderRadius: "50%" }} />
+                {/* 선수 배치 */}
+                {qFormation.slots.map((slot) => {
+                  const pl = qPlacements[slot.id];
+                  if (!pl) return null;
+                  const player = roster.find((r) => r.id === pl.playerId);
+                  const secondPlayer = pl.secondPlayerId ? roster.find((r) => r.id === pl.secondPlayerId) : null;
+                  return (
+                    <div
+                      key={slot.id}
+                      style={{
+                        position: "absolute",
+                        left: `${pl.x}%`,
+                        top: `${pl.y}%`,
+                        transform: "translate(-50%,-50%)",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 2,
+                      }}
+                    >
+                      <div style={{ ...uStyle, width: 28, height: 28, borderRadius: 4 }} />
+                      {secondPlayer ? (
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", backgroundColor: "rgba(0,0,0,0.7)", borderRadius: 4, padding: "1px 4px" }}>
+                          <span style={{ fontSize: 7, fontWeight: 700, color: "hsl(var(--info))" }}>전 {player?.name ?? ""}</span>
+                          <span style={{ fontSize: 7, fontWeight: 700, color: "hsl(var(--accent))" }}>후 {secondPlayer.name}</span>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: 8, fontWeight: 700, color: "hsl(var(--foreground))", backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 4, padding: "1px 4px", whiteSpace: "nowrap" }}>
+                          {player?.name ?? ""}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              {/* 쉬는 선수 + 역할 */}
+              {(() => {
+                const qRef = row?.positions?.["__referee"] as Placement | null | undefined;
+                const qLn1 = row?.positions?.["__linesman1"] as Placement | null | undefined;
+                const qLn2 = row?.positions?.["__linesman2"] as Placement | null | undefined;
+                const qCam = row?.positions?.["__camera"] as Placement | null | undefined;
+                const refName = qRef?.playerId ? roster.find((r) => r.id === qRef.playerId)?.name : null;
+                const ln1Name = qLn1?.playerId ? roster.find((r) => r.id === qLn1.playerId)?.name : null;
+                const ln2Name = qLn2?.playerId ? roster.find((r) => r.id === qLn2.playerId)?.name : null;
+                const camName = qCam?.playerId ? roster.find((r) => r.id === qCam.playerId)?.name : null;
+                const lineNames = [ln1Name, ln2Name].filter(Boolean) as string[];
+                const roleParts = [
+                  refName && `주심: ${refName}`,
+                  lineNames.length > 0 && `부심: ${lineNames.join(", ")}`,
+                  camName && `촬영: ${camName}`,
+                ].filter(Boolean) as string[];
+                return (
+                  <div style={{ padding: "6px 10px", fontSize: 10 }}>
+                    {qResting.length > 0 && (
+                      <div style={{ color: "hsl(var(--warning))" }}>쉬는 선수: {qResting.map((r) => r.name).join(", ")}</div>
+                    )}
+                    {roleParts.length > 0 && (
+                      <div style={{ color: "hsl(var(--muted-foreground))", marginTop: 2 }}>
+                        {roleParts.join(" · ")}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          );
+        }), [quarters, squadsData, formationTemplates, defaultFormation, resolvedTeamSettings, uniformMode, roster, isFutsal]);
+
   if (squadsLoading || (!teamSettingsProp && teamLoading) || !hydrated) {
     return <Card className="p-6">불러오는 중...</Card>;
   }
@@ -1471,129 +1597,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
         <span style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>PitchMaster</span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        {quarters.map((q) => {
-          const row = squadsData.squads.find((s) => s.quarter_number === q);
-          const qFormation = row
-            ? formationTemplates.find((f) => f.id === row.formation) ?? defaultFormation
-            : defaultFormation;
-          const qPlacements: Record<string, Placement | null> = {};
-          qFormation.slots.forEach((slot) => {
-            qPlacements[slot.id] = row?.positions?.[slot.id] ?? null;
-          });
-
-          const capUniforms = resolvedTeamSettings.uniforms;
-          let capPrimary: string, capSecondary: string, capPattern: string;
-          if (uniformMode === "THIRD" && capUniforms?.third) {
-            capPrimary = capUniforms.third.primary; capSecondary = capUniforms.third.secondary; capPattern = capUniforms.third.pattern;
-          } else if (uniformMode === "AWAY" && capUniforms?.away) {
-            capPrimary = capUniforms.away.primary; capSecondary = capUniforms.away.secondary; capPattern = capUniforms.away.pattern;
-          } else if (capUniforms?.home) {
-            capPrimary = capUniforms.home.primary; capSecondary = capUniforms.home.secondary; capPattern = capUniforms.home.pattern;
-          } else {
-            const hp = resolvedTeamSettings.uniformPrimary || "#2563eb";
-            const hs = resolvedTeamSettings.uniformSecondary || "#f97316";
-            capPrimary = uniformMode === "HOME" ? hp : hs; capSecondary = uniformMode === "HOME" ? hs : hp;
-            capPattern = resolvedTeamSettings.uniformPattern || "SOLID";
-          }
-          const uStyle = getJerseyStyle(capPrimary, capSecondary, capPattern);
-
-          // 쉬는 선수 계산
-          const assignedIds = new Set<string>();
-          Object.values(qPlacements).forEach((p) => {
-            if (p) {
-              assignedIds.add(p.playerId);
-              if (p.secondPlayerId) assignedIds.add(p.secondPlayerId);
-            }
-          });
-          const qResting = roster.filter((r) => !assignedIds.has(r.id));
-
-          return (
-            <div key={q} style={{ backgroundColor: "hsl(var(--card))", borderRadius: 12, overflow: "hidden" }}>
-              <div style={{ padding: "8px 12px", fontSize: 13, fontWeight: 700, color: "hsl(var(--foreground))" }}>
-                {q}쿼터
-              </div>
-              <div
-                style={{
-                  position: "relative",
-                  aspectRatio: isFutsal ? "3/2" : "4/5",
-                  width: "100%",
-                  background: "hsl(var(--pitch))",
-                  backgroundImage: [
-                    "repeating-linear-gradient(180deg, rgba(255,255,255,0) 0px, rgba(255,255,255,0) 38px, rgba(255,255,255,0.06) 38px, rgba(255,255,255,0.06) 76px)",
-                    "radial-gradient(ellipse at 50% 50%, rgba(34,197,94,0.15) 0%, transparent 70%)",
-                  ].join(", "),
-                }}
-              >
-                {/* 하프라인 */}
-                <div style={{ position: "absolute", top: "50%", left: "5%", right: "5%", height: 2, backgroundColor: "rgba(255,255,255,0.35)" }} />
-                <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 60, height: 60, border: "2px solid rgba(255,255,255,0.35)", borderRadius: "50%" }} />
-                {/* 선수 배치 */}
-                {qFormation.slots.map((slot) => {
-                  const pl = qPlacements[slot.id];
-                  if (!pl) return null;
-                  const player = roster.find((r) => r.id === pl.playerId);
-                  const secondPlayer = pl.secondPlayerId ? roster.find((r) => r.id === pl.secondPlayerId) : null;
-                  return (
-                    <div
-                      key={slot.id}
-                      style={{
-                        position: "absolute",
-                        left: `${pl.x}%`,
-                        top: `${pl.y}%`,
-                        transform: "translate(-50%,-50%)",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: 2,
-                      }}
-                    >
-                      <div style={{ ...uStyle, width: 28, height: 28, borderRadius: 4 }} />
-                      {secondPlayer ? (
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", backgroundColor: "rgba(0,0,0,0.7)", borderRadius: 4, padding: "1px 4px" }}>
-                          <span style={{ fontSize: 7, fontWeight: 700, color: "hsl(var(--info))" }}>전 {player?.name ?? ""}</span>
-                          <span style={{ fontSize: 7, fontWeight: 700, color: "hsl(var(--accent))" }}>후 {secondPlayer.name}</span>
-                        </div>
-                      ) : (
-                        <span style={{ fontSize: 8, fontWeight: 700, color: "hsl(var(--foreground))", backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 4, padding: "1px 4px", whiteSpace: "nowrap" }}>
-                          {player?.name ?? ""}
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              {/* 쉬는 선수 + 역할 */}
-              {(() => {
-                const qRef = row?.positions?.["__referee"] as Placement | null | undefined;
-                const qLn1 = row?.positions?.["__linesman1"] as Placement | null | undefined;
-                const qLn2 = row?.positions?.["__linesman2"] as Placement | null | undefined;
-                const qCam = row?.positions?.["__camera"] as Placement | null | undefined;
-                const refName = qRef?.playerId ? roster.find((r) => r.id === qRef.playerId)?.name : null;
-                const ln1Name = qLn1?.playerId ? roster.find((r) => r.id === qLn1.playerId)?.name : null;
-                const ln2Name = qLn2?.playerId ? roster.find((r) => r.id === qLn2.playerId)?.name : null;
-                const camName = qCam?.playerId ? roster.find((r) => r.id === qCam.playerId)?.name : null;
-                const lineNames = [ln1Name, ln2Name].filter(Boolean) as string[];
-                const roleParts = [
-                  refName && `주심: ${refName}`,
-                  lineNames.length > 0 && `부심: ${lineNames.join(", ")}`,
-                  camName && `촬영: ${camName}`,
-                ].filter(Boolean) as string[];
-                return (
-                  <div style={{ padding: "6px 10px", fontSize: 10 }}>
-                    {qResting.length > 0 && (
-                      <div style={{ color: "hsl(var(--warning))" }}>쉬는 선수: {qResting.map((r) => r.name).join(", ")}</div>
-                    )}
-                    {roleParts.length > 0 && (
-                      <div style={{ color: "hsl(var(--muted-foreground))", marginTop: 2 }}>
-                        {roleParts.join(" · ")}
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-            </div>
-          );
-        })}
+        {quarterCaptureCards}
       </div>
     </div>
 
