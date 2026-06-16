@@ -305,7 +305,7 @@ MatchTacticsTab
 
 ## 알려진 코드 품질 이슈
 
-- **stagger-children 딜레이**: 12번째 항목까지 360ms — 리스트 많으면 답답
+- **stagger-children 딜레이**: 해결됨 — globals.css가 4번째(90ms)까지만 누적, 5번째부터 동시 표시 (과거 360ms 부채 정리 완료)
 - **생일 confetti**: JSX div 6개로 하드코딩 (CSS pseudo-element로 대체 가능)
 - **스크린샷 경로**: `/screenshot/` vs `/screenshots/` 혼재
 
@@ -313,8 +313,8 @@ MatchTacticsTab
 
 - `useRealtimeSubscription` 사용 시 **반드시 filter 지정** (`match_id=eq.xxx` 등)
 - **filter 없는 전체 테이블 구독 절대 금지** — WAL 폴링이 전체 DB 시간의 86%를 점유하는 사고 발생 (2026-04-29)
-- 현재 안전한 구독: `MatchDetailClient.tsx` (3개 — 모두 `match_id=eq.${matchId}` 필터)
-- 제거된 위험 구독: `MatchesClient.tsx` match_attendance 전체 구독 (필터 없음)
+- 현재 Supabase 실시간 구독: **0개** (2026-04-29 사고 후 전부 제거 — 86차 재확인). 동기화는 window CustomEvent(`match-squads-saved`) + 본인 액션 직후 refetch로 대체
+- 제거된 위험 구독: `MatchesClient.tsx` match_attendance 전체 구독 (필터 없음) / `MatchDetailClient.tsx` 3개 구독
 - 대안: 본인 액션 직후 refetch, 또는 window CustomEvent로 동기화
 
 ---
