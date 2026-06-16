@@ -562,6 +562,12 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
         // 자기 슬롯 근처면 미세조정으로 간주 — move 핸들러가 갱신한 좌표 그대로 유지
         if (!nearest || nearest.id === sourceId) return prev;
 
+        // 스왑/이동 판정 반경 — 드롭 위치가 대상 슬롯 중심에서 이 거리(보드 0~100 % 단위) 안일 때만
+        // 스왑. 밖이면 자유 이동(드롭한 좌표 유지)으로 처리해, 근처만 가도 바뀌던 과민 스왑 방지.
+        // best 는 거리의 제곱이라 반경도 제곱으로 비교. 값을 줄이면 더 정확히 겹쳐야 바뀜(튜닝 포인트).
+        const SWAP_RADIUS = 9;
+        if (best > SWAP_RADIUS * SWAP_RADIUS) return prev;
+
         const srcSlot = slots.find((s) => s.id === sourceId);
         if (!srcSlot) return prev;
 
