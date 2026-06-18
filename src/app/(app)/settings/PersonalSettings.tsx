@@ -8,6 +8,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { subscribeToPush } from "@/lib/pushSubscription";
 import { GA } from "@/lib/analytics";
 import { apiMutate } from "@/lib/useApi";
+import { compressImage } from "@/lib/compressImage";
 import { useToast } from "@/lib/ToastContext";
 import { useConfirm } from "@/lib/ConfirmContext";
 import type { PreferredPosition, PreferredFoot } from "@/lib/types";
@@ -249,12 +250,14 @@ function PersonalSettingsComponent({
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { showToast("파일 크기는 5MB 이하만 가능합니다", "error"); return; }
     if (!file.type.startsWith("image/")) { showToast("이미지 파일만 업로드 가능합니다", "error"); return; }
     setUploading(true);
     try {
+      // 업로드 전 리사이즈·압축 (5MB 제한 + Vercel 4.5MB 본문 한계 회피). 압축 결과로 크기 검사.
+      const compressed = await compressImage(file);
+      if (compressed.size > 5 * 1024 * 1024) { showToast("파일 크기는 5MB 이하만 가능합니다", "error"); setUploading(false); return; }
       const formData = new FormData();
-      formData.append("image", file);
+      formData.append("image", compressed);
       const res = await fetch("/api/profile/image", { method: "POST", body: formData });
       const json = await res.json();
       if (!res.ok) { showToast(json.error || "업로드에 실패했습니다", "error"); return; }

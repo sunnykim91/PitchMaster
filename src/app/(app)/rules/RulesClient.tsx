@@ -11,6 +11,7 @@ import { useConfirm } from "@/lib/ConfirmContext";
 import type { Role } from "@/lib/types";
 import { toKoreanError } from "@/lib/errorMessages";
 import { formatDateTime } from "@/lib/utils";
+import { compressImage } from "@/lib/compressImage";
 
 type RuleCategory = string;
 
@@ -198,8 +199,10 @@ export default function RulesClient({
     setUploading(true);
     setUploadError(null);
     try {
+      // 이미지 첨부면 업로드 전 압축(문서는 compressImage가 원본 그대로 통과)
+      const compressed = await compressImage(file);
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", compressed);
       const res = await fetch("/api/upload/file", { method: "POST", body: fd });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));

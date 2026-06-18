@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { compressImage } from "@/lib/compressImage";
 import type { FormState, PollFormState } from "@/app/(app)/board/BoardClient";
 
 export interface PostEditorProps {
@@ -54,8 +55,10 @@ export const PostEditor = memo(function PostEditor({
     setUploading(true);
     setUploadError(null);
     try {
+      // 업로드 전 리사이즈·압축 (5MB 앱 제한 + Vercel 4.5MB 본문 한계 회피)
+      const compressed = await compressImage(file);
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", compressed);
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));

@@ -968,8 +968,9 @@ function LogoUpload({
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      alert("5MB 이하의 이미지만 업로드 가능합니다.");
+    // 원본은 512px webp 로 크롭해 올리므로 큰 폰 사진도 허용 (메모리 보호용 상한만 둠)
+    if (file.size > 15 * 1024 * 1024) {
+      alert("15MB 이하의 이미지만 업로드 가능합니다.");
       return;
     }
     const reader = new FileReader();

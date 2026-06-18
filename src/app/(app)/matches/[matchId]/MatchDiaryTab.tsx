@@ -6,6 +6,7 @@ import { Camera, X as XIcon, Trash2, ImageIcon, MessageCircle, Copy, Download, R
 import { ImageLightbox } from "@/components/ImageLightbox";
 import PlayerRatingCard from "@/components/playerRating/PlayerRatingCard";
 import { apiMutate } from "@/lib/useApi";
+import { compressImage } from "@/lib/compressImage";
 import { useToast } from "@/lib/ToastContext";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { useAsyncAction, useItemAction } from "@/lib/useAsyncAction";
@@ -229,8 +230,10 @@ function MatchDiaryTabInner({
     const newPhotos = [...photos];
     try {
       for (const file of Array.from(files)) {
+        // 업로드 전 리사이즈·압축 (5MB 앱 제한 + Vercel 4.5MB 본문 한계 회피)
+        const compressed = await compressImage(file);
         const fd = new FormData();
-        fd.append("file", file);
+        fd.append("file", compressed);
         const res = await fetch("/api/upload", { method: "POST", body: fd, credentials: "include" });
         const json = await res.json();
         if (!res.ok) {
