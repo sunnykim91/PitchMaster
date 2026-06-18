@@ -55,12 +55,17 @@ export async function POST(request: NextRequest) {
     return apiError("자체전 경기만 팀 편성이 가능합니다", 400);
   }
 
+  // payload 동적화: { A:[...], B:[...], C:[...] } — 허용 side(A/B/C)만, 한 선수는 한 팀(UNIQUE 보호)
+  const ALLOWED_SIDES = ["A", "B", "C"];
   const rows: { match_id: string; side: string; player_id: string }[] = [];
-  for (const playerId of teams.A ?? []) {
-    rows.push({ match_id: matchId, side: "A", player_id: playerId });
-  }
-  for (const playerId of teams.B ?? []) {
-    rows.push({ match_id: matchId, side: "B", player_id: playerId });
+  const seen = new Set<string>();
+  for (const [side, players] of Object.entries(teams as Record<string, unknown>)) {
+    if (!ALLOWED_SIDES.includes(side) || !Array.isArray(players)) continue;
+    for (const playerId of players) {
+      if (typeof playerId !== "string" || seen.has(playerId)) continue;
+      seen.add(playerId);
+      rows.push({ match_id: matchId, side, player_id: playerId });
+    }
   }
 
   // 기존 편성 백업 → 삭제 → 삽입. 비원자적(트랜잭션 아님)이라 insert 실패 시 백업으로 복구해 편성 유실 방지.

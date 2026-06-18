@@ -17,6 +17,7 @@ import { useConfirm } from "@/lib/ConfirmContext";
 import { useToast } from "@/lib/ToastContext";
 import Link from "next/link";
 import type { SportType } from "@/lib/types";
+import type { InternalSide } from "@/lib/internalSides";
 
 /* ── 공유 타입 & 매퍼 ── */
 import type {
@@ -112,7 +113,7 @@ export default function MatchDetailClient({
   const {
     data: internalTeamsData,
     refetch: refetchInternalTeams,
-  } = useApi<{ teams: { player_id: string; side: "A" | "B" }[] }>(`/api/internal-teams?matchId=${matchId}`, initialData?.internalTeams ?? { teams: [] }, { skip: !!initialData?.internalTeams });
+  } = useApi<{ teams: { player_id: string; side: InternalSide }[] }>(`/api/internal-teams?matchId=${matchId}`, initialData?.internalTeams ?? { teams: [] }, { skip: !!initialData?.internalTeams });
 
   // 댓글
   const {

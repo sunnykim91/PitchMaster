@@ -1,4 +1,5 @@
 import type { PreferredPosition, SportType } from "@/lib/types";
+import type { InternalSide } from "@/lib/internalSides";
 
 export type AttendingPlayer = {
   /** 표시용 메인 id — 연동 회원은 users.id, 미연동·용병은 team_members.id / match_guests.id */
@@ -53,7 +54,7 @@ export type AutoFormationBuilderProps = {
   /** 경기별 참가 인원 (축구 8/9/10/11, 풋살 3~6) */
   playerCount?: number;
   defaultFormationId?: string;
-  side?: "A" | "B";
+  side?: InternalSide;
   /** 이미 전술판에 편성이 저장된 상태인지 — 덮어쓰기 확인 다이얼로그 표시 기준 */
   hasExistingFormation?: boolean;
   /**

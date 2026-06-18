@@ -2,6 +2,7 @@
  * MatchDetailClient에서 분리된 탭 컴포넌트들이 공유하는 타입 정의
  */
 import type { Role, DetailedPosition, SportType } from "@/lib/types";
+import type { InternalSide } from "@/lib/internalSides";
 
 /* ── API response row types (snake_case from DB) ── */
 
@@ -140,7 +141,7 @@ export type GoalEvent = {
   minute: number;
   isOwnGoal?: boolean;
   goalType: GoalType;
-  side?: "A" | "B" | null;
+  side?: InternalSide | null;
 };
 
 export type Guest = {
@@ -161,7 +162,7 @@ export type MatchDiary = {
 /** 자체전 팀 편성 */
 export type InternalTeamAssignment = {
   playerId: string;
-  side: "A" | "B";
+  side: InternalSide;
 };
 
 export type VoteState = Record<string, string>;

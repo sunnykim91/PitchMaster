@@ -11,6 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Match, SimpleRosterPlayer, InternalTeamAssignment, Guest } from "./matchDetailTypes";
+import {
+  INTERNAL_SIDES, MAX_INTERNAL_TEAMS, sidesForCount, sideConfig,
+  buildTeamsPayload, nextSide, type InternalSide,
+} from "@/lib/internalSides";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -109,9 +113,19 @@ function MatchTacticsTabInner({
     generationMode: "rule" | "ai-fixed" | "ai-free" | "manual";
   } | null>(null);
   const isInternal = match.matchType === "INTERNAL";
-  const [activeSide, setActiveSide] = useState<"A" | "B">("A");
+  const [activeSide, setActiveSide] = useState<InternalSide>("A");
+  const [teamCount, setTeamCount] = useState(2); // 자체전 팀 수 (2~3)
   const [savingTeams, setSavingTeams] = useState(false);
   const [showTeamSplit, setShowTeamSplit] = useState(false);
+
+  // C팀에 배정된 선수가 있으면 자동으로 3팀 모드로 (앱 재진입·동기화 시 복원)
+  useEffect(() => {
+    if ((internalTeams ?? []).some((t) => t.side === "C")) setTeamCount(3);
+  }, [internalTeams]);
+  // 팀 수가 줄어 activeSide 가 범위를 벗어나면 A로 리셋
+  useEffect(() => {
+    if (!sidesForCount(teamCount).includes(activeSide)) setActiveSide("A");
+  }, [teamCount, activeSide]);
   const [showGuestForm, setShowGuestForm] = useState(false);
   const [editingGuestId, setEditingGuestId] = useState<string | null>(null);
   const [guestCardOpen, setGuestCardOpen] = useState(false);
@@ -319,36 +333,38 @@ function MatchTacticsTabInner({
       {isInternal && (
         <div style={{ order: -10 }} className="flex flex-col gap-5">
         {(() => {
-        const teamMap: Record<string, "A" | "B"> = {};
+        const activeSides = sidesForCount(teamCount);
+        const teamMap: Record<string, InternalSide> = {};
         for (const t of internalTeams ?? []) teamMap[t.playerId] = t.side;
-        const teamACount = Object.values(teamMap).filter((s) => s === "A").length;
-        const teamBCount = Object.values(teamMap).filter((s) => s === "B").length;
+        const counts = activeSides.reduce((acc, s) => { acc[s] = 0; return acc; }, {} as Record<InternalSide, number>);
+        for (const s of Object.values(teamMap)) if (s in counts) counts[s] += 1;
         const unassignedCount = attendingPlayers.filter((p) => !teamMap[p.id]).length;
-        const hasTeams = teamACount > 0 || teamBCount > 0;
+        const hasTeams = Object.values(counts).some((c) => c > 0);
 
-        async function assignSide(playerId: string, side: "A" | "B" | null) {
-          const newMap = { ...teamMap };
+        async function assignSide(playerId: string, side: InternalSide | null) {
+          const newMap: Record<string, InternalSide> = { ...teamMap };
           if (side === null) delete newMap[playerId]; else newMap[playerId] = side;
           setSavingTeams(true);
           const { error } = await apiMutate("/api/internal-teams", "POST", {
-            matchId, teams: { A: Object.entries(newMap).filter(([, s]) => s === "A").map(([id]) => id), B: Object.entries(newMap).filter(([, s]) => s === "B").map(([id]) => id) },
+            matchId, teams: buildTeamsPayload(newMap),
           });
           setSavingTeams(false);
           if (error) { showToast("팀 배정에 실패했어요. 다시 시도해주세요.", "error"); return; }
           refetchInternalTeams?.();
         }
 
-        async function handleRandomSplit() {
+        // 출석자(용병 포함)를 팀 수만큼 인원 균등 분배 (라운드로빈 → 6:6:6·6:6:5 등)
+        async function handleEvenSplit() {
           const shuffled = [...attendingPlayers].sort(() => Math.random() - 0.5);
-          const half = Math.ceil(shuffled.length / 2);
+          const teams: Record<string, string[]> = {};
+          for (const s of activeSides) teams[s] = [];
+          shuffled.forEach((m, i) => { teams[activeSides[i % activeSides.length]].push(m.id); });
           setSavingTeams(true);
-          const { error } = await apiMutate("/api/internal-teams", "POST", {
-            matchId, teams: { A: shuffled.slice(0, half).map((m) => m.id), B: shuffled.slice(half).map((m) => m.id) },
-          });
+          const { error } = await apiMutate("/api/internal-teams", "POST", { matchId, teams });
           setSavingTeams(false);
           // 실패해도 '편성 완료' 토스트를 띄우던 false-success 수정
-          if (error) { showToast("랜덤 팀 편성에 실패했어요. 다시 시도해주세요.", "error"); return; }
-          showToast("랜덤 팀 편성 완료");
+          if (error) { showToast("자동 분배에 실패했어요. 다시 시도해주세요.", "error"); return; }
+          showToast(`${activeSides.length}팀 균등 분배 완료`);
           // 결과 즉시 확인할 수 있도록 편성 영역 자동 펼침
           setShowTeamSplit(true);
           refetchInternalTeams?.();
@@ -366,9 +382,21 @@ function MatchTacticsTabInner({
                   </div>
                   <div className="flex gap-1.5">
                     {canManage && (
-                      <Button size="sm" variant="outline" onClick={handleRandomSplit} disabled={savingTeams || attendingPlayers.length < 2}>
-                        {savingTeams ? "..." : "랜덤"}
-                      </Button>
+                      <>
+                        {teamCount < MAX_INTERNAL_TEAMS ? (
+                          <Button size="sm" variant="outline" onClick={() => setTeamCount(teamCount + 1)} disabled={savingTeams}>
+                            + C팀
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="outline" onClick={() => setTeamCount(2)} disabled={savingTeams || (counts.C ?? 0) > 0}
+                            title={(counts.C ?? 0) > 0 ? "C팀을 비운 뒤 제거할 수 있어요" : undefined}>
+                            − C팀
+                          </Button>
+                        )}
+                        <Button size="sm" variant="outline" onClick={handleEvenSplit} disabled={savingTeams || attendingPlayers.length < 2}>
+                          {savingTeams ? "..." : "자동분배"}
+                        </Button>
+                      </>
                     )}
                     <Button size="sm" variant={showTeamSplit ? "default" : "outline"} onClick={() => setShowTeamSplit(!showTeamSplit)}>
                       {showTeamSplit ? "접기" : "편성"}
@@ -395,66 +423,58 @@ function MatchTacticsTabInner({
                       </div>
                     )}
 
-                    {/* A팀 / B팀 2열 */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="rounded-lg border border-primary/30 bg-primary/5 p-2">
-                        <p className="text-xs font-bold text-primary mb-1 sticky top-0 bg-[hsl(var(--card))] py-1.5 z-1 border-b border-primary/20">A팀 ({teamACount}명)</p>
-                        <div className="space-y-px">
-                          {attendingPlayers.filter((m) => teamMap[m.id] === "A").map((m) => (
-                            <button key={m.id} type="button" disabled={savingTeams || !canManage}
-                              onClick={() => assignSide(m.id, "B")}
-                              className="flex w-full items-center rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-[hsl(var(--info))]/15 active:bg-[hsl(var(--info))]/25 transition-colors min-h-[36px]">
-                              <span className="truncate">{m.name}</span>
-                              {canManage && <span className="ml-auto shrink-0 text-xs text-[hsl(var(--info))]/70">→B</span>}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="rounded-lg border border-[hsl(var(--info))]/30 bg-[hsl(var(--info))]/5 p-2">
-                        <p className="text-xs font-bold text-[hsl(var(--info))] mb-1 sticky top-0 bg-[hsl(var(--card))] py-1.5 z-1 border-b border-[hsl(var(--info))]/20">B팀 ({teamBCount}명)</p>
-                        <div className="space-y-px">
-                          {attendingPlayers.filter((m) => teamMap[m.id] === "B").map((m) => (
-                            <button key={m.id} type="button" disabled={savingTeams || !canManage}
-                              onClick={() => assignSide(m.id, "A")}
-                              className="flex w-full items-center rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-primary/15 active:bg-primary/25 transition-colors min-h-[36px]">
-                              <span className="truncate">{m.name}</span>
-                              {canManage && <span className="ml-auto shrink-0 text-xs text-primary/70">→A</span>}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                    {/* 팀별 열 (2~3팀) — 탭하면 다음 팀으로 이동 */}
+                    <div className={cn("grid gap-2", activeSides.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
+                      {activeSides.map((s) => {
+                        const cfg = sideConfig(s);
+                        const to = nextSide(s, activeSides);
+                        const toCfg = sideConfig(to);
+                        return (
+                          <div key={s} className={cn("rounded-lg border p-2", cfg.border, cfg.bg)}>
+                            <p className={cn("text-xs font-bold mb-1 sticky top-0 bg-[hsl(var(--card))] py-1.5 z-1 border-b", cfg.text, cfg.border)}>{cfg.label} ({counts[s]}명)</p>
+                            <div className="space-y-px">
+                              {attendingPlayers.filter((m) => teamMap[m.id] === s).map((m) => (
+                                <button key={m.id} type="button" disabled={savingTeams || !canManage}
+                                  onClick={() => assignSide(m.id, to)}
+                                  className="flex w-full items-center rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-secondary active:bg-secondary/70 transition-colors min-h-[36px]">
+                                  <span className="truncate">{m.name}</span>
+                                  {canManage && <span className={cn("ml-auto shrink-0 text-xs opacity-70", toCfg.text)}>→{to}</span>}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
 
                 {/* 접힌 상태에서 요약 */}
                 {!showTeamSplit && hasTeams && (
-                  <div className="flex items-center justify-center gap-4 py-1 text-sm font-semibold">
-                    <span className="text-primary">A팀 {teamACount}명</span>
-                    <span className="text-muted-foreground">vs</span>
-                    <span className="text-[hsl(var(--info))]">B팀 {teamBCount}명</span>
+                  <div className="flex items-center justify-center gap-3 py-1 text-sm font-semibold flex-wrap">
+                    {activeSides.map((s) => (
+                      <span key={s} className={sideConfig(s).text}>{sideConfig(s).label} {counts[s]}명</span>
+                    ))}
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* A/B 탭 토글 */}
+            {/* 팀 탭 토글 (2~3팀) */}
             {hasTeams && (
               <div className="flex gap-2">
-                <button type="button"
-                  onClick={() => { setActiveSide("A"); setGeneratedSquads([]); setTacticsKey((k) => k + 1); }}
-                  className={cn("flex-1 min-h-[44px] rounded-lg border px-4 text-sm font-bold transition-colors",
-                    activeSide === "A" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30"
-                  )}>
-                  A팀 ({teamACount}명)
-                </button>
-                <button type="button"
-                  onClick={() => { setActiveSide("B"); setGeneratedSquads([]); setTacticsKey((k) => k + 1); }}
-                  className={cn("flex-1 min-h-[44px] rounded-lg border px-4 text-sm font-bold transition-colors",
-                    activeSide === "B" ? "border-[hsl(var(--info))] bg-[hsl(var(--info))]/10 text-[hsl(var(--info))]" : "border-border text-muted-foreground hover:border-[hsl(var(--info))]/30"
-                  )}>
-                  B팀 ({teamBCount}명)
-                </button>
+                {activeSides.map((s) => {
+                  const cfg = sideConfig(s);
+                  return (
+                    <button key={s} type="button"
+                      onClick={() => { setActiveSide(s); setGeneratedSquads([]); setTacticsKey((k) => k + 1); }}
+                      className={cn("flex-1 min-h-[44px] rounded-lg border px-2 text-sm font-bold transition-colors",
+                        activeSide === s ? cfg.tabActive : "border-border text-muted-foreground"
+                      )}>
+                      {cfg.label} ({counts[s]}명)
+                    </button>
+                  );
+                })}
               </div>
             )}
 
@@ -462,7 +482,7 @@ function MatchTacticsTabInner({
             {!hasTeams && !showTeamSplit && (
               <Card className="border-[hsl(var(--warning))]/20 bg-[hsl(var(--warning))]/5">
                 <CardContent className="p-4 text-sm text-[hsl(var(--warning))] text-center">
-                  위 &quot;편성&quot; 버튼으로 A/B팀을 먼저 나눠주세요.
+                  위 &quot;편성&quot; 또는 &quot;자동분배&quot;로 팀을 먼저 나눠주세요.
                 </CardContent>
               </Card>
             )}

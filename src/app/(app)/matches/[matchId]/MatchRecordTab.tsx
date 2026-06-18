@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useRef, useState } from "react";
 import { apiMutate } from "@/lib/useApi";
+import type { InternalSide } from "@/lib/internalSides";
 import { useAsyncAction, useItemAction } from "@/lib/useAsyncAction";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -85,7 +86,7 @@ function MatchRecordTabInner({
   // 어시스트 PlayerPicker 명시적 펼침 (기본 접힘 — 어시 없는 골 흔하므로)
   const [showAssistPicker, setShowAssistPicker] = useState(false);
   // 자체전 A/B팀 토글 (수정 시 기존 side로 초기화, 새 등록은 null)
-  const [selectedSide, setSelectedSide] = useState<"A" | "B" | null>(null);
+  const [selectedSide, setSelectedSide] = useState<InternalSide | null>(null);
   // 쿼터 선택 (0 = 모름). controlled state로 관리해 stale 하이라이트·초기화 버그 방지
   const [selectedQuarter, setSelectedQuarter] = useState(0);
   // 폼 진입/리셋 시 어시 펼침 + side·쿼터 state reset
@@ -185,9 +186,9 @@ function MatchRecordTabInner({
     }
 
     // 자체전: 득점자의 소속팀(side) 결정
-    let side: "A" | "B" | null = null;
+    let side: InternalSide | null = null;
     const formSide = String(formData.get("side") || "");
-    if (formSide === "A" || formSide === "B") {
+    if (formSide === "A" || formSide === "B" || formSide === "C") {
       side = formSide;
     } else if (editingGoalId) {
       // 수정 시: 기존 골의 side 보존

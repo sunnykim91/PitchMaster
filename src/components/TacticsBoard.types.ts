@@ -1,4 +1,5 @@
 import type { DetailedPosition, SportType } from "@/lib/types";
+import type { InternalSide } from "@/lib/internalSides";
 
 export type Player = {
   id: string;
@@ -19,7 +20,7 @@ export type TacticsBoardProps = {
   initialSquads?: SquadRow[]; // 외부에서 주입 시 API fetch skip
   defaultFormationId?: string; // 팀 기본 포메이션
   readOnly?: boolean; // MEMBER: 조회만 가능
-  side?: "A" | "B"; // 자체전 팀 구분
+  side?: InternalSide; // 자체전 팀 구분 (A/B/C)
 };
 
 export type Placement = {
