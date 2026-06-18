@@ -164,6 +164,12 @@ public/22333.png
 # PII 포함 개인 문서 (커밋 금지)
 docs/portfolio.md
 
+# Firebase 비밀키·설정 (서비스 계정 키 = 서버 비밀, 절대 커밋 금지)
+*firebase-adminsdk*.json
+google-services.json
+docs/*firebase-adminsdk*.json
+docs/google-services.json
+
 # v0 design export (참조용)
 v0card/
 dsahboard/

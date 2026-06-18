@@ -51,6 +51,20 @@ export async function subscribeToPush(): Promise<PushSubscription | null> {
   return subscription;
 }
 
+/**
+ * 네이티브 FCM 앱(TWA + 네이티브 푸시) 안에서 도는지 여부.
+ * 앱이 launch URL 로 토큰을 넘겨주면 NativePushRegister 가 이 플래그를 세운다.
+ * true 면 웹푸시 구독을 하지 않는다 (네이티브 FCM 으로 받으므로 중복 방지).
+ */
+export function isNativePush(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem("pm_native_push") === "1";
+  } catch {
+    return false;
+  }
+}
+
 /** Check if push notifications are supported and permitted */
 export function isPushSupported(): boolean {
   return typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;

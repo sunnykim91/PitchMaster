@@ -22,6 +22,7 @@ import { isPlatformAdmin } from "@/lib/admin";
 import { cn, compactKakaoImage } from "@/lib/utils";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import PushAutoSubscribe from "@/components/PushAutoSubscribe";
+import NativePushRegister from "@/components/NativePushRegister";
 import TeamLogo from "@/components/TeamLogo";
 import { initInstallPromptCapture, triggerInstall, getInstallPrompt, detectInstallMode, onPromptChange, PLAY_STORE_URL, type InstallMode } from "@/lib/pwaInstall";
 import { useApi } from "@/lib/useApi";
@@ -590,6 +591,8 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       <InAppBrowserBanner />
       {/* TWA 앱: 설치 시 OS 알림 허용한 사용자를 추가 팝업 없이 푸시 구독 등록 */}
       <PushAutoSubscribe />
+      {/* 네이티브 FCM 앱: launch URL 로 받은 FCM 토큰을 서버 등록 (웹푸시 대체) */}
+      <NativePushRegister />
       <div className="mx-auto grid max-w-7xl gap-4 px-3 py-4 sm:px-4 lg:grid-cols-[260px_1fr]">
         {/* Offline Banner */}
         {isOffline && (

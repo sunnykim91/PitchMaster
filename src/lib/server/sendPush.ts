@@ -1,5 +1,6 @@
 import webpush from "web-push";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { sendNativePushToUsers } from "@/lib/server/sendNativePush";
 
 const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY;
@@ -47,13 +48,21 @@ export async function sendTeamPush(
   }));
   await db.from("notifications").insert(notifications);
 
-  // 푸시 구독 조회 & 발송
+  // 네이티브 FCM 발송 (앱 사용자 — 브라우저 비의존). 웹푸시와 별개 경로.
+  // 네이티브 앱은 웹푸시 구독을 만들지 않으므로 같은 기기 중복 없음.
+  const native = await sendNativePushToUsers(targetUserIds, {
+    title: opts.title,
+    body: opts.body,
+    url: opts.url,
+  });
+
+  // 웹푸시 구독 조회 & 발송 (데스크톱/PWA)
   const { data: subs } = await db
     .from("push_subscriptions")
     .select("endpoint, keys")
     .in("user_id", targetUserIds);
 
-  if (!subs || subs.length === 0) return { sent: 0, failed: 0 };
+  if (!subs || subs.length === 0) return native;
 
   const payload = JSON.stringify({
     title: opts.title,
@@ -85,5 +94,5 @@ export async function sendTeamPush(
     })
   );
 
-  return { sent, failed };
+  return { sent: sent + native.sent, failed: failed + native.failed };
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { subscribeToPush, isPushSupported } from "@/lib/pushSubscription";
+import { subscribeToPush, isPushSupported, isNativePush } from "@/lib/pushSubscription";
 
 /**
  * TWA(Play Store 앱) 사용자가 설치 시 안드로이드 알림 권한을 이미 허용해 둔 경우,
@@ -22,6 +22,9 @@ let attempted = false;
 export default function PushAutoSubscribe() {
   useEffect(() => {
     if (attempted || typeof window === "undefined") return;
+
+    // 네이티브 FCM 앱이면 웹푸시 구독을 하지 않는다 (네이티브로 받으므로 중복 방지)
+    if (isNativePush()) return;
 
     let isTwa = false;
     try {

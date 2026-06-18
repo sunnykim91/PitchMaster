@@ -5,7 +5,7 @@ import type { FormEvent } from "react";
 import Image from "next/image";
 import { Bell, Sun, Moon, Monitor, Camera, Link2, AlertTriangle, MessageSquare } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
-import { subscribeToPush } from "@/lib/pushSubscription";
+import { subscribeToPush, isNativePush } from "@/lib/pushSubscription";
 import { GA } from "@/lib/analytics";
 import { apiMutate } from "@/lib/useApi";
 import { compressImage } from "@/lib/compressImage";
@@ -207,7 +207,9 @@ function PersonalSettingsComponent({
     const next = !pushEnabled;
     setPushLoading(true);
     try {
-      if (next) {
+      // 네이티브 FCM 앱은 토큰이 앱 실행 시 자동 등록되므로 웹푸시 구독을 생략한다.
+      // (구독하면 중복 알림 위험 + 삼성 인터넷에서 어차피 안 됨)
+      if (next && !isNativePush()) {
         const hasSW = "serviceWorker" in navigator;
         const hasPM = "PushManager" in window;
         const hasNoti = typeof Notification !== "undefined";
