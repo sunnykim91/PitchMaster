@@ -86,9 +86,14 @@ export async function sendNativePushToUsers(
   await Promise.allSettled(
     tokens.map(async (row) => {
       try {
+        // notification 메시지: 앱 프로세스를 깨우지 않고 시스템이 직접 표시.
+        // TWA 는 호스트 앱이 백그라운드라 data-only 는 onMessageReceived 가 안 불림 →
+        // notification 으로 보내야 백그라운드·삼성인터넷 무관하게 알림이 뜬다.
+        // url 은 data 로 동봉(탭 시 라우팅용). 아이콘은 매니페스트 default_notification_icon.
         await messaging.send({
           token: row.token,
-          data: { title: opts.title, body: opts.body, url },
+          notification: { title: opts.title, body: opts.body },
+          data: { url },
           android: { priority: "high" },
         });
         sent++;
