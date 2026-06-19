@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { OpponentHistoryCard } from "@/components/OpponentHistoryCard";
 import { cn, formatDateKo, formatTime } from "@/lib/utils";
+import { sideConfig } from "@/lib/internalSides";
+import type { InternalSide } from "@/lib/internalSides";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { X, Trash2, Pencil } from "lucide-react";
 import { useToast } from "@/lib/ToastContext";
@@ -131,6 +133,8 @@ function MatchInfoTabInner({
   const [commentText, setCommentText] = useState("");
   const [sendingComment, setSendingComment] = useState(false);
   const isInternal = match.matchType === "INTERNAL";
+  // 3파전: 2팀 히어로(A:B) 대신 팀별 골 합계 카드로 대체
+  const internal3 = isInternal && ((internalTeams ?? []).some((t) => t.side === "C") || (goalsProp ?? []).some((g) => g.side === "C"));
 
   /* ── 날씨 데이터 (서버에서 prefetch된 initialWeather 사용, 없으면 클라에서 fetch) ── */
   const [weather, setWeather] = useState<{
@@ -258,7 +262,7 @@ function MatchInfoTabInner({
     <div className="space-y-4">
 
       {/* ═══ 1. 스코어 히어로 카드 (완료된 경기 + 골 있을 때) ═══ */}
-      {scoreData && match.matchType !== "EVENT" && (
+      {scoreData && !internal3 && match.matchType !== "EVENT" && (
         <Card className="rounded-2xl border-0 bg-gradient-to-br from-secondary to-background overflow-hidden">
           <CardContent className="p-0">
             <div className="px-6 pt-8 pb-6 text-center">
@@ -307,6 +311,36 @@ function MatchInfoTabInner({
                 {match.time && <><span className="h-3 w-px bg-border" /><span>{formatTime(match.time)}</span></>}
                 {match.location && <><span className="h-3 w-px bg-border" /><span className="max-w-[120px] truncate">{match.location}</span></>}
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ═══ 1-b. 3파전 스코어 카드 (자체전 3팀) ═══ */}
+      {internal3 && (goalsProp ?? []).length > 0 && match.matchType !== "EVENT" && (
+        <Card className="rounded-2xl border-0 bg-gradient-to-br from-secondary to-background overflow-hidden">
+          <CardContent className="px-6 py-6">
+            <p className="mb-3 text-center text-xs font-medium tracking-wider text-muted-foreground">자체전 · 3팀</p>
+            <div className="flex flex-wrap items-end justify-center gap-x-7 gap-y-3">
+              {(["A", "B", "C"] as InternalSide[]).map((s) => {
+                const cfg = sideConfig(s);
+                const g = (goalsProp ?? []).filter((x) => x.side === s && !x.isOwnGoal).length;
+                const r = match.internalTeamResults?.[s];
+                return (
+                  <div key={s} className="flex flex-col items-center gap-1">
+                    <span className={cn("text-sm font-bold", cfg.text)}>{cfg.label}</span>
+                    <span className={cn("text-4xl font-black tabular-nums", cfg.text)}>{g}</span>
+                    {r && (r.w || r.d || r.l) ? (
+                      <span className="text-[11px] text-muted-foreground">{r.w}승 {r.d}무 {r.l}패</span>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+              <span>{formatDateKo(match.date)}</span>
+              {match.time && <><span className="h-3 w-px bg-border" /><span>{formatTime(match.time)}</span></>}
+              {match.location && <><span className="h-3 w-px bg-border" /><span className="max-w-[120px] truncate">{match.location}</span></>}
             </div>
           </CardContent>
         </Card>

@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       assist_id: body.assistId || null,
       is_own_goal: isOwnGoal,
       goal_type: goalType,
-      side: body.side ?? null,
+      side: ["A", "B", "C"].includes(body.side) ? body.side : null,
       recorded_by: ctx.userId,
     })
     .select()
@@ -163,7 +163,7 @@ export async function PUT(request: NextRequest) {
       assist_id: body.assistId || null,
       is_own_goal: updIsOwnGoal,
       goal_type: updGoalType,
-      side: body.side ?? null,
+      side: ["A", "B", "C"].includes(body.side) ? body.side : null,
     })
     .eq("id", body.id)
     .select()

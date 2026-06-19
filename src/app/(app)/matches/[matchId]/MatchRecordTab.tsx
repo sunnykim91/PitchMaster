@@ -2,7 +2,8 @@
 
 import { memo, useEffect, useRef, useState } from "react";
 import { apiMutate } from "@/lib/useApi";
-import type { InternalSide } from "@/lib/internalSides";
+import { INTERNAL_SIDES, sideConfig, EMPTY_RECORD } from "@/lib/internalSides";
+import type { InternalSide, InternalTeamResults, SideRecord } from "@/lib/internalSides";
 import { useAsyncAction, useItemAction } from "@/lib/useAsyncAction";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,6 +51,8 @@ export interface MatchRecordTabProps {
   goals: GoalEvent[];
   guests: Guest[];
   canRecord: boolean;
+  /** 매치 수정 권한(STAFF+) — 3파전 전적 수기 카운터 등 match-edit 액션 게이트 */
+  canManage: boolean;
   /** 골/어시 PlayerPicker용 참석 멤버 */
   attendingMembers: RosterPlayer[];
   fullRoster: SimpleRosterPlayer[];
@@ -66,6 +69,7 @@ function MatchRecordTabInner({
   goals,
   guests,
   canRecord,
+  canManage,
   attendingMembers,
   fullRoster,
   refetchGoals,
@@ -73,6 +77,12 @@ function MatchRecordTabInner({
 }: MatchRecordTabProps) {
   const { showToast } = useToast();
   const isInternal = match.matchType === "INTERNAL";
+  // 3파전(3팀) 여부 — 편성 또는 골에 C가 있으면 3팀. 2팀이면 기존 A:B 화면 그대로 유지
+  const internalSidesPresent = INTERNAL_SIDES.map((s) => s.side).filter(
+    (side) => (internalTeams ?? []).some((t) => t.side === side) || goals.some((g) => g.side === side),
+  );
+  const is3Team = internalSidesPresent.includes("C");
+  const goalSides: InternalSide[] = is3Team ? ["A", "B", "C"] : ["A", "B"];
 
   const confirm = useConfirm();
   const [runAddGoal, addingGoal] = useAsyncAction();
@@ -87,6 +97,17 @@ function MatchRecordTabInner({
   const [showAssistPicker, setShowAssistPicker] = useState(false);
   // 자체전 A/B팀 토글 (수정 시 기존 side로 초기화, 새 등록은 null)
   const [selectedSide, setSelectedSide] = useState<InternalSide | null>(null);
+  // 3파전 팀별 가벼운 승/무/패 수기 카운트 (로컬 우선 + PUT 저장)
+  const [teamResults, setTeamResults] = useState<InternalTeamResults>(match.internalTeamResults ?? {});
+  function bumpResult(side: InternalSide, key: keyof SideRecord, delta: number) {
+    const prev = teamResults;
+    const cur = prev[side] ?? EMPTY_RECORD;
+    const next: InternalTeamResults = { ...prev, [side]: { ...cur, [key]: Math.max(0, cur[key] + delta) } };
+    setTeamResults(next);
+    apiMutate("/api/matches", "PUT", { id: matchId, internalTeamResults: next }).then(({ error }) => {
+      if (error) { setTeamResults(prev); showToast("기록 저장에 실패했어요.", "error"); } // 실패 시 롤백 → 화면/DB 불일치 방지
+    });
+  }
   // 쿼터 선택 (0 = 모름). controlled state로 관리해 stale 하이라이트·초기화 버그 방지
   const [selectedQuarter, setSelectedQuarter] = useState(0);
   // 폼 진입/리셋 시 어시 펼침 + side·쿼터 state reset
@@ -281,12 +302,24 @@ function MatchRecordTabInner({
             <div className="mb-6 text-center">
               <div className="text-6xl font-black tabular-nums tracking-tighter">
                 {isInternal ? (
+                  is3Team ? (
+                    /* 3파전: 팀별 골 합계 (자책골 개념 미적용) */
+                    <div className="flex flex-wrap items-baseline justify-center gap-x-6 gap-y-2">
+                      {goalSides.map((s) => (
+                        <span key={s} className={cn("flex items-baseline gap-1.5 text-4xl", sideConfig(s).text)}>
+                          <span className="text-sm font-bold">{sideConfig(s).label}</span>
+                          {goals.filter((g) => g.side === s && !g.isOwnGoal).length}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
                   <>
                     {/* 자체전 자책골 규칙: side=범한 팀이므로 자책골은 상대 사이드 득점으로 집계 */}
                     <span className="text-foreground">{goals.filter((g) => g.side === "A" && !g.isOwnGoal).length + goals.filter((g) => g.side === "B" && g.isOwnGoal).length}</span>
                     <span className="mx-3 text-muted-foreground">:</span>
                     <span className="text-muted-foreground">{goals.filter((g) => g.side === "B" && !g.isOwnGoal).length + goals.filter((g) => g.side === "A" && g.isOwnGoal).length}</span>
                   </>
+                  )
                 ) : (
                   <>
                     {/* 자책골 규칙: 상대 자책골(OPPONENT+isOwnGoal)=우리 득점, 우리 자책골=상대 득점 (MatchDetailClient와 동일) */}
@@ -301,6 +334,30 @@ function MatchRecordTabInner({
               <>
               <div className="flex gap-3">
                 {isInternal ? (
+                  is3Team ? (
+                    <>
+                      {goalSides.map((s) => {
+                        const cfg = sideConfig(s);
+                        return (
+                          <Button key={s} type="button" className={cn("flex-1 min-h-[48px] font-semibold", cfg.chipBg, cfg.text)}
+                            disabled={addingGoal}
+                            onClick={() => runAddGoal(async () => {
+                              const formData = new FormData();
+                              formData.set("scorerId", "UNKNOWN");
+                              formData.set("assistId", "");
+                              formData.set("quarter", "0");
+                              formData.set("minute", "0");
+                              formData.set("isOwnGoal", "");
+                              formData.set("goalType", "NORMAL");
+                              formData.set("side", s);
+                              await handleAddGoal(formData);
+                            })}>
+                            {addingGoal ? "..." : `+ ${cfg.label}`}
+                          </Button>
+                        );
+                      })}
+                    </>
+                  ) : (
                   <>
                     <Button type="button" className="flex-1 min-h-[48px] bg-primary/20 text-primary hover:bg-primary/30 font-semibold"
                       disabled={addingGoal}
@@ -333,6 +390,7 @@ function MatchRecordTabInner({
                       {addingGoal ? "처리 중..." : "+ B팀 골"}
                     </Button>
                   </>
+                  )
                 ) : (
                   <>
                     <Button type="button" aria-label="우리 팀 득점 기록 추가" className="flex-1 min-h-[48px] bg-[hsl(var(--success))]/20 text-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/30 font-semibold"
@@ -370,6 +428,42 @@ function MatchRecordTabInner({
               </p>
               </>
             )}
+            {/* 3파전 팀별 전적 (수기 승/무/패) */}
+            {isInternal && is3Team && (
+              <div className="mt-5 border-t border-border/30 pt-4">
+                <p className="mb-2 text-center text-xs font-semibold text-muted-foreground">팀별 전적 (수기)</p>
+                <div className="grid grid-cols-[2.2rem_1fr_1fr_1fr] items-center gap-x-1.5 gap-y-3">
+                  {/* 헤더: 승 / 무 / 패 (한 번만) */}
+                  <span />
+                  {(["w", "d", "l"] as const).map((k) => (
+                    <span key={k} className="text-center text-xs font-medium text-muted-foreground">{k === "w" ? "승" : k === "d" ? "무" : "패"}</span>
+                  ))}
+                  {/* 팀별 행 */}
+                  {goalSides.map((s) => {
+                    const cfg = sideConfig(s);
+                    const rec = teamResults[s] ?? EMPTY_RECORD;
+                    return (
+                      <div key={s} className="contents">
+                        <span className={cn("text-sm font-bold", cfg.text)}>{cfg.label}</span>
+                        {(["w", "d", "l"] as const).map((k) => (
+                          <div key={k} className="flex items-center justify-center gap-1.5">
+                            {canManage && (
+                              <button type="button" aria-label={`${cfg.label} ${k} 감소`} onClick={() => bumpResult(s, k, -1)} disabled={rec[k] <= 0}
+                                className="flex h-7 w-7 items-center justify-center rounded-md border border-border/50 text-muted-foreground hover:bg-secondary disabled:opacity-30">−</button>
+                            )}
+                            <span className="min-w-[18px] text-center text-base font-bold tabular-nums">{rec[k]}</span>
+                            {canManage && (
+                              <button type="button" aria-label={`${cfg.label} ${k} 증가`} onClick={() => bumpResult(s, k, 1)}
+                                className="flex h-7 w-7 items-center justify-center rounded-md border border-border/50 text-muted-foreground hover:bg-secondary">+</button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -398,7 +492,7 @@ function MatchRecordTabInner({
                   {editingGoalId && (() => {
                     const g = goals.find((x) => x.id === editingGoalId);
                     const sideTag = isInternal && g?.side
-                      ? (g.side === "A" ? { label: "🔵 A팀 골", cls: "bg-primary/15 text-primary border-primary/40" } : { label: "🟦 B팀 골", cls: "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))] border-[hsl(var(--info))]/40" })
+                      ? { label: `${sideConfig(g.side).emoji} ${sideConfig(g.side).label} 골`, cls: cn(sideConfig(g.side).chipBg, sideConfig(g.side).text, sideConfig(g.side).border) }
                       : null;
                     return (
                       <div className="mb-3 flex items-center gap-2 rounded-lg bg-[hsl(var(--warning)/0.1)] px-3 py-2 text-xs font-bold text-[hsl(var(--warning))]">
@@ -431,17 +525,20 @@ function MatchRecordTabInner({
 
                   {!editingIsOpponent && (() => {
                     const editingGoal = editingGoalId ? goals.find((g) => g.id === editingGoalId) : undefined;
-                    // 자체전: 참석 멤버를 A팀 / B팀 / 미배정으로 분리
+                    // 자체전: 참석 멤버를 팀별(A/B/C) / 미배정으로 분리
                     const isInt = isInternal && internalTeams && internalTeams.length > 0;
-                    const teamA = isInt ? attendingMembers.filter((p) => internalTeams!.find((t) => t.playerId === p.id)?.side === "A") : [];
-                    const teamB = isInt ? attendingMembers.filter((p) => internalTeams!.find((t) => t.playerId === p.id)?.side === "B") : [];
+                    const teamBySide = (side: InternalSide) => isInt ? attendingMembers.filter((p) => internalTeams!.find((t) => t.playerId === p.id)?.side === side) : [];
                     const unassigned = isInt ? attendingMembers.filter((p) => !internalTeams!.find((t) => t.playerId === p.id)) : [];
 
                     const buildPlayerGroups = (forAssist: boolean, selectedId?: string): PlayerPickerGroup[] => {
                       const groups: PlayerPickerGroup[] = [];
                       if (isInt) {
-                        if (teamA.length) groups.push({ label: "🔵 A팀", players: teamA.map((p) => ({ id: p.id, name: p.name })), tone: "default" });
-                        if (teamB.length) groups.push({ label: "🟦 B팀", players: teamB.map((p) => ({ id: p.id, name: p.name })), tone: "guest" });
+                        for (const side of goalSides) {
+                          const members = teamBySide(side);
+                          if (!members.length) continue;
+                          const tone = side === "A" ? "default" : side === "B" ? "guest" : "success";
+                          groups.push({ label: `${sideConfig(side).emoji} ${sideConfig(side).label}`, players: members.map((p) => ({ id: p.id, name: p.name })), tone });
+                        }
                         if (unassigned.length) groups.push({ label: "미배정", players: unassigned.map((p) => ({ id: p.id, name: p.name })), tone: "muted" });
                       } else {
                         groups.push({ label: "참석 멤버", players: attendingMembers.map((p) => ({ id: p.id, name: p.name })), tone: forAssist ? "success" : "default" });
@@ -453,7 +550,7 @@ function MatchRecordTabInner({
                         label: "기타",
                         players: forAssist
                           ? specialPlayers.map((sp) => ({ id: sp.id, name: sp.name }))
-                          : [{ id: "OWN_GOAL", name: "⚽ 자책골" }, ...specialPlayers.map((sp) => ({ id: sp.id, name: sp.name }))],
+                          : [...(is3Team ? [] : [{ id: "OWN_GOAL", name: "⚽ 자책골" }]), ...specialPlayers.map((sp) => ({ id: sp.id, name: sp.name }))],
                         tone: "special",
                       });
                       // 기록된 선수가 참석 목록·용병·기타에 없으면(불참 처리 등) 칩이 사라지지 않도록 보강
@@ -478,20 +575,19 @@ function MatchRecordTabInner({
                       <div className="space-y-1.5">
                         <p className="text-[13px] font-semibold text-foreground">팀</p>
                         <div className="flex gap-2">
-                          {(["A", "B"] as const).map((s) => {
+                          {goalSides.map((s) => {
+                            const cfg = sideConfig(s);
                             const active = selectedSide === s;
-                            const colorClass = s === "A"
-                              ? (active ? "bg-primary text-primary-foreground border-primary" : "bg-primary/10 text-primary border-primary/30 hover:border-primary/60")
-                              : (active ? "bg-[hsl(var(--info))] text-white border-[hsl(var(--info))]" : "bg-[hsl(var(--info))]/10 text-[hsl(var(--info))] border-[hsl(var(--info))]/30 hover:border-[hsl(var(--info))]/60");
                             return (
                               <button
                                 key={s}
                                 type="button"
                                 onClick={() => setSelectedSide(s)}
-                                className={cn("flex-1 min-h-[44px] rounded-xl border-2 px-3 text-sm font-bold transition-colors", colorClass)}
+                                className={cn("flex-1 min-h-[44px] rounded-xl border-2 px-2 text-sm font-bold transition-colors",
+                                  active ? cfg.tabActive : cn(cfg.bg, cfg.text, cfg.border))}
                                 aria-pressed={active}
                               >
-                                {s === "A" ? "🔵 A팀" : "🟦 B팀"}
+                                {cfg.emoji} {cfg.label}
                               </button>
                             );
                           })}
@@ -552,7 +648,7 @@ function MatchRecordTabInner({
                   {/* 쿼터 UI — 득점/실점 수정 모두 표시 (controlled state) */}
                   <div className={cn("space-y-1.5", !editingIsOpponent && "mt-4")}>
                     <p className="text-[12.5px] font-medium text-muted-foreground">쿼터</p>
-                    <div className="flex gap-1 rounded-lg bg-secondary p-1">
+                    <div className="flex flex-wrap gap-1 rounded-lg bg-secondary p-1">
                       {[0, ...Array.from({ length: match.quarterCount }, (_, i) => i + 1)].map((q) => {
                         const active = selectedQuarter === q;
                         return (
@@ -562,7 +658,7 @@ function MatchRecordTabInner({
                             onClick={() => setSelectedQuarter(q)}
                             aria-pressed={active}
                             className={cn(
-                              "flex-1 rounded-md py-2 text-sm font-medium transition-colors",
+                              "flex-1 min-w-[3rem] min-h-[40px] rounded-md py-2 text-sm font-medium transition-colors",
                               active ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
                             )}
                           >
@@ -722,14 +818,12 @@ function GoalCardContent({
     : <span className="text-[hsl(var(--success))]">{resolvePlayerName(goal.scorerId)}</span>;
   return (
     <div className="min-w-0">
-      <p className="text-sm font-semibold truncate flex items-center gap-1.5">
+      <div className="text-sm font-semibold truncate flex items-center gap-1.5">
         {isInternal && goal.side && (
-          <Badge className={cn("text-[12px] px-1.5 py-0 border-0",
-            goal.side === "A" ? "bg-primary/20 text-primary" : "bg-[hsl(var(--info))]/20 text-[hsl(var(--info))]"
-          )}>{goal.side}팀</Badge>
+          <Badge className={cn("text-[12px] px-1.5 py-0 border-0", sideConfig(goal.side).chipBg, sideConfig(goal.side).text)}>{sideConfig(goal.side).label}</Badge>
         )}
         {label}
-      </p>
+      </div>
       <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
         {(goal.quarter ?? 0) > 0 && (
           <span className="flex items-center gap-0.5">

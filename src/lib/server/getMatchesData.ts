@@ -15,6 +15,7 @@ export type DbMatchRow = {
   break_duration: number;
   status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
   vote_deadline: string | null;
+  match_type?: "REGULAR" | "INTERNAL" | "EVENT" | null;
   score?: string | null;
   created_by: string;
   created_at: string;
@@ -41,18 +42,37 @@ export async function getMatchesData(teamId: string): Promise<{ matches: DbMatch
     return { matches: matches.map((m) => ({ ...m, score: null })) };
   }
 
-  const { data: goals } = await db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", completedIds);
-  const scoreMap: Record<string, { our: number; opp: number }> = {};
+  const { data: goals } = await db.from("match_goals").select("match_id, scorer_id, is_own_goal, side").in("match_id", completedIds);
+  const internalIds = new Set(matches.filter((m) => m.match_type === "INTERNAL").map((m) => m.id));
+  const byMatch: Record<string, Array<{ scorer_id: string; is_own_goal: boolean; side: string | null }>> = {};
   for (const g of goals ?? []) {
-    if (!scoreMap[g.match_id]) scoreMap[g.match_id] = { our: 0, opp: 0 };
-    if (g.scorer_id === "OPPONENT" || g.is_own_goal) scoreMap[g.match_id].opp++;
-    else scoreMap[g.match_id].our++;
+    (byMatch[g.match_id] ??= []).push(g as { scorer_id: string; is_own_goal: boolean; side: string | null });
+  }
+
+  function computeScore(matchId: string): string | null {
+    const mg = byMatch[matchId];
+    if (!mg || mg.length === 0) return null;
+    if (internalIds.has(matchId)) {
+      // 자체전: side 기준 팀별 집계 (경기상세 스코어와 동일 규칙)
+      if (mg.some((g) => g.side === "C")) {
+        // 3파전: 팀별 골 합계 (자책골 제외)
+        const tally = (s: string) => mg.filter((g) => g.side === s && !g.is_own_goal).length;
+        return `${tally("A")} : ${tally("B")} : ${tally("C")}`;
+      }
+      // 2팀: 자책골은 상대 사이드 득점으로 집계
+      const a = mg.filter((g) => g.side === "A" && !g.is_own_goal).length + mg.filter((g) => g.side === "B" && g.is_own_goal).length;
+      const b = mg.filter((g) => g.side === "B" && !g.is_own_goal).length + mg.filter((g) => g.side === "A" && g.is_own_goal).length;
+      return `${a} : ${b}`;
+    }
+    // 일반: 우리 vs 상대
+    let our = 0, opp = 0;
+    for (const g of mg) {
+      if (g.scorer_id === "OPPONENT" || g.is_own_goal) opp++; else our++;
+    }
+    return `${our} : ${opp}`;
   }
 
   return {
-    matches: matches.map((m) => ({
-      ...m,
-      score: scoreMap[m.id] ? `${scoreMap[m.id].our} : ${scoreMap[m.id].opp}` : null,
-    })),
+    matches: matches.map((m) => ({ ...m, score: computeScore(m.id) })),
   };
 }

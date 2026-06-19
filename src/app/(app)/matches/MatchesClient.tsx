@@ -13,6 +13,8 @@ import type { Role, SportType } from "@/lib/types";
 import { GA } from "@/lib/analytics";
 import { SPORT_DEFAULTS } from "@/lib/types";
 import { cn, formatTime, formatDateTime, formatMatchDate } from "@/lib/utils";
+import { sideConfig } from "@/lib/internalSides";
+import type { InternalSide } from "@/lib/internalSides";
 import { voteStyles } from "@/lib/voteStyles";
 import { toKoreanError } from "@/lib/errorMessages";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -869,12 +871,28 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                           : match.opponent || "팀 이벤트"}
                       </div>
                       {score ? (
-                        <div className={`pm-past-score ${resultClass}`}>
-                          <span className="pm-past-num">{score[0]}</span>
-                          <span className="pm-past-dash">–</span>
-                          <span className="pm-past-num">{score[1]}</span>
-                          {resultMark && <span className="pm-past-mark">{resultMark}</span>}
-                        </div>
+                        match.matchType === "INTERNAL" ? (
+                          /* 자체전: 팀 글자(A/B/C) + 색으로 표기 — 어느 팀 점수인지 명확하게 */
+                          <div className="flex flex-wrap items-baseline justify-end gap-x-2.5 gap-y-0.5" style={{ fontFamily: "var(--font-display)" }}>
+                            {score.map((n, i) => {
+                              const side = (["A", "B", "C"][i] ?? "A") as InternalSide;
+                              const cfg = sideConfig(side);
+                              return (
+                                <span key={i} className={cn("inline-flex items-baseline gap-0.5", cfg.text)}>
+                                  <span className="text-xs font-bold">{side}</span>
+                                  <span className="pm-past-num">{n}</span>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className={`pm-past-score ${resultClass}`}>
+                            <span className="pm-past-num">{score[0]}</span>
+                            <span className="pm-past-dash">–</span>
+                            <span className="pm-past-num">{score[1]}</span>
+                            {resultMark && <span className="pm-past-mark">{resultMark}</span>}
+                          </div>
+                        )
                       ) : (
                         <div className="pm-past-score pm-past-score--empty">결과 미기록</div>
                       )}

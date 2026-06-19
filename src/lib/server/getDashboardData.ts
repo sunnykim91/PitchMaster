@@ -171,7 +171,7 @@ export async function getDashboardData(
       .limit(1)
       .maybeSingle(),
     db.from("matches")
-      .select("id, match_date, opponent_name, status")
+      .select("id, match_date, opponent_name, status, match_type")
       .eq("team_id", teamId)
       .eq("status", "COMPLETED")
       .order("match_date", { ascending: false })
@@ -310,8 +310,8 @@ export async function getDashboardData(
       ? db.from("match_guests").select("id").eq("match_id", upcomingRaw.id)
       : Promise.resolve({ data: [] as { id: string }[] }),
     recentMatch
-      ? db.from("match_goals").select("scorer_id, is_own_goal").eq("match_id", recentMatch.id)
-      : Promise.resolve({ data: [] as { scorer_id: string; is_own_goal: boolean }[] }),
+      ? db.from("match_goals").select("scorer_id, is_own_goal, side").eq("match_id", recentMatch.id)
+      : Promise.resolve({ data: [] as { scorer_id: string; is_own_goal: boolean; side: string | null }[] }),
     recentMatch
       ? db.from("match_mvp_votes").select("voter_id, candidate_id, is_staff_decision, users:candidate_id(name)").eq("match_id", recentMatch.id)
       : Promise.resolve({ data: [] as { voter_id: string; candidate_id: string; is_staff_decision: boolean | null; users: { name: string } | { name: string }[] | null }[] }),
@@ -381,9 +381,23 @@ export async function getDashboardData(
   // recentResult 조립
   let recentResult: DashboardData["recentResult"] = null;
   if (recentMatch) {
-    const goalRows = (recentGoalsRes.data ?? []) as { scorer_id: string; is_own_goal: boolean }[];
-    const ourGoals = goalRows.filter((g) => g.scorer_id !== "OPPONENT" && !g.is_own_goal).length;
-    const oppGoals = goalRows.filter((g) => g.scorer_id === "OPPONENT" || g.is_own_goal).length;
+    const goalRows = (recentGoalsRes.data ?? []) as { scorer_id: string; is_own_goal: boolean; side: string | null }[];
+    // 자체전은 side 기준 팀별 집계 (경기상세·목록과 동일 규칙), 일반은 우리 vs 상대
+    let scoreStr: string;
+    if (recentMatch.match_type === "INTERNAL") {
+      if (goalRows.some((g) => g.side === "C")) {
+        const tally = (s: string) => goalRows.filter((g) => g.side === s && !g.is_own_goal).length;
+        scoreStr = `${tally("A")} : ${tally("B")} : ${tally("C")}`;
+      } else {
+        const a = goalRows.filter((g) => g.side === "A" && !g.is_own_goal).length + goalRows.filter((g) => g.side === "B" && g.is_own_goal).length;
+        const b = goalRows.filter((g) => g.side === "B" && !g.is_own_goal).length + goalRows.filter((g) => g.side === "A" && g.is_own_goal).length;
+        scoreStr = `${a} : ${b}`;
+      }
+    } else {
+      const ourGoals = goalRows.filter((g) => g.scorer_id !== "OPPONENT" && !g.is_own_goal).length;
+      const oppGoals = goalRows.filter((g) => g.scorer_id === "OPPONENT" || g.is_own_goal).length;
+      scoreStr = `${ourGoals} : ${oppGoals}`;
+    }
     type MvpVoteRow = { voter_id: string; candidate_id: string; is_staff_decision: boolean | null; users: { name: string } | { name: string }[] | null };
     const voteRows = (recentMvpRes.data ?? []) as MvpVoteRow[];
     const attendedCount = (recentAttRes.data ?? []).length;
@@ -405,7 +419,7 @@ export async function getDashboardData(
     recentResult = {
       id: recentMatch.id,
       date: recentMatch.match_date,
-      score: `${ourGoals} : ${oppGoals}`,
+      score: scoreStr,
       opponent: recentMatch.opponent_name,
       mvp: winnerName,
     };

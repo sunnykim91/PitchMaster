@@ -454,7 +454,13 @@ export default function MatchDetailClient({
 
   const score = useMemo(() => {
     if (match.matchType === "INTERNAL") {
-      // 자책골은 side=범한 팀이므로 상대 사이드 득점으로 집계
+      const hasC = internalTeams.some((t) => t.side === "C") || goals.some((g) => g.side === "C");
+      if (hasC) {
+        // 3파전: 팀별 골 합계 (자책골 개념 미적용)
+        const tally = (s: string) => goals.filter((g) => g.side === s && !g.isOwnGoal).length;
+        return `${tally("A")} : ${tally("B")} : ${tally("C")}`;
+      }
+      // 자체전 2팀: 자책골은 side=범한 팀이므로 상대 사이드 득점으로 집계
       const aGoals = goals.filter((g) => g.side === "A" && !g.isOwnGoal).length
         + goals.filter((g) => g.side === "B" && g.isOwnGoal).length;
       const bGoals = goals.filter((g) => g.side === "B" && !g.isOwnGoal).length
@@ -691,6 +697,7 @@ export default function MatchDetailClient({
             goals={goals}
             guests={guests}
             canRecord={canRecord}
+            canManage={canManage}
             attendingMembers={attendingMembers}
             fullRoster={fullRoster}
             refetchGoals={refetchGoals}

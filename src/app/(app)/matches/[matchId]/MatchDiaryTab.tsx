@@ -7,6 +7,8 @@ import { ImageLightbox } from "@/components/ImageLightbox";
 import PlayerRatingCard from "@/components/playerRating/PlayerRatingCard";
 import { apiMutate } from "@/lib/useApi";
 import { compressImage } from "@/lib/compressImage";
+import { sideConfig } from "@/lib/internalSides";
+import type { InternalSide } from "@/lib/internalSides";
 import { useToast } from "@/lib/ToastContext";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { useAsyncAction, useItemAction } from "@/lib/useAsyncAction";
@@ -295,7 +297,9 @@ function MatchDiaryTabInner({
       `📍 ${match.location}`,
       ``,
       isInternal ? `🏟️ 자체전` : match.opponent ? `🆚 vs ${match.opponent}` : `🏟️ 친선 경기`,
-      isInternal ? `⚽ A팀 ${score.split(":")[0]?.trim()} : B팀 ${score.split(":")[1]?.trim()}` : `⚽ 스코어 ${score}`,
+      isInternal
+        ? `⚽ ${score.split(":").map((p, i) => `${sideConfig((["A", "B", "C"][i] ?? "A") as InternalSide).label} ${p.trim()}`).join(" : ")}`
+        : `⚽ 스코어 ${score}`,
     ];
     if (mvpName) lines.push(`🏆 MVP: ${mvpName}`);
     if (diary.weather) lines.push(`🌤️ 날씨: ${diary.weather}`);
@@ -364,15 +368,27 @@ function MatchDiaryTabInner({
               <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary">PITCHMASTER</span>
               {match.matchType === "INTERNAL" ? (
                 <div className="mt-3">
-                  <div className="flex items-center justify-center gap-4 text-5xl font-black tabular-nums tracking-tighter">
-                    <span className="text-primary">{score.split(":")[0]?.trim()}</span>
-                    <span className="text-muted-foreground">:</span>
-                    <span className="text-[hsl(var(--info))]">{score.split(":")[1]?.trim()}</span>
+                  <div className="flex flex-wrap items-center justify-center gap-3 text-5xl font-black tabular-nums tracking-tighter">
+                    {score.split(":").map((p, i) => {
+                      const side = (["A", "B", "C"][i] ?? "A") as InternalSide;
+                      return (
+                        <span key={i} className="flex items-center gap-3">
+                          {i > 0 && <span className="text-muted-foreground">:</span>}
+                          <span className={sideConfig(side).text}>{p.trim()}</span>
+                        </span>
+                      );
+                    })}
                   </div>
-                  <div className="mt-1 flex items-center justify-center gap-3 text-sm font-medium">
-                    <span className="text-primary">A팀</span>
-                    <span className="text-muted-foreground">vs</span>
-                    <span className="text-[hsl(var(--info))]">B팀</span>
+                  <div className="mt-1 flex flex-wrap items-center justify-center gap-3 text-sm font-medium">
+                    {score.split(":").map((_, i) => {
+                      const side = (["A", "B", "C"][i] ?? "A") as InternalSide;
+                      return (
+                        <span key={i} className="flex items-center gap-3">
+                          {i > 0 && <span className="text-muted-foreground">vs</span>}
+                          <span className={sideConfig(side).text}>{sideConfig(side).label}</span>
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
               ) : (

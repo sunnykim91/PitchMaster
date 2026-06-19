@@ -52,6 +52,12 @@ export async function GET(request: NextRequest) {
   for (const match of matches) {
     const isInternal = match.match_type === "INTERNAL";
 
+    // 자체전은 승/패 개념이 없어 결과 푸시 대상이 아님 — claim만 하고 발송 skip (7일간 재쿼리 방지)
+    if (isInternal) {
+      await db.from("matches").update({ result_pushed: true }).eq("id", match.id).eq("result_pushed", false);
+      continue;
+    }
+
     // 골 집계
     const { data: goals } = await db
       .from("match_goals")

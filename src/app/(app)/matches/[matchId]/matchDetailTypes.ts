@@ -2,7 +2,7 @@
  * MatchDetailClient에서 분리된 탭 컴포넌트들이 공유하는 타입 정의
  */
 import type { Role, DetailedPosition, SportType } from "@/lib/types";
-import type { InternalSide } from "@/lib/internalSides";
+import type { InternalSide, InternalTeamResults } from "@/lib/internalSides";
 
 /* ── API response row types (snake_case from DB) ── */
 
@@ -24,6 +24,7 @@ export type MatchRow = {
   sport_type?: "SOCCER" | "FUTSAL" | null;
   stats_included?: boolean;
   vote_deadline?: string | null;
+  internal_team_results?: InternalTeamResults | null;
 };
 
 export type GoalType = "NORMAL" | "PK" | "FK" | "HEADER" | "OWN_GOAL";
@@ -131,6 +132,8 @@ export type Match = {
   sportType?: "SOCCER" | "FUTSAL" | null;
   statsIncluded: boolean;
   voteDeadline?: string | null;
+  /** 자체전 3파전 팀별 가벼운 승/무/패 수기 카운트 */
+  internalTeamResults?: InternalTeamResults | null;
 };
 
 export type GoalEvent = {
@@ -239,6 +242,7 @@ export function mapMatch(row: MatchRow): Match {
     sportType: row.sport_type ?? null,
     statsIncluded: row.stats_included ?? true,
     voteDeadline: row.vote_deadline ?? null,
+    internalTeamResults: row.internal_team_results ?? null,
   };
 }
 

@@ -160,10 +160,15 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
             if (m.matchType === "EVENT") {
               dotColor = "bg-[hsl(var(--accent))]";
             } else if (m.status === "COMPLETED" && m.score) {
-              const [l, r] = m.score.split(":").map((s) => parseInt(s.trim(), 10));
-              if (l > r) dotColor = "bg-[hsl(var(--win))]";
-              else if (l < r) dotColor = "bg-[hsl(var(--loss))]";
-              else dotColor = "bg-muted-foreground";
+              if (m.matchType === "INTERNAL") {
+                // 자체전은 승/패 개념 없음 → 중립 도트
+                dotColor = "bg-muted-foreground";
+              } else {
+                const [l, r] = m.score.split(":").map((s) => parseInt(s.trim(), 10));
+                if (l > r) dotColor = "bg-[hsl(var(--win))]";
+                else if (l < r) dotColor = "bg-[hsl(var(--loss))]";
+                else dotColor = "bg-muted-foreground";
+              }
             }
           }
 
@@ -208,10 +213,15 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
             const isVoteClosed = m.voteDeadline ? new Date(m.voteDeadline) <= new Date() : false;
             let resultBadge = null;
             if (isCompleted && m.score) {
-              const [l, r] = m.score.split(":").map((s) => parseInt(s.trim(), 10));
-              const label = l > r ? "승" : l < r ? "패" : "무";
-              const variant = l > r ? "success" : l < r ? "destructive" : ("secondary" as const);
-              resultBadge = <Badge variant={variant} className="text-xs">{label} {m.score}</Badge>;
+              if (m.matchType === "INTERNAL") {
+                // 자체전은 승/패 라벨 없이 점수만 (3파전 "a:b:c"도 그대로 표기)
+                resultBadge = <Badge variant="secondary" className="text-xs">자체전 {m.score}</Badge>;
+              } else {
+                const [l, r] = m.score.split(":").map((s) => parseInt(s.trim(), 10));
+                const label = l > r ? "승" : l < r ? "패" : "무";
+                const variant = l > r ? "success" : l < r ? "destructive" : ("secondary" as const);
+                resultBadge = <Badge variant={variant} className="text-xs">{label} {m.score}</Badge>;
+              }
             }
 
             const myVote = myVotes?.[m.id];

@@ -167,7 +167,7 @@ export async function GET(request: NextRequest) {
   // 4. 시즌 기간 내 COMPLETED 경기 조회 — 자체전 중 전적 반영 안 함은 제외
   const { data: matches } = await db
     .from("matches")
-    .select("id, match_date")
+    .select("id, match_date, match_type")
     .eq("team_id", ctx.teamId)
     .eq("status", "COMPLETED")
     .neq("stats_included", false)
@@ -176,6 +176,8 @@ export async function GET(request: NextRequest) {
     .order("match_date", { ascending: false });
 
   const allMatchIds = (matches ?? []).map((m) => m.id);
+  // 자체전: 선수가 A/B/C 한 팀 소속이라 "우리 vs 상대" 승/클린시트가 성립 안 함 → 승률·클린시트·실점 집계에서 제외 (골·어시·MVP·출전수엔 포함)
+  const internalMatchIds = new Set((matches ?? []).filter((m) => m.match_type === "INTERNAL").map((m) => m.id));
   const totalMatches = allMatchIds.length;
 
   if (totalMatches === 0) {
@@ -310,18 +312,21 @@ export async function GET(request: NextRequest) {
   let cleanSheet = 0;
   let wins = 0;
   let totalConceded = 0;
+  let recordMatchCount = 0; // 자체전 제외한 상대전 출전 수 — 승률·클린시트·실점의 분모
 
   for (const mid of attendedMatchIds) {
+    if (internalMatchIds.has(mid)) continue; // 자체전은 승/클린시트/실점 집계 제외
+    recordMatchCount++;
     const score = matchScores.get(mid) ?? { our: 0, opp: 0 };
     if (score.opp === 0) cleanSheet++;
     if (score.our > score.opp) wins++;
     totalConceded += score.opp;
   }
 
-  const winRate = matchCount > 0 ? wins / matchCount : 0;
-  const concededPerGame = matchCount > 0 ? totalConceded / matchCount : 0;
+  const winRate = recordMatchCount > 0 ? wins / recordMatchCount : 0;
+  const concededPerGame = recordMatchCount > 0 ? totalConceded / recordMatchCount : 0;
   const attendanceRate = totalMatches > 0 ? matchCount / totalMatches : 0;
-  const cleanSheetPerGame = matchCount > 0 ? cleanSheet / matchCount : 0;
+  const cleanSheetPerGame = recordMatchCount > 0 ? cleanSheet / recordMatchCount : 0;
   const goalsPerGame = matchCount > 0 ? goals / matchCount : 0;
   const assistsPerGame = matchCount > 0 ? assists / matchCount : 0;
   const mvpRate = matchCount > 0 ? mvp / matchCount : 0;

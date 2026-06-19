@@ -34,13 +34,17 @@ export async function computeTeamSeasonOvrs(
   // 시즌 내 COMPLETED 경기 (stats_included 반영)
   const { data: matches } = await db
     .from("matches")
-    .select("id, match_date")
+    .select("id, match_date, match_type")
     .eq("team_id", teamId)
     .eq("status", "COMPLETED")
     .neq("stats_included", false)
     .gte("match_date", season.start_date)
     .lte("match_date", season.end_date);
   const matchIds = (matches ?? []).map((m: { id: string }) => m.id);
+  // 자체전 제외 — 승률·클린시트·실점 집계용 (골·어시·MVP·출전수엔 포함, player-card와 동일 규칙)
+  const internalMatchIds = new Set(
+    (matches ?? []).filter((m) => (m as { match_type?: string }).match_type === "INTERNAL").map((m: { id: string }) => m.id),
+  );
   if (matchIds.length === 0) return result;
   const matchDateById = new Map<string, string>();
   for (const m of matches ?? []) matchDateById.set(m.id, (m as { id: string; match_date: string }).match_date);
@@ -149,7 +153,10 @@ export async function computeTeamSeasonOvrs(
     let wins = 0;
     let cleanSheets = 0;
     let conceded = 0;
+    let recordCount = 0; // 자체전 제외한 상대전 출전 수 — 승률·클린시트·실점 분모
     for (const mid of attendedMatchIds) {
+      if (internalMatchIds.has(mid)) continue; // 자체전은 승/클린시트/실점 집계 제외
+      recordCount++;
       const s = scoreByMatch.get(mid) ?? { our: 0, opp: 0 };
       if (s.opp === 0) cleanSheets++;
       if (s.our > s.opp) wins++;
@@ -162,9 +169,9 @@ export async function computeTeamSeasonOvrs(
       myAssists.length / attended,
       attended / matchIds.length,
       myMvpCount / attended,
-      wins / attended,
-      cleanSheets / attended,
-      conceded / attended,
+      recordCount > 0 ? wins / recordCount : 0,
+      recordCount > 0 ? cleanSheets / recordCount : 0,
+      recordCount > 0 ? conceded / recordCount : 0,
       attended,
     );
 

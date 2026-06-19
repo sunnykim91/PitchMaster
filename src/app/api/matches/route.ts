@@ -45,12 +45,19 @@ export async function GET() {
     for (const matchId of completedIds) {
       const matchGoals = (goals ?? []).filter((g) => g.match_id === matchId);
       if (internalIds.has(matchId)) {
-        // 자체전: A팀 vs B팀 스코어 (자책골은 side=범한 팀이므로 상대 사이드 득점으로 집계)
-        const a = matchGoals.filter((g) => g.side === "A" && !g.is_own_goal).length
-          + matchGoals.filter((g) => g.side === "B" && g.is_own_goal).length;
-        const b = matchGoals.filter((g) => g.side === "B" && !g.is_own_goal).length
-          + matchGoals.filter((g) => g.side === "A" && g.is_own_goal).length;
-        map[matchId] = `${a} : ${b}`;
+        const hasC = matchGoals.some((g) => g.side === "C");
+        if (hasC) {
+          // 3파전: 팀별 골 합계 (자책골 개념 미적용 — 넣은 팀에 합산)
+          const tally = (side: string) => matchGoals.filter((g) => g.side === side && !g.is_own_goal).length;
+          map[matchId] = `${tally("A")} : ${tally("B")} : ${tally("C")}`;
+        } else {
+          // 자체전 2팀: A팀 vs B팀 (자책골은 side=범한 팀이므로 상대 사이드 득점으로 집계)
+          const a = matchGoals.filter((g) => g.side === "A" && !g.is_own_goal).length
+            + matchGoals.filter((g) => g.side === "B" && g.is_own_goal).length;
+          const b = matchGoals.filter((g) => g.side === "B" && !g.is_own_goal).length
+            + matchGoals.filter((g) => g.side === "A" && g.is_own_goal).length;
+          map[matchId] = `${a} : ${b}`;
+        }
       } else {
         // 일반 경기: 우리팀 vs 상대팀
         let our = 0, opp = 0;
@@ -254,6 +261,23 @@ export async function PUT(request: NextRequest) {
   if (body.uniformType !== undefined) updates.uniform_type = body.uniformType;
   if (body.matchType !== undefined) updates.match_type = body.matchType;
   if (body.statsIncluded !== undefined) updates.stats_included = body.statsIncluded;
+  // 자체전 3파전 팀별 승/무/패 수기 카운트 — A/B/C 키 + 음수 아닌 정수만 허용 (JSONB 주입 방지)
+  if (body.internalTeamResults !== undefined) {
+    const r = body.internalTeamResults;
+    if (r !== null && typeof r !== "object") return apiError("internalTeamResults 형식이 올바르지 않습니다");
+    const clean: Record<string, { w: number; d: number; l: number }> = {};
+    for (const side of ["A", "B", "C"]) {
+      const v = r?.[side];
+      if (v && typeof v === "object") {
+        clean[side] = {
+          w: Math.max(0, Math.floor(Number(v.w) || 0)),
+          d: Math.max(0, Math.floor(Number(v.d) || 0)),
+          l: Math.max(0, Math.floor(Number(v.l) || 0)),
+        };
+      }
+    }
+    updates.internal_team_results = Object.keys(clean).length > 0 ? clean : null;
+  }
   if (body.sportType !== undefined) {
     if (body.sportType !== null && !["SOCCER", "FUTSAL"].includes(body.sportType)) {
       return apiError("종목은 SOCCER 또는 FUTSAL만 가능합니다");

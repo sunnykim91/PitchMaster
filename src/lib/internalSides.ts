@@ -15,6 +15,8 @@ export const MAX_INTERNAL_TEAMS = 3;
 export interface InternalSideConfig {
   side: InternalSide;
   label: string;
+  /** 골 카드/그룹 라벨용 이모지 점 */
+  emoji: string;
   /** 텍스트 색 (요약·탭·라벨) */
   text: string;
   /** 카드 테두리 */
@@ -31,6 +33,7 @@ export const INTERNAL_SIDES: InternalSideConfig[] = [
   {
     side: "A",
     label: "A팀",
+    emoji: "🔴",
     text: "text-primary",
     border: "border-primary/30",
     bg: "bg-primary/5",
@@ -40,6 +43,7 @@ export const INTERNAL_SIDES: InternalSideConfig[] = [
   {
     side: "B",
     label: "B팀",
+    emoji: "🔵",
     text: "text-[hsl(var(--info))]",
     border: "border-[hsl(var(--info))]/30",
     bg: "bg-[hsl(var(--info))]/5",
@@ -49,6 +53,7 @@ export const INTERNAL_SIDES: InternalSideConfig[] = [
   {
     side: "C",
     label: "C팀",
+    emoji: "🟢",
     text: "text-[hsl(var(--success))]",
     border: "border-[hsl(var(--success))]/30",
     bg: "bg-[hsl(var(--success))]/5",
@@ -90,3 +95,8 @@ export function nextSide(current: InternalSide, sides: InternalSide[]): Internal
   if (i < 0) return sides[0];
   return sides[(i + 1) % sides.length];
 }
+
+/** 팀별 가벼운 승/무/패 수기 카운트 (matches.internal_team_results JSONB) */
+export interface SideRecord { w: number; d: number; l: number; }
+export type InternalTeamResults = Partial<Record<InternalSide, SideRecord>>;
+export const EMPTY_RECORD: SideRecord = { w: 0, d: 0, l: 0 };
