@@ -12,7 +12,7 @@ type RecentRow = {
   attended: number;
   eligible: number;
   isNew: boolean;
-  /** 경기별 상태 (왼쪽=최신). present=출석, late=지각, absent=결석, pre=합류전 */
+  /** 경기별 상태 (배열 index0=최신, 화면엔 역순으로 그려 오른쪽=최신). present=출석, late=지각, absent=결석, pre=합류전 */
   statuses: ("present" | "late" | "absent" | "pre")[];
 };
 
@@ -115,7 +115,7 @@ export function MatchAttendanceGlanceCard({
               <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[hsl(var(--success))]" />출석</span>
               <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[hsl(var(--warning))]" />지각</span>
               <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full border border-muted-foreground/40" />결석</span>
-              <span className="ml-auto">왼쪽=최신</span>
+              <span className="ml-auto">오른쪽=최신</span>
             </div>
             <div className="mt-2 space-y-1.5">
               {established.map(({ p, r }) => {
@@ -125,7 +125,7 @@ export function MatchAttendanceGlanceCard({
                     <span className="text-foreground/90">{p.name}</span>
                     <span className="flex items-center gap-2">
                       <span className="flex items-center gap-1">
-                        {r.statuses.filter((s) => s !== "pre").map((s, i) => (
+                        {r.statuses.filter((s) => s !== "pre").reverse().map((s, i) => (
                           <span key={i} className={cn("h-2.5 w-2.5 rounded-full", dotClass(s))} />
                         ))}
                       </span>
