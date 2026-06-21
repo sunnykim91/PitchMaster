@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useCallback } from "react";
 import { GA } from "@/lib/analytics";
+import { getKstToday } from "@/lib/kstDate";
 import Image from "next/image";
 import { Camera, FileSpreadsheet, Check, Trash2, X, HelpCircle } from "lucide-react";
 import { OcrScreenshotGuide } from "@/components/OcrScreenshotGuide";
@@ -280,7 +281,7 @@ function DuesBulkTabInner({
     };
     const txs = (json.transactions as Tx[]) ?? [];
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getKstToday();
     const rows: BulkRow[] = [];
     let latestBalance: number | null = null;
 

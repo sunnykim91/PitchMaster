@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { getMatchDetailData } from "@/lib/server/getMatchDetailData";
 import MatchDetailClient from "@/app/(app)/matches/[matchId]/MatchDetailClient";
+import { getKstToday } from "@/lib/kstDate";
 
 export default async function MatchDetailPage({
   params,
@@ -20,7 +21,8 @@ export default async function MatchDetailPage({
   const initialData = await getMatchDetailData(matchId, session.user.teamId!, enableAi, session.user.id);
 
   // 서버에서 "미래 경기" 여부 판단 → 클라이언트 hydration 일치 + LCP 개선
-  const todayIso = new Date().toISOString().slice(0, 10);
+  // KST 기준 — 서버(UTC)에서 new Date().toISOString() 쓰면 KST 00:00~09:00 에 하루 밀림
+  const todayIso = getKstToday();
 
   return (
     <MatchDetailClient

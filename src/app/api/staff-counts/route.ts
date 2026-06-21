@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isStaffOrAbove } from "@/lib/permissions";
-import { getKstToday } from "@/lib/server/autoCompleteMatches";
+import { getKstToday } from "@/lib/kstDate";
 
 /**
  * 햄버거 "빠른 처리" 그룹 badge 카운트 — Phase 4 (68차C).
@@ -23,10 +23,8 @@ export async function GET() {
   if (!db) return apiError("DB not available", 503);
 
   const today = getKstToday();
-  // 7일 가드 — 너무 옛 경기까지 "출석 체크 안 함" 노출하면 의미 없음
-  const sevenDaysAgoDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0];
+  // 7일 가드 — 너무 옛 경기까지 "출석 체크 안 함" 노출하면 의미 없음 (today 와 동일 KST 기준)
+  const sevenDaysAgoDate = getKstToday(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   // 1) 가입 신청 PENDING
   // 2) 미납 벌금 UNPAID — dues_penalties 테이블, status='UNPAID'

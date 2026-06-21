@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getKstToday } from "@/lib/kstDate";
 import {
   getApiContext,
   requireRole,
@@ -172,7 +173,7 @@ async function generatePenalty(db: any, teamId: string, matchId: string, targetU
       .eq("id", matchId)
       .single();
 
-    const matchDate = match?.match_date ?? new Date().toISOString().slice(0, 10);
+    const matchDate = match?.match_date ?? getKstToday();
     const opponent = match?.opponent_name ?? "경기";
     const label = triggerType === "LATE" ? "지각" : "불참";
 

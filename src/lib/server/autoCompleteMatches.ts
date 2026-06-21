@@ -2,24 +2,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { invalidateSignaturesForMatches } from "@/lib/server/aiSignatureInvalidate";
 import { processMatchCompletedPush } from "@/lib/server/processMatchCompletedPush";
 import { invalidateTeamStats } from "@/lib/server/aiTeamStats";
+import { getKstNow, getKstToday, getKstTimeOfDay } from "@/lib/kstDate";
 
-/**
- * KST 기준 현재 시각 계산.
- * 서버가 어떤 타임존에서 돌든 KST(UTC+9)의 "오늘" 과 "지금"을 얻기 위한 유틸.
- */
-export function getKstNow(nowMs: number = Date.now()): Date {
-  return new Date(nowMs + 9 * 60 * 60 * 1000);
-}
-
-/** 'YYYY-MM-DD' 형식의 KST 오늘 날짜 */
-export function getKstToday(nowMs: number = Date.now()): string {
-  return getKstNow(nowMs).toISOString().split("T")[0];
-}
-
-/** 'HH:MM:SS' 형식의 KST 현재 시각 */
-export function getKstTimeOfDay(nowMs: number = Date.now()): string {
-  return getKstNow(nowMs).toISOString().split("T")[1].slice(0, 8);
-}
+// KST 날짜·시각 헬퍼는 @/lib/kstDate 로 통합 (서버·클라 단일 source).
+// 기존 importer(getDashboardData·staff-counts·테스트) 호환 위해 re-export.
+export { getKstNow, getKstToday, getKstTimeOfDay };
 
 /**
  * 자동 완료 판정 — 주어진 경기 한 건이 "이미 끝난 경기" 인지 KST 기준으로 판단.

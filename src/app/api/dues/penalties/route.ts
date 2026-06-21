@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess, requireRole } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
+import { getKstToday } from "@/lib/kstDate";
 
 /** 벌금 기록 조회 */
 export async function GET(request: NextRequest) {
@@ -63,7 +64,7 @@ export async function PUT(request: NextRequest) {
   if (!db) return apiError("Database not available", 503);
 
   const updates: Record<string, unknown> = { status, is_paid: status === "PAID" };
-  if (status === "PAID") updates.date = new Date().toISOString().slice(0, 10);
+  if (status === "PAID") updates.date = getKstToday();
 
   const { data, error } = await db
     .from("penalty_records")
@@ -129,7 +130,7 @@ export async function POST(request: NextRequest) {
         rule_id: null,
         match_id: null,
         amount: amt,
-        date: new Date().toISOString().slice(0, 10),
+        date: getKstToday(),
         note: note || "수동 추가",
         status: "UNPAID",
         is_paid: false,

@@ -13,6 +13,7 @@ import type { Role, SportType } from "@/lib/types";
 import { GA } from "@/lib/analytics";
 import { SPORT_DEFAULTS } from "@/lib/types";
 import { cn, formatTime, formatDateTime, formatMatchDate } from "@/lib/utils";
+import { getKstToday } from "@/lib/kstDate";
 import { sideConfig } from "@/lib/internalSides";
 import type { InternalSide } from "@/lib/internalSides";
 import { voteStyles } from "@/lib/voteStyles";
@@ -99,7 +100,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   const [now, setNow] = useState<number>(0);
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setNow(Date.now()); }, []);
-  const today = now ? new Date(now).toISOString().split("T")[0] : "";
+  const today = now ? getKstToday(now) : "";
   const [matchDate, setMatchDate] = useState(today);
   // today가 설정되면 matchDate 동기화
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -215,7 +216,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     searchParams.get("previewEmpty") === "1" && userId === DESIGN_PREVIEW_USER_ID;
 
   const sortedMatches = useMemo(() => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = getKstToday();
     return [...matches].sort((a, b) => {
       const aIsPast = a.date < today || a.status === "COMPLETED";
       const bIsPast = b.date < today || b.status === "COMPLETED";
@@ -230,7 +231,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
 
   // 시안 카드용 — 다가오는·지난 분리 (sortedMatches에서 derive)
   const { upcomingMatches, pastMatches } = useMemo(() => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = getKstToday();
     const upcoming: Match[] = [];
     const past: Match[] = [];
     for (const m of sortedMatches) {

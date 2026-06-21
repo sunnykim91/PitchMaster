@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Plus, X, UserX, Link2 } from "lucide-react";
 import { useAsyncAction } from "@/lib/useAsyncAction";
+import { getKstToday } from "@/lib/kstDate";
 import PrepaymentLinkModal from "./PrepaymentLinkModal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -720,7 +721,7 @@ function MemberExemptionSection({
   const [memberId, setMemberId] = useState("");
   const [exemptionType, setExemptionType] = useState<ExemptionType>("EXEMPT");
   const [reason, setReason] = useState("");
-  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
+  const [startDate, setStartDate] = useState(getKstToday());
   const [endDate, setEndDate] = useState("");
   // PREPAID 전용
   const [periodMonths, setPeriodMonths] = useState<3 | 6 | 12>(6);
@@ -736,7 +737,7 @@ function MemberExemptionSection({
     setMemberId("");
     setExemptionType("EXEMPT");
     setReason("");
-    setStartDate(new Date().toISOString().slice(0, 10));
+    setStartDate(getKstToday());
     setEndDate("");
     setPeriodMonths(6);
     setStartMonth(nextMonthFirstISO());
@@ -816,7 +817,7 @@ function MemberExemptionSection({
     if (!ok) return;
     await runAction(async () => {
       await apiMutate("/api/dues/member-status", "PUT", { id });
-      setExemptions((prev) => prev.map((e) => e.id === id ? { ...e, is_active: false, end_date: new Date().toISOString().slice(0, 10) } : e));
+      setExemptions((prev) => prev.map((e) => e.id === id ? { ...e, is_active: false, end_date: getKstToday() } : e));
       refetchPaymentStatus?.();
     });
   }

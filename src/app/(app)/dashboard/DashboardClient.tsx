@@ -10,6 +10,7 @@ import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role } from "@/lib/types";
 import { cn, formatTime, formatDateKo, compactKakaoImage } from "@/lib/utils";
+import { getKstNow } from "@/lib/kstDate";
 import { toKoreanError } from "@/lib/errorMessages";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -334,10 +335,11 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
   const upcomingTypeMeta = MATCH_TYPE_META[upcomingType];
 
   // 인사 sub 라벨 + 요일 chip
-  const todayDate = new Date();
+  // KST 기준 — UTC toISOString 을 쓰면 KST 00:00~09:00 에 날짜와 요일이 어긋남
+  const todayDate = getKstNow();
   const todayStr = todayDate.toISOString().slice(0, 10);
   const dayShortNames = ["일", "월", "화", "수", "목", "금", "토"];
-  const todayDayShort = dayShortNames[todayDate.getDay()];
+  const todayDayShort = dayShortNames[todayDate.getUTCDay()];
   const greetMeta = `${formatDateKo(todayStr)}${teamName ? ` · ${teamName}` : ""}${recordTotal > 0 ? ` · 시즌 ${recordTotal}경기째` : ""}`;
   const upcomingRelLabel = upcomingMatch ? relativeDayLabel(upcomingMatch.match_date) : "";
 

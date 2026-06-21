@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useCallback } from "react";
 import { GA } from "@/lib/analytics";
+import { getKstToday } from "@/lib/kstDate";
 import { EmptyState } from "@/components/EmptyState";
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Receipt, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -394,7 +395,7 @@ function DuesRecordsTabInner({
                         name="recordedAt"
                         type="date"
                         required
-                        defaultValue={new Date().toISOString().slice(0, 10)}
+                        defaultValue={getKstToday()}
                         className={cn(
                           "h-10 rounded-lg bg-secondary border-0",
                           formErrors.recordedAt && "border border-destructive"
