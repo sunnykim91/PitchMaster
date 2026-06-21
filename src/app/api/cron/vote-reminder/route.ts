@@ -18,8 +18,12 @@ export async function GET(request: NextRequest) {
   const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
   const tomorrow = new Date(kstNow);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStart = tomorrow.toISOString().split("T")[0] + "T00:00:00";
-  const tomorrowEnd = tomorrow.toISOString().split("T")[0] + "T23:59:59";
+  const tomorrowDate = tomorrow.toISOString().split("T")[0]; // KST 기준 내일 (YYYY-MM-DD)
+  // vote_deadline 은 timestamptz — 경계에 +09:00 오프셋을 명시하지 않으면
+  // Postgres 가 KST 의도 문자열을 UTC 로 해석해 비교창이 9시간 어긋난다.
+  // (KST 00:00~09:00 마감이면 리마인더가 하루 일찍 발송되던 버그)
+  const tomorrowStart = `${tomorrowDate}T00:00:00+09:00`;
+  const tomorrowEnd = `${tomorrowDate}T23:59:59+09:00`;
 
   // 1) 내일 마감인 경기 (vote_deadline 기준)
   const { data: deadlineMatches } = await db
@@ -30,7 +34,7 @@ export async function GET(request: NextRequest) {
     .lte("vote_deadline", tomorrowEnd);
 
   // 2) 마감일 미설정이지만 내일 경기인 경우 (경기 전날 = 오늘 리마인드)
-  const tomorrowDate = tomorrow.toISOString().split("T")[0];
+  // match_date 는 date 컬럼이라 타임존 영향 없음 — KST 내일 날짜로 그대로 비교
   const { data: noDeadlineMatches } = await db
     .from("matches")
     .select("id, team_id, match_date, opponent_name, vote_deadline, match_type")
