@@ -3,7 +3,7 @@
 /**
  * MoreFeaturesSection — "이것만이 아닙니다"
  *
- * 핵심 3개(투표·회비·전술) 외 보조 기능 10개를 4-column 그리드로 가볍게 어필.
+ * 핵심 3개(투표·회비·전술) 외 보조 기능들을 4-column 그리드로 가볍게 어필.
  * 다크 베이스 + 코랄 시그너처, framer-motion stagger reveal.
  */
 
@@ -23,6 +23,11 @@ import {
   Film,
   Cake,
   UserPlus,
+  Shirt,
+  Shuffle,
+  Images,
+  CalendarCheck,
+  Handshake,
 } from "lucide-react";
 
 type Tone = "primary" | "info" | "accent" | "warning";
@@ -46,6 +51,11 @@ const FEATURES: Array<{
   { Icon: PieChart,     label: "월별 결산 리포트",     desc: "회비 수입·지출 자동 집계, 카드 이미지 공유",     tone: "info" },
   { Icon: Goal,         label: "풋살 지원",            desc: "주로 5·6인제 — 포지션·전술판·역할 가이드 별도",  tone: "accent" },
   { Icon: Cake,         label: "생일 축하 카드",       desc: "팀원 생일이면 대시보드 맨 위에 자동 축하 카드", tone: "accent" },
+  { Icon: Shirt,        label: "유니폼 설정",          desc: "홈·원정·써드 저지 색상·패턴, 경기마다 자동 표시", tone: "info" },
+  { Icon: Shuffle,      label: "자체전(홍백전)",       desc: "내부 경기를 2~3팀(A·B·C)으로 나눠 편성·점수·기록", tone: "primary" },
+  { Icon: Images,       label: "팀 앨범",              desc: "경기 사진을 게시판 앨범에 모아 팀원과 공유",      tone: "accent" },
+  { Icon: CalendarCheck, label: "최근 출석 한눈에",     desc: "스쿼드 짤 때 누가 요즘 잘 나오는지 참석 흐름 표시", tone: "warning" },
+  { Icon: Handshake,    label: "선수 궁합 분석",       desc: "같이 뛴 선수 페어별 승률·시너지 자동 집계",        tone: "info" },
 ];
 
 const TONE_FG: Record<Tone, string> = {

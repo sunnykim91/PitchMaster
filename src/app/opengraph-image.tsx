@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "PitchMaster — 조기축구 · 풋살 팀 관리 플랫폼";
+export const alt = "피치마스터 PitchMaster — 조기축구 · 풋살 팀 관리";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -86,7 +86,7 @@ export default function OgImage() {
             marginBottom: 20,
           }}
         >
-          PitchMaster
+          피치마스터 PitchMaster
         </div>
 
         {/* 메인 타이틀 */}
@@ -160,7 +160,7 @@ export default function OgImage() {
         >
           <span style={{ display: "flex" }}>pitch-master.app</span>
           <span style={{ display: "flex" }}>·</span>
-          <span style={{ display: "flex" }}>80+ 팀이 사용 중</span>
+          <span style={{ display: "flex" }}>130+ 팀이 사용 중</span>
         </div>
       </div>
     ),

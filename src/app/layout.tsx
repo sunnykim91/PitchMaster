@@ -26,7 +26,7 @@ const bebasNeue = Bebas_Neue({
 export const metadata: Metadata = {
   // SEO: 한글 핵심 키워드(조기축구·풋살 팀 관리 앱)를 prefix 로 두어 네이버 검색결과
   // 첫 단어 매칭 후크 강화. 영어 브랜드명은 suffix 로 이동 (조기싸커 1위 패턴 차용).
-  title: "조기축구·풋살 팀 관리 앱 — 회비·출석·전술판 무료 | PitchMaster",
+  title: "조기축구·풋살 팀 관리 앱 — 회비·출석·전술판 무료 | 피치마스터 PitchMaster",
   // 사실 검증된 기능만 사용: 통장 캡처 OCR (aiOcrParse), 휴면 자동 면제 (member_status),
   // 미투표 벌금 (no-vote-penalty cron). "단톡방 대신" painPoint 우선 노출.
   description: "조기축구·풋살 팀 무료 관리 앱. 카카오톡 단톡방 대신 출석·회비·전술판·시즌 통계를 한 곳에서. 통장 캡처 OCR 회비 정리, 휴면 자동 면제, 미투표 벌금 자동 청구까지.",
@@ -60,16 +60,16 @@ export const metadata: Metadata = {
     title: "PitchMaster",
   },
   openGraph: {
-    title: "조기축구·풋살 팀 관리 앱 — 회비·출석·전술판 무료 | PitchMaster",
+    title: "조기축구·풋살 팀 관리 앱 — 회비·출석·전술판 무료 | 피치마스터 PitchMaster",
     description: "조기축구·풋살 팀 무료 관리 앱. 카카오톡 단톡방 대신 출석·회비·전술판·시즌 통계를 한 곳에서. 통장 캡처 OCR 회비 정리, 휴면 자동 면제까지.",
     url: "https://pitch-master.app",
-    siteName: "PitchMaster",
+    siteName: "피치마스터 PitchMaster",
     locale: "ko_KR",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "조기축구·풋살 팀 관리 앱 — 무료 | PitchMaster",
+    title: "조기축구·풋살 팀 관리 앱 — 무료 | 피치마스터 PitchMaster",
     description: "카카오톡 단톡방 대신 출석·회비·전술판을 한 곳에서. 통장 캡처 OCR, 휴면 자동 면제, 미투표 벌금 자동까지.",
   },
   robots: {
@@ -109,7 +109,7 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
-              "name": "PitchMaster",
+              "name": "피치마스터 PitchMaster",
               "applicationCategory": "SportsApplication",
               "operatingSystem": "Android, Web",
               "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" },
@@ -141,7 +141,9 @@ export default function RootLayout({
                 { "@type": "Question", "name": "여러 팀을 동시에 운영할 수 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "한 카카오 계정으로 여러 팀을 만들고 전환할 수 있습니다. 회장이 두 팀 운영하는 경우도 흔해서 초기부터 지원합니다." } },
                 { "@type": "Question", "name": "안드로이드(갤럭시) 앱이 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "네, Google Play 스토어에 정식 출시됐습니다. '피치마스터'를 검색하거나 스토어 링크로 설치하면 홈 화면 아이콘으로 바로 실행할 수 있습니다. 아이폰은 아직 별도 앱이 없지만, 사파리에서 '홈 화면에 추가'를 하면 앱처럼 사용할 수 있습니다. 어느 쪽이든 카카오 로그인이 같아 데이터는 그대로 유지됩니다." } },
                 { "@type": "Question", "name": "PC에서도 쓸 수 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "PC는 브라우저로 바로 쓸 수 있고, 휴대폰은 앱으로도 쓸 수 있습니다. 안드로이드(갤럭시 등)는 Google Play에서 '피치마스터'를 설치하면 되고, 아이폰은 홈 화면에 추가하면 앱처럼 사용됩니다. 어느 쪽이든 같은 계정·데이터로 이어집니다." } },
-                { "@type": "Question", "name": "우리 팀 데이터는 안전한가요?", "acceptedAnswer": { "@type": "Answer", "text": "출석·회비·경기 기록은 한국 서울 리전에 암호화되어 보관되고, 권한이 있는 운영진만 접근할 수 있습니다. 카카오 로그인만 사용해 별도 비밀번호는 저장하지 않습니다. 월별 결산은 PDF·이미지로 저장해 앱과 별개로도 기록을 남길 수 있습니다." } }
+                { "@type": "Question", "name": "우리 팀 데이터는 안전한가요?", "acceptedAnswer": { "@type": "Answer", "text": "출석·회비·경기 기록은 한국 서울 리전에 암호화되어 보관되고, 권한이 있는 운영진만 접근할 수 있습니다. 카카오 로그인만 사용해 별도 비밀번호는 저장하지 않습니다. 월별 결산은 PDF·이미지로 저장해 앱과 별개로도 기록을 남길 수 있습니다." } },
+                { "@type": "Question", "name": "팀 내부 자체전(홍백전)도 기록되나요?", "acceptedAnswer": { "@type": "Answer", "text": "네, 자체전은 인원을 2~3팀(A·B·C)으로 나눠 편성하고 팀별 점수와 개인 기록까지 남길 수 있습니다. 자체전 기록은 상대팀 전적과 분리되어 집계됩니다." } },
+                { "@type": "Question", "name": "경기 사진을 모아둘 수 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "네, 경기마다 사진을 올리면 게시판 앨범 탭에 자동으로 모여 팀원 누구나 지난 경기 사진을 한곳에서 볼 수 있습니다." } }
               ]
             })
           }}

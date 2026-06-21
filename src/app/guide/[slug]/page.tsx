@@ -147,12 +147,22 @@ export default async function GuidePostPage({ params }: Props) {
               회비 OCR · 출석 투표 · AI 자동 라인업 · 전술판 · 경기 기록 — 130여 팀이 무료로
               사용합니다.
             </p>
-            <Link
-              href="/login"
-              className="mt-3 inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-            >
-              PitchMaster 무료로 시작
-            </Link>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                피치마스터 무료로 시작
+              </Link>
+              <a
+                href="https://play.google.com/store/apps/details?id=app.pitchmaster"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-xl border border-border/60 px-4 py-2 text-sm font-semibold text-foreground hover:bg-secondary/40 transition-colors"
+              >
+                Google Play에서 ‘피치마스터’ 설치
+              </a>
+            </div>
           </div>
         </footer>
       </div>

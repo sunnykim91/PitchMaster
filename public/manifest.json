@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "PitchMaster - 조기축구 팀 관리",
-  "short_name": "PitchMaster",
+  "name": "피치마스터 - 조기축구·풋살 팀 관리",
+  "short_name": "피치마스터",
   "description": "참석투표, 회비관리, 전술판, 경기기록까지 — 조기축구·풋살 팀 운영 올인원 앱",
   "start_url": "/dashboard",
   "display": "standalone",
