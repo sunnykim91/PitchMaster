@@ -33,7 +33,9 @@ export default function FooterSection() {
           <span>·</span>
           <a href="/terms" className="transition hover:text-foreground">이용약관</a>
           <span>·</span>
-          <a href="/guide" className="transition hover:text-foreground">시작 가이드</a>
+          <a href="/help" className="transition hover:text-foreground">사용 가이드</a>
+          <span>·</span>
+          <a href="/guide" className="transition hover:text-foreground">운영 노하우</a>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Shield className="h-3.5 w-3.5 text-[hsl(var(--success))]" />
