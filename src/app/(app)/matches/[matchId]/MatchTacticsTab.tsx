@@ -38,6 +38,7 @@ import { PairSynergyHint } from "@/components/PairSynergyHint";
 import { AiCoachAnalysisCard } from "@/components/AiCoachAnalysisCard";
 import { MatchAttendanceGlanceCard } from "@/components/MatchAttendanceGlanceCard";
 import { MatchRoleGuide } from "@/components/MatchRoleGuide";
+import { KeeperRotationCard } from "@/components/KeeperRotationCard";
 
 export interface MatchTacticsTabProps {
   matchId: string;
@@ -840,6 +841,20 @@ function MatchTacticsTabInner({
       {canManage && (
         <div style={{ order: 5 }}>
           <MatchAttendanceGlanceCard matchId={matchId} attendingPlayers={attendingPlayers} />
+        </div>
+      )}
+
+      {/* 풋살 키퍼·교대 순번 룰렛 — 전원 조회, 배정은 STAFF+ (풋살 전용) */}
+      {sportType === "FUTSAL" && (
+        <div style={{ order: 6 }}>
+          <KeeperRotationCard
+            matchId={matchId}
+            attendingPlayers={attendingPlayers}
+            guests={(guests ?? []).map((g) => ({ id: g.id, name: g.name }))}
+            isInternal={isInternal}
+            internalTeams={internalTeams}
+            canManage={canManage}
+          />
         </div>
       )}
 
