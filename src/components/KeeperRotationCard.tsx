@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Dices, Copy, Check, Info } from "lucide-react";
+import { Dices, Copy, Check, Info, Pencil } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { AttendingPlayer } from "@/components/AutoFormationBuilder";
@@ -11,10 +11,10 @@ import { INTERNAL_SIDES } from "@/lib/internalSides";
 /**
  * 풋살 키퍼·교대 순번 카드 ("번호 뽑기") — 전술 탭, 풋살 전용.
  *
- * 풋살은 실점 시 키퍼 교체 + 쿼터 쉬는 순서를 즉석 뽑은 번호로 돌리는 팀이 많다.
- * 각 팀(자체전 A/B/C) 또는 참석 인원 전체에 1~N 랜덤 번호를 공정 배정·공유한다.
+ * 각 팀(자체전 A/B/C) 또는 참석 인원 전체에 1~N 랜덤 번호를 공정 배정하고,
+ * 그 번호로 (1) 골키퍼 순서 (2) 쿼터별 쉬는 사람까지 자동 계산해 보여준다.
  *
- * - 고정 키퍼(필드 안 뜀)는 번호에서 제외. 선호 포지션이 GK '단독'인 선수는 자동 후보(탭으로 해제 가능).
+ * - 고정 키퍼(필드 안 뜀)는 번호 풀에서 제외. 선호 포지션이 GK '단독'이면 자동 후보(✎로 변경).
  * - 배정·재추첨은 STAFF+(canManage), 조회는 전원.
  * - 저장: /api/keeper-rotation (matches.keeper_rotation JSONB). 전술판 배치와는 독립.
  */
@@ -53,7 +53,7 @@ function shuffle<T>(arr: T[]): T[] {
 /**
  * 코트 인원 회전 — 매 쿼터 벤치(쉬는) 인원이 restCount 칸씩 원형으로 돈다.
  * 각 쿼터의 '쉬는' pool 인덱스(0-based) 배열을 반환. 쿼터 수만큼 wrap 하며 확장.
- * 예: poolLen 8, restCount 2 → Q1 [6,7] Q2 [4,5] Q3 [2,3] Q4 [0,1] (= 쉬는 ⑦⑧ → ⑤⑥ → ③④ → ①②)
+ * 예: poolLen 8, restCount 2 → Q1 [6,7] Q2 [4,5] Q3 [2,3] Q4 [0,1]
  */
 function restSchedule(poolLen: number, restCount: number, quarters: number): number[][] {
   const out: number[][] = [];
@@ -149,6 +149,16 @@ export function KeeperRotationCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId]);
 
+  const court = Math.max(1, courtSize ?? 6);
+  const quarters = Math.max(1, quarterCount ?? 8);
+
+  /** 그룹의 쿼터별 '쉬는' 인덱스 스케줄 (고정 키퍼는 골문 차지 → 필드 슬롯만 회전) */
+  function scheduleFor(ordered: string[], keeperCount: number): number[][] {
+    const effCourt = Math.max(1, court - keeperCount);
+    const restCount = ordered.length > 0 ? Math.max(0, ordered.length - effCourt) : 0;
+    return restCount > 0 ? restSchedule(ordered.length, restCount, quarters) : [];
+  }
+
   async function persist(keeperIds: string[], grps: Record<string, string[]>) {
     if (!canManage) return;
     setSaving(true);
@@ -190,10 +200,14 @@ export function KeeperRotationCard({
   function buildShareText(): string {
     const lines: string[] = ["⚽ 키퍼·교대 순번"];
     for (const g of groups) {
+      const ordered = order[g.key] ?? [];
       if (groups.length > 1) lines.push(`\n[${g.label}]`);
       const kps = g.players.filter((p) => keepers.has(p.id));
-      if (kps.length) lines.push(`🧤 고정 키퍼: ${kps.map((p) => p.name).join(", ")}`);
-      (order[g.key] ?? []).forEach((id, i) => lines.push(`${i + 1}. ${nameOf.get(id) ?? "?"}`));
+      if (kps.length) lines.push(`🧤 키퍼 ${kps.map((p) => p.name).join("·")} 고정`);
+      else if (ordered.length) lines.push(`🧤 골키퍼: ${ordered.map((id) => nameOf.get(id) ?? "?").join(" → ")} (실점 시 다음)`);
+      if (ordered.length) lines.push("번호 " + ordered.map((id, i) => `${i + 1}.${nameOf.get(id) ?? "?"}`).join("  "));
+      const sch = scheduleFor(ordered, kps.length);
+      sch.forEach((b, qi) => lines.push(`${qi + 1}Q 쉬는 ${b.map((idx) => nameOf.get(ordered[idx]) ?? "?").join("·")}`));
     }
     return lines.join("\n");
   }
@@ -213,7 +227,6 @@ export function KeeperRotationCard({
   const totalPlayers = groups.reduce((s, g) => s + g.players.length, 0);
   const hasOrder = Object.values(order).some((arr) => arr.length > 0);
 
-  // 자체전인데 팀 미편성
   if (isInternal && (!internalTeams || internalTeams.length === 0)) {
     return (
       <Card className="rounded-xl border-border/30">
@@ -242,16 +255,19 @@ export function KeeperRotationCard({
             이게 뭐예요?
           </button>
         </div>
-        <p className="mt-1 text-xs text-muted-foreground">실점 시 키퍼 바꾸고, 쉬는 순서도 번호대로 — 공정하게 뽑아요.</p>
+        <p className="mt-1 text-xs text-muted-foreground">풋살 골키퍼·쉬는 순서를 번호로 공정하게 정해요.</p>
 
         {showHelp && (
           <div className="mt-2 space-y-1 rounded-lg bg-secondary/40 p-3 text-xs leading-relaxed text-muted-foreground">
-            <p>• 풋살은 실점하면 키퍼를 다음 사람으로 바꾸고, 쉬는 순서도 정하죠. 매번 제비뽑기하던 걸 앱이 공정하게 번호로 뽑아줘요.</p>
+            <p>• 번호 뽑기를 누르면 각자 1~N 번호를 받아요. 이 번호로 골키퍼와 쉬는 순서를 같이 정합니다.</p>
             <p>
-              • <b className="text-foreground">1번이 첫 키퍼</b>, 실점하면 다음 번호. 쉬는 사람은 쿼터마다 번호 순서로 돌아가요 (아래 교대표).
+              • <b className="text-foreground">골키퍼</b>는 1번부터, 실점하면 다음 번호로 교체.
             </p>
             <p>
-              • 한 명이 <b className="text-foreground">계속 키퍼만</b> 한다면(고정 키퍼) 그 사람은 빼고 나머지 번호를 뽑아요. (선호 포지션이 GK만인 선수는 자동으로 잡혀요)
+              • <b className="text-foreground">쉬는 사람</b>은 쿼터마다 뒷번호부터 돌아가요. (아래 "쿼터별 쉬는 사람" 표가 자동으로 나옵니다)
+            </p>
+            <p>
+              • 계속 <b className="text-foreground">키퍼만</b> 하는 사람(필드 안 뜀)이 있으면 ✎로 지정 → 그 사람 빼고 번호를 뽑아요. (선호 포지션 GK만인 선수는 자동)
             </p>
           </div>
         )}
@@ -288,8 +304,8 @@ export function KeeperRotationCard({
         {!hasOrder && (
           <p className="mt-2 text-xs text-muted-foreground">
             {canManage
-              ? "🎲 번호 뽑기를 누르면 팀별로 키퍼·교대 순번이 정해져요."
-              : "아직 순번이 정해지지 않았어요. 운영진이 정하면 표시됩니다."}
+              ? "🎲 번호 뽑기를 누르면 각자 번호 + 쿼터별 쉬는 사람까지 자동으로 정해져요."
+              : "아직 번호가 정해지지 않았어요. 운영진이 정하면 표시됩니다."}
           </p>
         )}
 
@@ -298,81 +314,69 @@ export function KeeperRotationCard({
           {groups.map((g) => {
             const keeperPlayers = g.players.filter((p) => keepers.has(p.id));
             const ordered = order[g.key] ?? [];
-            const showHeader = groups.length > 1 || keeperPlayers.length > 0;
-            const court = Math.max(1, courtSize ?? 6);
-            const quarters = Math.max(1, quarterCount ?? 8);
-            const effCourt = Math.max(1, court - keeperPlayers.length); // 고정 키퍼는 골문 차지 → 필드 슬롯만 회전
-            const restCount = ordered.length > 0 ? Math.max(0, ordered.length - effCourt) : 0;
-            const schedule = restCount > 0 ? restSchedule(ordered.length, restCount, quarters) : [];
+            const schedule = scheduleFor(ordered, keeperPlayers.length);
             return (
               <div key={g.key} className="py-3 first:pt-2">
-                {showHeader && (
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    {groups.length > 1 && (
-                      <span className={cn("text-sm font-bold", g.cfg?.text ?? "text-foreground")}>
-                        {g.cfg?.emoji} {g.label}
+                {groups.length > 1 && (
+                  <p className={cn("text-sm font-bold", g.cfg?.text ?? "text-foreground")}>
+                    {g.cfg?.emoji} {g.label}
+                  </p>
+                )}
+
+                {/* 각자 번호 (번호+이름 칩) */}
+                {ordered.length > 0 && (
+                  <div className={cn("flex flex-wrap gap-1.5", groups.length > 1 && "mt-1.5")}>
+                    {ordered.map((id, i) => (
+                      <span
+                        key={id}
+                        className="inline-flex items-center gap-1 rounded-full border border-border/60 py-0.5 pl-1 pr-2 text-xs"
+                      >
+                        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold tabular-nums text-primary">
+                          {i + 1}
+                        </span>
+                        <span className="text-foreground/90">{nameOf.get(id) ?? "?"}</span>
                       </span>
-                    )}
-                    {keeperPlayers.length > 0 && (
-                      <span className="text-xs text-muted-foreground">
-                        🧤 고정 키퍼 <b className="text-foreground/90">{keeperPlayers.map((p) => p.name).join(", ")}</b>
-                      </span>
-                    )}
+                    ))}
                   </div>
                 )}
 
-                {ordered.length > 0 && (
-                  <>
-                    <ol className="mt-2 space-y-1">
-                      {ordered.map((id, i) => (
-                        <li key={id} className="flex items-center gap-2 text-sm">
-                          <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold tabular-nums text-primary">
-                            {i + 1}
-                          </span>
-                          <span className="text-foreground/90">{nameOf.get(id) ?? "?"}</span>
-                        </li>
-                      ))}
-                    </ol>
-                    <p className="mt-1.5 text-[11px] text-muted-foreground">
-                      {keeperPlayers.length > 0
-                        ? `🧤 키퍼 ${keeperPlayers.map((p) => p.name).join("·")} 고정 · 번호는 필드 교대 순서`
-                        : "🧤 키퍼는 뛰는 사람 중 1번부터 · 실점하면 다음 번호로"}
-                    </p>
-                    {schedule.length > 0 ? (
-                      <div className="mt-2 rounded-lg bg-secondary/30 p-2">
-                        <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">
-                          쿼터별 쉬는 번호 · 코트 {court}명{keeperPlayers.length > 0 ? " (키퍼 고정)" : ""}
-                        </p>
-                        <div className="grid grid-cols-2 gap-x-3 gap-y-1 sm:grid-cols-4">
-                          {schedule.map((bench, qi) => (
-                            <div key={qi} className="flex items-center gap-1 text-xs">
-                              <span className="w-6 shrink-0 text-muted-foreground">Q{qi + 1}</span>
-                              {bench.map((idx) => (
-                                <span
-                                  key={idx}
-                                  className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-secondary text-[10px] font-bold text-muted-foreground"
-                                >
-                                  {idx + 1}
-                                </span>
-                              ))}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="mt-1 text-[11px] text-muted-foreground/80">전원 출전 · 쉬는 사람 없음</p>
-                    )}
-                  </>
+                {/* 골키퍼 안내 한 줄 */}
+                {(ordered.length > 0 || keeperPlayers.length > 0) && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {keeperPlayers.length > 0
+                      ? `🧤 키퍼 ${keeperPlayers.map((p) => p.name).join("·")} 고정${ordered.length > 0 ? " · 위 번호는 필드 교대" : ""}`
+                      : "🧤 골키퍼는 1번부터, 실점하면 다음 번호"}
+                  </p>
                 )}
 
+                {/* 쿼터별 쉬는 사람 (이름) */}
+                {ordered.length > 0 &&
+                  (schedule.length > 0 ? (
+                    <div className="mt-2 rounded-lg bg-secondary/30 p-2.5">
+                      <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">💺 쿼터별 쉬는 사람 · 코트 {court}명</p>
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                        {schedule.map((bench, qi) => (
+                          <div key={qi} className="flex items-start gap-1.5 text-xs">
+                            <span className="shrink-0 font-semibold text-muted-foreground">{qi + 1}Q</span>
+                            <span className="text-foreground/80">
+                              {bench.map((idx) => nameOf.get(ordered[idx]) ?? "?").join(" · ")}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-1.5 text-[11px] text-muted-foreground/80">전원 출전 · 쉬는 사람 없음</p>
+                  ))}
+
+                {/* 키퍼 지정 변경 (작게, 접힘) */}
                 {canManage && (
                   <details className="mt-2">
-                    <summary className="cursor-pointer text-xs text-muted-foreground transition-colors hover:text-foreground">
-                      키퍼 바꾸기
+                    <summary className="inline-flex cursor-pointer items-center gap-1 text-[11px] text-muted-foreground/80 transition-colors hover:text-foreground">
+                      <Pencil className="h-3 w-3" />
+                      키퍼 지정 바꾸기
                     </summary>
-                    <p className="mt-1 text-[11px] text-muted-foreground/80">
-                      계속 키퍼만 하고 필드는 안 뛰는 사람을 골라주세요. 나머지는 번호로 돌아갑니다.
-                    </p>
+                    <p className="mt-1 text-[11px] text-muted-foreground/70">계속 키퍼만 하고 필드는 안 뛰는 사람을 골라주세요. 나머지는 번호로 돌아갑니다.</p>
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
                       {g.players.map((p) => {
                         const on = keepers.has(p.id);
