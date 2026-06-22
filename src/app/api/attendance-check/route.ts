@@ -128,7 +128,8 @@ async function generatePenalty(db: any, teamId: string, matchId: string, targetU
       .maybeSingle();
     if (!memberRow || memberRow.status !== "ACTIVE") return;
 
-    // 면제/휴회/부상 회원이면 벌금 생성 안 함.
+    // 휴회(LEAVE)·부상(INJURED) 면제만 벌금 제외 (정책 2026-06-22).
+    // 선납·키퍼·직책(EXEMPT/PREPAID)은 회비만 면제일 뿐 지각·노쇼 벌금은 부과.
     // member_dues_exemptions.member_id 는 team_members.id (penalty_records 와 달리 users.id 아님).
     const { data: exemption } = await db
       .from("member_dues_exemptions")
@@ -136,6 +137,7 @@ async function generatePenalty(db: any, teamId: string, matchId: string, targetU
       .eq("team_id", teamId)
       .eq("member_id", memberRow.id)
       .eq("is_active", true)
+      .in("exemption_type", ["LEAVE", "INJURED"])
       .limit(1)
       .maybeSingle();
     if (exemption) return;
@@ -188,7 +190,11 @@ async function generatePenalty(db: any, teamId: string, matchId: string, targetU
       status: "UNPAID",
       is_paid: false,
     });
-  } catch {
-    // 벌금 생성 실패해도 출석 체크는 성공으로 처리
+  } catch (e) {
+    // 벌금 생성 실패해도 출석 체크는 성공으로 처리 — 단 조용히 삼키지 말고 흔적은 남긴다
+    console.error(
+      `[attendance-check] 벌금 자동생성 실패 (match ${matchId}, user ${targetUserId}, ${status}):`,
+      e instanceof Error ? e.message : e,
+    );
   }
 }

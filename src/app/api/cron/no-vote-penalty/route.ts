@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getActiveExemptions } from "@/lib/server/getActiveExemptions";
+import { getPenaltyExemptUserIds } from "@/lib/server/getPenaltyExemptUserIds";
 
 /**
  * 미투표 벌금 자동 생성 크론 (매일 KST 23:00 실행)
@@ -82,8 +83,10 @@ export async function GET(request: NextRequest) {
 
   // 3. 경기별 미투표자 벌금 생성
   let totalCreated = 0;
-  // 같은 팀이 같은 날 여러 경기면 getActiveExemptions 반복 호출 → 팀별 1회 캐싱 (86차 perf)
+  // 같은 팀이 같은 날 여러 경기면 면제 조회 반복 호출 → 팀별 1회 캐싱 (86차 perf)
   const exemptionsByTeam = new Map<string, Awaited<ReturnType<typeof getActiveExemptions>>>();
+  // 휴회(LEAVE)·부상(INJURED) 회비면제 회원도 미투표 벌금 제외 (정책 2026-06-22, 팀별 캐싱)
+  const penaltyExemptByTeam = new Map<string, Set<string>>();
 
   for (const match of matches) {
     const rule = teamRuleMap.get(match.team_id);
@@ -100,13 +103,21 @@ export async function GET(request: NextRequest) {
     const allUserIdsRaw = (members ?? []).map((m) => m.user_id).filter(Boolean) as string[];
     if (allUserIdsRaw.length === 0) continue;
 
-    // 면제/휴회/부상 회원 제외 (팀별 1회만 조회)
+    // 휴면(DORMANT) 회원 제외 (팀별 1회만 조회)
     let exemptions = exemptionsByTeam.get(match.team_id);
     if (!exemptions) {
       exemptions = await getActiveExemptions(match.team_id);
       exemptionsByTeam.set(match.team_id, exemptions);
     }
-    const allUserIds = allUserIdsRaw.filter((uid) => !exemptions.has(uid));
+    // 휴회·부상 회비면제 회원 제외 (선납·키퍼 등 EXEMPT 는 미투표 벌금 부과)
+    let penaltyExempt = penaltyExemptByTeam.get(match.team_id);
+    if (!penaltyExempt) {
+      penaltyExempt = await getPenaltyExemptUserIds(match.team_id);
+      penaltyExemptByTeam.set(match.team_id, penaltyExempt);
+    }
+    const allUserIds = allUserIdsRaw.filter(
+      (uid) => !exemptions.has(uid) && !penaltyExempt.has(uid)
+    );
 
     // 투표한 멤버
     const { data: voted } = await db

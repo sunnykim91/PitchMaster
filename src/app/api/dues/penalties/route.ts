@@ -3,6 +3,7 @@ import { getApiContext, apiError, apiSuccess, requireRole } from "@/lib/api-help
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
 import { getKstToday } from "@/lib/kstDate";
+import { getPenaltyExemptUserIds } from "@/lib/server/getPenaltyExemptUserIds";
 
 /** 벌금 기록 조회 */
 export async function GET(request: NextRequest) {
@@ -181,6 +182,9 @@ export async function POST(request: NextRequest) {
     .eq("status", "ACTIVE")
     .not("user_id", "is", null);
 
+  // 휴회(LEAVE)·부상(INJURED) 면제 회원은 벌금 제외 (attendance-check 와 동일 정책).
+  const penaltyExemptUserIds = await getPenaltyExemptUserIds(ctx.teamId);
+
   // 기존 벌금 (중복 방지)
   const { data: existing } = await db
     .from("penalty_records")
@@ -219,6 +223,7 @@ export async function POST(request: NextRequest) {
   for (const member of members ?? []) {
     const userId = member.user_id;
     if (!userId) continue;
+    if (penaltyExemptUserIds.has(userId)) continue; // 휴회·부상 면제 제외
 
     const att = attendanceByUser.get(userId);
 

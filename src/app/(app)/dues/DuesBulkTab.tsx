@@ -741,12 +741,19 @@ function DuesBulkTabInner({
             <Button
               className="min-h-[44px] px-4 gap-1.5 text-sm font-semibold active:scale-[0.97] transition-transform"
               onClick={handleBulkSave}
-              disabled={bulkSaving || validBulkCount === 0}
+              disabled={bulkSaving || validBulkCount === 0 || pendingBalance !== null}
             >
               <Check className="h-4 w-4" />
               {bulkSaving ? (bulkProgress || "저장 중...") : "전체 저장"}
             </Button>
           </div>
+
+          {/* 잔고 미선택 시 저장 차단 — '반영' 또는 '무시'를 명시적으로 선택하게 유도 */}
+          {pendingBalance !== null && (
+            <p className="rounded-lg bg-[hsl(var(--warning))]/10 border border-[hsl(var(--warning))]/20 px-3 py-2 text-xs text-[hsl(var(--warning))]">
+              위 <b>“인식된 잔고”</b>를 <b>반영</b> 또는 <b>무시</b> 중 하나를 선택해야 저장할 수 있어요.
+            </p>
+          )}
 
           <div className="space-y-3">
             {bulkRows.map((row, index) => {
