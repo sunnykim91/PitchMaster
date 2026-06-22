@@ -114,6 +114,11 @@ function MatchTacticsTabInner({
     generationMode: "rule" | "ai-fixed" | "ai-free" | "manual";
   } | null>(null);
   const isInternal = match.matchType === "INTERNAL";
+  // 용병 선호 포지션 선택지 — 풋살은 FIXO/ALA/PIVO, 축구는 세부 10종
+  const guestPositionOptions: readonly string[] =
+    sportType === "FUTSAL"
+      ? ["GK", "FIXO", "ALA", "PIVO"]
+      : ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"];
   const [activeSide, setActiveSide] = useState<InternalSide>("A");
   const [teamCount, setTeamCount] = useState(2); // 자체전 팀 수 (2~3)
   const [savingTeams, setSavingTeams] = useState(false);
@@ -559,7 +564,7 @@ function MatchTacticsTabInner({
                 <div>
                   <p className="mb-2 text-[12.5px] font-medium text-muted-foreground">선호 포지션 (복수 선택)</p>
                   <div className="grid grid-cols-4 gap-2">
-                    {(["GK","CB","LB","RB","CDM","CM","CAM","LW","RW","ST"] as const).map((pos) => (
+                    {guestPositionOptions.map((pos) => (
                       <label key={pos} className="flex cursor-pointer items-center gap-2 rounded-lg bg-background px-3 py-2.5">
                         <input type="checkbox" name="guestPositions" value={pos} className="h-4 w-4 rounded border-border accent-primary" />
                         <span className="text-sm font-medium">{pos}</span>
@@ -630,7 +635,7 @@ function MatchTacticsTabInner({
                           <div>
                             <p className="mb-2 text-[12.5px] font-medium text-muted-foreground">선호 포지션 (복수 선택)</p>
                             <div className="grid grid-cols-4 gap-2">
-                              {(["GK","CB","LB","RB","CDM","CM","CAM","LW","RW","ST"] as const).map((pos) => (
+                              {guestPositionOptions.map((pos) => (
                                 <label key={pos} className="flex cursor-pointer items-center gap-2 rounded-lg bg-background px-3 py-2">
                                   <input
                                     type="checkbox"
