@@ -50,6 +50,22 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+/**
+ * 코트 인원 회전 — 매 쿼터 벤치(쉬는) 인원이 restCount 칸씩 원형으로 돈다.
+ * 각 쿼터의 '쉬는' pool 인덱스(0-based) 배열을 반환. 쿼터 수만큼 wrap 하며 확장.
+ * 예: poolLen 8, restCount 2 → Q1 [6,7] Q2 [4,5] Q3 [2,3] Q4 [0,1] (= 쉬는 ⑦⑧ → ⑤⑥ → ③④ → ①②)
+ */
+function restSchedule(poolLen: number, restCount: number, quarters: number): number[][] {
+  const out: number[][] = [];
+  for (let q = 0; q < quarters; q++) {
+    const start = (((poolLen - restCount * (q + 1)) % poolLen) + poolLen) % poolLen;
+    const bench: number[] = [];
+    for (let k = 0; k < restCount; k++) bench.push((start + k) % poolLen);
+    out.push(bench.sort((a, b) => a - b));
+  }
+  return out;
+}
+
 export function KeeperRotationCard({
   matchId,
   attendingPlayers,
@@ -57,6 +73,8 @@ export function KeeperRotationCard({
   isInternal,
   internalTeams,
   canManage,
+  courtSize,
+  quarterCount,
 }: {
   matchId: string;
   attendingPlayers: AttendingPlayer[];
@@ -64,6 +82,10 @@ export function KeeperRotationCard({
   isInternal: boolean;
   internalTeams?: InternalTeamAssignment[];
   canManage: boolean;
+  /** 코트에 동시에 서는 인원 (경기 player_count). 풋살 보통 5~6 */
+  courtSize?: number;
+  /** 경기 쿼터 수 (팀바팀, 풋살 보통 8) */
+  quarterCount?: number;
 }) {
   const [keepers, setKeepers] = useState<Set<string>>(new Set());
   const [order, setOrder] = useState<Record<string, string[]>>({});
@@ -226,7 +248,7 @@ export function KeeperRotationCard({
           <div className="mt-2 space-y-1 rounded-lg bg-secondary/40 p-3 text-xs leading-relaxed text-muted-foreground">
             <p>• 풋살은 실점하면 키퍼를 다음 사람으로 바꾸고, 쉬는 순서도 정하죠. 매번 제비뽑기하던 걸 앱이 공정하게 번호로 뽑아줘요.</p>
             <p>
-              • <b className="text-foreground">1번이 첫 키퍼</b>, 실점하면 2번이 키퍼… 쉬는 순서도 이 번호대로 쓰면 공평해요.
+              • <b className="text-foreground">1번이 첫 키퍼</b>, 실점하면 다음 번호. 쉬는 사람은 쿼터마다 번호 순서로 돌아가요 (아래 교대표).
             </p>
             <p>
               • 한 명이 <b className="text-foreground">계속 키퍼만</b> 한다면(고정 키퍼) 그 사람은 빼고 나머지 번호를 뽑아요. (선호 포지션이 GK만인 선수는 자동으로 잡혀요)
@@ -277,6 +299,11 @@ export function KeeperRotationCard({
             const keeperPlayers = g.players.filter((p) => keepers.has(p.id));
             const ordered = order[g.key] ?? [];
             const showHeader = groups.length > 1 || keeperPlayers.length > 0;
+            const court = Math.max(1, courtSize ?? 6);
+            const quarters = Math.max(1, quarterCount ?? 8);
+            const effCourt = Math.max(1, court - keeperPlayers.length); // 고정 키퍼는 골문 차지 → 필드 슬롯만 회전
+            const restCount = ordered.length > 0 ? Math.max(0, ordered.length - effCourt) : 0;
+            const schedule = restCount > 0 ? restSchedule(ordered.length, restCount, quarters) : [];
             return (
               <div key={g.key} className="py-3 first:pt-2">
                 {showHeader && (
@@ -308,9 +335,33 @@ export function KeeperRotationCard({
                     </ol>
                     <p className="mt-1.5 text-[11px] text-muted-foreground">
                       {keeperPlayers.length > 0
-                        ? "번호 = 필드·휴식 교대 순서"
-                        : "1번이 첫 키퍼 · 실점하면 다음 번호로 (쉬는 순서도 번호순)"}
+                        ? `🧤 키퍼 ${keeperPlayers.map((p) => p.name).join("·")} 고정 · 번호는 필드 교대 순서`
+                        : "🧤 키퍼는 뛰는 사람 중 1번부터 · 실점하면 다음 번호로"}
                     </p>
+                    {schedule.length > 0 ? (
+                      <div className="mt-2 rounded-lg bg-secondary/30 p-2">
+                        <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">
+                          쿼터별 쉬는 번호 · 코트 {court}명{keeperPlayers.length > 0 ? " (키퍼 고정)" : ""}
+                        </p>
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-1 sm:grid-cols-4">
+                          {schedule.map((bench, qi) => (
+                            <div key={qi} className="flex items-center gap-1 text-xs">
+                              <span className="w-6 shrink-0 text-muted-foreground">Q{qi + 1}</span>
+                              {bench.map((idx) => (
+                                <span
+                                  key={idx}
+                                  className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-secondary text-[10px] font-bold text-muted-foreground"
+                                >
+                                  {idx + 1}
+                                </span>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="mt-1 text-[11px] text-muted-foreground/80">전원 출전 · 쉬는 사람 없음</p>
+                    )}
                   </>
                 )}
 

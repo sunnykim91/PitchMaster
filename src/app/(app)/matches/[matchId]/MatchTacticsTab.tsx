@@ -859,6 +859,8 @@ function MatchTacticsTabInner({
             isInternal={isInternal}
             internalTeams={internalTeams}
             canManage={canManage}
+            courtSize={match.playerCount}
+            quarterCount={match.quarterCount}
           />
         </div>
       )}
