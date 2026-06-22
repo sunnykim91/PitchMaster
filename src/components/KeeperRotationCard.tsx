@@ -197,17 +197,16 @@ export function KeeperRotationCard({
     setStaleKeepers(true);
   }
 
+  // 복사는 단순하게 — 팀별 번호만 (1번 누구 / 2번 누구). 고정 키퍼만 한 줄 표기.
   function buildShareText(): string {
     const lines: string[] = ["⚽ 키퍼·교대 순번"];
     for (const g of groups) {
       const ordered = order[g.key] ?? [];
-      if (groups.length > 1) lines.push(`\n[${g.label}]`);
       const kps = g.players.filter((p) => keepers.has(p.id));
-      if (kps.length) lines.push(`🧤 키퍼 ${kps.map((p) => p.name).join("·")} 고정`);
-      else if (ordered.length) lines.push(`🧤 골키퍼: ${ordered.map((id) => nameOf.get(id) ?? "?").join(" → ")} (득점·실점 시 다음)`);
-      if (ordered.length) lines.push("번호 " + ordered.map((id, i) => `${i + 1}.${nameOf.get(id) ?? "?"}`).join("  "));
-      const sch = scheduleFor(ordered, kps.length);
-      sch.forEach((b, qi) => lines.push(`${qi + 1}Q 쉬는 ${b.map((idx) => nameOf.get(ordered[idx]) ?? "?").join("·")}`));
+      if (!ordered.length && !kps.length) continue;
+      lines.push(groups.length > 1 ? `\n[${g.label}]` : "");
+      if (kps.length) lines.push(`🧤 고정 키퍼: ${kps.map((p) => p.name).join(", ")}`);
+      ordered.forEach((id, i) => lines.push(`${i + 1}번 ${nameOf.get(id) ?? "?"}`));
     }
     return lines.join("\n");
   }
