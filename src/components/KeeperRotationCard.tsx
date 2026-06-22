@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Dices, Copy, Check, Info, Pencil } from "lucide-react";
+import { Dices, Copy, Check, Info, Pencil, ChevronDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { AttendingPlayer } from "@/components/AutoFormationBuilder";
@@ -204,7 +204,7 @@ export function KeeperRotationCard({
       if (groups.length > 1) lines.push(`\n[${g.label}]`);
       const kps = g.players.filter((p) => keepers.has(p.id));
       if (kps.length) lines.push(`🧤 키퍼 ${kps.map((p) => p.name).join("·")} 고정`);
-      else if (ordered.length) lines.push(`🧤 골키퍼: ${ordered.map((id) => nameOf.get(id) ?? "?").join(" → ")} (실점 시 다음)`);
+      else if (ordered.length) lines.push(`🧤 골키퍼: ${ordered.map((id) => nameOf.get(id) ?? "?").join(" → ")} (득점·실점 시 다음)`);
       if (ordered.length) lines.push("번호 " + ordered.map((id, i) => `${i + 1}.${nameOf.get(id) ?? "?"}`).join("  "));
       const sch = scheduleFor(ordered, kps.length);
       sch.forEach((b, qi) => lines.push(`${qi + 1}Q 쉬는 ${b.map((idx) => nameOf.get(ordered[idx]) ?? "?").join("·")}`));
@@ -261,7 +261,7 @@ export function KeeperRotationCard({
           <div className="mt-2 space-y-1 rounded-lg bg-secondary/40 p-3 text-xs leading-relaxed text-muted-foreground">
             <p>• 번호 뽑기를 누르면 각자 1~N 번호를 받아요. 이 번호로 골키퍼와 쉬는 순서를 같이 정합니다.</p>
             <p>
-              • <b className="text-foreground">골키퍼</b>는 1번부터, 실점하면 다음 번호로 교체.
+              • <b className="text-foreground">골키퍼</b>는 1번부터, 득점·실점 시 다음 번호로 교체.
             </p>
             <p>
               • <b className="text-foreground">쉬는 사람</b>은 쿼터마다 뒷번호부터 돌아가요. (아래 "쿼터별 쉬는 사람" 표가 자동으로 나옵니다)
@@ -345,7 +345,7 @@ export function KeeperRotationCard({
                   <p className="mt-2 text-xs text-muted-foreground">
                     {keeperPlayers.length > 0
                       ? `🧤 키퍼 ${keeperPlayers.map((p) => p.name).join("·")} 고정${ordered.length > 0 ? " · 위 번호는 필드 교대" : ""}`
-                      : "🧤 골키퍼는 1번부터, 실점하면 다음 번호"}
+                      : "🧤 골키퍼는 1번부터, 득점·실점 시 다음 번호"}
                   </p>
                 )}
 
@@ -353,7 +353,7 @@ export function KeeperRotationCard({
                 {ordered.length > 0 &&
                   (schedule.length > 0 ? (
                     <div className="mt-2 rounded-lg bg-secondary/30 p-2.5">
-                      <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">💺 쿼터별 쉬는 사람 · 코트 {court}명</p>
+                      <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">💺 쿼터별 쉬는 사람 {schedule[0].length}명 · 필드 {court}명</p>
                       <div className="grid grid-cols-2 gap-x-3 gap-y-1">
                         {schedule.map((bench, qi) => (
                           <div key={qi} className="flex items-start gap-1.5 text-xs">
@@ -371,10 +371,11 @@ export function KeeperRotationCard({
 
                 {/* 키퍼 지정 변경 (작게, 접힘) */}
                 {canManage && (
-                  <details className="mt-2">
-                    <summary className="inline-flex cursor-pointer items-center gap-1 text-[11px] text-muted-foreground/80 transition-colors hover:text-foreground">
+                  <details className="group mt-2">
+                    <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-md border border-border/50 px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-secondary/40 hover:text-foreground [&::-webkit-details-marker]:hidden">
                       <Pencil className="h-3 w-3" />
-                      키퍼 지정 바꾸기
+                      고정 키퍼 바꾸기
+                      <ChevronDown className="h-3 w-3 transition-transform group-open:rotate-180" />
                     </summary>
                     <p className="mt-1 text-[11px] text-muted-foreground/70">계속 키퍼만 하고 필드는 안 뛰는 사람을 골라주세요. 나머지는 번호로 돌아갑니다.</p>
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
