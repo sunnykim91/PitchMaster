@@ -229,7 +229,7 @@ export function KeeperRotationCard({
               • <b className="text-foreground">1번이 첫 키퍼</b>, 실점하면 2번이 키퍼… 쉬는 순서도 이 번호대로 쓰면 공평해요.
             </p>
             <p>
-              • 골문만 보는 <b className="text-foreground">고정 키퍼</b>가 있으면 그 사람은 빼고 나머지 번호를 뽑아요. (선호 포지션이 GK만인 선수는 자동으로 잡혀요)
+              • 한 명이 <b className="text-foreground">계속 키퍼만</b> 한다면(고정 키퍼) 그 사람은 빼고 나머지 번호를 뽑아요. (선호 포지션이 GK만인 선수는 자동으로 잡혀요)
             </p>
           </div>
         )}
@@ -320,7 +320,7 @@ export function KeeperRotationCard({
                       키퍼 바꾸기
                     </summary>
                     <p className="mt-1 text-[11px] text-muted-foreground/80">
-                      골문만 보는 사람(필드 안 뜀)을 골라주세요. 나머지는 번호로 돌아갑니다.
+                      계속 키퍼만 하고 필드는 안 뛰는 사람을 골라주세요. 나머지는 번호로 돌아갑니다.
                     </p>
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
                       {g.players.map((p) => {
