@@ -320,7 +320,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
     const settings = [
       { href: "/rules", label: "회칙", detail: "팀 규정", icon: BookOpen },
       { href: "/settings", label: "설정", detail: "개인·팀", icon: Settings },
-      { href: "/guide.html", label: "가이드", detail: "기능 안내", icon: HelpCircle },
+      { href: "/help", label: "가이드", detail: "기능 안내", icon: HelpCircle },
       ...(isOperator
         ? [{ href: "/admin/notice", label: "운영공지 관리", detail: "PitchMaster 운영자 전용", icon: Megaphone }]
         : []),

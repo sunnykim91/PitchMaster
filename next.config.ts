@@ -31,11 +31,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.kakaocdn.net" },
     ],
   },
-  async rewrites() {
+  async redirects() {
     return [
-      // /guide 로 접근 시 public/guide.html 서빙 (확장자 없는 깔끔한 URL)
-      // 향후 Next.js 페이지로 완전 마이그레이션 시 제거 (계획: docs/pre-launch-checklist.md)
-      { source: "/guide", destination: "/guide.html" },
+      // 사용법 매뉴얼: 정적 /guide.html → Next.js /help 이관 (2026-06). 옛 링크·색인 보존.
+      { source: "/guide.html", destination: "/help", permanent: true },
     ];
   },
   // ⚠️ www → non-www redirect 는 Vercel/Cloudflare 단에서 처리 중. next.config 에서
