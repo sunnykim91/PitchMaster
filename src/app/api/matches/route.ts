@@ -3,7 +3,7 @@ import { getApiContext, requireRole, apiError, apiSuccess } from "@/lib/api-help
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
 import { sendTeamPush } from "@/lib/server/sendPush";
-import { autoCompleteTeamMatches } from "@/lib/server/autoCompleteMatches";
+import { autoCompleteTeamMatches, shouldAutoComplete } from "@/lib/server/autoCompleteMatches";
 import { invalidateTeamStats } from "@/lib/server/aiTeamStats";
 import { validateFreeText } from "@/lib/validators/safeText";
 
@@ -22,28 +22,44 @@ export async function GET() {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  // 종료된 SCHEDULED 경기 → 자동 COMPLETED 처리 (KST 기준, 당일 match_end_time 포함)
-  await autoCompleteTeamMatches(db, ctx.teamId);
-
-  const { data, error } = await db
-    .from("matches")
-    .select("*")
-    .eq("team_id", ctx.teamId)
-    .order("match_date", { ascending: false });
-
+  // 자동 완료 UPDATE 를 await 로 막지 않고 SELECT 와 병렬 실행(순차 1라운드트립 절감) +
+  // shouldAutoComplete in-memory 보정 — UPDATE 가 SELECT 보다 늦게 끝나도 응답엔 완료로 반영.
+  const [, matchesRes] = await Promise.all([
+    autoCompleteTeamMatches(db, ctx.teamId),
+    db.from("matches").select("*").eq("team_id", ctx.teamId).order("match_date", { ascending: false }),
+  ]);
+  const { data, error } = matchesRes;
   if (error) return apiError(error.message);
 
   // 완료된 경기의 스코어 계산
-  type MatchRow = { id: string; status: string; [key: string]: unknown };
-  const rows = (data ?? []) as MatchRow[];
+  type MatchRow = {
+    id: string;
+    status: string;
+    match_date: string;
+    match_time?: string | null;
+    match_end_date?: string | null;
+    match_end_time?: string | null;
+    match_type?: string | null;
+    [key: string]: unknown;
+  };
+  const rows = ((data ?? []) as MatchRow[]).map((m) =>
+    shouldAutoComplete(m) ? { ...m, status: "COMPLETED" } : m
+  );
   const completedIds = rows.filter((m) => m.status === "COMPLETED").map((m) => m.id);
   let scoreMap: Record<string, string> = {};
   if (completedIds.length > 0) {
     const { data: goals } = await db.from("match_goals").select("match_id, scorer_id, is_own_goal, side").in("match_id", completedIds);
     const internalIds = new Set(rows.filter((m) => m.match_type === "INTERNAL").map((m) => m.id));
+    // 경기별 골 1회 그룹핑 — 기존의 경기마다 goals.filter() (O(경기×골)) 제거
+    const goalsByMatch = new Map<string, Array<{ scorer_id: string; is_own_goal: boolean; side: string | null }>>();
+    for (const g of (goals ?? []) as Array<{ match_id: string; scorer_id: string; is_own_goal: boolean; side: string | null }>) {
+      let arr = goalsByMatch.get(g.match_id);
+      if (!arr) { arr = []; goalsByMatch.set(g.match_id, arr); }
+      arr.push(g);
+    }
     const map: Record<string, string> = {};
     for (const matchId of completedIds) {
-      const matchGoals = (goals ?? []).filter((g) => g.match_id === matchId);
+      const matchGoals = goalsByMatch.get(matchId) ?? [];
       if (internalIds.has(matchId)) {
         const hasC = matchGoals.some((g) => g.side === "C");
         if (hasC) {

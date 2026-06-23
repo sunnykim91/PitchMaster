@@ -407,8 +407,9 @@ export default function RecordsClient({
         </Select>
       </div>
 
-      {/* ── Tab: 내 기록 ── */}
-      <div className={activeTab === "my" ? "grid gap-5" : "hidden"}>
+      {/* ── Tab: 내 기록 ── (비활성 탭은 마운트하지 않음 — 초기 렌더/차트 비용 절감) */}
+      {activeTab === "my" && (
+      <div className="grid gap-5">
       {/* ── 시즌 요약 + 레이더 ── */}
       <Card>
         <CardHeader>
@@ -594,9 +595,11 @@ export default function RecordsClient({
       </Card>
 
       </div>
+      )}
 
       {/* ── Tab: 팀 랭킹 ── */}
-      <div className={activeTab === "ranking" ? "grid gap-5" : "hidden"}>
+      {activeTab === "ranking" && (
+      <div className="grid gap-5">
 
       {/* ── 팀 전적 (시즌 누적 승무패·득실·최근 5경기) ── */}
       {initialData?.teamRecord && (initialData.teamRecord.wins + initialData.teamRecord.draws + initialData.teamRecord.losses) > 0 && (() => {
@@ -737,9 +740,11 @@ export default function RecordsClient({
       </Card>
 
       </div>
+      )}
 
       {/* ── Tab: 전체 기록 ── */}
-      <div className={activeTab === "all" ? "grid gap-5" : "hidden"}>
+      {activeTab === "all" && (
+      <div className="grid gap-5">
       {/* ── Row 3: 전체 회원 기록 (풀와이드 테이블) ── */}
       <Card>
         <CardHeader>
@@ -914,9 +919,11 @@ export default function RecordsClient({
         </CardContent>
       </Card>
       </div>
+      )}
 
       {/* ── Tab: 시즌 어워드 ── */}
-      <div className={activeTab === "awards" ? "grid gap-5" : "hidden"}>
+      {activeTab === "awards" && (
+      <div className="grid gap-5">
         {isAllTime ? (
           <Card>
             <CardContent className="py-8 text-center text-sm text-muted-foreground">
@@ -927,6 +934,7 @@ export default function RecordsClient({
           <SeasonAwardsCard seasonId={seasonId} />
         )}
       </div>
+      )}
 
       {/* ── Tab: 페어 시너지 (운영진 전용) ── */}
       {isStaff && (

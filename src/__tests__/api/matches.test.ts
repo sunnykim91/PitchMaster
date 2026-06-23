@@ -56,10 +56,13 @@ describe("GET /api/matches", () => {
     const res = await GET();
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.matches).toEqual(mockMatches.map((m: Record<string, unknown>) => ({
-      ...m,
-      score: m.status === "COMPLETED" ? "0 : 0" : null,
-    })));
+    // 과거 날짜 SCHEDULED(m1)는 shouldAutoComplete in-memory 보정으로 COMPLETED 로 반환
+    // (SSR getMatchesData 와 동일 — 프로덕션에선 자동완료 UPDATE 후 COMPLETED 로 노출됨).
+    // 골 0건이라 두 경기 모두 "0 : 0".
+    expect(json.matches).toEqual([
+      { id: "m1", match_date: "2025-03-20", status: "COMPLETED", location: "구장A", match_type: "REGULAR", score: "0 : 0" },
+      { id: "m2", match_date: "2025-02-10", status: "COMPLETED", location: "구장B", match_type: "REGULAR", score: "0 : 0" },
+    ]);
   });
 
   it("400: DB 에러 발생시 에러 반환", async () => {

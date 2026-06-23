@@ -125,6 +125,23 @@ export async function computeTeamSeasonOvrs(
     if (winner) mvpWinnerByMatch.set(mid, winner);
   }
 
+  // ── 선수별 집계 prebuild — 멤버마다 전체 행을 재스캔하던 O(멤버×행) 제거용 인덱스 ──
+  // 출석: user_id·member_id 양쪽 키로 match_id 집합 인덱싱 (기존 lookupIds OR 조건과 동치)
+  const attendMatchesByKey = new Map<string, Set<string>>();
+  const addAttendKey = (key: string | null, mid: string) => {
+    if (!key) return;
+    let s = attendMatchesByKey.get(key);
+    if (!s) { s = new Set(); attendMatchesByKey.set(key, s); }
+    s.add(mid);
+  };
+  for (const a of (attendRes.data ?? []) as AttendRow[]) { addAttendKey(a.user_id, a.match_id); addAttendKey(a.member_id, a.match_id); }
+  const goalCountByScorer = new Map<string, number>();
+  for (const g of (goalsRes.data ?? []) as GoalRow[]) goalCountByScorer.set(g.scorer_id, (goalCountByScorer.get(g.scorer_id) ?? 0) + 1);
+  const assistCountByAssister = new Map<string, number>();
+  for (const a of (assistsRes.data ?? []) as AssistRow[]) assistCountByAssister.set(a.assist_id, (assistCountByAssister.get(a.assist_id) ?? 0) + 1);
+  const mvpCountByWinner = new Map<string, number>();
+  for (const w of mvpWinnerByMatch.values()) mvpCountByWinner.set(w, (mvpCountByWinner.get(w) ?? 0) + 1);
+
   // 선수별 집계
   for (const mem of members) {
     const lookupIds: string[] = mem.user_id ? [mem.user_id, mem.id] : [mem.id];
@@ -132,12 +149,11 @@ export async function computeTeamSeasonOvrs(
     const positions = userObj?.preferred_positions ?? [];
     const cat = classifyPosition(positions);
 
-    // 출석한 경기
+    // 출석한 경기 — prebuild 인덱스에서 lookupIds 키들의 match_id 합집합 (전체 행 재스캔 제거)
     const attendedMatchIds = new Set<string>();
-    for (const a of (attendRes.data ?? []) as AttendRow[]) {
-      if ((a.user_id && lookupIds.includes(a.user_id)) || (a.member_id && lookupIds.includes(a.member_id))) {
-        attendedMatchIds.add(a.match_id);
-      }
+    for (const key of lookupIds) {
+      const s = attendMatchesByKey.get(key);
+      if (s) for (const mid of s) attendedMatchIds.add(mid);
     }
     const attended = attendedMatchIds.size;
     if (attended === 0) {
@@ -145,9 +161,9 @@ export async function computeTeamSeasonOvrs(
       continue;
     }
 
-    const myGoals = ((goalsRes.data ?? []) as GoalRow[]).filter((g) => lookupIds.includes(g.scorer_id));
-    const myAssists = ((assistsRes.data ?? []) as AssistRow[]).filter((a) => lookupIds.includes(a.assist_id));
-    const myMvpCount = [...mvpWinnerByMatch.values()].filter((w) => lookupIds.includes(w)).length;
+    const myGoalCount = lookupIds.reduce((sum, id) => sum + (goalCountByScorer.get(id) ?? 0), 0);
+    const myAssistCount = lookupIds.reduce((sum, id) => sum + (assistCountByAssister.get(id) ?? 0), 0);
+    const myMvpCount = lookupIds.reduce((sum, id) => sum + (mvpCountByWinner.get(id) ?? 0), 0);
 
     // 출석 경기 기준 승률·클린시트·실점
     let wins = 0;
@@ -165,8 +181,8 @@ export async function computeTeamSeasonOvrs(
 
     const ovr = calculateOVR(
       cat,
-      myGoals.length / attended,
-      myAssists.length / attended,
+      myGoalCount / attended,
+      myAssistCount / attended,
       attended / matchIds.length,
       myMvpCount / attended,
       recordCount > 0 ? wins / recordCount : 0,

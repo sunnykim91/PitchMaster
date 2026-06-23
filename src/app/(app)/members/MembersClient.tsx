@@ -2,7 +2,7 @@
 
 import "@/app/onboarding/onboarding.css";
 import { createPortal } from "react-dom";
-import { useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useApi, apiMutate } from "@/lib/useApi";
@@ -156,6 +156,8 @@ export default function MembersClient({
   const [showBulk, setShowBulk] = useState(() => searchParams.get("bulk") === "true");
   const [showSingleAdd, setShowSingleAdd] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  // 안정적 콜백 — MemberRow memo 가 검색 타이핑 시 전 행 리렌더되지 않도록 (행마다 새 클로저 생성 방지)
+  const handleSelectMember = useCallback((id: string) => setEditingMemberId(id), []);
   const [filter, setFilter] = useState<FilterKey>("all");
   const [sort, setSort] = useState<SortKey>("joined_desc");
   const [searchQuery, setSearchQuery] = useState("");
@@ -639,9 +641,7 @@ export default function MembersClient({
                       {i > 0 && <div className="pm-mrow-div" />}
                       <MemberRow
                         m={m}
-                        onClick={() => {
-                          setEditingMemberId(m.id);
-                        }}
+                        onSelect={handleSelectMember}
                       />
                     </div>
                   ))
@@ -741,12 +741,12 @@ export default function MembersClient({
 // ─────────────────────────────────────────────────────────────
 // MemberRow
 // ─────────────────────────────────────────────────────────────
-function MemberRow({ m, onClick }: { m: Member; onClick: () => void }) {
+const MemberRow = memo(function MemberRow({ m, onSelect }: { m: Member; onSelect: (id: string) => void }) {
   const dot = displayStatusDot(m);
   const label = displayStatusLabel(m);
   const hue = ROLE_HUE[m.role];
   return (
-    <button type="button" className="pm-mrow" onClick={onClick}>
+    <button type="button" className="pm-mrow" onClick={() => onSelect(m.id)}>
       <div className={`pm-mrow-av pm-hue--${hue}`} aria-hidden>
         {m.profileImageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -801,7 +801,7 @@ function MemberRow({ m, onClick }: { m: Member; onClick: () => void }) {
       </svg>
     </button>
   );
-}
+});
 
 // ─────────────────────────────────────────────────────────────
 // FilterChip

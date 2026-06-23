@@ -200,7 +200,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Bulk 쿼리 — 전체 데이터 한번에 조회
-  const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes, staffMembersRes, gkSquadsRes, concededGoalsRes] = await Promise.all([
+  const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes, staffMembersRes, gkSquadsRes, concededGoalsRes, teamSettingsForMvpRes] = await Promise.all([
     db.from("match_goals").select("scorer_id").in("match_id", matchIds).eq("is_own_goal", false),
     db.from("match_goals").select("assist_id").in("match_id", matchIds).not("assist_id", "is", null),
     db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision").in("match_id", matchIds),
@@ -211,6 +211,8 @@ export async function GET(request: NextRequest) {
     // 키퍼 클린시트용 — 전술판(쿼터별 GK 배정) + 실점 골(is_own_goal 필터 없이 전부)
     db.from("match_squads").select("match_id, quarter_number, positions, side").in("match_id", matchIds),
     db.from("match_goals").select("match_id, quarter_number, scorer_id, is_own_goal, side").in("match_id", matchIds),
+    // 팀 설정(MVP 정책·평점 토글) — matchIds 비의존이라 위 묶음에 합류(순차 await 1회 제거)
+    db.from("teams").select("mvp_vote_staff_only, player_rating_enabled").eq("id", ctx.teamId).maybeSingle(),
   ]);
 
   // 골키퍼 무실점 쿼터 — ① 전술판 쿼터별 ② 전술판 없으면 GK선호 참석자 경기→쿼터 환산 (SSR getRecordsData 와 동일 로직)
@@ -260,7 +262,7 @@ export async function GET(request: NextRequest) {
   // 경기별 MVP winner만 집계 — 참석자 70% 이상 투표 통과 시 최다득표자, 또는 운영진 직접 지정.
   const { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
   // 새 MVP 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04) + 평점 토글
-  const { data: teamSettingsForMvp } = await db.from("teams").select("mvp_vote_staff_only, player_rating_enabled").eq("id", ctx.teamId).maybeSingle();
+  const teamSettingsForMvp = teamSettingsForMvpRes.data;
   const mvpVoteStaffOnlyForMvp = (teamSettingsForMvp as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
   const playerRatingEnabledForRecords = (teamSettingsForMvp as { player_rating_enabled?: boolean } | null)?.player_rating_enabled ?? false;
   const matchDateById = new Map<string, string>();
