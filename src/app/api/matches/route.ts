@@ -259,7 +259,10 @@ export async function PUT(request: NextRequest) {
   if (body.status !== undefined) updates.status = body.status;
   if (body.voteDeadline !== undefined) updates.vote_deadline = body.voteDeadline ? toKSTTimestamp(body.voteDeadline) : null;
   if (body.uniformType !== undefined) updates.uniform_type = body.uniformType;
-  if (body.matchType !== undefined) updates.match_type = body.matchType;
+  if (body.matchType !== undefined) {
+    if (!["REGULAR", "INTERNAL", "EVENT"].includes(body.matchType)) return apiError("경기 유형이 올바르지 않습니다");
+    updates.match_type = body.matchType;
+  }
   if (body.statsIncluded !== undefined) updates.stats_included = body.statsIncluded;
   // 자체전 3파전 팀별 승/무/패 수기 카운트 — A/B/C 키 + 음수 아닌 정수만 허용 (JSONB 주입 방지)
   if (body.internalTeamResults !== undefined) {

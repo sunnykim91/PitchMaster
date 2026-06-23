@@ -28,6 +28,11 @@ export default function EditMatchInfoForm({
     (match.sportType as "SOCCER" | "FUTSAL" | null) ?? sportType
   );
   const editingIsFutsal = editingSportType === "FUTSAL";
+  const isEvent = match.matchType === "EVENT";
+  const [editingMatchType, setEditingMatchType] = useState<"REGULAR" | "INTERNAL">(
+    match.matchType === "INTERNAL" ? "INTERNAL" : "REGULAR"
+  );
+  const isInternal = !isEvent && editingMatchType === "INTERNAL";
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -40,10 +45,11 @@ export default function EditMatchInfoForm({
       time: fd.get("time"),
       endTime: fd.get("endTime") || null,
       location: fd.get("location"),
-      opponent: fd.get("opponent"),
+      opponent: isInternal ? null : fd.get("opponent"),
       voteDeadline: fd.get("voteDeadline") || null,
       playerCount: playerCountVal ? Number(playerCountVal) : undefined,
       sportType: match.matchType === "EVENT" ? null : editingSportType,
+      matchType: isEvent ? undefined : editingMatchType,
     });
     setSaving(false);
     if (!error) {
@@ -62,14 +68,47 @@ export default function EditMatchInfoForm({
         .edit-form input[type="datetime-local"]::-webkit-calendar-picker-indicator { opacity: 0; width: 100%; height: 100%; position: absolute; top: 0; left: 0; cursor: pointer; }
       `}</style>
       <div className="edit-form space-y-5">
+        {/* 경기 유형 — 상대전/자체전 (EVENT 일정은 변경 불가) */}
+        {!isEvent && (
+          <div>
+            <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">경기 유형</p>
+            <div className="flex gap-2">
+              {([
+                { type: "REGULAR" as const, label: "🆚 상대전", color: "primary" },
+                { type: "INTERNAL" as const, label: "👥 자체전", color: "info" },
+              ]).map((item) => (
+                <button
+                  key={item.type}
+                  type="button"
+                  onClick={() => setEditingMatchType(item.type)}
+                  className={cn(
+                    "flex-1 min-h-[44px] rounded-xl border-2 px-2 text-sm font-bold transition-all",
+                    editingMatchType === item.type
+                      ? `border-[hsl(var(--${item.color}))] bg-[hsl(var(--${item.color}))]/15 text-[hsl(var(--${item.color}))] shadow-sm`
+                      : "border-border bg-secondary/40 text-muted-foreground hover:border-foreground/30"
+                  )}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            {isInternal && (
+              <p className="mt-1.5 text-[11px] text-muted-foreground">우리끼리 A·B(·C)로 나눠 뛰어요. 팀 편성은 전술 탭에서 합니다.</p>
+            )}
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">날짜</p>
             <input type="date" name="date" defaultValue={match.date} required className="relative h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
           </div>
           <div>
-            <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">{match.matchType === "EVENT" ? "일정 제목" : "상대팀"}</p>
-            <input name="opponent" defaultValue={match.opponent ?? ""} placeholder={match.matchType === "EVENT" ? "예: 연말 회식" : "미정"} className="h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+            <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">{isEvent ? "일정 제목" : isInternal ? "구분" : "상대팀"}</p>
+            {isInternal ? (
+              <div className="flex h-12 items-center rounded-xl bg-secondary/40 px-4 text-sm text-muted-foreground">자체전 (상대팀 없음)</div>
+            ) : (
+              <input name="opponent" defaultValue={match.opponent ?? ""} placeholder={isEvent ? "예: 연말 회식" : "미정"} className="h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+            )}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
