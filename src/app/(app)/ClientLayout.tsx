@@ -20,6 +20,7 @@ import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { isPlatformAdmin } from "@/lib/admin";
 import { cn, compactKakaoImage } from "@/lib/utils";
+import { formatKstDateTime } from "@/lib/formatters";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import PushAutoSubscribe from "@/components/PushAutoSubscribe";
 import NativePushRegister from "@/components/NativePushRegister";
@@ -676,7 +677,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                             </p>
                             <p className="mt-0.5 text-xs text-muted-foreground">{n.message}</p>
                             <p className="mt-1 text-xs text-muted-foreground/50">
-                              {new Date(n.created_at).toLocaleDateString("ko-KR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                              {formatKstDateTime(n.created_at)}
                             </p>
                           </button>
                         ))

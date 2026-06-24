@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/lib/ToastContext";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { apiMutate } from "@/lib/useApi";
+import { formatKstDateTime } from "@/lib/formatters";
 
 export type GlobalNoticeRow = {
   id: string;
@@ -160,13 +161,7 @@ export default function AdminNoticeClient({ recent: initialRecent }: Props) {
                     <p className="text-sm font-semibold truncate">{r.title}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2 whitespace-pre-line">{r.content}</p>
                     <p className="mt-1 text-[10px] text-muted-foreground/70">
-                      {new Date(r.createdAt).toLocaleString("ko-KR", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {formatKstDateTime(r.createdAt, { withYear: true })}
                     </p>
                   </div>
                   <button

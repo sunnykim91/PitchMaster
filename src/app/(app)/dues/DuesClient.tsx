@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatAmount } from "@/lib/formatters";
+import { formatAmount, formatKstDateTime } from "@/lib/formatters";
 
 import { DuesRecordsTab } from "./DuesRecordsTab";
 import { DuesStatusTab } from "./DuesStatusTab";
@@ -412,7 +412,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
             )}
             {summaryData.balanceUpdatedAt && (
               <p className="text-xs text-muted-foreground/80">
-                최종 업데이트: {new Date(summaryData.balanceUpdatedAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                최종 업데이트: {formatKstDateTime(summaryData.balanceUpdatedAt)}
                 <span className="ml-1 text-muted-foreground/50">· 스크린샷/엑셀 기준</span>
               </p>
             )}

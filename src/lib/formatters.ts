@@ -60,6 +60,30 @@ export function formatTimeKo(input: string): string {
   return `${period} ${hour12}:${m}`;
 }
 
+/**
+ * timestamptz(ISO) → 한국어 날짜·시각 (KST 고정·결정론적).
+ *
+ * ⚠️ `toLocale*({hour})` 금지: 서버 Node ICU 는 dayPeriod 를 영문("PM")으로, 브라우저는 "오후"로
+ * 렌더해 **하이드레이션 불일치**를 유발한다(+ 런타임 타임존 의존). UTC 에 +9h 한 뒤 컴포넌트를
+ * 직접 조립해 서버·클라가 항상 동일 문자열을 내도록 한다. (참고: feedback_timestamptz_display_kst)
+ *
+ * 기본: "4월 2일 오후 02:00" / withYear: "2026년 4월 2일 오후 02:00"
+ */
+export function formatKstDateTime(input: string | Date, opts?: { withYear?: boolean }): string {
+  const d = input instanceof Date ? input : new Date(input);
+  if (isNaN(d.getTime())) return "";
+  const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  const year = kst.getUTCFullYear();
+  const month = kst.getUTCMonth() + 1;
+  const day = kst.getUTCDate();
+  const h24 = kst.getUTCHours();
+  const minute = String(kst.getUTCMinutes()).padStart(2, "0");
+  const period = h24 < 12 ? "오전" : "오후";
+  const h12 = String(h24 % 12 === 0 ? 12 : h24 % 12).padStart(2, "0");
+  const datePart = opts?.withYear ? `${year}년 ${month}월 ${day}일` : `${month}월 ${day}일`;
+  return `${datePart} ${period} ${h12}:${minute}`;
+}
+
 /** "3,000원" 금액 */
 export function formatAmount(n: number | null | undefined): string {
   if (n == null || isNaN(n)) return "0원";
