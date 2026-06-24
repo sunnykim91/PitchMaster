@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatKstDateTime } from "@/lib/formatters";
+import { formatKstDateTime, formatKstDate } from "@/lib/formatters";
 
 /**
  * formatKstDateTime 은 하이드레이션 불일치를 막기 위한 결정론적 KST 포매터.
@@ -41,5 +41,25 @@ describe("formatKstDateTime", () => {
 
   it("잘못된 입력은 빈 문자열", () => {
     expect(formatKstDateTime("not-a-date")).toBe("");
+  });
+});
+
+describe("formatKstDate", () => {
+  it("KST 날짜를 2자리 연도로 표기한다", () => {
+    expect(formatKstDate("2026-04-02T05:00:00Z")).toBe("26년 4월 2일");
+  });
+
+  it("자정 근처 +9h 로 날짜가 넘어가는 경우를 처리한다", () => {
+    // 2026-04-01T20:00Z → KST 익일 05:00
+    expect(formatKstDate("2026-04-01T20:00:00Z")).toBe("26년 4월 2일");
+  });
+
+  it("연말 → 연초 롤오버", () => {
+    // 2025-12-31T20:00Z → KST 2026-01-01 05:00
+    expect(formatKstDate("2025-12-31T20:00:00Z")).toBe("26년 1월 1일");
+  });
+
+  it("잘못된 입력은 빈 문자열", () => {
+    expect(formatKstDate("not-a-date")).toBe("");
   });
 });

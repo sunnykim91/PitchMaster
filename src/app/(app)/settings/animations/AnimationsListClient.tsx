@@ -10,6 +10,7 @@ import BackButton from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { formatKstDate } from "@/lib/formatters";
 import { useToast } from "@/lib/ToastContext";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { getFormationMotion } from "@/lib/formationMotions";
@@ -723,11 +724,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {animation.formation_id} ·{" "}
-                    {new Date(animation.updated_at).toLocaleDateString("ko-KR", {
-                      year: "2-digit",
-                      month: "short",
-                      day: "numeric",
-                    })}{" "}
+                    {formatKstDate(animation.updated_at)}{" "}
                     수정
                   </p>
                   {animation.description && (

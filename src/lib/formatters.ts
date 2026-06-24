@@ -84,6 +84,22 @@ export function formatKstDateTime(input: string | Date, opts?: { withYear?: bool
   return `${datePart} ${period} ${h12}:${minute}`;
 }
 
+/**
+ * timestamptz(ISO) → "26년 4월 2일" (KST 고정·결정론적, 날짜만).
+ *
+ * formatKstDateTime 과 동일 이유로 toLocaleDateString 금지 — 날짜만이어도 자정 근처
+ * timestamp 는 서버(UTC)·클라(KST)에서 다른 날짜로 갈려 하이드레이션 불일치가 난다.
+ */
+export function formatKstDate(input: string | Date): string {
+  const d = input instanceof Date ? input : new Date(input);
+  if (isNaN(d.getTime())) return "";
+  const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  const yy = String(kst.getUTCFullYear()).slice(2);
+  const month = kst.getUTCMonth() + 1;
+  const day = kst.getUTCDate();
+  return `${yy}년 ${month}월 ${day}일`;
+}
+
 /** "3,000원" 금액 */
 export function formatAmount(n: number | null | undefined): string {
   if (n == null || isNaN(n)) return "0원";
