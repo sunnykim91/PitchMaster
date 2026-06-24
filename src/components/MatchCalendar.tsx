@@ -132,9 +132,9 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
       <div className="grid grid-cols-7 text-center">
         {WEEKDAYS.map((day, i) => (
           <span key={day} className={cn(
-            "text-xs font-semibold py-2 rounded-md",
-            i === 0 ? "text-primary/80 bg-primary/5" :
-            i === 6 ? "text-[hsl(var(--info))] bg-[hsl(var(--info)/0.1)]" :
+            "text-xs font-semibold py-2",
+            i === 0 ? "text-primary/80" :
+            i === 6 ? "text-[hsl(var(--info))]" :
             "text-muted-foreground"
           )}>
             {day}
