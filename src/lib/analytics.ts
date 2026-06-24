@@ -24,8 +24,10 @@ export const GA = {
   // ── 핵심 기능 사용 ──
   /** 경기 생성 */
   matchCreate: (matchType: string) => trackEvent("match_create", { match_type: matchType }),
-  /** 투표 완료. vote_source 키 — GA4 예약어 `source` 충돌 회피 (트래픽 채널 오분류 방지). */
+  /** 투표 완료. vote_source 키 — GA4 예약어 `source` 충돌 회피 (트래픽 채널 오분류 방지). source=shared_link 면 공유 링크 경유 유입. */
   voteComplete: (vote: string, source: string) => trackEvent("vote_complete", { vote_type: vote, vote_source: source }),
+  /** 투표 링크 공유 클릭 (카톡 등). vote_share 퍼널(공유→유입→투표) 측정용 — 공유가 실제로 일어나는지 확인. */
+  voteShared: (method: string) => trackEvent("vote_shared", { method }),
   /** 팀원 초대 */
   inviteSent: (method: string) => trackEvent("invite_sent", { method }),
   /** 회원 사전등록 */

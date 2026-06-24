@@ -3,9 +3,10 @@
 import { memo, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { GA } from "@/lib/analytics";
+import { shareVoteLink } from "@/lib/kakaoShare";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, HelpCircle, UserX, Check, Clock, Lock, LockOpen, Loader2 } from "lucide-react";
+import { Users, HelpCircle, UserX, Check, Clock, Lock, LockOpen, Loader2, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiMutate } from "@/lib/useApi";
 import { useToast } from "@/lib/ToastContext";
@@ -110,7 +111,9 @@ function MatchVoteTabInner({
       setTimeout(() => setShakeVote(null), 500);
       showToast("투표에 실패했습니다. 다시 시도해주세요.", "error");
     } else {
-      GA.voteComplete(vote, "match_detail");
+      // 공유 링크(?src=kakaoshare) 경유 유입이면 source 구분 — 공유→투표 전환 측정
+      const fromShare = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("src") === "kakaoshare";
+      GA.voteComplete(vote, fromShare ? "shared_link" : "match_detail");
       showToast(vote === "ATTEND" ? "참석으로 투표했습니다." : vote === "ABSENT" ? "불참으로 투표했습니다." : "미정으로 투표했습니다.");
       // 성공 시 백그라운드 refetch 후 낙관적 상태 초기화
       await refetchVote();
@@ -249,6 +252,17 @@ function MatchVoteTabInner({
           </div>
           <div className="mt-3 border-t border-border/30 pt-3 text-center text-xs text-muted-foreground">총 {baseRoster.length + guestCount}명</div>
 
+          {/* 카톡으로 투표 공유 — 단톡방에 링크를 던져 멤버가 바로 투표하도록 (마감 전만) */}
+          {match.status !== "COMPLETED" && !isExpired && (
+            <button
+              type="button"
+              onClick={() => shareVoteLink({ matchId, date: match.date, time: match.time, location: match.location, opponent: match.opponent, matchType: match.matchType })}
+              className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg bg-[hsl(var(--kakao))] py-2.5 text-sm font-bold text-[hsl(var(--kakao-foreground))] transition-colors hover:bg-[hsl(var(--kakao))]/90"
+            >
+              <Share2 className="h-4 w-4" />
+              카톡으로 투표 공유
+            </button>
+          )}
         </CardContent>
       </Card>
 

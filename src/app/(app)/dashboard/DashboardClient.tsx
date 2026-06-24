@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ChevronRight, Loader2, Vote, Trophy, User, Wallet, Upload, UserPlus, Calendar, ClipboardCheck, Settings, Users, AlertCircle, CheckCircle2, ChevronDown as ChevronDownIcon } from "lucide-react";
+import { ChevronRight, Loader2, Vote, Trophy, User, Wallet, Upload, UserPlus, Calendar, ClipboardCheck, Settings, Users, AlertCircle, CheckCircle2, ChevronDown as ChevronDownIcon, Share2 } from "lucide-react";
 import { GA } from "@/lib/analytics";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
@@ -21,7 +21,7 @@ import dynamic from "next/dynamic";
 // 정적 import면 대시보드 첫 JS 번들에 항상 포함되므로 dynamic 으로 분리해 첫 파스/실행량을 줄임.
 const PlayStoreInstallBanner = dynamic(() => import("@/components/PlayStoreInstallBanner"), { ssr: false });
 const WelcomeCard = dynamic(() => import("@/components/onboarding/WelcomeCard"), { ssr: false });
-import { shareTeamInvite } from "@/lib/kakaoShare";
+import { shareTeamInvite, shareVoteLink } from "@/lib/kakaoShare";
 import "@/app/onboarding/onboarding.css";
 
 // TEMP: 디자인 검토용 — 김선휘만 ?previewWelcome=created로 시안 created 카드 노출. 작업 종료 후 제거.
@@ -642,6 +642,25 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
                           </button>
                         ))}
                       </div>
+                    )}
+
+                    {/* 카톡으로 투표 공유 — 단톡방에 링크를 던져 멤버가 바로 투표 (마감 전만) */}
+                    {!isVoteClosed && (
+                      <button
+                        type="button"
+                        onClick={() => shareVoteLink({
+                          matchId: upcomingMatch.id,
+                          date: upcomingMatch.match_date,
+                          time: upcomingMatch.match_time ?? undefined,
+                          location: upcomingMatch.location ?? undefined,
+                          opponent: upcomingMatch.opponent_name ?? undefined,
+                          matchType: upcomingType,
+                        })}
+                        className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-border py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                      >
+                        <Share2 className="h-3.5 w-3.5" />
+                        카톡으로 투표 공유
+                      </button>
                     )}
 
                     {/* Footer — 마감 상태 + 내 투표 통합 표시 */}

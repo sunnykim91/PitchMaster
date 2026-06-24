@@ -106,9 +106,12 @@ export async function shareVoteLink({
   opponent?: string;
   matchType?: string;
 }) {
+  // GA — 투표 공유 클릭 (채널 무관, fallback 포함). 공유가 실제로 일어나는지 측정.
+  try { const { GA } = await import("@/lib/analytics"); GA.voteShared("kakao_talk"); } catch { /* ignore */ }
   const isEvent = matchType === "EVENT";
   const label = isEvent ? "일정" : "경기";
-  const voteUrl = `${APP_URL}/matches/${matchId}?tab=vote`;
+  // src=kakaoshare — 공유 링크 경유 유입을 vote_complete source 로 구분 (퍼널 측정)
+  const voteUrl = `${APP_URL}/matches/${matchId}?tab=vote&src=kakaoshare`;
   if (!(await ensureKakao())) {
     fallbackShare(voteUrl, `${date} ${label} 참석 투표에 참여하세요!`);
     return;
