@@ -54,12 +54,15 @@ const getSocialProof = unstable_cache(
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ code?: string }>;
+  searchParams: Promise<{ code?: string; redirect?: string }>;
 }) {
-  const { code: inviteCode } = await searchParams;
+  const { code: inviteCode, redirect: redirectAfter } = await searchParams;
   const kakaoEnabled = isKakaoConfigured();
+  // 초대 코드가 우선(가입 흐름), 없으면 redirect 경로 보존(A2 — 공유 투표 링크 등 복귀)
   const kakaoHref = inviteCode
     ? `/api/auth/kakao?inviteCode=${encodeURIComponent(inviteCode)}`
+    : redirectAfter
+    ? `/api/auth/kakao?redirect=${encodeURIComponent(redirectAfter)}`
     : "/api/auth/kakao";
 
   const { teamCount, memberCount } = await getSocialProof();

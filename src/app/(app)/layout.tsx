@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import ClientLayout from "@/app/(app)/ClientLayout";
 
@@ -13,7 +14,9 @@ export default async function AppLayout({
   const session = await auth();
 
   if (!session) {
-    redirect("/login");
+    // 로그인 후 원래 보던 페이지(예: 단톡방에서 받은 투표 링크)로 복귀시키기 위해 경로 보존
+    const path = (await headers()).get("x-pathname") || "";
+    redirect(path && path !== "/" ? `/login?redirect=${encodeURIComponent(path)}` : "/login");
   }
 
   if (!session.user.isProfileComplete) {

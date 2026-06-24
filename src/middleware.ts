@@ -115,7 +115,11 @@ export function middleware(req: NextRequest) {
   // GET/HEAD/OPTIONS — signup_source fallback만 시도하고 통과
   if (!STATE_CHANGING.has(method)) {
     if (method === "GET") {
-      return maybeSetSignupSource(req, NextResponse.next());
+      // 로그인 후 원래 페이지 복귀(A2)용 — 서버 컴포넌트(layout)는 현재 경로를 직접 못 읽어서
+      // request 헤더로 주입해준다. 응답/리다이렉트/리라이트는 일절 손대지 않음 (request 헤더 추가만).
+      const requestHeaders = new Headers(req.headers);
+      requestHeaders.set("x-pathname", req.nextUrl.pathname + req.nextUrl.search);
+      return maybeSetSignupSource(req, NextResponse.next({ request: { headers: requestHeaders } }));
     }
     return NextResponse.next();
   }
