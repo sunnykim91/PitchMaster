@@ -145,7 +145,7 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
       {/* 날짜 그리드 */}
       <div className="grid grid-cols-7">
         {days.map((day, i) => {
-          if (day === null) return <div key={`e-${i}`} className="aspect-square" />;
+          if (day === null) return <div key={`e-${i}`} />;
 
           const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           const dayMatches = matchesByDate.get(dateStr);
@@ -179,7 +179,7 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
               type="button"
               onClick={() => setSelectedDate(isSelected ? null : dateStr)}
               className={cn(
-                "flex flex-col items-center justify-center rounded-lg transition-all text-sm relative py-3",
+                "flex flex-col items-center justify-center rounded-lg transition-all text-sm relative min-h-[52px]",
                 isSelected && isToday ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background" :
                 isSelected ? "bg-primary text-primary-foreground" :
                 isToday ? "ring-2 ring-primary text-primary font-bold" :
