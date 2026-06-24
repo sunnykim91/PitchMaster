@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Star, Pencil, Loader2, Copy, Download } from "lucide-react";
@@ -120,22 +120,25 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
   // P2 카테고리 필터 — null이면 전체. animation_data.category 없으면 phase 라벨 기반 자동 추정.
   const [categoryFilter, setCategoryFilter] = useState<AnimationCategory | null>(null);
 
-  // 추정된 카테고리 캐시 — 매 렌더마다 재계산 막기
-  const animationsWithCategory = animations.map((a) => ({
-    ...a,
-    _category: inferAnimationCategory(a.animation_data),
-  }));
-  const filteredAnimations = (
-    categoryFilter
-      ? animationsWithCategory.filter((a) => a._category === categoryFilter)
-      : animationsWithCategory
-  )
-    // 대표(⭐) 영상이 맨 위. 그 안에서 최신순.
-    .slice()
-    .sort((a, b) => {
-      if (!!a.is_default !== !!b.is_default) return a.is_default ? -1 : 1;
-      return (b.created_at ?? "").localeCompare(a.created_at ?? "");
-    });
+  // 추정된 카테고리 캐시 — 매 렌더마다 재계산 막기 (useMemo)
+  const animationsWithCategory = useMemo(
+    () => animations.map((a) => ({ ...a, _category: inferAnimationCategory(a.animation_data) })),
+    [animations],
+  );
+  const filteredAnimations = useMemo(
+    () =>
+      (categoryFilter
+        ? animationsWithCategory.filter((a) => a._category === categoryFilter)
+        : animationsWithCategory
+      )
+        // 대표(⭐) 영상이 맨 위. 그 안에서 최신순.
+        .slice()
+        .sort((a, b) => {
+          if (!!a.is_default !== !!b.is_default) return a.is_default ? -1 : 1;
+          return (b.created_at ?? "").localeCompare(a.created_at ?? "");
+        }),
+    [animationsWithCategory, categoryFilter],
+  );
 
 
   // 대표(⭐) 토글 — 마이그 00073 이후 카테고리·포메이션 무관 N개 가능. 다른 영상 영향 X.
@@ -174,20 +177,28 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
   }
 
   // 각 카테고리별 개수 (필터 칩에 노출)
-  const categoryCounts = ANIMATION_CATEGORIES.reduce(
-    (acc, c) => {
-      acc[c] = animationsWithCategory.filter((a) => a._category === c).length;
-      return acc;
-    },
-    {} as Record<AnimationCategory, number>,
+  const categoryCounts = useMemo(
+    () =>
+      ANIMATION_CATEGORIES.reduce(
+        (acc, c) => {
+          acc[c] = animationsWithCategory.filter((a) => a._category === c).length;
+          return acc;
+        },
+        {} as Record<AnimationCategory, number>,
+      ),
+    [animationsWithCategory],
   );
 
   // 영상은 있는데 대표(⭐) 0개인 카테고리 — 매치 자동 노출이 안 됨. 운영진 알림용.
-  const categoriesMissingDefault = ANIMATION_CATEGORIES.filter((c) => {
-    const list = animationsWithCategory.filter((a) => a._category === c);
-    if (list.length === 0) return false;
-    return list.every((a) => !a.is_default);
-  });
+  const categoriesMissingDefault = useMemo(
+    () =>
+      ANIMATION_CATEGORIES.filter((c) => {
+        const list = animationsWithCategory.filter((a) => a._category === c);
+        if (list.length === 0) return false;
+        return list.every((a) => !a.is_default);
+      }),
+    [animationsWithCategory],
+  );
 
   async function handleExportGif(
     animation: TeamTacticalAnimation,

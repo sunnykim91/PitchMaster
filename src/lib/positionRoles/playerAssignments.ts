@@ -12,6 +12,9 @@ import { formationTemplates } from "@/lib/formations";
 import { getPositionRole } from "./index";
 import type { MergedPositionRole } from "./types";
 
+// formation id → template 조회 O(1). 매 슬롯마다 formationTemplates.find(35개 선형탐색)하던 것 제거.
+const formationById = new Map(formationTemplates.map((f) => [f.id, f]));
+
 export type SquadPosition = {
   playerId: string;
   x?: number;
@@ -45,7 +48,7 @@ export type AssignmentGroup = {
 
 /** formation id + slot id → role 코드 조회 */
 function findRoleForSlot(formationId: string, slotId: string): string | null {
-  const tpl = formationTemplates.find((f) => f.id === formationId);
+  const tpl = formationById.get(formationId);
   if (!tpl) return null;
   const slot = tpl.slots.find((s) => s.id === slotId);
   return slot?.role ?? null;

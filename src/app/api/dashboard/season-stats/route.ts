@@ -12,5 +12,9 @@ export async function GET() {
   if (ctx instanceof NextResponse) return ctx;
 
   const data = await getDashboardSeasonStats(ctx.teamId, ctx.userId);
-  return apiSuccess(data);
+  // 무거운 시즌 집계 — 본인 전용(private) 60초 캐시로 TWA 재진입·포커스 복귀 시 재집계/재요청 차단.
+  // (경기 결과는 초 단위로 안 바뀌므로 60초 staleness 무해)
+  const res = apiSuccess(data);
+  res.headers.set("Cache-Control", "private, max-age=60");
+  return res;
 }

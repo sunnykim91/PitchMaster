@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { auth } from "@/lib/auth";
 import type { Metadata } from "next";
@@ -40,7 +41,7 @@ type MemberRow = {
   teams: JoinedRow<{ name: string; sport_type: string; uniform_primary: string | null; logo_url: string | null }>;
 };
 
-async function getPlayerData(memberId: string, teamId?: string, enableAi: boolean = false, callerUserId: string | null = null, callerTeamId: string | null = null): Promise<PlayerProfile | null> {
+async function _getPlayerData(memberId: string, teamId?: string, enableAi: boolean = false, callerUserId: string | null = null, callerTeamId: string | null = null): Promise<PlayerProfile | null> {
   const db = getSupabaseAdmin();
   if (!db) return null;
   // .or() 보간 가드 — URL 파라미터 직접 들어오는 자리. 비-UUID면 즉시 not-found.
@@ -417,10 +418,16 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
   };
 }
 
+// React cache() — 같은 요청 내 generateMetadata 와 페이지 본문의 중복 호출을 1회로 합침.
+// 시즌 전체 집계(8~12쿼리)가 요청당 2번 돌던 걸 1번으로. 양쪽이 동일 인자로 호출해야 효과.
+const getPlayerData = cache(_getPlayerData);
+
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { memberId } = await params;
   const { team } = await searchParams;
-  const data = await getPlayerData(memberId, team);
+  // 페이지 본문과 동일 인자로 호출 → cache() 가 두 번을 1회 실행으로 합침
+  const session = await auth().catch(() => null);
+  const data = await getPlayerData(memberId, team, true, session?.user?.id ?? null, session?.user?.teamId ?? null);
   const canonical = `https://pitch-master.app/player/${memberId}${team ? `?team=${team}` : ""}`;
   if (!data) {
     return {

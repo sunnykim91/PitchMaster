@@ -16,8 +16,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/lib/ToastContext";
-import PlayStoreInstallBanner from "@/components/PlayStoreInstallBanner";
-import WelcomeCard from "@/components/onboarding/WelcomeCard";
+import dynamic from "next/dynamic";
+// 둘 다 조건부로만 노출(안드로이드 非TWA 설치배너 / 신규팀 환영카드) — 대부분의 진입에선 안 그려짐.
+// 정적 import면 대시보드 첫 JS 번들에 항상 포함되므로 dynamic 으로 분리해 첫 파스/실행량을 줄임.
+const PlayStoreInstallBanner = dynamic(() => import("@/components/PlayStoreInstallBanner"), { ssr: false });
+const WelcomeCard = dynamic(() => import("@/components/onboarding/WelcomeCard"), { ssr: false });
 import { shareTeamInvite } from "@/lib/kakaoShare";
 import "@/app/onboarding/onboarding.css";
 
