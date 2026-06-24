@@ -53,5 +53,8 @@ export default defineConfig({
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    // 권한별 테스트용 dev-login 활성화 (NODE_ENV!=production 이중 게이트 → prod 무영향).
+    // ⚠️ reuseExistingServer 로 기존 서버를 재사용하면 적용 안 됨 → 그 경우 permissions 스펙은 자동 skip.
+    env: { DEV_IMPERSONATE: "1" },
   },
 });

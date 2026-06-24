@@ -398,6 +398,7 @@ npm run test:e2e:report   # 마지막 HTML 리포트 열기
   - CSRF 미들웨어 때문에 API 호출 시 `Origin: http://localhost:3000` 헤더 필수
 - **로컬 전용**: 인증 테스트는 `.env`(SESSION_SECRET·service role)+데모 계정 필요. **CI**(placeholder DB)에선 `setup`이 빈 state 기록 → 인증 테스트 자동 skip (`guard.ts`가 `/login` 리다이렉트 감지). CI 항상 green 유지
 - **변경(write) 테스트**: `vote.spec.ts`는 데모 28경기가 전부 COMPLETED라 임시 경기 생성→투표→`afterEach` 삭제(CASCADE)로 잔여물 없이 실행
+- **권한별 테스트**: `permissions.spec.ts` — dev-login(`DEV_IMPERSONATE=1`, playwright.config webServer env)으로 FC DEMO STAFF(`demo_정공미`)/MEMBER(`demo_서공격`) 가장 → staffOnly 게이트(회비 납부현황·설정 탭, 햄버거 "빠른 처리" 그룹) 노출 차이 검증. **fresh 서버에서만 동작**(reuseExistingServer 로 기존 서버 재사용 시 env 미적용 → 자동 skip)
 - 첫 방문 코치마크(`localStorage["pm_coach_mark_v1"]`)·Next dev 오버레이(`<nextjs-portal>`)는 `guard.ts`의 `addInitScript`로 차단 (클릭 가로채기 방지)
 
 ### 성능 측정 (Playwright, `perf/` + `playwright.perf.config.ts`)
