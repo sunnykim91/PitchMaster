@@ -181,3 +181,11 @@ memory/
 # 일회성 fix·migration 스크립트 (실행 후 의미 없음)
 scripts/fix-*.mjs
 scripts/run-migration-*.mjs
+
+# Playwright E2E 산출물 (리포트·트레이스·인증 storageState)
+/playwright-report/
+/test-results/
+/e2e/.auth/
+
+# 성능 측정 산출물 (Lighthouse HTML 리포트)
+/lighthouse-report/

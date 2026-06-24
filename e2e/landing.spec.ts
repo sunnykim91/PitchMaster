@@ -8,7 +8,8 @@ test.describe("Landing Page", () => {
 
   test("should have a login link", async ({ page }) => {
     await page.goto("/");
-    const loginLink = page.getByRole("link", { name: /로그인|시작/i });
+    // 랜딩에는 카카오 시작 CTA가 여러 곳(헤더·히어로·하단)에 있으므로 첫 번째만 검증
+    const loginLink = page.getByRole("link", { name: /로그인|시작/i }).first();
     await expect(loginLink).toBeVisible();
   });
 });

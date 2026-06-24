@@ -29,7 +29,7 @@ test.describe("Accessibility Basics", () => {
     const response = await page.goto("/manifest.json");
     expect(response?.status()).toBe(200);
     const manifest = await response?.json();
-    expect(manifest.name).toContain("PitchMaster");
+    expect(manifest.name).toContain("피치마스터");
     expect(manifest.display).toBe("standalone");
   });
 });
