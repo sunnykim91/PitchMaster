@@ -1,4 +1,7 @@
 import { test, expect } from "@playwright/test";
+import { installRuntimeErrorGuard } from "./errorGuard";
+
+installRuntimeErrorGuard();
 
 test.describe("Navigation & Routing", () => {
   test("unauthenticated user is redirected to login", async ({ page }) => {

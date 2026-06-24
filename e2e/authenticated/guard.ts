@@ -1,4 +1,5 @@
-import { test, expect } from "@playwright/test";
+import { test } from "@playwright/test";
+import { installRuntimeErrorGuard } from "../errorGuard";
 
 /**
  * 데모 세션이 없으면(CI/placeholder DB 등 setup 이 빈 storageState 를 남긴 경우)
@@ -7,21 +8,10 @@ import { test, expect } from "@playwright/test";
  * /dashboard 로 이동했을 때 /login 으로 튕기면 = 비로그인 상태로 판단.
  */
 export function skipWhenUnauthenticated() {
-  // 하이드레이션 불일치·런타임 예외 감지용 (타임스탬프 locale 등 이 클래스 재발 자동 차단)
-  const runtimeErrors: string[] = [];
-  const HYDRATION_RE = /hydrat|did not match|Text content does not match|Minified React error #(418|423|425)/i;
+  // 하이드레이션/런타임 에러 가드 (공용) — 네비게이션 전 리스너 부착을 위해 먼저 호출
+  installRuntimeErrorGuard();
 
   test.beforeEach(async ({ page }) => {
-    runtimeErrors.length = 0;
-    page.on("pageerror", (e) => {
-      if (HYDRATION_RE.test(e.message)) runtimeErrors.push(`pageerror: ${e.message.slice(0, 200)}`);
-    });
-    page.on("console", (m) => {
-      if (m.type() === "error" && HYDRATION_RE.test(m.text())) {
-        runtimeErrors.push(`console: ${m.text().slice(0, 200)}`);
-      }
-    });
-
     // 첫 방문 온보딩 코치마크(z-[200] 모달 오버레이)가 탭바·햄버거 클릭을 가로채므로
     // 노출 1회 플래그(localStorage["pm_coach_mark_v1"])를 미리 심어 차단한다.
     await page.addInitScript(() => {
@@ -50,9 +40,5 @@ export function skipWhenUnauthenticated() {
     if (new URL(page.url()).pathname.startsWith("/login")) {
       test.skip(true, "데모 로그인 불가 — 인증 E2E skip (로컬 .env + 데모 계정 필요)");
     }
-  });
-
-  test.afterEach(() => {
-    expect(runtimeErrors, `런타임/하이드레이션 에러 감지:\n${runtimeErrors.join("\n")}`).toEqual([]);
   });
 }

@@ -1,4 +1,7 @@
 import { test, expect } from "@playwright/test";
+import { installRuntimeErrorGuard } from "./errorGuard";
+
+installRuntimeErrorGuard();
 
 test.describe("Accessibility Basics", () => {
   test("landing page has proper HTML lang attribute", async ({ page }) => {

@@ -1,4 +1,7 @@
 import { test, expect } from "@playwright/test";
+import { installRuntimeErrorGuard } from "./errorGuard";
+
+installRuntimeErrorGuard();
 
 test.describe("Landing Page", () => {
   test("should load the landing page", async ({ page }) => {

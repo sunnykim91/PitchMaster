@@ -1,4 +1,7 @@
 import { test, expect } from "@playwright/test";
+import { installRuntimeErrorGuard } from "./errorGuard";
+
+installRuntimeErrorGuard();
 
 /**
  * 공개 SEO / 인프라 스모크 (비로그인, CI-safe).
