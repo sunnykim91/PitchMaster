@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
       agg.rows.push(v);
       aggByMatch.set(v.match_id, agg);
     }
-    const { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
+    const { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
     // 새 MVP 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04)
     const { data: teamSettingsForMvp } = await db.from("teams").select("mvp_vote_staff_only").eq("id", ctx.teamId).maybeSingle();
     const mvpVoteStaffOnlyForMvp = (teamSettingsForMvp as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
@@ -150,8 +150,9 @@ export async function GET(request: NextRequest) {
       const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
         applyBackfillHealing: !newPolicy,
       });
-      const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(matchId) ?? 0, staffDecision);
-      if (!winner || !lookupIds.includes(winner)) continue;
+      // 공동 1등이면 그 안에 본인이 있으면 이 경기를 본인 MVP 목록에 포함 (공동 MVP)
+      const winners = resolveValidMvps(agg.votes, attendedPerMatch.get(matchId) ?? 0, staffDecision);
+      if (!winners.some((w) => lookupIds.includes(w))) continue;
       const m = matchMap.get(matchId);
       if (m) {
         const sc = scoreMap.get(matchId);

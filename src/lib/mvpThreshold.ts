@@ -97,12 +97,43 @@ export function isValidMvpVoteTurnout(
 }
 
 /**
- * MVP 후보 목록에서 유효한 MVP 당선자를 판정.
- * 투표 참여율이 임계값 미만이면 null 반환.
+ * MVP 후보 목록에서 유효한 MVP 당선자(들)를 판정 — 공동 1등 전원 반환.
+ * 투표 참여율이 임계값 미만이면 빈 배열.
+ *
+ * 투표로 뽑힌 경우 최다 득표가 동률이면 공동 MVP로 전원 인정한다.
+ * (운영진 직접 지정은 명시적으로 1명을 고르는 개념이라 공동 적용 안 함.)
  *
  * @param votes candidate_id 배열 (중복 있음 — 한 후보에 여러 표)
  * @param attendedCount 해당 경기 실제 참석 인원
- * @param staffDecisionCandidateId 운영진이 직접 지정한 후보 ID (있으면 즉시 확정)
+ * @param staffDecisionCandidateId 운영진이 직접 지정한 후보 ID (있으면 그 1명 즉시 확정)
+ * @returns 당선자 candidate_id 배열 (공동 1등이면 복수, 없으면 빈 배열). candidate_id 사전순 정렬.
+ */
+export function resolveValidMvps(
+  votes: string[],
+  attendedCount: number,
+  staffDecisionCandidateId?: string | null
+): string[] {
+  // 운영진 직접 지정이 있으면 투표율 무관하게 그 1명 즉시 확정 (공동 적용 안 함)
+  if (staffDecisionCandidateId) return [staffDecisionCandidateId];
+
+  if (!votes.length) return [];
+  // 투표자 수 = 실제 표 개수 (voter_id 유니크 제약이 DB에 있어 voter 수 = 표 수)
+  if (!isValidMvpVoteTurnout(votes.length, attendedCount)) return [];
+
+  const counts: Record<string, number> = {};
+  for (const id of votes) counts[id] = (counts[id] ?? 0) + 1;
+  const max = Math.max(...Object.values(counts));
+  // 최다 득표 동률(공동 1등) 전원 — candidate_id 사전순으로 결정론적 반환
+  return Object.keys(counts)
+    .filter((id) => counts[id] === max)
+    .sort();
+}
+
+/**
+ * 단일 MVP 당선자 — 공동 1등이면 사전순 첫 번째 1명만.
+ * 단수 winner가 필요한 레거시 경로(실시간 표시 등)용 얇은 래퍼.
+ * 집계·기록 경로는 resolveValidMvps(복수)를 써서 공동 MVP를 모두 반영할 것.
+ *
  * @returns 당선자 candidate_id 또는 null
  */
 export function resolveValidMvp(
@@ -110,17 +141,5 @@ export function resolveValidMvp(
   attendedCount: number,
   staffDecisionCandidateId?: string | null
 ): string | null {
-  // 운영진 직접 지정이 있으면 투표율 무관하게 즉시 확정
-  if (staffDecisionCandidateId) return staffDecisionCandidateId;
-
-  if (!votes.length) return null;
-  // 투표자 수 = 실제 표 개수 (voter_id 유니크 제약이 DB에 있어 voter 수 = 표 수)
-  if (!isValidMvpVoteTurnout(votes.length, attendedCount)) return null;
-
-  const counts: Record<string, number> = {};
-  for (const id of votes) counts[id] = (counts[id] ?? 0) + 1;
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  if (sorted.length === 0) return null;
-  // 동률일 경우: 첫 번째 반환 (상위 로직에서 필요시 동률 처리)
-  return sorted[0][0];
+  return resolveValidMvps(votes, attendedCount, staffDecisionCandidateId)[0] ?? null;
 }

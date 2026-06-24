@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
         (staffResp.data ?? []).map((m) => m.user_id).filter((id): id is string => !!id)
       );
 
-      const { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
+      const { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
       // 새 MVP 정책 — match_date + mvp_vote_staff_only 토글
       const { data: teamSettingsForMvp } = await db.from("teams").select("mvp_vote_staff_only").eq("id", ctx.teamId).maybeSingle();
       const mvpVoteStaffOnlyForMvp = (teamSettingsForMvp as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
@@ -91,14 +91,15 @@ export async function GET(request: NextRequest) {
       });
       const votes = rows.map((v) => v.candidate_id);
 
-      const winner = resolveValidMvp(votes, attendedCount, staffPick);
-      if (winner) {
-        const { data: mvpUser } = await db
+      // 공동 1등이면 이름 병기 ("철수, 영희")
+      const winners = resolveValidMvps(votes, attendedCount, staffPick);
+      if (winners.length > 0) {
+        const { data: mvpUsers } = await db
           .from("users")
           .select("name")
-          .eq("id", winner)
-          .single();
-        if (mvpUser) mvpName = mvpUser.name;
+          .in("id", winners);
+        const names = (mvpUsers ?? []).map((u) => u.name).filter(Boolean);
+        if (names.length > 0) mvpName = names.join(", ");
       }
     }
 

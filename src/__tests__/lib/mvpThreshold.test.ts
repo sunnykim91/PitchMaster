@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   isValidMvpVoteTurnout,
   resolveValidMvp,
+  resolveValidMvps,
   pickStaffDecision,
   shouldApplyNewMvpPolicy,
   MVP_VOTE_THRESHOLD,
@@ -63,9 +64,9 @@ describe("resolveValidMvp", () => {
     ).toBe("b");
   });
 
-  it("동률일 때 첫 번째로 카운트된 후보 반환", () => {
-    // a=2, b=2 → a (Object.entries는 삽입 순서 유지, votes에 a 먼저 등장)
-    expect(resolveValidMvp(["a", "b", "a", "b"], 4)).toBe("a");
+  it("동률일 때 candidate_id 사전순 첫 번째 반환 (결정론적)", () => {
+    // a=2, b=2 → 사전순 첫 번째 a
+    expect(resolveValidMvp(["b", "a", "b", "a"], 4)).toBe("a");
   });
 
   it("표 0개 + staffDecision 없음 → null", () => {
@@ -74,6 +75,43 @@ describe("resolveValidMvp", () => {
 
   it("참석 체크 미기록 경기는 폴백으로 단순 최다득표 통과", () => {
     expect(resolveValidMvp(["a", "a", "b"], 0)).toBe("a");
+  });
+});
+
+describe("resolveValidMvps (공동 MVP)", () => {
+  it("단독 1등이면 1명 배열 반환", () => {
+    // 7표 / 10명 = 70%, b=4 vs a=3 → [b]
+    expect(
+      resolveValidMvps(["a", "a", "a", "b", "b", "b", "b"], 10),
+    ).toEqual(["b"]);
+  });
+
+  it("공동 1등이면 전원 반환 (사전순)", () => {
+    // a=2, b=2 동률 → 둘 다 (사전순)
+    expect(resolveValidMvps(["b", "a", "b", "a"], 4)).toEqual(["a", "b"]);
+  });
+
+  it("3명 공동 1등도 전원 반환", () => {
+    expect(resolveValidMvps(["c", "a", "b"], 3)).toEqual(["a", "b", "c"]);
+  });
+
+  it("staffDecision 있으면 그 1명만 (공동 적용 안 함)", () => {
+    // a=2, b=2 동률이어도 운영진 직접 지정 z 1명만
+    expect(resolveValidMvps(["a", "a", "b", "b"], 4, "z")).toEqual(["z"]);
+  });
+
+  it("70% 미달이면 빈 배열", () => {
+    // 5표 / 10명 = 50% → []
+    expect(resolveValidMvps(["a", "a", "a", "b", "b"], 10)).toEqual([]);
+  });
+
+  it("표 0개 + staffDecision 없음 → 빈 배열", () => {
+    expect(resolveValidMvps([], 10)).toEqual([]);
+  });
+
+  it("참석 체크 미기록 경기는 폴백으로 최다득표 통과 (공동 포함)", () => {
+    // attendedCount=0 폴백, a=2 단독 → [a]
+    expect(resolveValidMvps(["a", "a", "b"], 0)).toEqual(["a"]);
   });
 });
 

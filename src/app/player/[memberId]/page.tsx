@@ -19,7 +19,7 @@ import { PlayerProfilePage, PlayerProfileEmpty } from "@/components/pitchmaster/
 import type { PlayerProfile, PlayerStats } from "@/components/pitchmaster/PlayerProfilePage";
 import type { PlayerCardProps, StatWithContext } from "@/components/pitchmaster/PlayerCard";
 import { firstOf, type JoinedRow } from "@/lib/supabaseJoins";
-import { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
+import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
 import { isValidUuid } from "@/lib/validators/uuid";
 
 type Props = {
@@ -168,19 +168,20 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
   const matchDateById = new Map<string, string>();
   for (const mm of matches ?? []) matchDateById.set(mm.id, mm.match_date);
 
-  const mvpWinnerByMatch = new Map<string, string>();
+  const mvpWinnersByMatch = new Map<string, string[]>();
   for (const [mid, agg] of mvpVotesByMatch) {
     const newPolicy = shouldApplyNewMvpPolicy(matchDateById.get(mid), mvpVoteStaffOnly);
     const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
       applyBackfillHealing: !newPolicy,
     });
-    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
-    if (winner) mvpWinnerByMatch.set(mid, winner);
+    // 공동 1등이면 전원 (공동 MVP)
+    const winners = resolveValidMvps(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
+    if (winners.length) mvpWinnersByMatch.set(mid, winners);
   }
 
   const myGoals = (allGoalsByScorerRes.data ?? []).filter((g) => lookupIds.includes(g.scorer_id));
   const myAssists = (allAssistsRes.data ?? []).filter((a) => lookupIds.includes(a.assist_id));
-  const myMvpMatches = [...mvpWinnerByMatch.entries()].filter(([, winner]) => lookupIds.includes(winner));
+  const myMvpMatches = [...mvpWinnersByMatch.entries()].filter(([, winners]) => winners.some((w) => lookupIds.includes(w)));
 
   const totalGoals = myGoals.length;
   const totalAssists = myAssists.length;
@@ -227,9 +228,11 @@ async function getPlayerData(memberId: string, teamId?: string, enableAi: boolea
     const agg = memberAggs.find((mm) => mm.ids.includes(a.assist_id));
     if (agg) agg.assists++;
   }
-  for (const winner of mvpWinnerByMatch.values()) {
-    const agg = memberAggs.find((mm) => mm.ids.includes(winner));
-    if (agg) agg.mvp++;
+  for (const winners of mvpWinnersByMatch.values()) {
+    for (const winner of winners) {
+      const agg = memberAggs.find((mm) => mm.ids.includes(winner));
+      if (agg) agg.mvp++;
+    }
   }
 
   const goalsRank = computeRankLabel(totalGoals, memberAggs.map((x) => x.goals));

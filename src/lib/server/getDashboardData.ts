@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { autoCompleteTeamMatches, getKstToday } from "@/lib/server/autoCompleteMatches";
-import { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
+import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
 import { isTeamRecordMatch } from "@/lib/types";
 
 export type TeamRecord = {
@@ -405,16 +405,18 @@ export async function getDashboardData(
     const staffDecision = pickStaffDecision(voteRows, staffVoterIds, {
       applyBackfillHealing: !newPolicy,
     });
-    const winnerId = resolveValidMvp(
+    const winnerIds = resolveValidMvps(
       voteRows.map((v) => v.candidate_id).filter(Boolean),
       attendedCount,
       staffDecision,
     );
-    const winnerName = winnerId
-      ? (() => {
-          const row = voteRows.find((v) => v.candidate_id === winnerId);
-          return row ? (Array.isArray(row.users) ? row.users[0]?.name : row.users?.name) ?? null : null;
-        })()
+    // 공동 1등이면 이름 병기 ("철수, 영희")
+    const nameOfWinner = (id: string): string | null => {
+      const row = voteRows.find((v) => v.candidate_id === id);
+      return row ? (Array.isArray(row.users) ? row.users[0]?.name : row.users?.name) ?? null : null;
+    };
+    const winnerName = winnerIds.length
+      ? winnerIds.map(nameOfWinner).filter(Boolean).join(", ") || null
       : null;
     recentResult = {
       id: recentMatch.id,

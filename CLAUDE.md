@@ -139,10 +139,11 @@ v{hash}
 
 이전 박제(회원 벌크 CSV·guide.html 마이그)는 **둘 다 완료**:
 - ✅ 회원 벌크 CSV/paste 등록 — `MemberBulkUploadModal.tsx` + `/api/members/bulk` (max 200명, paste+CSV, PRESIDENT only)
-- ✅ guide.html → Next.js 마이그 — `/guide/[slug]/page.tsx` 이관 완료. `public/guide.html` 레거시 잔재 정리 LOW
+- ✅ guide.html(앱 사용법 16섹션) → Next.js `/help` 이관 완료 (92차, 1515ab5). `/guide`는 SEO 블로그 허브(`/guide/[slug]`), `/help`는 앱 사용법 manual. next.config 301 `/guide.html→/help`. 푸터: "사용 가이드"→/help, "운영 노하우"→/guide 분리.
 
 남은 채택 후보 (조기싸커 차용 검토 — 마감 없음):
-- GK 로테이션 자동 (AutoFormationBuilder 통합 후보, 축구·풋살 둘 다)
+- ✅ 풋살 키퍼·교대 순번 룰렛 — `KeeperRotationCard.tsx` + `/api/keeper-rotation` + `keeper_rotation` JSONB 컬럼 (마이그 00077). 풋살 전술 탭 전용. 고정 키퍼 유무 이진(선호포지션 GK 단독 자동 감지)·원형 쿼터 회전·번호 랜덤 (92차, 6f3481d~014eeb5).
+- GK 로테이션 자동 (AutoFormationBuilder 통합 후보, 축구 전용) — 풋살은 위 기능으로 대체됨
 - 라인 밸런스 시각화 — PitchScore 50차 제거로 보류
 
 UI/UX 부채 잔존 (CLAUDE.md 알려진 이슈 참조)
@@ -159,18 +160,21 @@ UI/UX 부채 잔존 (CLAUDE.md 알려진 이슈 참조)
 ## MVP 집계 정책 (2026-04-23 기준)
 
 **확정 조건** (둘 중 하나):
-1. 운영진(STAFF+) 1명 이상이 해당 경기에 투표 → 즉시 확정 (투표율 무관)
-2. 일반 팀원 투표가 실제 참석자(`attendance_status=PRESENT|LATE`) 70% 이상 → 최다득표자 확정
+1. 운영진(STAFF+) 1명 이상이 해당 경기에 투표 → 즉시 확정 (투표율 무관, **1명만**)
+2. 일반 팀원 투표가 실제 참석자(`attendance_status=PRESENT|LATE`) 70% 이상 → 최다득표자 확정. **공동 1등이면 전원 공동 MVP로 인정 (92차+ 정책)**
 
 **구현 헬퍼** (`src/lib/mvpThreshold.ts`):
-- `resolveValidMvp(votes, attendedCount, staffDecision)` — 정책 판정
+- `resolveValidMvps(votes, attendedCount, staffDecision)` — **정책 판정, 공동 1등 전원을 candidate_id 사전순 배열로 반환** (투표 동률 = 공동 MVP. 운영진 직접 지정은 1명만). 집계·기록 경로는 이걸 써서 동률 전원 +1.
+- `resolveValidMvp(...)` — 단수 래퍼 (`resolveValidMvps(...)[0] ?? null`). 단수 winner가 필요한 레거시용. 동률은 사전순 첫 번째 (결정론적).
 - `pickStaffDecision(rows, staffVoterIds)` — `is_staff_decision=true` OR 현재 STAFF+ voter 투표를 확정 후보로 리턴. 2026-04-20(커밋 `2d457b8`) 이전에 저장된 staff 투표가 `false`로 남아있는 백필 누락을 동적 치유.
 
-**집계 경로 9곳** — 하나 수정 시 전부 같이 건드려야 일관성 유지:
-- SSR: `src/lib/server/getRecordsData.ts`, `src/lib/server/getDashboardData.ts`
-- API: `src/app/api/records/route.ts`, `src/app/api/records/detail/route.ts` (`type=mvp`), `src/app/api/season-awards/route.ts`, `src/app/api/player-card/route.ts`, `src/app/api/share-card/route.ts`
+**집계 경로 11곳** — 하나 수정 시 전부 같이 건드려야 일관성 유지 (전부 `resolveValidMvps` 사용):
+- SSR: `src/lib/server/getRecordsData.ts`, `src/lib/server/getDashboardData.ts`(동률 시 이름 병기)
+- 선수 프로필 SSR: `src/app/player/[memberId]/page.tsx` (totalMvp + 팀 랭킹)
+- API: `src/app/api/records/route.ts`, `src/app/api/records/detail/route.ts` (`type=mvp`), `src/app/api/season-awards/route.ts`, `src/app/api/player-card/route.ts`, `src/app/api/share-card/route.ts`(동률 시 이름 병기)
 - AI 캐시: `src/lib/server/aiTeamStats.ts` (24h TTL)
-- 실시간 UI: `MatchRecordTab.tsx`의 "현재 1위" 표시는 확정 정책과 별개 (건드리지 말 것)
+- 크론 OVR: `src/lib/server/computeSeasonOvr.ts` (경기 후 OVR 변동 감지)
+- 실시간 UI: `MatchDiaryTab.tsx`(후기 탭)의 "현재 1위" 표시는 확정 정책과 별개 — 단수 leader만 표시 (건드리지 말 것)
 
 **설정 토글**: 팀 설정 `mvp_vote_staff_only` — 일반 팀원 투표를 막는 게이트.
 

@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
+import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
 import { isTeamRecordMatch } from "@/lib/types";
 import { aggregateGkCleanSheets, buildGkAttendeesByMatch, isGkPreferred, type GkSquadRow, type GkGoalRow, type GkRosterMember } from "@/lib/server/getGoalkeeperStats";
 
@@ -216,8 +216,9 @@ export async function getRecordsData(teamId: string) {
     const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
       applyBackfillHealing: !newPolicy,
     });
-    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
-    if (winner) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
+    // 공동 1등이면 전원 +1 (공동 MVP)
+    const winners = resolveValidMvps(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
+    for (const winner of winners) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
   }
 
   // 평점 시즌 집계 (토글 ON 팀만)

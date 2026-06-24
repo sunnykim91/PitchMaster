@@ -260,7 +260,7 @@ export async function GET(request: NextRequest) {
   }
 
   // 경기별 MVP winner만 집계 — 참석자 70% 이상 투표 통과 시 최다득표자, 또는 운영진 직접 지정.
-  const { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
+  const { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
   // 새 MVP 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04) + 평점 토글
   const teamSettingsForMvp = teamSettingsForMvpRes.data;
   const mvpVoteStaffOnlyForMvp = (teamSettingsForMvp as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
@@ -289,8 +289,9 @@ export async function GET(request: NextRequest) {
     const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
       applyBackfillHealing: !newPolicy,
     });
-    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
-    if (winner) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
+    // 공동 1등이면 전원 +1 (공동 MVP)
+    const winners = resolveValidMvps(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
+    for (const winner of winners) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
   }
 
   const attendByUserId = new Map<string, number>();

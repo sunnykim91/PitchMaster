@@ -261,7 +261,7 @@ export async function GET(request: NextRequest) {
   }
 
   // MVP — 경기별 winner가 본인인 경기만 카운트 (투표율 70% 통과 또는 운영진 지정)
-  const { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
+  const { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
   const { data: staffMembersData } = await db
     .from("team_members")
     .select("user_id")
@@ -296,8 +296,9 @@ export async function GET(request: NextRequest) {
     const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
       applyBackfillHealing: !newPolicy,
     });
-    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
-    if (winner && lookupIds.includes(winner)) mvp++;
+    // 공동 1등이면 그 안에 본인이 있으면 카운트 (공동 MVP)
+    const winners = resolveValidMvps(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
+    if (winners.some((w) => lookupIds.includes(w))) mvp++;
   }
 
   // 7. 경기별 스코어 계산 (클린시트/승률/실점)

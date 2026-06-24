@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
-  resolveValidMvp as resolveValidMvpForAi,
+  resolveValidMvps as resolveValidMvpsForAi,
   pickStaffDecision as pickStaffDecisionForAi,
   shouldApplyNewMvpPolicy as shouldApplyNewMvpPolicyForAi,
 } from "@/lib/mvpThreshold";
@@ -438,10 +438,12 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
     const staffDecision = pickStaffDecisionForAi(agg.rows, staffVoterIds, {
       applyBackfillHealing: !newPolicy,
     });
-    const winnerUserId = resolveValidMvpForAi(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
-    if (!winnerUserId) continue;
-    const memberId = memberIdByUserId.get(winnerUserId);
-    if (memberId) memberMvpCount.set(memberId, (memberMvpCount.get(memberId) ?? 0) + 1);
+    // 공동 1등이면 전원 +1 (공동 MVP)
+    const winnerUserIds = resolveValidMvpsForAi(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
+    for (const winnerUserId of winnerUserIds) {
+      const memberId = memberIdByUserId.get(winnerUserId);
+      if (memberId) memberMvpCount.set(memberId, (memberMvpCount.get(memberId) ?? 0) + 1);
+    }
   }
   // 선수별 최다 출전 포지션
   const memberBestPosition = new Map<string, string>();

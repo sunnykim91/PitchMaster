@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { calculateOVR, classifyPosition } from "@/lib/playerCardUtils";
-import { resolveValidMvp, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
+import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
 
 /**
  * 단일 팀·시즌 기준으로 여러 선수의 OVR 을 한 번에 계산.
@@ -115,14 +115,15 @@ export async function computeTeamSeasonOvrs(
   const { data: teamSettings } = await db.from("teams").select("mvp_vote_staff_only").eq("id", teamId).maybeSingle();
   const mvpVoteStaffOnly = (teamSettings as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
 
-  const mvpWinnerByMatch = new Map<string, string>();
+  const mvpWinnersByMatch = new Map<string, string[]>();
   for (const [mid, agg] of mvpVotesByMatch) {
     const newPolicy = shouldApplyNewMvpPolicy(matchDateById.get(mid), mvpVoteStaffOnly);
     const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
       applyBackfillHealing: !newPolicy,
     });
-    const winner = resolveValidMvp(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
-    if (winner) mvpWinnerByMatch.set(mid, winner);
+    // 공동 1등이면 전원 (공동 MVP)
+    const winners = resolveValidMvps(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
+    if (winners.length) mvpWinnersByMatch.set(mid, winners);
   }
 
   // ── 선수별 집계 prebuild — 멤버마다 전체 행을 재스캔하던 O(멤버×행) 제거용 인덱스 ──
@@ -140,7 +141,8 @@ export async function computeTeamSeasonOvrs(
   const assistCountByAssister = new Map<string, number>();
   for (const a of (assistsRes.data ?? []) as AssistRow[]) assistCountByAssister.set(a.assist_id, (assistCountByAssister.get(a.assist_id) ?? 0) + 1);
   const mvpCountByWinner = new Map<string, number>();
-  for (const w of mvpWinnerByMatch.values()) mvpCountByWinner.set(w, (mvpCountByWinner.get(w) ?? 0) + 1);
+  for (const winners of mvpWinnersByMatch.values())
+    for (const w of winners) mvpCountByWinner.set(w, (mvpCountByWinner.get(w) ?? 0) + 1);
 
   // 선수별 집계
   for (const mem of members) {
