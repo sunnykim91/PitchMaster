@@ -34,14 +34,13 @@ interface MatchCalendarProps {
   shakeVoteKey?: string | null;
 }
 
-const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"];
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 function getMonthDays(year: number, month: number) {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  // 월요일 시작 (0=월, 6=일)
-  let startDow = firstDay.getDay() - 1;
-  if (startDow < 0) startDow = 6;
+  // 일요일 시작 (0=일, 6=토)
+  const startDow = firstDay.getDay();
 
   const days: (number | null)[] = [];
   for (let i = 0; i < startDow; i++) days.push(null);
@@ -133,8 +132,10 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
       <div className="grid grid-cols-7 text-center">
         {WEEKDAYS.map((day, i) => (
           <span key={day} className={cn(
-            "text-xs font-semibold py-2",
-            i >= 5 ? "text-primary/70" : "text-muted-foreground"
+            "text-xs font-semibold py-2 rounded-md",
+            i === 0 ? "text-primary/80 bg-primary/5" :
+            i === 6 ? "text-[hsl(var(--info))] bg-[hsl(var(--info)/0.1)]" :
+            "text-muted-foreground"
           )}>
             {day}
           </span>
@@ -151,7 +152,7 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
           const hasMatch = !!dayMatches && dayMatches.length > 0;
           const isToday = dateStr === todayStr;
           const isSelected = dateStr === selectedDate;
-          const dow = i % 7; // 0=월 ... 6=일
+          const dow = i % 7; // 0=일 ... 6=토
 
           // 경기 결과에 따른 도트 색상
           let dotColor = "bg-primary"; // 예정
@@ -184,7 +185,8 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
                 isToday ? "ring-2 ring-primary text-primary font-bold" :
                 hasMatch && "bg-primary/8",
                 !isSelected && !isToday && "hover:bg-secondary",
-                dow >= 5 && !isSelected && !isToday && "text-primary/70",
+                dow === 0 && !isSelected && !isToday && "text-primary/70",
+                dow === 6 && !isSelected && !isToday && "text-[hsl(var(--info))]",
               )}
             >
               {day}
