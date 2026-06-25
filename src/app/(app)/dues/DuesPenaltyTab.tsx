@@ -210,7 +210,7 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
                     value={p.status}
                     onChange={(e) => handleStatusChange(p.id, e.target.value)}
                     className={cn(
-                      "h-7 w-[4.5rem] text-[12.5px] py-0 bg-card border-white/[0.06]",
+                      "h-7 w-24 text-[12.5px] py-0 bg-card border-white/[0.06]",
                       p.status === "WAIVED" && "border-[hsl(var(--warning))]/40"
                     )}
                   >
