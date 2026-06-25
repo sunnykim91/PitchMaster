@@ -125,13 +125,13 @@ export async function requestJoinTeam(formData: FormData) {
 
   if (!user?.kakao_id) redirect("/login");
 
-  // 이미 소속인지 체크
+  // 이미 소속인지 체크 (휴면 포함 — LEFT/BANNED 만 재가입 흐름으로)
   const { data: existingMember } = await db
     .from("team_members")
     .select("id")
     .eq("team_id", teamId)
     .eq("user_id", session.user.id)
-    .eq("status", "ACTIVE")
+    .in("status", ["ACTIVE", "DORMANT"])
     .maybeSingle();
 
   if (existingMember) {

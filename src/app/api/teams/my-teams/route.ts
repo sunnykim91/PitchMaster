@@ -18,7 +18,7 @@ export async function GET() {
     .from("team_members")
     .select("team_id, role, teams(id, name, invite_code, sport_type)")
     .eq("user_id", session.user.id)
-    .eq("status", "ACTIVE");
+    .in("status", ["ACTIVE", "DORMANT"]); // 휴면 팀도 전환 목록에 노출 (LEFT/BANNED만 제외)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
@@ -58,14 +58,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Database not available" }, { status: 503 });
   }
 
-  // 해당 유저가 실제로 이 팀의 ACTIVE 멤버인지 확인
+  // 해당 유저가 이 팀의 멤버(휴면 포함)인지 확인 — LEFT/BANNED 만 전환 불가.
   const { data: membership } = await db
     .from("team_members")
     .select("role, teams(id, name, invite_code)")
     .eq("user_id", session.user.id)
     .eq("team_id", targetTeamId)
-    .eq("status", "ACTIVE")
-    .single();
+    .in("status", ["ACTIVE", "DORMANT"])
+    .maybeSingle();
 
   if (!membership) {
     return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
