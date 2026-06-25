@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, MessageSquare, Bell, BookOpen, Settings, ExternalLink, Share, Smartphone, HelpCircle, LogOut } from "lucide-react";
+import { Users, MessageSquare, BookOpen, Settings, ExternalLink, Share, Smartphone, HelpCircle, LogOut } from "lucide-react";
 import { PLAY_STORE_URL } from "@/lib/pwaInstall";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -17,7 +17,6 @@ interface BeforeInstallPromptEvent extends Event {
 const menuItems = [
   { href: "/members", label: "회원 관리", desc: "멤버 목록 · 역할 관리", icon: Users, color: "text-[hsl(var(--success))]" },
   { href: "/board", label: "게시판 · 앨범", desc: "공지 · 자유글 · 경기 사진", icon: MessageSquare, color: "text-primary" },
-  { href: "/notifications", label: "알림", desc: "알림 센터", icon: Bell, color: "text-[hsl(var(--warning))]" },
   { href: "/rules", label: "회칙", desc: "팀 규정 관리", icon: BookOpen, color: "text-[hsl(var(--accent))]" },
   { href: "/settings", label: "설정", desc: "프로필 · 팀 설정", icon: Settings, color: "text-muted-foreground" },
   { href: "/guide", label: "사용 가이드", desc: "기능 안내 · FAQ", icon: HelpCircle, color: "text-[hsl(var(--info))]" },
