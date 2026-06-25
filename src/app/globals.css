@@ -156,6 +156,19 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   filter: invert(0.7);
 }
 
+/* iOS Safari 자동 확대 방지: 폰트 16px 미만 입력에 포커스하면 화면이 줌인되고,
+   폼이 닫히며 입력이 언마운트되면 줌이 안 풀린 채 남는다(회비 설정 '사유' 등).
+   모바일에서 폼 컨트롤 폰트를 최소 16px로 강제. 공유 <Input>은 이미 모바일 text-base(16px)
+   지만, 개별 `text-sm` 오버라이드·<select>(NativeSelect)·<textarea>까지 일괄 보장.
+   데스크톱(≥768px)은 각 컴포넌트의 compact 사이즈(md:text-sm) 유지. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
 /* 클릭 가능 요소 기본 커서 */
 button, [role="button"], [onclick], a, summary { cursor: pointer; }
 

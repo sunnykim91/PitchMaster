@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { isStaffOrAbove } from "@/lib/permissions";
@@ -158,27 +158,30 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
 
   /* ── Local UI state ── */
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
   const duesTabFromUrl = searchParams.get("tab") as DuesTabKey | null;
   const [duesTab, setDuesTabState] = useState<DuesTabKey>(
     duesTabFromUrl && validDuesTabs.includes(duesTabFromUrl) ? duesTabFromUrl : "records"
   );
+  // 탭 전환은 history.replaceState 로 URL 만 갱신한다. router.replace 는 쿼리 변경마다
+  // dynamic 페이지(getDuesData) RSC 재페치 + loading.tsx 스켈레톤 깜빡 + 재마운트(스크롤·로컬 state 리셋)를
+  // 유발했음. (아래 동기화 effect 는 유지 — dues 는 앱 내 ?tab 딥링크 Link 가 있어 외부 전환 대응 필요.)
   const setDuesTab = useCallback((tab: DuesTabKey) => {
     setDuesTabState(tab);
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", tab);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [searchParams, router, pathname]);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", tab);
+    window.history.replaceState(null, "", url.toString());
+  }, []);
 
-  // URL 쿼리(?tab=)가 외부 변경(같은 페이지 Link 이동 등)으로 바뀌면 탭 동기화
+  // 외부 ?tab 변경(다른 화면 Link 이동 등)만 동기화. 내부 클릭은 history.replaceState 라
+  // searchParams 가 안 바뀌어 이 effect 가 안 돌아감 → 탭 되돌림 없음. duesTab 은 deps 제외.
   useEffect(() => {
     const tab = searchParams.get("tab") as DuesTabKey | null;
     if (tab && validDuesTabs.includes(tab) && tab !== duesTab) {
       setDuesTabState(tab);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  }, [searchParams, duesTab]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   const [monthFilter, setMonthFilter] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;

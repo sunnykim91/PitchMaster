@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import type { AttendingPlayer } from "@/components/AutoFormationBuilder";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
@@ -296,8 +296,6 @@ export default function MatchDetailClient({
    * (이전엔 useState 초기값에서 searchParams.get 을 직접 읽었는데, 진짜 조건부 렌더로 바뀌면서
    *  SSR/CSR 초기 mount 컴포넌트가 달라질 위험이 생김.) */
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
   const validTabs = ["info", "vote", "tactics", "attendance", "record", "diary"] as const;
   type TabKey = (typeof validTabs)[number];
   const [activeTab, setActiveTabState] = useState<TabKey>("info");
@@ -309,12 +307,14 @@ export default function MatchDetailClient({
     // 의도: URL ?tab 변경 시 동기화. activeTab 자체는 deps 에서 제외 (사용자 클릭으로 변경된 직후 useEffect 가 다시 덮어쓰지 않게).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+  // 탭 전환은 history.replaceState 로 URL 만 갱신 — router.replace 는 쿼리 변경마다
+  // dynamic 경기상세 페이지 RSC 재페치 + loading.tsx 스켈레톤 깜빡 + 재마운트를 유발했음.
   const setActiveTab = useCallback((tab: TabKey) => {
     setActiveTabState(tab);
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", tab);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [searchParams, router, pathname]);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", tab);
+    window.history.replaceState(null, "", url.toString());
+  }, []);
 
   const { effectiveRole } = useViewAsRole();
   const role = effectiveRole(userRole);
