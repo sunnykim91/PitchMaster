@@ -47,7 +47,7 @@ export default function PitchMasterCardDemoPage() {
                   "shrink-0 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all",
                   activeTab === tab.key
                     ? "bg-[hsl(16,85%,58%)] text-white"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
+                    : "text-white/60 hover:text-white hover:bg-[rgb(255_255_255_/_0.05)]"
                 )}
               >
                 {tab.label}

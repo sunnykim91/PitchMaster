@@ -84,7 +84,7 @@ export function Modal({
       aria-modal="true"
       aria-label={ariaLabel}
       onClick={closeOnBackdropClick ? onClose : undefined}
-      className="fixed inset-0 flex items-end justify-center bg-black/60 sm:items-center"
+      className="fixed inset-0 flex items-end justify-center bg-[rgb(0_0_0_/_0.6)] sm:items-center"
       style={{ zIndex }}
     >
       <div

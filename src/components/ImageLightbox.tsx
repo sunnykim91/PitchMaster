@@ -51,7 +51,7 @@ function ImageLightboxBase({ src, alt = "", onClose }: ImageLightboxProps) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in cursor-zoom-out"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-[rgb(0_0_0_/_0.8)] backdrop-blur-sm animate-fade-in cursor-zoom-out"
       onClick={onClose}
     >
       <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>

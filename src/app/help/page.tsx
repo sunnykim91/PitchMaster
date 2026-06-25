@@ -29,8 +29,8 @@ export const metadata: Metadata = {
 
 function Badge({ variant }: { variant: "president" | "staff" | "member" }) {
   const styles = {
-    president: "bg-primary/15 text-primary",
-    staff: "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]",
+    president: "bg-[hsl(var(--primary)_/_0.15)] text-primary",
+    staff: "bg-[hsl(var(--info)_/_0.15)] text-[hsl(var(--info))]",
     member: "bg-secondary text-muted-foreground",
   };
   const labels = { president: "회장", staff: "운영진", member: "회원" };
@@ -48,7 +48,7 @@ function StepFlow({ steps }: { steps: string[] }) {
     <div className="flex flex-wrap items-center gap-1.5 my-3">
       {steps.map((step, i) => (
         <span key={i} className="flex items-center gap-1.5">
-          <span className="rounded border border-border bg-secondary/40 px-2.5 py-1 text-xs font-medium text-foreground">
+          <span className="rounded border border-border bg-[hsl(var(--secondary)_/_0.4)] px-2.5 py-1 text-xs font-medium text-foreground">
             {step}
           </span>
           {i < steps.length - 1 && (
@@ -133,7 +133,7 @@ export default function HelpPage() {
               <a
                 key={href}
                 href={href}
-                className="block rounded-xl border border-border/60 bg-secondary/20 px-4 py-3 text-sm font-medium text-foreground hover:border-primary/40 hover:bg-secondary/40 transition-colors"
+                className="block rounded-xl border border-border/60 bg-[hsl(var(--secondary)_/_0.2)] px-4 py-3 text-sm font-medium text-foreground hover:border-primary/40 hover:bg-[hsl(var(--secondary)_/_0.4)] transition-colors"
               >
                 {label}
               </a>
@@ -142,7 +142,7 @@ export default function HelpPage() {
         </nav>
 
         {/* 역할별 추천 코스 */}
-        <div className="rounded-xl border border-border/60 bg-secondary/20 p-5 mb-8">
+        <div className="rounded-xl border border-border/60 bg-[hsl(var(--secondary)_/_0.2)] p-5 mb-8">
           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
             역할별 추천 코스
           </p>
@@ -251,9 +251,9 @@ export default function HelpPage() {
             팀이 만들어지면 대시보드(홈 화면) 위쪽에 <strong className="text-foreground">초대 코드 카드</strong>가 떠요. 그 카드의 <strong className="text-foreground">[카카오톡으로 초대]</strong> 버튼을 누르면 단톡방에 안내문이 자동으로 채워지고, 그대로 보내기만 하면 됩니다.
           </p>
 
-          <div className="rounded-xl border border-border/60 bg-secondary/20 p-5 my-4">
+          <div className="rounded-xl border border-border/60 bg-[hsl(var(--secondary)_/_0.2)] p-5 my-4">
             <p className="text-sm font-semibold text-foreground mb-2">단톡방에 던질 안내 예시 (자동으로 채워져요)</p>
-            <div className="rounded-lg bg-background/60 border border-border/40 px-4 py-3 text-sm text-muted-foreground leading-relaxed select-all">
+            <div className="rounded-lg bg-[hsl(var(--background)_/_0.6)] border border-border/40 px-4 py-3 text-sm text-muted-foreground leading-relaxed select-all">
               우리 팀 참석투표·회비관리 앱이에요!<br />
               아래 링크 누르고 카카오 로그인하면 바로 가입돼요<br /><br />
               https://www.pitch-master.app/team?code=<strong className="text-foreground">[초대코드]</strong><br /><br />
@@ -268,21 +268,21 @@ export default function HelpPage() {
 
           <div className="mt-4 space-y-2">
             <details className="rounded-xl border border-border/60 overflow-hidden">
-              <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-secondary/20 hover:bg-secondary/40 transition-colors list-none">
+              <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-[hsl(var(--secondary)_/_0.2)] hover:bg-[hsl(var(--secondary)_/_0.4)] transition-colors list-none">
                 초대 링크를 못 받았어요. 팀 이름으로 찾을 수 있나요?
                 <span className="text-muted-foreground text-base">+</span>
               </summary>
-              <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-background/40">
+              <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-[hsl(var(--background)_/_0.4)]">
                 가입 후 <strong className="text-foreground">[팀 검색해서 가입]</strong>을 누르고 팀 이름을 검색 → <strong className="text-foreground">[가입 신청]</strong> 버튼을 누르면 회장·운영진에게 신청이 가요. 승인되면 자동으로 합류됩니다.<br /><br />
                 ※ 단, 회장이 설정 → 팀 설정에서 <strong className="text-foreground">[팀 검색 허용]</strong>을 켜놨을 때만 검색에 떠요.
               </div>
             </details>
             <details className="rounded-xl border border-border/60 overflow-hidden">
-              <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-secondary/20 hover:bg-secondary/40 transition-colors list-none">
+              <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-[hsl(var(--secondary)_/_0.2)] hover:bg-[hsl(var(--secondary)_/_0.4)] transition-colors list-none">
                 한 사람이 여러 팀에 들어가도 되나요?
                 <span className="text-muted-foreground text-base">+</span>
               </summary>
-              <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-background/40">
+              <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-[hsl(var(--background)_/_0.4)]">
                 됩니다. 같은 카카오 계정으로 여러 팀에 가입하거나 새 팀을 만들 수 있고, 햄버거 메뉴 위쪽의 <strong className="text-foreground">팀 전환 버튼</strong>으로 팀을 오갈 수 있어요. 평일 풋살팀 + 주말 축구팀 따로 운영하는 분들이 자주 쓰는 방식입니다.
               </div>
             </details>
@@ -341,7 +341,7 @@ export default function HelpPage() {
           <div className="rounded-xl border border-border/60 overflow-hidden my-4">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border/40 bg-secondary/20">
+                <tr className="border-b border-border/40 bg-[hsl(var(--secondary)_/_0.2)]">
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">역할</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">할 수 있는 것</th>
                 </tr>
@@ -493,7 +493,7 @@ export default function HelpPage() {
             전술판이 <strong className="text-foreground">한 장짜리 정지 화면</strong>이라면, 전술 영상은 그 위에서 <strong className="text-foreground">선수들이 어떻게 움직이는지</strong>까지 보여주는 동영상이에요. 회장·운영진이 직접 선수 점을 끌어 빌드업·수비 흐름을 만들면, 회원들은 경기 전에 그 영상을 보며 우리 팀 움직임을 익힐 수 있습니다.
           </p>
 
-          <div className="rounded-xl border border-border/60 bg-secondary/20 p-5 my-4">
+          <div className="rounded-xl border border-border/60 bg-[hsl(var(--secondary)_/_0.2)] p-5 my-4">
             <p className="text-sm font-semibold text-foreground mb-2">왜 영상까지 만들어야 하나요</p>
             <p className="text-sm text-muted-foreground leading-relaxed">
               조기축구·풋살에서 가장 어려운 부분이 <strong className="text-foreground">&quot;공이 좌측으로 갈 때 반대편 선수는 어디로 가야 하나?&quot;</strong> 같은 여러 명이 동시에 움직이는 흐름이에요. 전술판은 한 시점만 보여주니까 이걸 다 못 표현합니다. 시퀀스로 보면 회원이 한 번만 보고 움직임을 이해할 수 있어요.
@@ -591,20 +591,20 @@ export default function HelpPage() {
 
           <div className="mt-4 space-y-2">
             <details className="rounded-xl border border-border/60 overflow-hidden">
-              <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-secondary/20 hover:bg-secondary/40 transition-colors list-none">
+              <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-[hsl(var(--secondary)_/_0.2)] hover:bg-[hsl(var(--secondary)_/_0.4)] transition-colors list-none">
                 경기 역할 가이드와 어떻게 연결되나요?
                 <span className="text-muted-foreground text-base">+</span>
               </summary>
-              <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-background/40">
+              <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-[hsl(var(--background)_/_0.4)]">
                 경기 상세 → <strong className="text-foreground">[전술] 탭</strong> → 화면 아래쪽의 역할 가이드 카드를 펼치면, 그 포메이션의 영상이 들어 있는 <strong className="text-foreground">&quot;팀 움직임 보기&quot;</strong> 토글이 자동으로 나와요. 누르면 영상이 재생되고, 본인 자리는 코랄색(분홍-주황 톤)으로 강조됩니다.
               </div>
             </details>
             <details className="rounded-xl border border-border/60 overflow-hidden">
-              <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-secondary/20 hover:bg-secondary/40 transition-colors list-none">
+              <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-[hsl(var(--secondary)_/_0.2)] hover:bg-[hsl(var(--secondary)_/_0.4)] transition-colors list-none">
                 회원도 영상을 만들 수 있나요?
                 <span className="text-muted-foreground text-base">+</span>
               </summary>
-              <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-background/40">
+              <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-[hsl(var(--background)_/_0.4)]">
                 만드는 건 <strong className="text-foreground">회장·운영진만</strong>입니다. 회원은 경기 역할 가이드에서 만들어진 영상을 <strong className="text-foreground">볼 수만</strong> 있어요. 전술 의사결정 권한을 운영진에 모아둔 설계입니다.
               </div>
             </details>
@@ -637,7 +637,7 @@ export default function HelpPage() {
           <Tip>기본은 <strong className="text-foreground">모든 회원이 기록 가능</strong>이에요. 설정 → 팀 설정에서 <strong className="text-foreground">[경기 기록은 운영진만]</strong> 토글을 켜면 막을 수 있어요.</Tip>
 
           <h3 className="text-base font-semibold mb-3 mt-6">MVP 투표</h3>
-          <div className="rounded-xl border border-border/60 bg-secondary/20 p-5 my-4">
+          <div className="rounded-xl border border-border/60 bg-[hsl(var(--secondary)_/_0.2)] p-5 my-4">
             <p className="text-sm font-semibold text-foreground mb-3">MVP가 공식으로 확정되는 두 가지 경로</p>
             <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
               <p>① <strong className="text-foreground">운영진(회장·총무) 1명 이상이 투표</strong>하면 그 즉시 확정.</p>
@@ -666,11 +666,11 @@ export default function HelpPage() {
 
           <div className="mt-4">
             <details className="rounded-xl border border-border/60 overflow-hidden">
-              <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-secondary/20 hover:bg-secondary/40 transition-colors list-none">
+              <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-[hsl(var(--secondary)_/_0.2)] hover:bg-[hsl(var(--secondary)_/_0.4)] transition-colors list-none">
                 자체전(우리끼리 A·B·C팀)은 어떻게 기록하나요?
                 <span className="text-muted-foreground text-base">+</span>
               </summary>
-              <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-background/40">
+              <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-[hsl(var(--background)_/_0.4)]">
                 <ul className="list-disc list-inside space-y-1.5 pl-1">
                   <li>경기 등록할 때 <strong className="text-foreground">[자체전] 토글</strong>을 켜면 자체전으로 등록됩니다.</li>
                   <li>인원을 <strong className="text-foreground">2팀 또는 3팀(A·B·C)</strong>으로 나눌 수 있어요. 참석자를 랜덤으로 자동 배정하거나 손으로 직접 나눕니다.</li>
@@ -795,7 +795,7 @@ export default function HelpPage() {
           <div className="rounded-xl border border-border/60 overflow-hidden my-4">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border/40 bg-secondary/20">
+                <tr className="border-b border-border/40 bg-[hsl(var(--secondary)_/_0.2)]">
                   <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
                   <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">기능</th>
                   <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">어디서</th>
@@ -947,11 +947,11 @@ export default function HelpPage() {
 
           <div className="mt-4">
             <details className="rounded-xl border border-border/60 overflow-hidden">
-              <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-secondary/20 hover:bg-secondary/40 transition-colors list-none">
+              <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-[hsl(var(--secondary)_/_0.2)] hover:bg-[hsl(var(--secondary)_/_0.4)] transition-colors list-none">
                 그 외 알아두면 좋은 보조 기능
                 <span className="text-muted-foreground text-base">+</span>
               </summary>
-              <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-background/40">
+              <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-[hsl(var(--background)_/_0.4)]">
                 <ul className="list-disc list-inside space-y-1.5 pl-1">
                   <li><strong className="text-foreground">회칙</strong> — 팀 규칙·운영 원칙 한 페이지로 정리.</li>
                   <li><strong className="text-foreground">경기별 댓글</strong> — &quot;늦어요&quot;, &quot;용병 한 명 가능해요?&quot; 같은 경기별 짧은 소통용.</li>
@@ -970,7 +970,7 @@ export default function HelpPage() {
           <div className="mt-6">
             <Link
               href="/login"
-              className="block text-center bg-primary text-primary-foreground rounded-xl px-4 py-3 text-sm font-bold hover:bg-primary/90 transition-colors"
+              className="block text-center bg-primary text-primary-foreground rounded-xl px-4 py-3 text-sm font-bold hover:bg-[hsl(var(--primary)_/_0.9)] transition-colors"
             >
               직접 체험해보기
             </Link>
@@ -989,11 +989,11 @@ export default function HelpPage() {
           </p>
 
           <details open className="rounded-xl border border-border/60 overflow-hidden mb-2">
-            <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-secondary/20 hover:bg-secondary/40 transition-colors list-none">
+            <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-[hsl(var(--secondary)_/_0.2)] hover:bg-[hsl(var(--secondary)_/_0.4)] transition-colors list-none">
               아이폰 (Safari 사용)
               <span className="text-muted-foreground text-base">+</span>
             </summary>
-            <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-background/40">
+            <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-[hsl(var(--background)_/_0.4)]">
               <ol className="list-decimal list-inside space-y-2 pl-1">
                 <li>Safari 앱으로 pitch-master.app에 접속하세요. 카톡 안 브라우저나 다른 브라우저로 들어오면 안 돼요 — 꼭 Safari여야 합니다.</li>
                 <li>화면 하단 가운데의 <strong className="text-foreground">공유 아이콘</strong>(위쪽 화살표가 있는 네모) 탭.</li>
@@ -1004,11 +1004,11 @@ export default function HelpPage() {
           </details>
 
           <details className="rounded-xl border border-border/60 overflow-hidden mb-2">
-            <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-secondary/20 hover:bg-secondary/40 transition-colors list-none">
+            <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-[hsl(var(--secondary)_/_0.2)] hover:bg-[hsl(var(--secondary)_/_0.4)] transition-colors list-none">
               안드로이드 (갤럭시 등) — Play 스토어 앱 권장
               <span className="text-muted-foreground text-base">+</span>
             </summary>
-            <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-background/40">
+            <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-[hsl(var(--background)_/_0.4)]">
               <p className="mb-2">
                 안드로이드는 <strong className="text-foreground">Google Play에서 &apos;피치마스터&apos; 앱을 설치</strong>하는 걸 가장 추천해요. 홈 화면 아이콘으로 바로 열리고, <strong className="text-foreground">알림(푸시)이 가장 안정적으로 옵니다.</strong> 기본 브라우저가 삼성 인터넷이라 홈 화면 추가로는 알림이 안 오던 갤럭시도 앱으로 설치하면 해결됩니다.
               </p>
@@ -1097,11 +1097,11 @@ export default function HelpPage() {
               },
             ].map(({ q, a }) => (
               <details key={q} className="rounded-xl border border-border/60 overflow-hidden">
-                <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-secondary/20 hover:bg-secondary/40 transition-colors list-none">
+                <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-[hsl(var(--secondary)_/_0.2)] hover:bg-[hsl(var(--secondary)_/_0.4)] transition-colors list-none">
                   {q}
                   <span className="shrink-0 ml-3 text-muted-foreground text-base">+</span>
                 </summary>
-                <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-background/40">
+                <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-[hsl(var(--background)_/_0.4)]">
                   {a}
                 </div>
               </details>
@@ -1133,7 +1133,7 @@ export default function HelpPage() {
 
           <Link
             href="/login"
-            className="block text-center bg-primary text-primary-foreground rounded-xl px-4 py-3 text-sm font-bold hover:bg-primary/90 transition-colors"
+            className="block text-center bg-primary text-primary-foreground rounded-xl px-4 py-3 text-sm font-bold hover:bg-[hsl(var(--primary)_/_0.9)] transition-colors"
           >
             지금 시작하기
           </Link>
@@ -1141,7 +1141,7 @@ export default function HelpPage() {
 
         {/* 푸터 CTA */}
         <footer className="mt-12 border-t border-border/40 pt-8">
-          <div className="rounded-2xl bg-secondary/30 p-5">
+          <div className="rounded-2xl bg-[hsl(var(--secondary)_/_0.3)] p-5">
             <p className="text-sm font-semibold text-foreground">
               조기축구·풋살 동호회 운영을 한 곳에서
             </p>
@@ -1151,7 +1151,7 @@ export default function HelpPage() {
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-[hsl(var(--primary)_/_0.9)] transition-colors"
               >
                 피치마스터 무료로 시작
               </Link>
@@ -1159,7 +1159,7 @@ export default function HelpPage() {
                 href="https://play.google.com/store/apps/details?id=app.pitchmaster"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-xl border border-border/60 px-4 py-2 text-sm font-semibold text-foreground hover:bg-secondary/40 transition-colors"
+                className="inline-flex items-center justify-center rounded-xl border border-border/60 px-4 py-2 text-sm font-semibold text-foreground hover:bg-[hsl(var(--secondary)_/_0.4)] transition-colors"
               >
                 Google Play에서 설치
               </a>

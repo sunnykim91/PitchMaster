@@ -305,7 +305,7 @@ export default function AdminClient() {
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">프로필 완료율</p>
             <p className="mt-1 text-2xl font-bold">{profileRate}%</p>
-            <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-secondary/50">
+            <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[hsl(var(--secondary)_/_0.5)]">
               <div
                 className="h-full rounded-full bg-primary transition-all duration-500"
                 style={{ width: `${profileRate}%` }}
@@ -424,7 +424,7 @@ export default function AdminClient() {
                           {c.activeRate}%
                         </td>
                         <td className="py-2.5 min-w-[80px]">
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary/50">
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[hsl(var(--secondary)_/_0.5)]">
                             <div
                               className="h-full rounded-full bg-primary transition-all duration-500"
                               style={{ width: `${widthPct}%` }}

@@ -259,7 +259,7 @@ export function AiCoachAnalysisCard({
             <Button
               type="button"
               variant="outline"
-              className="w-full gap-2 rounded-xl border-primary/40 text-primary hover:bg-primary/5"
+              className="w-full gap-2 rounded-xl border-primary/40 text-primary hover:bg-[hsl(var(--primary)_/_0.05)]"
               onClick={handleAnalyze}
             >
               <Sparkles className="h-4 w-4" />
@@ -285,7 +285,7 @@ export function AiCoachAnalysisCard({
           <div className="space-y-2">
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
               {analysis || ""}
-              {loading && <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-primary/60 align-middle" />}
+              {loading && <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-[hsl(var(--primary)_/_0.6)] align-middle" />}
             </p>
             {source === "rule" ? (
               <p className="mt-2 text-[12.5px] text-muted-foreground/70">

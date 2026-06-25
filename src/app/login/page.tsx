@@ -73,7 +73,7 @@ export default async function LoginPage({
     </svg>
   );
 
-  const kakaoButtonClass = "h-14 rounded-2xl bg-[hsl(var(--kakao))] px-10 text-base font-bold text-[hsl(var(--kakao-foreground))] shadow-lg shadow-[hsl(var(--kakao))]/25 transition-all hover:bg-[hsl(var(--kakao))]/90 hover:shadow-xl hover:shadow-[hsl(var(--kakao))]/30 hover:scale-[1.02]";
+  const kakaoButtonClass = "h-14 rounded-2xl bg-[hsl(var(--kakao))] px-10 text-base font-bold text-[hsl(var(--kakao-foreground))] shadow-lg shadow-[hsl(var(--kakao))]/25 transition-all hover:bg-[hsl(var(--kakao)_/_0.9)] hover:shadow-xl hover:shadow-[hsl(var(--kakao))]/30 hover:scale-[1.02]";
 
   const kakaoButtonFinal = kakaoEnabled ? (
     <Button className={kakaoButtonClass} asChild>
@@ -110,10 +110,10 @@ export default async function LoginPage({
       <FooterSection />
 
       {/* Sticky Mobile CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/30 bg-background/80 backdrop-blur-xl p-3 lg:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/30 bg-[hsl(var(--background)_/_0.8)] backdrop-blur-xl p-3 lg:hidden">
         <div className="flex gap-2" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
           {kakaoEnabled ? (
-            <Button className="h-12 flex-1 rounded-xl bg-[hsl(var(--kakao))] text-sm font-bold text-[hsl(var(--kakao-foreground))] shadow-lg shadow-[hsl(var(--kakao))]/25 hover:bg-[hsl(var(--kakao))]/90" asChild>
+            <Button className="h-12 flex-1 rounded-xl bg-[hsl(var(--kakao))] text-sm font-bold text-[hsl(var(--kakao-foreground))] shadow-lg shadow-[hsl(var(--kakao))]/25 hover:bg-[hsl(var(--kakao)_/_0.9)]" asChild>
               <KakaoLoginLink href={kakaoHref} source="sticky_mobile">무료로 시작</KakaoLoginLink>
             </Button>
           ) : (

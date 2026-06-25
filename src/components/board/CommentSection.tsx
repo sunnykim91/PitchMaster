@@ -92,10 +92,10 @@ export const CommentSection = memo(function CommentSection({
 
       {/* Comment input */}
       <div className="flex items-center gap-2 pt-1">
-        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+        <div className="h-6 w-6 rounded-full bg-[hsl(var(--primary)_/_0.1)] flex items-center justify-center shrink-0">
           <span className="text-xs font-bold text-primary">나</span>
         </div>
-        <div className="flex-1 flex items-center gap-1.5 bg-muted/50 rounded-full px-3 py-1">
+        <div className="flex-1 flex items-center gap-1.5 bg-[hsl(var(--muted)_/_0.5)] rounded-full px-3 py-1">
           <input
             type="text"
             value={commentInput}

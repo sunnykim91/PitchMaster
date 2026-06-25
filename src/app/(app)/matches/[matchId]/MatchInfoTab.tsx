@@ -305,7 +305,7 @@ function MatchInfoTabInner({
                 </div>
               </div>
             </div>
-            <div className="border-t border-border/30 bg-card/50 px-5 py-3">
+            <div className="border-t border-border/30 bg-[hsl(var(--card)_/_0.5)] px-5 py-3">
               <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
                 <span>{formatDateKo(match.date)}</span>
                 {match.time && <><span className="h-3 w-px bg-border" /><span>{formatTime(match.time)}</span></>}
@@ -415,7 +415,7 @@ function MatchInfoTabInner({
                 ]).map((u) => (
                   <button key={u.type} type="button" onClick={() => handleUniformChange(u.type)} disabled={!canManage || uniformLoading}
                     className={cn("flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
-                      match.uniformType === u.type ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-secondary",
+                      match.uniformType === u.type ? "border-primary bg-[hsl(var(--primary)_/_0.1)] text-primary" : "border-border text-muted-foreground hover:bg-secondary",
                       uniformLoading && "opacity-50"
                     )}>
                     <div className="h-5 w-5 shrink-0 rounded-sm" style={u.style} />
@@ -441,7 +441,7 @@ function MatchInfoTabInner({
                   const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, statsIncluded: next });
                   if (!err) { showToast(next ? "전적에 반영됩니다." : "전적에서 제외됩니다."); await refetchMatches(); }
                 }}
-                className={cn("relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200", match.statsIncluded ? "bg-primary" : "bg-muted-foreground/25")}
+                className={cn("relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200", match.statsIncluded ? "bg-primary" : "bg-[hsl(var(--muted-foreground)_/_0.25)]")}
               >
                 <span className={cn("pointer-events-none block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200", match.statsIncluded ? "translate-x-[22px]" : "translate-x-[2px]")} />
               </button>
@@ -514,8 +514,8 @@ function MatchInfoTabInner({
           ) : (
             <ul className="space-y-2" role="list">
               {(comments ?? []).map((c) => (
-                <li key={c.id} className="flex gap-3 rounded-xl bg-secondary/50 p-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">
+                <li key={c.id} className="flex gap-3 rounded-xl bg-[hsl(var(--secondary)_/_0.5)] p-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary)_/_0.2)] text-sm font-bold text-primary">
                     {(c.users?.name ?? "?")[0]}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -529,7 +529,7 @@ function MatchInfoTabInner({
                     <button type="button"
                       disabled={deletingCommentId === c.id}
                       onClick={() => runDeleteComment(c.id, async () => { await apiMutate(`/api/match-comments?id=${c.id}`, "DELETE"); refetchComments?.(); })}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[hsl(var(--destructive)_/_0.1)] hover:text-destructive disabled:opacity-50"
                       aria-label="댓글 삭제"
                     >
                       <X className="h-3.5 w-3.5" />
@@ -544,7 +544,7 @@ function MatchInfoTabInner({
 
       {/* ═══ 6. 경기 삭제 ═══ */}
       {canManage && (
-        <Button variant="ghost" className="w-full min-h-[44px] gap-2 text-sm text-destructive hover:bg-destructive/10 hover:text-destructive" disabled={deleting} onClick={handleDeleteMatch}>
+        <Button variant="ghost" className="w-full min-h-[44px] gap-2 text-sm text-destructive hover:bg-[hsl(var(--destructive)_/_0.1)] hover:text-destructive" disabled={deleting} onClick={handleDeleteMatch}>
           <Trash2 className="h-4 w-4" />
           {deleting ? "삭제 중..." : "경기 삭제"}
         </Button>

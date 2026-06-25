@@ -893,7 +893,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             }, 0);
             if (matchedCount === 0) return null;
             return (
-              <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--success))]/10 px-3 py-1.5">
+              <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--success)_/_0.1)] px-3 py-1.5">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--success))]" />
                 <span className="text-[12.5px] font-semibold text-[hsl(var(--success))]">
                   초록 표시 = 선호 포지션에 잘 배치된 선수 · {matchedCount}명
@@ -921,11 +921,11 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             {/* 경기장 외곽선 */}
             <div className="absolute inset-3 rounded-sm border-2 border-white/50" />
             {/* 센터라인 */}
-            <div className="absolute inset-x-3 top-1/2 h-0.5 -translate-y-px bg-white/30" />
+            <div className="absolute inset-x-3 top-1/2 h-0.5 -translate-y-px bg-[rgb(255_255_255_/_0.3)]" />
             {/* 센터서클 */}
             <div className="absolute left-1/2 top-1/2 h-[18%] w-[28%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/50" />
             {/* 센터스팟 */}
-            <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/40" />
+            <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgb(255_255_255_/_0.4)]" />
             {/* 상단 페널티 박스 */}
             <div className="absolute inset-x-[20%] top-3 h-[16%] border-2 border-t-0 border-white/50" />
             {/* 상단 골 에어리어 */}
@@ -955,8 +955,8 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                     className={cn(
                       "absolute flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border text-xs font-bold text-white transition",
                       activeSlotId === slot.id
-                        ? "border-primary/60 bg-primary/20 shadow-lg shadow-primary/20"
-                        : "border-white/40 bg-black/25"
+                        ? "border-primary/60 bg-[hsl(var(--primary)_/_0.2)] shadow-lg shadow-primary/20"
+                        : "border-white/40 bg-[rgb(0_0_0_/_0.25)]"
                     )}
                     style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
                   >
@@ -1027,19 +1027,19 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                         className={cn(
                           "flex flex-col items-center rounded-md px-1 py-0.5 shadow-sm sm:px-1.5",
                           (firstMatched || secondMatched)
-                            ? "bg-[hsl(var(--success))]/90 ring-2 ring-[hsl(var(--success))] shadow-[0_0_10px_hsl(var(--success)/0.5)]"
-                            : "bg-black/70"
+                            ? "bg-[hsl(var(--success)_/_0.9)] ring-2 ring-[hsl(var(--success))] shadow-[0_0_10px_hsl(var(--success)/0.5)]"
+                            : "bg-[rgb(0_0_0_/_0.7)]"
                         )}
                         title={(firstMatched || secondMatched) ? "선호 포지션과 일치" : undefined}
                       >
                         <span className="flex items-center gap-0.5 whitespace-nowrap text-[12px] font-bold text-white sm:text-xs">
                           <span className="rounded bg-sky-500/40 px-0.5">전</span>
-                          {firstMatched && <span className="hidden sm:inline rounded bg-white/25 px-0.5 text-[9px]">적합</span>}
+                          {firstMatched && <span className="hidden sm:inline rounded bg-[rgb(255_255_255_/_0.25)] px-0.5 text-[9px]">적합</span>}
                           <span className="whitespace-nowrap">{(player?.name ?? "선수").slice(0, 3)}</span>
                         </span>
                         <span className="flex items-center gap-0.5 whitespace-nowrap text-[12px] font-bold text-white sm:text-xs">
                           <span className="rounded bg-violet-500/40 px-0.5">후</span>
-                          {secondMatched && <span className="hidden sm:inline rounded bg-white/25 px-0.5 text-[9px]">적합</span>}
+                          {secondMatched && <span className="hidden sm:inline rounded bg-[rgb(255_255_255_/_0.25)] px-0.5 text-[9px]">적합</span>}
                           <span className="whitespace-nowrap">{secondPlayer.name.slice(0, 3)}</span>
                         </span>
                       </span>
@@ -1049,12 +1049,12 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                           "flex max-w-[64px] items-center gap-1 whitespace-nowrap rounded-md px-1 py-0.5 text-[12px] font-bold shadow-sm sm:max-w-[110px] sm:px-1.5 sm:text-xs",
                           singleMatched
                             ? "bg-[hsl(var(--success))] text-white ring-2 ring-[hsl(var(--success))] shadow-[0_0_10px_hsl(var(--success)/0.6)]"
-                            : "bg-black/70 text-white"
+                            : "bg-[rgb(0_0_0_/_0.7)] text-white"
                         )}
                         title={singleMatched ? "선호 포지션과 일치" : undefined}
                       >
                         {singleMatched && (
-                          <span className="hidden sm:inline-block shrink-0 rounded bg-white/25 px-1 text-[9px] font-bold text-white">적합</span>
+                          <span className="hidden sm:inline-block shrink-0 rounded bg-[rgb(255_255_255_/_0.25)] px-1 text-[9px] font-bold text-white">적합</span>
                         )}
                         <span className="truncate">{displayName}</span>
                       </span>
@@ -1067,7 +1067,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
 
           {/* 쉬는 인원 (캡처 영역 내) */}
           {restingPlayers.length > 0 && (
-            <div className="rounded-xl bg-secondary/50 px-4 py-3">
+            <div className="rounded-xl bg-[hsl(var(--secondary)_/_0.5)] px-4 py-3">
               <div className="mb-2 flex items-center gap-2">
                 <Coffee className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium text-muted-foreground">쉬는 선수</span>
@@ -1085,7 +1085,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
 
           {/* 주심/부심/촬영 역할 표시 (캡처 영역 내) */}
           {(referee || linesman1 || linesman2 || camera) && (
-            <div className="rounded-xl bg-secondary/50 px-4 py-3">
+            <div className="rounded-xl bg-[hsl(var(--secondary)_/_0.5)] px-4 py-3">
               <div className="flex flex-wrap gap-3">
                 {referee && (() => {
                   const p = roster.find((r) => r.id === referee);
@@ -1136,7 +1136,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
           )}
           {/* 역할 배정 — 모바일용 (captureRef 밖) */}
           {!readOnly && isMobile && (
-            <div className="rounded-xl bg-secondary/50 px-4 py-3">
+            <div className="rounded-xl bg-[hsl(var(--secondary)_/_0.5)] px-4 py-3">
               <p className="mb-2 text-sm font-bold">역할 배정</p>
               <div className="space-y-3">
                 {[
@@ -1235,7 +1235,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                       <div className="flex items-baseline justify-between gap-2">
                         <p className="text-sm font-bold text-foreground">선수 선택</p>
                         {activeSlotId && recommendCount > 0 && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(var(--success))]/15 px-2 py-0.5 text-[12px] font-bold text-[hsl(var(--success))]">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(var(--success)_/_0.15)] px-2 py-0.5 text-[12px] font-bold text-[hsl(var(--success))]">
                             <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--success))]" />
                             추천 {recommendCount}명
                           </span>
@@ -1285,12 +1285,12 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                                 matched ? "text-white/85" : "text-muted-foreground"
                               )}>
                                 {matched && (
-                                  <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[12px] font-bold text-white">
+                                  <span className="rounded-full bg-[rgb(255_255_255_/_0.2)] px-1.5 py-0.5 text-[12px] font-bold text-white">
                                     추천
                                   </span>
                                 )}
                                 {qCount > 0 && !matched && (
-                                  <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[12px] font-bold text-primary">
+                                  <span className="rounded-full bg-[hsl(var(--primary)_/_0.15)] px-1.5 py-0.5 text-[12px] font-bold text-primary">
                                     {qCount}Q
                                   </span>
                                 )}
@@ -1396,7 +1396,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                   return (
                     <>
                       {activeSlotId && recommendCount > 0 && (
-                        <div className="mt-3 flex items-center gap-2 rounded-lg bg-[hsl(var(--success))]/10 px-3 py-2">
+                        <div className="mt-3 flex items-center gap-2 rounded-lg bg-[hsl(var(--success)_/_0.1)] px-3 py-2">
                           <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--success))]" />
                           <span className="text-[12.5px] font-semibold text-[hsl(var(--success))]">
                             추천 {recommendCount}명 · 선호 포지션과 일치하는 선수
@@ -1437,7 +1437,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                                 matched ? "text-white/85" : "text-muted-foreground"
                               )}>
                                 {matched && (
-                                  <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[12px] font-bold text-white">
+                                  <span className="rounded-full bg-[rgb(255_255_255_/_0.2)] px-1.5 py-0.5 text-[12px] font-bold text-white">
                                     추천
                                   </span>
                                 )}
@@ -1608,10 +1608,10 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
         {/* 범례 */}
         <div className="mt-3 flex flex-wrap gap-3 text-[12.5px] text-muted-foreground">
           <span className="flex items-center gap-1">
-            <span className="inline-block h-4 w-4 rounded-full bg-primary/20 text-center text-[9px] font-bold leading-4 text-primary">●</span>풀타임
+            <span className="inline-block h-4 w-4 rounded-full bg-[hsl(var(--primary)_/_0.2)] text-center text-[9px] font-bold leading-4 text-primary">●</span>풀타임
           </span>
           <span className="flex items-center gap-1">
-            <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary/15 text-[7px] font-bold text-primary/80">전</span>전반 출전
+            <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[hsl(var(--primary)_/_0.15)] text-[7px] font-bold text-primary/80">전</span>전반 출전
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border-2 border-primary/40 text-[7px] font-bold text-primary/60">교</span>교체 출전
@@ -1646,20 +1646,20 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                             /* 풀타임 출전 */
                             <span className={cn(
                               "inline-block h-5 w-5 rounded-full text-[12px] font-bold leading-5 text-center",
-                              q === activeQuarter ? "bg-primary text-white" : "bg-primary/20 text-primary"
+                              q === activeQuarter ? "bg-primary text-white" : "bg-[hsl(var(--primary)_/_0.2)] text-primary"
                             )}>●</span>
                           ) : qt === "first" ? (
                             /* 전반 출전 후 교체 아웃 */
                             <span className={cn(
                               "inline-flex h-5 w-5 items-center justify-center rounded-full text-[8px] font-bold",
-                              q === activeQuarter ? "bg-primary/70 text-white" : "bg-primary/15 text-primary/80"
+                              q === activeQuarter ? "bg-[hsl(var(--primary)_/_0.7)] text-white" : "bg-[hsl(var(--primary)_/_0.15)] text-primary/80"
                             )} title="전반 출전">전</span>
                           ) : qt === "second" ? (
                             /* 후반 교체 인 */
                             <span className={cn(
                               "inline-flex h-5 w-5 items-center justify-center rounded-full border-2 text-[8px] font-bold",
                               q === activeQuarter
-                                ? "border-primary bg-primary/10 text-primary"
+                                ? "border-primary bg-[hsl(var(--primary)_/_0.1)] text-primary"
                                 : "border-primary/40 bg-transparent text-primary/60"
                             )} title="교체 출전">교</span>
                           ) : (

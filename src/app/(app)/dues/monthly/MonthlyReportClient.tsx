@@ -163,7 +163,7 @@ export default function MonthlyReportClient({ teamName }: { teamName: string }) 
       </div>
 
       {/* 결산 카드 (공유 대상) */}
-      <div ref={cardRef} className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-secondary/40 p-5 space-y-5">
+      <div ref={cardRef} className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-[hsl(var(--secondary)_/_0.4)] p-5 space-y-5">
         {/* 카드 헤더 — 공유 이미지에 포함될 브랜딩 */}
         <div className="flex items-center justify-between border-b border-border/50 pb-3">
           <div>
@@ -179,7 +179,7 @@ export default function MonthlyReportClient({ teamName }: { teamName: string }) 
         {loading ? (
           <ReportSkeleton />
         ) : error ? (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+          <div className="rounded-lg border border-destructive/30 bg-[hsl(var(--destructive)_/_0.05)] p-4 text-sm text-destructive">
             결산 데이터를 불러오지 못했습니다: {error}
           </div>
         ) : !hasAnyData ? (
@@ -321,7 +321,7 @@ function FinanceStatCard({
     primary: "text-primary",
   };
   return (
-    <div className="rounded-lg bg-secondary/40 p-3 text-center">
+    <div className="rounded-lg bg-[hsl(var(--secondary)_/_0.4)] p-3 text-center">
       <div className="flex items-center justify-center gap-1 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
         {icon}
         {label}
@@ -349,7 +349,7 @@ function MatchStatCard({
       ? "text-[hsl(var(--loss))]"
       : "text-foreground";
   return (
-    <div className="rounded-lg bg-secondary/40 p-3 text-center">
+    <div className="rounded-lg bg-[hsl(var(--secondary)_/_0.4)] p-3 text-center">
       <div className={cn("font-bold text-lg", toneClass)}>{value}</div>
       <div className="text-[12px] font-medium text-muted-foreground">{label}</div>
     </div>

@@ -88,7 +88,7 @@ export default function PlayStoreInstallBanner() {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/70 p-3 pt-2"
+      className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-[rgb(0_0_0_/_0.7)] p-3 pt-2"
       onClick={() => setOpen(false)}
     >
       <div

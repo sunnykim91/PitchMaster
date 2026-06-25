@@ -26,7 +26,7 @@ export default function MatchDetailError({
 
   return (
     <div className="flex min-h-[50vh] items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md rounded-xl border border-border/30 bg-card/60 p-6 text-center">
+      <div className="w-full max-w-md rounded-xl border border-border/30 bg-[hsl(var(--card)_/_0.6)] p-6 text-center">
         <AlertTriangle className="mx-auto h-8 w-8 text-[hsl(var(--warning))]" />
         <h2 className="mt-3 text-base font-bold">경기 정보를 불러오지 못했어요</h2>
         <p className="mt-1 text-xs text-muted-foreground">

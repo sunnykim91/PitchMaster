@@ -670,7 +670,7 @@ const PlayerAssignmentRow = memo(function PlayerAssignmentRow({
   const positions = player.preferredPositions ?? [player.preferredPosition];
   return (
     <div
-      className={cn("rounded-xl p-3 transition-colors", idx % 2 === 0 ? "bg-secondary/30" : "bg-secondary/15")}
+      className={cn("rounded-xl p-3 transition-colors", idx % 2 === 0 ? "bg-[hsl(var(--secondary)_/_0.3)]" : "bg-[hsl(var(--secondary)_/_0.15)]")}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
@@ -684,7 +684,7 @@ const PlayerAssignmentRow = memo(function PlayerAssignmentRow({
                   "flex items-center gap-1 rounded-md px-2 py-0.5 text-[12px] font-bold transition-all",
                   player.isGK
                     ? "bg-amber-500/30 text-amber-700 dark:text-amber-400"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    : "bg-muted text-muted-foreground hover:bg-[hsl(var(--muted)_/_0.8)]"
                 )}
               >
                 🥅 GK
@@ -712,10 +712,10 @@ const PlayerAssignmentRow = memo(function PlayerAssignmentRow({
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/50 text-sm text-muted-foreground transition-colors hover:bg-secondary disabled:opacity-30"
               >−</button>
               <div className={cn("flex h-8 w-14 shrink-0 items-center justify-center rounded-lg text-sm font-bold",
-                player.quarters === quarterCount ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]" :
+                player.quarters === quarterCount ? "bg-[hsl(var(--success)_/_0.2)] text-[hsl(var(--success))]" :
                 player.quarters === 0 ? "bg-muted text-muted-foreground" :
-                player.quarters >= quarterCount * 0.75 ? "bg-primary/20 text-primary" :
-                "bg-[hsl(var(--accent))]/20 text-[hsl(var(--accent))]"
+                player.quarters >= quarterCount * 0.75 ? "bg-[hsl(var(--primary)_/_0.2)] text-primary" :
+                "bg-[hsl(var(--accent)_/_0.2)] text-[hsl(var(--accent))]"
               )}>
                 {player.quarters}Q
               </div>
@@ -1344,7 +1344,7 @@ export default function AutoFormationBuilder({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between px-5 py-4 hover:bg-secondary/30 transition-colors"
+        className="flex w-full items-center justify-between px-5 py-4 hover:bg-[hsl(var(--secondary)_/_0.3)] transition-colors"
       >
         <span className="flex items-center gap-2 text-base font-bold">
           <Zap className="h-4 w-4 text-primary" /> 자동 편성
@@ -1396,7 +1396,7 @@ export default function AutoFormationBuilder({
                   key={opt.id}
                   className={cn(
                     "flex cursor-pointer items-start gap-2 rounded-lg border p-2.5 transition-colors",
-                    selected ? "border-primary/50 bg-primary/5" : "border-border/40 hover:bg-secondary/30"
+                    selected ? "border-primary/50 bg-[hsl(var(--primary)_/_0.05)]" : "border-border/40 hover:bg-[hsl(var(--secondary)_/_0.3)]"
                   )}
                 >
                   <input
@@ -1422,7 +1422,7 @@ export default function AutoFormationBuilder({
         {/* ── ② 포메이션 선택 ── */}
         <div className="flex flex-wrap items-center gap-2">
           {planMode === "ai-free" ? (
-            <div className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-xs text-primary">
+            <div className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-[hsl(var(--primary)_/_0.05)] px-3 py-2 text-xs text-primary">
               <Sparkles className="h-3.5 w-3.5" />
               포메이션은 AI가 결정
             </div>
@@ -1441,15 +1441,15 @@ export default function AutoFormationBuilder({
 
         {/* ── ③ 통계 3열 ── */}
         <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-xl bg-secondary/30 p-3 text-center">
+          <div className="rounded-xl bg-[hsl(var(--secondary)_/_0.3)] p-3 text-center">
             <div className="text-2xl font-bold">{attendingPlayers.length}</div>
             <div className="text-[12.5px] text-muted-foreground">총 선수</div>
           </div>
-          <div className="rounded-xl bg-secondary/30 p-3 text-center">
+          <div className="rounded-xl bg-[hsl(var(--secondary)_/_0.3)] p-3 text-center">
             <div className="text-2xl font-bold">{formation?.slots.length ?? 0}</div>
             <div className="text-[12.5px] text-muted-foreground">포지션</div>
           </div>
-          <div className="rounded-xl bg-secondary/30 p-3 text-center">
+          <div className="rounded-xl bg-[hsl(var(--secondary)_/_0.3)] p-3 text-center">
             <div className={cn("text-2xl font-bold", isBalanced ? "text-[hsl(var(--success))]" : "text-destructive")}>
               {totalAssigned}/{totalNeeded}
             </div>

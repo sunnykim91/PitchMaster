@@ -108,7 +108,7 @@ export default function AdminNoticeClient({ recent: initialRecent }: Props) {
           홈
         </Link>
         <h1 className="ml-2 text-base font-bold">운영공지 관리</h1>
-        <span className="ml-auto rounded-full bg-[hsl(var(--warning))]/15 px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--warning))]">
+        <span className="ml-auto rounded-full bg-[hsl(var(--warning)_/_0.15)] px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--warning))]">
           PitchMaster 운영자 전용
         </span>
       </div>
@@ -156,7 +156,7 @@ export default function AdminNoticeClient({ recent: initialRecent }: Props) {
           ) : (
             <div className="space-y-2">
               {recent.map((r) => (
-                <div key={r.id} className="flex items-start gap-2 rounded-md bg-secondary/30 p-3">
+                <div key={r.id} className="flex items-start gap-2 rounded-md bg-[hsl(var(--secondary)_/_0.3)] p-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold truncate">{r.title}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2 whitespace-pre-line">{r.content}</p>
@@ -168,7 +168,7 @@ export default function AdminNoticeClient({ recent: initialRecent }: Props) {
                     type="button"
                     onClick={() => handleDelete(r.id, r.title)}
                     disabled={deletingId === r.id}
-                    className="p-2 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors active:scale-95 disabled:opacity-50"
+                    className="p-2 rounded-md text-muted-foreground hover:bg-[hsl(var(--destructive)_/_0.1)] hover:text-destructive transition-colors active:scale-95 disabled:opacity-50"
                     aria-label="삭제"
                   >
                     <Trash2 className="h-4 w-4" />

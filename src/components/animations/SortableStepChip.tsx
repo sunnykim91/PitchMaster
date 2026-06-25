@@ -38,7 +38,7 @@ export function SortableStepChip({
       className={cn(
         "min-h-[32px] min-w-[32px] rounded px-2 py-1.5 text-[12.5px] font-semibold tabular-nums transition-colors touch-none select-none",
         active
-          ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]"
+          ? "bg-[hsl(var(--primary)_/_0.15)] text-[hsl(var(--primary))]"
           : "text-muted-foreground hover:text-foreground",
         isDragging && "scale-[1.08] shadow-lg ring-2 ring-[hsl(var(--primary))]/40 cursor-grabbing",
       )}

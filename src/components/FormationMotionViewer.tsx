@@ -44,9 +44,9 @@ interface Props {
 }
 
 const CATEGORY_BADGE_STYLE: Record<AnimationCategory, { cls: string; Icon: typeof Swords }> = {
-  ATTACK: { cls: "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]", Icon: Swords },
-  DEFENSE: { cls: "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]", Icon: Shield },
-  SETPIECE: { cls: "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]", Icon: Calendar },
+  ATTACK: { cls: "bg-[hsl(var(--primary)_/_0.15)] text-[hsl(var(--primary))]", Icon: Swords },
+  DEFENSE: { cls: "bg-[hsl(var(--info)_/_0.15)] text-[hsl(var(--info))]", Icon: Shield },
+  SETPIECE: { cls: "bg-[hsl(var(--warning)_/_0.15)] text-[hsl(var(--warning))]", Icon: Calendar },
   OTHER: { cls: "bg-secondary text-muted-foreground", Icon: MoreHorizontal },
 };
 
@@ -148,7 +148,7 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
   // 빈 phases 가드 (compact 미니뷰·평면 영상에서 mode 토글 시 발생 가능)
   if (!phase || !step) {
     return (
-      <div className="rounded-xl border border-border bg-background/40 p-4 text-center text-[12px] text-muted-foreground">
+      <div className="rounded-xl border border-border bg-[hsl(var(--background)_/_0.4)] p-4 text-center text-[12px] text-muted-foreground">
         이 모드는 아직 장면이 없어요
       </div>
     );
@@ -166,7 +166,7 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
   const positionMap = new Map(step.positions.map((p) => [p.slot, p]));
 
   return (
-    <div className={cn("rounded-xl border border-border bg-background/40", compact ? "p-2" : "p-3 sm:p-4")}>
+    <div className={cn("rounded-xl border border-border bg-[hsl(var(--background)_/_0.4)]", compact ? "p-2" : "p-3 sm:p-4")}>
       {/* 헤더: compact·controlledMode·단일 mode 영상은 모드 토글 hide (P3 평면 영상은 한 카테고리만 있어 토글 의미 없음). */}
       <div className={cn("flex items-center justify-between gap-2", compact ? "mb-1.5" : "mb-3")}>
         {!compact && !controlledMode && dualMode && (
@@ -259,8 +259,8 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
               "flex-1 rounded px-2 py-1 text-[12.5px] font-semibold transition-colors text-center",
               i === phaseIdx
                 ? effectiveMode === "attack"
-                  ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]"
-                  : "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]"
+                  ? "bg-[hsl(var(--primary)_/_0.15)] text-[hsl(var(--primary))]"
+                  : "bg-[hsl(var(--info)_/_0.15)] text-[hsl(var(--info))]"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -390,7 +390,7 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
           )}
         </div>
       ) : (
-        <div className="mt-3 rounded-md bg-background/60 p-2.5 text-[12px] leading-relaxed text-foreground">
+        <div className="mt-3 rounded-md bg-[hsl(var(--background)_/_0.6)] p-2.5 text-[12px] leading-relaxed text-foreground">
           {highlightSlot && highlightLabel && (
             <p className="mb-1 text-[12px] font-bold uppercase tracking-wider text-[hsl(var(--primary))]">
               내 포지션: {highlightLabel}

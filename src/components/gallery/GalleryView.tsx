@@ -88,7 +88,7 @@ export function GalleryView({ showSummary = false }: { showSummary?: boolean }) 
 
   if (error) {
     return (
-      <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+      <div className="rounded-xl border border-destructive/30 bg-[hsl(var(--destructive)_/_0.05)] p-4 text-sm text-destructive">
         사진을 불러오지 못했습니다: {error}
       </div>
     );
@@ -137,7 +137,7 @@ export function GalleryView({ showSummary = false }: { showSummary?: boolean }) 
                   key={`${m.matchId}-${photoIdx}`}
                   type="button"
                   onClick={() => setLightboxIndex({ matchIdx, photoIdx })}
-                  className="group relative aspect-square overflow-hidden rounded-lg bg-secondary/40 transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="group relative aspect-square overflow-hidden rounded-lg bg-[hsl(var(--secondary)_/_0.4)] transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   <Image
                     src={src}
@@ -165,7 +165,7 @@ export function GalleryView({ showSummary = false }: { showSummary?: boolean }) 
               type="button"
               disabled={currentFlatIndex <= 0}
               onClick={goPrev}
-              className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-opacity hover:bg-black/60 disabled:opacity-30"
+              className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-[rgb(0_0_0_/_0.4)] text-white backdrop-blur-sm transition-opacity hover:bg-[rgb(0_0_0_/_0.6)] disabled:opacity-30"
               aria-label="이전 사진"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -174,13 +174,13 @@ export function GalleryView({ showSummary = false }: { showSummary?: boolean }) 
               type="button"
               disabled={currentFlatIndex >= flatPhotos.length - 1}
               onClick={goNext}
-              className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-opacity hover:bg-black/60 disabled:opacity-30"
+              className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-[rgb(0_0_0_/_0.4)] text-white backdrop-blur-sm transition-opacity hover:bg-[rgb(0_0_0_/_0.6)] disabled:opacity-30"
               aria-label="다음 사진"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
           </div>
-          <div className="pointer-events-none fixed left-1/2 top-4 z-[80] -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs text-white backdrop-blur-sm">
+          <div className="pointer-events-none fixed left-1/2 top-4 z-[80] -translate-x-1/2 rounded-full bg-[rgb(0_0_0_/_0.6)] px-3 py-1 text-xs text-white backdrop-blur-sm">
             {currentFlatIndex + 1} / {flatPhotos.length}
           </div>
         </>

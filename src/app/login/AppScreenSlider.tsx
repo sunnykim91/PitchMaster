@@ -85,7 +85,7 @@ export default function AppScreenSlider() {
             className="flex items-center justify-center p-2"
           >
             <span className={`block rounded-full transition-all ${
-              i === current ? "h-1.5 w-6 bg-primary" : "h-1.5 w-1.5 bg-foreground/20"
+              i === current ? "h-1.5 w-6 bg-primary" : "h-1.5 w-1.5 bg-[hsl(var(--foreground)_/_0.2)]"
             }`} />
           </button>
         ))}

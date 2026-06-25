@@ -111,7 +111,7 @@ export const PostEditor = memo(function PostEditor({
                 className={cn(
                   "rounded-full border px-3 py-1 text-xs font-medium transition-all active:scale-95",
                   form.category === "FREE"
-                    ? "border-primary bg-primary/15 text-primary"
+                    ? "border-primary bg-[hsl(var(--primary)_/_0.15)] text-primary"
                     : "border-border bg-transparent text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -123,7 +123,7 @@ export const PostEditor = memo(function PostEditor({
                 className={cn(
                   "rounded-full border px-3 py-1 text-xs font-medium transition-all active:scale-95",
                   form.category === "NOTICE"
-                    ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]"
+                    ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent)_/_0.15)] text-[hsl(var(--accent))]"
                     : "border-border bg-transparent text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -221,7 +221,7 @@ export const PostEditor = memo(function PostEditor({
               </Button>
 
               {pollForm.enabled && (
-                <div className="rounded-lg border border-border/50 bg-secondary/50 p-3 space-y-2.5 animate-in slide-in-from-top-1 duration-150">
+                <div className="rounded-lg border border-border/50 bg-[hsl(var(--secondary)_/_0.5)] p-3 space-y-2.5 animate-in slide-in-from-top-1 duration-150">
                   <Input
                     value={pollForm.question}
                     onChange={(e) => setPollForm((prev) => ({ ...prev, question: e.target.value }))}

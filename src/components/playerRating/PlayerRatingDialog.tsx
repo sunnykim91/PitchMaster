@@ -138,7 +138,7 @@ export default function PlayerRatingDialog({
               size="sm"
               disabled={saving}
               onClick={handleDelete}
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              className="text-destructive hover:bg-[hsl(var(--destructive)_/_0.1)] hover:text-destructive"
             >
               삭제
             </Button>

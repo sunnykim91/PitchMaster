@@ -311,7 +311,7 @@ export default function SettingsClient({
     <div className="grid gap-5 stagger-children">
       {/* ── Tab Bar (운영진 이상만 표시) ── */}
       {isStaff && (
-        <div className="sticky top-0 z-10 -mx-1 px-1 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="sticky top-0 z-10 -mx-1 px-1 bg-[hsl(var(--background)_/_0.95)] backdrop-blur-sm border-b border-border">
           <div role="tablist" aria-label="설정 탭" className="flex">
             {tabItems.map((tab) => (
               <button
@@ -334,7 +334,7 @@ export default function SettingsClient({
       )}
 
       {message && (
-        <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary animate-in fade-in duration-200">
+        <div className="rounded-xl border border-primary/20 bg-[hsl(var(--primary)_/_0.05)] px-4 py-3 text-sm font-semibold text-primary animate-in fade-in duration-200">
           {message}
         </div>
       )}
@@ -361,7 +361,7 @@ export default function SettingsClient({
           {/* 전술 영상 진입 카드 — 모든 팀 운영진 노출 */}
           <Link
             href="/settings/animations"
-            className="block rounded-xl border border-[hsl(var(--primary))]/30 bg-gradient-to-br from-[hsl(var(--primary))]/8 to-[hsl(var(--primary))]/3 p-4 transition-colors hover:border-[hsl(var(--primary))]/50"
+            className="block rounded-xl border border-[hsl(var(--primary))]/30 bg-gradient-to-br from-[hsl(var(--primary)_/_0.08)] to-[hsl(var(--primary)_/_0.03)] p-4 transition-colors hover:border-[hsl(var(--primary))]/50"
           >
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1">

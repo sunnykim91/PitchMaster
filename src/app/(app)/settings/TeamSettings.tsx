@@ -345,7 +345,7 @@ function TeamSettingsComponent({
               </div>
               <div className="space-y-1.5">
                 <Label className="text-sm font-semibold text-muted-foreground">초대 코드</Label>
-                <Input value={team.inviteCode} readOnly className="font-mono tracking-wider bg-secondary/50 text-muted-foreground" />
+                <Input value={team.inviteCode} readOnly className="font-mono tracking-wider bg-[hsl(var(--secondary)_/_0.5)] text-muted-foreground" />
               </div>
             </div>
             <div className="space-y-1.5">
@@ -906,7 +906,7 @@ function UniformSettings({
               onClick={() => updateCurrent({ pattern: p.value })}
               className={cn("rounded-lg border p-2 text-center text-xs font-medium transition-all",
                 currentSet.pattern === p.value
-                  ? "border-primary bg-primary/10 text-primary"
+                  ? "border-primary bg-[hsl(var(--primary)_/_0.1)] text-primary"
                   : "border-border text-muted-foreground hover:text-foreground"
               )}>
               {p.label}
@@ -918,7 +918,7 @@ function UniformSettings({
       {/* 써드 삭제 */}
       {activeTab === "third" && hasThird && (
         <button type="button" onClick={removeThird} disabled={disabled}
-          className="w-full rounded-lg py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors">
+          className="w-full rounded-lg py-2 text-sm font-medium text-destructive hover:bg-[hsl(var(--destructive)_/_0.1)] transition-colors">
           써드 유니폼 삭제
         </button>
       )}

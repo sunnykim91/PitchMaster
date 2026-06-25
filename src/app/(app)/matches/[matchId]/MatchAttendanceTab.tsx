@@ -123,9 +123,9 @@ function MatchAttendanceTabInner({
                         {status && (
                           <div className={cn(
                             "flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
-                            status === "PRESENT" && "bg-[hsl(var(--success))]/20",
-                            status === "LATE" && "bg-[hsl(var(--warning))]/20",
-                            status === "ABSENT" && "bg-destructive/20",
+                            status === "PRESENT" && "bg-[hsl(var(--success)_/_0.2)]",
+                            status === "LATE" && "bg-[hsl(var(--warning)_/_0.2)]",
+                            status === "ABSENT" && "bg-[hsl(var(--destructive)_/_0.2)]",
                           )}>
                             <Check className={cn(
                               "h-3 w-3",

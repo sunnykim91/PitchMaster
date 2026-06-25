@@ -414,13 +414,13 @@ function MatchTacticsTabInner({
                   <div className="max-h-[55vh] overflow-y-auto">
                     {/* 미배정 */}
                     {unassignedCount > 0 && canManage && (
-                      <div className="mb-2 p-2 rounded-lg bg-[hsl(var(--warning))]/5 border border-[hsl(var(--warning))]/20">
+                      <div className="mb-2 p-2 rounded-lg bg-[hsl(var(--warning)_/_0.05)] border border-[hsl(var(--warning))]/20">
                         <p className="text-xs font-semibold text-[hsl(var(--warning))] mb-1.5">미배정</p>
                         <div className="flex flex-wrap gap-1">
                           {attendingPlayers.filter((m) => !teamMap[m.id]).map((m) => (
                             <button key={m.id} type="button" disabled={savingTeams}
                               onClick={() => assignSide(m.id, "A")}
-                              className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors">
+                              className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-[hsl(var(--primary)_/_0.1)] hover:text-primary transition-colors">
                               {m.name}
                             </button>
                           ))}
@@ -442,7 +442,7 @@ function MatchTacticsTabInner({
                               {attendingPlayers.filter((m) => teamMap[m.id] === s).map((m) => (
                                 <button key={m.id} type="button" disabled={savingTeams || !canManage}
                                   onClick={() => assignSide(m.id, to)}
-                                  className="flex w-full items-center rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-secondary active:bg-secondary/70 transition-colors min-h-[36px]">
+                                  className="flex w-full items-center rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-secondary active:bg-[hsl(var(--secondary)_/_0.7)] transition-colors min-h-[36px]">
                                   <span className="truncate">{m.name}</span>
                                   {canManage && <span className={cn("ml-auto shrink-0 text-xs opacity-70", toCfg.text)}>→{to}</span>}
                                 </button>
@@ -486,7 +486,7 @@ function MatchTacticsTabInner({
 
             {/* 편성 안 됐으면 안내 */}
             {!hasTeams && !showTeamSplit && (
-              <Card className="border-[hsl(var(--warning))]/20 bg-[hsl(var(--warning))]/5">
+              <Card className="border-[hsl(var(--warning))]/20 bg-[hsl(var(--warning)_/_0.05)]">
                 <CardContent className="p-4 text-sm text-[hsl(var(--warning))] text-center">
                   위 &quot;편성&quot; 또는 &quot;자동분배&quot;로 팀을 먼저 나눠주세요.
                 </CardContent>
@@ -504,7 +504,7 @@ function MatchTacticsTabInner({
           <button
             type="button"
             onClick={() => setGuestCardOpen(!guestCardOpen)}
-            className="flex w-full items-center justify-between px-5 py-4 hover:bg-secondary/30 transition-colors"
+            className="flex w-full items-center justify-between px-5 py-4 hover:bg-[hsl(var(--secondary)_/_0.3)] transition-colors"
           >
             <span className="flex items-center gap-2 text-base font-bold">
               <Users className="h-4 w-4 text-primary" />
@@ -556,7 +556,7 @@ function MatchTacticsTabInner({
                 await apiMutate("/api/guests", "POST", { matchId, name, position: positions.join(",") || null, phone, note });
                 setShowGuestForm(false);
                 refetchGuests?.();
-              }} className="space-y-4 rounded-xl bg-secondary/30 p-4">
+              }} className="space-y-4 rounded-xl bg-[hsl(var(--secondary)_/_0.3)] p-4">
                 <div>
                   <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">이름 <span className="text-destructive">*</span></p>
                   <input name="guestName" required placeholder="용병 이름" className="h-12 w-full rounded-xl border-0 bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
@@ -594,7 +594,7 @@ function MatchTacticsTabInner({
                     .map((p) => p.trim())
                     .filter(Boolean);
                   return (
-                    <li key={g.id} className="rounded-xl bg-secondary/30 p-3">
+                    <li key={g.id} className="rounded-xl bg-[hsl(var(--secondary)_/_0.3)] p-3">
                       {isEditing ? (
                         <form
                           action={async (formData) => {
@@ -703,7 +703,7 @@ function MatchTacticsTabInner({
                               type="button"
                               onClick={() => handleRemoveGuest?.(g.id)}
                               title="삭제"
-                              className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                              className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-[hsl(var(--destructive)_/_0.1)] hover:text-destructive"
                             >
                               <X className="h-4 w-4" />
                             </button>
@@ -779,9 +779,9 @@ function MatchTacticsTabInner({
         <Link
           href="/settings/animations"
           style={{ order: 15 }}
-          className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-secondary/30 hover:border-primary/30"
+          className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-[hsl(var(--secondary)_/_0.3)] hover:border-primary/30"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--primary)_/_0.1)] text-primary">
             <Film className="h-4 w-4" />
           </span>
           <span className="min-w-0 flex-1">
@@ -798,7 +798,7 @@ function MatchTacticsTabInner({
             ) : (
               <>
                 <span className="block text-sm font-bold">
-                  감독의 전술노트 <span className="ml-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary tabular-nums">{animationMeta.count}개</span>
+                  감독의 전술노트 <span className="ml-1 rounded-full bg-[hsl(var(--primary)_/_0.1)] px-1.5 py-0.5 text-[10px] text-primary tabular-nums">{animationMeta.count}개</span>
                 </span>
                 <span className="block text-xs text-muted-foreground">
                   {animationMeta.defaultFormation ? `대표 ${animationMeta.defaultFormation} · 카톡으로 GIF 공유` : "카톡으로 GIF 공유"}

@@ -99,7 +99,7 @@ export default function PrepaymentLinkModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="prepay-link-title"
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgb(0_0_0_/_0.6)] backdrop-blur-sm sm:items-center"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -132,7 +132,7 @@ export default function PrepaymentLinkModal({
           {loading ? (
             <p className="text-xs text-muted-foreground/60 py-6 text-center">불러오는 중...</p>
           ) : candidates.length === 0 ? (
-            <div className="rounded-lg bg-muted/50 p-4 text-xs text-muted-foreground space-y-1">
+            <div className="rounded-lg bg-[hsl(var(--muted)_/_0.5)] p-4 text-xs text-muted-foreground space-y-1">
               <p className="font-semibold text-foreground">매칭 가능한 입금 거래가 없습니다</p>
               <p>회비 기록 탭에서 해당 입금을 먼저 등록한 뒤 다시 시도해주세요.</p>
               <p>금액·시점이 정확히 일치해야 후보로 노출됩니다.</p>
@@ -148,7 +148,7 @@ export default function PrepaymentLinkModal({
                     onClick={() => setSelectedId(c.id)}
                     className={`w-full text-left rounded-lg border px-3 py-2.5 transition-colors ${
                       selected
-                        ? "border-primary bg-primary/10"
+                        ? "border-primary bg-[hsl(var(--primary)_/_0.1)]"
                         : "border-border bg-card hover:bg-secondary"
                     }`}
                   >

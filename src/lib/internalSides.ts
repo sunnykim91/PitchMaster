@@ -36,9 +36,9 @@ export const INTERNAL_SIDES: InternalSideConfig[] = [
     emoji: "🔴",
     text: "text-primary",
     border: "border-primary/30",
-    bg: "bg-primary/5",
-    tabActive: "border-primary bg-primary/10 text-primary",
-    chipBg: "bg-primary/15",
+    bg: "bg-[hsl(var(--primary)_/_0.05)]",
+    tabActive: "border-primary bg-[hsl(var(--primary)_/_0.1)] text-primary",
+    chipBg: "bg-[hsl(var(--primary)_/_0.15)]",
   },
   {
     side: "B",
@@ -46,9 +46,9 @@ export const INTERNAL_SIDES: InternalSideConfig[] = [
     emoji: "🔵",
     text: "text-[hsl(var(--info))]",
     border: "border-[hsl(var(--info))]/30",
-    bg: "bg-[hsl(var(--info))]/5",
-    tabActive: "border-[hsl(var(--info))] bg-[hsl(var(--info))]/10 text-[hsl(var(--info))]",
-    chipBg: "bg-[hsl(var(--info))]/15",
+    bg: "bg-[hsl(var(--info)_/_0.05)]",
+    tabActive: "border-[hsl(var(--info))] bg-[hsl(var(--info)_/_0.1)] text-[hsl(var(--info))]",
+    chipBg: "bg-[hsl(var(--info)_/_0.15)]",
   },
   {
     side: "C",
@@ -56,9 +56,9 @@ export const INTERNAL_SIDES: InternalSideConfig[] = [
     emoji: "🟢",
     text: "text-[hsl(var(--success))]",
     border: "border-[hsl(var(--success))]/30",
-    bg: "bg-[hsl(var(--success))]/5",
-    tabActive: "border-[hsl(var(--success))] bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]",
-    chipBg: "bg-[hsl(var(--success))]/15",
+    bg: "bg-[hsl(var(--success)_/_0.05)]",
+    tabActive: "border-[hsl(var(--success))] bg-[hsl(var(--success)_/_0.1)] text-[hsl(var(--success))]",
+    chipBg: "bg-[hsl(var(--success)_/_0.15)]",
   },
 ];
 

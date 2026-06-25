@@ -29,7 +29,7 @@ const rarityConfig = {
   ICON: { label: "ICON", color: "text-yellow-400", bgGradient: "from-yellow-500/30 via-yellow-900/20 to-yellow-500/30" },
   HERO: { label: "HERO", color: "text-orange-400", bgGradient: "from-orange-500/25 via-orange-900/15 to-orange-500/25" },
   RARE: { label: "RARE", color: "text-teal-400", bgGradient: "from-teal-500/20 via-teal-900/10 to-teal-500/20" },
-  COMMON: { label: "COMMON", color: "text-white/60", bgGradient: "from-white/10 via-transparent to-white/10" },
+  COMMON: { label: "COMMON", color: "text-white/60", bgGradient: "from-[rgb(255_255_255_/_0.1)] via-transparent to-[rgb(255_255_255_/_0.1)]" },
 };
 
 // Mini Player Card for Share (simplified inline version)
@@ -159,12 +159,12 @@ function StoryShareCard({ data }: { data: ShareCardData }) {
         {stats && stats.length > 0 && (
           <div className="space-y-2 mb-4">
             {stats.slice(0, 3).map((stat, i) => (
-              <div key={i} className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
+              <div key={i} className="flex items-center justify-between bg-[rgb(255_255_255_/_0.05)] rounded-lg px-3 py-2">
                 <span className="text-xs text-white/60">{stat.label}</span>
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-bold text-white">{stat.value}</span>
                   {stat.rank && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-white/70">{stat.rank}</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-[rgb(255_255_255_/_0.1)] text-white/70">{stat.rank}</span>
                   )}
                 </div>
               </div>
@@ -576,7 +576,7 @@ export function ShareModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/_0.8)] p-4" onClick={onClose}>
       <div
         className="bg-[hsl(240,5%,10%)] rounded-2xl p-4 sm:p-5 max-w-[460px] w-full border border-white/10 max-h-[95vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
@@ -604,7 +604,7 @@ export function ShareModal({
                 "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors",
                 side === v
                   ? "bg-[hsl(16,85%,58%)] text-white"
-                  : "bg-white/5 text-white/60 hover:bg-white/10"
+                  : "bg-[rgb(255_255_255_/_0.05)] text-white/60 hover:bg-[rgb(255_255_255_/_0.1)]"
               )}
             >
               {label}
@@ -636,7 +636,7 @@ export function ShareModal({
               "mb-3 rounded-lg px-3 py-2 text-center text-xs",
               statusMsg.tone === "success"
                 ? "bg-[hsl(152,55%,55%)]/15 text-[hsl(152,55%,75%)]"
-                : "bg-destructive/20 text-destructive"
+                : "bg-[hsl(var(--destructive)_/_0.2)] text-destructive"
             )}
           >
             {statusMsg.text}
@@ -655,7 +655,7 @@ export function ShareModal({
           <button
             onClick={handleExport}
             disabled={isExporting || isSharing}
-            className="w-full py-3 rounded-xl border border-white/20 text-white/80 font-medium hover:bg-white/5 transition-colors disabled:opacity-50"
+            className="w-full py-3 rounded-xl border border-white/20 text-white/80 font-medium hover:bg-[rgb(255_255_255_/_0.05)] transition-colors disabled:opacity-50"
           >
             {isExporting ? "저장 중..." : "이미지로 저장"}
           </button>

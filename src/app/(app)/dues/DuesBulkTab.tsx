@@ -576,7 +576,7 @@ function DuesBulkTabInner({
         <button
           type="button"
           onClick={() => setShowGuide(true)}
-          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium text-foreground bg-secondary/60 border border-border hover:bg-secondary hover:border-primary/50 transition-colors active:scale-[0.97]"
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium text-foreground bg-[hsl(var(--secondary)_/_0.6)] border border-border hover:bg-secondary hover:border-primary/50 transition-colors active:scale-[0.97]"
           aria-label="OCR 사용법 보기"
         >
           <HelpCircle className="h-3.5 w-3.5" />
@@ -603,7 +603,7 @@ function DuesBulkTabInner({
           aria-busy={ocrLoading || undefined}
         >
           <CardContent className="flex flex-col items-center gap-3 px-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--primary)_/_0.1)]">
               <Camera className="h-6 w-6 text-primary" />
             </div>
             <div className="text-center space-y-1">
@@ -641,7 +641,7 @@ function DuesBulkTabInner({
 
       {/* OCR 로딩 오버레이 */}
       {ocrLoading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/_0.6)] backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3 rounded-2xl bg-background p-8 shadow-2xl">
             <span className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-[hsl(var(--info))]" />
             <p className="text-base font-semibold text-foreground">거래 내역 인식 중...</p>
@@ -662,10 +662,10 @@ function DuesBulkTabInner({
         <div className={cn(
           "rounded-xl px-4 py-3 text-sm font-medium",
           ocrStatus.includes("오류") || ocrStatus.includes("못했") || ocrStatus.includes("실패")
-            ? "bg-destructive/10 text-destructive border border-destructive/20"
+            ? "bg-[hsl(var(--destructive)_/_0.1)] text-destructive border border-destructive/20"
             : ocrStatus.includes("중복") || ocrStatus.includes("이미")
-            ? "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border border-[hsl(var(--warning))]/20"
-            : "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border border-[hsl(var(--success))]/20"
+            ? "bg-[hsl(var(--warning)_/_0.1)] text-[hsl(var(--warning))] border border-[hsl(var(--warning))]/20"
+            : "bg-[hsl(var(--success)_/_0.1)] text-[hsl(var(--success))] border border-[hsl(var(--success))]/20"
         )}>
           {ocrStatus}
         </div>
@@ -673,7 +673,7 @@ function DuesBulkTabInner({
 
       {/* 잔고 확인 카드 */}
       {pendingBalance !== null && (
-        <Card className="border-primary/30 bg-primary/5 py-2">
+        <Card className="border-primary/30 bg-[hsl(var(--primary)_/_0.05)] py-2">
           <CardContent className="px-4 pb-0">
             <div className="flex items-center justify-between">
               <div>
@@ -724,7 +724,7 @@ function DuesBulkTabInner({
               setPendingBalance(null);
               if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
             }}
-            className="absolute top-2 right-2 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur-sm hover:bg-black/85 active:scale-95 transition"
+            className="absolute top-2 right-2 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-[rgb(0_0_0_/_0.7)] text-white shadow-lg backdrop-blur-sm hover:bg-[rgb(0_0_0_/_0.85)] active:scale-95 transition"
           >
             <X className="h-5 w-5" />
           </button>
@@ -750,7 +750,7 @@ function DuesBulkTabInner({
 
           {/* 잔고 미선택 시 저장 차단 — '반영' 또는 '무시'를 명시적으로 선택하게 유도 */}
           {pendingBalance !== null && (
-            <p className="rounded-lg bg-[hsl(var(--warning))]/10 border border-[hsl(var(--warning))]/20 px-3 py-2 text-xs text-[hsl(var(--warning))]">
+            <p className="rounded-lg bg-[hsl(var(--warning)_/_0.1)] border border-[hsl(var(--warning))]/20 px-3 py-2 text-xs text-[hsl(var(--warning))]">
               위 <b>“인식된 잔고”</b>를 <b>반영</b> 또는 <b>무시</b> 중 하나를 선택해야 저장할 수 있어요.
             </p>
           )}

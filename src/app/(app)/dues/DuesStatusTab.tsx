@@ -224,9 +224,9 @@ function DuesStatusTabInner({
 
 // ── 상태 그룹 (접기/펼치기) ──
 const COLOR_MAP = {
-  destructive: { bg: "bg-destructive/8", text: "text-destructive", hover: "hover:bg-destructive/12" },
-  warning: { bg: "bg-[hsl(var(--warning))]/8", text: "text-[hsl(var(--warning))]", hover: "hover:bg-[hsl(var(--warning))]/12" },
-  success: { bg: "bg-[hsl(var(--success))]/8", text: "text-[hsl(var(--success))]", hover: "hover:bg-[hsl(var(--success))]/12" },
+  destructive: { bg: "bg-[hsl(var(--destructive)_/_0.08)]", text: "text-destructive", hover: "hover:bg-[hsl(var(--destructive)_/_0.12)]" },
+  warning: { bg: "bg-[hsl(var(--warning)_/_0.08)]", text: "text-[hsl(var(--warning))]", hover: "hover:bg-[hsl(var(--warning)_/_0.12)]" },
+  success: { bg: "bg-[hsl(var(--success)_/_0.08)]", text: "text-[hsl(var(--success))]", hover: "hover:bg-[hsl(var(--success)_/_0.12)]" },
 } as const;
 
 function StatusGroup<T>({ label, color, items, renderItem, defaultOpen = false }: {
@@ -447,7 +447,7 @@ function PaymentStats({ monthFilter, duesStatus }: {
 
       {/* 장기 미납자 경고 카드 */}
       {longTermUnpaid.length > 0 && (
-        <Card className="border-destructive/20 bg-destructive/10 py-2">
+        <Card className="border-destructive/20 bg-[hsl(var(--destructive)_/_0.1)] py-2">
           <CardContent className="px-3 pb-0 flex items-start gap-2">
             <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
             <div className="space-y-1 min-w-0">

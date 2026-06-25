@@ -639,7 +639,7 @@ function CheckCircle({
 
 function XCircle() {
   return (
-    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted/60">
+    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--muted)_/_0.6)]">
       <X className="h-3 w-3 text-muted-foreground/70" strokeWidth={2.5} />
     </div>
   );

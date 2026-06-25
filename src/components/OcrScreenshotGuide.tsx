@@ -49,7 +49,7 @@ export function OcrScreenshotGuide({ open, onClose }: OcrScreenshotGuideProps) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 sm:items-center"
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-[rgb(0_0_0_/_0.6)] sm:items-center"
       onClick={onClose}
       role="dialog"
       aria-modal="true"

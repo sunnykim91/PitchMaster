@@ -359,7 +359,7 @@ function MatchRecordTabInner({
                     </>
                   ) : (
                   <>
-                    <Button type="button" className="flex-1 min-h-[48px] bg-primary/20 text-primary hover:bg-primary/30 font-semibold"
+                    <Button type="button" className="flex-1 min-h-[48px] bg-[hsl(var(--primary)_/_0.2)] text-primary hover:bg-[hsl(var(--primary)_/_0.3)] font-semibold"
                       disabled={addingGoal}
                       onClick={() => runAddGoal(async () => {
                         const formData = new FormData();
@@ -374,7 +374,7 @@ function MatchRecordTabInner({
                       })}>
                       {addingGoal ? "처리 중..." : "+ A팀 골"}
                     </Button>
-                    <Button type="button" className="flex-1 min-h-[48px] bg-[hsl(var(--info))]/20 text-[hsl(var(--info))] hover:bg-[hsl(var(--info))]/30 font-semibold"
+                    <Button type="button" className="flex-1 min-h-[48px] bg-[hsl(var(--info)_/_0.2)] text-[hsl(var(--info))] hover:bg-[hsl(var(--info)_/_0.3)] font-semibold"
                       disabled={addingGoal}
                       onClick={() => runAddGoal(async () => {
                         const formData = new FormData();
@@ -393,7 +393,7 @@ function MatchRecordTabInner({
                   )
                 ) : (
                   <>
-                    <Button type="button" aria-label="우리 팀 득점 기록 추가" className="flex-1 min-h-[48px] bg-[hsl(var(--success))]/20 text-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/30 font-semibold"
+                    <Button type="button" aria-label="우리 팀 득점 기록 추가" className="flex-1 min-h-[48px] bg-[hsl(var(--success)_/_0.2)] text-[hsl(var(--success))] hover:bg-[hsl(var(--success)_/_0.3)] font-semibold"
                       disabled={addingGoal}
                       onClick={() => runAddGoal(async () => {
                         const formData = new FormData();
@@ -407,7 +407,7 @@ function MatchRecordTabInner({
                       })}>
                       {addingGoal ? "처리 중..." : "+ 득점"}
                     </Button>
-                    <Button type="button" aria-label="상대 팀 실점 기록 추가" className="flex-1 min-h-[48px] bg-destructive/20 text-destructive hover:bg-destructive/30 font-semibold"
+                    <Button type="button" aria-label="상대 팀 실점 기록 추가" className="flex-1 min-h-[48px] bg-[hsl(var(--destructive)_/_0.2)] text-destructive hover:bg-[hsl(var(--destructive)_/_0.3)] font-semibold"
                       disabled={addingGoal}
                       onClick={() => runAddGoal(async () => {
                         const formData = new FormData();
@@ -471,7 +471,7 @@ function MatchRecordTabInner({
         <Card className="rounded-xl border-border/30 overflow-hidden">
           {canRecord && (
             <button type="button" onClick={() => setShowDetailForm((prev) => !prev)}
-              className="flex w-full items-center justify-between px-5 py-4 hover:bg-secondary/30 transition-colors">
+              className="flex w-full items-center justify-between px-5 py-4 hover:bg-[hsl(var(--secondary)_/_0.3)] transition-colors">
               <span className="flex items-center gap-2 text-base font-bold">
                 <Target className="h-4 w-4 text-primary" />
                 골 기록 추가
@@ -623,7 +623,7 @@ function MatchRecordTabInner({
                           <button
                             type="button"
                             onClick={() => setShowAssistPicker(true)}
-                            className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full border border-dashed border-[hsl(var(--success))]/40 bg-[hsl(var(--success))]/5 text-[hsl(var(--success))] text-sm font-medium hover:border-[hsl(var(--success))]/70 hover:bg-[hsl(var(--success))]/10 transition-colors"
+                            className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full border border-dashed border-[hsl(var(--success))]/40 bg-[hsl(var(--success)_/_0.05)] text-[hsl(var(--success))] text-sm font-medium hover:border-[hsl(var(--success))]/70 hover:bg-[hsl(var(--success)_/_0.1)] transition-colors"
                           >
                             + 어시스트 추가
                           </button>
@@ -772,7 +772,7 @@ function MatchRecordTabInner({
                             <div className="flex items-center gap-2 px-1">
                               <span className="text-[12.5px] font-bold text-foreground">{label}</span>
                               <span className="text-[12px] text-muted-foreground">{groupGoals.length}골</span>
-                              <div className="flex-1 h-px bg-border/40" />
+                              <div className="flex-1 h-px bg-[hsl(var(--border)_/_0.4)]" />
                             </div>
                             {canRecord ? (
                               <SortableContext items={groupGoals.map((g) => g.id)} strategy={verticalListSortingStrategy}>
@@ -831,7 +831,7 @@ function GoalCardContent({
           </span>
         )}
         {goal.goalType && goal.goalType !== "NORMAL" && goal.goalType !== "OWN_GOAL" && (
-          <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[12px] font-bold text-primary">{goal.goalType}</span>
+          <span className="rounded bg-[hsl(var(--primary)_/_0.15)] px-1.5 py-0.5 text-[12px] font-bold text-primary">{goal.goalType}</span>
         )}
         {goal.assistId
           ? <span>{((goal.quarter ?? 0) > 0 || (goal.goalType && goal.goalType !== "NORMAL" && goal.goalType !== "OWN_GOAL")) ? " · " : ""}A: {resolvePlayerName(goal.assistId)}</span>
@@ -895,7 +895,7 @@ function SortableGoalItem({
             type="button"
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            className="rounded-lg bg-secondary min-h-[44px] px-4 py-2 text-xs font-semibold text-foreground hover:bg-secondary/70 active:bg-secondary/50 active:scale-95 transition-all cursor-pointer select-none"
+            className="rounded-lg bg-secondary min-h-[44px] px-4 py-2 text-xs font-semibold text-foreground hover:bg-[hsl(var(--secondary)_/_0.7)] active:bg-[hsl(var(--secondary)_/_0.5)] active:scale-95 transition-all cursor-pointer select-none"
           >
             수정
           </button>

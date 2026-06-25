@@ -322,7 +322,7 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-8 gap-1.5 text-xs border-[hsl(var(--loss))]/30 text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss))]/10"
+                  className="h-8 gap-1.5 text-xs border-[hsl(var(--loss))]/30 text-[hsl(var(--loss))] hover:bg-[hsl(var(--loss)_/_0.1)]"
                   disabled={syncing}
                   onClick={handleSyncPayments}
                 >

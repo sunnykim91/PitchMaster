@@ -49,7 +49,7 @@ export const PollBlock = memo(function PollBlock({ poll, onVote, onClosePoll, is
   }
 
   return (
-    <div className="mt-3 rounded-lg border border-border/50 bg-secondary/30 p-3 space-y-2.5">
+    <div className="mt-3 rounded-lg border border-border/50 bg-[hsl(var(--secondary)_/_0.3)] p-3 space-y-2.5">
       <div className="flex items-center gap-1.5">
         <BarChart3 className="h-4 w-4 text-primary" />
         <span className="text-sm font-semibold">{poll.question}</span>
@@ -72,8 +72,8 @@ export const PollBlock = memo(function PollBlock({ poll, onVote, onClosePoll, is
               className={cn(
                 "relative w-full text-left rounded-lg px-3 py-2.5 text-sm transition-all overflow-hidden",
                 showResults
-                  ? "bg-muted/50"
-                  : "bg-muted/30 hover:bg-muted/60 active:scale-[0.99]",
+                  ? "bg-[hsl(var(--muted)_/_0.5)]"
+                  : "bg-[hsl(var(--muted)_/_0.3)] hover:bg-[hsl(var(--muted)_/_0.6)] active:scale-[0.99]",
                 isMyVote && "ring-1 ring-primary/50",
                 isPollExpired && "opacity-70 cursor-default"
               )}
@@ -83,7 +83,7 @@ export const PollBlock = memo(function PollBlock({ poll, onVote, onClosePoll, is
                 <div
                   className={cn(
                     "absolute inset-y-0 left-0 transition-all duration-500 ease-out rounded-lg",
-                    isMyVote ? "bg-primary/15" : "bg-muted-foreground/8"
+                    isMyVote ? "bg-[hsl(var(--primary)_/_0.15)]" : "bg-[hsl(var(--muted-foreground)_/_0.08)]"
                   )}
                   style={{ width: `${pct}%` }}
                 />
@@ -182,7 +182,7 @@ export const PollBlock = memo(function PollBlock({ poll, onVote, onClosePoll, is
                     {opt.voters.length > 0 ? (
                       <div className="flex flex-wrap gap-1.5">
                         {opt.voters.map((v, i) => (
-                          <span key={i} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                          <span key={i} className="rounded-full bg-[hsl(var(--primary)_/_0.1)] px-2.5 py-0.5 text-xs font-medium text-primary">
                             {v.name}
                           </span>
                         ))}

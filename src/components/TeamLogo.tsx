@@ -52,7 +52,7 @@ export default function TeamLogo({
   // Fallback: 팀명 첫 글자
   return (
     <div
-      className={`flex items-center justify-center rounded-full bg-primary/10 font-bold text-primary ${text} ${className}`}
+      className={`flex items-center justify-center rounded-full bg-[hsl(var(--primary)_/_0.1)] font-bold text-primary ${text} ${className}`}
       style={{ width: px, height: px }}
     >
       {teamName.charAt(0)}

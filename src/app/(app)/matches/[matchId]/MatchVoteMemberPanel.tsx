@@ -58,7 +58,7 @@ function MatchVoteMemberPanelInner({
         {dormantIds.size > 0 && (
           <div>
             <div className="mb-2 flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+              <div className="h-2 w-2 rounded-full bg-[hsl(var(--muted-foreground)_/_0.4)]" />
               <span className="text-sm font-semibold text-muted-foreground">휴면</span>
               <Badge variant="secondary" className="text-xs">{dormantIds.size}</Badge>
             </div>
@@ -66,7 +66,7 @@ function MatchVoteMemberPanelInner({
               {baseRoster.filter((m) => dormantIds.has(m.id)).map((m) => {
                 const info = exemptions[m.id];
                 return (
-                  <Badge key={m.id} className="border-0 font-medium bg-secondary/50 text-muted-foreground/60">
+                  <Badge key={m.id} className="border-0 font-medium bg-[hsl(var(--secondary)_/_0.5)] text-muted-foreground/60">
                     {DORMANT_ICON[info?.type] ?? ""} {m.name}
                     {info?.type && <span className="ml-1 text-[12px]">({DORMANT_LABEL[info.type] ?? "휴면"})</span>}
                   </Badge>

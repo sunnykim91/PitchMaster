@@ -715,13 +715,13 @@ export default function AnimationEditorClient({ initial }: Props) {
         <button
           type="button"
           onClick={() => setMetaOpen((v) => !v)}
-          className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left hover:bg-secondary/30 rounded-xl"
+          className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left hover:bg-[hsl(var(--secondary)_/_0.3)] rounded-xl"
           aria-expanded={metaOpen}
         >
           <span className="flex min-w-0 flex-1 items-center gap-2">
             <span className="truncate text-sm font-semibold">{name || "이름 없음"}</span>
             {isDefault && (
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary">
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[hsl(var(--primary)_/_0.15)] px-2 py-0.5 text-[10px] font-bold text-primary">
                 <Star className="h-2.5 w-2.5" /> 대표
               </span>
             )}
@@ -779,7 +779,7 @@ export default function AnimationEditorClient({ initial }: Props) {
 
       {/* 첫 진입 안내 — 1회 표시 후 localStorage로 dismiss. 최대화 모드에선 숨김. */}
       {coachOpen && (
-        <div className="mb-4 rounded-xl border border-primary/30 bg-primary/5 p-3">
+        <div className="mb-4 rounded-xl border border-primary/30 bg-[hsl(var(--primary)_/_0.05)] p-3">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 text-[12.5px] leading-relaxed text-foreground">
               <p className="mb-1.5 font-bold text-primary">전술 영상은 이렇게 만들어요</p>
@@ -894,7 +894,7 @@ export default function AnimationEditorClient({ initial }: Props) {
                 className={cn(
                   "rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors min-h-[32px]",
                   i === phaseIdx
-                    ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]"
+                    ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary)_/_0.1)] text-[hsl(var(--primary))]"
                     : "border-border text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -924,7 +924,7 @@ export default function AnimationEditorClient({ initial }: Props) {
               size="sm"
               variant="outline"
               onClick={deletePhase}
-              className="h-8 gap-1 border-destructive/40 text-destructive hover:bg-destructive/10"
+              className="h-8 gap-1 border-destructive/40 text-destructive hover:bg-[hsl(var(--destructive)_/_0.1)]"
             >
               <Trash2 className="h-3.5 w-3.5" />
               장면 삭제
@@ -979,7 +979,7 @@ export default function AnimationEditorClient({ initial }: Props) {
         <button
           type="button"
           onClick={deleteStep}
-          className="min-h-[32px] min-w-[32px] rounded px-2 py-1.5 text-[12.5px] font-semibold text-destructive hover:bg-destructive/10"
+          className="min-h-[32px] min-w-[32px] rounded px-2 py-1.5 text-[12.5px] font-semibold text-destructive hover:bg-[hsl(var(--destructive)_/_0.1)]"
           title="현재 컷 삭제"
         >
           <Trash2 className="h-3 w-3" />
@@ -1115,7 +1115,7 @@ export default function AnimationEditorClient({ initial }: Props) {
       </div>
 
       {/* 현재 컷 편집 — 설명 + 공 표시 */}
-      <div className="mb-3 space-y-2 rounded-md bg-card/50 p-3">
+      <div className="mb-3 space-y-2 rounded-md bg-[hsl(var(--card)_/_0.5)] p-3">
         <div>
           <Label htmlFor="step-caption" className="text-xs">컷 설명 (시청자가 읽을 짧은 글)</Label>
           <Textarea
@@ -1223,7 +1223,7 @@ function SetpieceScenarioControl({
   }
 
   return (
-    <div className="rounded-md border border-border bg-secondary/30 p-2.5">
+    <div className="rounded-md border border-border bg-[hsl(var(--secondary)_/_0.3)] p-2.5">
       <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
         세트피스 시나리오
       </p>

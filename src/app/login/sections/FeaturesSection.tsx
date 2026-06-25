@@ -713,11 +713,11 @@ function TacticsBoardReplica() {
         {/* 경기장 외곽선 */}
         <div className="absolute inset-3 rounded-sm border-2 border-white/50" />
         {/* 센터라인 */}
-        <div className="absolute inset-x-3 top-1/2 h-0.5 -translate-y-px bg-white/30" />
+        <div className="absolute inset-x-3 top-1/2 h-0.5 -translate-y-px bg-[rgb(255_255_255_/_0.3)]" />
         {/* 센터서클 */}
         <div className="absolute left-1/2 top-1/2 h-[18%] w-[28%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/50" />
         {/* 센터스팟 */}
-        <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/40" />
+        <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgb(255_255_255_/_0.4)]" />
         {/* 상단 페널티 박스 + 골 에어리어 + 페널티 아크 */}
         <div className="absolute inset-x-[20%] top-3 h-[16%] border-2 border-t-0 border-white/50" />
         <div className="absolute inset-x-[32%] top-3 h-[8%] border-2 border-t-0 border-white/50" />

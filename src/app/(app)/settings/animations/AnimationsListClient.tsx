@@ -481,7 +481,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
 
       {/* 신규 생성 — 종목 → 카테고리 → (공/수만) 포메이션 → (세트피스만) 시나리오 → 만들기.
           PC·모바일 공통 카드로 묶고 라벨 너비 일관(sm:w-[300px] lg:w-full)으로 정돈. */}
-      <div className="mb-5 rounded-xl border border-border bg-card/40 p-4 sm:p-5">
+      <div className="mb-5 rounded-xl border border-border bg-[hsl(var(--card)_/_0.4)] p-4 sm:p-5">
         <div className="mb-3 text-sm font-bold text-foreground">새 영상 만들기</div>
         <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-x-6 lg:gap-y-3 lg:space-y-0">
           {/* ① 종목 */}
@@ -492,7 +492,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
                 우리 팀: {sportType === "FUTSAL" ? "풋살" : "축구"}
               </span>
             </div>
-            <div className="grid w-full grid-cols-2 gap-1 rounded-lg border border-border bg-secondary/30 p-1 sm:w-[300px] lg:w-full">
+            <div className="grid w-full grid-cols-2 gap-1 rounded-lg border border-border bg-[hsl(var(--secondary)_/_0.3)] p-1 sm:w-[300px] lg:w-full">
               <button
                 type="button"
                 onClick={() => handleSportToggle("SOCCER")}
@@ -525,7 +525,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
           {/* ② 카테고리 선택 — 만들 영상의 의도 */}
           <div>
             <div className="mb-1.5 text-xs font-semibold text-foreground">카테고리</div>
-            <div className="grid w-full grid-cols-4 gap-1 rounded-lg border border-border bg-secondary/30 p-1 sm:w-[300px] lg:w-full" role="group" aria-label="영상 카테고리 선택">
+            <div className="grid w-full grid-cols-4 gap-1 rounded-lg border border-border bg-[hsl(var(--secondary)_/_0.3)] p-1 sm:w-[300px] lg:w-full" role="group" aria-label="영상 카테고리 선택">
               {ANIMATION_CATEGORIES.map((c) => {
                 const active = createCategory === c;
                 return (
@@ -589,7 +589,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
             </div>
           )}
           {createCategory === "SETPIECE" && selectedSport === "FUTSAL" && (
-            <div className="rounded-md border border-border bg-secondary/30 p-3 text-[11.5px] text-muted-foreground sm:w-[300px] lg:w-full">
+            <div className="rounded-md border border-border bg-[hsl(var(--secondary)_/_0.3)] p-3 text-[11.5px] text-muted-foreground sm:w-[300px] lg:w-full">
               💡 풋살은 표준 배치 템플릿 없이 <strong>빈 캔버스에서 자유 배치</strong>로 시작해요. 만든 후 드래그로 선수 위치를 잡아주세요.
             </div>
           )}
@@ -618,7 +618,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
           불러오는 중…
         </div>
       ) : animations.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-card/40 p-8 text-center">
+        <div className="rounded-xl border border-dashed border-border bg-[hsl(var(--card)_/_0.4)] p-8 text-center">
           <p className="text-sm text-muted-foreground">
             아직 만든 영상이 없어요.<br />
             위에서 종목·포메이션을 고르고 첫 영상을 만들어보세요.
@@ -628,7 +628,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
         <div className="space-y-3">
           {/* 운영진 알림 — 영상은 있는데 대표(⭐) 0개인 카테고리 (매치 자동 노출 안 됨) */}
           {categoriesMissingDefault.length > 0 && (
-            <div className="rounded-lg border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/5 p-3 text-[12px]">
+            <div className="rounded-lg border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning)_/_0.05)] p-3 text-[12px]">
               <p className="font-semibold text-foreground">
                 {categoriesMissingDefault.length === 1
                   ? `${ANIMATION_CATEGORY_LABEL[categoriesMissingDefault[0]]} 카테고리에 대표 영상이 없어요`
@@ -682,7 +682,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
             })}
           </div>
           {filteredAnimations.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-card/40 p-6 text-center">
+            <div className="rounded-xl border border-dashed border-border bg-[hsl(var(--card)_/_0.4)] p-6 text-center">
               <p className="text-sm text-muted-foreground">
                 이 카테고리에 해당하는 영상이 없어요.
               </p>
@@ -700,9 +700,9 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
                     <h2 className="text-base font-bold truncate">{animation.name}</h2>
                     <span className={cn(
                       "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold",
-                      animation._category === "ATTACK" && "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]",
-                      animation._category === "DEFENSE" && "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]",
-                      animation._category === "SETPIECE" && "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]",
+                      animation._category === "ATTACK" && "bg-[hsl(var(--primary)_/_0.15)] text-[hsl(var(--primary))]",
+                      animation._category === "DEFENSE" && "bg-[hsl(var(--info)_/_0.15)] text-[hsl(var(--info))]",
+                      animation._category === "SETPIECE" && "bg-[hsl(var(--warning)_/_0.15)] text-[hsl(var(--warning))]",
                       animation._category === "OTHER" && "bg-secondary text-muted-foreground",
                     )}>
                       {ANIMATION_CATEGORY_LABEL[animation._category]}
@@ -712,9 +712,9 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
                       // 매치 노출 동작과 1:1 — 사용자가 어느 카테고리의 대표인지 한눈에 인지.
                       <span className={cn(
                         "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-bold",
-                        animation._category === "ATTACK" && "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]",
-                        animation._category === "DEFENSE" && "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]",
-                        animation._category === "SETPIECE" && "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]",
+                        animation._category === "ATTACK" && "bg-[hsl(var(--primary)_/_0.15)] text-[hsl(var(--primary))]",
+                        animation._category === "DEFENSE" && "bg-[hsl(var(--info)_/_0.15)] text-[hsl(var(--info))]",
+                        animation._category === "SETPIECE" && "bg-[hsl(var(--warning)_/_0.15)] text-[hsl(var(--warning))]",
                         animation._category === "OTHER" && "bg-secondary text-foreground",
                       )}>
                         <Star className="h-2.5 w-2.5 fill-current" aria-hidden="true" />
@@ -790,7 +790,7 @@ export default function AnimationsListClient({ teamId: _teamId, teamName, sportT
                   type="button"
                   size="sm"
                   variant="outline"
-                  className="h-8 text-xs gap-1 border-destructive/40 text-destructive hover:bg-destructive/10"
+                  className="h-8 text-xs gap-1 border-destructive/40 text-destructive hover:bg-[hsl(var(--destructive)_/_0.1)]"
                   onClick={() => handleDelete(animation)}
                 >
                   <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />

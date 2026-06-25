@@ -28,7 +28,7 @@ export function AiBadge({ variant, label, size = "md", className }: AiBadgeProps
   // variant별 박스 스타일 + 박스 안에 표시할 축약 라벨("AI"/"룰"/"생성중"/"실패")
   const variantClasses: Record<AiBadgeVariant, { box: string; text: string; short: string }> = {
     ai: {
-      box: "bg-gradient-to-br from-primary/25 via-primary/20 to-purple-500/20 text-primary ring-1 ring-primary/30 shadow-sm shadow-primary/10",
+      box: "bg-gradient-to-br from-[hsl(var(--primary)_/_0.25)] via-[hsl(var(--primary)_/_0.2)] to-purple-500/20 text-primary ring-1 ring-primary/30 shadow-sm shadow-primary/10",
       text: "font-bold text-foreground",
       short: "AI",
     },
@@ -38,12 +38,12 @@ export function AiBadge({ variant, label, size = "md", className }: AiBadgeProps
       short: "룰",
     },
     loading: {
-      box: "bg-primary/15 text-primary ring-1 ring-primary/20",
+      box: "bg-[hsl(var(--primary)_/_0.15)] text-primary ring-1 ring-primary/20",
       text: "font-semibold text-foreground/80",
       short: "생성중",
     },
     error: {
-      box: "bg-destructive/15 text-destructive ring-1 ring-destructive/20",
+      box: "bg-[hsl(var(--destructive)_/_0.15)] text-destructive ring-1 ring-destructive/20",
       text: "font-semibold text-destructive",
       short: "실패",
     },

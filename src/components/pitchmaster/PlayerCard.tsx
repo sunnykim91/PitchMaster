@@ -69,7 +69,7 @@ function SparklesDots({ count = 8, color = "gold" }: { count?: number; color?: s
 // Context Chip Component
 function ContextChip({ text }: { text: string }) {
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[12px] font-semibold rounded-full bg-white/15 text-white/90 whitespace-nowrap">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[12px] font-semibold rounded-full bg-[rgb(255_255_255_/_0.15)] text-white/90 whitespace-nowrap">
       {text}
     </span>
   );
@@ -342,7 +342,7 @@ export function PlayerCard({
           <div className="absolute inset-0 vignette" />
 
           {/* Light Streak from top */}
-          <div className="absolute top-0 left-0 w-full h-1/3 bg-gradient-to-b from-white/10 to-transparent" />
+          <div className="absolute top-0 left-0 w-full h-1/3 bg-gradient-to-b from-[rgb(255_255_255_/_0.1)] to-transparent" />
 
           {/* Sparkles for ICON cards */}
           {config.sparkleCount > 0 && (
@@ -460,13 +460,13 @@ export function PlayerCard({
             </div>
 
             {/* Divider */}
-            <div className="h-px bg-gradient-to-r from-transparent via-white/30 to-transparent mb-3" />
+            <div className="h-px bg-gradient-to-r from-transparent via-[rgb(255_255_255_/_0.3)] to-transparent mb-3" />
 
             {/* Stats Section with Hero Stat */}
             <div className="space-y-3">
               {/* Hero Stat - Large */}
               {heroStat && (
-                <div className="flex items-center justify-between bg-white/8 rounded-xl px-4 py-3">
+                <div className="flex items-center justify-between bg-[rgb(255_255_255_/_0.08)] rounded-xl px-4 py-3">
                   <span className="text-sm text-white/70 font-medium">{heroStat.label}</span>
                   <div className="flex items-center gap-3">
                     <span className={cn(
@@ -486,7 +486,7 @@ export function PlayerCard({
               {/* Other Stats - Smaller Grid */}
               <div className="grid grid-cols-5 gap-1.5">
                 {otherStats.map((stat, i) => (
-                  <div key={i} className="text-center bg-white/5 rounded-lg py-2 px-1">
+                  <div key={i} className="text-center bg-[rgb(255_255_255_/_0.05)] rounded-lg py-2 px-1">
                     <p className="text-base sm:text-lg font-bold text-white">{stat.value}</p>
                     <p className="text-[8px] sm:text-[9px] text-white/50 truncate">{stat.label}</p>
                   </div>
@@ -505,7 +505,7 @@ export function PlayerCard({
           {!locked && (
             <div
               aria-hidden="true"
-              className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-sm border border-white/30 animate-pulse shadow-lg pointer-events-none"
+              className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[rgb(0_0_0_/_0.7)] backdrop-blur-sm border border-white/30 animate-pulse shadow-lg pointer-events-none"
             >
               <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 12a9 9 0 11-3-6.7" />
@@ -669,7 +669,7 @@ export function PlayerCardDemo() {
 
         {/* Action Buttons */}
         <div className="flex justify-center gap-4 mt-12">
-          <button className="px-6 py-3 rounded-xl border border-white/20 text-white/80 text-sm font-medium hover:bg-white/5 transition-colors">
+          <button className="px-6 py-3 rounded-xl border border-white/20 text-white/80 text-sm font-medium hover:bg-[rgb(255_255_255_/_0.05)] transition-colors">
             이미지로 저장
           </button>
           <button className="px-6 py-3 rounded-xl bg-[hsl(16,85%,58%)] text-white text-sm font-medium hover:bg-[hsl(16,85%,50%)] transition-colors">
@@ -680,7 +680,7 @@ export function PlayerCardDemo() {
         {/* Empty State Example */}
         <div className="mt-16 max-w-sm mx-auto">
           <div className="bg-[hsl(240,5%,10%)] rounded-2xl p-8 text-center border border-white/10">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgb(255_255_255_/_0.05)] flex items-center justify-center">
               <svg className="w-8 h-8 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>

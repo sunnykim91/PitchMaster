@@ -94,7 +94,7 @@ export default function PWAInstallPrompt() {
     <div className="fixed bottom-20 left-4 right-4 z-50 animate-in slide-in-from-bottom-4 duration-300">
       <div className="mx-auto max-w-md rounded-2xl border border-border bg-card p-4 shadow-xl">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[hsl(var(--primary)_/_0.1)]">
             {content.icon}
           </div>
           <div className="flex-1 min-w-0">
@@ -107,32 +107,32 @@ export default function PWAInstallPrompt() {
         </div>
         <button
           onClick={handleInstall}
-          className="mt-3 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 active:scale-[0.98]"
+          className="mt-3 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-[hsl(var(--primary)_/_0.9)] active:scale-[0.98]"
         >
           {content.btn}
         </button>
       </div>
       {showIosGuide && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={() => setShowIosGuide(false)}>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[rgb(0_0_0_/_0.5)] p-4" onClick={() => setShowIosGuide(false)}>
           <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-base font-bold">홈 화면에 추가하기</h3>
             <div className="mt-4 space-y-4">
               <div className="flex items-start gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">1</span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary)_/_0.1)] text-xs font-bold text-primary">1</span>
                 <p className="text-sm text-muted-foreground">Safari 하단 메뉴바에서 <span className="inline-flex items-center gap-1 font-semibold text-foreground">공유 아이콘 <Share className="inline h-3.5 w-3.5" aria-hidden="true" /></span> (네모에서 화살표 나온 모양)을 탭하세요</p>
               </div>
               <div className="flex items-start gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">2</span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary)_/_0.1)] text-xs font-bold text-primary">2</span>
                 <p className="text-sm text-muted-foreground">메뉴에서 <span className="font-semibold text-foreground">&quot;홈 화면에 추가&quot;</span>를 선택하세요</p>
               </div>
               <div className="flex items-start gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">3</span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary)_/_0.1)] text-xs font-bold text-primary">3</span>
                 <p className="text-sm text-muted-foreground">우측 상단의 <span className="font-semibold text-foreground">&quot;추가&quot;</span>를 탭하세요</p>
               </div>
             </div>
             <button
               onClick={() => setShowIosGuide(false)}
-              className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+              className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-[hsl(var(--primary)_/_0.9)]"
             >
               확인
             </button>

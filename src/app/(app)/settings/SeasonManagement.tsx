@@ -155,7 +155,7 @@ function SeasonManagementComponent() {
       </CardHeader>
       <CardContent className="space-y-4">
         {seasonMsg && (
-          <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary">
+          <div className="rounded-lg border border-primary/20 bg-[hsl(var(--primary)_/_0.05)] px-4 py-2 text-sm font-semibold text-primary">
             {seasonMsg}
           </div>
         )}
@@ -170,7 +170,7 @@ function SeasonManagementComponent() {
                 key={s.id}
                 className={cn(
                   "flex flex-wrap items-center justify-between gap-3 rounded-xl p-4",
-                  s.isActive ? "bg-primary/5 border border-primary/20" : "bg-secondary"
+                  s.isActive ? "bg-[hsl(var(--primary)_/_0.05)] border border-primary/20" : "bg-secondary"
                 )}
               >
                 <div className="flex items-center gap-3 min-w-0">

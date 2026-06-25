@@ -82,7 +82,7 @@ function MatchVoteStaffPanelInner({
         <CardTitle className="text-base font-bold">투표 관리</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex h-11 items-center gap-2.5 rounded-lg border border-border bg-secondary/50 px-3">
+        <div className="flex h-11 items-center gap-2.5 rounded-lg border border-border bg-[hsl(var(--secondary)_/_0.5)] px-3">
           <Search className="h-4 w-4 shrink-0 text-muted-foreground translate-y-[0.5px]" />
           <input type="text" placeholder="이름 검색" value={voteSearch}
             onChange={(e) => setVoteSearch(e.target.value)} autoComplete="off"
@@ -109,7 +109,7 @@ function MatchVoteStaffPanelInner({
               <button key={key} type="button"
                 onClick={() => { const next = idx < 0 ? 1 : (idx + 1) % 3; setVoteSortBy(cycle[next] as typeof voteSortBy); }}
                 className={cn("h-9 rounded-lg px-3 text-xs font-medium transition-colors",
-                  isActive ? "bg-secondary text-foreground" : "bg-secondary/50 text-muted-foreground hover:text-foreground"
+                  isActive ? "bg-secondary text-foreground" : "bg-[hsl(var(--secondary)_/_0.5)] text-muted-foreground hover:text-foreground"
                 )}>
                 {isActive ? labels[idx] : labels[0]}
               </button>
@@ -136,7 +136,7 @@ function MatchVoteStaffPanelInner({
             const currentVote = memberVoteMap[member.memberId];
             return (
               <li key={member.id} className={cn("flex items-center justify-between rounded-xl p-3 transition-colors",
-                !currentVote ? "bg-destructive/10 border border-destructive/30" : "bg-secondary/50"
+                !currentVote ? "bg-[hsl(var(--destructive)_/_0.1)] border border-destructive/30" : "bg-[hsl(var(--secondary)_/_0.5)]"
               )}>
                 <span className={cn("text-sm font-medium", !currentVote && "text-destructive")}>{member.name}</span>
                 <div className="flex gap-1" role="radiogroup">
@@ -166,7 +166,7 @@ function MatchVoteStaffPanelInner({
 
         {noVoteCount > 0 && (
           <Button
-            className="w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25 hover:bg-primary/90"
+            className="w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25 hover:bg-[hsl(var(--primary)_/_0.9)]"
             disabled={nudgeLoading}
             onClick={() => runNudge(async () => {
               try {
@@ -187,7 +187,7 @@ function MatchVoteStaffPanelInner({
               {baseRoster.filter((m) => dormantIds.has(m.id)).map((m) => {
                 const info = exemptions[m.id];
                 return (
-                  <Badge key={m.id} className="border-0 font-medium bg-secondary/50 text-muted-foreground/60">
+                  <Badge key={m.id} className="border-0 font-medium bg-[hsl(var(--secondary)_/_0.5)] text-muted-foreground/60">
                     {DORMANT_ICON[info?.type] ?? ""} {m.name}
                   </Badge>
                 );

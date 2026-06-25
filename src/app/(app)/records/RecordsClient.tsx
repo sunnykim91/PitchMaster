@@ -367,7 +367,7 @@ export default function RecordsClient({
   return (
     <div className="grid gap-5 stagger-children min-w-0">
       {/* ── Tab Bar ── */}
-      <div className="sticky top-0 z-10 -mx-1 px-1 bg-background/95 backdrop-blur-sm border-b border-border">
+      <div className="sticky top-0 z-10 -mx-1 px-1 bg-[hsl(var(--background)_/_0.95)] backdrop-blur-sm border-b border-border">
         <div role="tablist" aria-label="기록 탭" className="flex">
           {tabItems.map((tab) => (
             <button
@@ -567,7 +567,7 @@ export default function RecordsClient({
                         {item.rank !== null && (
                           <span
                             aria-label={`팀 ${item.rank}위`}
-                            className="absolute right-2 top-2 rounded-full bg-[hsl(var(--warning))]/15 px-1.5 py-0.5 text-[10px] font-bold text-[hsl(var(--warning))]"
+                            className="absolute right-2 top-2 rounded-full bg-[hsl(var(--warning)_/_0.15)] px-1.5 py-0.5 text-[10px] font-bold text-[hsl(var(--warning))]"
                           >
                             {item.rank === 1 ? "🥇 1위" : item.rank === 2 ? "🥈 2위" : item.rank === 3 ? "🥉 3위" : `${item.rank}위`}
                           </span>
@@ -708,7 +708,7 @@ export default function RecordsClient({
                         <span className="flex items-center gap-2 min-w-0">
                           <span className={cn(
                             "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-xs font-bold",
-                            index === 0 ? "bg-[hsl(var(--warning))]/20 text-[hsl(var(--warning))]"
+                            index === 0 ? "bg-[hsl(var(--warning)_/_0.2)] text-[hsl(var(--warning))]"
                               : index === 1 ? "bg-secondary text-foreground/60"
                               : "bg-secondary text-muted-foreground"
                           )}>
@@ -779,7 +779,7 @@ export default function RecordsClient({
                       key={s.memberId}
                       className={cn(
                         "rounded-xl px-4 py-3 border border-border/40",
-                        isMe && "bg-primary/8 border-primary/20"
+                        isMe && "bg-[hsl(var(--primary)_/_0.08)] border-primary/20"
                       )}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -791,7 +791,7 @@ export default function RecordsClient({
                             {i + 1}
                           </span>
                           {s.jerseyNumber !== null && (
-                            <span className="shrink-0 rounded bg-primary/10 px-1 py-0.5 text-xs font-bold text-primary">#{s.jerseyNumber}</span>
+                            <span className="shrink-0 rounded bg-[hsl(var(--primary)_/_0.1)] px-1 py-0.5 text-xs font-bold text-primary">#{s.jerseyNumber}</span>
                           )}
                           <Link href={`/player/${s.memberId}${activeSeason?.teamId ? `?team=${activeSeason.teamId}` : ""}`} className="font-semibold text-sm truncate underline decoration-dotted decoration-muted-foreground/40 underline-offset-[3px] hover:text-primary hover:decoration-primary">{s.memberName || "-"}</Link>
                           {s.teamRole === "CAPTAIN" && <Badge variant="warning" className="text-xs px-1 py-0 shrink-0">C</Badge>}
@@ -799,7 +799,7 @@ export default function RecordsClient({
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           {s.avgRating !== undefined && (
-                            <span className="inline-flex items-center gap-0.5 rounded-full bg-[hsl(var(--warning))]/15 px-2 py-0.5 text-xs font-bold text-[hsl(var(--warning))] tabular-nums">
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-[hsl(var(--warning)_/_0.15)] px-2 py-0.5 text-xs font-bold text-[hsl(var(--warning))] tabular-nums">
                               ⭐ {s.avgRating.toFixed(1)}
                               <span className="ml-0.5 text-[10px] font-normal text-muted-foreground">({s.ratingCount ?? 0})</span>
                             </span>
@@ -819,7 +819,7 @@ export default function RecordsClient({
                             type="button"
                             disabled={stat.key !== "attendance" ? stat.value === 0 : false}
                             onClick={() => openDetail(s.memberId, s.memberName, stat.key)}
-                            className="hover:bg-secondary/50 rounded-lg py-1 transition-colors disabled:opacity-50 disabled:cursor-default cursor-pointer"
+                            className="hover:bg-[hsl(var(--secondary)_/_0.5)] rounded-lg py-1 transition-colors disabled:opacity-50 disabled:cursor-default cursor-pointer"
                           >
                             <p className="text-muted-foreground">{stat.label}</p>
                             <p className={cn("font-semibold underline decoration-dotted underline-offset-2", stat.color)}>{stat.value}{"suffix" in stat ? stat.suffix : ""}</p>
@@ -877,9 +877,9 @@ export default function RecordsClient({
                       {allStats.map((s, i) => {
                         const isMe = s.memberId === userId;
                         const isTop3 = i < 3 && s.points > 0;
-                        const stickyBg = isMe ? "bg-primary/8" : "bg-card";
+                        const stickyBg = isMe ? "bg-[hsl(var(--primary)_/_0.08)]" : "bg-card";
                         return (
-                          <tr key={s.memberId} className={cn(isMe && "[&>td]:bg-primary/8")}>
+                          <tr key={s.memberId} className={cn(isMe && "[&>td]:bg-[hsl(var(--primary)_/_0.08)]")}>
                             <td className={cn("sticky left-0 z-1 py-2.5", stickyBg, isTop3 ? "text-primary font-bold" : "text-muted-foreground")}>{i + 1}</td>
                             <td className={cn("sticky left-8 z-1 py-2.5 font-semibold max-w-[120px] truncate", stickyBg)}>
                               <span className="flex items-center gap-1">
@@ -972,13 +972,13 @@ export default function RecordsClient({
                       key={d.matchId}
                       href={`/matches/${d.matchId}`}
                       onClick={() => setDetailOpen(false)}
-                      className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-secondary/50 transition-colors"
+                      className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-[hsl(var(--secondary)_/_0.5)] transition-colors"
                     >
                       {/* 승/무/패 인디케이터 */}
                       <span className={cn(
                         "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
-                        result === "W" ? "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"
-                          : result === "L" ? "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]"
+                        result === "W" ? "bg-[hsl(var(--success)_/_0.15)] text-[hsl(var(--success))]"
+                          : result === "L" ? "bg-[hsl(var(--loss)_/_0.15)] text-[hsl(var(--loss))]"
                           : "bg-secondary text-muted-foreground"
                       )}>
                         {result === "W" ? "승" : result === "L" ? "패" : "무"}
@@ -997,9 +997,9 @@ export default function RecordsClient({
                       {detailType !== "attendance" && (
                         <span className={cn(
                           "shrink-0 rounded-lg px-2.5 py-1 text-xs font-bold",
-                          detailType === "goals" ? "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"
-                            : detailType === "assists" ? "bg-[hsl(var(--info))]/15 text-[hsl(var(--info))]"
-                            : "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]"
+                          detailType === "goals" ? "bg-[hsl(var(--success)_/_0.15)] text-[hsl(var(--success))]"
+                            : detailType === "assists" ? "bg-[hsl(var(--info)_/_0.15)] text-[hsl(var(--info))]"
+                            : "bg-[hsl(var(--warning)_/_0.15)] text-[hsl(var(--warning))]"
                         )}>
                           {d.count}{detailType === "goals" ? "골" : detailType === "assists" ? "어시" : "표"}
                         </span>
@@ -1199,7 +1199,7 @@ function SeasonAwardsCard({ seasonId }: { seasonId: string }) {
             // null·name 비어있으면 스킵 (데이터 없는 어워드)
             if (!award || !award.name) return null;
             return (
-              <div key={key} className="flex items-center gap-3 rounded-xl bg-secondary/50 px-3 py-2.5">
+              <div key={key} className="flex items-center gap-3 rounded-xl bg-[hsl(var(--secondary)_/_0.5)] px-3 py-2.5">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center text-lg leading-none">{emoji}</span>
                 <span className="text-sm font-medium text-muted-foreground w-16 shrink-0">
                   {award.label || fallbackLabel}

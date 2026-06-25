@@ -405,7 +405,7 @@ function MatchDiaryTabInner({
             </div>
           </div>
           <div className="flex gap-2 bg-card p-4">
-            <Button type="button" className="flex-1 min-h-[48px] gap-2 font-semibold bg-[hsl(var(--kakao))] text-[hsl(var(--kakao-foreground))] hover:bg-[hsl(var(--kakao))]/90" onClick={handleKakaoShare}>
+            <Button type="button" className="flex-1 min-h-[48px] gap-2 font-semibold bg-[hsl(var(--kakao))] text-[hsl(var(--kakao-foreground))] hover:bg-[hsl(var(--kakao)_/_0.9)]" onClick={handleKakaoShare}>
               <MessageCircle className="h-4 w-4" />카카오톡 공유
             </Button>
             <Button type="button" variant="outline" className="flex-1 min-h-[48px] gap-2 font-semibold" onClick={handleShare}>
@@ -413,7 +413,7 @@ function MatchDiaryTabInner({
             </Button>
           </div>
           {shareMessage && (
-            <div className="mx-4 mb-3 rounded-lg bg-[hsl(var(--success))]/10 px-3 py-2 text-center text-xs font-medium text-[hsl(var(--success))]">
+            <div className="mx-4 mb-3 rounded-lg bg-[hsl(var(--success)_/_0.1)] px-3 py-2 text-center text-xs font-medium text-[hsl(var(--success))]">
               ✓ {shareMessage}
             </div>
           )}
@@ -438,7 +438,7 @@ function MatchDiaryTabInner({
                   <button
                     type="button"
                     onClick={async (e) => { e.stopPropagation(); const ok = await confirm({ title: "이 사진을 삭제하시겠습니까?", variant: "destructive", confirmLabel: "삭제" }); if (ok) handleRemovePhoto(url); }}
-                    className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-background/90 text-destructive shadow-sm"
+                    className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-[hsl(var(--background)_/_0.9)] text-destructive shadow-sm"
                     aria-label="사진 삭제"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -451,7 +451,7 @@ function MatchDiaryTabInner({
                 type="button"
                 onClick={() => photoInputRef.current?.click()}
                 disabled={uploadingPhoto}
-                className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-border/50 bg-secondary/30 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-border/50 bg-[hsl(var(--secondary)_/_0.3)] text-muted-foreground transition-colors hover:border-primary hover:text-primary"
               >
                 <Camera className="h-6 w-6" />
                 <span className="text-xs font-medium">{uploadingPhoto ? "업로드 중..." : "사진 추가"}</span>
@@ -497,7 +497,7 @@ function MatchDiaryTabInner({
           </CardHeader>
           <CardContent>
             {isAttendFallback && (
-              <p className="mb-3 rounded-md bg-[hsl(var(--info))]/10 px-2.5 py-1.5 text-[12.5px] leading-snug text-[hsl(var(--info))]">
+              <p className="mb-3 rounded-md bg-[hsl(var(--info)_/_0.1)] px-2.5 py-1.5 text-[12.5px] leading-snug text-[hsl(var(--info))]">
                 출석 체크가 아직 안 됐어요. 일단 참석 투표한 분으로 후보를 띄웠습니다. 출석 탭에서 처리하면 실제 참석한 분으로 후보가 좁혀집니다.
               </p>
             )}
@@ -531,7 +531,7 @@ function MatchDiaryTabInner({
                     )}
                   </div>
                   {attendeeCount > 0 && !reached && (
-                    <p className="rounded-md bg-[hsl(var(--warning))]/10 px-2.5 py-1.5 text-[12.5px] leading-snug text-[hsl(var(--warning))]">
+                    <p className="rounded-md bg-[hsl(var(--warning)_/_0.1)] px-2.5 py-1.5 text-[12.5px] leading-snug text-[hsl(var(--warning))]">
                       참석자 70% 이상이 투표해야 공식 MVP로 확정됩니다. 미달 시 운영진이 직접 지정할 수 있어요.
                     </p>
                   )}
@@ -548,8 +548,8 @@ function MatchDiaryTabInner({
                 return top;
               }, null);
               return topPlayer ? (
-                <div className="mb-4 flex items-center gap-3 rounded-xl bg-[hsl(var(--warning))]/10 p-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--warning))]/20">
+                <div className="mb-4 flex items-center gap-3 rounded-xl bg-[hsl(var(--warning)_/_0.1)] p-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--warning)_/_0.2)]">
                     <Trophy className="h-5 w-5 text-[hsl(var(--warning))]" />
                   </div>
                   <div>
@@ -590,7 +590,7 @@ function MatchDiaryTabInner({
                         onClick={() => !isSelf && runMvpVote(player.id, () => handleMvpVote(player.id))}
                         className={cn(
                           "relative rounded-xl p-3 text-sm font-medium transition-all",
-                          isVoted ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+                          isVoted ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-[hsl(var(--secondary)_/_0.8)]",
                           mvpVotingId === player.id && "opacity-70"
                         )}
                       >
@@ -647,17 +647,17 @@ function MatchDiaryTabInner({
         canRegenerateAi &&
         match.status === "COMPLETED" &&
         (match.matchType ?? "REGULAR") === "REGULAR" && (
-          <Card className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+          <Card className="rounded-2xl border border-primary/20 bg-gradient-to-br from-[hsl(var(--primary)_/_0.05)] to-background">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm font-bold">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[12px] font-black text-primary">AI</span>
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-[hsl(var(--primary)_/_0.15)] text-[12px] font-black text-primary">AI</span>
                 AI가 정리한 경기
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               {autoGenStatus === "loading" ? (
                 <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
-                  <span className="inline-block h-3 w-1.5 animate-pulse bg-primary/60 align-middle" />
+                  <span className="inline-block h-3 w-1.5 animate-pulse bg-[hsl(var(--primary)_/_0.6)] align-middle" />
                   경기 기록을 정리하는 중…
                 </div>
               ) : autoGenStatus === "blocked" ? (
@@ -712,17 +712,17 @@ function MatchDiaryTabInner({
           </Card>
         )}
       {currentAiSummary && (
-        <Card className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+        <Card className="rounded-2xl border border-primary/20 bg-gradient-to-br from-[hsl(var(--primary)_/_0.05)] to-background">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-bold">
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary/15 text-[12px] font-black text-primary">AI</span>
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-[hsl(var(--primary)_/_0.15)] text-[12px] font-black text-primary">AI</span>
               AI가 정리한 경기
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
               {currentAiSummary}
-              {regenerating && <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-primary/60 align-middle" />}
+              {regenerating && <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-[hsl(var(--primary)_/_0.6)] align-middle" />}
             </p>
             <div className="mt-3 flex gap-2">
               <Button
@@ -747,7 +747,7 @@ function MatchDiaryTabInner({
               <Button
                 type="button"
                 size="sm"
-                className="gap-1.5 text-xs bg-[hsl(var(--kakao))] text-[hsl(var(--kakao-foreground))] hover:bg-[hsl(var(--kakao))]/90"
+                className="gap-1.5 text-xs bg-[hsl(var(--kakao))] text-[hsl(var(--kakao-foreground))] hover:bg-[hsl(var(--kakao)_/_0.9)]"
                 onClick={async () => {
                   if (!currentAiSummary) return;
                   const url = typeof window !== "undefined" ? window.location.href : "";
@@ -831,7 +831,7 @@ function MatchDiaryTabInner({
                     return (
                       <label key={w} className="cursor-pointer">
                         <input type="radio" name="weather" value={w} defaultChecked={diary.weather === w} className="peer sr-only" />
-                        <div className="flex flex-col items-center gap-1.5 rounded-xl border border-border p-3 text-muted-foreground transition-all peer-checked:bg-primary peer-checked:text-primary-foreground peer-checked:border-primary hover:bg-secondary/80">
+                        <div className="flex flex-col items-center gap-1.5 rounded-xl border border-border p-3 text-muted-foreground transition-all peer-checked:bg-primary peer-checked:text-primary-foreground peer-checked:border-primary hover:bg-[hsl(var(--secondary)_/_0.8)]">
                           <span className="text-lg">{icons[w] ?? "🌤️"}</span>
                           <span className="text-[12px] font-medium">{w}</span>
                         </div>
@@ -850,7 +850,7 @@ function MatchDiaryTabInner({
                       <input type="radio" name="condition" value={c} defaultChecked={diary.condition === c} className="peer sr-only" />
                       <div className={cn(
                         "rounded-xl border border-border p-2.5 text-center text-xs font-semibold transition-all",
-                        "hover:bg-secondary/80 text-muted-foreground",
+                        "hover:bg-[hsl(var(--secondary)_/_0.8)] text-muted-foreground",
                         c === "최상" || c === "좋음" ? "peer-checked:bg-[hsl(var(--success))] peer-checked:text-white peer-checked:border-[hsl(var(--success))]" :
                         c === "보통" ? "peer-checked:bg-muted peer-checked:text-foreground peer-checked:border-muted" :
                         "peer-checked:bg-destructive peer-checked:text-white peer-checked:border-destructive"
@@ -889,16 +889,16 @@ function MatchDiaryTabInner({
                 {diary.condition && (
                   <Badge className={cn(
                     "py-1.5 px-3 text-sm border-0",
-                    diary.condition === "최상" || diary.condition === "좋음" ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]" :
+                    diary.condition === "최상" || diary.condition === "좋음" ? "bg-[hsl(var(--success)_/_0.2)] text-[hsl(var(--success))]" :
                     diary.condition === "보통" ? "bg-muted text-muted-foreground" :
-                    "bg-destructive/20 text-destructive"
+                    "bg-[hsl(var(--destructive)_/_0.2)] text-destructive"
                   )}>
                     컨디션: {diary.condition}
                   </Badge>
                 )}
               </div>
               {diary.memo && (
-                <div className="rounded-xl bg-secondary/30 p-4">
+                <div className="rounded-xl bg-[hsl(var(--secondary)_/_0.3)] p-4">
                   <p className="whitespace-pre-wrap text-sm text-foreground/90 leading-relaxed">
                     {diary.memo}
                   </p>

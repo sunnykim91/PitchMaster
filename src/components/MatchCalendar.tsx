@@ -183,7 +183,7 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
                 isSelected && isToday ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background" :
                 isSelected ? "bg-primary text-primary-foreground" :
                 isToday ? "ring-2 ring-primary text-primary font-bold" :
-                hasMatch && "bg-primary/8",
+                hasMatch && "bg-[hsl(var(--primary)_/_0.08)]",
                 !isSelected && !isToday && "hover:bg-secondary",
                 dow === 0 && !isSelected && !isToday && "text-primary/70",
                 dow === 6 && !isSelected && !isToday && "text-[hsl(var(--info))]",
@@ -255,7 +255,7 @@ export const MatchCalendar = memo(function MatchCalendar({ matches, myVotes, onV
                 {/* 투표 마감 안내 (예정 경기 + 마감됨) */}
                 {!isCompleted && isVoteClosed && (
                   <div className="px-3 pb-3">
-                    <div className="flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary/40 py-1.5 text-xs text-muted-foreground">
+                    <div className="flex items-center justify-center gap-2 rounded-lg border border-border bg-[hsl(var(--secondary)_/_0.4)] py-1.5 text-xs text-muted-foreground">
                       <span>투표 마감</span>
                       {myVote && (
                         <span>· 내 투표: {myVote === "ATTEND" ? "참석" : myVote === "ABSENT" ? "불참" : "미정"}</span>

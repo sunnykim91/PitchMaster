@@ -284,7 +284,7 @@ function DuesRecordsTabInner({
 
       {/* ── 선택 모드 액션 바 ── */}
       {selectMode && (
-        <div className="flex items-center justify-between rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2">
+        <div className="flex items-center justify-between rounded-lg border border-destructive/20 bg-[hsl(var(--destructive)_/_0.05)] px-3 py-2">
           <button
             type="button"
             onClick={() => {
@@ -326,7 +326,7 @@ function DuesRecordsTabInner({
           <button
             type="button"
             onClick={() => { setIsFormOpen((prev) => { if (!prev) setFormErrors({}); return !prev; }); }}
-            className="w-full flex items-center justify-between rounded-xl bg-card border border-white/[0.04] px-4 py-3 hover:bg-secondary/50 transition-colors active:scale-[0.99]"
+            className="w-full flex items-center justify-between rounded-xl bg-card border border-white/[0.04] px-4 py-3 hover:bg-[hsl(var(--secondary)_/_0.5)] transition-colors active:scale-[0.99]"
           >
             <span className="text-sm font-medium text-foreground">수기 입력</span>
             {isFormOpen ? (
@@ -512,7 +512,7 @@ function DuesRecordsTabInner({
             ) : (
               <Card
                 key={record.id}
-                className="border-white/[0.04] bg-card py-2 hover:bg-secondary/50 transition-colors"
+                className="border-white/[0.04] bg-card py-2 hover:bg-[hsl(var(--secondary)_/_0.5)] transition-colors"
               >
                 <CardContent className="px-4 pb-0">
                   <div className="flex items-center justify-between gap-2">
@@ -583,7 +583,7 @@ function DuesRecordsTabInner({
                               const ok = await confirm({ title: "이 내역을 삭제할까요?", variant: "destructive", confirmLabel: "삭제" });
                               if (ok) await handleDeleteRecord(record.id);
                             }}
-                            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors active:scale-95"
+                            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-[hsl(var(--destructive)_/_0.1)] hover:text-destructive transition-colors active:scale-95"
                             aria-label="삭제"
                           >
                             <Trash2 className="h-3.5 w-3.5" />

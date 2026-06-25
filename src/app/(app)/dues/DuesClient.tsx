@@ -442,7 +442,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
             <div className="pt-1">
               <Link
                 href="/dues/monthly"
-                className="flex items-center justify-between rounded-lg border border-border bg-secondary/30 px-3 py-2 text-sm transition-colors hover:bg-secondary/50 active:scale-[0.99]"
+                className="flex items-center justify-between rounded-lg border border-border bg-[hsl(var(--secondary)_/_0.3)] px-3 py-2 text-sm transition-colors hover:bg-[hsl(var(--secondary)_/_0.5)] active:scale-[0.99]"
               >
                 <span className="flex items-center gap-2 text-foreground/80">
                   <span className="text-base">📊</span>
@@ -489,7 +489,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
                 {myStatus.status === "PAID" && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[hsl(var(--success))]/20">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[hsl(var(--success)_/_0.2)]">
                         <Check className="h-4 w-4 text-[hsl(var(--success))]" />
                       </div>
                       <span className="text-lg font-semibold text-[hsl(var(--success))]">납부 완료</span>
@@ -500,7 +500,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
                 {myStatus.status === "UNPAID" && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-destructive/20">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[hsl(var(--destructive)_/_0.2)]">
                         <X className="h-4 w-4 text-destructive" />
                       </div>
                       <span className="text-lg font-semibold text-destructive">미납</span>
@@ -510,7 +510,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-9 px-3 gap-1.5 border-destructive/50 text-destructive hover:bg-destructive/10 active:scale-[0.97] transition-transform"
+                        className="h-9 px-3 gap-1.5 border-destructive/50 text-destructive hover:bg-[hsl(var(--destructive)_/_0.1)] active:scale-[0.97] transition-transform"
                         disabled={selfReporting}
                         onClick={async () => {
                           const ok = await confirm({ title: "입금 사실을 운영진에게 알리시겠습니까?", variant: "default", confirmLabel: "신고하기" });
@@ -540,7 +540,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
       })()}
 
       {/* ── Dues Tab Bar ── */}
-      <nav className="sticky top-0 z-10 -mx-4 backdrop-blur-md bg-background/80">
+      <nav className="sticky top-0 z-10 -mx-4 backdrop-blur-md bg-[hsl(var(--background)_/_0.8)]">
         <div className="border-b border-border px-4">
         <div className="flex" role="tablist">
           {([
@@ -573,7 +573,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
 
       {/* ── 온보딩 가이드 ── */}
       {showOnboarding && (
-        <Card className="p-4 sm:p-6 border-primary/20 bg-primary/5">
+        <Card className="p-4 sm:p-6 border-primary/20 bg-[hsl(var(--primary)_/_0.05)]">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="text-xl">💰</span>
@@ -582,7 +582,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
             <button
               type="button"
               onClick={dismissOnboarding}
-              className="rounded-md p-1 hover:bg-primary/10 transition-colors focus-visible:ring-2 focus-visible:ring-primary"
+              className="rounded-md p-1 hover:bg-[hsl(var(--primary)_/_0.1)] transition-colors focus-visible:ring-2 focus-visible:ring-primary"
               aria-label="온보딩 가이드 닫기"
             >
               <X className="h-4 w-4 text-muted-foreground" />
@@ -592,7 +592,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
           <div className="mt-4 grid gap-4">
             {/* 단계 1 */}
             <div className="flex gap-3">
-              <span className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">
+              <span className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-[hsl(var(--primary)_/_0.1)] text-primary text-sm font-bold">
                 1
               </span>
               <div className="flex-1">
@@ -617,7 +617,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
 
             {/* 단계 2 */}
             <div className="flex gap-3">
-              <span className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">
+              <span className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-[hsl(var(--primary)_/_0.1)] text-primary text-sm font-bold">
                 2
               </span>
               <div>
@@ -630,7 +630,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
 
             {/* 단계 3 */}
             <div className="flex gap-3">
-              <span className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">
+              <span className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-[hsl(var(--primary)_/_0.1)] text-primary text-sm font-bold">
                 3
               </span>
               <div>

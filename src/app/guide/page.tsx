@@ -79,7 +79,7 @@ export default function GuideIndexPage() {
             <li key={g.meta.slug}>
               <Link
                 href={`/guide/${g.meta.slug}`}
-                className="group block rounded-2xl border border-border/60 bg-secondary/20 p-5 transition-colors hover:border-primary/40 hover:bg-secondary/40"
+                className="group block rounded-2xl border border-border/60 bg-[hsl(var(--secondary)_/_0.2)] p-5 transition-colors hover:border-primary/40 hover:bg-[hsl(var(--secondary)_/_0.4)]"
               >
                 <div className="text-xs font-semibold uppercase tracking-wider text-primary">
                   {g.meta.category}
@@ -104,7 +104,7 @@ export default function GuideIndexPage() {
         </ul>
 
         <footer className="mt-12 border-t border-border/40 pt-8">
-          <div className="rounded-2xl bg-secondary/30 p-5">
+          <div className="rounded-2xl bg-[hsl(var(--secondary)_/_0.3)] p-5">
             <p className="text-sm font-semibold text-foreground">
               조기축구·풋살 동호회 운영을 한 곳에서
             </p>
@@ -113,7 +113,7 @@ export default function GuideIndexPage() {
             </p>
             <Link
               href="/login"
-              className="mt-3 inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+              className="mt-3 inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-[hsl(var(--primary)_/_0.9)] transition-colors"
             >
               PitchMaster 무료로 시작
             </Link>

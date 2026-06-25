@@ -35,9 +35,9 @@ export interface HintCardProps {
 }
 
 const TONE_CLASS: Record<NonNullable<HintCardProps["tone"]>, string> = {
-  info: "border-[hsl(var(--info))]/30 bg-[hsl(var(--info))]/8 text-[hsl(var(--info))]",
-  warning: "border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/8 text-[hsl(var(--warning))]",
-  success: "border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/8 text-[hsl(var(--success))]",
+  info: "border-[hsl(var(--info))]/30 bg-[hsl(var(--info)_/_0.08)] text-[hsl(var(--info))]",
+  warning: "border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning)_/_0.08)] text-[hsl(var(--warning))]",
+  success: "border-[hsl(var(--success))]/30 bg-[hsl(var(--success)_/_0.08)] text-[hsl(var(--success))]",
 };
 
 export default function HintCard({
@@ -101,7 +101,7 @@ export default function HintCard({
         type="button"
         onClick={dismiss}
         aria-label="안내 닫기"
-        className="absolute right-2 top-2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
+        className="absolute right-2 top-2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-[hsl(var(--foreground)_/_0.05)] hover:text-foreground"
       >
         <X className="h-3.5 w-3.5" />
       </button>

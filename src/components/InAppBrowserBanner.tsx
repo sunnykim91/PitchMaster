@@ -132,7 +132,7 @@ export function InAppBrowserBanner({ context = "app" }: { context?: "app" | "log
         type="button"
         onClick={handleDismiss}
         aria-label="배너 닫기"
-        className="shrink-0 rounded-full p-1.5 hover:bg-foreground/10"
+        className="shrink-0 rounded-full p-1.5 hover:bg-[hsl(var(--foreground)_/_0.1)]"
       >
         <X className="h-3.5 w-3.5" />
       </button>

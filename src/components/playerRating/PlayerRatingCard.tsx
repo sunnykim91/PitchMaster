@@ -108,7 +108,7 @@ export default function PlayerRatingCard({
             return (
               <div
                 key={player.id}
-                className="rounded-xl border border-border/40 bg-card/40 p-3"
+                className="rounded-xl border border-border/40 bg-[hsl(var(--card)_/_0.4)] p-3"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
@@ -153,7 +153,7 @@ export default function PlayerRatingCard({
                         <li
                           key={row.id}
                           className={cn(
-                            "flex items-start justify-between gap-2 rounded-md bg-secondary/40 px-2.5 py-1.5",
+                            "flex items-start justify-between gap-2 rounded-md bg-[hsl(var(--secondary)_/_0.4)] px-2.5 py-1.5",
                           )}
                         >
                           <div className="min-w-0 flex-1">

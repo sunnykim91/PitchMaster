@@ -137,7 +137,7 @@ export function PlayerPicker({
           <button
             type="button"
             onClick={() => setQuery("")}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted-foreground hover:bg-secondary-foreground/10"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted-foreground hover:bg-[hsl(var(--secondary-foreground)_/_0.1)]"
             aria-label="검색어 지우기"
           >
             <X className="h-3.5 w-3.5" />
@@ -146,7 +146,7 @@ export function PlayerPicker({
           <button
             type="button"
             onClick={() => setExpanded(false)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted-foreground hover:bg-secondary-foreground/10"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted-foreground hover:bg-[hsl(var(--secondary-foreground)_/_0.1)]"
             aria-label="목록 접기"
           >
             <ChevronDown className="h-4 w-4" />
@@ -224,11 +224,11 @@ function ChipButton({ selected, onClick, tone = "default", children }: ChipButto
     }
     switch (tone) {
       case "guest":
-        return "bg-[hsl(var(--info))]/10 text-[hsl(var(--info))] border-[hsl(var(--info))]/30 hover:border-[hsl(var(--info))]/60";
+        return "bg-[hsl(var(--info)_/_0.1)] text-[hsl(var(--info))] border-[hsl(var(--info))]/30 hover:border-[hsl(var(--info))]/60";
       case "special":
-        return "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30 hover:border-[hsl(var(--warning))]/60";
+        return "bg-[hsl(var(--warning)_/_0.1)] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30 hover:border-[hsl(var(--warning))]/60";
       case "success":
-        return "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/30 hover:border-[hsl(var(--success))]/60";
+        return "bg-[hsl(var(--success)_/_0.1)] text-[hsl(var(--success))] border-[hsl(var(--success))]/30 hover:border-[hsl(var(--success))]/60";
       case "muted":
         return "bg-secondary text-muted-foreground border-border hover:border-muted-foreground/40";
       default:

@@ -521,7 +521,7 @@ export default function BoardClient({
     <div className="space-y-4">
       {/* ── Header with Tabs ── */}
       <div className="flex items-center justify-between">
-        <div className="flex rounded-lg bg-secondary/50 p-0.5">
+        <div className="flex rounded-lg bg-[hsl(var(--secondary)_/_0.5)] p-0.5">
           <button
             type="button"
             onClick={() => setActiveTab("posts")}

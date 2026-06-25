@@ -127,7 +127,7 @@ export function OpponentHistoryCard({
           <StatBox label="패" value={adjusted.lost} tone="loss" />
         </div>
 
-        <div className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-2 text-xs">
+        <div className="flex items-center justify-between rounded-lg bg-[hsl(var(--secondary)_/_0.3)] px-3 py-2 text-xs">
           <span className="text-muted-foreground">
             득 <strong className="text-foreground">{adjusted.goalsFor}</strong> · 실{" "}
             <strong className="text-foreground">{adjusted.goalsAgainst}</strong> · 득실차{" "}
@@ -151,7 +151,7 @@ export function OpponentHistoryCard({
                 <Link
                   key={s.matchId}
                   href={`/matches/${s.matchId}`}
-                  className="flex items-center justify-between rounded-lg border border-border/40 px-3 py-2 text-sm transition-colors hover:bg-secondary/40"
+                  className="flex items-center justify-between rounded-lg border border-border/40 px-3 py-2 text-sm transition-colors hover:bg-[hsl(var(--secondary)_/_0.4)]"
                 >
                   <span className="text-xs text-muted-foreground">{s.date.slice(5).replace("-", "/")}</span>
                   <span className="font-bold tabular-nums">
@@ -160,9 +160,9 @@ export function OpponentHistoryCard({
                   <span
                     className={cn(
                       "rounded px-1.5 py-0.5 text-[12px] font-bold",
-                      s.result === "W" && "bg-[hsl(var(--win))]/15 text-[hsl(var(--win))]",
+                      s.result === "W" && "bg-[hsl(var(--win)_/_0.15)] text-[hsl(var(--win))]",
                       s.result === "D" && "bg-secondary text-muted-foreground",
-                      s.result === "L" && "bg-[hsl(var(--loss))]/15 text-[hsl(var(--loss))]",
+                      s.result === "L" && "bg-[hsl(var(--loss)_/_0.15)] text-[hsl(var(--loss))]",
                     )}
                   >
                     {s.result === "W" ? "승" : s.result === "D" ? "무" : "패"}
@@ -184,7 +184,7 @@ function StatBox({ label, value, tone }: { label: string; value: number; tone?: 
       ? "text-[hsl(var(--loss))]"
       : "text-foreground";
   return (
-    <div className="rounded-lg bg-secondary/40 p-3 text-center">
+    <div className="rounded-lg bg-[hsl(var(--secondary)_/_0.4)] p-3 text-center">
       <div className={cn("font-bold text-lg", toneClass)}>{value}</div>
       <div className="text-[12px] font-medium text-muted-foreground">{label}</div>
     </div>

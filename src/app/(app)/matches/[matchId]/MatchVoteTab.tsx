@@ -158,14 +158,14 @@ function MatchVoteTabInner({
                     prev.setHours(17, 0, 0, 0);
                     const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, voteDeadline: prev.toISOString() });
                     if (!err) { setIsExpired(false); showToast("투표가 재개되었습니다."); await refetchVote(); }
-                  })} aria-label="투표 마감을 해제하고 재개" className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/10 px-3 py-1.5 text-[12.5px] font-semibold text-[hsl(var(--success))] transition-colors hover:bg-[hsl(var(--success))]/20 disabled:opacity-50">
+                  })} aria-label="투표 마감을 해제하고 재개" className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[hsl(var(--success))]/30 bg-[hsl(var(--success)_/_0.1)] px-3 py-1.5 text-[12.5px] font-semibold text-[hsl(var(--success))] transition-colors hover:bg-[hsl(var(--success)_/_0.2)] disabled:opacity-50">
                     <LockOpen className="h-3.5 w-3.5" />{deadlineLoading ? "처리 중..." : "재개"}
                   </button>
                 ) : (
                   <button type="button" disabled={deadlineLoading} onClick={() => runDeadline(async () => {
                     const { error: err } = await apiMutate("/api/matches", "PUT", { id: matchId, voteDeadline: new Date().toISOString() });
                     if (!err) { setIsExpired(true); showToast("투표가 마감되었습니다."); }
-                  })} aria-label="투표를 즉시 마감" className="flex shrink-0 items-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-[12.5px] font-semibold text-destructive transition-colors hover:bg-destructive/20 disabled:opacity-50">
+                  })} aria-label="투표를 즉시 마감" className="flex shrink-0 items-center gap-1.5 rounded-lg border border-destructive/30 bg-[hsl(var(--destructive)_/_0.1)] px-3 py-1.5 text-[12.5px] font-semibold text-destructive transition-colors hover:bg-[hsl(var(--destructive)_/_0.2)] disabled:opacity-50">
                     <Lock className="h-3.5 w-3.5" />{deadlineLoading ? "처리 중..." : "마감"}
                   </button>
                 )
@@ -179,9 +179,9 @@ function MatchVoteTabInner({
                 <p className="text-sm text-muted-foreground">투표가 마감되었습니다</p>
                 {myVote && (
                   <Badge className={cn("text-sm px-3 py-1",
-                    myVote === "ATTEND" && "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]",
-                    myVote === "MAYBE" && "bg-[hsl(var(--warning))]/20 text-[hsl(var(--warning))]",
-                    myVote === "ABSENT" && "bg-destructive/20 text-destructive",
+                    myVote === "ATTEND" && "bg-[hsl(var(--success)_/_0.2)] text-[hsl(var(--success))]",
+                    myVote === "MAYBE" && "bg-[hsl(var(--warning)_/_0.2)] text-[hsl(var(--warning))]",
+                    myVote === "ABSENT" && "bg-[hsl(var(--destructive)_/_0.2)] text-destructive",
                   )}>
                     내 투표: {myVote === "ATTEND" ? "참석" : myVote === "MAYBE" ? "미정" : "불참"}
                   </Badge>
@@ -202,7 +202,7 @@ function MatchVoteTabInner({
                     onClick={() => handleMyVote(opt.value)}
                     className={cn(
                       "relative flex flex-col items-center justify-center gap-2 rounded-xl p-4 transition-all min-h-[80px]",
-                      myVote === opt.value ? opt.activeClass : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+                      myVote === opt.value ? opt.activeClass : "bg-secondary text-secondary-foreground hover:bg-[hsl(var(--secondary)_/_0.8)]",
                       pendingVote && loadingVote !== opt.value && "opacity-50",
                       shakeVote === opt.value && "animate-shake ring-2 ring-destructive"
                     )}
@@ -257,7 +257,7 @@ function MatchVoteTabInner({
             <button
               type="button"
               onClick={() => shareVoteLink({ matchId, date: match.date, time: match.time, location: match.location, opponent: match.opponent, matchType: match.matchType })}
-              className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg bg-[hsl(var(--kakao))] py-2.5 text-sm font-bold text-[hsl(var(--kakao-foreground))] transition-colors hover:bg-[hsl(var(--kakao))]/90"
+              className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg bg-[hsl(var(--kakao))] py-2.5 text-sm font-bold text-[hsl(var(--kakao-foreground))] transition-colors hover:bg-[hsl(var(--kakao)_/_0.9)]"
             >
               <Share2 className="h-4 w-4" />
               카톡으로 투표 공유

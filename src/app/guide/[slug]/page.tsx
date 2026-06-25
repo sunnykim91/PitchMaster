@@ -120,7 +120,7 @@ export default async function GuidePostPage({ params }: Props) {
                 <li key={r.slug}>
                   <Link
                     href={`/guide/${r.slug}`}
-                    className="group -mx-2 flex items-start gap-2.5 rounded-lg px-2 py-2 hover:bg-secondary/40 transition-colors"
+                    className="group -mx-2 flex items-start gap-2.5 rounded-lg px-2 py-2 hover:bg-[hsl(var(--secondary)_/_0.4)] transition-colors"
                   >
                     <span className="mt-0.5 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-primary">
                       {r.category}
@@ -139,7 +139,7 @@ export default async function GuidePostPage({ params }: Props) {
         )}
 
         <footer className="mt-12 border-t border-border/40 pt-8">
-          <div className="rounded-2xl bg-secondary/30 p-5">
+          <div className="rounded-2xl bg-[hsl(var(--secondary)_/_0.3)] p-5">
             <p className="text-sm font-semibold text-foreground">
               조기축구·풋살 동호회 운영을 한 곳에서
             </p>
@@ -150,7 +150,7 @@ export default async function GuidePostPage({ params }: Props) {
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-[hsl(var(--primary)_/_0.9)] transition-colors"
               >
                 피치마스터 무료로 시작
               </Link>
@@ -158,7 +158,7 @@ export default async function GuidePostPage({ params }: Props) {
                 href="https://play.google.com/store/apps/details?id=app.pitchmaster"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-xl border border-border/60 px-4 py-2 text-sm font-semibold text-foreground hover:bg-secondary/40 transition-colors"
+                className="inline-flex items-center justify-center rounded-xl border border-border/60 px-4 py-2 text-sm font-semibold text-foreground hover:bg-[hsl(var(--secondary)_/_0.4)] transition-colors"
               >
                 Google Play에서 ‘피치마스터’ 설치
               </a>

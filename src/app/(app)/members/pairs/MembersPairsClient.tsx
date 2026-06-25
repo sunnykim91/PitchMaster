@@ -142,7 +142,7 @@ export default function MembersPairsClient({ initialData, hideHeader }: Props) {
                 className={cn(
                   "rounded-full border px-2.5 py-1 text-xs transition-all active:scale-95",
                   m.id === selectedMemberId
-                    ? "border-primary bg-primary/15 text-primary font-semibold"
+                    ? "border-primary bg-[hsl(var(--primary)_/_0.15)] text-primary font-semibold"
                     : "border-border text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -231,7 +231,7 @@ function PairRow({ pair, nameById, index, accent, highlightId }: PairRowProps) {
   const rankBadge = index === 1 ? "🥇" : index === 2 ? "🥈" : index === 3 ? "🥉" : index !== undefined ? String(index) : null;
 
   return (
-    <div className="flex items-center gap-2.5 rounded-lg bg-secondary/40 px-3 py-2.5 transition-colors hover:bg-secondary/60">
+    <div className="flex items-center gap-2.5 rounded-lg bg-[hsl(var(--secondary)_/_0.4)] px-3 py-2.5 transition-colors hover:bg-[hsl(var(--secondary)_/_0.6)]">
       {rankBadge !== null && (
         <span
           className={cn(

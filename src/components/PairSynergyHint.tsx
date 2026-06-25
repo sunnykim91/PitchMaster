@@ -64,10 +64,10 @@ export function PairSynergyHint({ memberIds, isStaff }: Props) {
       href="/members/pairs"
       className={cn(
         "block rounded-xl border p-3 transition-colors",
-        accent === "success" && "border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/5 hover:bg-[hsl(var(--success))]/10",
-        accent === "loss" && "border-[hsl(var(--loss))]/30 bg-[hsl(var(--loss))]/5 hover:bg-[hsl(var(--loss))]/10",
-        accent === "warning" && "border-[hsl(var(--warning))]/25 bg-[hsl(var(--warning))]/5 hover:bg-[hsl(var(--warning))]/10",
-        accent === "muted" && "border-border bg-secondary/30 hover:bg-secondary/50",
+        accent === "success" && "border-[hsl(var(--success))]/30 bg-[hsl(var(--success)_/_0.05)] hover:bg-[hsl(var(--success)_/_0.1)]",
+        accent === "loss" && "border-[hsl(var(--loss))]/30 bg-[hsl(var(--loss)_/_0.05)] hover:bg-[hsl(var(--loss)_/_0.1)]",
+        accent === "warning" && "border-[hsl(var(--warning))]/25 bg-[hsl(var(--warning)_/_0.05)] hover:bg-[hsl(var(--warning)_/_0.1)]",
+        accent === "muted" && "border-border bg-[hsl(var(--secondary)_/_0.3)] hover:bg-[hsl(var(--secondary)_/_0.5)]",
       )}
     >
       <div className="flex items-center gap-2">

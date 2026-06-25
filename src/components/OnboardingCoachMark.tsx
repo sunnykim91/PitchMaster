@@ -193,7 +193,7 @@ export function OnboardingCoachMark() {
     >
       {/* Backdrop with spotlight cutout — clip-path으로 hole */}
       <div
-        className="absolute inset-0 bg-black/70"
+        className="absolute inset-0 bg-[rgb(0_0_0_/_0.7)]"
         style={{ clipPath }}
         onClick={skip}
       />
@@ -242,7 +242,7 @@ export function OnboardingCoachMark() {
           <button
             type="button"
             onClick={next}
-            className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-[13.5px] font-bold text-primary-foreground hover:bg-primary/90 active:scale-[0.97] transition"
+            className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-[13.5px] font-bold text-primary-foreground hover:bg-[hsl(var(--primary)_/_0.9)] active:scale-[0.97] transition"
           >
             {stepIdx + 1 === STEPS.length ? "끝" : "다음"}
             {stepIdx + 1 !== STEPS.length && <ChevronRight className="h-3.5 w-3.5" />}

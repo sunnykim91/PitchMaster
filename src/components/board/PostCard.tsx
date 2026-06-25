@@ -74,10 +74,10 @@ export const PostCard = memo(function PostCard({
       className={cn(
         "overflow-hidden transition-colors",
         post.isGlobal
-          ? "border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/[0.05]"
+          ? "border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning)_/_0.05)]"
           : post.category === "NOTICE"
-          ? "border-[hsl(var(--accent))]/30 bg-[hsl(var(--accent))]/[0.05]"
-          : post.isPinned && "border-primary/30 bg-primary/[0.06]"
+          ? "border-[hsl(var(--accent))]/30 bg-[hsl(var(--accent)_/_0.05)]"
+          : post.isPinned && "border-primary/30 bg-[hsl(var(--primary)_/_0.06)]"
       )}
     >
       <CardContent className="p-4">
@@ -85,7 +85,7 @@ export const PostCard = memo(function PostCard({
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             {/* Avatar */}
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-border">
+            <div className="h-8 w-8 rounded-full bg-[hsl(var(--primary)_/_0.1)] flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-border">
               {post.authorProfileImage ? (
                 <img src={compactKakaoImage(post.authorProfileImage, 110)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
               ) : (
@@ -97,12 +97,12 @@ export const PostCard = memo(function PostCard({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5">
                 {post.isGlobal && (
-                  <Badge className="text-xs px-1.5 py-0 h-4 gap-0.5 bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30 hover:bg-[hsl(var(--warning))]/20">
+                  <Badge className="text-xs px-1.5 py-0 h-4 gap-0.5 bg-[hsl(var(--warning)_/_0.15)] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30 hover:bg-[hsl(var(--warning)_/_0.2)]">
                     🔔 운영공지
                   </Badge>
                 )}
                 {!post.isGlobal && post.category === "NOTICE" && (
-                  <Badge className="text-xs px-1.5 py-0 h-4 gap-0.5 bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))] border-[hsl(var(--accent))]/30 hover:bg-[hsl(var(--accent))]/20">
+                  <Badge className="text-xs px-1.5 py-0 h-4 gap-0.5 bg-[hsl(var(--accent)_/_0.15)] text-[hsl(var(--accent))] border-[hsl(var(--accent))]/30 hover:bg-[hsl(var(--accent)_/_0.2)]">
                     📢 팀공지
                   </Badge>
                 )}
@@ -128,7 +128,7 @@ export const PostCard = memo(function PostCard({
                   className={cn(
                     "p-2.5 rounded-md transition-colors active:scale-95",
                     post.isPinned
-                      ? "text-primary hover:bg-primary/10"
+                      ? "text-primary hover:bg-[hsl(var(--primary)_/_0.1)]"
                       : "text-muted-foreground hover:bg-muted"
                   )}
                   title={post.isPinned ? "고정 해제" : "고정"}
@@ -152,7 +152,7 @@ export const PostCard = memo(function PostCard({
                       if (ok) onDelete(post.id);
                     }}
                     disabled={deletingPostIds.has(post.id)}
-                    className="p-2.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors active:scale-95"
+                    className="p-2.5 rounded-md text-muted-foreground hover:bg-[hsl(var(--destructive)_/_0.1)] hover:text-destructive transition-colors active:scale-95"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -205,7 +205,7 @@ export const PostCard = memo(function PostCard({
             type="button"
             onClick={() => onLike(post.id)}
             disabled={likingPostIds.has(post.id)}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-primary/5 active:scale-95"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors px-3 py-2 rounded-md hover:bg-[hsl(var(--primary)_/_0.05)] active:scale-95"
           >
             <Heart className={cn("h-4 w-4", post.likes > 0 && "fill-primary/20 text-primary")} />
             {post.likes > 0 && <span>{post.likes}</span>}

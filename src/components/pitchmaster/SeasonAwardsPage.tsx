@@ -231,7 +231,7 @@ function AwardCard({ awardKey, award, featured = false }: { awardKey: string; aw
           {/* Context */}
           {award.context && (
             <span className={cn(
-              "inline-block mt-2 px-2 py-0.5 rounded bg-white/10 text-white/70",
+              "inline-block mt-2 px-2 py-0.5 rounded bg-[rgb(255_255_255_/_0.1)] text-white/70",
               featured ? "text-xs" : "text-[12px]"
             )}>
               {award.context}
@@ -368,7 +368,7 @@ export function SeasonAwardsPage({ data }: { data: SeasonAwardsResponse }) {
                   {/* Key Stats */}
                   <div className="flex flex-wrap justify-center lg:justify-start gap-4">
                     {mvp.keyStats.map((stat, i) => (
-                      <div key={i} className="text-center px-4 py-2 bg-white/5 rounded-xl">
+                      <div key={i} className="text-center px-4 py-2 bg-[rgb(255_255_255_/_0.05)] rounded-xl">
                         <p className="text-2xl font-black text-yellow-400">{stat.value}</p>
                         <p className="text-xs text-white/50">{stat.label}</p>
                       </div>
@@ -456,7 +456,7 @@ export function SeasonAwardsPage({ data }: { data: SeasonAwardsResponse }) {
               >
                 스토리로 공유
               </button>
-              <button className="px-6 py-3 rounded-xl border border-white/20 text-white/80 font-medium hover:bg-white/5 transition-colors">
+              <button className="px-6 py-3 rounded-xl border border-white/20 text-white/80 font-medium hover:bg-[rgb(255_255_255_/_0.05)] transition-colors">
                 이미지 저장
               </button>
             </div>
@@ -472,11 +472,11 @@ export function SeasonAwardsPage({ data }: { data: SeasonAwardsResponse }) {
 
       {/* Share Modal Placeholder */}
       {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setShowShareModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/_0.8)] p-4" onClick={() => setShowShareModal(false)}>
           <div className="bg-[hsl(240,5%,10%)] rounded-2xl p-6 max-w-sm w-full border border-white/10" onClick={(e) => e.stopPropagation()}>
             <h4 className="text-lg font-bold text-white mb-4">공유하기</h4>
             <p className="text-sm text-white/60 mb-4">ShareCard 컴포넌트가 여기에 렌더링됩니다</p>
-            <button onClick={() => setShowShareModal(false)} className="w-full py-2 rounded-lg bg-white/10 text-white text-sm">
+            <button onClick={() => setShowShareModal(false)} className="w-full py-2 rounded-lg bg-[rgb(255_255_255_/_0.1)] text-white text-sm">
               닫기
             </button>
           </div>
@@ -491,7 +491,7 @@ export function SeasonAwardsEmpty({ teamName }: { teamName: string }) {
   return (
     <div className="min-h-screen bg-[hsl(240,6%,6%)] flex items-center justify-center px-4">
       <div className="text-center">
-        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center">
+        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-[rgb(255_255_255_/_0.05)] flex items-center justify-center">
           <TrophyIcon className="w-12 h-12 text-white/20" />
         </div>
         <h2 className="text-xl font-bold text-white mb-2">{teamName}</h2>

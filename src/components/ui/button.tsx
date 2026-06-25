@@ -9,15 +9,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20",
-        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md hover:shadow-destructive/20",
+        default: "bg-primary text-primary-foreground shadow hover:bg-[hsl(var(--primary)_/_0.9)] hover:shadow-md hover:shadow-primary/20",
+        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-[hsl(var(--destructive)_/_0.9)] hover:shadow-md hover:shadow-destructive/20",
         outline: "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground hover:border-primary/30",
-        secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+        secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-[hsl(var(--secondary)_/_0.8)]",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline active:scale-100",
-        success: "bg-[hsl(var(--success))] text-[hsl(0_0%_10%)] shadow-sm hover:bg-[hsl(var(--success))]/90 hover:shadow-md hover:shadow-[hsl(var(--success))]/20",
-        warning: "bg-[hsl(var(--warning))] text-[hsl(0_0%_10%)] shadow-sm hover:bg-[hsl(var(--warning))]/90 hover:shadow-md hover:shadow-[hsl(var(--warning))]/20",
-        info: "bg-[hsl(var(--info))] text-white shadow-sm hover:bg-[hsl(var(--info))]/90 hover:shadow-md hover:shadow-[hsl(var(--info))]/20",
+        success: "bg-[hsl(var(--success))] text-[hsl(0_0%_10%)] shadow-sm hover:bg-[hsl(var(--success)_/_0.9)] hover:shadow-md hover:shadow-[hsl(var(--success))]/20",
+        warning: "bg-[hsl(var(--warning))] text-[hsl(0_0%_10%)] shadow-sm hover:bg-[hsl(var(--warning)_/_0.9)] hover:shadow-md hover:shadow-[hsl(var(--warning))]/20",
+        info: "bg-[hsl(var(--info))] text-white shadow-sm hover:bg-[hsl(var(--info)_/_0.9)] hover:shadow-md hover:shadow-[hsl(var(--info))]/20",
       },
       size: {
         default: "h-11 px-4 py-2",

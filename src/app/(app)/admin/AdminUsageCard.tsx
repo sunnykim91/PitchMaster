@@ -127,11 +127,11 @@ export function AdminUsageCard() {
           <div className="text-xs text-muted-foreground mb-2 font-medium">
             일별 호출 추이 (최근 30일)
           </div>
-          <div className="flex items-end gap-0.5 h-16 bg-secondary/30 rounded p-1">
+          <div className="flex items-end gap-0.5 h-16 bg-[hsl(var(--secondary)_/_0.3)] rounded p-1">
             {u.dailyTrend.map((d) => (
               <div
                 key={d.date}
-                className="flex-1 bg-primary/70 rounded-t hover:bg-primary transition-colors"
+                className="flex-1 bg-[hsl(var(--primary)_/_0.7)] rounded-t hover:bg-primary transition-colors"
                 style={{ height: `${(d.count / maxDaily) * 100}%`, minHeight: 2 }}
                 title={`${d.date}: ${d.count}회`}
               />
@@ -160,7 +160,7 @@ export function AdminUsageCard() {
                       <span className="w-24 shrink-0 text-foreground/80">
                         {FEATURE_LABELS[feature] ?? feature}
                       </span>
-                      <div className="flex-1 h-2 rounded-full bg-secondary/50 overflow-hidden">
+                      <div className="flex-1 h-2 rounded-full bg-[hsl(var(--secondary)_/_0.5)] overflow-hidden">
                         <div
                           className="h-full bg-primary rounded-full"
                           style={{ width: `${pct}%` }}
@@ -192,7 +192,7 @@ export function AdminUsageCard() {
                     <span className="w-28 shrink-0 truncate text-foreground/80" title={t.teamName}>
                       {t.teamName}
                     </span>
-                    <div className="flex-1 h-2 rounded-full bg-secondary/50 overflow-hidden">
+                    <div className="flex-1 h-2 rounded-full bg-[hsl(var(--secondary)_/_0.5)] overflow-hidden">
                       <div
                         className="h-full bg-info rounded-full"
                         style={{ width: `${pct}%`, background: "hsl(var(--info))" }}

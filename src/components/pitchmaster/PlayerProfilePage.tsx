@@ -73,7 +73,7 @@ function RoleBadge({ role }: { role: "CAPTAIN" | "VICE_CAPTAIN" }) {
         "inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold",
         isCaption
           ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-          : "bg-white/10 text-white/80 border border-white/20"
+          : "bg-[rgb(255_255_255_/_0.1)] text-white/80 border border-white/20"
       )}
     >
       {isCaption ? "C" : "VC"}
@@ -85,11 +85,11 @@ function RoleBadge({ role }: { role: "CAPTAIN" | "VICE_CAPTAIN" }) {
 // Attendance Heatmap — 최근 N경기 출석/결과 시각화
 function AttendanceHeatmap({ cells }: { cells: AttendanceCell[] }) {
   function cellColor(c: AttendanceCell): string {
-    if (!c.attended) return "bg-white/15";
+    if (!c.attended) return "bg-[rgb(255_255_255_/_0.15)]";
     if (c.result === "W") return "bg-emerald-500/80";
     if (c.result === "D") return "bg-amber-500/70";
     if (c.result === "L") return "bg-rose-500/70";
-    return "bg-white/30"; // 출석은 했는데 결과 미상 (스코어 없음)
+    return "bg-[rgb(255_255_255_/_0.3)]"; // 출석은 했는데 결과 미상 (스코어 없음)
   }
   function cellLabel(c: AttendanceCell): string {
     const date = c.date.slice(5).replace("-", "/");
@@ -214,7 +214,7 @@ function StatBar({ label, value, unit }: { label: string; value: string | number
 // Context Chip
 function ContextChip({ text, icon }: { text: string; icon?: string }) {
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[12px] font-medium rounded-full bg-white/10 text-white/80">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[12px] font-medium rounded-full bg-[rgb(255_255_255_/_0.1)] text-white/80">
       {icon && <span>{icon}</span>}
       {text}
     </span>
@@ -282,7 +282,7 @@ function BestMomentCard({ moment, index }: { moment: BestMoment; index: number }
       {/* 좌측: 큰 이모지 박스 — 미니 그라디언트 + 링 */}
       <div className={cn(
         "relative shrink-0 flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl backdrop-blur-sm",
-        "bg-gradient-to-br from-white/15 to-white/5 ring-1 ring-white/20",
+        "bg-gradient-to-br from-[rgb(255_255_255_/_0.15)] to-[rgb(255_255_255_/_0.05)] ring-1 ring-white/20",
       )}>
         <span className="text-4xl sm:text-5xl drop-shadow-lg" aria-hidden>
           {icons[moment.kind]}
@@ -332,7 +332,7 @@ function MatchTimelineItem({ match, isLast }: { match: RecentMatch; isLast: bool
               : "bg-transparent border-white/30"
           )}
         />
-        {!isLast && <div className="w-px flex-1 bg-white/10 my-1" />}
+        {!isLast && <div className="w-px flex-1 bg-[rgb(255_255_255_/_0.1)] my-1" />}
       </div>
 
       <div className={cn("flex-1 pb-4 transition-all", match.isHighlight ? "mb-2" : "")}>
@@ -455,7 +455,7 @@ export function PlayerProfilePage({
       <button
         type="button"
         onClick={handleBack}
-        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70 transition-colors border border-white/10"
+        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-[rgb(0_0_0_/_0.5)] text-white backdrop-blur-sm hover:bg-[rgb(0_0_0_/_0.7)] transition-colors border border-white/10"
         aria-label="뒤로가기"
       >
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -657,15 +657,15 @@ export function PlayerProfilePage({
             </div>
 
             <div className="flex flex-wrap justify-center gap-3 pt-4 border-t border-white/10">
-              <div className="px-4 py-2 bg-white/5 rounded-lg text-center">
+              <div className="px-4 py-2 bg-[rgb(255_255_255_/_0.05)] rounded-lg text-center">
                 <p className="text-sm font-bold text-white">{stats.attended} / {stats.totalMatches}</p>
                 <p className="text-xs text-white/50">출전 경기</p>
               </div>
-              <div className="px-4 py-2 bg-white/5 rounded-lg text-center">
+              <div className="px-4 py-2 bg-[rgb(255_255_255_/_0.05)] rounded-lg text-center">
                 <p className="text-sm font-bold text-white">{stats.cleanSheets}</p>
                 <p className="text-xs text-white/50">클린시트</p>
               </div>
-              <div className="px-4 py-2 bg-white/5 rounded-lg text-center">
+              <div className="px-4 py-2 bg-[rgb(255_255_255_/_0.05)] rounded-lg text-center">
                 <p className="text-sm font-bold text-white">{stats.attackPoints}</p>
                 <p className="text-xs text-white/50">공격P</p>
               </div>
@@ -704,7 +704,7 @@ export function PlayerProfilePage({
               <span className="h-3 w-3 rounded bg-rose-500/70" />출석·패
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded bg-white/15" />결석
+              <span className="h-3 w-3 rounded bg-[rgb(255_255_255_/_0.15)]" />결석
             </span>
           </div>
         </section>
@@ -742,7 +742,7 @@ export function PlayerProfilePage({
             </button>
             <button
               onClick={handleStartOwnTeam}
-              className="px-6 py-3 rounded-xl border border-white/20 text-white/80 font-medium hover:bg-white/5 transition-colors"
+              className="px-6 py-3 rounded-xl border border-white/20 text-white/80 font-medium hover:bg-[rgb(255_255_255_/_0.05)] transition-colors"
               title="PitchMaster로 우리 팀도 시작하기"
             >
               우리 팀도 시작하기 →
@@ -766,14 +766,14 @@ export function PlayerProfilePage({
 
       {/* Share Toast */}
       {shareToast && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-full bg-black/80 text-white text-sm border border-white/10 backdrop-blur-sm">
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-full bg-[rgb(0_0_0_/_0.8)] text-white text-sm border border-white/10 backdrop-blur-sm">
           {shareToast}
         </div>
       )}
 
       {/* Share Modal */}
       {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setShowShareModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0_0_0_/_0.8)] p-4" onClick={() => setShowShareModal(false)}>
           <div className="bg-[hsl(240,5%,10%)] rounded-2xl p-6 max-w-sm w-full border border-white/10" onClick={(e) => e.stopPropagation()}>
             <h4 className="text-lg font-bold text-white mb-4">공유하기</h4>
             <div className="space-y-3">
@@ -785,13 +785,13 @@ export function PlayerProfilePage({
               </button>
               <button
                 onClick={handleCopyUrl}
-                className="w-full py-3 rounded-lg bg-white/10 text-white font-medium hover:bg-white/20 transition-colors"
+                className="w-full py-3 rounded-lg bg-[rgb(255_255_255_/_0.1)] text-white font-medium hover:bg-[rgb(255_255_255_/_0.2)] transition-colors"
               >
                 링크 복사
               </button>
               <button
                 onClick={handleSaveImage}
-                className="w-full py-3 rounded-lg bg-white/10 text-white font-medium hover:bg-white/20 transition-colors"
+                className="w-full py-3 rounded-lg bg-[rgb(255_255_255_/_0.1)] text-white font-medium hover:bg-[rgb(255_255_255_/_0.2)] transition-colors"
               >
                 이미지 카드로 저장
               </button>
@@ -828,7 +828,7 @@ export function PlayerProfileEmpty({ name, teamName, positions }: { name: string
       <button
         type="button"
         onClick={handleBack}
-        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70 transition-colors border border-white/10"
+        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-[rgb(0_0_0_/_0.5)] text-white backdrop-blur-sm hover:bg-[rgb(0_0_0_/_0.7)] transition-colors border border-white/10"
         aria-label="뒤로가기"
       >
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -836,7 +836,7 @@ export function PlayerProfileEmpty({ name, teamName, positions }: { name: string
         </svg>
       </button>
       <div className="text-center max-w-sm">
-        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center">
+        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-[rgb(255_255_255_/_0.05)] flex items-center justify-center">
           <svg className="w-12 h-12 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>

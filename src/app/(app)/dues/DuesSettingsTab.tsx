@@ -900,7 +900,7 @@ function MemberExemptionSection({
                         className={cn(
                           "h-9 rounded-lg border text-sm font-medium transition-colors",
                           periodMonths === p
-                            ? "border-primary bg-primary/10 text-primary"
+                            ? "border-primary bg-[hsl(var(--primary)_/_0.1)] text-primary"
                             : "border-border bg-background text-foreground hover:bg-secondary"
                         )}
                       >
@@ -939,7 +939,7 @@ function MemberExemptionSection({
                 </div>
 
                 {/* 미리보기 박스 */}
-                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-1.5">
+                <div className="rounded-lg border border-primary/30 bg-[hsl(var(--primary)_/_0.05)] p-3 space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">합계</span>
                     <span className="font-medium tabular-nums">{formatAmount(prepaidTotal)}</span>
@@ -979,7 +979,7 @@ function MemberExemptionSection({
                   ) : candidatesLoading ? (
                     <p className="text-[12.5px] text-muted-foreground/70 px-1 py-2">불러오는 중...</p>
                   ) : incomeCandidates.length === 0 ? (
-                    <div className="rounded-lg bg-muted/40 px-3 py-2.5 text-[12.5px] text-muted-foreground leading-relaxed">
+                    <div className="rounded-lg bg-[hsl(var(--muted)_/_0.4)] px-3 py-2.5 text-[12.5px] text-muted-foreground leading-relaxed">
                       최근 6개월 입금 기록이 없습니다.<br />
                       <Link href="/dues?tab=records" className="text-primary underline">회비 기록 탭에서 먼저 등록</Link>하시거나, 그냥 등록하시면 선납만 기록됩니다.
                     </div>
@@ -991,8 +991,8 @@ function MemberExemptionSection({
                         className={cn(
                           "w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-2 border-b border-border/50",
                           selectedRecordId === ""
-                            ? "bg-primary/5 text-foreground"
-                            : "text-muted-foreground hover:bg-secondary/40",
+                            ? "bg-[hsl(var(--primary)_/_0.05)] text-foreground"
+                            : "text-muted-foreground hover:bg-[hsl(var(--secondary)_/_0.4)]",
                         )}
                       >
                         <span className={cn(
@@ -1012,7 +1012,7 @@ function MemberExemptionSection({
                             onClick={() => setSelectedRecordId(c.id)}
                             className={cn(
                               "w-full text-left px-3 py-2 transition-colors flex items-center gap-2",
-                              selected ? "bg-primary/10" : "hover:bg-secondary/40",
+                              selected ? "bg-[hsl(var(--primary)_/_0.1)]" : "hover:bg-[hsl(var(--secondary)_/_0.4)]",
                             )}
                           >
                             <span className={cn(
@@ -1106,8 +1106,8 @@ function MemberExemptionSection({
                     className={cn(
                       "mt-1.5 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[12.5px] font-medium transition-colors",
                       isLinked
-                        ? "text-[hsl(var(--success))] hover:bg-[hsl(var(--success))]/10"
-                        : "text-primary hover:bg-primary/10 border border-primary/30"
+                        ? "text-[hsl(var(--success))] hover:bg-[hsl(var(--success)_/_0.1)]"
+                        : "text-primary hover:bg-[hsl(var(--primary)_/_0.1)] border border-primary/30"
                     )}
                   >
                     <Link2 className="h-3 w-3" />
@@ -1136,7 +1136,7 @@ function MemberExemptionSection({
       {showHistory && historyExemptions.map((ex) => {
         const typeInfo = getTypeInfo(ex.exemption_type);
         return (
-          <Card key={ex.id} className="border-white/[0.04] bg-card/50 p-3 opacity-60">
+          <Card key={ex.id} className="border-white/[0.04] bg-[hsl(var(--card)_/_0.5)] p-3 opacity-60">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-medium">{getMemberName(ex.member_id)}</span>
               <span className={`text-[12px] ${typeInfo.color}`}>{typeInfo.label}</span>

@@ -257,7 +257,7 @@ export function KeeperRotationCard({
         <p className="mt-1 text-xs text-muted-foreground">풋살 골키퍼·쉬는 순서를 번호로 공정하게 정해요.</p>
 
         {showHelp && (
-          <div className="mt-2 space-y-1 rounded-lg bg-secondary/40 p-3 text-xs leading-relaxed text-muted-foreground">
+          <div className="mt-2 space-y-1 rounded-lg bg-[hsl(var(--secondary)_/_0.4)] p-3 text-xs leading-relaxed text-muted-foreground">
             <p>• 번호 뽑기를 누르면 각자 1~N 번호를 받아요. 이 번호로 골키퍼와 쉬는 순서를 같이 정합니다.</p>
             <p>
               • <b className="text-foreground">골키퍼</b>는 1번부터, 득점·실점 시 다음 번호로 교체.
@@ -278,7 +278,7 @@ export function KeeperRotationCard({
               type="button"
               onClick={roll}
               disabled={saving}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[hsl(var(--primary)_/_0.9)] disabled:opacity-50"
             >
               <Dices className="h-4 w-4" />
               {hasOrder ? "다시 뽑기" : "번호 뽑기"}
@@ -287,7 +287,7 @@ export function KeeperRotationCard({
               <button
                 type="button"
                 onClick={copy}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-secondary/40"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-[hsl(var(--secondary)_/_0.4)]"
               >
                 {copied ? <Check className="h-4 w-4 text-[hsl(var(--success))]" /> : <Copy className="h-4 w-4" />}
                 {copied ? "복사됨" : "결과 복사"}
@@ -330,7 +330,7 @@ export function KeeperRotationCard({
                         key={id}
                         className="inline-flex items-center gap-1 rounded-full border border-border/60 py-0.5 pl-1 pr-2 text-xs"
                       >
-                        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold tabular-nums text-primary">
+                        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[hsl(var(--primary)_/_0.15)] text-[10px] font-bold tabular-nums text-primary">
                           {i + 1}
                         </span>
                         <span className="text-foreground/90">{nameOf.get(id) ?? "?"}</span>
@@ -351,7 +351,7 @@ export function KeeperRotationCard({
                 {/* 쿼터별 쉬는 사람 (이름) */}
                 {ordered.length > 0 &&
                   (schedule.length > 0 ? (
-                    <div className="mt-2 rounded-lg bg-secondary/30 p-2.5">
+                    <div className="mt-2 rounded-lg bg-[hsl(var(--secondary)_/_0.3)] p-2.5">
                       <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">💺 쿼터별 쉬는 사람 {schedule[0].length}명 · 필드 {court}명</p>
                       <div className="grid grid-cols-2 gap-x-3 gap-y-1">
                         {schedule.map((bench, qi) => (
@@ -371,7 +371,7 @@ export function KeeperRotationCard({
                 {/* 키퍼 지정 변경 (작게, 접힘) */}
                 {canManage && (
                   <details className="group mt-2">
-                    <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-md border border-border/50 px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-secondary/40 hover:text-foreground [&::-webkit-details-marker]:hidden">
+                    <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-md border border-border/50 px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-[hsl(var(--secondary)_/_0.4)] hover:text-foreground [&::-webkit-details-marker]:hidden">
                       <Pencil className="h-3 w-3" />
                       고정 키퍼 바꾸기
                       <ChevronDown className="h-3 w-3 transition-transform group-open:rotate-180" />
@@ -388,8 +388,8 @@ export function KeeperRotationCard({
                             className={cn(
                               "rounded-full px-2 py-0.5 text-xs transition-colors",
                               on
-                                ? "bg-primary/15 font-medium text-primary"
-                                : "border border-border/60 text-muted-foreground hover:bg-secondary/40",
+                                ? "bg-[hsl(var(--primary)_/_0.15)] font-medium text-primary"
+                                : "border border-border/60 text-muted-foreground hover:bg-[hsl(var(--secondary)_/_0.4)]",
                             )}
                           >
                             {on ? "🧤 " : ""}

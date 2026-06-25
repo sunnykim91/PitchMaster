@@ -421,7 +421,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       {/* 프로필 영역 — 클릭 시 내 커리어 프로필로 이동 (현재 팀 기준) */}
       <Link
         href={`/player/${session.user.id}${session.user.teamId ? `?team=${session.user.teamId}` : ""}`}
-        className="group flex items-center gap-3 mb-4 rounded-lg -mx-2 px-2 py-1.5 hover:bg-secondary/50 transition-colors"
+        className="group flex items-center gap-3 mb-4 rounded-lg -mx-2 px-2 py-1.5 hover:bg-[hsl(var(--secondary)_/_0.5)] transition-colors"
         title="내 프로필 보기"
       >
         <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-border">
@@ -467,7 +467,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
               const current = teams.find((t) => t.isCurrent);
               const st = current?.sportType ?? "SOCCER";
               return (
-                <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-bold ${st === "FUTSAL" ? "bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]" : "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"}`}>
+                <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-bold ${st === "FUTSAL" ? "bg-[hsl(var(--accent)_/_0.15)] text-[hsl(var(--accent))]" : "bg-[hsl(var(--success)_/_0.15)] text-[hsl(var(--success))]"}`}>
                   {st === "FUTSAL" ? "풋살" : "축구"}
                 </span>
               );
@@ -552,7 +552,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
         <button
           type="button"
           onClick={handleFeedback}
-          className="flex w-full items-center justify-between rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-white/[0.03] hover:text-foreground"
+          className="flex w-full items-center justify-between rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-[rgb(255_255_255_/_0.03)] hover:text-foreground"
         >
           <span className="flex items-center gap-2.5">
             <MessageSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -564,7 +564,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           type="button"
           onClick={handleLogout}
           disabled={loggingOut}
-          className="flex w-full items-center justify-between rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-destructive/5 hover:text-destructive disabled:opacity-50"
+          className="flex w-full items-center justify-between rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-[hsl(var(--destructive)_/_0.05)] hover:text-destructive disabled:opacity-50"
         >
           <span className="flex items-center gap-2.5">
             <LogOut className="h-4 w-4 shrink-0" />
@@ -573,7 +573,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
         </button>
       </div>
       <Separator className="my-4" />
-      <Card className="border-[hsl(var(--accent))]/20 bg-[hsl(var(--accent))]/5">
+      <Card className="border-[hsl(var(--accent))]/20 bg-[hsl(var(--accent)_/_0.05)]">
         <CardContent className="p-4">
           <p className="type-overline text-[hsl(var(--accent))]">초대 코드</p>
           <p className="mt-1 font-mono text-lg font-bold tracking-[0.2em] text-[hsl(var(--accent))]">{session.user.inviteCode}</p>
@@ -581,7 +581,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           <Button
             variant="outline"
             size="sm"
-            className="mt-3 w-full gap-2 border-[hsl(var(--accent))]/30 text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/10"
+            className="mt-3 w-full gap-2 border-[hsl(var(--accent))]/30 text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent)_/_0.1)]"
             onClick={() => {
               const inviteUrl = `${window.location.origin}/team?code=${session.user.inviteCode}`;
               navigator.clipboard.writeText(inviteUrl).then(() => {
@@ -618,14 +618,14 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       <div className="mx-auto grid max-w-7xl gap-4 px-3 py-4 sm:px-4 lg:grid-cols-[260px_1fr]">
         {/* Offline Banner */}
         {isOffline && (
-          <div className="rounded-xl bg-[hsl(var(--loss))]/15 px-4 py-2.5 text-center text-sm font-semibold text-[hsl(var(--loss))] lg:col-span-2">
+          <div className="rounded-xl bg-[hsl(var(--loss)_/_0.15)] px-4 py-2.5 text-center text-sm font-semibold text-[hsl(var(--loss))] lg:col-span-2">
             인터넷 연결이 끊겼습니다. 일부 기능이 제한될 수 있습니다.
           </div>
         )}
 
         {/* Mobile Header */}
         <header className="lg:hidden">
-          <Card className="backdrop-blur-sm bg-card/95 shadow-sm">
+          <Card className="backdrop-blur-sm bg-[hsl(var(--card)_/_0.95)] shadow-sm">
             <CardContent className="flex items-center justify-between p-4">
               <Link href="/dashboard" className="block">
                 <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary block">PitchMaster</span>
@@ -641,7 +641,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                       const current = teams.find((t) => t.isCurrent);
                       const st = current?.sportType ?? "SOCCER";
                       return (
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${st === "FUTSAL" ? "bg-[hsl(var(--accent))]/15 text-[hsl(var(--accent))]" : "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]"}`}>
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${st === "FUTSAL" ? "bg-[hsl(var(--accent)_/_0.15)] text-[hsl(var(--accent))]" : "bg-[hsl(var(--success)_/_0.15)] text-[hsl(var(--success))]"}`}>
                           {st === "FUTSAL" ? "풋살" : "축구"}
                         </span>
                       );
@@ -673,7 +673,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                     {unreadCount > 0 && (
                       <button
                         onClick={markAllRead}
-                        className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 active:scale-95"
+                        className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-[hsl(var(--primary)_/_0.1)] px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-[hsl(var(--primary)_/_0.2)] active:scale-95"
                       >
                         <CheckCheck className="h-3.5 w-3.5" />
                         모두 읽음 ({unreadCount > 9 ? "9+" : unreadCount})
@@ -690,7 +690,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                             onClick={() => handleNotiClick(n)}
                             className={cn(
                               "block w-full text-left rounded-lg p-3 text-sm transition-colors hover:bg-secondary active:scale-[0.99]",
-                              n.is_read ? "bg-secondary/50" : "bg-primary/5 border border-primary/20"
+                              n.is_read ? "bg-[hsl(var(--secondary)_/_0.5)]" : "bg-[hsl(var(--primary)_/_0.05)] border border-primary/20"
                             )}
                             aria-label={`${n.title} — 알림 열기`}
                           >
@@ -737,12 +737,12 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
         {/* Main Content */}
         <main className="min-w-0 space-y-4 pb-16 lg:pb-0">
           {session.user.isDemo && (
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/20 bg-[hsl(var(--primary)_/_0.05)] px-4 py-2.5">
               <p className="text-xs font-medium text-primary">
                 <span className="mr-1.5 font-bold">데모 모드</span>
                 실제 데이터가 아닌 샘플 데이터입니다
               </p>
-              <Link href="/login" className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90">
+              <Link href="/login" className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground transition-colors hover:bg-[hsl(var(--primary)_/_0.9)]">
                 회원가입
               </Link>
             </div>
@@ -783,7 +783,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       <OnboardingCoachMark />
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/85 backdrop-blur-xl backdrop-saturate-150 shadow-[0_-1px_3px_0_rgb(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)] lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-[hsl(var(--background)_/_0.85)] backdrop-blur-xl backdrop-saturate-150 shadow-[0_-1px_3px_0_rgb(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)] lg:hidden">
         <div className="flex items-center justify-around">
           {[
             { href: "/dashboard", label: "홈", icon: Home, coachId: "tab-home" },
@@ -837,7 +837,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       {/* More Bottom Sheet */}
       {moreSheetOpen && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="더보기 메뉴" onClick={closeSheet}>
-          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute inset-0 bg-[rgb(0_0_0_/_0.5)]" />
           <div
             className={cn(
               "absolute bottom-0 left-0 right-0 rounded-t-2xl bg-card p-4 pb-8 shadow-2xl",
@@ -852,9 +852,9 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
               <Link
                 href="/board"
                 onClick={closeSheet}
-                className="flex items-center gap-3 rounded-xl border border-border bg-secondary/30 p-4 transition-colors hover:bg-secondary active:scale-[0.98]"
+                className="flex items-center gap-3 rounded-xl border border-border bg-[hsl(var(--secondary)_/_0.3)] p-4 transition-colors hover:bg-secondary active:scale-[0.98]"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[hsl(var(--primary)_/_0.1)] text-primary">
                   <MessageSquare className="h-5 w-5" />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -874,7 +874,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                     key={item.href}
                     href={item.href}
                     onClick={closeSheet}
-                    className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-secondary/30 p-3 transition-colors hover:bg-secondary active:scale-95"
+                    className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-[hsl(var(--secondary)_/_0.3)] p-3 transition-colors hover:bg-secondary active:scale-95"
                   >
                     <item.icon className="h-5 w-5 text-muted-foreground" />
                     <span className="text-xs font-semibold">{item.label}</span>
@@ -918,26 +918,26 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
 
       {/* iOS 홈 화면 추가 가이드 모달 */}
       {showIosGuide && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={() => setShowIosGuide(false)}>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[rgb(0_0_0_/_0.5)] p-4" onClick={() => setShowIosGuide(false)}>
           <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-base font-bold">홈 화면에 추가하기</h3>
             <div className="mt-4 space-y-4">
               <div className="flex items-start gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">1</span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary)_/_0.1)] text-xs font-bold text-primary">1</span>
                 <p className="text-sm text-muted-foreground">Safari 하단 메뉴바에서 <span className="inline-flex items-center gap-1 font-semibold text-foreground">공유 아이콘 <Share className="inline h-3.5 w-3.5" aria-hidden="true" /></span> (네모에서 화살표 나온 모양)을 탭하세요</p>
               </div>
               <div className="flex items-start gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">2</span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary)_/_0.1)] text-xs font-bold text-primary">2</span>
                 <p className="text-sm text-muted-foreground">메뉴에서 <span className="font-semibold text-foreground">&quot;홈 화면에 추가&quot;</span>를 선택하세요</p>
               </div>
               <div className="flex items-start gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">3</span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary)_/_0.1)] text-xs font-bold text-primary">3</span>
                 <p className="text-sm text-muted-foreground">우측 상단의 <span className="font-semibold text-foreground">&quot;추가&quot;</span>를 탭하세요</p>
               </div>
             </div>
             <button
               onClick={() => setShowIosGuide(false)}
-              className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+              className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-[hsl(var(--primary)_/_0.9)]"
             >
               확인
             </button>

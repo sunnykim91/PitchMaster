@@ -85,7 +85,7 @@ export default function EditMatchInfoForm({
                     "flex-1 min-h-[44px] rounded-xl border-2 px-2 text-sm font-bold transition-all",
                     editingMatchType === item.type
                       ? `border-[hsl(var(--${item.color}))] bg-[hsl(var(--${item.color}))]/15 text-[hsl(var(--${item.color}))] shadow-sm`
-                      : "border-border bg-secondary/40 text-muted-foreground hover:border-foreground/30"
+                      : "border-border bg-[hsl(var(--secondary)_/_0.4)] text-muted-foreground hover:border-foreground/30"
                   )}
                 >
                   {item.label}
@@ -105,7 +105,7 @@ export default function EditMatchInfoForm({
           <div>
             <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">{isEvent ? "일정 제목" : isInternal ? "구분" : "상대팀"}</p>
             {isInternal ? (
-              <div className="flex h-12 items-center rounded-xl bg-secondary/40 px-4 text-sm text-muted-foreground">자체전 (상대팀 없음)</div>
+              <div className="flex h-12 items-center rounded-xl bg-[hsl(var(--secondary)_/_0.4)] px-4 text-sm text-muted-foreground">자체전 (상대팀 없음)</div>
             ) : (
               <input name="opponent" defaultValue={match.opponent ?? ""} placeholder={isEvent ? "예: 연말 회식" : "미정"} className="h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
             )}
@@ -147,7 +147,7 @@ export default function EditMatchInfoForm({
                     "flex-1 min-h-[44px] rounded-xl border-2 px-2 text-sm font-bold transition-all",
                     editingSportType === item.type
                       ? `border-[hsl(var(--${item.color}))] bg-[hsl(var(--${item.color}))]/15 text-[hsl(var(--${item.color}))] shadow-sm`
-                      : "border-border bg-secondary/40 text-muted-foreground hover:border-foreground/30"
+                      : "border-border bg-[hsl(var(--secondary)_/_0.4)] text-muted-foreground hover:border-foreground/30"
                   )}
                 >
                   {item.label}

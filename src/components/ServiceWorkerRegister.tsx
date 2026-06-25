@@ -91,7 +91,7 @@ export default function ServiceWorkerRegister() {
       aria-live="polite"
     >
       <div className="flex items-center gap-3 p-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary)_/_0.15)] text-primary">
           <RefreshCw className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
@@ -101,7 +101,7 @@ export default function ServiceWorkerRegister() {
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="shrink-0 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+          className="shrink-0 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition-colors hover:bg-[hsl(var(--primary)_/_0.9)]"
         >
           새로고침
         </button>

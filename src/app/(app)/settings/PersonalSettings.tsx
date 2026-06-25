@@ -360,11 +360,11 @@ function PersonalSettingsComponent({
               ) : (
                 <span className="text-2xl font-black text-muted-foreground">{profile.name?.charAt(0) || "?"}</span>
               )}
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="absolute inset-0 flex items-center justify-center bg-[rgb(0_0_0_/_0.5)] opacity-0 transition-opacity group-hover:opacity-100">
                 <Camera className="h-5 w-5 text-white" />
               </div>
               {uploading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                <div className="absolute inset-0 flex items-center justify-center bg-[rgb(0_0_0_/_0.6)]">
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 </div>
               )}
@@ -501,9 +501,9 @@ function PersonalSettingsComponent({
                             className={cn(
                               "relative rounded-full border px-2.5 py-1 text-xs font-medium transition-all active:scale-95",
                               isTopThree
-                                ? "border-primary bg-primary/15 text-primary"
+                                ? "border-primary bg-[hsl(var(--primary)_/_0.15)] text-primary"
                                 : isSelected
-                                ? "border-primary/40 bg-primary/5 text-primary/70"
+                                ? "border-primary/40 bg-[hsl(var(--primary)_/_0.05)] text-primary/70"
                                 : "border-border bg-transparent text-secondary-foreground hover:border-primary/30 hover:text-foreground"
                             )}
                             aria-label={isSelected ? `${pos} ${rankIndex + 1}순위 — 클릭하면 해제` : `${pos} 선택`}
@@ -573,7 +573,7 @@ function PersonalSettingsComponent({
                 className={cn(
                   "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                   pushLoading && "opacity-50 cursor-wait",
-                  pushEnabled ? "bg-primary" : "bg-muted-foreground/25"
+                  pushEnabled ? "bg-primary" : "bg-[hsl(var(--muted-foreground)_/_0.25)]"
                 )}
               >
                 <span
@@ -628,7 +628,7 @@ function PersonalSettingsComponent({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="mt-1 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                className="mt-1 border-destructive/40 text-destructive hover:bg-[hsl(var(--destructive)_/_0.1)] hover:text-destructive"
                 onClick={handleWithdraw}
                 disabled={withdrawing}
               >
@@ -666,7 +666,7 @@ function ThemeSelector() {
               className={cn(
                 "flex flex-1 flex-col items-center gap-1.5 rounded-lg border px-3 py-3 text-sm font-medium transition-all active:scale-95",
                 isActive
-                  ? "border-primary bg-primary/10 text-primary"
+                  ? "border-primary bg-[hsl(var(--primary)_/_0.1)] text-primary"
                   : "border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:text-foreground"
               )}
             >

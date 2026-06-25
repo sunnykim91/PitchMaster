@@ -23,7 +23,7 @@ export default function FormationMotionThumb({ data, size = 64 }: Props) {
   if (!firstStep) {
     return (
       <div
-        className="shrink-0 rounded-md bg-muted/40"
+        className="shrink-0 rounded-md bg-[hsl(var(--muted)_/_0.4)]"
         style={{ width: size, height: size }}
         aria-hidden="true"
       />

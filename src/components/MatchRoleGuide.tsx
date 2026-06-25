@@ -256,7 +256,7 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
 
 function SectionFrame({ children }: { children: React.ReactNode }) {
   return (
-    <section className="mt-6 rounded-xl border border-border/30 bg-card/40 p-4">
+    <section className="mt-6 rounded-xl border border-border/30 bg-[hsl(var(--card)_/_0.4)] p-4">
       <div className="mb-3 flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-primary" />
         <div>
@@ -273,7 +273,7 @@ function SectionFrame({ children }: { children: React.ReactNode }) {
 
 function EmptyMessage({ title, hint }: { title: string; hint?: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-border/30 bg-background/30 p-6 text-center">
+    <div className="rounded-xl border border-dashed border-border/30 bg-[hsl(var(--background)_/_0.3)] p-6 text-center">
       <p className="text-sm font-medium">{title}</p>
       {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </div>
@@ -352,7 +352,7 @@ function RoleCard({
 
   if (!mergedRole) {
     return (
-      <div className="rounded-xl bg-secondary/30 p-3 text-sm">
+      <div className="rounded-xl bg-[hsl(var(--secondary)_/_0.3)] p-3 text-sm">
         <div className="flex items-center gap-2">
           <QuarterBadge label={quarterLabel} />
           <span className="font-medium">{group.role}</span>
@@ -505,14 +505,14 @@ function FormationMotionBlock({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-2 rounded-md border border-border bg-background/40 px-3 py-2 text-left text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-[hsl(var(--primary))]/40"
+        className="flex w-full items-center justify-between gap-2 rounded-md border border-border bg-[hsl(var(--background)_/_0.4)] px-3 py-2 text-left text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-[hsl(var(--primary))]/40"
         aria-expanded={open}
       >
         <span className="inline-flex items-center gap-1.5">
           <Film className="h-3.5 w-3.5" aria-hidden="true" />
           팀 움직임 보기 ({formationId})
           {hasAnyTeamAnim && (
-            <span className="rounded-full bg-[hsl(var(--primary))]/15 px-1.5 py-0.5 text-[9px] font-bold text-[hsl(var(--primary))]">
+            <span className="rounded-full bg-[hsl(var(--primary)_/_0.15)] px-1.5 py-0.5 text-[9px] font-bold text-[hsl(var(--primary))]">
               우리 팀
             </span>
           )}
@@ -597,7 +597,7 @@ function FormationMotionBlock({
           {!hasAnyTeamAnim && canManage && (
             <a
               href="/settings/animations"
-              className="block rounded-md border border-dashed border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary))]/5 p-3 text-center text-xs hover:bg-[hsl(var(--primary))]/10"
+              className="block rounded-md border border-dashed border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary)_/_0.05)] p-3 text-center text-xs hover:bg-[hsl(var(--primary)_/_0.1)]"
             >
               🎬 우리 팀 <strong>{formationId}</strong> 영상 직접 만들어보기 →
             </a>
@@ -624,14 +624,14 @@ function AccordionCard({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-xl bg-secondary/30 transition-colors",
-        open && "bg-secondary/40"
+        "overflow-hidden rounded-xl bg-[hsl(var(--secondary)_/_0.3)] transition-colors",
+        open && "bg-[hsl(var(--secondary)_/_0.4)]"
       )}
     >
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between gap-2 p-3.5 text-left hover:bg-secondary/50 transition-colors"
+        className="flex w-full items-center justify-between gap-2 p-3.5 text-left hover:bg-[hsl(var(--secondary)_/_0.5)] transition-colors"
         aria-expanded={open}
       >
         {header}
@@ -643,7 +643,7 @@ function AccordionCard({
         />
       </button>
       {open && (
-        <div className="border-t border-border/20 bg-background/40 p-4">
+        <div className="border-t border-border/20 bg-[hsl(var(--background)_/_0.4)] p-4">
           {children}
         </div>
       )}
@@ -671,7 +671,7 @@ function RoleDetail({ role }: { role: MergedPositionRole }) {
 
 function QuarterBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex shrink-0 items-center rounded-md bg-primary/15 px-2 py-0.5 text-[12.5px] font-bold text-primary">
+    <span className="inline-flex shrink-0 items-center rounded-md bg-[hsl(var(--primary)_/_0.15)] px-2 py-0.5 text-[12.5px] font-bold text-primary">
       {label}
     </span>
   );
@@ -739,7 +739,7 @@ function LinkageList({ items }: { items: LinkageItem[] }) {
       </p>
       <ul className="space-y-1.5">
         {items.map((l, i) => (
-          <li key={i} className="rounded-lg bg-secondary/40 p-3">
+          <li key={i} className="rounded-lg bg-[hsl(var(--secondary)_/_0.4)] p-3">
             <p className="text-[13px] font-medium">{l.position}</p>
             <p className="mt-0.5 text-[12px] text-foreground/70">
               <MarkdownLite text={l.note} />
@@ -791,7 +791,7 @@ function FormationOnlyFallback({ formationId }: { formationId?: string }) {
 
   return (
     <div className="space-y-2">
-      <p className="mb-2 rounded-lg bg-primary/10 p-3 text-xs text-foreground/80">
+      <p className="mb-2 rounded-lg bg-[hsl(var(--primary)_/_0.1)] p-3 text-xs text-foreground/80">
         전술판이 비어있어 <strong className="text-foreground">{formationId}</strong> 포메이션 기준
         전체 포지션 가이드를 보여드려요. 쿼터별 정확한 역할은 전술판을 먼저 짠 뒤 확인하세요.
       </p>
@@ -812,7 +812,7 @@ function FormationSlotCard({
   const [open, setOpen] = useState(false);
   if (!role) {
     return (
-      <div className="rounded-xl bg-secondary/30 p-3 text-sm">
+      <div className="rounded-xl bg-[hsl(var(--secondary)_/_0.3)] p-3 text-sm">
         <span className="font-medium">{slotCode}</span>
         <span className="ml-2 text-xs text-muted-foreground">가이드 준비 중</span>
       </div>

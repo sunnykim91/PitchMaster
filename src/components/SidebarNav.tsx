@@ -49,8 +49,8 @@ function SidebarNav({ items, activeHref: externalActiveHref }: SidebarNavProps) 
             className={cn(
               "w-full justify-between h-auto py-2.5 px-3",
               isActive
-                ? "bg-primary/10 text-primary hover:bg-primary/15"
-                : "text-muted-foreground hover:text-foreground hover:bg-white/[0.03]"
+                ? "bg-[hsl(var(--primary)_/_0.1)] text-primary hover:bg-[hsl(var(--primary)_/_0.15)]"
+                : "text-muted-foreground hover:text-foreground hover:bg-[rgb(255_255_255_/_0.03)]"
             )}
             asChild
           >
