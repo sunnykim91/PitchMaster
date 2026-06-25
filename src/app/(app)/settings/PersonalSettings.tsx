@@ -64,6 +64,7 @@ function PersonalSettingsComponent({
   const posShort = isFutsal ? FUTSAL_POSITION_SHORT : PREF_POSITION_SHORT;
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
+  const [isNative, setIsNative] = useState(false);
   const [myMemberId, setMyMemberId] = useState<string | null>(null);
   const [jerseyNumber, setJerseyNumber] = useState<string>("");
   const [jerseySaving, setJerseySaving] = useState(false);
@@ -157,12 +158,41 @@ function PersonalSettingsComponent({
     }
   }
 
-  // 알림 설정 로드 — DB에 설정이 없으면 OFF (구독 전)
+  // 알림 토글 상태 로드 — '의도(notification_settings)' + '실제 채널(구독/토큰)' 둘 다 봐서 판단.
+  // 웹/PWA: 실제 푸시 구독이 있어야 ON (홈 화면 추가만으론 구독이 안 생기므로 OFF로 표시).
+  // 네이티브 앱: 토큰이 자동 등록되므로 명시적 OFF 가 아니면 ON.
   useEffect(() => {
-    fetch("/api/notification-settings")
-      .then((r) => r.json())
-      .then((j) => { if (j.settings) setPushEnabled(j.settings.push ?? false); })
-      .catch(() => {});
+    let cancelled = false;
+    const native = isNativePush();
+    setIsNative(native);
+    (async () => {
+      const settings = await fetch("/api/notification-settings")
+        .then((r) => r.json())
+        .then((j) => j.settings as { push?: boolean } | null)
+        .catch(() => null);
+      const notDisabled = settings?.push !== false; // 명시적 false 만 비활성으로 취급
+
+      if (native) {
+        if (!cancelled) setPushEnabled(notDisabled);
+        return;
+      }
+      let hasSub = false;
+      try {
+        if ("serviceWorker" in navigator && "PushManager" in window) {
+          // subscribeToPush 가 serviceWorker.ready(active SW) 로 구독하므로 로드도 같은 기준 사용.
+          // SW 가 끝내 active 안 되는 환경 대비 3초 타임아웃 폴백 (구독 있는데 OFF로 보이는 race 방지).
+          const reg = await Promise.race([
+            navigator.serviceWorker.ready,
+            new Promise<ServiceWorkerRegistration | undefined>((resolve) =>
+              setTimeout(() => resolve(undefined), 3000)
+            ),
+          ]);
+          hasSub = reg ? !!(await reg.pushManager.getSubscription()) : false;
+        }
+      } catch { /* noop */ }
+      if (!cancelled) setPushEnabled(hasSub && notDisabled);
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   // 등번호 로드 — user_id로 본인 식별 (이름 매칭은 동명이인에 타인 등번호 덮어쓰던 버그)
@@ -227,6 +257,22 @@ function PersonalSettingsComponent({
           setTimeout(() => setMessage(null), 4000);
           return;
         }
+      }
+      // 끄기 — 웹/PWA 는 실제 구독을 해제해야 알림이 멈춘다 (설정 플래그만으론 발송 경로가 계속 보냄).
+      // 네이티브 앱은 토큰을 클라이언트가 갖고 있지 않으므로 서버 발송 필터(push=false)로 차단된다.
+      if (!next && !isNativePush()) {
+        try {
+          const reg = await navigator.serviceWorker?.getRegistration?.();
+          const sub = reg ? await reg.pushManager.getSubscription() : null;
+          if (sub) {
+            await fetch("/api/push/subscribe", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ endpoint: sub.endpoint }),
+            });
+            await sub.unsubscribe();
+          }
+        } catch { /* 구독 해제 실패해도 설정 플래그는 저장 — 서버 필터가 차단 */ }
       }
       await fetch("/api/notification-settings", {
         method: "PUT",
@@ -539,6 +585,13 @@ function PersonalSettingsComponent({
               </button>
             </div>
           </div>
+          {!isNative && !pushLoading && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {pushEnabled
+                ? "이 기기에서 알림을 받는 중이에요. 알림은 휴대폰·PC마다 따로 켜야 합니다."
+                : "홈 화면에 추가만으론 알림이 오지 않아요. 이 스위치를 켜야 이 기기에서 알림을 받습니다."}
+            </p>
+          )}
           {pushLoading && (
             <p className="mt-2 text-xs text-muted-foreground animate-pulse">알림 권한을 확인하고 있습니다...</p>
           )}

@@ -48,9 +48,25 @@ export async function sendTeamPush(
   }));
   await db.from("notifications").insert(notifications);
 
+  // 푸시 알림 OFF(notification_settings.push=false) 유저는 OS 푸시 배달 대상에서 제외.
+  // 인앱 알림(notifications)은 위에서 이미 전원 생성 — '푸시 알림' 토글은 OS 배달만 제어.
+  // 행이 없는 유저(=미설정)는 제외하지 않음 (명시적 false 만 opt-out).
+  const { data: optOut, error: optOutErr } = await db
+    .from("notification_settings")
+    .select("user_id")
+    .in("user_id", targetUserIds)
+    .eq("push", false);
+  if (optOutErr) {
+    // fail-open: 조회 실패 시 아무도 제외하지 않고 전원 발송. 진단용 로그만 남긴다.
+    console.warn("[Push] notification_settings opt-out 조회 실패:", optOutErr.message);
+  }
+  const optOutSet = new Set((optOut ?? []).map((r) => r.user_id));
+  const pushUserIds = targetUserIds.filter((uid) => !optOutSet.has(uid));
+  if (pushUserIds.length === 0) return { sent: 0, failed: 0 };
+
   // 네이티브 FCM 발송 (앱 사용자 — 브라우저 비의존). 웹푸시와 별개 경로.
   // 네이티브 앱은 웹푸시 구독을 만들지 않으므로 같은 기기 중복 없음.
-  const native = await sendNativePushToUsers(targetUserIds, {
+  const native = await sendNativePushToUsers(pushUserIds, {
     title: opts.title,
     body: opts.body,
     url: opts.url,
@@ -60,7 +76,7 @@ export async function sendTeamPush(
   const { data: subs } = await db
     .from("push_subscriptions")
     .select("endpoint, keys")
-    .in("user_id", targetUserIds);
+    .in("user_id", pushUserIds);
 
   if (!subs || subs.length === 0) return native;
 

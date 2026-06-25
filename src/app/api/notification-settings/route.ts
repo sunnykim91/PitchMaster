@@ -15,7 +15,9 @@ export async function GET() {
     .eq("user_id", ctx.userId)
     .maybeSingle();
   if (error) return apiError(error.message);
-  return apiSuccess({ settings: data || { push: true } });
+  // 행이 없으면 null 반환 — 클라이언트가 '실제 구독 여부'로 토글 상태를 판단한다.
+  // (과거 { push: true } 기본값은 구독이 없어도 토글을 켜진 것처럼 보이게 해 오해를 유발)
+  return apiSuccess({ settings: data ?? null });
 }
 
 export async function PUT(request: NextRequest) {

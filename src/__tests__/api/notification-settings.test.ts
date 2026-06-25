@@ -45,7 +45,7 @@ describe("GET /api/notification-settings", () => {
     expect(json.settings).toEqual(settings);
   });
 
-  it("200: 설정 레코드 없는 경우 기본값 반환 (push:true)", async () => {
+  it("200: 설정 레코드 없는 경우 null 반환 (클라이언트가 실제 구독 여부로 판단)", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["notification_settings", null]);
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
@@ -53,7 +53,7 @@ describe("GET /api/notification-settings", () => {
     const res = await GET();
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.settings).toEqual({ push: true });
+    expect(json.settings).toBeNull();
   });
 
   it("400: DB 에러 시 에러 반환", async () => {
