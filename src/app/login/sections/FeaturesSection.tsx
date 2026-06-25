@@ -154,7 +154,7 @@ function VoteCard() {
       </div>
       <h3 className="text-[20px] font-bold tracking-[-0.02em] mb-1.5">참석 투표</h3>
       <p className="text-muted-foreground text-[13.5px] leading-[1.55] mb-4">
-        링크 한 번이면 끝. 다음 6경기까지 한 화면에서 한 번에 응답, 일정마다 투표 다시 올릴 일 X.
+        링크 한 번이면 끝. 다가오는 경기를 한 화면에서 응답, 일정마다 투표 다시 올릴 일 X.
       </p>
 
       <div

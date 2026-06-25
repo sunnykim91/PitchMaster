@@ -27,9 +27,9 @@ export const metadata: Metadata = {
   // SEO: 한글 핵심 키워드(조기축구·풋살 팀 관리 앱)를 prefix 로 두어 네이버 검색결과
   // 첫 단어 매칭 후크 강화. 영어 브랜드명은 suffix 로 이동 (조기싸커 1위 패턴 차용).
   title: "조기축구·풋살 팀 관리 앱 — 회비·출석·전술판 무료 | 피치마스터 PitchMaster",
-  // 사실 검증된 기능만 사용: 통장 캡처 OCR (aiOcrParse), 휴면 자동 면제 (member_status),
+  // 사실 검증된 기능만 사용: 통장 캡처 OCR (aiOcrParse), 휴회·부상 자동 면제 (member_status),
   // 미투표 벌금 (no-vote-penalty cron). "단톡방 대신" painPoint 우선 노출.
-  description: "조기축구·풋살 팀 무료 관리 앱. 카카오톡 단톡방 대신 출석·회비·전술판·시즌 통계를 한 곳에서. 통장 캡처 OCR 회비 정리, 휴면 자동 면제, 미투표 벌금 자동 청구까지.",
+  description: "조기축구·풋살 팀 무료 관리 앱. 카카오톡 단톡방 대신 출석·회비·전술판·시즌 통계를 한 곳에서. 통장 캡처 OCR 회비 정리, 휴회·부상 자동 면제, 미투표 벌금 자동 청구까지.",
   manifest: "/manifest.json",
   metadataBase: new URL("https://pitch-master.app"),
   verification: {
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "조기축구·풋살 팀 관리 앱 — 회비·출석·전술판 무료 | 피치마스터 PitchMaster",
-    description: "조기축구·풋살 팀 무료 관리 앱. 카카오톡 단톡방 대신 출석·회비·전술판·시즌 통계를 한 곳에서. 통장 캡처 OCR 회비 정리, 휴면 자동 면제까지.",
+    description: "조기축구·풋살 팀 무료 관리 앱. 카카오톡 단톡방 대신 출석·회비·전술판·시즌 통계를 한 곳에서. 통장 캡처 OCR 회비 정리, 휴회·부상 자동 면제까지.",
     url: "https://pitch-master.app",
     siteName: "피치마스터 PitchMaster",
     locale: "ko_KR",
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "조기축구·풋살 팀 관리 앱 — 무료 | 피치마스터 PitchMaster",
-    description: "카카오톡 단톡방 대신 출석·회비·전술판을 한 곳에서. 통장 캡처 OCR, 휴면 자동 면제, 미투표 벌금 자동까지.",
+    description: "카카오톡 단톡방 대신 출석·회비·전술판을 한 곳에서. 통장 캡처 OCR, 휴회·부상 자동 면제, 미투표 벌금 자동까지.",
   },
   robots: {
     index: true,

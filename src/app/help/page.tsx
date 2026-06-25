@@ -750,12 +750,13 @@ export default function HelpPage() {
             &quot;이번 분기 회비 한 번에 받자&quot;처럼 일정 기간 회비를 미리 받고 등록만 해두면, 그 기간 동안 매월이 자동으로 &quot;납부 완료&quot;로 처리됩니다.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed mb-2">
-            등록 동선: 회비 → <strong className="text-foreground">[납부현황] 탭</strong> → 우측 상단 <strong className="text-foreground">[선납 등록]</strong> 버튼.
+            등록 동선: 회비 → <strong className="text-foreground">[설정] 탭</strong> → <strong className="text-foreground">회원 회비 상태 관리</strong> → <strong className="text-foreground">[추가]</strong> 버튼.
           </p>
           <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground leading-relaxed pl-1">
             <li>선납받을 <strong className="text-foreground">회원 선택</strong>.</li>
+            <li>상태를 <strong className="text-foreground">[선납]</strong>으로 선택.</li>
             <li>선납 기간 선택 — <strong className="text-foreground">3개월/6개월/12개월</strong>.</li>
-            <li><strong className="text-foreground">시작 월</strong> 선택.</li>
+            <li><strong className="text-foreground">시작 월</strong>과 받은 금액 입력.</li>
             <li><strong className="text-foreground">[등록]</strong>을 누르면 그 기간의 매월이 &quot;납부 완료&quot;로 자동 표시됩니다.</li>
           </ol>
           <Tip>PitchMaster 자체에는 결제·송금 기능이 없어요. 카톡 송금·계좌 이체로 받고 운영진이 선납 등록을 해주는 흐름입니다. 수수료가 0원이에요.</Tip>
@@ -769,7 +770,7 @@ export default function HelpPage() {
             한 달 동안의 경기 결과·득점왕·회비 흐름이 한 카드로 정리되고, 카카오톡으로 단톡방에 한 번에 던질 수 있어요.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-            하단 탭바의 <strong className="text-foreground">[회비]</strong> 메뉴 → 우측 상단의 <strong className="text-foreground">[월별 결산]</strong> 버튼.
+            하단 탭바의 <strong className="text-foreground">[회비]</strong> 메뉴 → 잔고 카드 아래쪽의 <strong className="text-foreground">[월별 결산 리포트]</strong> 버튼(운영진만 보여요).
           </p>
           <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed pl-1">
             <li>그 달의 <strong className="text-foreground">경기 수·승·무·패</strong>.</li>
@@ -818,7 +819,7 @@ export default function HelpPage() {
                 <tr>
                   <td className="px-3 py-3 text-muted-foreground align-top">3</td>
                   <td className="px-3 py-3 align-top"><strong className="text-foreground">자동 경기 후기</strong><br /><span className="text-muted-foreground text-xs">한 줄 자동 요약</span></td>
-                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기 → [일지] 탭 (경기 끝나면 자동 생성)</td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기 → [후기] 탭 (경기 끝나면 자동 생성)</td>
                   <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기당 1회 재생성</td>
                 </tr>
                 <tr>
@@ -880,8 +881,8 @@ export default function HelpPage() {
             햄버거 메뉴 → <strong className="text-foreground">[게시판 · 앨범]</strong> 메뉴.
           </p>
           <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed pl-1">
-            <li>카테고리는 <strong className="text-foreground">공지사항·자유·건의·투표</strong> 4가지.</li>
-            <li><strong className="text-foreground">공지사항</strong>은 자동으로 목록 맨 위에 고정돼요.</li>
+            <li>카테고리는 <strong className="text-foreground">일반·팀공지</strong> 2가지. 모든 글에 <strong className="text-foreground">투표(설문)</strong>를 첨부할 수 있어요.</li>
+            <li><strong className="text-foreground">팀공지</strong>(운영진만 작성)는 자동으로 목록 맨 위에 고정돼요.</li>
             <li>댓글·좋아요 가능.</li>
           </ul>
 
@@ -903,7 +904,7 @@ export default function HelpPage() {
 
           <h3 id="guests" className="text-base font-semibold mb-3 mt-6">용병 관리 — 그날만 부르는 외부 인원</h3>
           <p className="text-sm text-muted-foreground leading-relaxed mb-2">
-            등록 동선: 경기 상세 → <strong className="text-foreground">[정보] 탭</strong> → 아래쪽 <strong className="text-foreground">[용병 추가]</strong> 버튼.
+            등록 동선: 경기 상세 → <strong className="text-foreground">[전술] 탭</strong> → <strong className="text-foreground">용병</strong> 카드 → <strong className="text-foreground">[용병 등록]</strong> 버튼.
           </p>
           <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed pl-1">
             <li>이름·포지션·연락처·메모만 입력하면 등록 완료.</li>
@@ -918,7 +919,7 @@ export default function HelpPage() {
           </p>
           <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed pl-1">
             <li><strong className="text-foreground">홈·원정·써드</strong> 세 종류로 따로 등록할 수 있어요.</li>
-            <li>메인 색상·서브 색상·패턴(<strong className="text-foreground">단색/세로 줄/가로 줄/대각선 줄</strong>) 선택.</li>
+            <li>메인 색상·서브 색상·패턴(<strong className="text-foreground">단색/세로 스트라이프/가로 스트라이프/대각 스트라이프</strong>) 선택.</li>
             <li>경기 상세 → [정보] 탭에서 그날 어떤 유니폼을 입을지 [홈/원정/써드] 버튼으로 골라두면 단톡방 공유 카드에도 그대로 들어갑니다.</li>
           </ul>
 
@@ -928,7 +929,7 @@ export default function HelpPage() {
           </p>
           <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed pl-1">
             <li>자동으로 가는 알림: <strong className="text-foreground">경기 등록·투표 마감 리마인더·가입 승인·MVP 투표 시작 안내</strong>.</li>
-            <li><strong className="text-foreground">안드로이드(갤럭시 등)는 Google Play에서 &apos;피치마스터&apos; 앱을 설치하면 알림이 가장 안정적이에요.</strong> 특히 기본 브라우저가 <strong className="text-foreground">삼성 인터넷</strong>인 갤럭시에서는 홈 화면 추가만으로는 알림이 잘 안 오는 경우가 많은데, <strong className="text-foreground">Play 스토어 앱으로 설치하면 해결됩니다.</strong></li>
+            <li><strong className="text-foreground">안드로이드(갤럭시 등)는 크롬·삼성 인터넷 어느 브라우저든 알림을 허용하면 앱 없이도 푸시를 받을 수 있어요.</strong> 더 안정적으로 받고 싶다면 Google Play의 <strong className="text-foreground">&apos;피치마스터&apos;</strong> 앱을 설치해도 됩니다(선택).</li>
             <li>아이폰은 사파리에서 <strong className="text-foreground">[홈 화면에 추가]</strong>(다음 섹션)를 한 뒤, 그 아이콘으로 처음 들어갈 때 뜨는 &quot;알림을 허용할까요?&quot;를 허용해주세요.</li>
           </ul>
           <Tip>알림이 안 오면? ① <strong className="text-foreground">설정 → 알림</strong> 토글이 켜져 있는지 ② (갤럭시) <strong className="text-foreground">Play 스토어 앱으로 설치</strong>했는지 ③ (아이폰) <strong className="text-foreground">홈 화면 아이콘</strong>으로 들어왔는지 ④ 카카오톡 안 브라우저가 아닌지 확인하세요.</Tip>
@@ -1005,24 +1006,24 @@ export default function HelpPage() {
 
           <details className="rounded-xl border border-border/60 overflow-hidden mb-2">
             <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-[hsl(var(--secondary)_/_0.2)] hover:bg-[hsl(var(--secondary)_/_0.4)] transition-colors list-none">
-              안드로이드 (갤럭시 등) — Play 스토어 앱 권장
+              안드로이드 (갤럭시 등) — 홈 화면 추가 · 앱은 선택
               <span className="text-muted-foreground text-base">+</span>
             </summary>
             <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-[hsl(var(--background)_/_0.4)]">
               <p className="mb-2">
-                안드로이드는 <strong className="text-foreground">Google Play에서 &apos;피치마스터&apos; 앱을 설치</strong>하는 걸 가장 추천해요. 홈 화면 아이콘으로 바로 열리고, <strong className="text-foreground">알림(푸시)이 가장 안정적으로 옵니다.</strong> 기본 브라우저가 삼성 인터넷이라 홈 화면 추가로는 알림이 안 오던 갤럭시도 앱으로 설치하면 해결됩니다.
+                안드로이드는 <strong className="text-foreground">크롬·삼성 인터넷 브라우저에서 [홈 화면에 추가]</strong>만 해도 앱처럼 쓰고 알림(푸시)도 받을 수 있어요. 더 안정적으로 받고 싶다면 <strong className="text-foreground">Google Play의 &apos;피치마스터&apos; 앱 설치</strong>를 추천합니다(선택).
               </p>
               <ol className="list-decimal list-inside space-y-2 pl-1">
                 <li>Play 스토어에서 <strong className="text-foreground">&apos;피치마스터&apos;</strong> 검색 → 설치 (또는 footer의 Google Play 버튼).</li>
                 <li>앱을 열고 카카오 로그인 — 웹과 같은 계정·데이터라 그대로 이어집니다.</li>
               </ol>
               <p className="mt-2 text-xs">
-                앱 설치 대신 브라우저로 쓰고 싶다면, 브라우저 우측 상단 메뉴(점 세 개) → <strong className="text-foreground">[홈 화면에 추가]</strong>로도 됩니다(단 갤럭시는 알림이 불안정할 수 있어요).
+                브라우저로만 쓰고 싶다면, 브라우저 우측 상단 메뉴(점 세 개) → <strong className="text-foreground">[홈 화면에 추가]</strong> 후 알림을 허용하면 됩니다. (카카오톡 인앱 브라우저에서는 알림이 막혀 있으니 크롬·삼성 인터넷으로 열어주세요.)
               </p>
             </div>
           </details>
 
-          <Tip>아이폰은 홈 화면에 추가한 아이콘으로 들어왔을 때만 <strong className="text-foreground">푸시 알림</strong>을 받을 수 있어요(일반 브라우저 탭에선 안 옴). 안드로이드는 Play 스토어 앱을 설치하면 됩니다.</Tip>
+          <Tip>아이폰은 홈 화면에 추가한 아이콘으로 들어왔을 때만 <strong className="text-foreground">푸시 알림</strong>을 받을 수 있어요(일반 브라우저 탭에선 안 옴). 안드로이드는 크롬·삼성 인터넷에서 알림 허용만 하면 받을 수 있고, 더 안정적으로 원하면 Play 스토어 앱을 설치하면 됩니다.</Tip>
         </section>
 
         {/* ══════════════ FAQ ══════════════ */}
@@ -1053,7 +1054,7 @@ export default function HelpPage() {
               },
               {
                 q: "알림(푸시)이 안 와요.",
-                a: "안드로이드(갤럭시 등)는 Google Play에서 '피치마스터' 앱을 설치하면 가장 안정적이에요 — 특히 기본 브라우저가 삼성 인터넷인 갤럭시는 홈 화면 추가만으로는 알림이 잘 안 오는데, 앱으로 설치하면 해결됩니다. 아이폰은 사파리에서 홈 화면에 추가한 뒤 '알림 허용'을 눌러주세요. 그래도 안 오면 ① 설정 → 알림 토글이 켜져 있는지 ② 폰 자체 알림 권한이 켜져 있는지 ③ 카카오톡 안 브라우저로 보고 있는 건 아닌지 확인하세요. 자세한 건 13번 알림 설정 섹션 참고.",
+                a: "안드로이드(갤럭시 등)는 크롬·삼성 인터넷 어느 브라우저든 '홈 화면에 추가' 후 알림을 허용하면 앱 없이도 푸시를 받아요. 더 안정적으로 받고 싶으면 Google Play의 '피치마스터' 앱을 설치해도 됩니다(선택). 아이폰은 사파리에서 홈 화면에 추가한 뒤 '알림 허용'을 눌러주세요. 그래도 안 오면 ① 설정 → 알림 토글이 켜져 있는지 ② 폰 자체 알림 권한이 켜져 있는지 ③ 카카오톡 안 브라우저로 보고 있는 건 아닌지 확인하세요. 자세한 건 13번 알림 설정 섹션 참고.",
               },
               {
                 q: "이전 시즌 데이터를 PitchMaster로 옮길 수 있나요?",
@@ -1065,7 +1066,7 @@ export default function HelpPage() {
               },
               {
                 q: "회비를 6개월·1년치 한 번에 받고 싶은데요?",
-                a: "회비 → [납부현황] 탭 → 우측 상단 [선납 등록] 버튼을 누르고 회원·기간(3·6·12개월)·시작 월을 고르면 등록 끝. 자세한 건 10번 회비 선납 섹션 참고.",
+                a: "회비 → [설정] 탭 → 회원 회비 상태 관리 → [추가] 버튼을 누르고, 상태를 [선납]으로 바꾼 뒤 회원·기간(3·6·12개월)·시작 월을 고르면 등록 끝. 자세한 건 10번 회비 선납 섹션 참고.",
               },
               {
                 q: "이미 끝난 경기의 참석자를 수정할 수 있나요?",

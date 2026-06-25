@@ -16,7 +16,7 @@ const comparisonData: {
 }[] = [
   {
     feature: "참석 투표",
-    pm: "링크 1개 → 다음 6경기 한 번에 응답 + 마감 자동 알림",
+    pm: "링크 1개 → 다가오는 경기 한곳에서 응답 + 마감 자동 알림",
     other: "경기마다 새 투표 / 갠톡 추적",
     isHighlight: false,
   },
@@ -39,8 +39,8 @@ const comparisonData: {
     isHighlight: false,
   },
   {
-    feature: "회비 OCR + 휴면 면제",
-    pm: "은행 앱 캡처 자동 매칭 + 휴면·부상 자동 면제",
+    feature: "회비 OCR + 휴회 면제",
+    pm: "은행 앱 캡처 자동 매칭 + 휴회·부상 자동 면제",
     other: "엑셀 / 메모 수기",
     isHighlight: true,
   },
