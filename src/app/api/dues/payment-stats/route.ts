@@ -23,12 +23,12 @@ export async function GET() {
     months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
   }
 
-  // 활성 멤버 수 (면제 제외)
+  // 회비 대상 멤버 (LEFT/BANNED 제외, 휴면 DORMANT는 포함 — 회비 명단과 동일 기준).
   const { data: members } = await db
     .from("team_members")
     .select("id, user_id, joined_at, users(name)")
     .eq("team_id", ctx.teamId)
-    .eq("status", "ACTIVE");
+    .in("status", ["ACTIVE", "DORMANT"]);
 
   const memberCount = members?.length ?? 0;
   if (memberCount === 0) return apiSuccess({ history: [], longTermUnpaid: [] });

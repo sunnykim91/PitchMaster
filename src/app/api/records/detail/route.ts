@@ -34,11 +34,16 @@ export async function GET(request: NextRequest) {
   // 해당 멤버의 user_id와 team_members.id 모두 확인 (양쪽으로 기록 가능)
   const { data: memberRow } = await db
     .from("team_members")
-    .select("id, user_id")
+    .select("id, user_id, status")
     .eq("team_id", ctx.teamId)
     .or(`user_id.eq.${memberId},id.eq.${memberId}`)
     .limit(1)
-    .single();
+    .maybeSingle();
+
+  // 탈퇴(LEFT)·강퇴(BANNED) 회원은 팀원이 아니므로 기록 조회 비노출 (휴면 DORMANT는 정상 노출).
+  if (memberRow && (memberRow.status === "LEFT" || memberRow.status === "BANNED")) {
+    return apiSuccess({ details: [] });
+  }
 
   const lookupIds: string[] = [];
   if (memberRow) {

@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
           .from("team_members")
           .select("user_id, users(name)")
           .eq("team_id", ctx.teamId)
-          .eq("status", "ACTIVE")
+          .in("status", ["ACTIVE", "DORMANT"]) // 휴면 회원이 낸 입금도 이름 매칭 (LEFT/BANNED만 제외)
           .not("user_id", "is", null);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const match = (members ?? []).find((m: any) => {

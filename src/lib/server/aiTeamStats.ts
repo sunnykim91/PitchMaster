@@ -279,7 +279,8 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
     const { data: roster } = await db
       .from("team_members")
       .select("id, pre_name, users(id, name)")
-      .eq("team_id", teamId);
+      .eq("team_id", teamId)
+      .in("status", ["ACTIVE", "DORMANT"]); // 탈퇴·강퇴(LEFT/BANNED) 제외, 휴면(DORMANT)은 포함
     for (const mb of (roster ?? []) as Array<{ id: string; pre_name: string | null; users: { id: string; name: string } | { id: string; name: string }[] | null }>) {
       const u = Array.isArray(mb.users) ? mb.users[0] : mb.users;
       nameMap.set(mb.id, u?.name ?? mb.pre_name ?? "선수");
