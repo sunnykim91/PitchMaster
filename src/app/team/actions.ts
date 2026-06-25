@@ -216,15 +216,36 @@ export async function joinTeam(formData: FormData) {
     return;
   }
 
-  // Check if already a member (with user_id linked)
+  // 이미 이 팀에 row가 있는지 (status 무관 — unique(team_id, user_id))
   const { data: existing } = await db
     .from("team_members")
-    .select("id, role")
+    .select("id, role, status")
     .eq("team_id", team.id)
     .eq("user_id", session.user.id)
-    .single();
+    .maybeSingle();
 
   if (existing) {
+    // 강퇴(BANNED)된 계정은 초대 링크로 재가입 불가 — 운영진 재승인 필요(권한 우회 방지)
+    if (existing.status === "BANNED") {
+      redirect("/team?error=banned");
+      return;
+    }
+    // 탈퇴(LEFT)했던 계정은 기존 row를 재활성화해 재가입. 권한은 MEMBER로 초기화(초대링크로 권한 복원 방지).
+    if (existing.status === "LEFT") {
+      await db
+        .from("team_members")
+        .update({ status: "ACTIVE", role: "MEMBER" })
+        .eq("id", existing.id);
+      await updateSession({
+        teamId: team.id,
+        teamName: team.name,
+        teamRole: "MEMBER",
+        inviteCode: team.invite_code,
+      });
+      redirect(`/dashboard?welcome=joined&team=${encodeURIComponent(team.name)}`);
+      return;
+    }
+    // ACTIVE / DORMANT — 이미 소속된 멤버
     await updateSession({
       teamId: team.id,
       teamName: team.name,

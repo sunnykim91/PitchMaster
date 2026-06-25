@@ -633,6 +633,8 @@ export default function TeamClient({
       ? "가입 메시지에 사용할 수 없는 문자가 포함되어 있습니다."
       : errorParam === "user_not_found"
       ? "사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요."
+      : errorParam === "banned"
+      ? "이 팀에서 제외된 계정은 초대 링크로 재가입할 수 없습니다. 팀 운영진에게 문의해주세요."
       : null;
 
   const headTitle =
