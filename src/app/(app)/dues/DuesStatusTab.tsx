@@ -222,10 +222,17 @@ function DuesStatusTabInner({
   );
 }
 
+/** 면제 종류 라벨 추출 — note 형식 "면제"|"선납"|"선납: 6개월"|"휴회"|"부상" (payment-status API TYPE_LABELS).
+ *  수동 토글한 면제는 note=null → "면제" 폴백. */
+function getExemptLabel(note?: string): string {
+  return (note ?? "").split(":")[0].trim() || "면제";
+}
+
 // ── 상태 그룹 (접기/펼치기) ──
 const COLOR_MAP = {
   destructive: { bg: "bg-[hsl(var(--destructive)_/_0.08)]", text: "text-destructive", hover: "hover:bg-[hsl(var(--destructive)_/_0.12)]" },
   warning: { bg: "bg-[hsl(var(--warning)_/_0.08)]", text: "text-[hsl(var(--warning))]", hover: "hover:bg-[hsl(var(--warning)_/_0.12)]" },
+  info: { bg: "bg-[hsl(var(--info)_/_0.08)]", text: "text-[hsl(var(--info))]", hover: "hover:bg-[hsl(var(--info)_/_0.12)]" },
   success: { bg: "bg-[hsl(var(--success)_/_0.08)]", text: "text-[hsl(var(--success))]", hover: "hover:bg-[hsl(var(--success)_/_0.12)]" },
 } as const;
 
@@ -267,7 +274,9 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
 }) {
   const [runFor, changingId] = useItemAction();
   const unpaid = duesStatus.filter((m) => m.status === "UNPAID");
-  const exempt = duesStatus.filter((m) => m.status === "EXEMPT");
+  const exemptAll = duesStatus.filter((m) => m.status === "EXEMPT");
+  const prepaid = exemptAll.filter((m) => getExemptLabel(m.note) === "선납");
+  const exempt = exemptAll.filter((m) => getExemptLabel(m.note) !== "선납");
   const paid = duesStatus.filter((m) => m.status === "PAID");
 
   function getSettingAmount(memberType: string): number | null {
@@ -307,9 +316,14 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
               {m.status === "UNPAID" && (
                 <Badge variant="destructive" className="border-0 text-[12px] px-1.5 py-0 shrink-0">미납</Badge>
               )}
-              {m.status === "EXEMPT" && (
-                <Badge variant="warning" className="border-0 text-[12px] px-1.5 py-0 shrink-0">면제</Badge>
-              )}
+              {m.status === "EXEMPT" && (() => {
+                const exemptLabel = getExemptLabel(m.note);
+                return (
+                  <Badge variant={exemptLabel === "선납" ? "info" : "warning"} className="border-0 text-[12px] px-1.5 py-0 shrink-0">
+                    {exemptLabel}
+                  </Badge>
+                );
+              })()}
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               {m.status === "PAID" && m.paidAmount > 0 && (
@@ -360,6 +374,16 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
         />
       )}
 
+      {/* 선납자 그룹 */}
+      {prepaid.length > 0 && (
+        <StatusGroup
+          label={`선납 (${prepaid.length}명)`}
+          color="info"
+          items={prepaid}
+          renderItem={renderCard}
+        />
+      )}
+
       {/* 면제자 그룹 */}
       {exempt.length > 0 && (
         <StatusGroup
@@ -399,9 +423,11 @@ function PaymentStats({ monthFilter, duesStatus }: {
       .catch((e) => console.warn("[DuesStatusTab] payment-stats 로드 실패:", e));
   }, [monthFilter]);
 
-  // 현재 월 납부율
-  const exempt = duesStatus.filter((m) => m.status === "EXEMPT").length;
-  const total = duesStatus.length - exempt;
+  // 현재 월 납부율 (선납·면제는 분모에서 제외 — 이번 달 납부 대상 아님)
+  const exemptMembers = duesStatus.filter((m) => m.status === "EXEMPT");
+  const prepaid = exemptMembers.filter((m) => getExemptLabel(m.note) === "선납").length;
+  const exempt = exemptMembers.length - prepaid;
+  const total = duesStatus.length - exemptMembers.length;
   const paid = duesStatus.filter((m) => m.status === "PAID").length;
   const unpaid = duesStatus.filter((m) => m.status === "UNPAID").length;
   const rate = total > 0 ? Math.round((paid / total) * 100) : 0;
@@ -437,6 +463,12 @@ function PaymentStats({ monthFilter, duesStatus }: {
               <span className="text-[hsl(var(--success))] font-medium">납부 {paid}명</span>
               {" · "}
               <span className="text-destructive font-medium">미납 {unpaid}명</span>
+              {prepaid > 0 && (
+                <>
+                  {" · "}
+                  <span className="text-[hsl(var(--info))] font-medium">선납 {prepaid}명</span>
+                </>
+              )}
               {" · "}
               <span className="text-[hsl(var(--warning))] font-medium">면제 {exempt}명</span>
             </p>

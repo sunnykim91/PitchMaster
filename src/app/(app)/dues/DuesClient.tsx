@@ -419,19 +419,19 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
       <Card className="relative overflow-hidden border-white/[0.06] bg-card py-4">
         <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, hsl(16 85% 58% / 0.12) 0%, transparent 60%)" }} />
         <CardContent className="relative space-y-3 px-4">
-          <div className="space-y-0.5">
+          <div>
             <p className="text-[12.5px] font-medium uppercase tracking-wider text-muted-foreground">통장 잔고</p>
             {summaryData.balance !== null ? (
-              <p className="text-[clamp(1.75rem,7vw,2.5rem)] font-bold leading-none tracking-wide text-primary tabular-nums">
+              <p className="mt-1.5 text-[clamp(1.75rem,7vw,2.5rem)] font-bold leading-none tracking-wide text-primary tabular-nums">
                 {formatAmount(summaryData.balance)}
               </p>
             ) : (
-              <p className="text-xs text-muted-foreground/80">
+              <p className="mt-1.5 text-xs text-muted-foreground/80">
                 업로드 탭에서 스크린샷이나 엑셀을 올리면 잔고가 반영됩니다
               </p>
             )}
             {summaryData.balanceUpdatedAt && (
-              <p className="text-xs text-muted-foreground/80">
+              <p className="mt-2.5 text-xs text-muted-foreground/80">
                 최종 업데이트: {formatKstDateTime(summaryData.balanceUpdatedAt)}
                 <span className="ml-1 text-muted-foreground/50">· 스크린샷/엑셀 기준</span>
               </p>
