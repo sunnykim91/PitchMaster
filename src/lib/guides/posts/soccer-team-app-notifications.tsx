@@ -99,7 +99,7 @@ export default function Content() {
       <ul>
         <li><strong>앱 안 알림 설정</strong>이 켜져 있는지 — 보통 설정 화면에 알림 on/off 토글이 있습니다.</li>
         <li><strong>폰 자체 알림 권한</strong>이 꺼져 있지 않은지 — 폰 설정 → 앱 → 알림에서 허용 상태 확인.</li>
-        <li>알림이 <strong>특정 일정만</strong> 오게 되어 있는지 — 예를 들어 PitchMaster는 경기 7일 이내 일정에 대해서만 푸시를 보냅니다. 한 달 뒤 경기는 일부러 안 보내요(스팸 방지).</li>
+        <li><strong>카카오톡 안 브라우저</strong>로 보고 있는 건 아닌지 — 인앱 브라우저에선 푸시가 막혀요(아래 참고).</li>
         <li>갤럭시라면 <strong>절전 모드·백그라운드 제한</strong>이 알림을 막고 있지 않은지 — 배터리 최적화 예외에 앱을 넣어두면 확실합니다.</li>
       </ul>
 

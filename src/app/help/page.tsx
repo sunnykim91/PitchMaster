@@ -807,13 +807,13 @@ export default function HelpPage() {
                   <td className="px-3 py-3 text-muted-foreground align-top">1</td>
                   <td className="px-3 py-3 align-top"><strong className="text-foreground">AI 풀 플랜</strong><br /><span className="text-muted-foreground text-xs">편성 + 작전 브리핑</span></td>
                   <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기 → [전술] 탭 → [AI 풀 플랜] 버튼</td>
-                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기당 2회 + 팀 월 10회</td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기당 3회 + 팀 월 20회</td>
                 </tr>
                 <tr>
                   <td className="px-3 py-3 text-muted-foreground align-top">2</td>
                   <td className="px-3 py-3 align-top"><strong className="text-foreground">AI 코치 분석</strong><br /><span className="text-muted-foreground text-xs">편성 후 분석만</span></td>
                   <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기 → [전술] 탭 → 자동 편성 후 [AI 코치 분석]</td>
-                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기당 3회</td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기당 4회 + 팀 월 30회</td>
                 </tr>
                 <tr>
                   <td className="px-3 py-3 text-muted-foreground align-top">3</td>
@@ -831,7 +831,7 @@ export default function HelpPage() {
                   <td className="px-3 py-3 text-muted-foreground align-top">5</td>
                   <td className="px-3 py-3 align-top"><strong className="text-foreground">회비 OCR</strong><br /><span className="text-muted-foreground text-xs">통장 캡쳐 자동 인식</span></td>
                   <td className="px-3 py-3 text-muted-foreground align-top text-xs">회비 → [업로드] 탭</td>
-                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">제한 없음</td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">팀 월 100회</td>
                 </tr>
               </tbody>
             </table>
@@ -927,12 +927,11 @@ export default function HelpPage() {
             알림을 켜고 끄는 곳: 햄버거 메뉴 → <strong className="text-foreground">[설정]</strong> → 개인 설정 안의 <strong className="text-foreground">[알림]</strong> 섹션. 화면 상단 <strong className="text-foreground">종(🔔) 아이콘</strong>을 누르면 받은 알림이 모여 있고, <strong className="text-foreground">[모두 읽음]</strong> 버튼으로 한 번에 정리할 수 있어요.
           </p>
           <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed pl-1">
-            <li>자동으로 가는 알림: <strong className="text-foreground">경기 등록·투표 마감 리마인더·가입 승인·MVP 확정 안내</strong>.</li>
+            <li>자동으로 가는 알림: <strong className="text-foreground">경기 등록·투표 마감 리마인더·가입 승인·MVP 투표 시작 안내</strong>.</li>
             <li><strong className="text-foreground">안드로이드(갤럭시 등)는 Google Play에서 &apos;피치마스터&apos; 앱을 설치하면 알림이 가장 안정적이에요.</strong> 특히 기본 브라우저가 <strong className="text-foreground">삼성 인터넷</strong>인 갤럭시에서는 홈 화면 추가만으로는 알림이 잘 안 오는 경우가 많은데, <strong className="text-foreground">Play 스토어 앱으로 설치하면 해결됩니다.</strong></li>
             <li>아이폰은 사파리에서 <strong className="text-foreground">[홈 화면에 추가]</strong>(다음 섹션)를 한 뒤, 그 아이콘으로 처음 들어갈 때 뜨는 &quot;알림을 허용할까요?&quot;를 허용해주세요.</li>
-            <li><strong className="text-foreground">경기 7일 이내 일정만</strong> 푸시가 가게 되어 있어요.</li>
           </ul>
-          <Tip>알림이 안 오면? ① <strong className="text-foreground">설정 → 알림</strong> 토글이 켜져 있는지 ② (갤럭시) <strong className="text-foreground">Play 스토어 앱으로 설치</strong>했는지 ③ 경기가 <strong className="text-foreground">7일 이내 일정</strong>인지 확인하세요.</Tip>
+          <Tip>알림이 안 오면? ① <strong className="text-foreground">설정 → 알림</strong> 토글이 켜져 있는지 ② (갤럭시) <strong className="text-foreground">Play 스토어 앱으로 설치</strong>했는지 ③ (아이폰) <strong className="text-foreground">홈 화면 아이콘</strong>으로 들어왔는지 ④ 카카오톡 안 브라우저가 아닌지 확인하세요.</Tip>
 
           <h3 id="season" className="text-base font-semibold mb-3 mt-6">
             시즌 관리 <Badge variant="president" />
@@ -1054,7 +1053,7 @@ export default function HelpPage() {
               },
               {
                 q: "알림(푸시)이 안 와요.",
-                a: "안드로이드(갤럭시 등)는 Google Play에서 '피치마스터' 앱을 설치하면 가장 안정적이에요 — 특히 기본 브라우저가 삼성 인터넷인 갤럭시는 홈 화면 추가만으로는 알림이 잘 안 오는데, 앱으로 설치하면 해결됩니다. 아이폰은 사파리에서 홈 화면에 추가한 뒤 '알림 허용'을 눌러주세요. 그래도 안 오면 ① 설정 → 알림 토글이 켜져 있는지 ② 경기가 7일 이내 일정인지(7일 이내 일정만 푸시가 갑니다) 확인하세요. 자세한 건 13번 알림 설정 섹션 참고.",
+                a: "안드로이드(갤럭시 등)는 Google Play에서 '피치마스터' 앱을 설치하면 가장 안정적이에요 — 특히 기본 브라우저가 삼성 인터넷인 갤럭시는 홈 화면 추가만으로는 알림이 잘 안 오는데, 앱으로 설치하면 해결됩니다. 아이폰은 사파리에서 홈 화면에 추가한 뒤 '알림 허용'을 눌러주세요. 그래도 안 오면 ① 설정 → 알림 토글이 켜져 있는지 ② 폰 자체 알림 권한이 켜져 있는지 ③ 카카오톡 안 브라우저로 보고 있는 건 아닌지 확인하세요. 자세한 건 13번 알림 설정 섹션 참고.",
               },
               {
                 q: "이전 시즌 데이터를 PitchMaster로 옮길 수 있나요?",
@@ -1090,7 +1089,7 @@ export default function HelpPage() {
               },
               {
                 q: "AI 기능 사용 한도가 있나요?",
-                a: "기능별로 다릅니다. AI 풀 플랜은 경기당 2회 + 팀 월 10회, AI 코치 분석은 경기당 3회, 자동 경기 후기는 경기당 1회 재생성, 회비 OCR은 한도 없음. 실패한 호출이나 자동 규칙으로 대신 처리된 경우는 한도에서 차감되지 않아요.",
+                a: "기능별로 다릅니다. AI 풀 플랜은 경기당 3회 + 팀 월 20회, AI 코치 분석은 경기당 4회 + 팀 월 30회, 자동 경기 후기는 경기당 1회 재생성, 회비 OCR은 팀 월 100회. 실패한 호출이나 자동 규칙으로 대신 처리된 경우는 한도에서 차감되지 않아요.",
               },
               {
                 q: "무료인가요?",
