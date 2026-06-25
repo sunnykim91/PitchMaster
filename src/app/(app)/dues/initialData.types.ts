@@ -56,6 +56,7 @@ export type ApiMemberRow = {
   user_id: string | null;
   role: string;
   pre_name: string | null;
+  joined_at: string | null;
   users: { id: string; name: string } | null;
 };
 

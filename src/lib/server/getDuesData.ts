@@ -46,7 +46,7 @@ export async function getDuesData(teamId: string): Promise<DuesInitialData> {
       .order("date", { ascending: false })
       .returns<ApiPenaltyRecord[]>(),
     db.from("team_members")
-      .select("id, user_id, pre_name, users(id, name), status")
+      .select("id, user_id, pre_name, joined_at, users(id, name), status")
       .eq("team_id", teamId)
       .in("status", ["ACTIVE", "DORMANT"])
       .returns<ApiMemberRow[]>(),

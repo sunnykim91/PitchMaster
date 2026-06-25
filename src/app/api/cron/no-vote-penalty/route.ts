@@ -95,12 +95,22 @@ export async function GET(request: NextRequest) {
     // 활성 멤버
     const { data: members } = await db
       .from("team_members")
-      .select("user_id")
+      .select("user_id, joined_at")
       .eq("team_id", match.team_id)
       .eq("status", "ACTIVE")
       .not("user_id", "is", null);
 
-    const allUserIdsRaw = (members ?? []).map((m) => m.user_id).filter(Boolean) as string[];
+    // 가입일 이전 경기는 벌금 대상 아님 — 가입 후의 회원만 (투표 기회가 있던 회원만).
+    const allUserIdsRaw = (members ?? [])
+      .filter((m) => {
+        if (!m.user_id) return false;
+        if (!m.joined_at) return true;
+        const joinedDateKst = new Date(new Date(m.joined_at).getTime() + 9 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10);
+        return match.match_date >= joinedDateKst;
+      })
+      .map((m) => m.user_id) as string[];
     if (allUserIdsRaw.length === 0) continue;
 
     // 휴면(DORMANT) 회원 제외 (팀별 1회만 조회)

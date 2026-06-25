@@ -39,7 +39,17 @@ type ApiMember = {
   name: string;
   memberId: string;
   role: string;
+  /** 가입일(timestamptz). 가입 다음 달부터 회비 부과 — 가입 월·이전은 미납 대상 아님. */
+  joinedAt: string | null;
 };
+
+/** timestamptz → KST 기준 "YYYY-MM" (가입 월 판정용). null·미파싱은 null. */
+function kstYearMonth(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return null;
+  return new Date(t + 9 * 60 * 60 * 1000).toISOString().slice(0, 7);
+}
 
 /* ── Client-side types (camelCase) ── */
 
@@ -152,6 +162,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
           name: m.users?.name ?? m.pre_name ?? "",
           memberId: m.id,
           role: m.role ?? "MEMBER",
+          joinedAt: m.joined_at ?? null,
         })),
     [membersRaw.members],
   );
@@ -326,11 +337,12 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
   const duesStatus = useMemo(() => {
     if (!members.length) return [];
 
-    const list = members.map((m) => {
+    const list = members.flatMap((m) => {
       const dbStatus = paymentStatusMap.get(m.memberId);
 
+      // 운영진이 명시적으로 찍은 상태(DB 행)는 가입일과 무관하게 존중.
       if (dbStatus) {
-        return {
+        return [{
           id: m.id,
           memberId: m.memberId,
           name: m.name,
@@ -338,15 +350,20 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
           paidAmount: dbStatus.paidAmount,
           status: dbStatus.status as "PAID" | "UNPAID" | "EXEMPT",
           note: dbStatus.note,
-        };
+        }];
       }
+
+      // 가입 다음 달부터 부과 — 가입 월·그 이전 달은 미납 대상이 아니므로 목록에서 제외
+      // (신규 가입자가 가입 전 달에 '미납'으로 잡히던 버그 방지).
+      const joinMonth = kstYearMonth(m.joinedAt);
+      if (joinMonth && monthFilter <= joinMonth) return [];
 
       const paid = monthRecords.filter(
         (r) => r.type === "INCOME" && (r.memberName === m.name || r.description?.includes(m.name))
       );
       const duesPaid = paid.filter((r) => isDuesPayment(r.amount));
       const paidAmount = duesPaid.reduce((sum, r) => sum + r.amount, 0);
-      return {
+      return [{
         id: m.id,
         memberId: m.memberId,
         name: m.name,
@@ -354,7 +371,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
         paidAmount,
         status: (paidAmount > 0 ? "PAID" : "UNPAID") as "PAID" | "UNPAID" | "EXEMPT",
         note: undefined as string | undefined,
-      };
+      }];
     });
 
     list.sort((a, b) => {
@@ -364,7 +381,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
     });
 
     return list;
-  }, [members, monthRecords, isDuesPayment, paymentStatusMap]);
+  }, [members, monthRecords, isDuesPayment, paymentStatusMap, monthFilter]);
 
   /* 최초 로딩 시에만 스켈레톤 표시 (refetch 중에는 탭 콘텐츠 유지하여 state 보존) */
   const [initialLoaded, setInitialLoaded] = useState(false);

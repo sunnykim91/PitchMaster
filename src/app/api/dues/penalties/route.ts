@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
   // 팀 활성 멤버
   const { data: members } = await db
     .from("team_members")
-    .select("id, user_id")
+    .select("id, user_id, joined_at")
     .eq("team_id", ctx.teamId)
     .eq("status", "ACTIVE")
     .not("user_id", "is", null);
@@ -224,6 +224,15 @@ export async function POST(request: NextRequest) {
     const userId = member.user_id;
     if (!userId) continue;
     if (penaltyExemptUserIds.has(userId)) continue; // 휴회·부상 면제 제외
+
+    // 가입일 이전 경기는 벌금 대상 아님 — 미투표/지각/불참 전부 제외.
+    // (신규 가입자는 가입 전 경기에 출석기록이 없어 '미투표' 벌금이 잘못 붙던 버그 방지.)
+    if (member.joined_at) {
+      const joinedDateKst = new Date(new Date(member.joined_at).getTime() + 9 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10);
+      if (match.match_date < joinedDateKst) continue;
+    }
 
     const att = attendanceByUser.get(userId);
 

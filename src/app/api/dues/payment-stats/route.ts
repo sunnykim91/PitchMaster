@@ -26,7 +26,7 @@ export async function GET() {
   // 활성 멤버 수 (면제 제외)
   const { data: members } = await db
     .from("team_members")
-    .select("id, user_id, users(name)")
+    .select("id, user_id, joined_at, users(name)")
     .eq("team_id", ctx.teamId)
     .eq("status", "ACTIVE");
 
@@ -69,8 +69,13 @@ export async function GET() {
     // (예전 m.user_id ?? m.id 는 users.id 라 항상 mismatch → 전원 미납 오판 + 면제자 노출)
     const memberId = m.id;
     if (exemptMemberIds.has(memberId)) continue; // 면제 회원 스킵
+    // 가입 다음 달부터 부과 — 가입 월·이전은 미납 streak 에서 제외 (신규 가입자가 행 없음=미납으로 장기미납 오판 방지)
+    const joinMonth = m.joined_at
+      ? new Date(new Date(m.joined_at).getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 7)
+      : null;
     let consecutive = 0;
     for (const month of recentMonths) {
+      if (joinMonth && month <= joinMonth) continue; // 가입 전·당월은 부과 대상 아님 → streak 미반영
       const status = (allStatus ?? []).find(
         (s) => s.member_id === memberId && s.month === month
       );
