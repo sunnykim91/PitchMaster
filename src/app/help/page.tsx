@@ -194,6 +194,8 @@ export default function HelpPage() {
                 {" · "}
                 <a href="#record" className="text-primary hover:underline">MVP</a>
                 {" · "}
+                <a href="#notif" className="text-primary hover:underline">알림</a>
+                {" · "}
                 <a href="#pwa" className="text-primary hover:underline">홈 화면 추가</a>
               </span>
             </div>
@@ -453,6 +455,7 @@ export default function HelpPage() {
             <li><strong className="text-foreground">GK</strong>는 1명이면 풀 출전, 여럿이면 쿼터별로 로테이션.</li>
             <li><strong className="text-foreground">용병</strong>은 정규 슬롯이 다 채워진 뒤 자동으로 빈 자리에 들어갑니다.</li>
           </ul>
+          <Tip><strong className="text-foreground">풋살 키퍼 순번 룰렛</strong> — 풋살 전술 탭에는 <strong className="text-foreground">[키퍼 순번 룰렛]</strong>이 있어요. 고정 키퍼가 없을 때 쿼터마다 누가 골문을 볼지 번호를 돌려 공정하게 정해줍니다(선호 포지션이 GK인 사람이 한 명이면 자동으로 고정 키퍼로 인식).</Tip>
 
           <h3 className="text-base font-semibold mb-3 mt-6">주심·부심·촬영 자리도 같이 정해요</h3>
           <p className="text-sm text-muted-foreground leading-relaxed mb-2">
@@ -664,14 +667,14 @@ export default function HelpPage() {
           <div className="mt-4">
             <details className="rounded-xl border border-border/60 overflow-hidden">
               <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-secondary/20 hover:bg-secondary/40 transition-colors list-none">
-                자체전(우리끼리 A팀 vs B팀)은 어떻게 기록하나요?
+                자체전(우리끼리 A·B·C팀)은 어떻게 기록하나요?
                 <span className="text-muted-foreground text-base">+</span>
               </summary>
               <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-background/40">
                 <ul className="list-disc list-inside space-y-1.5 pl-1">
                   <li>경기 등록할 때 <strong className="text-foreground">[자체전] 토글</strong>을 켜면 자체전으로 등록됩니다.</li>
-                  <li>참석자를 랜덤으로 두 팀에 자동 배정하거나, 손으로 A/B 팀을 나눌 수 있어요.</li>
-                  <li>스코어보드·골 기록·전술판이 A팀 vs B팀으로 분리됩니다.</li>
+                  <li>인원을 <strong className="text-foreground">2팀 또는 3팀(A·B·C)</strong>으로 나눌 수 있어요. 참석자를 랜덤으로 자동 배정하거나 손으로 직접 나눕니다.</li>
+                  <li>스코어보드·골 기록·전술판이 팀별로 분리되고, 개인 골·어시 기록까지 남습니다.</li>
                   <li><strong className="text-foreground">[전적 반영 토글]</strong>을 끄면 시즌 통계에서 자체전이 빠집니다.</li>
                 </ul>
               </div>
@@ -919,16 +922,17 @@ export default function HelpPage() {
             <li>경기 상세 → [정보] 탭에서 그날 어떤 유니폼을 입을지 [홈/원정/써드] 버튼으로 골라두면 단톡방 공유 카드에도 그대로 들어갑니다.</li>
           </ul>
 
-          <h3 id="notif" className="text-base font-semibold mb-3 mt-6">알림 설정</h3>
+          <h3 id="notif" className="text-base font-semibold mb-3 mt-6">알림 설정 · 푸시가 안 올 때</h3>
           <p className="text-sm text-muted-foreground leading-relaxed mb-2">
-            햄버거 메뉴 → <strong className="text-foreground">[설정]</strong> → 개인 설정 안의 <strong className="text-foreground">[알림]</strong> 섹션에서 끄고 켤 수 있어요.
+            알림을 켜고 끄는 곳: 햄버거 메뉴 → <strong className="text-foreground">[설정]</strong> → 개인 설정 안의 <strong className="text-foreground">[알림]</strong> 섹션. 화면 상단 <strong className="text-foreground">종(🔔) 아이콘</strong>을 누르면 받은 알림이 모여 있고, <strong className="text-foreground">[모두 읽음]</strong> 버튼으로 한 번에 정리할 수 있어요.
           </p>
           <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed pl-1">
             <li>자동으로 가는 알림: <strong className="text-foreground">경기 등록·투표 마감 리마인더·가입 승인·MVP 확정 안내</strong>.</li>
-            <li>알림은 PWA(다음 섹션 참고)로 <strong className="text-foreground">홈 화면에 추가</strong>해야 받을 수 있어요.</li>
-            <li>처음 받을 땐 브라우저가 &quot;알림을 허용할까요?&quot; 물어봐요. 허용해주셔야 동작합니다.</li>
+            <li><strong className="text-foreground">안드로이드(갤럭시 등)는 Google Play에서 &apos;피치마스터&apos; 앱을 설치하면 알림이 가장 안정적이에요.</strong> 특히 기본 브라우저가 <strong className="text-foreground">삼성 인터넷</strong>인 갤럭시에서는 홈 화면 추가만으로는 알림이 잘 안 오는 경우가 많은데, <strong className="text-foreground">Play 스토어 앱으로 설치하면 해결됩니다.</strong></li>
+            <li>아이폰은 사파리에서 <strong className="text-foreground">[홈 화면에 추가]</strong>(다음 섹션)를 한 뒤, 그 아이콘으로 처음 들어갈 때 뜨는 &quot;알림을 허용할까요?&quot;를 허용해주세요.</li>
             <li><strong className="text-foreground">경기 7일 이내 일정만</strong> 푸시가 가게 되어 있어요.</li>
           </ul>
+          <Tip>알림이 안 오면? ① <strong className="text-foreground">설정 → 알림</strong> 토글이 켜져 있는지 ② (갤럭시) <strong className="text-foreground">Play 스토어 앱으로 설치</strong>했는지 ③ 경기가 <strong className="text-foreground">7일 이내 일정</strong>인지 확인하세요.</Tip>
 
           <h3 id="season" className="text-base font-semibold mb-3 mt-6">
             시즌 관리 <Badge variant="president" />
@@ -1002,19 +1006,24 @@ export default function HelpPage() {
 
           <details className="rounded-xl border border-border/60 overflow-hidden mb-2">
             <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-secondary/20 hover:bg-secondary/40 transition-colors list-none">
-              안드로이드 (Chrome · 삼성 인터넷 등)
+              안드로이드 (갤럭시 등) — Play 스토어 앱 권장
               <span className="text-muted-foreground text-base">+</span>
             </summary>
             <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-background/40">
+              <p className="mb-2">
+                안드로이드는 <strong className="text-foreground">Google Play에서 &apos;피치마스터&apos; 앱을 설치</strong>하는 걸 가장 추천해요. 홈 화면 아이콘으로 바로 열리고, <strong className="text-foreground">알림(푸시)이 가장 안정적으로 옵니다.</strong> 기본 브라우저가 삼성 인터넷이라 홈 화면 추가로는 알림이 안 오던 갤럭시도 앱으로 설치하면 해결됩니다.
+              </p>
               <ol className="list-decimal list-inside space-y-2 pl-1">
-                <li>평소 쓰는 브라우저로 pitch-master.app에 접속하세요.</li>
-                <li>화면 아래쪽에 <strong className="text-foreground">&quot;홈 화면에 추가하시겠습니까?&quot;</strong> 배너가 자동으로 떠요. 그 배너를 누르면 끝.</li>
-                <li>배너가 안 뜨면 브라우저 우측 상단 메뉴(점 세 개) → <strong className="text-foreground">[홈 화면에 추가]</strong> 항목을 직접 눌러도 됩니다.</li>
+                <li>Play 스토어에서 <strong className="text-foreground">&apos;피치마스터&apos;</strong> 검색 → 설치 (또는 footer의 Google Play 버튼).</li>
+                <li>앱을 열고 카카오 로그인 — 웹과 같은 계정·데이터라 그대로 이어집니다.</li>
               </ol>
+              <p className="mt-2 text-xs">
+                앱 설치 대신 브라우저로 쓰고 싶다면, 브라우저 우측 상단 메뉴(점 세 개) → <strong className="text-foreground">[홈 화면에 추가]</strong>로도 됩니다(단 갤럭시는 알림이 불안정할 수 있어요).
+              </p>
             </div>
           </details>
 
-          <Tip>홈 화면에 추가하면 그 아이콘으로 들어왔을 때만 <strong className="text-foreground">푸시 알림</strong>을 받을 수 있어요. 일반 브라우저 탭으로 보던 상태에선 알림이 안 옵니다.</Tip>
+          <Tip>아이폰은 홈 화면에 추가한 아이콘으로 들어왔을 때만 <strong className="text-foreground">푸시 알림</strong>을 받을 수 있어요(일반 브라우저 탭에선 안 옴). 안드로이드는 Play 스토어 앱을 설치하면 됩니다.</Tip>
         </section>
 
         {/* ══════════════ FAQ ══════════════ */}
@@ -1042,6 +1051,10 @@ export default function HelpPage() {
               {
                 q: "카카오톡 안에서 링크를 열면 안 되는 게 있나요?",
                 a: "네. 카카오톡 안 브라우저(인앱 브라우저)에선 푸시 알림·홈 화면에 추가가 막혀 있어요. 카카오 안에서 링크를 열었을 때 우측 상단의 ··· 메뉴 → [다른 브라우저로 열기](또는 [Safari로 열기])를 누르면 외부 브라우저로 넘어가서 모든 기능을 쓸 수 있어요.",
+              },
+              {
+                q: "알림(푸시)이 안 와요.",
+                a: "안드로이드(갤럭시 등)는 Google Play에서 '피치마스터' 앱을 설치하면 가장 안정적이에요 — 특히 기본 브라우저가 삼성 인터넷인 갤럭시는 홈 화면 추가만으로는 알림이 잘 안 오는데, 앱으로 설치하면 해결됩니다. 아이폰은 사파리에서 홈 화면에 추가한 뒤 '알림 허용'을 눌러주세요. 그래도 안 오면 ① 설정 → 알림 토글이 켜져 있는지 ② 경기가 7일 이내 일정인지(7일 이내 일정만 푸시가 갑니다) 확인하세요. 자세한 건 13번 알림 설정 섹션 참고.",
               },
               {
                 q: "이전 시즌 데이터를 PitchMaster로 옮길 수 있나요?",
