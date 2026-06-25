@@ -15,7 +15,7 @@ import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from 
 import { Separator } from "@/components/ui/separator";
 import { InAppBrowserBanner } from "@/components/InAppBrowserBanner";
 import { OnboardingCoachMark } from "@/components/OnboardingCoachMark";
-import { Check, Copy, Link2, Menu, ChevronDown, ChevronRight, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Share, Sun, Moon, LogOut, Film, Megaphone, UserPlus, AlertCircle, ClipboardCheck } from "lucide-react";
+import { Check, CheckCheck, Copy, Link2, Menu, ChevronDown, ChevronRight, Plus, Home, Calendar, Trophy, Wallet, MessageSquare, Bell, Users, BookOpen, Settings, MoreHorizontal, Smartphone, ExternalLink, HelpCircle, Share, Sun, Moon, LogOut, Film, Megaphone, UserPlus, AlertCircle, ClipboardCheck } from "lucide-react";
 import type { Session, Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { isPlatformAdmin } from "@/lib/admin";
@@ -79,8 +79,9 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [sheetClosing, setSheetClosing] = useState(false);
   const [notiOpen, setNotiOpen] = useState(false);
-  const [notifications, setNotifications] = useState<{ id: string; title: string; message: string; is_read: boolean; created_at: string; url?: string | null }[]>([]);
+  const [notifications, setNotifications] = useState<{ id: string; title: string; message: string; is_read: boolean; is_seen?: boolean; created_at: string; url?: string | null }[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unseenCount, setUnseenCount] = useState(0);
   const [installMode, setInstallMode] = useState<InstallMode>("none");
   const [hasPrompt, setHasPrompt] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
@@ -134,11 +135,14 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       const json = await res.json();
       const items = json.notifications ?? [];
       setNotifications(items);
-      const count = items.filter((n: { is_read: boolean }) => !n.is_read).length;
-      setUnreadCount(count);
-      // PWA 앱 아이콘 배지 숫자 업데이트
+      // 뱃지(개수) = 미확인(is_seen=false). 항목 하이라이트·"모두 읽음" 버튼 = 미읽음(is_read=false).
+      const unread = items.filter((n: { is_read: boolean }) => !n.is_read).length;
+      const unseen = items.filter((n: { is_seen?: boolean }) => !n.is_seen).length;
+      setUnreadCount(unread);
+      setUnseenCount(unseen);
+      // PWA 앱 아이콘 배지 = 미확인 개수 (벨 뱃지와 일치)
       if ("setAppBadge" in navigator) {
-        count > 0 ? navigator.setAppBadge(count) : navigator.clearAppBadge();
+        unseen > 0 ? navigator.setAppBadge(unseen) : navigator.clearAppBadge();
       }
     } catch {}
   }, []);
@@ -158,6 +162,23 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       body: JSON.stringify({ markAllRead: true }),
     });
     fetchNotifications();
+  };
+
+  // 패널 열기 = "확인함(seen)" — 뱃지(개수)는 즉시 0, 항목 하이라이트(is_read)는 탭 전까지 유지.
+  // 소셜앱 관례(열면 숫자만 사라짐). 읽음 처리는 항목 탭(handleNotiClick)에서만.
+  const markAllSeen = async () => {
+    if (unseenCount === 0) { fetchNotifications(); return; }
+    // 낙관적 반영: 뱃지·앱아이콘 배지 즉시 0
+    setUnseenCount(0);
+    if ("clearAppBadge" in navigator) navigator.clearAppBadge();
+    try {
+      await fetch("/api/notifications", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markAllSeen: true }),
+      });
+    } catch {}
+    fetchNotifications(); // 서버 반영 후 목록·카운트 동기화
   };
 
   // url 컬럼이 비어 있는 legacy 알림용 fallback. 새 알림은 sendPush 가 url 채워서 저장.
@@ -635,13 +656,13 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
               </Link>
               <div className="flex items-center gap-1">
                 <ThemeToggleButton />
-                <Sheet open={notiOpen} onOpenChange={(open) => { setNotiOpen(open); if (open) fetchNotifications(); }}>
+                <Sheet open={notiOpen} onOpenChange={(open) => { setNotiOpen(open); if (open) markAllSeen(); }}>
                   <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" aria-label={unreadCount > 0 ? `알림 ${unreadCount > 9 ? "9건 이상" : `${unreadCount}건`}` : "알림"} className="relative">
+                    <Button variant="ghost" size="icon" aria-label={unseenCount > 0 ? `알림 ${unseenCount > 9 ? "9건 이상" : `${unseenCount}건`}` : "알림"} className="relative">
                       <Bell className="h-4 w-4" />
-                      {unreadCount > 0 && (
+                      {unseenCount > 0 && (
                         <span aria-hidden="true" className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[hsl(var(--loss))] px-1 text-xs font-bold text-white">
-                          {unreadCount > 9 ? "9+" : unreadCount}
+                          {unseenCount > 9 ? "9+" : unseenCount}
                         </span>
                       )}
                     </Button>
@@ -650,8 +671,12 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                     <SheetTitle className="text-sm font-bold pr-8">알림</SheetTitle>
                     <SheetDescription className="sr-only">알림 목록</SheetDescription>
                     {unreadCount > 0 && (
-                      <button onClick={markAllRead} className="mt-2 text-xs font-medium text-primary hover:underline">
-                        전체 읽음 처리
+                      <button
+                        onClick={markAllRead}
+                        className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 active:scale-95"
+                      >
+                        <CheckCheck className="h-3.5 w-3.5" />
+                        모두 읽음 ({unreadCount > 9 ? "9+" : unreadCount})
                       </button>
                     )}
                     <div className="mt-4 space-y-2">

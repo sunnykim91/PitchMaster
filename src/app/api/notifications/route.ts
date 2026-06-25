@@ -29,16 +29,28 @@ export async function PUT(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  if (body.markAllRead || body.all) {
+  if (body.markAllSeen) {
+    // 패널 열기 = "확인함" — 뱃지(개수)만 0으로. 항목 읽음(is_read)은 그대로 둔다.
     const { error } = await db
       .from("notifications")
-      .update({ is_read: true })
+      .update({ is_seen: true })
+      .eq("user_id", ctx.userId)
+      .eq("is_seen", false);
+    if (error) return apiError(error.message);
+  } else if (body.markAllRead || body.all) {
+    // 전체 읽음 — read 는 seen 을 함의하므로 둘 다 true (read ⊆ seen 불변식).
+    const { error } = await db
+      .from("notifications")
+      .update({ is_read: true, is_seen: true })
       .eq("user_id", ctx.userId);
     if (error) return apiError(error.message);
   } else if (body.id) {
+    const isRead = body.isRead ?? true;
+    // 읽음 처리 시 seen 도 같이 true. 읽지 않음 처리(isRead=false)는 seen 을 건드리지 않는다.
+    const update = isRead ? { is_read: true, is_seen: true } : { is_read: false };
     const { error } = await db
       .from("notifications")
-      .update({ is_read: body.isRead ?? true })
+      .update(update)
       .eq("id", body.id)
       .eq("user_id", ctx.userId);
     if (error) return apiError(error.message);

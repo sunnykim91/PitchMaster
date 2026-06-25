@@ -129,6 +129,28 @@ describe("PUT /api/notifications", () => {
     expect(json.ok).toBe(true);
   });
 
+  it("200: markAllSeen:true — 패널 열람 처리 (뱃지 클리어)", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+    const db = createMockDb(["notifications", null]);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await PUT(makeRequest({ markAllSeen: true }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+  });
+
+  it("400: markAllSeen DB 에러 시 에러 반환", async () => {
+    vi.mocked(auth).mockResolvedValue(memberSession);
+    const db = createMockDb(["notifications", null, { message: "seen update failed" }]);
+    vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
+
+    const res = await PUT(makeRequest({ markAllSeen: true }));
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toBe("seen update failed");
+  });
+
   it("200: id 지정 — 단일 알림 읽음 처리", async () => {
     vi.mocked(auth).mockResolvedValue(memberSession);
     const db = createMockDb(["notifications", null]);

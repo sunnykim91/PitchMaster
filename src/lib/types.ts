@@ -328,5 +328,8 @@ export type DbNotification = {
   title: string;
   message: string | null;
   is_read: boolean;
+  /** 패널 열람 여부 — 뱃지(개수)용. is_read(탭 시 읽음)와 별개. (migration 00079) */
+  is_seen: boolean;
+  url?: string | null;
   created_at: string;
 };
