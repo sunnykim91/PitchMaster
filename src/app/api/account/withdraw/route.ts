@@ -105,9 +105,10 @@ export async function POST() {
     }
 
     // 2. 팀 멤버십 전체 LEFT 처리 (활성 명단에서 제외)
+    //    등번호도 비운다 — unique 인덱스가 status 무관이라 번호를 쥔 채 LEFT 되면 영구 점유됨.
     await db
       .from("team_members")
-      .update({ status: "LEFT" })
+      .update({ status: "LEFT", jersey_number: null })
       .eq("user_id", userId);
 
     // 3. 푸시·알림·MVP 투표 즉시 삭제 (개인 식별 가능 데이터)

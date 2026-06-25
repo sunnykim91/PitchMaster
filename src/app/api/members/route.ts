@@ -370,9 +370,11 @@ export async function DELETE(request: NextRequest) {
     return apiError("본인은 강퇴할 수 없습니다. 회원 탈퇴 기능을 이용해주세요.");
   }
 
+  // 강퇴 시 등번호도 비운다. unique 인덱스(team_id, jersey_number)는 status 무관이라
+  // 번호를 쥔 채 BANNED 되면 그 번호가 영구 점유돼 다른 회원(특히 본인 실계정)에게 재부여 불가.
   const { error } = await db
     .from("team_members")
-    .update({ status: "BANNED" })
+    .update({ status: "BANNED", jersey_number: null })
     .eq("id", memberId)
     .eq("team_id", ctx.teamId);
 
