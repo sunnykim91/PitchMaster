@@ -3,6 +3,7 @@ import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isTeamRecordMatch } from "@/lib/types";
 import { aggregateGkCleanSheets, buildGkAttendeesByMatch, isGkPreferred, type GkSquadRow, type GkGoalRow, type GkRosterMember } from "@/lib/server/getGoalkeeperStats";
+import { computeAttendanceRate } from "@/lib/attendanceEligibility";
 
 type MemberRow = {
   id: string;
@@ -10,6 +11,7 @@ type MemberRow = {
   pre_name: string | null;
   jersey_number?: number | null;
   team_role?: string | null;
+  joined_at?: string | null;
   users: { id: string; name: string; preferred_positions: string[] } | { id: string; name: string; preferred_positions: string[] }[] | null;
 };
 
@@ -123,7 +125,7 @@ export async function GET(request: NextRequest) {
   // SSR(getRecordsData)과 동일 기준으로 유지. BANNED만 제외.
   const { data: members } = await db
     .from("team_members")
-    .select("id, user_id, pre_name, jersey_number, team_role, users(id, name, preferred_positions)")
+    .select("id, user_id, pre_name, jersey_number, team_role, joined_at, users(id, name, preferred_positions)")
     .eq("team_id", ctx.teamId)
     .in("status", ["ACTIVE", "DORMANT"]);
 
@@ -317,6 +319,9 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // 출석률 분모용 — 시즌 전체 경기일 (회원별 가입일 이후만 카운트)
+  const allMatchDates = (matches ?? []).map((mm) => (mm as { match_date: string }).match_date);
+
   // 멤버별 집계 (동기, O(1) 맵 조회)
   const stats = typedMembers.map((m) => {
     const userId = m.user_id;
@@ -359,7 +364,7 @@ export async function GET(request: NextRequest) {
       assists,
       mvp,
       matches: attended,
-      attendanceRate: matchIds.length > 0 ? attended / matchIds.length : 0,
+      attendanceRate: computeAttendanceRate(attended, allMatchDates, m.joined_at),
       preferredPositions: user?.preferred_positions ?? [],
       jerseyNumber: m.jersey_number ?? null,
       teamRole: m.team_role ?? null,

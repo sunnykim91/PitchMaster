@@ -5,11 +5,13 @@ import {
   generateSeasonSummary,
   awardContext,
 } from "@/lib/playerCardUtils";
+import { countEligibleMatches } from "@/lib/attendanceEligibility";
 
 type MemberRow = {
   id: string;
   user_id: string | null;
   pre_name: string | null;
+  joined_at: string | null;
   users:
     | { id: string; name: string }
     | { id: string; name: string }[]
@@ -108,7 +110,7 @@ export async function GET(request: NextRequest) {
   // 멤버 조회 (ACTIVE + DORMANT)
   const { data: members } = await db
     .from("team_members")
-    .select("id, user_id, pre_name, users(id, name)")
+    .select("id, user_id, pre_name, joined_at, users(id, name)")
     .eq("team_id", ctx.teamId)
     .in("status", ["ACTIVE", "DORMANT"]);
 
@@ -134,7 +136,11 @@ export async function GET(request: NextRequest) {
       "",
     userId: m.user_id,
     memberId: m.id,
+    joinedAt: m.joined_at,
   }));
+
+  // 출석률 분모용 — 시즌 전체 경기일 (회원별 가입일 이후만 카운트)
+  const allMatchDates = matchList.map((mm) => mm.match_date as string);
 
   // Bulk 데이터 조회
   const [goalsRes, mvpRes, attendanceRes, actualAttendRes] = await Promise.all([
@@ -272,18 +278,21 @@ export async function GET(request: NextRequest) {
   {
     let maxRate = 0;
     let bestName = "";
-    const minGames = Math.ceil(totalMatches * 0.5);
+    // 출석왕은 시즌상(賞) — 시즌 절반 이상 '대상'이었던 회원만 후보(중반 이후 가입자가
+    // 소수표본 100%로 출석왕 되는 것 방지). 단 분모는 가입 이후 경기(eligible)로 계산.
+    const minSeasonShare = Math.ceil(totalMatches * 0.5);
     for (const m of memberLookups) {
       const attended = Math.max(
         m.userId ? (attendByUser.get(m.userId) ?? 0) : 0,
         attendByMember.get(m.memberId) ?? 0
       );
-      if (attended >= minGames) {
-        const rate = attended / totalMatches;
-        if (rate > maxRate) {
-          maxRate = rate;
-          bestName = m.name;
-        }
+      const eligible = countEligibleMatches(allMatchDates, m.joinedAt);
+      if (eligible < minSeasonShare) continue;       // 중반 이후 가입자는 출석왕 비대상
+      if (attended < Math.ceil(eligible * 0.5)) continue; // 본인 대상 경기 절반 미만 출전 제외
+      const rate = eligible > 0 ? attended / eligible : 0;
+      if (rate > maxRate) {
+        maxRate = rate;
+        bestName = m.name;
       }
     }
     if (maxRate > 0) {

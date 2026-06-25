@@ -73,12 +73,26 @@ export async function PATCH(
 
   // 3. 승인 시: team_members에 추가 + 신청자에게 알림
   if (status === "APPROVED") {
+    // 기존 멤버 row 확인 — 강퇴(BANNED)는 승인 차단(권한 우회 방지), 재가입(LEFT)/신규는 joined_at 갱신.
+    const { data: existingMember } = await db
+      .from("team_members")
+      .select("status")
+      .eq("team_id", ctx.teamId)
+      .eq("user_id", applicantUserId)
+      .maybeSingle();
+    if (existingMember?.status === "BANNED") {
+      return apiError("강퇴된 회원은 다시 승인할 수 없습니다. 회원 관리에서 차단을 먼저 해제하세요.", 403);
+    }
+    // 신규 가입·탈퇴 후 재가입이면 가입일을 현재로 — 옛 가입일이 남아 가입 전 기간 회비·벌금이
+    // 소급되는 것 방지. 휴면(DORMANT) 복귀는 재가입이 아니므로 joined_at 유지.
+    const isRejoinOrNew = !existingMember || existingMember.status === "LEFT";
     const { error: memberErr } = await db.from("team_members").upsert(
       {
         team_id: ctx.teamId,
         user_id: applicantUserId,
         role: "MEMBER",
         status: "ACTIVE",
+        ...(isRejoinOrNew ? { joined_at: new Date().toISOString() } : {}),
       },
       { onConflict: "team_id,user_id" }
     );

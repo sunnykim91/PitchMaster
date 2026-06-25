@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { calculateOVR, classifyPosition } from "@/lib/playerCardUtils";
 import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
+import { computeAttendanceRate } from "@/lib/attendanceEligibility";
 
 /**
  * 단일 팀·시즌 기준으로 여러 선수의 OVR 을 한 번에 계산.
@@ -52,16 +53,19 @@ export async function computeTeamSeasonOvrs(
   // 팀 멤버 + 포지션
   const { data: membersData } = await db
     .from("team_members")
-    .select("id, user_id, users(preferred_positions)")
+    .select("id, user_id, joined_at, users(preferred_positions)")
     .eq("team_id", teamId)
     .in("status", ["ACTIVE", "DORMANT"])
     .not("user_id", "is", null);
   type MemberRow = {
     id: string;
     user_id: string | null;
+    joined_at: string | null;
     users: { preferred_positions: string[] | null } | { preferred_positions: string[] | null }[] | null;
   };
   const members = (membersData ?? []) as MemberRow[];
+  // 출석률 분모용 — 시즌 전체 경기일 (회원별 가입일 이후만 카운트)
+  const allMatchDates = (matches ?? []).map((m) => (m as { match_date: string }).match_date);
   if (members.length === 0) return result;
 
   // 골/어시/MVP/출석/운영진 병렬 조회
@@ -185,7 +189,7 @@ export async function computeTeamSeasonOvrs(
       cat,
       myGoalCount / attended,
       myAssistCount / attended,
-      attended / matchIds.length,
+      computeAttendanceRate(attended, allMatchDates, mem.joined_at),
       myMvpCount / attended,
       recordCount > 0 ? wins / recordCount : 0,
       recordCount > 0 ? cleanSheets / recordCount : 0,

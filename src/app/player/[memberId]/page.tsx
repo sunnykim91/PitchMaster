@@ -22,6 +22,7 @@ import type { PlayerCardProps, StatWithContext } from "@/components/pitchmaster/
 import { firstOf, type JoinedRow } from "@/lib/supabaseJoins";
 import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
 import { isValidUuid } from "@/lib/validators/uuid";
+import { kstDateString, isEligibleMatch } from "@/lib/attendanceEligibility";
 
 type Props = {
   params: Promise<{ memberId: string }>;
@@ -35,6 +36,7 @@ type MemberRow = {
   jersey_number: number | null;
   team_role: string | null;
   team_id: string;
+  joined_at: string | null;
   ai_signature: string | null;
   ai_signature_generated_at: string | null;
   users: JoinedRow<{ name: string; preferred_positions: string[]; preferred_foot: "RIGHT" | "LEFT" | "BOTH" | null; profile_image_url: string | null }>;
@@ -52,7 +54,7 @@ async function _getPlayerData(memberId: string, teamId?: string, enableAi: boole
   // ACTIVE + DORMANT 모두 허용 (휴면 회원도 프로필 열람 가능, BANNED만 제외)
   let query = db
     .from("team_members")
-    .select("id, user_id, pre_name, jersey_number, team_role, team_id, ai_signature, ai_signature_generated_at, users(name, preferred_positions, preferred_foot, profile_image_url), teams(name, sport_type, uniform_primary, logo_url)")
+    .select("id, user_id, pre_name, jersey_number, team_role, team_id, joined_at, ai_signature, ai_signature_generated_at, users(name, preferred_positions, preferred_foot, profile_image_url), teams(name, sport_type, uniform_primary, logo_url)")
     .or(`user_id.eq.${memberId},id.eq.${memberId}`)
     .in("status", ["ACTIVE", "DORMANT"]);
   if (teamId) query = query.eq("team_id", teamId);
@@ -213,7 +215,11 @@ async function _getPlayerData(memberId: string, teamId?: string, enableAi: boole
 
   const attended = attendedMatchIds.size;
   const winRate = attended > 0 ? wins / attended : 0;
-  const attendanceRate = matchIds.length > 0 ? attended / matchIds.length : 0;
+  // 출석률 분모는 가입(joined_at) 이후 경기만 — 가입 전 경기를 결석으로 세지 않음.
+  const joinKst = kstDateString(m.joined_at);
+  const eligibleMatches = (matches ?? []).filter((mm) => isEligibleMatch(mm.match_date, joinKst));
+  const eligibleCount = eligibleMatches.length;
+  const attendanceRate = eligibleCount > 0 ? attended / eligibleCount : 0;
 
   // 팀 내 랭킹
   type MemberAgg = { ids: string[]; goals: number; assists: number; mvp: number };
@@ -243,8 +249,8 @@ async function _getPlayerData(memberId: string, teamId?: string, enableAi: boole
   const isTopAssist = totalAssists > 0 && assistsRank === "🏆 팀 1위";
   const isTopMvp = totalMvp > 0 && mvpRank === "🏆 팀 1위";
 
-  // 연속 기록
-  const matchesAsc = [...(matches ?? [])].sort((a, b) => a.match_date < b.match_date ? -1 : 1);
+  // 연속 기록 — 가입 이후 경기만 (가입 전 경기를 결석으로 세어 streak 끊지 않음)
+  const matchesAsc = [...eligibleMatches].sort((a, b) => a.match_date < b.match_date ? -1 : 1);
   const attendFlagsAsc = matchesAsc.map((mm) => attendedMatchIds.has(mm.id));
   const attendanceStreak = computeStreak(attendFlagsAsc);
   const goalFlagsAsc = matchesAsc
@@ -386,8 +392,8 @@ async function _getPlayerData(memberId: string, teamId?: string, enableAi: boole
       };
     });
 
-  // 출석 히트맵 — 최근 15경기 (출석/결석 + 결과). 오래된 경기 → 최신 순서
-  const attendanceHistory = (matches ?? [])
+  // 출석 히트맵 — 가입 이후 최근 15경기 (출석/결석 + 결과). 오래된 경기 → 최신 순서
+  const attendanceHistory = eligibleMatches
     .slice(0, 15)
     .reverse()
     .map((mm) => {
@@ -401,7 +407,7 @@ async function _getPlayerData(memberId: string, teamId?: string, enableAi: boole
 
   const stats: PlayerStats = {
     goals: totalGoals, assists: totalAssists, mvp: totalMvp,
-    attended, totalMatches: matchIds.length,
+    attended, totalMatches: eligibleCount,
     attendanceRate, winRate, cleanSheets,
     attackPoints: totalGoals + totalAssists,
     goalsRank, assistsRank,

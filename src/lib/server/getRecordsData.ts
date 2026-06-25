@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
 import { isTeamRecordMatch } from "@/lib/types";
 import { aggregateGkCleanSheets, buildGkAttendeesByMatch, isGkPreferred, type GkSquadRow, type GkGoalRow, type GkRosterMember } from "@/lib/server/getGoalkeeperStats";
+import { computeAttendanceRate } from "@/lib/attendanceEligibility";
 
 type SeasonRow = { id: string; is_active: boolean; start_date: string; end_date: string; [key: string]: unknown };
 type MemberRow = {
@@ -10,6 +11,7 @@ type MemberRow = {
   pre_name: string | null;
   jersey_number?: number | null;
   team_role?: string | null;
+  joined_at?: string | null;
   users: { id: string; name: string; preferred_positions: string[] } | { id: string; name: string; preferred_positions: string[] }[] | null;
 };
 
@@ -60,7 +62,7 @@ export async function getRecordsData(teamId: string) {
   const [matchesRes, membersRes] = await Promise.all([
     matchQuery,
     db.from("team_members")
-      .select("id, user_id, pre_name, jersey_number, team_role, role, users(id, name, preferred_positions)")
+      .select("id, user_id, pre_name, jersey_number, team_role, role, joined_at, users(id, name, preferred_positions)")
       .eq("team_id", teamId)
       .in("status", ["ACTIVE", "DORMANT"]),
   ]);
@@ -232,6 +234,9 @@ export async function getRecordsData(teamId: string) {
     }
   }
 
+  // 출석률 분모용 — 시즌 전체 경기일 (회원별 가입일 이후만 카운트)
+  const allMatchDates = matches.map((mm) => mm.match_date as string);
+
   const records = typedMembers.map((m) => {
     const userId = m.user_id;
     const memberId = m.id;
@@ -268,7 +273,7 @@ export async function getRecordsData(teamId: string) {
       assists: ids.reduce((s, id) => s + (assistMap.get(id) ?? 0), 0),
       mvp: ids.reduce((s, id) => s + (mvpMap.get(id) ?? 0), 0),
       matches: attended,
-      attendanceRate: matchIds.length > 0 ? attended / matchIds.length : 0,
+      attendanceRate: computeAttendanceRate(attended, allMatchDates, m.joined_at),
       preferredPositions: user?.preferred_positions ?? [],
       jerseyNumber: m.jersey_number ?? null,
       teamRole: m.team_role ?? null,

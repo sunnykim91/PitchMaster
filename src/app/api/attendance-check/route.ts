@@ -122,7 +122,7 @@ async function generatePenalty(db: any, teamId: string, matchId: string, targetU
     // DORMANT/PENDING/BANNED 회원이면 벌금 생성 안 함 (ACTIVE 만 대상)
     const { data: memberRow } = await db
       .from("team_members")
-      .select("id, status")
+      .select("id, status, joined_at")
       .eq("team_id", teamId)
       .eq("user_id", targetUserId)
       .maybeSingle();
@@ -176,6 +176,13 @@ async function generatePenalty(db: any, teamId: string, matchId: string, targetU
       .single();
 
     const matchDate = match?.match_date ?? getKstToday();
+    // 가입일 이전 경기는 벌금 대상 아님 (방어선 — 정상 UI 흐름은 가입 전 경기에 도달 못하지만 직접 호출 대비).
+    if (memberRow.joined_at) {
+      const joinKst = new Date(new Date(memberRow.joined_at).getTime() + 9 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10);
+      if (matchDate < joinKst) return;
+    }
     const opponent = match?.opponent_name ?? "경기";
     const label = triggerType === "LATE" ? "지각" : "불참";
 

@@ -231,10 +231,11 @@ export async function joinTeam(formData: FormData) {
       return;
     }
     // 탈퇴(LEFT)했던 계정은 기존 row를 재활성화해 재가입. 권한은 MEMBER로 초기화(초대링크로 권한 복원 방지).
+    // joined_at 을 현재로 갱신 — 옛 가입일이 남으면 가입 전 기간 회비·벌금이 소급 부과됨.
     if (existing.status === "LEFT") {
       await db
         .from("team_members")
-        .update({ status: "ACTIVE", role: "MEMBER" })
+        .update({ status: "ACTIVE", role: "MEMBER", joined_at: new Date().toISOString() })
         .eq("id", existing.id);
       await updateSession({
         teamId: team.id,

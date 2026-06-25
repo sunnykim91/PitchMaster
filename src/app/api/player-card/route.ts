@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isValidUuid } from "@/lib/validators/uuid";
+import { kstDateString, isEligibleMatch } from "@/lib/attendanceEligibility";
 import {
   classifyPosition,
   getRarity,
@@ -118,7 +119,7 @@ export async function GET(request: NextRequest) {
   // 1. 멤버 정보 조회 (team_members + users 조인)
   const { data: memberData } = await db
     .from("team_members")
-    .select("id, user_id, pre_name, jersey_number, users(id, name, preferred_positions)")
+    .select("id, user_id, pre_name, jersey_number, joined_at, users(id, name, preferred_positions)")
     .eq("team_id", ctx.teamId)
     .or(`user_id.eq.${memberId},id.eq.${memberId}`)
     .limit(1)
@@ -175,6 +176,9 @@ export async function GET(request: NextRequest) {
     .lte("match_date", season.end_date)
     .order("match_date", { ascending: false });
 
+  // 출석률·연속기록 분모는 가입(joined_at) 이후 경기만 — 가입 전 경기를 결석으로 세지 않음.
+  const joinKst = kstDateString((memberData.joined_at as string | null) ?? null);
+  const eligibleMatches = (matches ?? []).filter((m) => isEligibleMatch(m.match_date as string, joinKst));
   const allMatchIds = (matches ?? []).map((m) => m.id);
   // 자체전: 선수가 A/B/C 한 팀 소속이라 "우리 vs 상대" 승/클린시트가 성립 안 함 → 승률·클린시트·실점 집계에서 제외 (골·어시·MVP·출전수엔 포함)
   const internalMatchIds = new Set((matches ?? []).filter((m) => m.match_type === "INTERNAL").map((m) => m.id));
@@ -326,7 +330,7 @@ export async function GET(request: NextRequest) {
 
   const winRate = recordMatchCount > 0 ? wins / recordMatchCount : 0;
   const concededPerGame = recordMatchCount > 0 ? totalConceded / recordMatchCount : 0;
-  const attendanceRate = totalMatches > 0 ? matchCount / totalMatches : 0;
+  const attendanceRate = eligibleMatches.length > 0 ? matchCount / eligibleMatches.length : 0;
   const cleanSheetPerGame = recordMatchCount > 0 ? cleanSheet / recordMatchCount : 0;
   const goalsPerGame = matchCount > 0 ? goals / matchCount : 0;
   const assistsPerGame = matchCount > 0 ? assists / matchCount : 0;
@@ -405,8 +409,8 @@ export async function GET(request: NextRequest) {
     const isTopAssist = assists > 0 && rankByKey.get("assists") === "🏆 팀 1위";
     const isTopMvp = mvp > 0 && rankByKey.get("mvp") === "🏆 팀 1위";
 
-    // 9-3. 연속 기록 — 경기 날짜 오름차순으로 정렬해서 walk
-    const matchesByDateAsc = [...(matches ?? [])]
+    // 9-3. 연속 기록 — 가입 이후 경기만, 날짜 오름차순으로 walk (가입 전 경기로 streak 끊지 않음)
+    const matchesByDateAsc = [...eligibleMatches]
       .slice()
       .sort((a, b) => (a.match_date < b.match_date ? -1 : 1));
 

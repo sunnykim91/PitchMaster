@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { autoCompleteTeamMatches, getKstToday } from "@/lib/server/autoCompleteMatches";
 import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
 import { isTeamRecordMatch } from "@/lib/types";
+import { countEligibleMatches, kstDateString } from "@/lib/attendanceEligibility";
 
 export type TeamRecord = {
   wins: number;
@@ -112,6 +113,7 @@ type ActiveMemberRow = {
   user_id: string | null;
   status: string;
   role: string;
+  joined_at: string | null;
   users: { name: string | null; birth_date: string | null; profile_image_url: string | null } | { name: string | null; birth_date: string | null; profile_image_url: string | null }[] | null;
 };
 
@@ -197,7 +199,7 @@ export async function getDashboardData(
     //  • birthdayMembers (ACTIVE + birth_date)
     //  • dues OCR 기준 멤버 수 (ACTIVE/DORMANT)
     db.from("team_members")
-      .select("id, user_id, status, role, users(name, birth_date, profile_image_url)")
+      .select("id, user_id, status, role, joined_at, users(name, birth_date, profile_image_url)")
       .eq("team_id", teamId)
       .in("status", ["ACTIVE", "DORMANT"])
       .returns<ActiveMemberRow[]>(),
@@ -499,7 +501,10 @@ export async function getDashboardData(
   const myExemptions = (myExemptionsRes.data ?? []) as { start_date: string; end_date: string | null }[];
   const hasActiveExemption = myExemptions.some((ex) => ex.start_date <= monthEnd && (ex.end_date === null || ex.end_date >= monthStart));
   const isPaidOrExempt = myStatus === "PAID" || myStatus === "EXEMPT" || hasActiveExemption;
-  if (hasDuesSettings && myTeamMemberId && todayDay >= DUES_CUTOFF_DAY && !isPaidOrExempt) {
+  // 회비는 가입 다음 달부터 부과 — 가입 월·이전이면 본인 미납 task 띄우지 않음.
+  const myJoinMonth = kstDateString(myMember?.joined_at)?.slice(0, 7) ?? null;
+  const billableThisMonth = !myJoinMonth || currentMonth > myJoinMonth;
+  if (hasDuesSettings && myTeamMemberId && billableThisMonth && todayDay >= DUES_CUTOFF_DAY && !isPaidOrExempt) {
     tasks.push({
       label: "이번 달 회비 납부 확인",
       href: "/dues?tab=status",
@@ -720,7 +725,7 @@ export async function getDashboardSeasonStats(
       .eq("team_id", teamId)
       .order("start_date", { ascending: false }),
     db.from("team_members")
-      .select("id")
+      .select("id, joined_at")
       .eq("team_id", teamId)
       .eq("user_id", userId)
       .in("status", ["ACTIVE", "DORMANT"])
@@ -730,11 +735,12 @@ export async function getDashboardSeasonStats(
   const activeSeason = seasonList.find((s) => s.is_active) ?? seasonList[0] ?? null;
   const seasonStart = activeSeason?.start_date ?? null;
   const seasonEnd = activeSeason?.end_date ?? null;
-  const myTeamMemberId = (myMemberRes.data as { id: string } | null)?.id ?? null;
+  const myMemberForStats = myMemberRes.data as { id: string; joined_at: string | null } | null;
+  const myTeamMemberId = myMemberForStats?.id ?? null;
 
   // completedMatches 쿼리 (시즌 범위 내) — 기존 stage 2/3 와 동일 SQL (stats_included NULL 처리 포함).
   let completedMatchesQuery = db.from("matches")
-    .select("id, match_type")
+    .select("id, match_type, match_date")
     .eq("team_id", teamId)
     .eq("status", "COMPLETED")
     .neq("stats_included", false)
@@ -744,9 +750,14 @@ export async function getDashboardSeasonStats(
   }
   const completedMatchesRes = await completedMatchesQuery;
 
-  const completedMatchIds = (completedMatchesRes.data ?? [])
-    .filter((m) => isTeamRecordMatch((m as { match_type?: string | null }).match_type))
-    .map((m) => m.id);
+  const completedMatchRows = (completedMatchesRes.data ?? [])
+    .filter((m) => isTeamRecordMatch((m as { match_type?: string | null }).match_type));
+  const completedMatchIds = completedMatchRows.map((m) => m.id);
+  // 내 출석률 분모는 가입(joined_at) 이후 경기만
+  const myEligibleMatches = countEligibleMatches(
+    completedMatchRows.map((m) => (m as { match_date: string }).match_date),
+    myMemberForStats?.joined_at,
+  );
 
   let teamRecord = EMPTY_RECORD;
   let mySeasonStats: DashboardSeasonStats["mySeasonStats"] = null;
@@ -825,9 +836,9 @@ export async function getDashboardSeasonStats(
       mySeasonStats = {
         matches: attendCount,
         goals: myGoalCount,
-        attendanceRate: Math.round((attendCount / completedMatchIds.length) * 100),
+        attendanceRate: myEligibleMatches > 0 ? Math.round((attendCount / myEligibleMatches) * 100) : 0,
         teamGoalRank,
-        totalCompletedMatches: completedMatchIds.length,
+        totalCompletedMatches: myEligibleMatches,
       };
     }
   }
