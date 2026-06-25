@@ -4,7 +4,7 @@ import { getActiveExemptions } from "@/lib/server/getActiveExemptions";
 import { getPenaltyExemptUserIds } from "@/lib/server/getPenaltyExemptUserIds";
 
 /**
- * 미투표 벌금 자동 생성 크론 (매일 KST 23:00 실행)
+ * 미투표 벌금 자동 생성 크론 (매시간 정각 실행 — vercel.json: "0 * * * *")
  *
  * 1. NO_VOTE 규칙이 활성화된 팀만 대상
  * 2. 최근 7일 내 투표 마감이 지난 경기 (vote_deadline 기준, UTC 비교 + 백필)
@@ -129,14 +129,18 @@ export async function GET(request: NextRequest) {
       (uid) => !exemptions.has(uid) && !penaltyExempt.has(uid)
     );
 
-    // 투표한 멤버
+    // 투표한 멤버 — 미정(MAYBE)은 '투표함'으로 보지 않음.
+    // 마감까지 미정이면 의사표시를 안 한 것으로 간주해 미투표 벌금 대상 (정책 2026-06-25).
+    // 참석/불참 같은 확정 의사표시(또는 출석만 기록된 vote=null 행)만 '투표함'으로 인정.
     const { data: voted } = await db
       .from("match_attendance")
-      .select("user_id")
+      .select("user_id, vote")
       .eq("match_id", match.id)
       .not("user_id", "is", null);
 
-    const votedIds = new Set((voted ?? []).map((v) => v.user_id));
+    const votedIds = new Set(
+      (voted ?? []).filter((v) => v.vote !== "MAYBE").map((v) => v.user_id)
+    );
     const unvotedIds = allUserIds.filter((uid) => !votedIds.has(uid));
     if (unvotedIds.length === 0) continue;
 

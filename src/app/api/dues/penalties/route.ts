@@ -274,9 +274,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 미투표 체크
+    // 미투표 체크 — 마감까지 '미정(MAYBE)'이면 의사표시를 안 한 것으로 보고 미투표로 간주 (정책 2026-06-25).
+    // (참석/불참 같은 확정 의사표시만 '투표함'으로 인정. 표시는 그대로 '미정'이고 벌금만 부과.)
+    // 단 지각·불참 같은 출석 기반 벌금이 잡히는 행이면 그쪽이 우선 — 한 경기에 미투표+불참 이중 부과 방지.
     const noVoteRule = ruleMap.get("NO_VOTE");
-    if (noVoteRule && !att) {
+    const isNoVote = !att || att.vote === "MAYBE";
+    const hasAttendancePenalty =
+      att?.attendance_status === "LATE" || att?.actually_attended === false;
+    if (noVoteRule && isNoVote && !hasAttendancePenalty) {
       const key = `${userId}:${noVoteRule.id}`;
       if (!existingSet.has(key)) {
         newPenalties.push({
