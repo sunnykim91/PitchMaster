@@ -17,6 +17,10 @@ type ConfirmOptions = {
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: "default" | "destructive";
+  /** 엔터(autoFocus) 기본 버튼 지정.
+   * 미지정 시: default→확인, destructive→취소(실수 삭제 방지).
+   * 사소·복구 쉬운 삭제(예: 영상 컷)는 "confirm"으로 엔터=삭제 가능. */
+  defaultFocus?: "confirm" | "cancel";
 };
 
 type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>;
@@ -67,26 +71,35 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
                   {state.description}
                 </p>
               )}
-              <div className="mt-5 flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={handleCancel}
-                  autoFocus={state.variant === "destructive"}
-                >
-                  {state.cancelLabel ?? "취소"}
-                </Button>
-                <Button
-                  variant={state.variant === "destructive" ? "destructive" : "default"}
-                  size="sm"
-                  className="flex-1"
-                  onClick={handleConfirm}
-                  autoFocus={state.variant !== "destructive"}
-                >
-                  {state.confirmLabel ?? "확인"}
-                </Button>
-              </div>
+              {(() => {
+                // 엔터(autoFocus) 대상: defaultFocus 우선, 없으면 기존 규칙(destructive→취소).
+                const confirmFocused =
+                  state.defaultFocus
+                    ? state.defaultFocus === "confirm"
+                    : state.variant !== "destructive";
+                return (
+                  <div className="mt-5 flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={handleCancel}
+                      autoFocus={!confirmFocused}
+                    >
+                      {state.cancelLabel ?? "취소"}
+                    </Button>
+                    <Button
+                      variant={state.variant === "destructive" ? "destructive" : "default"}
+                      size="sm"
+                      className="flex-1"
+                      onClick={handleConfirm}
+                      autoFocus={confirmFocused}
+                    >
+                      {state.confirmLabel ?? "확인"}
+                    </Button>
+                  </div>
+                );
+              })()}
             </Card>
           </div>,
           document.body

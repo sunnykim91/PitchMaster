@@ -349,6 +349,25 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
             );
           })}
 
+          {/* 상대팀 선수 — 붉은 점 (우리 팀 흰 점과 대비). 컷 간 id 기준 보간 이동 */}
+          {(step.opponents ?? []).map((opp) => (
+            <motion.g
+              key={opp.id}
+              animate={{ x: opp.x, y: opp.y }}
+              transition={{ type: "spring", stiffness: 90 * rate, damping: 15, mass: 0.8 }}
+              initial={false}
+            >
+              <circle
+                cx={0}
+                cy={0}
+                r={2.6}
+                fill="hsl(0 72% 50%)"
+                stroke="hsl(0 50% 22%)"
+                strokeWidth="0.5"
+              />
+            </motion.g>
+          ))}
+
           {/* 공 — 선수 점 옆에 오프셋 표시 (라벨 안 가림)
               · 공격: 흰 축구공 + 빠른 펄스 (우리 팀이 가짐)
               · 수비: 옅은 회색 + 점선 (상대 공) */}

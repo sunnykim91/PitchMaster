@@ -55,6 +55,7 @@ import {
   horizontalListSortingStrategy,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
+import { motion } from "framer-motion";
 import { exportMotionAsGif, downloadBlob, buildGifFilename } from "@/lib/animationExport/gifExport";
 import { SortableStepChip } from "@/components/animations/SortableStepChip";
 import { Button } from "@/components/ui/button";
@@ -82,13 +83,50 @@ import type {
   TeamTacticalAnimation,
   TacticalAnimationData,
 } from "@/lib/formationMotions/dbTypes";
-import type { MotionPhase, MotionStep, PhasePosition } from "@/lib/formationMotions/types";
+import type { MotionPhase, MotionStep, PhasePosition, OpponentMark } from "@/lib/formationMotions/types";
 
 interface Props {
   initial: TeamTacticalAnimation;
 }
 
 type Mode = "attack" | "defense";
+
+/** 상대 선수 안정적 id 생성 (드래그 타깃·컷 간 framer-motion 보간 key). */
+function makeOpponentId(): string {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+  } catch {
+    /* ignore */
+  }
+  return `opp-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+}
+
+/** 두 컷의 선수·공·상대 좌표가 사실상 동일한지 (빈 컷 추가 차단용). 부동소수 오차는 0.1 이내 동일 취급. */
+function stepsVisuallyEqual(a: MotionStep, b: MotionStep): boolean {
+  const near = (m: number, n: number) => Math.abs(m - n) < 0.1;
+  // 공
+  if (!!a.ball !== !!b.ball) return false;
+  if (a.ball && b.ball && (!near(a.ball.x, b.ball.x) || !near(a.ball.y, b.ball.y))) return false;
+  // 선수 (slot 기준 매칭)
+  const bm = new Map(b.positions.map((p) => [p.slot, p]));
+  if (a.positions.length !== b.positions.length) return false;
+  for (const p of a.positions) {
+    const q = bm.get(p.slot);
+    if (!q || !near(p.x, q.x) || !near(p.y, q.y)) return false;
+  }
+  // 상대 선수 (id 기준 매칭)
+  const ao = a.opponents ?? [];
+  const bo = b.opponents ?? [];
+  if (ao.length !== bo.length) return false;
+  const bom = new Map(bo.map((o) => [o.id, o]));
+  for (const o of ao) {
+    const q = bom.get(o.id);
+    if (!q || !near(o.x, q.x) || !near(o.y, q.y)) return false;
+  }
+  return true;
+}
 
 /** 4-2-3-1 폴백 (formationTemplates에 못 찾을 때만 — 일반적이지 않음). */
 const FALLBACK_4231_POSITIONS: PhasePosition[] = [
@@ -401,12 +439,20 @@ export default function AnimationEditorClient({ initial }: Props) {
           caption: "",
           ball: step.ball ? { ...step.ball } : { x: 50, y: 50 },
           positions: step.positions.map((p) => ({ ...p })),
+          opponents: step.opponents?.map((o) => ({ ...o })),
         }
       : {
           caption: "",
           ball: { x: 50, y: 50 },
           positions: basePositions.map((p) => ({ ...p })),
         };
+    // 변동 없는 빈 컷 양산 방지 — 현재 컷이 "바로 앞 컷과 똑같은 미편집 복사본"이면 추가 차단.
+    // (기본 배치 cut1 → cut2 같은 첫 추가는 허용. 편집 안 한 컷을 또 복사하려 할 때만 막음.
+    //  "컷 복사" 버튼은 의도적 복제라 여기서 막지 않음.)
+    if (stepIdx > 0 && step && steps[stepIdx - 1] && stepsVisuallyEqual(step, steps[stepIdx - 1])) {
+      showToast("직전 컷이 앞 컷과 똑같아요. 선수나 공을 옮긴 뒤 새 컷을 추가하세요.", "error");
+      return;
+    }
     if (isFlat) {
       patchFlatSteps((curr) => [...curr, newStep]);
     } else {
@@ -421,6 +467,7 @@ export default function AnimationEditorClient({ initial }: Props) {
       ...step,
       positions: step.positions.map((p) => ({ ...p })),
       ball: step.ball ? { ...step.ball } : null,
+      opponents: step.opponents?.map((o) => ({ ...o })),
     };
     if (isFlat) {
       patchFlatSteps((curr) => [...curr, newStep]);
@@ -440,6 +487,8 @@ export default function AnimationEditorClient({ initial }: Props) {
       description: "현재 컷을 삭제합니다.",
       variant: "destructive",
       confirmLabel: "삭제",
+      // 컷은 저장 전이라 복구 쉬움 → 엔터로 바로 삭제되게 확인 버튼에 포커스
+      defaultFocus: "confirm",
     });
     if (!ok) return;
     if (isFlat) {
@@ -488,9 +537,28 @@ export default function AnimationEditorClient({ initial }: Props) {
     }));
   }
 
+  // ── 상대 선수 관리 (이 컷 전용 — 다른 컷엔 영향 없음) ──
+  function addOpponent() {
+    patchStep((s) => {
+      const existing = s.opponents ?? [];
+      const n = existing.length;
+      // 가운데 근처에 격자로 살짝 흩어 배치 (겹침 방지)
+      const x = Math.max(4, Math.min(96, 50 + ((n % 3) - 1) * 11));
+      const y = Math.max(4, Math.min(96, 36 + Math.floor(n / 3) * 11));
+      return { ...s, opponents: [...existing, { id: makeOpponentId(), x, y }] };
+    });
+  }
+  function removeLastOpponent() {
+    patchStep((s) => {
+      const existing = s.opponents ?? [];
+      if (existing.length === 0) return s;
+      return { ...s, opponents: existing.slice(0, -1) };
+    });
+  }
+
   // ── 드래그 로직 (setPointerCapture 패턴 — closure 문제 회피) ──
   const boardRef = useRef<SVGSVGElement | null>(null);
-  const [dragging, setDragging] = useState<{ kind: "slot" | "ball"; slotId?: string } | null>(null);
+  const [dragging, setDragging] = useState<{ kind: "slot" | "ball" | "opponent"; slotId?: string; opponentId?: string } | null>(null);
 
   function clientToSvg(clientX: number, clientY: number) {
     if (!boardRef.current) return null;
@@ -517,6 +585,14 @@ export default function AnimationEditorClient({ initial }: Props) {
           p.slot === id ? { ...p, x: pt.x, y: pt.y } : p,
         ),
       }));
+    } else if (dragging.kind === "opponent" && dragging.opponentId) {
+      const oid = dragging.opponentId;
+      patchStep((s) => ({
+        ...s,
+        opponents: (s.opponents ?? []).map((o) =>
+          o.id === oid ? { ...o, x: pt.x, y: pt.y } : o,
+        ),
+      }));
     }
   }
 
@@ -532,8 +608,8 @@ export default function AnimationEditorClient({ initial }: Props) {
 
   function startDragOnElement(
     e: React.PointerEvent,
-    kind: "slot" | "ball",
-    slotId?: string,
+    kind: "slot" | "ball" | "opponent",
+    id?: string,
   ) {
     e.preventDefault();
     try {
@@ -541,7 +617,11 @@ export default function AnimationEditorClient({ initial }: Props) {
     } catch {
       /* capture 실패 시 무시 (브라우저 차이) */
     }
-    setDragging({ kind, slotId });
+    setDragging({
+      kind,
+      slotId: kind === "slot" ? id : undefined,
+      opponentId: kind === "opponent" ? id : undefined,
+    });
   }
 
   // ── 저장 ──
@@ -576,6 +656,13 @@ export default function AnimationEditorClient({ initial }: Props) {
     () => (step ? new Map(step.positions.map((p) => [p.slot, p])) : new Map()),
     [step],
   );
+
+  // 편집 캔버스 점 이동 transition — 재생 중에만 부드러운 spring 보간(미리보기와 동일 느낌),
+  // 편집·드래그 중에는 즉시 반영(duration 0)해 손가락을 따라오게.
+  const dotTransition = editorPlaying
+    ? ({ type: "spring", stiffness: 90, damping: 15, mass: 0.8 } as const)
+    : ({ duration: 0 } as const);
+  const opponentCount = step?.opponents?.length ?? 0;
 
   // 미리보기 모드일 때는 FormationMotionViewer 렌더
   if (previewing) {
@@ -1062,11 +1149,13 @@ export default function AnimationEditorClient({ initial }: Props) {
             <rect x="36" y="2" width="28" height="5" />
           </g>
 
-          {/* 선수 점 — 드래그 가능 (setPointerCapture) */}
+          {/* 선수 점 — 드래그 가능 (setPointerCapture). 재생 중엔 spring 보간 */}
           {step?.positions.map((pos) => (
-            <g
+            <motion.g
               key={pos.slot}
-              transform={`translate(${pos.x}, ${pos.y})`}
+              animate={{ x: pos.x, y: pos.y }}
+              transition={dotTransition}
+              initial={false}
               onPointerDown={(e) => startDragOnElement(e, "slot", pos.slot)}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
@@ -1088,13 +1177,45 @@ export default function AnimationEditorClient({ initial }: Props) {
               >
                 {pos.slot.toUpperCase()}
               </text>
-            </g>
+            </motion.g>
+          ))}
+
+          {/* 상대팀 선수 — 붉은 점, 드래그 가능. 번호는 순서대로 자동 부여 */}
+          {(step?.opponents ?? []).map((opp, i) => (
+            <motion.g
+              key={opp.id}
+              animate={{ x: opp.x, y: opp.y }}
+              transition={dotTransition}
+              initial={false}
+              onPointerDown={(e) => startDragOnElement(e, "opponent", opp.id)}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
+              style={{ cursor: dragging?.opponentId === opp.id ? "grabbing" : "grab", touchAction: "none" }}
+            >
+              <circle cx={0} cy={0} r={8} fill="transparent" />
+              <circle cx={0} cy={0} r={3.6} fill="hsl(0 72% 50%)" stroke="hsl(0 50% 22%)" strokeWidth="0.5" />
+              <text
+                x={0}
+                y={0.6}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize="2.4"
+                fontWeight="700"
+                fill="white"
+                style={{ pointerEvents: "none" }}
+              >
+                {i + 1}
+              </text>
+            </motion.g>
           ))}
 
           {/* 공 — 드래그 가능 (setPointerCapture) */}
           {step?.ball && (
-            <g
-              transform={`translate(${step.ball.x}, ${step.ball.y + 2.4})`}
+            <motion.g
+              animate={{ x: step.ball.x, y: step.ball.y + 2.4 }}
+              transition={dotTransition}
+              initial={false}
               onPointerDown={(e) => startDragOnElement(e, "ball")}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
@@ -1109,7 +1230,7 @@ export default function AnimationEditorClient({ initial }: Props) {
                 fill="#0f0f0f"
                 style={{ pointerEvents: "none" }}
               />
-            </g>
+            </motion.g>
           )}
         </svg>
       </div>
@@ -1138,6 +1259,36 @@ export default function AnimationEditorClient({ initial }: Props) {
           <Label htmlFor="ball-on" className="cursor-pointer text-xs">
             이 컷에서 공 표시{!step?.ball && " (체크하면 공이 나타남)"}
           </Label>
+        </div>
+
+        {/* 상대팀 선수 — 이 컷 전용 (붉은 점). 추가·마지막 제거 + 드래그 이동 */}
+        <div className="flex flex-wrap items-center gap-2 border-t border-border/40 pt-2">
+          <span className="text-xs font-semibold text-foreground">상대 선수</span>
+          <span className="text-[11px] tabular-nums text-muted-foreground">{opponentCount}명</span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-7 gap-1 text-xs"
+            onClick={addOpponent}
+          >
+            <Plus className="h-3 w-3" />
+            추가
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-7 gap-1 text-xs"
+            onClick={removeLastOpponent}
+            disabled={opponentCount === 0}
+          >
+            <Trash2 className="h-3 w-3" />
+            마지막 제거
+          </Button>
+          <span className="w-full text-[11px] leading-relaxed text-muted-foreground/80">
+            붉은 점이 상대 선수예요. 점을 드래그해 위치를 잡으세요. (이 컷에만 적용 — 컷마다 따로 배치)
+          </span>
         </div>
       </div>
 

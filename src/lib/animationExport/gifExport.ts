@@ -186,10 +186,19 @@ function interpolateStep(a: MotionStep, b: MotionStep, t: number): MotionStep {
     ball = a.ball;
   }
 
+  // 상대 선수 — id 기준으로 보간 (다음 컷에 같은 id 있으면 이동, 없으면 현재 위치 유지)
+  const oppMap = new Map((b.opponents ?? []).map((o) => [o.id, o]));
+  const opponents = (a.opponents ?? []).map((o) => {
+    const next = oppMap.get(o.id);
+    if (!next) return o;
+    return { id: o.id, x: o.x + (next.x - o.x) * t, y: o.y + (next.y - o.y) * t };
+  });
+
   return {
     caption: t < 0.5 ? a.caption : b.caption,
     ball,
     positions,
+    opponents,
   };
 }
 
@@ -246,6 +255,19 @@ function drawFrame(
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(pos.slot.toUpperCase(), x, y + 0.6 * scale);
+  }
+
+  // 상대팀 선수 — 붉은 점 (우리 팀 흰 점과 대비)
+  for (const opp of step.opponents ?? []) {
+    const ox = opp.x * scale;
+    const oy = opp.y * scale;
+    ctx.beginPath();
+    ctx.arc(ox, oy, 2.6 * scale, 0, Math.PI * 2);
+    ctx.fillStyle = "#d83838";
+    ctx.fill();
+    ctx.strokeStyle = "#561c1c";
+    ctx.lineWidth = 0.5 * scale;
+    ctx.stroke();
   }
 
   if (step.ball) {

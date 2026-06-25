@@ -31,4 +31,4 @@ export function hasFormationMotion(formationId: string): boolean {
   return formationId in REGISTRY;
 }
 
-export type { FormationMotion, MotionPhase, MotionStep, PhasePosition } from "./types";
+export type { FormationMotion, MotionPhase, MotionStep, PhasePosition, OpponentMark } from "./types";

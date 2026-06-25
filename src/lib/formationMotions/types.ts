@@ -18,6 +18,14 @@ export interface PhasePosition {
   y: number;
 }
 
+/** 상대팀 선수 마크 — 우리 슬롯과 달리 포메이션에 묶이지 않는 자유 배치 점.
+ * id 는 드래그 타깃·컷 간 framer-motion 보간 key 로 쓰이므로 컷 복사 시 그대로 유지. */
+export interface OpponentMark {
+  id: string;
+  x: number;
+  y: number;
+}
+
 export interface MotionStep {
   /** 단계 캡션 — 사용자가 읽으며 흐름 파악할 한 줄 설명 */
   caption: string;
@@ -25,6 +33,8 @@ export interface MotionStep {
   ball?: { x: number; y: number } | null;
   /** 11개 슬롯 위치 (GK 포함) */
   positions: PhasePosition[];
+  /** 상대팀 선수 마크 (선택). undefined/빈 배열 = 미표시. 하위호환 — 기존 영상엔 없음. */
+  opponents?: OpponentMark[];
   /** 이 step 머무르는 시간 (ms). 미지정 시 컴포넌트 default 사용 */
   duration?: number;
 }
