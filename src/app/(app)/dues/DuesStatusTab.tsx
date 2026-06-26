@@ -300,6 +300,8 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
     const feeLabel = ROLE_LABEL[m.role] ?? null;
     // 미납 시 표시할 금액: 해당 회비설정의 금액 or paidAmount
     const unpaidAmount = getSettingAmount(m.role);
+    // 면제 멤버의 실제 종류 라벨(선납/면제/휴회/부상…) — 뱃지·셀렉트가 같은 값을 공유
+    const exemptLabel = m.status === "EXEMPT" ? getExemptLabel(m.note) : null;
 
     return (
       <Card
@@ -316,14 +318,11 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
               {m.status === "UNPAID" && (
                 <Badge variant="destructive" className="border-0 text-[12px] px-1.5 py-0 shrink-0">미납</Badge>
               )}
-              {m.status === "EXEMPT" && (() => {
-                const exemptLabel = getExemptLabel(m.note);
-                return (
-                  <Badge variant={exemptLabel === "선납" ? "info" : "warning"} className="border-0 text-[12px] px-1.5 py-0 shrink-0">
-                    {exemptLabel}
-                  </Badge>
-                );
-              })()}
+              {m.status === "EXEMPT" && (
+                <Badge variant={exemptLabel === "선납" ? "info" : "warning"} className="border-0 text-[12px] px-1.5 py-0 shrink-0">
+                  {exemptLabel}
+                </Badge>
+              )}
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               {m.status === "PAID" && m.paidAmount > 0 && (
@@ -348,7 +347,7 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
                   >
                     <option value="PAID">납부</option>
                     <option value="UNPAID">미납</option>
-                    <option value="EXEMPT">면제</option>
+                    <option value="EXEMPT">{exemptLabel ?? "면제"}</option>
                   </NativeSelect>
                 )
               )}
