@@ -725,7 +725,9 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       const { secondPlayerId: _, ...rest } = current;
       return { ...prev, placements: { ...prev.placements, [slotId]: rest } };
     });
-    setActiveSlotId(null);
+    // 슬롯 선택을 유지해 곧바로 다른 후반 선수를 추가하거나 시트를 닫을 수 있게 한다.
+    // (이전: setActiveSlotId(null) → 모바일 바텀시트가 빈 화면으로 멈춰 아무것도 못 누르던 버그)
+    setSlotMode("assign");
   }
 
   function handleClearSlot(slotId: string) {
