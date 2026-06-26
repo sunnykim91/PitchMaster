@@ -32,7 +32,8 @@ paths:
 - `resolveValidMvps(votes, attendedCount, staffDecision)` — **정책 판정, 공동 1등 전원을 candidate_id 사전순 배열로 반환** (투표 동률 = 공동 MVP. 운영진 직접 지정은 1명만). 집계·기록 경로는 이걸 써서 동률 전원 +1.
 - `resolveValidMvp(...)` — 단수 래퍼 (`resolveValidMvps(...)[0] ?? null`). 단수 winner가 필요한 레거시용. 동률은 사전순 첫 번째 (결정론적).
 - `pickStaffDecision(rows, staffVoterIds)` — `is_staff_decision=true` OR 현재 STAFF+ voter 투표를 확정 후보로 리턴. 2026-04-20(커밋 `2d457b8`) 이전에 저장된 staff 투표가 `false`로 남아있는 백필 누락을 동적 치유.
-- `aggregateMvpsByMatch(rows, attendedPerMatch, matchDateById, staffVoterIds, mvpVoteStaffOnly)` — **경기별 MVP 집계 단일 오케스트레이션**(votesByMatch 그룹핑 → shouldApplyNewMvpPolicy → pickStaffDecision → resolveValidMvps → candidate_id별 횟수 맵). getRecordsData·records route 가 복붙하던 ~25줄을 묶음. 여러 경기를 한 번에 집계하는 경로는 이걸 쓸 것.
+- `resolveMvpWinnersByMatch(...)` — **경기별 확정 winner 배열 맵**(`Map<matchId, candidateId[]>`). "어느 경기에 누가 당선됐는지"가 필요한 경로(선수 프로필·OVR·선수카드 랭킹)용. 아래 `aggregateMvpsByMatch`가 이걸 공유.
+- `aggregateMvpsByMatch(rows, attendedPerMatch, matchDateById, staffVoterIds, mvpVoteStaffOnly)` — **경기별 MVP 집계 단일 오케스트레이션**(→ resolveMvpWinnersByMatch → candidate_id별 횟수 맵). getRecordsData·records route·season-awards 가 복붙하던 ~25줄을 묶음. 여러 경기 횟수 집계 경로는 이걸, winner 배열이 필요하면 resolveMvpWinnersByMatch 를 쓸 것.
 
 **집계 경로 12곳** — 하나 수정 시 전부 같이 건드려야 일관성 유지 (전부 정책 헬퍼 경유):
 - SSR: `src/lib/server/getRecordsData.ts`, `src/lib/server/getDashboardData.ts`(동률 시 이름 병기) — getRecordsData·records route 는 `aggregateMvpsByMatch` 공유
