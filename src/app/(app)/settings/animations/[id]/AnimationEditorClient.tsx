@@ -537,28 +537,100 @@ export default function AnimationEditorClient({ initial }: Props) {
     }));
   }
 
-  // ── 상대 선수 관리 (이 컷 전용 — 다른 컷엔 영향 없음) ──
-  function addOpponent() {
-    patchStep((s) => {
-      const existing = s.opponents ?? [];
-      const n = existing.length;
-      // 가운데 근처에 격자로 살짝 흩어 배치 (겹침 방지)
-      const x = Math.max(4, Math.min(96, 50 + ((n % 3) - 1) * 11));
-      const y = Math.max(4, Math.min(96, 36 + Math.floor(n / 3) * 11));
-      return { ...s, opponents: [...existing, { id: makeOpponentId(), x, y }] };
-    });
-  }
-  function removeLastOpponent() {
-    patchStep((s) => {
-      const existing = s.opponents ?? [];
-      if (existing.length === 0) return s;
-      return { ...s, opponents: existing.slice(0, -1) };
-    });
+  // ── 상대 선수 관리 ──
+  // 상대 선수는 "전 컷 공통 로스터" — 모든 컷에 같은 id로 존재해야 컷 사이를 부드럽게
+  // 이동(보간)한다. 추가·삭제는 모든 컷에 동시 적용하고, 위치만 컷마다 따로 잡는다.
+  const [selectedOpponentId, setSelectedOpponentId] = useState<string | null>(null);
+
+  // 모든 컷(flat=data.steps / legacy=현재 phase)에 같은 변환 적용
+  function patchAllSteps(updater: (s: MotionStep) => MotionStep) {
+    if (isFlat) {
+      patchData({ ...data, steps: (data.steps ?? []).map((s) => updater(s)) });
+    } else {
+      patchPhase((p) => ({ ...p, steps: p.steps.map((s) => updater(s)) }));
+    }
   }
 
-  // ── 드래그 로직 (setPointerCapture 패턴 — closure 문제 회피) ──
+  /** 상대 한 명 추가 — 모든 컷에 같은 id로. 기본 위치는 상대 진영(위쪽)에 가로로 흩어 배치. */
+  function addOpponent() {
+    const n = step?.opponents?.length ?? 0;
+    const id = makeOpponentId();
+    const x = Math.max(8, Math.min(92, 20 + (n % 4) * 20)); // 20·40·60·80 반복
+    const y = Math.max(8, Math.min(60, 20 + Math.floor(n / 4) * 13)); // 위쪽부터 줄줄이
+    patchAllSteps((s) => ({ ...s, opponents: [...(s.opponents ?? []), { id, x, y }] }));
+    setSelectedOpponentId(id);
+  }
+
+  /** 상대 한 팀 전체 배치 — 우리 포메이션을 상대 진영(위쪽)으로 뒤집어 같은 인원수로.
+   *  (축구 11명 / 풋살 5~8명 = 이 영상 포메이션 슬롯 수와 동일.) 기존 상대는 대체. */
+  async function addFullOpponentTeam() {
+    const count = step?.opponents?.length ?? 0;
+    if (count > 0) {
+      const ok = await confirm({
+        title: "상대 전체 배치",
+        description: `지금 상대 선수 ${count}명을 지우고 ${basePositions.length}명 한 팀으로 다시 놓습니다.`,
+        confirmLabel: "배치",
+      });
+      if (!ok) return;
+    }
+    // y 를 위아래로 뒤집어(100 - y) 상대 진영에 우리 포메이션을 마주 보게 배치.
+    const team: OpponentMark[] = basePositions.map((p) => ({
+      id: makeOpponentId(),
+      x: p.x,
+      y: Math.max(4, Math.min(96, 100 - p.y)),
+    }));
+    patchAllSteps((s) => ({ ...s, opponents: team }));
+    setSelectedOpponentId(null);
+  }
+
+  /** 선택한 상대 삭제 — 모든 컷에서. */
+  function removeOpponent(id: string) {
+    patchAllSteps((s) => ({ ...s, opponents: (s.opponents ?? []).filter((o) => o.id !== id) }));
+    setSelectedOpponentId((cur) => (cur === id ? null : cur));
+  }
+
+  /** 상대 전체 비우기 — 모든 컷에서. */
+  function clearOpponents() {
+    patchAllSteps((s) => ({ ...s, opponents: [] }));
+    setSelectedOpponentId(null);
+  }
+
+  // ── 드래그 로직 (SVG 전체에서 가장 가까운 점을 집어 드래그 — 겹쳐도 정확) ──
   const boardRef = useRef<SVGSVGElement | null>(null);
   const [dragging, setDragging] = useState<{ kind: "slot" | "ball" | "opponent"; slotId?: string; opponentId?: string } | null>(null);
+
+  /** SVG 어디를 눌러도 가장 가까운 드래그 대상(공·상대·선수)을 grab 반경 안에서 집어 든다.
+   *  → 점들이 겹쳐도 손가락에 가장 가까운 점이 잡혀 오조작 방지. 공은 작아 동률 시 우선. */
+  function handleBoardPointerDown(e: React.PointerEvent) {
+    if (!step) return;
+    const pt = clientToSvg(e.clientX, e.clientY);
+    if (!pt) return;
+    const GRAB_RADIUS = 7;
+    let best: { kind: "slot" | "ball" | "opponent"; id?: string; dist: number } | null = null;
+    const consider = (kind: "slot" | "ball" | "opponent", id: string | undefined, cx: number, cy: number) => {
+      const dist = Math.hypot(pt.x - cx, pt.y - cy);
+      if (dist <= GRAB_RADIUS && (best === null || dist < best.dist)) best = { kind, id, dist };
+    };
+    if (step.ball) consider("ball", undefined, step.ball.x, step.ball.y + 2.4);
+    for (const o of step.opponents ?? []) consider("opponent", o.id, o.x, o.y);
+    for (const p of step.positions) consider("slot", p.slot, p.x, p.y);
+
+    const picked = best as { kind: "slot" | "ball" | "opponent"; id?: string; dist: number } | null;
+    // 빈 공간·다른 대상 누르면 상대 선택 해제
+    setSelectedOpponentId(picked?.kind === "opponent" ? picked.id ?? null : null);
+    if (!picked) return;
+    e.preventDefault();
+    try {
+      boardRef.current?.setPointerCapture(e.pointerId);
+    } catch {
+      /* capture 실패 시 무시 (브라우저 차이) */
+    }
+    setDragging({
+      kind: picked.kind,
+      slotId: picked.kind === "slot" ? picked.id : undefined,
+      opponentId: picked.kind === "opponent" ? picked.id : undefined,
+    });
+  }
 
   function clientToSvg(clientX: number, clientY: number) {
     if (!boardRef.current) return null;
@@ -604,24 +676,6 @@ export default function AnimationEditorClient({ initial }: Props) {
       /* capture 안 잡혀있으면 무시 */
     }
     setDragging(null);
-  }
-
-  function startDragOnElement(
-    e: React.PointerEvent,
-    kind: "slot" | "ball" | "opponent",
-    id?: string,
-  ) {
-    e.preventDefault();
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      /* capture 실패 시 무시 (브라우저 차이) */
-    }
-    setDragging({
-      kind,
-      slotId: kind === "slot" ? id : undefined,
-      opponentId: kind === "opponent" ? id : undefined,
-    });
   }
 
   // ── 저장 ──
@@ -1136,6 +1190,11 @@ export default function AnimationEditorClient({ initial }: Props) {
           className="absolute inset-0 h-full w-full select-none touch-none"
           role="application"
           aria-label={`전술 편집 캔버스 — ${mode === "attack" ? "공격" : "수비"} · ${phase?.label ?? ""} · 컷 ${stepIdx + 1}/${steps.length}. 선수 점·공을 드래그해 위치를 조정합니다.`}
+          onPointerDown={handleBoardPointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          style={{ cursor: dragging ? "grabbing" : "grab" }}
         >
           {/* 피치 배경 */}
           <rect x="0" y="0" width="100" height="100" fill="hsl(140 25% 18%)" />
@@ -1149,21 +1208,16 @@ export default function AnimationEditorClient({ initial }: Props) {
             <rect x="36" y="2" width="28" height="5" />
           </g>
 
-          {/* 선수 점 — 드래그 가능 (setPointerCapture). 재생 중엔 spring 보간 */}
+          {/* 선수 점 — 재생 중엔 spring 보간. 드래그는 SVG 전체 hit-testing(handleBoardPointerDown)이 처리.
+              pointerEvents none 으로 두어 점끼리 겹쳐도 가장 가까운 점이 잡히게 함. */}
           {step?.positions.map((pos) => (
             <motion.g
               key={pos.slot}
               animate={{ x: pos.x, y: pos.y }}
               transition={dotTransition}
               initial={false}
-              onPointerDown={(e) => startDragOnElement(e, "slot", pos.slot)}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerUp}
-              style={{ cursor: dragging?.slotId === pos.slot ? "grabbing" : "grab", touchAction: "none" }}
+              style={{ pointerEvents: "none" }}
             >
-              {/* 클릭 영역 확대 (투명 원) — 모바일 터치 정확도 ↑ (Z Flip 5 370px 기준 약 30px hit area) */}
-              <circle cx={0} cy={0} r={8} fill="transparent" />
               <circle cx={0} cy={0} r={3.6} fill="hsl(0 0% 92%)" stroke="hsl(140 25% 18%)" strokeWidth="0.5" />
               <text
                 x={0}
@@ -1173,62 +1227,54 @@ export default function AnimationEditorClient({ initial }: Props) {
                 fontSize="2.4"
                 fontWeight="700"
                 fill="hsl(140 30% 18%)"
-                style={{ pointerEvents: "none" }}
               >
                 {pos.slot.toUpperCase()}
               </text>
             </motion.g>
           ))}
 
-          {/* 상대팀 선수 — 붉은 점, 드래그 가능. 번호는 순서대로 자동 부여 */}
-          {(step?.opponents ?? []).map((opp, i) => (
-            <motion.g
-              key={opp.id}
-              animate={{ x: opp.x, y: opp.y }}
-              transition={dotTransition}
-              initial={false}
-              onPointerDown={(e) => startDragOnElement(e, "opponent", opp.id)}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerUp}
-              style={{ cursor: dragging?.opponentId === opp.id ? "grabbing" : "grab", touchAction: "none" }}
-            >
-              <circle cx={0} cy={0} r={8} fill="transparent" />
-              <circle cx={0} cy={0} r={3.6} fill="hsl(0 72% 50%)" stroke="hsl(0 50% 22%)" strokeWidth="0.5" />
-              <text
-                x={0}
-                y={0.6}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize="2.4"
-                fontWeight="700"
-                fill="white"
+          {/* 상대팀 선수 — 붉은 점, 번호 자동. 선택 시 강조 링. 드래그는 SVG hit-testing이 처리. */}
+          {(step?.opponents ?? []).map((opp, i) => {
+            const selected = opp.id === selectedOpponentId;
+            return (
+              <motion.g
+                key={opp.id}
+                animate={{ x: opp.x, y: opp.y }}
+                transition={dotTransition}
+                initial={false}
                 style={{ pointerEvents: "none" }}
               >
-                {i + 1}
-              </text>
-            </motion.g>
-          ))}
+                {selected && (
+                  <circle cx={0} cy={0} r={5.4} fill="none" stroke="hsl(48 95% 58%)" strokeWidth="0.8" />
+                )}
+                <circle cx={0} cy={0} r={3.6} fill="hsl(0 72% 50%)" stroke="hsl(0 50% 22%)" strokeWidth="0.5" />
+                <text
+                  x={0}
+                  y={0.6}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize="2.4"
+                  fontWeight="700"
+                  fill="white"
+                >
+                  {i + 1}
+                </text>
+              </motion.g>
+            );
+          })}
 
-          {/* 공 — 드래그 가능 (setPointerCapture) */}
+          {/* 공 — 재생 중엔 spring 보간. 드래그는 SVG hit-testing이 처리(작아도 동률 시 우선 grab). */}
           {step?.ball && (
             <motion.g
               animate={{ x: step.ball.x, y: step.ball.y + 2.4 }}
               transition={dotTransition}
               initial={false}
-              onPointerDown={(e) => startDragOnElement(e, "ball")}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerUp}
-              style={{ cursor: dragging?.kind === "ball" ? "grabbing" : "grab", touchAction: "none" }}
+              style={{ pointerEvents: "none" }}
             >
-              {/* 클릭 영역 확대 */}
-              <circle cx={0} cy={0} r={6} fill="transparent" />
               <circle cx={0} cy={0} r={1.8} fill="white" stroke="#0f0f0f" strokeWidth={0.4} />
               <polygon
                 points="0,-0.78 0.74,-0.24 0.46,0.63 -0.46,0.63 -0.74,-0.24"
                 fill="#0f0f0f"
-                style={{ pointerEvents: "none" }}
               />
             </motion.g>
           )}
@@ -1261,34 +1307,54 @@ export default function AnimationEditorClient({ initial }: Props) {
           </Label>
         </div>
 
-        {/* 상대팀 선수 — 이 컷 전용 (붉은 점). 추가·마지막 제거 + 드래그 이동 */}
-        <div className="flex flex-wrap items-center gap-2 border-t border-border/40 pt-2">
-          <span className="text-xs font-semibold text-foreground">상대 선수</span>
-          <span className="text-[11px] tabular-nums text-muted-foreground">{opponentCount}명</span>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-7 gap-1 text-xs"
-            onClick={addOpponent}
-          >
-            <Plus className="h-3 w-3" />
-            추가
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-7 gap-1 text-xs"
-            onClick={removeLastOpponent}
-            disabled={opponentCount === 0}
-          >
-            <Trash2 className="h-3 w-3" />
-            마지막 제거
-          </Button>
-          <span className="w-full text-[11px] leading-relaxed text-muted-foreground/80">
-            붉은 점이 상대 선수예요. 점을 드래그해 위치를 잡으세요. (이 컷에만 적용 — 컷마다 따로 배치)
-          </span>
+        {/* 상대팀 선수 — 전 컷 공통 로스터(붉은 점). 추가·삭제는 모든 컷, 위치는 컷마다 따로. */}
+        <div className="space-y-2 border-t border-border/40 pt-2">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="text-xs font-semibold text-foreground">상대 선수</span>
+            <span className="text-[11px] tabular-nums text-muted-foreground">{opponentCount}명</span>
+            {/* 범례 — 우리팀/상대팀 색 구분 */}
+            <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+              <span className="inline-block h-2.5 w-2.5 rounded-full border border-[hsl(0_0%_40%)] bg-[hsl(0_0%_92%)]" />
+              우리팀
+              <span className="ml-1.5 inline-block h-2.5 w-2.5 rounded-full bg-[hsl(0_72%_50%)]" />
+              상대팀
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Button type="button" size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={addOpponent}>
+              <Plus className="h-3 w-3" />
+              상대 추가
+            </Button>
+            <Button type="button" size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={addFullOpponentTeam}>
+              <Plus className="h-3 w-3" />
+              상대 전체({basePositions.length})
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 gap-1 text-xs border-destructive/40 text-destructive hover:bg-[hsl(var(--destructive)_/_0.1)]"
+              onClick={() => selectedOpponentId && removeOpponent(selectedOpponentId)}
+              disabled={!selectedOpponentId}
+            >
+              <Trash2 className="h-3 w-3" />
+              선택 삭제
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-7 gap-1 text-xs text-muted-foreground"
+              onClick={clearOpponents}
+              disabled={opponentCount === 0}
+            >
+              비우기
+            </Button>
+          </div>
+          <p className="text-[11px] leading-relaxed text-muted-foreground/80">
+            붉은 점을 <span className="font-semibold text-foreground">탭하면 선택</span>(노란 테두리)되고 <span className="font-semibold text-foreground">선택 삭제</span>로 지워요.
+            드래그로 위치 이동. 추가·삭제는 모든 컷에 함께 적용되고, <span className="font-semibold text-foreground">위치만 컷마다 따로</span> 잡으면 이어 재생할 때 부드럽게 움직여요.
+          </p>
         </div>
       </div>
 
