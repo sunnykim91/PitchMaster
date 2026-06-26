@@ -20,7 +20,7 @@ import { PlayerProfilePage, PlayerProfileEmpty } from "@/components/pitchmaster/
 import type { PlayerProfile, PlayerStats } from "@/components/pitchmaster/PlayerProfilePage";
 import type { PlayerCardProps, StatWithContext } from "@/components/pitchmaster/PlayerCard";
 import { firstOf, type JoinedRow } from "@/lib/supabaseJoins";
-import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
+import { resolveMvpWinnersByMatch, type MvpVoteRow } from "@/lib/mvpThreshold";
 import { isValidUuid } from "@/lib/validators/uuid";
 import { kstDateString, isEligibleMatch } from "@/lib/attendanceEligibility";
 
@@ -156,31 +156,17 @@ async function _getPlayerData(memberId: string, teamId?: string, enableAi: boole
   const staffVoterIds = new Set<string>(
     (staffMembersRes.data ?? []).map((x) => (x as { user_id: string | null }).user_id).filter((id): id is string => !!id)
   );
-  type MvpRow = { match_id: string; voter_id: string; candidate_id: string; is_staff_decision: boolean | null };
-  const mvpVotesByMatch = new Map<string, { votes: string[]; rows: MvpRow[] }>();
-  for (const v of (allMvpRes.data ?? []) as MvpRow[]) {
-    if (!v.candidate_id) continue;
-    const agg = mvpVotesByMatch.get(v.match_id) ?? { votes: [], rows: [] };
-    agg.votes.push(v.candidate_id);
-    agg.rows.push(v);
-    mvpVotesByMatch.set(v.match_id, agg);
-  }
   // 새 MVP 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04)
   const { data: teamSettingsForMvp } = await db.from("teams").select("mvp_vote_staff_only").eq("id", m.team_id).maybeSingle();
   const mvpVoteStaffOnly = (teamSettingsForMvp as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
   const matchDateById = new Map<string, string>();
   for (const mm of matches ?? []) matchDateById.set(mm.id, mm.match_date);
 
-  const mvpWinnersByMatch = new Map<string, string[]>();
-  for (const [mid, agg] of mvpVotesByMatch) {
-    const newPolicy = shouldApplyNewMvpPolicy(matchDateById.get(mid), mvpVoteStaffOnly);
-    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
-      applyBackfillHealing: !newPolicy,
-    });
-    // 공동 1등이면 전원 (공동 MVP)
-    const winners = resolveValidMvps(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
-    if (winners.length) mvpWinnersByMatch.set(mid, winners);
-  }
+  // 경기별 확정 MVP winner (정책 검증 단일소스)
+  const mvpWinnersByMatch = resolveMvpWinnersByMatch(
+    (allMvpRes.data ?? []) as MvpVoteRow[],
+    attendedPerMatch, matchDateById, staffVoterIds, mvpVoteStaffOnly,
+  );
 
   const myGoals = (allGoalsByScorerRes.data ?? []).filter((g) => lookupIds.includes(g.scorer_id));
   const myAssists = (allAssistsRes.data ?? []).filter((a) => lookupIds.includes(a.assist_id));

@@ -307,7 +307,7 @@ export async function GET(request: NextRequest) {
   // === 4. MOM (경기별 최다득표자 집계) ===
   // 경기별 winner 한 명만 카운트. 투표율 70% 미달이면 "MVP 없음" → 아무도 카운트 안 됨.
   // 운영진 직접 지정(is_staff_decision)은 투표율 무관 즉시 확정.
-  const { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
+  const { aggregateMvpsByMatch } = await import("@/lib/mvpThreshold");
   // 새 MVP 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04)
   const { data: teamSettingsForMvp } = await db.from("teams").select("mvp_vote_staff_only").eq("id", ctx.teamId).maybeSingle();
   const mvpVoteStaffOnlyForMvp = (teamSettingsForMvp as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
@@ -326,25 +326,10 @@ export async function GET(request: NextRequest) {
   for (const a of actualAttendRes.data ?? []) {
     attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
   }
-  type MvpRow = { match_id: string; voter_id: string; candidate_id: string; is_staff_decision: boolean | null };
-  const mvpAggByMatch = new Map<string, { votes: string[]; rows: MvpRow[] }>();
-  for (const v of allMvpVotes as MvpRow[]) {
-    if (!v.candidate_id) continue;
-    const agg = mvpAggByMatch.get(v.match_id) ?? { votes: [], rows: [] };
-    agg.votes.push(v.candidate_id);
-    agg.rows.push(v);
-    mvpAggByMatch.set(v.match_id, agg);
-  }
-  const mvpMap = new Map<string, number>();
-  for (const [mid, agg] of mvpAggByMatch) {
-    const newPolicy = shouldApplyNewMvpPolicy(matchDateById.get(mid), mvpVoteStaffOnlyForMvp);
-    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
-      applyBackfillHealing: !newPolicy,
-    });
-    // 공동 1등이면 전원 +1 (공동 MVP)
-    const winners = resolveValidMvps(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
-    for (const winner of winners) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
-  }
+  const mvpMap = aggregateMvpsByMatch(
+    allMvpVotes as Parameters<typeof aggregateMvpsByMatch>[0],
+    attendedPerMatch, matchDateById, staffVoterIds, mvpVoteStaffOnlyForMvp,
+  );
 
   let topMvp: AwardEntry | null = null;
   {

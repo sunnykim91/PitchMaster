@@ -175,6 +175,27 @@ export function aggregateMvpsByMatch(
   staffVoterIds: Set<string>,
   mvpVoteStaffOnly: boolean
 ): Map<string, number> {
+  const winnersByMatch = resolveMvpWinnersByMatch(mvpRows, attendedPerMatch, matchDateById, staffVoterIds, mvpVoteStaffOnly);
+  const mvpMap = new Map<string, number>();
+  for (const winners of winnersByMatch.values()) {
+    for (const winner of winners) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
+  }
+  return mvpMap;
+}
+
+/**
+ * 경기별 확정 MVP 당선자(candidate_id 배열) 맵 — 공동 1등이면 복수, 미달·후보없음 경기는 미수록.
+ *
+ * `aggregateMvpsByMatch`(횟수 맵)와 동일 정책을 쓰되 "어느 경기에 누가 당선됐는지"가 필요한
+ * 경로(선수 프로필·OVR 재계산·선수 카드 랭킹 풀)용. 두 헬퍼가 이 함수를 공유해 정책 단일화.
+ */
+export function resolveMvpWinnersByMatch(
+  mvpRows: MvpVoteRow[],
+  attendedPerMatch: Map<string, number>,
+  matchDateById: Map<string, string>,
+  staffVoterIds: Set<string>,
+  mvpVoteStaffOnly: boolean
+): Map<string, string[]> {
   const aggByMatch = new Map<string, { votes: string[]; rows: MvpVoteRow[] }>();
   for (const v of mvpRows) {
     if (!v.candidate_id) continue;
@@ -184,15 +205,15 @@ export function aggregateMvpsByMatch(
     aggByMatch.set(v.match_id, agg);
   }
 
-  const mvpMap = new Map<string, number>();
+  const winnersByMatch = new Map<string, string[]>();
   for (const [mid, agg] of aggByMatch) {
     const newPolicy = shouldApplyNewMvpPolicy(matchDateById.get(mid), mvpVoteStaffOnly);
     const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
       applyBackfillHealing: !newPolicy,
     });
-    // 공동 1등이면 전원 +1 (공동 MVP)
+    // 공동 1등이면 전원 (공동 MVP)
     const winners = resolveValidMvps(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
-    for (const winner of winners) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
+    if (winners.length) winnersByMatch.set(mid, winners);
   }
-  return mvpMap;
+  return winnersByMatch;
 }

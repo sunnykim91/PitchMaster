@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { calculateOVR, classifyPosition } from "@/lib/playerCardUtils";
-import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
+import { resolveMvpWinnersByMatch, type MvpVoteRow } from "@/lib/mvpThreshold";
 import { computeAttendanceRateWithHistory } from "@/lib/attendanceEligibility";
 
 /**
@@ -81,7 +81,6 @@ export async function computeTeamSeasonOvrs(
 
   type GoalRow = { match_id: string; scorer_id: string };
   type AssistRow = { match_id: string; assist_id: string };
-  type MvpRow = { match_id: string; voter_id: string; candidate_id: string; is_staff_decision: boolean | null };
   type AttendRow = { match_id: string; user_id: string | null; member_id: string | null };
   type GoalAllRow = { match_id: string; scorer_id: string; is_own_goal: boolean };
 
@@ -106,29 +105,15 @@ export async function computeTeamSeasonOvrs(
       .filter((id): id is string => !!id),
   );
 
-  // 경기별 MVP winner
-  const mvpVotesByMatch = new Map<string, { votes: string[]; rows: MvpRow[] }>();
-  for (const v of (mvpRes.data ?? []) as MvpRow[]) {
-    if (!v.candidate_id) continue;
-    const agg = mvpVotesByMatch.get(v.match_id) ?? { votes: [], rows: [] };
-    agg.votes.push(v.candidate_id);
-    agg.rows.push(v);
-    mvpVotesByMatch.set(v.match_id, agg);
-  }
   // 새 MVP 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04)
   const { data: teamSettings } = await db.from("teams").select("mvp_vote_staff_only").eq("id", teamId).maybeSingle();
   const mvpVoteStaffOnly = (teamSettings as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
 
-  const mvpWinnersByMatch = new Map<string, string[]>();
-  for (const [mid, agg] of mvpVotesByMatch) {
-    const newPolicy = shouldApplyNewMvpPolicy(matchDateById.get(mid), mvpVoteStaffOnly);
-    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
-      applyBackfillHealing: !newPolicy,
-    });
-    // 공동 1등이면 전원 (공동 MVP)
-    const winners = resolveValidMvps(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
-    if (winners.length) mvpWinnersByMatch.set(mid, winners);
-  }
+  // 경기별 확정 MVP winner (정책 검증 단일소스)
+  const mvpWinnersByMatch = resolveMvpWinnersByMatch(
+    (mvpRes.data ?? []) as MvpVoteRow[],
+    attendedPerMatch, matchDateById, staffVoterIds, mvpVoteStaffOnly,
+  );
 
   // ── 선수별 집계 prebuild — 멤버마다 전체 행을 재스캔하던 O(멤버×행) 제거용 인덱스 ──
   // 출석: user_id·member_id 양쪽 키로 match_id 집합 인덱싱 (기존 lookupIds OR 조건과 동치)

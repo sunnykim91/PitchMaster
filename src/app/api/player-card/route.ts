@@ -264,8 +264,8 @@ export async function GET(request: NextRequest) {
     if (lookupIds.includes(row.assist_id)) assists++;
   }
 
-  // MVP — 경기별 winner가 본인인 경기만 카운트 (투표율 70% 통과 또는 운영진 지정)
-  const { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
+  // MVP — 경기별 winner(정책 검증) 단일소스. 본인 카운트 + 팀 랭킹 풀(아래 9-2) 양쪽에 사용.
+  const { resolveMvpWinnersByMatch } = await import("@/lib/mvpThreshold");
   const { data: staffMembersData } = await db
     .from("team_members")
     .select("user_id")
@@ -279,29 +279,18 @@ export async function GET(request: NextRequest) {
   for (const a of actualAttendRes.data ?? []) {
     attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
   }
-  type MvpRow = { match_id: string; voter_id: string; candidate_id: string; is_staff_decision: boolean | null };
-  const mvpAggByMatch = new Map<string, { votes: string[]; rows: MvpRow[] }>();
-  for (const v of (mvpRes.data ?? []) as MvpRow[]) {
-    if (!v.candidate_id) continue;
-    const agg = mvpAggByMatch.get(v.match_id) ?? { votes: [], rows: [] };
-    agg.votes.push(v.candidate_id);
-    agg.rows.push(v);
-    mvpAggByMatch.set(v.match_id, agg);
-  }
   // 새 MVP 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04)
   const { data: teamSettingsForMvp } = await db.from("teams").select("mvp_vote_staff_only").eq("id", ctx.teamId).maybeSingle();
   const mvpVoteStaffOnly = (teamSettingsForMvp as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
   const matchDateById = new Map<string, string>();
   for (const m of matches ?? []) matchDateById.set(m.id, m.match_date);
 
+  const mvpWinnersByMatch = resolveMvpWinnersByMatch(
+    (mvpRes.data ?? []) as Parameters<typeof resolveMvpWinnersByMatch>[0],
+    attendedPerMatch, matchDateById, staffVoterIds, mvpVoteStaffOnly,
+  );
   let mvp = 0;
-  for (const [mid, agg] of mvpAggByMatch) {
-    const newPolicy = shouldApplyNewMvpPolicy(matchDateById.get(mid), mvpVoteStaffOnly);
-    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
-      applyBackfillHealing: !newPolicy,
-    });
-    // 공동 1등이면 그 안에 본인이 있으면 카운트 (공동 MVP)
-    const winners = resolveValidMvps(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
+  for (const winners of mvpWinnersByMatch.values()) {
     if (winners.some((w) => lookupIds.includes(w))) mvp++;
   }
 
@@ -391,9 +380,12 @@ export async function GET(request: NextRequest) {
       const agg = aggById.get(row.assist_id);
       if (agg) agg.assists++;
     }
-    for (const row of mvpRes.data ?? []) {
-      const agg = aggById.get(row.candidate_id);
-      if (agg) agg.mvp++;
+    // 랭킹 MVP도 검증된 winner 기준 (raw 투표수 금지 — 본인 mvp 값과 동일 정책)
+    for (const winners of mvpWinnersByMatch.values()) {
+      for (const w of winners) {
+        const agg = aggById.get(w);
+        if (agg) agg.mvp++;
+      }
     }
 
     const allGoals = memberAggs.map((m) => m.goals);
