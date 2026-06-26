@@ -10,7 +10,10 @@ const NativeSelect = React.forwardRef<
       <select
         ref={ref}
         className={cn(
-          "flex h-11 w-full appearance-none rounded-md border border-input bg-card px-3 pr-8 py-2 text-sm shadow-sm transition-colors",
+          // py-1 (not py-2): an h-9/h-8 override with py-2 leaves only ~14-18px content height,
+          // less than the text line, clipping labels top/bottom. py-1 fits every compact height.
+          // (h-7 selects still need an explicit py-0 at the call site — see DuesStatusTab/DuesPenaltyTab.)
+          "flex h-11 w-full appearance-none rounded-md border border-input bg-card px-3 pr-8 py-1 text-sm shadow-sm transition-colors",
           "focus:outline-none focus:ring-1 focus:ring-ring",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "[&_option]:bg-popover [&_option]:text-popover-foreground",
