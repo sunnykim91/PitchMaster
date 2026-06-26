@@ -980,7 +980,7 @@ function DuesBulkTabInner({
           onClick={() => excelFileInputRef.current?.click()}
         >
           <CardContent className="flex flex-col items-center gap-3 px-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(210,70%,60%)]/10">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(210,70%,60%_/_0.1)]">
               <FileSpreadsheet className="h-6 w-6 text-[hsl(210,70%,60%)]" />
             </div>
             <div className="text-center space-y-1">

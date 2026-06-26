@@ -635,7 +635,7 @@ export function ShareModal({
             className={cn(
               "mb-3 rounded-lg px-3 py-2 text-center text-xs",
               statusMsg.tone === "success"
-                ? "bg-[hsl(152,55%,55%)]/15 text-[hsl(152,55%,75%)]"
+                ? "bg-[hsl(152,55%,55%_/_0.15)] text-[hsl(152,55%,75%)]"
                 : "bg-[hsl(var(--destructive)_/_0.2)] text-destructive"
             )}
           >

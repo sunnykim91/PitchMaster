@@ -729,7 +729,7 @@ export function PlayerProfilePage({
 
       {/* Footer CTA */}
       <section className="max-w-4xl mx-auto px-4 py-10">
-        <div className="bg-gradient-to-r from-[hsl(16,85%,58%)]/20 via-[hsl(240,5%,10%)] to-[hsl(16,85%,58%)]/20 rounded-2xl p-6 border border-[hsl(16,85%,58%)]/30 text-center">
+        <div className="bg-gradient-to-r from-[hsl(16,85%,58%_/_0.2)] via-[hsl(240,5%,10%)] to-[hsl(16,85%,58%_/_0.2)] rounded-2xl p-6 border border-[hsl(16,85%,58%_/_0.3)] text-center">
           <h3 className="text-xl font-bold text-white mb-2">내 카드 가져가세요</h3>
           <p className="text-sm text-white/50 mb-5">이 시즌의 내 카드를 다운로드하고 공유하세요</p>
 

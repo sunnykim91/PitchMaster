@@ -445,7 +445,7 @@ export function SeasonAwardsPage({ data }: { data: SeasonAwardsResponse }) {
 
         {/* Share CTA */}
         <section className="text-center py-8">
-          <div className="bg-gradient-to-r from-[hsl(16,85%,58%)]/20 via-[hsl(240,5%,10%)] to-[hsl(16,85%,58%)]/20 rounded-2xl p-8 border border-[hsl(16,85%,58%)]/30">
+          <div className="bg-gradient-to-r from-[hsl(16,85%,58%_/_0.2)] via-[hsl(240,5%,10%)] to-[hsl(16,85%,58%_/_0.2)] rounded-2xl p-8 border border-[hsl(16,85%,58%_/_0.3)]">
             <h3 className="text-xl font-bold text-white mb-2">이 시즌을 하나의 이미지로</h3>
             <p className="text-sm text-white/50 mb-6">인스타 스토리, 카톡으로 공유하세요</p>
             
