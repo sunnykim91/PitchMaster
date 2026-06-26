@@ -341,7 +341,7 @@ function DuesStatusList({ duesStatus, role, monthFilter, refetchPaymentStatus, s
                     disabled={!!changingId}
                     onChange={async (e) => { await handleStatusChange(m, e.target.value as "PAID" | "UNPAID" | "EXEMPT"); }}
                     className={cn(
-                      "h-7 w-24 text-[12.5px] bg-card border-white/[0.06] py-0",
+                      "h-7 w-[5rem] text-[12.5px] bg-card border-white/[0.06] py-0",
                       m.status === "EXEMPT" && "border-[hsl(var(--warning))]/40",
                       changingId && "opacity-50"
                     )}

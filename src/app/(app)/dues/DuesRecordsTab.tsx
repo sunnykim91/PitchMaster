@@ -259,7 +259,7 @@ function DuesRecordsTabInner({
           <NativeSelect
             value={filter}
             onChange={(e) => setFilter(e.target.value as RecordFilter)}
-            className="h-8 w-24 bg-card border-white/[0.06] text-xs"
+            className="h-8 w-20 bg-card border-white/[0.06] text-xs py-0"
           >
             <option value="ALL">전체</option>
             <option value="INCOME">입금</option>
