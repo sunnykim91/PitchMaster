@@ -97,7 +97,10 @@ describe("POST /api/ai/match-summary/[matchId]", () => {
       ["match_mvp_votes", []],
       ["match_attendance", []],
       ["match_guests", []],
+      // 1st team_members = staffMembersRes(MVP 정책 staff voter), 2nd = 이름 매핑 members
+      ["team_members", []],
       ["team_members", null, { message: "DB error" }],
+      ["teams", { mvp_vote_staff_only: false }],
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);
     const res = await POST(makeRequest(MATCH_ID), makeParams(MATCH_ID));
@@ -122,7 +125,10 @@ describe("POST /api/ai/match-summary/[matchId]", () => {
       ["match_mvp_votes", []],
       ["match_attendance", [{ user_id: "user-1", member_id: "mem-1", actually_attended: true, attendance_status: "PRESENT" }]],
       ["match_guests", []],
+      // 1st team_members = staffMembersRes(user_id만), 2nd = 이름 매핑 members
+      ["team_members", [{ user_id: "user-1" }]],
       ["team_members", [{ id: "mem-1", user_id: "user-1", pre_name: null, users: { name: "홍길동" } }]],
+      ["teams", { mvp_vote_staff_only: false }],
       ["matches", null], // update
     );
     vi.mocked(getSupabaseAdmin).mockReturnValue(db as unknown as ReturnType<typeof getSupabaseAdmin>);

@@ -261,8 +261,9 @@ export async function GET(request: NextRequest) {
     if (row.assist_id) assistMap.set(row.assist_id, (assistMap.get(row.assist_id) ?? 0) + 1);
   }
 
-  // 경기별 MVP winner만 집계 — 참석자 70% 이상 투표 통과 시 최다득표자, 또는 운영진 직접 지정.
-  const { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
+  // 경기별 MVP winner만 집계 — SSR·API·match-summary 공통 헬퍼 (aggregateMvpsByMatch).
+  // 참석자 70% 이상 투표 통과 시 최다득표자, 또는 운영진 직접 지정. 공동 1등이면 전원 인정.
+  const { aggregateMvpsByMatch } = await import("@/lib/mvpThreshold");
   // 새 MVP 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04) + 평점 토글
   const teamSettingsForMvp = teamSettingsForMvpRes.data;
   const mvpVoteStaffOnlyForMvp = (teamSettingsForMvp as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
@@ -276,25 +277,13 @@ export async function GET(request: NextRequest) {
   const staffVoterIds = new Set<string>(
     (staffMembersRes.data ?? []).map((m) => m.user_id).filter((id): id is string => !!id)
   );
-  type MvpRow = { match_id: string; voter_id: string; candidate_id: string; is_staff_decision: boolean | null };
-  const mvpAggByMatch = new Map<string, { votes: string[]; rows: MvpRow[] }>();
-  for (const v of (mvpRes.data ?? []) as MvpRow[]) {
-    if (!v.candidate_id) continue;
-    const agg = mvpAggByMatch.get(v.match_id) ?? { votes: [], rows: [] };
-    agg.votes.push(v.candidate_id);
-    agg.rows.push(v);
-    mvpAggByMatch.set(v.match_id, agg);
-  }
-  const mvpMap = new Map<string, number>();
-  for (const [mid, agg] of mvpAggByMatch) {
-    const newPolicy = shouldApplyNewMvpPolicy(matchDateById.get(mid), mvpVoteStaffOnlyForMvp);
-    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
-      applyBackfillHealing: !newPolicy,
-    });
-    // 공동 1등이면 전원 +1 (공동 MVP)
-    const winners = resolveValidMvps(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
-    for (const winner of winners) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
-  }
+  const mvpMap = aggregateMvpsByMatch(
+    (mvpRes.data ?? []) as Parameters<typeof aggregateMvpsByMatch>[0],
+    attendedPerMatch,
+    matchDateById,
+    staffVoterIds,
+    mvpVoteStaffOnlyForMvp
+  );
 
   const attendByUserId = new Map<string, number>();
   const attendByMemberId = new Map<string, number>();

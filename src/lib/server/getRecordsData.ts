@@ -1,6 +1,7 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
-import { isTeamRecordMatch } from "@/lib/types";
+import { aggregateMvpsByMatch, type MvpVoteRow } from "@/lib/mvpThreshold";
+import { isTeamRecordMatch, type Role } from "@/lib/types";
+import { isStaffOrAbove } from "@/lib/permissions";
 import { aggregateGkCleanSheets, buildGkAttendeesByMatch, isGkPreferred, type GkSquadRow, type GkGoalRow, type GkRosterMember } from "@/lib/server/getGoalkeeperStats";
 import { computeAttendanceRate } from "@/lib/attendanceEligibility";
 
@@ -81,7 +82,7 @@ export async function getRecordsData(teamId: string) {
   // STAFF voter 셋 — members 한 번 fetch 한 결과에서 추출 (이전: 별도 staffMembersRes 쿼리)
   const staffVoterIds = new Set<string>(
     (members as Array<{ user_id: string | null; role: string }>)
-      .filter((m) => m.role === "STAFF" || m.role === "PRESIDENT")
+      .filter((m) => isStaffOrAbove(m.role as Role))
       .map((m) => m.user_id)
       .filter((id): id is string => !!id)
   );
@@ -196,32 +197,20 @@ export async function getRecordsData(teamId: string) {
     if (row.member_id) attendByMember.set(row.member_id, (attendByMember.get(row.member_id) ?? 0) + 1);
   }
 
-  // 경기별 MVP winner
+  // 경기별 MVP winner (공동 MVP 지원) — SSR·API·match-summary 공통 헬퍼 (aggregateMvpsByMatch)
   const attendedPerMatch = new Map<string, number>();
   for (const a of actualAttendRes.data ?? []) {
     attendedPerMatch.set(a.match_id, (attendedPerMatch.get(a.match_id) ?? 0) + 1);
   }
-  const votesByMatch = new Map<string, { votes: string[]; rows: Array<{ voter_id: string; candidate_id: string; is_staff_decision: boolean | null }> }>();
-  for (const row of mvpRes.data ?? []) {
-    if (!row.candidate_id) continue;
-    const agg = votesByMatch.get(row.match_id) ?? { votes: [], rows: [] };
-    agg.votes.push(row.candidate_id);
-    agg.rows.push({ voter_id: row.voter_id, candidate_id: row.candidate_id, is_staff_decision: row.is_staff_decision });
-    votesByMatch.set(row.match_id, agg);
-  }
   const matchDateById = new Map<string, string>();
   for (const m of matches) matchDateById.set(m.id, m.match_date);
-
-  const mvpMap = new Map<string, number>();
-  for (const [mid, agg] of votesByMatch) {
-    const newPolicy = shouldApplyNewMvpPolicy(matchDateById.get(mid), mvpVoteStaffOnly);
-    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
-      applyBackfillHealing: !newPolicy,
-    });
-    // 공동 1등이면 전원 +1 (공동 MVP)
-    const winners = resolveValidMvps(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
-    for (const winner of winners) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
-  }
+  const mvpMap = aggregateMvpsByMatch(
+    (mvpRes.data ?? []) as MvpVoteRow[],
+    attendedPerMatch,
+    matchDateById,
+    staffVoterIds,
+    mvpVoteStaffOnly
+  );
 
   // 평점 시즌 집계 (토글 ON 팀만)
   const ratingSumByUser = new Map<string, { sum: number; count: number }>();

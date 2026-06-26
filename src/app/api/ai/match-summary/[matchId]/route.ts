@@ -4,6 +4,7 @@ import { isStaffOrAbove } from "@/lib/permissions";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type { MatchSummaryInput } from "@/lib/server/aiMatchSummary";
 import { generateMatchSummaryFromTemplate } from "@/lib/server/matchSummaryTemplate";
+import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
 
 /**
  * POST /api/ai/match-summary/[matchId]
@@ -69,15 +70,20 @@ export async function POST(
   }
 
   // MatchSummaryInput 조립 (실제 DB 스키마 기준)
-  const [goalsRes, mvpRes, attendanceRes, guestsRes] = await Promise.all([
+  const [goalsRes, mvpRes, attendanceRes, guestsRes, staffMembersRes, teamSettingsRes] = await Promise.all([
     db.from("match_goals").select("scorer_id, assist_id, quarter_number, is_own_goal").eq("match_id", matchId),
-    db.from("match_mvp_votes").select("candidate_id").eq("match_id", matchId),
+    // MVP는 공식 정책(70% 투표율 + 운영진 확정 + 공동 1등) 판정 — voter_id·is_staff_decision 필요
+    db.from("match_mvp_votes").select("voter_id, candidate_id, is_staff_decision").eq("match_id", matchId),
     db
       .from("match_attendance")
       .select("user_id, member_id, actually_attended, attendance_status")
       .eq("match_id", matchId),
     // 용병 — scorer_id / assist_id가 match_guests.id를 가리키는 경우
     db.from("match_guests").select("id, name").eq("match_id", matchId),
+    // is_staff_decision 백필 치유용 — 현재 STAFF+ voter의 user_id
+    db.from("team_members").select("user_id").eq("team_id", session.user.teamId!).in("role", ["STAFF", "PRESIDENT"]).not("user_id", "is", null),
+    // MVP 정책 토글 (mvp_vote_staff_only)
+    db.from("teams").select("mvp_vote_staff_only").eq("id", session.user.teamId!).maybeSingle(),
   ]);
 
   // 집계 쿼리 실패를 묵살하면 '기록 없음'처럼 보이는 빈 후기가 저장됨 → 중단.
@@ -154,13 +160,6 @@ export async function POST(
     .map((g) => resolveName(g.assist_id))
     .filter((n): n is string => !!n);
 
-  const mvpCounts = new Map<string, number>();
-  for (const v of mvpRes.data ?? []) {
-    if (v.candidate_id) mvpCounts.set(v.candidate_id, (mvpCounts.get(v.candidate_id) ?? 0) + 1);
-  }
-  const topMvp = [...mvpCounts.entries()].sort((a, b) => b[1] - a[1])[0];
-  const mom = topMvp ? resolveName(topMvp[0]) : null;
-
   // 참석: attendance_status PRESENT/LATE 우선, 없으면 actually_attended=true 폴백
   const attendanceCount = (attendanceRes.data ?? []).filter((a) => {
     const s = a.attendance_status;
@@ -168,6 +167,27 @@ export async function POST(
     if (s === "ABSENT") return false;
     return a.actually_attended === true;
   }).length;
+
+  // MVP(MOM)는 다른 집계 경로와 동일한 공식 정책으로 판정 — 단순 최다득표 금지.
+  // (70% 투표율 게이트·운영진 확정·공동 1등 처리. 미달이면 mom=null → "MVP 미확정")
+  const mvpVotes = (mvpRes.data ?? []) as Array<{ voter_id: string; candidate_id: string; is_staff_decision: boolean | null }>;
+  const staffVoterIds = new Set<string>(
+    (staffMembersRes.data ?? []).map((m) => m.user_id).filter((id): id is string => !!id)
+  );
+  const mvpVoteStaffOnly = (teamSettingsRes.data as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
+  const newMvpPolicy = shouldApplyNewMvpPolicy(match.match_date, mvpVoteStaffOnly);
+  const staffDecision = pickStaffDecision(
+    mvpVotes.filter((v) => v.candidate_id),
+    staffVoterIds,
+    { applyBackfillHealing: !newMvpPolicy }
+  );
+  const mvpWinnerIds = resolveValidMvps(
+    mvpVotes.map((v) => v.candidate_id).filter(Boolean),
+    attendanceCount,
+    staffDecision
+  );
+  // 공동 MVP면 이름 병기
+  const mom = mvpWinnerIds.map((id) => resolveName(id)).filter((n): n is string => !!n).join("·") || null;
 
   // 득점자 중 최다 득점자 (topScorer)
   const scorerCounts = new Map<string, number>();

@@ -143,3 +143,56 @@ export function resolveValidMvp(
 ): string | null {
   return resolveValidMvps(votes, attendedCount, staffDecisionCandidateId)[0] ?? null;
 }
+
+/** match_mvp_votes 원시 행 (집계 헬퍼 입력) */
+export interface MvpVoteRow {
+  match_id: string;
+  voter_id: string;
+  candidate_id: string;
+  is_staff_decision: boolean | null;
+}
+
+/**
+ * 경기별 MVP 당선자를 집계해 candidate_id별 MVP 횟수 맵을 반환하는 단일 오케스트레이션.
+ *
+ * 이전엔 getRecordsData(SSR)·records route(API) 두 곳이 이 ~25줄(votesByMatch 그룹핑 →
+ * shouldApplyNewMvpPolicy → pickStaffDecision → resolveValidMvps → mvpMap +1)을 줄단위
+ * 복붙해 divergence 위험이 있었음. MVP 정책이 11곳 경로에 흩어져 있어 단일소스로 묶는다.
+ *
+ * 공동 1등이면 전원 +1 (공동 MVP). resolveValidMvps 가 동률 전원을 반환하므로 그대로 누적.
+ *
+ * @param mvpRows     match_mvp_votes (match_id·voter_id·candidate_id·is_staff_decision)
+ * @param attendedPerMatch match_id → 실제 참석 인원 (70% 임계값 분모)
+ * @param matchDateById    match_id → match_date (새 정책 컷오프 판정용)
+ * @param staffVoterIds    현재 STAFF+ 인 voter의 user_id 집합 (백필 치유)
+ * @param mvpVoteStaffOnly 팀 설정 토글 (ON이면 운영진 즉시 확정 옛 정책)
+ * @returns candidate_id → MVP 확정 횟수
+ */
+export function aggregateMvpsByMatch(
+  mvpRows: MvpVoteRow[],
+  attendedPerMatch: Map<string, number>,
+  matchDateById: Map<string, string>,
+  staffVoterIds: Set<string>,
+  mvpVoteStaffOnly: boolean
+): Map<string, number> {
+  const aggByMatch = new Map<string, { votes: string[]; rows: MvpVoteRow[] }>();
+  for (const v of mvpRows) {
+    if (!v.candidate_id) continue;
+    const agg = aggByMatch.get(v.match_id) ?? { votes: [], rows: [] };
+    agg.votes.push(v.candidate_id);
+    agg.rows.push(v);
+    aggByMatch.set(v.match_id, agg);
+  }
+
+  const mvpMap = new Map<string, number>();
+  for (const [mid, agg] of aggByMatch) {
+    const newPolicy = shouldApplyNewMvpPolicy(matchDateById.get(mid), mvpVoteStaffOnly);
+    const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
+      applyBackfillHealing: !newPolicy,
+    });
+    // 공동 1등이면 전원 +1 (공동 MVP)
+    const winners = resolveValidMvps(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);
+    for (const winner of winners) mvpMap.set(winner, (mvpMap.get(winner) ?? 0) + 1);
+  }
+  return mvpMap;
+}
