@@ -21,9 +21,3 @@ export type PlayerRating = {
 export type PlayerRatingsResponse = {
   ratings: PlayerRating[];
 };
-
-export type PlayerRatingSeasonResponse = {
-  avgRating: number | null;
-  ratingCount: number;
-  recent: PlayerRating[];
-};

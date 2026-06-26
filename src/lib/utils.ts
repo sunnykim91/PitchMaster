@@ -54,26 +54,6 @@ export function formatMatchDate(dateStr: string): string {
   return `${month}월 ${day}일 (${dow})`;
 }
 
-/** ISO datetime → "마감: 3월 16일 17:00" */
-export function formatDue(iso: string): string {
-  try {
-    const d = new Date(iso);
-    const m = d.getMonth() + 1;
-    const day = d.getDate();
-    const h = String(d.getHours()).padStart(2, "0");
-    const min = String(d.getMinutes()).padStart(2, "0");
-    return `${m}월 ${day}일 ${h}:${min}`;
-  } catch {
-    return iso;
-  }
-}
-
-/** ISO date → "2025.03.16" */
-export function formatDateDot(dateStr: string): string {
-  if (!dateStr) return "";
-  const [y, m, d] = dateStr.split("-");
-  return `${y}.${m}.${d}`;
-}
 
 /**
  * 카카오 프로필 이미지 URL 사이즈 축소.

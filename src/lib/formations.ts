@@ -654,10 +654,6 @@ export function getFutsalFieldCounts(): number[] {
   return getSportFieldCounts("FUTSAL");
 }
 
-/** 축구에서 지원하는 인원 수 목록 (11/10/9/8) */
-export function getSoccerFieldCounts(): number[] {
-  return getSportFieldCounts("SOCCER");
-}
 
 /** 주어진 스포츠의 지원 인원 수 목록 */
 export function getSportFieldCounts(sportType: SportType): number[] {

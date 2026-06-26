@@ -4,9 +4,8 @@
  * 주의:
  *  - 이 파일의 포맷터는 "UI 표시용" 통일 포맷을 제공한다.
  *  - API 요청/DB 저장용 날짜는 여전히 ISO(YYYY-MM-DD) 포맷을 유지해야 한다.
- *  - `src/lib/utils.ts`에 역사적 포맷터(formatTime, formatDateKo, formatMatchDate,
- *    formatDateDot, formatDue 등)가 이미 있으며, 이름이 겹치는 것이 있다.
- *    기존 호출부의 동작을 유지하기 위해 utils.ts의 함수는 그대로 두고,
+ *  - `src/lib/utils.ts`에 역사적 포맷터(formatTime, formatDateKo, formatMatchDate 등)가
+ *    이미 있으며, 이름이 겹치는 것이 있다.
  *    신규 코드는 본 파일의 포맷터를 쓰는 방향으로 점진 통일한다.
  */
 import { getKstNow } from "@/lib/kstDate";
@@ -50,16 +49,6 @@ export function formatTime(input: string): string {
   return input.slice(0, 5);
 }
 
-/** "오후 5:00" 한국어 시간 */
-export function formatTimeKo(input: string): string {
-  if (!input) return "";
-  const [hStr, m] = input.split(":");
-  const h = Number(hStr);
-  if (isNaN(h)) return input;
-  const period = h < 12 ? "오전" : "오후";
-  const hour12 = h % 12 === 0 ? 12 : h % 12;
-  return `${period} ${hour12}:${m}`;
-}
 
 /**
  * timestamptz(ISO) → 한국어 날짜·시각 (KST 고정·결정론적).

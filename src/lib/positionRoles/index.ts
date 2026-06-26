@@ -54,33 +54,6 @@ export function getPositionRole(
   return mergeRole(base, override);
 }
 
-/**
- * 특정 포지션의 베이스 역할만 조회 (포메이션 맥락 없이)
- */
-export function getPositionBaseRole(roleCode: string): PositionBaseRole | null {
-  return POSITION_BASE_ROLES[roleCode] ?? null;
-}
-
-/**
- * 특정 포메이션의 모든 포지션 역할 조회
- *
- * @returns roleCode → MergedPositionRole 맵. 오버라이드 없는 포지션은 제외.
- */
-export function getAllPositionRolesForFormation(
-  formationId: string
-): Record<string, MergedPositionRole> {
-  const formationOverride = FORMATION_OVERRIDES[formationId];
-  if (!formationOverride) return {};
-
-  const result: Record<string, MergedPositionRole> = {};
-  for (const [roleCode, override] of Object.entries(formationOverride)) {
-    const base = POSITION_BASE_ROLES[roleCode];
-    if (base) {
-      result[roleCode] = mergeRole(base, override);
-    }
-  }
-  return result;
-}
 
 export type { MergedPositionRole, PositionBaseRole, FormationPositionOverride };
 export { POSITION_BASE_ROLES, FORMATION_OVERRIDES };
