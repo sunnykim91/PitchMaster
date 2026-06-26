@@ -167,12 +167,14 @@ UI/UX 부채 잔존 (CLAUDE.md 알려진 이슈 참조)
 - `resolveValidMvps(votes, attendedCount, staffDecision)` — **정책 판정, 공동 1등 전원을 candidate_id 사전순 배열로 반환** (투표 동률 = 공동 MVP. 운영진 직접 지정은 1명만). 집계·기록 경로는 이걸 써서 동률 전원 +1.
 - `resolveValidMvp(...)` — 단수 래퍼 (`resolveValidMvps(...)[0] ?? null`). 단수 winner가 필요한 레거시용. 동률은 사전순 첫 번째 (결정론적).
 - `pickStaffDecision(rows, staffVoterIds)` — `is_staff_decision=true` OR 현재 STAFF+ voter 투표를 확정 후보로 리턴. 2026-04-20(커밋 `2d457b8`) 이전에 저장된 staff 투표가 `false`로 남아있는 백필 누락을 동적 치유.
+- `aggregateMvpsByMatch(rows, attendedPerMatch, matchDateById, staffVoterIds, mvpVoteStaffOnly)` — **경기별 MVP 집계 단일 오케스트레이션**(votesByMatch 그룹핑 → shouldApplyNewMvpPolicy → pickStaffDecision → resolveValidMvps → candidate_id별 횟수 맵). getRecordsData·records route 가 복붙하던 ~25줄을 묶음. 여러 경기를 한 번에 집계하는 경로는 이걸 쓸 것.
 
-**집계 경로 11곳** — 하나 수정 시 전부 같이 건드려야 일관성 유지 (전부 `resolveValidMvps` 사용):
-- SSR: `src/lib/server/getRecordsData.ts`, `src/lib/server/getDashboardData.ts`(동률 시 이름 병기)
+**집계 경로 12곳** — 하나 수정 시 전부 같이 건드려야 일관성 유지 (전부 정책 헬퍼 경유):
+- SSR: `src/lib/server/getRecordsData.ts`, `src/lib/server/getDashboardData.ts`(동률 시 이름 병기) — getRecordsData·records route 는 `aggregateMvpsByMatch` 공유
 - 선수 프로필 SSR: `src/app/player/[memberId]/page.tsx` (totalMvp + 팀 랭킹)
-- API: `src/app/api/records/route.ts`, `src/app/api/records/detail/route.ts` (`type=mvp`), `src/app/api/season-awards/route.ts`, `src/app/api/player-card/route.ts`, `src/app/api/share-card/route.ts`(동률 시 이름 병기)
+- API: `src/app/api/records/route.ts`(`aggregateMvpsByMatch`), `src/app/api/records/detail/route.ts` (`type=mvp`), `src/app/api/season-awards/route.ts`, `src/app/api/player-card/route.ts`, `src/app/api/share-card/route.ts`(동률 시 이름 병기)
 - AI 캐시: `src/lib/server/aiTeamStats.ts` (24h TTL)
+- AI 후기: `src/app/api/ai/match-summary/[matchId]/route.ts` — MOM 표시. **이전엔 단순 최다득표로 정책을 우회했으나(70% 게이트·운영진·공동 1등 무시) `resolveValidMvps`로 통일 (전수조사 수정)**
 - 크론 OVR: `src/lib/server/computeSeasonOvr.ts` (경기 후 OVR 변동 감지)
 - 실시간 UI: `MatchDiaryTab.tsx`(후기 탭)의 "현재 1위" 표시는 확정 정책과 별개 — 단수 leader만 표시 (건드리지 말 것)
 
@@ -210,7 +212,7 @@ const effectiveEnableAi = enableAi;
 | AI Full Plan | 자동편성 빌더 | **전체 공개 (STAFF+, 축구·풋살)** | Haiku 4.5 |
 | OCR 거래 파싱 | 회비 일괄등록 | **전체 공개 (rate limit: 팀 월 100회 + 이미지 해시 캐시. per-user/일 캡 없음)** | Haiku 4.5 Vision |
 
-> ⚠️ 단 하나의 풋살 차단: `/api/ai/match-summary/[matchId]` POST 재생성만 403. 자동 생성은 풋살도 받음 → 실질 무의미. 정리 후보.
+> 풋살 차단 코드는 모두 제거됨(41차·71차). match-summary route 에 sport_type/futsal 검사 없음 — 전 종목 동일.
 
 ### AI 코치 분석 데이터 파이프라인 (2026-04-19 갱신)
 
@@ -310,8 +312,8 @@ MatchTacticsTab
 ## 알려진 코드 품질 이슈
 
 - **stagger-children 딜레이**: 해결됨 — globals.css가 4번째(90ms)까지만 누적, 5번째부터 동시 표시 (과거 360ms 부채 정리 완료)
-- **생일 confetti**: JSX div 6개로 하드코딩 (CSS pseudo-element로 대체 가능)
-- **스크린샷 경로**: `/screenshot/` vs `/screenshots/` 혼재
+- **생일 confetti**: 해결됨 — div 하드코딩 제거, `pm-dash-bday-banner`(🎂 이모지+아바타칩)로 교체됨 (코드에 confetti 흔적 0)
+- **스크린샷 경로**: `public/screenshot/`(단수)·`public/screenshots/`(복수) 두 폴더 공존. 복수=정본(manifest·Hero·Features·OCR가이드), 단수=AppScreenSlider 전용. AppScreenSlider 내부 경로 단수로 통일 완료(전수조사). 폴더 일원화는 미완(후순위)
 
 ## Supabase Realtime 구독 주의사항 (2026-04-29)
 
