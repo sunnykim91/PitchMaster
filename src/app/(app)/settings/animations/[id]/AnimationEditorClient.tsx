@@ -91,6 +91,10 @@ interface Props {
 
 type Mode = "attack" | "defense";
 
+/** 공은 선수 라벨을 가리지 않게 저장 좌표보다 살짝 아래(+Y)에 그린다.
+ *  미리보기(FormationMotionViewer)·GIF(gifExport)와 동일 값이어야 위치가 일치한다. */
+const BALL_OFFSET_Y = 2.4;
+
 /** 상대 선수 안정적 id 생성 (드래그 타깃·컷 간 framer-motion 보간 key). */
 function makeOpponentId(): string {
   try {
@@ -597,7 +601,8 @@ export default function AnimationEditorClient({ initial }: Props) {
 
   // ── 드래그 로직 (SVG 전체에서 가장 가까운 점을 집어 드래그 — 겹쳐도 정확) ──
   const boardRef = useRef<SVGSVGElement | null>(null);
-  const [dragging, setDragging] = useState<{ kind: "slot" | "ball" | "opponent"; slotId?: string; opponentId?: string } | null>(null);
+  // grabDx/grabDy = 누른 지점과 대상 저장좌표의 차이 — 드래그 내내 유지해 "잡은 그 지점"이 손가락을 따라오게.
+  const [dragging, setDragging] = useState<{ kind: "slot" | "ball" | "opponent"; slotId?: string; opponentId?: string; grabDx: number; grabDy: number } | null>(null);
 
   /** SVG 어디를 눌러도 가장 가까운 드래그 대상(공·상대·선수)을 grab 반경 안에서 집어 든다.
    *  → 점들이 겹쳐도 손가락에 가장 가까운 점이 잡혀 오조작 방지. 공은 작아 동률 시 우선. */
@@ -611,7 +616,8 @@ export default function AnimationEditorClient({ initial }: Props) {
       const dist = Math.hypot(pt.x - cx, pt.y - cy);
       if (dist <= GRAB_RADIUS && (best === null || dist < best.dist)) best = { kind, id, dist };
     };
-    if (step.ball) consider("ball", undefined, step.ball.x, step.ball.y + 2.4);
+    // 공은 화면상 +BALL_OFFSET_Y 아래에 그려지므로 그 시각 중심으로 hit-test.
+    if (step.ball) consider("ball", undefined, step.ball.x, step.ball.y + BALL_OFFSET_Y);
     for (const o of step.opponents ?? []) consider("opponent", o.id, o.x, o.y);
     for (const p of step.positions) consider("slot", p.slot, p.x, p.y);
 
@@ -625,10 +631,25 @@ export default function AnimationEditorClient({ initial }: Props) {
     } catch {
       /* capture 실패 시 무시 (브라우저 차이) */
     }
+    // 잡은 지점과 대상 저장좌표의 차이를 기록 — 드래그 내내 유지(공의 +offset·오프센터 grab 보정).
+    let baseX = pt.x;
+    let baseY = pt.y;
+    if (picked.kind === "ball" && step.ball) {
+      baseX = step.ball.x;
+      baseY = step.ball.y;
+    } else if (picked.kind === "opponent") {
+      const o = (step.opponents ?? []).find((o) => o.id === picked.id);
+      if (o) { baseX = o.x; baseY = o.y; }
+    } else if (picked.kind === "slot") {
+      const p = step.positions.find((p) => p.slot === picked.id);
+      if (p) { baseX = p.x; baseY = p.y; }
+    }
     setDragging({
       kind: picked.kind,
       slotId: picked.kind === "slot" ? picked.id : undefined,
       opponentId: picked.kind === "opponent" ? picked.id : undefined,
+      grabDx: pt.x - baseX,
+      grabDy: pt.y - baseY,
     });
   }
 
@@ -647,14 +668,17 @@ export default function AnimationEditorClient({ initial }: Props) {
     if (!dragging) return;
     const pt = clientToSvg(e.clientX, e.clientY);
     if (!pt) return;
+    // 잡은 지점 오프셋을 빼서 "잡은 그 지점"이 손가락을 따라오게 (공의 +offset 보정 포함).
+    const nx = Math.max(0, Math.min(100, pt.x - dragging.grabDx));
+    const ny = Math.max(0, Math.min(100, pt.y - dragging.grabDy));
     if (dragging.kind === "ball") {
-      patchStep((s) => ({ ...s, ball: pt }));
+      patchStep((s) => ({ ...s, ball: { x: nx, y: ny } }));
     } else if (dragging.kind === "slot" && dragging.slotId) {
       const id = dragging.slotId;
       patchStep((s) => ({
         ...s,
         positions: s.positions.map((p) =>
-          p.slot === id ? { ...p, x: pt.x, y: pt.y } : p,
+          p.slot === id ? { ...p, x: nx, y: ny } : p,
         ),
       }));
     } else if (dragging.kind === "opponent" && dragging.opponentId) {
@@ -662,7 +686,7 @@ export default function AnimationEditorClient({ initial }: Props) {
       patchStep((s) => ({
         ...s,
         opponents: (s.opponents ?? []).map((o) =>
-          o.id === oid ? { ...o, x: pt.x, y: pt.y } : o,
+          o.id === oid ? { ...o, x: nx, y: ny } : o,
         ),
       }));
     }
@@ -1266,7 +1290,7 @@ export default function AnimationEditorClient({ initial }: Props) {
           {/* 공 — 재생 중엔 spring 보간. 드래그는 SVG hit-testing이 처리(작아도 동률 시 우선 grab). */}
           {step?.ball && (
             <motion.g
-              animate={{ x: step.ball.x, y: step.ball.y + 2.4 }}
+              animate={{ x: step.ball.x, y: step.ball.y + BALL_OFFSET_Y }}
               transition={dotTransition}
               initial={false}
               style={{ pointerEvents: "none" }}
