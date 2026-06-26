@@ -1027,7 +1027,7 @@ function DuesBulkTabInner({
               }
               // 기존 회비 내역과 중복 체크
               const existingKeys = new Set(
-                summaryRecords.map((r) => `${r.recorded_at?.slice(0, 10)}_${r.amount}_${r.type}`)
+                summaryRecords.map((r) => `${r.recorded_at ? getKstNow(new Date(r.recorded_at).getTime()).toISOString().slice(0, 10) : ""}_${r.amount}_${r.type}`)
               );
               const filtered = json.records.filter((r: { date: string; amount: number; type: string }) => {
                 const key = `${r.date}_${r.amount}_${r.type}`;

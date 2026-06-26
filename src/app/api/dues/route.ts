@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getKstToday } from "@/lib/kstDate";
+import { getKstNow, getKstToday } from "@/lib/kstDate";
 import {
   getApiContext,
   requireRole,
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
   // 벌금 자동 납부 매칭: 같은 멤버 + 같은 금액 + 벌금 발생일 이후 입금
   if (body.type === "INCOME") {
     try {
-      const incomeDate = data.recorded_at?.slice(0, 10) ?? getKstToday();
+      const incomeDate = data.recorded_at ? getKstNow(new Date(data.recorded_at).getTime()).toISOString().slice(0, 10) : getKstToday();
       let memberId = data.user_id;
 
       // user_id가 없으면 description에서 이름으로 매칭 시도

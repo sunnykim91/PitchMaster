@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getKstNow } from "@/lib/kstDate";
 import { getApiContext, apiError, apiSuccess, requireRole } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -68,7 +69,7 @@ export async function POST() {
       (r) =>
         r.amount === penalty.amount &&
         !usedIncomeIds.has(r.id) &&
-        (r.recorded_at?.slice(0, 10) ?? "") >= penaltyDate &&
+        (r.recorded_at ? getKstNow(new Date(r.recorded_at).getTime()).toISOString().slice(0, 10) : "") >= penaltyDate &&
         (r.user_id === penalty.member_id || (memberName && r.description?.includes(memberName)))
     );
 

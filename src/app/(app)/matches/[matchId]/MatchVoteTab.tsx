@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, HelpCircle, UserX, Check, Clock, Lock, LockOpen, Loader2, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiMutate } from "@/lib/useApi";
+import { getKstNow } from "@/lib/kstDate";
 import { useToast } from "@/lib/ToastContext";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import type { Match, RosterPlayer } from "./matchDetailTypes";
@@ -147,7 +148,7 @@ function MatchVoteTabInner({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground min-w-0">
                 <Clock className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">마감: {match.voteDeadline ? (() => { const d = new Date(match.voteDeadline); return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; })() : "미설정"}</span>
+                <span className="truncate">마감: {match.voteDeadline ? (() => { const d = getKstNow(new Date(match.voteDeadline).getTime()); return `${d.getUTCMonth() + 1}월 ${d.getUTCDate()}일 ${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`; })() : "미설정"}</span>
               </div>
               {canManage && (
                 isExpired ? (
