@@ -19,9 +19,9 @@ paths:
 
 경기 전술 탭에서 쿼터별 본인 포지션의 역할·주의점을 보여주는 결정론적 지식 베이스.
 
-- **파일**: `src/lib/positionRoles/` (types · base 24 포지션 · override 10 포메이션 · merge 유틸)
+- **파일**: `src/lib/positionRoles/` — `base/`·`overrides/`는 이제 디렉터리(축구 10 포메이션 override + `futsal.ts`) + merge 유틸
 - **UI**: `src/components/MatchRoleGuide.tsx`
-- **지원**: 축구 11인제 10 포메이션만 (풋살·8/9/10인제는 조용히 미노출)
+- **지원**: 축구 11인제 + **풋살 5·6인제** (축구 8/9/10인제는 조용히 미노출). `isSupported` 헬퍼 기준 (41차 풋살 추가)
 - **구조**: base(포메이션 무관 공통) + override(포메이션별 whyItMatters·linkage) 병합
 - **권한별 뷰**:
   - MEMBER — 본인만. 불참 시 안내. 전술판 미작성이면 섹션 숨김

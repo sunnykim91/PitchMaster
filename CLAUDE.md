@@ -175,7 +175,7 @@ UI/UX 부채 잔존 (CLAUDE.md 알려진 이슈 참조)
 
 `src/app/login/sections/`
 
-- FAQ 3개 → 7-8개 확장 필요 (`FaqSection.tsx`)
+- ~~FAQ 3개 → 7-8개 확장~~ ✅ 완료 (`FaqSection.tsx` 현재 ~19개, 102차 확인)
 - 사용자 후기 이니셜 처리 명시 필요 (`TestimonialsSection.tsx`)
 - 모바일 헤더 CTA 버튼 추가 필요 (`HeaderSection.tsx`)
 - HowItWorks 섹션 순서 이동: Comparison/Testimonials 앞으로

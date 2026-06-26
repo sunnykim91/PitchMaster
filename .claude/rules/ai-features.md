@@ -102,6 +102,5 @@ MatchTacticsTab
 - 박스 안에 variant별 아이콘(Sparkles/Cog/Loader2/AlertCircle) + 축약 라벨("AI"/"룰"/"생성중"/"실패")
 - 1차 적용: AiCoachAnalysisCard. 순차 적용 대기: 경기 후기·AI Full Plan·선수 시그니처·OCR
 
-### 미해결 성능 이슈 (2026-04-19)
-- `src/lib/server/getMatchDetailData.ts:82-109` — 경기 상세 SSR에서 `enableAi=true` + 후기 캐시 없는 경기마다 `getOrComputeTeamStats()` await 블로킹
-- 후기 생성 API route로 이동 필요 (SSR 언블록). 사용자 승인 대기
+### SSR 블로킹 이슈 — 해결됨 (102차 확인)
+- 과거 `getMatchDetailData` SSR이 후기 생성을 await 블로킹하던 이슈는 **이미 해결**. 현재 `getMatchDetailData`는 `match.ai_summary`를 DB에서 바로 읽고(68줄), 첫 후기 생성은 클라이언트 `MatchDiaryTab`에서 트리거. `getOrComputeTeamStats` 블로킹 코드 없음.
