@@ -35,7 +35,7 @@ export default function PitchMasterCardDemoPage() {
       </div>
 
       {/* Navigation Tabs */}
-      <nav className="sticky top-0 z-40 bg-[hsl(240,6%,6%)]/90 backdrop-blur-md border-b border-white/5">
+      <nav className="sticky top-0 z-40 bg-[hsl(240,6%,6%)] border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center gap-1 sm:gap-2 h-14 overflow-x-auto">
             {tabs.map((tab) => (

@@ -311,7 +311,7 @@ export default function SettingsClient({
     <div className="grid gap-5 stagger-children">
       {/* ── Tab Bar (운영진 이상만 표시) ── */}
       {isStaff && (
-        <div className="sticky top-0 z-10 -mx-1 px-1 bg-[hsl(var(--background)_/_0.95)] backdrop-blur-sm border-b border-border">
+        <div className="sticky top-0 z-10 -mx-1 px-1 bg-[hsl(var(--background)_/_0.98)] border-b border-border">
           <div role="tablist" aria-label="설정 탭" className="flex">
             {tabItems.map((tab) => (
               <button

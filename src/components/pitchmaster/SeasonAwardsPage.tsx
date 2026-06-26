@@ -300,7 +300,7 @@ export function SeasonAwardsPage({ data }: { data: SeasonAwardsResponse }) {
       <div className="fixed inset-0 vignette pointer-events-none" />
 
       {/* Season Selector */}
-      <div className="sticky top-0 z-50 bg-[hsl(240,6%,6%)]/80 backdrop-blur-md border-b border-white/5">
+      <div className="sticky top-0 z-50 bg-[hsl(240,6%,6%)] border-b border-white/5">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <span className="text-xs tracking-[0.2em] text-white/40">PITCHMASTER</span>
           <SeasonSelector 

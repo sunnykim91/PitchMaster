@@ -455,7 +455,7 @@ export function PlayerProfilePage({
       <button
         type="button"
         onClick={handleBack}
-        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-[rgb(0_0_0_/_0.5)] text-white backdrop-blur-sm hover:bg-[rgb(0_0_0_/_0.7)] transition-colors border border-white/10"
+        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-[rgb(0_0_0_/_0.6)] text-white hover:bg-[rgb(0_0_0_/_0.8)] transition-colors border border-white/10"
         aria-label="뒤로가기"
       >
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -828,7 +828,7 @@ export function PlayerProfileEmpty({ name, teamName, positions }: { name: string
       <button
         type="button"
         onClick={handleBack}
-        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-[rgb(0_0_0_/_0.5)] text-white backdrop-blur-sm hover:bg-[rgb(0_0_0_/_0.7)] transition-colors border border-white/10"
+        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-[rgb(0_0_0_/_0.6)] text-white hover:bg-[rgb(0_0_0_/_0.8)] transition-colors border border-white/10"
         aria-label="뒤로가기"
       >
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -110,7 +110,7 @@ export default async function LoginPage({
       <FooterSection />
 
       {/* Sticky Mobile CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/30 bg-[hsl(var(--background)_/_0.8)] backdrop-blur-xl p-3 lg:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/30 bg-[hsl(var(--background)_/_0.98)] p-3 lg:hidden">
         <div className="flex gap-2" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
           {kakaoEnabled ? (
             <Button className="h-12 flex-1 rounded-xl bg-[hsl(var(--kakao))] text-sm font-bold text-[hsl(var(--kakao-foreground))] shadow-lg shadow-[hsl(var(--kakao))]/25 hover:bg-[hsl(var(--kakao)_/_0.9)]" asChild>

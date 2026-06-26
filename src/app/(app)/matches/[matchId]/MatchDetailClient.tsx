@@ -558,7 +558,7 @@ export default function MatchDetailClient({
       </div>
 
       {/* ── Sticky Tab Bar — 7탭 모두 균등 분할 (370px도 fit) ── */}
-      <div className="sticky top-0 z-10 -mx-1 px-1 bg-[hsl(var(--background)_/_0.9)] backdrop-blur-md">
+      <div className="sticky top-0 z-10 -mx-1 px-1 bg-[hsl(var(--background)_/_0.98)]">
         <div className="flex border-b border-border/50" role="tablist" aria-label="경기 상세 탭">
           {([
             { key: "info", label: "정보", Icon: Info },

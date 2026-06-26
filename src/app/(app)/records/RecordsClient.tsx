@@ -367,7 +367,7 @@ export default function RecordsClient({
   return (
     <div className="grid gap-5 stagger-children min-w-0">
       {/* ── Tab Bar ── */}
-      <div className="sticky top-0 z-10 -mx-1 px-1 bg-[hsl(var(--background)_/_0.95)] backdrop-blur-sm border-b border-border">
+      <div className="sticky top-0 z-10 -mx-1 px-1 bg-[hsl(var(--background)_/_0.98)] border-b border-border">
         <div role="tablist" aria-label="기록 탭" className="flex">
           {tabItems.map((tab) => (
             <button

@@ -541,7 +541,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
       })()}
 
       {/* ── Dues Tab Bar ── */}
-      <nav className="sticky top-0 z-10 -mx-4 backdrop-blur-md bg-[hsl(var(--background)_/_0.8)]">
+      <nav className="sticky top-0 z-10 -mx-4 bg-[hsl(var(--background)_/_0.98)]">
         <div className="border-b border-border px-4">
         <div className="flex" role="tablist">
           {([
