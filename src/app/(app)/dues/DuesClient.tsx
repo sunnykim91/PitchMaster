@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { getKstNow } from "@/lib/kstDate";
 import { formatAmount, formatKstDateTime } from "@/lib/formatters";
 
 import { DuesRecordsTab } from "./DuesRecordsTab";
@@ -48,7 +49,7 @@ function kstYearMonth(iso: string | null | undefined): string | null {
   if (!iso) return null;
   const t = new Date(iso).getTime();
   if (Number.isNaN(t)) return null;
-  return new Date(t + 9 * 60 * 60 * 1000).toISOString().slice(0, 7);
+  return getKstNow(t).toISOString().slice(0, 7);
 }
 
 /* ── Client-side types (camelCase) ── */

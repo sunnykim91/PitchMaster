@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getActiveExemptions } from "@/lib/server/getActiveExemptions";
 import { getPenaltyExemptUserIds } from "@/lib/server/getPenaltyExemptUserIds";
+import { getKstNow } from "@/lib/kstDate";
 
 /**
  * 미투표 벌금 자동 생성 크론 (매시간 정각 실행 — vercel.json: "0 * * * *")
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
   const nowIso = now.toISOString();
   const sevenDaysAgoIso = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   // 마감 없는 경기는 match_date(DATE, tz 무관) 기준 KST 날짜 윈도우 사용
-  const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const kstNow = getKstNow(now.getTime());
   const todayStrKst = kstNow.toISOString().split("T")[0];
   const sevenAgoStrKst = new Date(kstNow.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
@@ -105,7 +106,7 @@ export async function GET(request: NextRequest) {
       .filter((m) => {
         if (!m.user_id) return false;
         if (!m.joined_at) return true;
-        const joinedDateKst = new Date(new Date(m.joined_at).getTime() + 9 * 60 * 60 * 1000)
+        const joinedDateKst = getKstNow(new Date(m.joined_at).getTime())
           .toISOString()
           .slice(0, 10);
         return match.match_date >= joinedDateKst;

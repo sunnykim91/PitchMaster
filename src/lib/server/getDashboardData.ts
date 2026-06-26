@@ -1,7 +1,8 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { autoCompleteTeamMatches, getKstToday } from "@/lib/server/autoCompleteMatches";
+import { autoCompleteTeamMatches, getKstNow, getKstToday } from "@/lib/server/autoCompleteMatches";
 import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
-import { isTeamRecordMatch } from "@/lib/types";
+import { isTeamRecordMatch, type Role } from "@/lib/types";
+import { isStaffOrAbove } from "@/lib/permissions";
 import { countEligibleMatches, kstDateString } from "@/lib/attendanceEligibility";
 
 export type TeamRecord = {
@@ -141,7 +142,7 @@ export async function getDashboardData(
 
   const nowIso = new Date().toISOString();
   const today = getKstToday();
-  const kstNowDate = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const kstNowDate = getKstNow();
   const currentMonth = `${kstNowDate.getUTCFullYear()}-${String(kstNowDate.getUTCMonth() + 1).padStart(2, "0")}`;
   const todayDay = kstNowDate.getUTCDate();
   const monthStart = `${currentMonth}-01`;
@@ -248,10 +249,10 @@ export async function getDashboardData(
   const myMember = allMembers.find((m) => m.user_id === userId) ?? null;
   const myTeamMemberId = myMember?.id ?? null;
   const myRole = myMember?.role ?? "MEMBER";
-  const isStaff = myRole === "PRESIDENT" || myRole === "STAFF";
+  const isStaff = isStaffOrAbove(myRole as Role);
   const staffVoterIds = new Set<string>(
     allMembers
-      .filter((m) => m.role === "PRESIDENT" || m.role === "STAFF")
+      .filter((m) => isStaffOrAbove(m.role as Role))
       .map((m) => m.user_id)
       .filter((id): id is string => !!id)
   );

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess, requireRole } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
+import { getKstNow } from "@/lib/kstDate";
 
 /** 납부 통계 — 최근 6개월 납부율 추이 + 장기 미납자 (운영진 전용) */
 export async function GET() {
@@ -71,7 +72,7 @@ export async function GET() {
     if (exemptMemberIds.has(memberId)) continue; // 면제 회원 스킵
     // 가입 다음 달부터 부과 — 가입 월·이전은 미납 streak 에서 제외 (신규 가입자가 행 없음=미납으로 장기미납 오판 방지)
     const joinMonth = m.joined_at
-      ? new Date(new Date(m.joined_at).getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 7)
+      ? getKstNow(new Date(m.joined_at).getTime()).toISOString().slice(0, 7)
       : null;
     let consecutive = 0;
     for (const month of recentMonths) {

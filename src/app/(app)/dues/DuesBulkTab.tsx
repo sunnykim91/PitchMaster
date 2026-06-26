@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useCallback } from "react";
 import { GA } from "@/lib/analytics";
-import { getKstToday } from "@/lib/kstDate";
+import { getKstNow, getKstToday } from "@/lib/kstDate";
 import Image from "next/image";
 import { Camera, FileSpreadsheet, Check, Trash2, X, HelpCircle } from "lucide-react";
 import { OcrScreenshotGuide } from "@/components/OcrScreenshotGuide";
@@ -332,7 +332,7 @@ function DuesBulkTabInner({
     const currentRecords = recordsRef.current;
     const toKSTDate = (isoStr: string) => {
       const d = new Date(isoStr);
-      const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+      const kst = getKstNow(d.getTime());
       return kst.toISOString().slice(0, 10);
     };
     const firstToken = (s: string | null | undefined) => ((s ?? "").trim().split(/\s+/)[0] ?? "").toLowerCase();
@@ -469,7 +469,7 @@ function DuesBulkTabInner({
     // KST 변환
     const toKSTDate = (isoStr: string) => {
       const d = new Date(isoStr);
-      const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+      const kst = getKstNow(d.getTime());
       return kst.toISOString().slice(0, 10);
     };
     // 첫 단어(이름) 비교 — handleBulkImageChange의 isDupAgainstRecords와 동일 정책

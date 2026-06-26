@@ -13,7 +13,7 @@ import type { Role, SportType } from "@/lib/types";
 import { GA } from "@/lib/analytics";
 import { SPORT_DEFAULTS } from "@/lib/types";
 import { cn, formatTime, formatDateTime, formatMatchDate } from "@/lib/utils";
-import { getKstToday } from "@/lib/kstDate";
+import { getKstNow, getKstToday } from "@/lib/kstDate";
 import { sideConfig } from "@/lib/internalSides";
 import type { InternalSide } from "@/lib/internalSides";
 import { voteStyles } from "@/lib/voteStyles";
@@ -804,7 +804,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                       )}
                       {match.voteDeadline && !isVoteClosed && (() => {
                         // vote_deadline 은 UTC(timestamptz) → KST(+9h, 한국 DST 없음)로 변환해 표시
-                        const kst = new Date(new Date(match.voteDeadline).getTime() + 9 * 3600 * 1000).toISOString();
+                        const kst = getKstNow(new Date(match.voteDeadline).getTime()).toISOString();
                         return (
                           <div className="pm-mc-deadline" style={{ textAlign: "center" }}>
                             투표 마감 · {formatMatchDate(kst.slice(0, 10))} {kst.slice(11, 16)}

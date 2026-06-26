@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getKstToday } from "@/lib/kstDate";
+import { getKstNow, getKstToday } from "@/lib/kstDate";
 import {
   getApiContext,
   requireRole,
@@ -178,7 +178,7 @@ async function generatePenalty(db: any, teamId: string, matchId: string, targetU
     const matchDate = match?.match_date ?? getKstToday();
     // 가입일 이전 경기는 벌금 대상 아님 (방어선 — 정상 UI 흐름은 가입 전 경기에 도달 못하지만 직접 호출 대비).
     if (memberRow.joined_at) {
-      const joinKst = new Date(new Date(memberRow.joined_at).getTime() + 9 * 60 * 60 * 1000)
+      const joinKst = getKstNow(new Date(memberRow.joined_at).getTime())
         .toISOString()
         .slice(0, 10);
       if (matchDate < joinKst) return;

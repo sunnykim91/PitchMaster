@@ -3,6 +3,7 @@ import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isValidUuid } from "@/lib/validators/uuid";
+import { getKstToday } from "@/lib/kstDate";
 
 /**
  * GET /api/attendance/recent?matchId=X
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
   const result = (members ?? []).map((m) => {
     let joinKst: string | null = null;
     if (m.joined_at) {
-      joinKst = new Date(new Date(m.joined_at).getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      joinKst = getKstToday(new Date(m.joined_at).getTime());
     }
     let attended = 0;
     let eligible = 0;

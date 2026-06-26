@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { sendTeamPush } from "@/lib/server/sendPush";
 import { getActiveExemptions } from "@/lib/server/getActiveExemptions";
+import { getKstNow } from "@/lib/kstDate";
 
 /** 투표 마감 하루 전 자동 알림 (Vercel Cron으로 매일 09:00 KST 실행) */
 export async function GET(request: NextRequest) {
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
   if (!db) return NextResponse.json({ error: "DB unavailable" }, { status: 500 });
 
   // KST 기준 내일 날짜
-  const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const kstNow = getKstNow();
   const tomorrow = new Date(kstNow);
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowDate = tomorrow.toISOString().split("T")[0]; // KST 기준 내일 (YYYY-MM-DD)

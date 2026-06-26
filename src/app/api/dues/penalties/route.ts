@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess, requireRole } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
-import { getKstToday } from "@/lib/kstDate";
+import { getKstNow, getKstToday } from "@/lib/kstDate";
 import { getPenaltyExemptUserIds } from "@/lib/server/getPenaltyExemptUserIds";
 
 /** 벌금 기록 조회 */
@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
     // 가입일 이전 경기는 벌금 대상 아님 — 미투표/지각/불참 전부 제외.
     // (신규 가입자는 가입 전 경기에 출석기록이 없어 '미투표' 벌금이 잘못 붙던 버그 방지.)
     if (member.joined_at) {
-      const joinedDateKst = new Date(new Date(member.joined_at).getTime() + 9 * 60 * 60 * 1000)
+      const joinedDateKst = getKstNow(new Date(member.joined_at).getTime())
         .toISOString()
         .slice(0, 10);
       if (match.match_date < joinedDateKst) continue;

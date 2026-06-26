@@ -9,6 +9,7 @@
  *    기존 호출부의 동작을 유지하기 위해 utils.ts의 함수는 그대로 두고,
  *    신규 코드는 본 파일의 포맷터를 쓰는 방향으로 점진 통일한다.
  */
+import { getKstNow } from "@/lib/kstDate";
 
 /** "YYYY-MM-DD" 순수 날짜 문자열은 타임존 불변으로 파싱 */
 function toLocalDate(input: string | Date): Date {
@@ -72,7 +73,7 @@ export function formatTimeKo(input: string): string {
 export function formatKstDateTime(input: string | Date, opts?: { withYear?: boolean }): string {
   const d = input instanceof Date ? input : new Date(input);
   if (isNaN(d.getTime())) return "";
-  const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  const kst = getKstNow(d.getTime());
   const year = kst.getUTCFullYear();
   const month = kst.getUTCMonth() + 1;
   const day = kst.getUTCDate();
@@ -93,7 +94,7 @@ export function formatKstDateTime(input: string | Date, opts?: { withYear?: bool
 export function formatKstDate(input: string | Date): string {
   const d = input instanceof Date ? input : new Date(input);
   if (isNaN(d.getTime())) return "";
-  const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  const kst = getKstNow(d.getTime());
   const yy = String(kst.getUTCFullYear()).slice(2);
   const month = kst.getUTCMonth() + 1;
   const day = kst.getUTCDate();

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { sendTeamPush } from "@/lib/server/sendPush";
+import { getKstNow } from "@/lib/kstDate";
 
 /** 경기 결과 자동 푸시 (매일 22:00 KST = 13:00 UTC) */
 export async function GET(request: NextRequest) {
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: "DB unavailable" }, { status: 500 });
 
-  const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const kstNow = getKstNow();
   const today = kstNow.toISOString().split("T")[0];
 
   // 22시 cron + result_pushed=false 멱등성. 22시 이후 종료 경기 다음날 fix용 7일 가드.

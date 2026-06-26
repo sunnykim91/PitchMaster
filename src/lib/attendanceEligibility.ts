@@ -1,3 +1,5 @@
+import { getKstToday } from "@/lib/kstDate";
+
 /**
  * 출석률 분모 산정 — 가입(joined_at) 이전 경기는 표본에서 제외.
  *
@@ -14,7 +16,7 @@ export function kstDateString(iso: string | null | undefined): string | null {
   if (!iso) return null;
   const t = new Date(iso).getTime();
   if (Number.isNaN(t)) return null;
-  return new Date(t + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  return getKstToday(t);
 }
 
 /** 해당 경기가 회원의 출석률 표본 대상인지 (가입일 이후). joinKst null이면 전체 대상. */

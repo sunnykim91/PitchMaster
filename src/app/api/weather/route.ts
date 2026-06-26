@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
+import { getKstNow } from "@/lib/kstDate";
 import { getCoords } from "@/lib/server/getCoords";
 import { fetchWithTimeout } from "@/lib/server/fetchWithTimeout";
 
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
   }
 
   // KST 기준 오늘 날짜
-  const nowKST = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const nowKST = getKstNow();
   const todayStr = nowKST.toISOString().slice(0, 10);
 
   // 과거 경기면 날씨 조회 안 함

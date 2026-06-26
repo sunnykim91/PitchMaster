@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getKstToday } from "@/lib/kstDate";
 
 /** 휴면 자동 복귀 크론 (매일 KST 00:00 실행) — dormant_until 만료 시 ACTIVE 전환 */
 export async function GET(request: NextRequest) {
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
   if (!db) return NextResponse.json({ error: "DB unavailable" }, { status: 500 });
 
   // KST 기준 오늘 — UTC 날짜를 쓰면 KST 00:00 실행 시점(UTC 전날)이라 복귀가 하루 늦어짐
-  const today = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const today = getKstToday();
 
   // dormant_until이 오늘 이전이고 아직 DORMANT인 멤버 → ACTIVE 전환
   const { data: expired, error } = await db
