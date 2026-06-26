@@ -3,7 +3,7 @@ import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isTeamRecordMatch } from "@/lib/types";
 import { aggregateGkCleanSheets, buildGkAttendeesByMatch, isGkPreferred, type GkSquadRow, type GkGoalRow, type GkRosterMember } from "@/lib/server/getGoalkeeperStats";
-import { computeAttendanceRate } from "@/lib/attendanceEligibility";
+import { computeAttendanceRateWithHistory } from "@/lib/attendanceEligibility";
 
 type MemberRow = {
   id: string;
@@ -287,9 +287,17 @@ export async function GET(request: NextRequest) {
 
   const attendByUserId = new Map<string, number>();
   const attendByMemberId = new Map<string, number>();
+  // 회원별 출석 경기일 — 가입 전 출석(과거 데이터 이관) 판별용 (computeAttendanceRateWithHistory)
+  const attendDatesByUser = new Map<string, string[]>();
+  const attendDatesByMember = new Map<string, string[]>();
   for (const row of attendanceRes.data ?? []) {
     if (row.user_id) attendByUserId.set(row.user_id, (attendByUserId.get(row.user_id) ?? 0) + 1);
     if (row.member_id) attendByMemberId.set(row.member_id, (attendByMemberId.get(row.member_id) ?? 0) + 1);
+    const d = matchDateById.get(row.match_id);
+    if (d) {
+      if (row.user_id) (attendDatesByUser.get(row.user_id) ?? attendDatesByUser.set(row.user_id, []).get(row.user_id)!).push(d);
+      if (row.member_id) (attendDatesByMember.get(row.member_id) ?? attendDatesByMember.set(row.member_id, []).get(row.member_id)!).push(d);
+    }
   }
 
   // 평점 시즌 집계 — 토글 ON 팀에만 옵셔널 필드. 잠정 도입 (FCO2 팀 요청, 2026-05-12)
@@ -353,7 +361,10 @@ export async function GET(request: NextRequest) {
       assists,
       mvp,
       matches: attended,
-      attendanceRate: computeAttendanceRate(attended, allMatchDates, m.joined_at),
+      attendanceRate: computeAttendanceRateWithHistory(attended, allMatchDates, m.joined_at, [
+        ...(userId ? attendDatesByUser.get(userId) ?? [] : []),
+        ...(attendDatesByMember.get(memberId) ?? []),
+      ]),
       preferredPositions: user?.preferred_positions ?? [],
       jerseyNumber: m.jersey_number ?? null,
       teamRole: m.team_role ?? null,

@@ -3,7 +3,7 @@ import { aggregateMvpsByMatch, type MvpVoteRow } from "@/lib/mvpThreshold";
 import { isTeamRecordMatch, type Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { aggregateGkCleanSheets, buildGkAttendeesByMatch, isGkPreferred, type GkSquadRow, type GkGoalRow, type GkRosterMember } from "@/lib/server/getGoalkeeperStats";
-import { computeAttendanceRate } from "@/lib/attendanceEligibility";
+import { computeAttendanceRateWithHistory } from "@/lib/attendanceEligibility";
 
 type SeasonRow = { id: string; is_active: boolean; start_date: string; end_date: string; [key: string]: unknown };
 type MemberRow = {
@@ -204,6 +204,15 @@ export async function getRecordsData(teamId: string) {
   }
   const matchDateById = new Map<string, string>();
   for (const m of matches) matchDateById.set(m.id, m.match_date);
+  // 회원별 출석 경기일 — 가입 전 출석(과거 데이터 이관) 판별용 (computeAttendanceRateWithHistory)
+  const attendDatesByUser = new Map<string, string[]>();
+  const attendDatesByMember = new Map<string, string[]>();
+  for (const row of attendanceRes.data ?? []) {
+    const d = matchDateById.get(row.match_id);
+    if (!d) continue;
+    if (row.user_id) (attendDatesByUser.get(row.user_id) ?? attendDatesByUser.set(row.user_id, []).get(row.user_id)!).push(d);
+    if (row.member_id) (attendDatesByMember.get(row.member_id) ?? attendDatesByMember.set(row.member_id, []).get(row.member_id)!).push(d);
+  }
   const mvpMap = aggregateMvpsByMatch(
     (mvpRes.data ?? []) as MvpVoteRow[],
     attendedPerMatch,
@@ -262,7 +271,10 @@ export async function getRecordsData(teamId: string) {
       assists: ids.reduce((s, id) => s + (assistMap.get(id) ?? 0), 0),
       mvp: ids.reduce((s, id) => s + (mvpMap.get(id) ?? 0), 0),
       matches: attended,
-      attendanceRate: computeAttendanceRate(attended, allMatchDates, m.joined_at),
+      attendanceRate: computeAttendanceRateWithHistory(attended, allMatchDates, m.joined_at, [
+        ...(userId ? attendDatesByUser.get(userId) ?? [] : []),
+        ...(attendDatesByMember.get(memberId) ?? []),
+      ]),
       preferredPositions: user?.preferred_positions ?? [],
       jerseyNumber: m.jersey_number ?? null,
       teamRole: m.team_role ?? null,

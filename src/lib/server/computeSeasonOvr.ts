@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { calculateOVR, classifyPosition } from "@/lib/playerCardUtils";
 import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
-import { computeAttendanceRate } from "@/lib/attendanceEligibility";
+import { computeAttendanceRateWithHistory } from "@/lib/attendanceEligibility";
 
 /**
  * 단일 팀·시즌 기준으로 여러 선수의 OVR 을 한 번에 계산.
@@ -189,7 +189,12 @@ export async function computeTeamSeasonOvrs(
       cat,
       myGoalCount / attended,
       myAssistCount / attended,
-      computeAttendanceRate(attended, allMatchDates, mem.joined_at),
+      computeAttendanceRateWithHistory(
+        attended,
+        allMatchDates,
+        mem.joined_at,
+        [...attendedMatchIds].map((mid) => matchDateById.get(mid)).filter((d): d is string => !!d),
+      ),
       myMvpCount / attended,
       recordCount > 0 ? wins / recordCount : 0,
       recordCount > 0 ? cleanSheets / recordCount : 0,
