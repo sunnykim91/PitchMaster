@@ -124,16 +124,7 @@ v{hash}
 
 ---
 
-## 경기 상세 탭 구조
-
-`src/app/(app)/matches/[matchId]/MatchDetailClient.tsx`
-
-```
-정보 | 투표 | 전술 | 출석 | 기록 | 후기
-```
-6개 탭 (EVENT 타입은 2개만). 각 탭 = lucide 아이콘 + 라벨 세로 배치, `flex-1` 균등 분할 + `min-h-[52px]`. 370px Z Flip도 fit (52차에 라벨 후기로 변경 + 아이콘 추가 적용).
-
----
+## 경기 상세 탭 구조 → `.claude/rules/matches-tabs-tactics.md` (matches/positionRoles 작업 시 자동 로드)
 
 ## 실제 미구현 항목 (2026-05-14 정정 — 채택된 큰 미구현 0개)
 
@@ -148,164 +139,15 @@ v{hash}
 
 UI/UX 부채 잔존 (CLAUDE.md 알려진 이슈 참조)
 
-## 골 기록 설계 (2026-04-18 기준)
+## 골 기록 설계 → `.claude/rules/mvp-and-scoring.md` (records/matches API·mvpThreshold 작업 시 자동 로드)
 
-- `match_goals.quarter_number` — **nullable** (migration 00032). `null` = 쿼터 모름
-- `+ 득점` / `+ 실점` 버튼: 원클릭 즉시 등록 (기본값: 득점자 UNKNOWN, 쿼터 null, 골유형 NORMAL)
-- 상세 수정은 골 카드 수정 버튼 → 아코디언 폼에서 처리
-- API: `quarter=0` → `null` 변환 저장, 유효범위 0~10 (`goals/route.ts`)
+## MVP 집계 정책 → `.claude/rules/mvp-and-scoring.md` (records/matches API·mvpThreshold 작업 시 자동 로드)
 
----
+## AI 기능 설계 → `.claude/rules/ai-features.md` (api/ai·전술 탭 작업 시 자동 로드)
 
-## MVP 집계 정책 (2026-04-23 기준)
+## 역할 가이드 → `.claude/rules/matches-tabs-tactics.md` (matches/positionRoles 작업 시 자동 로드)
 
-**확정 조건** (둘 중 하나):
-1. 운영진(STAFF+) 1명 이상이 해당 경기에 투표 → 즉시 확정 (투표율 무관, **1명만**)
-2. 일반 팀원 투표가 실제 참석자(`attendance_status=PRESENT|LATE`) 70% 이상 → 최다득표자 확정. **공동 1등이면 전원 공동 MVP로 인정 (92차+ 정책)**
-
-**구현 헬퍼** (`src/lib/mvpThreshold.ts`):
-- `resolveValidMvps(votes, attendedCount, staffDecision)` — **정책 판정, 공동 1등 전원을 candidate_id 사전순 배열로 반환** (투표 동률 = 공동 MVP. 운영진 직접 지정은 1명만). 집계·기록 경로는 이걸 써서 동률 전원 +1.
-- `resolveValidMvp(...)` — 단수 래퍼 (`resolveValidMvps(...)[0] ?? null`). 단수 winner가 필요한 레거시용. 동률은 사전순 첫 번째 (결정론적).
-- `pickStaffDecision(rows, staffVoterIds)` — `is_staff_decision=true` OR 현재 STAFF+ voter 투표를 확정 후보로 리턴. 2026-04-20(커밋 `2d457b8`) 이전에 저장된 staff 투표가 `false`로 남아있는 백필 누락을 동적 치유.
-- `aggregateMvpsByMatch(rows, attendedPerMatch, matchDateById, staffVoterIds, mvpVoteStaffOnly)` — **경기별 MVP 집계 단일 오케스트레이션**(votesByMatch 그룹핑 → shouldApplyNewMvpPolicy → pickStaffDecision → resolveValidMvps → candidate_id별 횟수 맵). getRecordsData·records route 가 복붙하던 ~25줄을 묶음. 여러 경기를 한 번에 집계하는 경로는 이걸 쓸 것.
-
-**집계 경로 12곳** — 하나 수정 시 전부 같이 건드려야 일관성 유지 (전부 정책 헬퍼 경유):
-- SSR: `src/lib/server/getRecordsData.ts`, `src/lib/server/getDashboardData.ts`(동률 시 이름 병기) — getRecordsData·records route 는 `aggregateMvpsByMatch` 공유
-- 선수 프로필 SSR: `src/app/player/[memberId]/page.tsx` (totalMvp + 팀 랭킹)
-- API: `src/app/api/records/route.ts`(`aggregateMvpsByMatch`), `src/app/api/records/detail/route.ts` (`type=mvp`), `src/app/api/season-awards/route.ts`, `src/app/api/player-card/route.ts`, `src/app/api/share-card/route.ts`(동률 시 이름 병기)
-- AI 캐시: `src/lib/server/aiTeamStats.ts` (24h TTL)
-- AI 후기: `src/app/api/ai/match-summary/[matchId]/route.ts` — MOM 표시. **이전엔 단순 최다득표로 정책을 우회했으나(70% 게이트·운영진·공동 1등 무시) `resolveValidMvps`로 통일 (전수조사 수정)**
-- 크론 OVR: `src/lib/server/computeSeasonOvr.ts` (경기 후 OVR 변동 감지)
-- 실시간 UI: `MatchDiaryTab.tsx`(후기 탭)의 "현재 1위" 표시는 확정 정책과 별개 — 단수 leader만 표시 (건드리지 말 것)
-
-**설정 토글**: 팀 설정 `mvp_vote_staff_only` — 일반 팀원 투표를 막는 게이트.
-
-**운영진 즉시 확정은 (a) 토글 ON 이거나 (b) 경기일이 `STAFF_DECISION_POLICY_CUTOFF`(2026-05-04) 이전일 때만** 작동. 2026-05-04 이후 + 토글 OFF 팀에선 **운영진 투표도 일반 표로 처리(70% 룰 적용)** — `mvp/route.ts`의 `isStaffDecision = mvpVoteStaffOnly && isStaff`, 집계는 `shouldApplyNewMvpPolicy(matchDate, mvpVoteStaffOnly)` + `applyBackfillHealing: !newPolicy`로 분기. (CUTOFF는 과거 경기 MVP 결과 보존용.)
-
-**UI 안내**: MVP 투표 카드에 threshold 미달 시 "참석자 70% 이상이 투표해야 공식 MVP로 확정됩니다. 미달 시 운영진이 직접 지정할 수 있어요." 문구 자동 노출.
-
----
-
-## AI 기능 설계 (2026-05-13 정정 — 전체 공개 상태)
-
-### Feature Flag (현행)
-```typescript
-// page.tsx — 모두 true (전체 STAFF+ 공개)
-const enableAi = true;                              // matches/[matchId]/page.tsx:19
-const enableAi = true;                              // dues/page.tsx:10 (OCR)
-const enableAi = true;                              // player/[memberId]/page.tsx:447
-const enableAiSummary = true;                       // MatchDetailClient.tsx:152
-
-// 클라이언트 — 풋살 분기 제거됨 (47차에 풋살 4 포메이션 등록 후)
-const effectiveEnableAi = enableAi;
-// 주석: "AI 코치 분석 + AI Full Plan: 축구·풋살 모두 활성"
-```
-
-> 과거 `session.user.name === "김선휘"` 게이트와 sportType=SOCCER 게이트는 **둘 다 풀림**. 비용 안전망은 rate limit + 이미지 해시 캐시.
-
-### AI 기능 목록 (5개)
-| 기능 | 위치 | 공개 범위 | 모델 |
-|------|------|-----------|------|
-| 선수 시그니처 | /player/[id] | **전체 공개 (축구·풋살)** | Haiku 4.5 |
-| 경기 후기 | 경기 일지 탭 | **전체 공개 (축구·풋살). 단 LLM 아닌 결정론적 템플릿 (25차 이후)** | — |
-| AI 코치 분석 | 전술 탭 | **전체 공개 (STAFF+, 축구·풋살)** | Haiku 4.5 |
-| AI Full Plan | 자동편성 빌더 | **전체 공개 (STAFF+, 축구·풋살)** | Haiku 4.5 |
-| OCR 거래 파싱 | 회비 일괄등록 | **전체 공개 (rate limit: 팀 월 100회 + 이미지 해시 캐시. per-user/일 캡 없음)** | Haiku 4.5 Vision |
-
-> 풋살 차단 코드는 모두 제거됨(41차·71차). match-summary route 에 sport_type/futsal 검사 없음 — 전 종목 동일.
-
-### AI 코치 분석 데이터 파이프라인 (2026-04-19 갱신)
-
-```
-MatchTacticsTab
-  ├─ AutoFormationBuilder → onAnalysisContextReady(ctx)   (자동 편성 경로)
-  └─ /api/squads + attendingPlayers + formationTemplates
-       → dbAiCoachContext                                 (DB fallback — 수동 편집·기존 기록)
-     effectiveAiCoachContext = autoCtx ?? dbCtx
-  → AiCoachAnalysisCard
-       - match-squads-saved 이벤트 구독 → refetch로 실시간 갱신
-  → POST /api/ai/tactics
-       payload에 사전 계산 5종 자동 포함 (aiTacticsAnalysis.ts 헬퍼):
-         - playerRotation      선수별 [{quarter, slot}]
-         - positionChangers    쿼터 간 포지션 바뀐 선수 (서술 의무)
-         - slotSharing         같은 slot을 여러 명이 쿼터 나눠 맡는 경우만
-         - quarterBreakdown    쿼터별 {GK,DEF,MID,FWD} 인원
-         - benchPlayers        미배치 참석자
-  → generateAiTacticsAnalysisStream()
-       historyBlock = getOrComputeTeamStats(teamId) → buildHistoryBlock()
-         - 포메이션별 전적
-         - 선수별 커리어 Top 20
-         - 포지션별 활약 Top 10
-         - 쿼터별 득실 (누적 + 경기당 평균)
-         - 최근 3경기 요약 (폼 상태)
-         - 상대팀 이력
-```
-
-### TeamStats 캐시 (`ai_team_stats_cache`, TTL 24h)
-- `playerCareerStats`: 출전수/골/어시/MVP/주포지션
-- `quarterStats`: 쿼터별 누적 득실 + 경기당 평균
-- `recentMatchSummaries`: 최근 3경기 (상대/스코어/결과/포메이션/최다득점자)
-- MVP 집계: `match_mvp_votes.candidate_id`(users.id) → team_members.id 브릿지 → 경기별 최다득표 winner
-
-### 사용량 로그 (`ai_usage_log`)
-- 컬럼: feature / user_id / team_id / **match_id** / entity_id / source / model / tokens / latency / error_reason
-- `source`: `"ai"` | `"rule"` | `"error"`. **`"ai"`만 `checkRateLimit` 집계** → 실패·룰 폴백은 한도 차감 안 됨
-- 캡 (단일 source = `aiUsageLog.ts` MATCH_CAPS·MONTHLY_TEAM_CAPS — 수치 변경 시 코드만 보면 됨):
-  tactics-coach 경기당 4·월 30 / tactics-plan 경기당 3·월 20 / ocr 월 100 (Clova 폴백 `/api/ocr`도 동일 캡 합산, 2026-06-10 추가)
-- logBase에 `matchId` 세팅은 aiTactics·aiMatchSummary·aiFullPlan 3곳 공통
-
-### 시스템 프롬프트 핵심 규칙 (aiTacticsAnalysis.ts)
-- **포메이션 이름 hallucination 금지** — `formationName`/`quarterFormations` 값 그대로만 사용. placement 숫자 집계로 "4-6-0" 같은 창작 금지 (규칙 0)
-- 선수 역할은 **playerRotation 전체**의 slot 기준 (1쿼터 placement만으로 고정 서술 금지)
-- `positionChangers`에 있는 선수는 쿼터 간 변화 **반드시** 서술 (예: "1쿼터 DM → 2쿼터 ST")
-- `slotSharing`의 같은 slot을 여럿이 나눠 맡으면 **전원 언급**
-- 용병(`isGuest=true`)에 단정적 표현 금지
-- 상대팀 이력 블록 없으면 hallucination 금지, "첫 대결"로 명시
-- `playerWorkload`에서 전 쿼터 출전 선수 → 3단락 체력 부담 언급 필수
-- 쿼터별 득실 패턴(3쿼터 실점 집중 등) → 해당 쿼터 주의점으로 반영
-
-### dbAiCoachContext allSlotsFilled 계산 규칙 (2026-04-24 버그 수정)
-
-`MatchTacticsTab.tsx` `dbAiCoachContext` useMemo 내 슬롯 카운팅:
-- **playerId 존재 여부만으로 카운트** — `nameMap`(attendingPlayers+guests)에 없어도 포함
-- 수정 전: `if (!playerName) continue;` → 참석 취소 선수 슬롯 카운트 누락 → `allSlotsFilled=false` → 버튼 비활성
-- 수정 후: `nameMap.get(playerId) ?? \`선수(${playerId.slice(0,6)})\`` — DB 배치 기록 있으면 무조건 카운트
-- ⚠️ 이 규칙 절대 원상복구 금지: nameMap 기반으로 되돌리면 앱 재진입 후 버튼 비활성 버그 재발
-
-### AI UI 공통 컴포넌트 (2026-04-19 신규)
-- `src/components/AiBadge.tsx` — variant: `ai`/`rule`/`loading`/`error`, size: `sm`/`md`
-- 박스 안에 variant별 아이콘(Sparkles/Cog/Loader2/AlertCircle) + 축약 라벨("AI"/"룰"/"생성중"/"실패")
-- 1차 적용: AiCoachAnalysisCard. 순차 적용 대기: 경기 후기·AI Full Plan·선수 시그니처·OCR
-
-### 미해결 성능 이슈 (2026-04-19)
-- `src/lib/server/getMatchDetailData.ts:82-109` — 경기 상세 SSR에서 `enableAi=true` + 후기 캐시 없는 경기마다 `getOrComputeTeamStats()` await 블로킹
-- 후기 생성 API route로 이동 필요 (SSR 언블록). 사용자 승인 대기
-
----
-
-## 역할 가이드 (2026-04-19 신규)
-
-경기 전술 탭에서 쿼터별 본인 포지션의 역할·주의점을 보여주는 결정론적 지식 베이스.
-
-- **파일**: `src/lib/positionRoles/` (types · base 24 포지션 · override 10 포메이션 · merge 유틸)
-- **UI**: `src/components/MatchRoleGuide.tsx`
-- **지원**: 축구 11인제 10 포메이션만 (풋살·8/9/10인제는 조용히 미노출)
-- **구조**: base(포메이션 무관 공통) + override(포메이션별 whyItMatters·linkage) 병합
-- **권한별 뷰**:
-  - MEMBER — 본인만. 불참 시 안내. 전술판 미작성이면 섹션 숨김
-  - PRESIDENT/STAFF — 드롭다운(용병 제외)으로 다른 선수 가능. 전술판 미작성이면 포메이션 폴백
-- **쿼터 그룹화**: 같은 (formationId, role)이면 비연속 쿼터도 한 카드 ("2·4쿼터 RCB"). 포메이션 다르면 별도 카드
-- **동기화**: `match-squads-saved` window CustomEvent — TacticsBoard/AutoFormationBuilder 저장 시 발행 → MatchRoleGuide·MatchTacticsTab이 구독해 refetch
-
----
-
-## 전술 탭 카드 순서 (2026-04-19 재정비)
-
-카드 순서 프리셋 드롭다운 제거 + 고정 `order` 기반 배치. 상세는 [src/app/(app)/matches/CLAUDE.md](src/app/(app)/matches/CLAUDE.md) 참고.
-
-- 용병 카드는 **편성 완료 여부**에 따라 동적 이동 (-5 상단 / 95 하단)
-- "편성 완료" = 매 쿼터마다 정규 슬롯 전부 채워진 squad 존재 (주심/부심1·2/촬영 제외, `match_squads`에 DB 영속 기준)
-- 메타 슬롯 키(formation.slots에 없음, `__` prefix): `__referee`(주심·sky) · `__linesman1`·`__linesman2`(부심 2명·emerald, 2026-04-29 추가) · `__camera`(촬영·violet). 모두 `match_squads.positions` JSONB에 동일 Placement 형식으로 저장
+## 전술 탭 카드 순서 → `.claude/rules/matches-tabs-tactics.md` (matches/positionRoles 작업 시 자동 로드)
 
 ---
 
@@ -325,32 +167,7 @@ MatchTacticsTab
 
 ---
 
-## 입력 검증 (2026-05-02 신규 — SQL/script 인젝션 사고 대응)
-
-**헬퍼**: `src/lib/validators/safeText.ts`
-- `validateSafeName(input, options)` — 사용자/팀 이름 검증
-- `sanitizeKakaoNickname(input)` — 카카오 닉네임 자동 정제 ("사용자" 폴백)
-
-**거부 패턴**:
-- SQL/script: `' " ; \ < > -- /* */`
-- 제어문자: `\x00-\x1f \x7f`
-- (옵션 `requireMeaningful`) 의미문자(`[가-힣a-zA-Z0-9]`) 부재 — 자모만/특수문자만 거부
-
-**적용 위치 6곳 + 권장 옵션**:
-1. `src/lib/auth.ts findOrCreateKakaoUser` — `sanitizeKakaoNickname` (위험 시 "사용자" 폴백)
-2. `src/app/onboarding/actions.ts` — `validateSafeName` + `requireMeaningful: true`
-3. `src/app/api/profile/route.ts PUT` — 위와 동일
-4. `src/app/team/actions.ts createTeam` — `validateSafeName` + `minLength: 2` + `requireMeaningful: true`
-5. `src/app/api/teams/route.ts PUT` — 위와 동일
-6. `src/app/api/auth/kakao/callback/route.ts` — `ACCOUNT_BLOCKED` catch + `/login?error=blocked` redirect
-
-**카카오 ID 차단 흐름** (커밋 6e3dfb7):
-- `findOrCreateKakaoUser` 진입 시 `users.deleted_at IS NOT NULL` 사전 체크 → `ACCOUNT_BLOCKED` throw
-- 한계: `cron/hard-delete-withdrawn`이 14일 후 row 삭제하면 차단 풀림. 영구 차단은 `users.is_banned` 컬럼 신설 백로그
-
-**규칙**: 새 user-text 입력 필드 추가 시 위 헬퍼 동일 적용 의무 (게시판 글·댓글, 회비 메모 등 미적용 영역은 백로그)
-
-**테스트**: `src/__tests__/lib/safeText.test.ts` (43 케이스)
+## 입력 검증 → `.claude/rules/input-validation.md` (validators·auth·onboarding·team API 작업 시 자동 로드)
 
 ---
 
@@ -386,38 +203,7 @@ git push origin main        # Vercel 자동배포
 - `.env` 파일 절대 커밋 금지
 - 커밋 메시지: 영어 Conventional Commits (feat/fix/refactor/docs/chore)
 
-### E2E 테스트 (Playwright)
-
-```bash
-npm run test:e2e          # 전체 (자동으로 npm run dev 띄움, reuseExistingServer)
-npm run test:e2e:ui       # UI 모드 (디버깅)
-npm run test:e2e:report   # 마지막 HTML 리포트 열기
-```
-
-- **3개 프로젝트**: `chromium`(비로그인 스모크, Desktop) / `setup`(데모 로그인) / `chromium-auth`(인증, 모바일 390px)
-- **인증 방식**: `setup`이 `POST /api/auth/demo`로 데모 계정(FC DEMO·회장) 세션을 `e2e/.auth/demo.json`(gitignore)에 저장 → `chromium-auth`가 재사용
-  - ⚠️ **prod 빌드 금지** — `setSession`이 prod에서 `secure:true` 쿠키를 굽는데 http://localhost에선 세션이 안 잡힘. 반드시 `npm run dev`(secure:false)로 실행
-  - CSRF 미들웨어 때문에 API 호출 시 `Origin: http://localhost:3000` 헤더 필수
-- **로컬 전용**: 인증 테스트는 `.env`(SESSION_SECRET·service role)+데모 계정 필요. **CI**(placeholder DB)에선 `setup`이 빈 state 기록 → 인증 테스트 자동 skip (`guard.ts`가 `/login` 리다이렉트 감지). CI 항상 green 유지
-- **변경(write) 테스트**: `vote.spec.ts`는 데모 28경기가 전부 COMPLETED라 임시 경기 생성→투표→`afterEach` 삭제(CASCADE)로 잔여물 없이 실행
-- **권한별 테스트**: `permissions.spec.ts` — dev-login(`DEV_IMPERSONATE=1`, playwright.config webServer env)으로 FC DEMO STAFF(`demo_정공미`)/MEMBER(`demo_서공격`) 가장 → staffOnly 게이트(회비 납부현황·설정 탭, 햄버거 "빠른 처리" 그룹) 노출 차이 검증. **fresh 서버에서만 동작**(reuseExistingServer 로 기존 서버 재사용 시 env 미적용 → 자동 skip)
-- 첫 방문 코치마크(`localStorage["pm_coach_mark_v1"]`)·Next dev 오버레이(`<nextjs-portal>`)는 `guard.ts`의 `addInitScript`로 차단 (클릭 가로채기 방지)
-
-### 성능 측정 (Playwright, `perf/` + `playwright.perf.config.ts`)
-
-```bash
-npm run test:perf             # Web Vitals + Lighthouse 전체
-npm run test:perf:vitals      # 경량 Web Vitals만 (의존성 0)
-npm run test:perf:lighthouse  # Lighthouse 종합 감사만
-PERF_BASE_URL=http://localhost:3000 npm run test:perf  # 로컬 prod 빌드 대상 (먼저 next build && next start)
-```
-
-- ⚠️ **성능은 dev 가 아닌 prod 대상** — 기본 타깃 = 라이브(`https://pitch-master.app`). dev 는 미압축으로 2~5배 부풀려져 무의미. (E2E 와 정반대 — 그래서 **별도 config**)
-- `web-vitals.spec.ts`(의존성 0): LCP·FCP·CLS·TTFB + 요청수·전송량, Google 기준 판정 출력 + 관대한 회귀 가드. `lighthouse.spec.ts`: perf·a11y·BP·SEO 점수 (모바일 emulation, `playwright-lighthouse`+`lighthouse`)
-- ⚠️ **`/` 는 비로그인 시 `/login`(=실제 랜딩/마케팅 페이지)으로 리다이렉트** ([src/app/page.tsx](src/app/page.tsx)). 랜딩 측정은 `/login` 직접. 공개 측정 대상: `/login`·`/guide`·`/pricing`
-- ⚠️ **콜드 캐시 1회 측정값은 노이즈** (라이브 랜딩 LCP가 cold 6.3s ↔ warm 1.2s). 비교·검토는 워밍 후 또는 여러 번 median
-- **부하/스트레스 테스트는 범위 밖** (k6·Artillery 별도). Playwright 는 클라이언트 측 측정 전용
-- 베이스라인(2026-06-24): 랜딩 Lighthouse perf 63(상대 약점, 43요청·889KB) / 가이드 100 / 요금제 99, a11y·BP·SEO 거의 만점
+- E2E·성능 측정 상세 → `.claude/rules/testing.md` (테스트/perf 파일 작업 시 자동 로드)
 
 ---
 
