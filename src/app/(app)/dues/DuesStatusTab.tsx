@@ -223,6 +223,7 @@ function DuesStatusTabInner({
 }
 
 /** 면제 종류 라벨 추출 — note 형식 "면제"|"선납"|"선납: 6개월"|"휴회"|"부상" (payment-status API TYPE_LABELS).
+ *  선납은 exemption_type=PREPAID(=note "선납")로 통일. 옛 "완납"·"납부"(EXEMPT+reason)는 데이터 정리로 선납 전환.
  *  수동 토글한 면제는 note=null → "면제" 폴백. */
 function getExemptLabel(note?: string): string {
   return (note ?? "").split(":")[0].trim() || "면제";
