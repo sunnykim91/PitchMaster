@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { validateFreeText } from "@/lib/validators/safeText";
+import { isStaffOrAbove } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -86,7 +87,7 @@ export async function DELETE(request: NextRequest) {
 
   // 2) 본인 댓글이거나 운영진(STAFF+) 만 삭제 가능
   const isOwn = commentRow.user_id === ctx.userId;
-  const isStaff = ctx.teamRole === "PRESIDENT" || ctx.teamRole === "STAFF";
+  const isStaff = isStaffOrAbove(ctx.teamRole);
   if (!isOwn && !isStaff) {
     return apiError("본인 댓글이거나 운영진만 삭제할 수 있습니다", 403);
   }

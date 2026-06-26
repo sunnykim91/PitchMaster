@@ -318,7 +318,7 @@ export default function MembersClient({
         list = list.filter((m) => m.status === "DORMANT");
         break;
       case "STAFF_PLUS":
-        list = list.filter((m) => m.role === "PRESIDENT" || m.role === "STAFF");
+        list = list.filter((m) => isStaffOrAbove(m.role));
         break;
       case "MEMBER_ONLY":
         list = list.filter((m) => m.role === "MEMBER");
@@ -368,7 +368,7 @@ export default function MembersClient({
     members.forEach((m) => {
       if (m.status === "ACTIVE") c.ACTIVE += 1;
       else if (m.status === "DORMANT") c.DORMANT += 1;
-      if (m.role === "PRESIDENT" || m.role === "STAFF") c.STAFF_PLUS += 1;
+      if (isStaffOrAbove(m.role)) c.STAFF_PLUS += 1;
       else if (m.role === "MEMBER") c.MEMBER_ONLY += 1;
     });
     return c;
