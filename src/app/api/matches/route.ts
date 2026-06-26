@@ -6,6 +6,7 @@ import { sendTeamPush } from "@/lib/server/sendPush";
 import { autoCompleteTeamMatches, shouldAutoComplete } from "@/lib/server/autoCompleteMatches";
 import { invalidateTeamStats } from "@/lib/server/aiTeamStats";
 import { validateFreeText } from "@/lib/validators/safeText";
+import { computeMatchScore } from "@/lib/server/matchScore";
 
 /** datetime-local 값("2026-04-02T17:00")에 KST 오프셋이 없으면 붙여줌 */
 function toKSTTimestamp(v: string): string {
@@ -59,30 +60,9 @@ export async function GET() {
     }
     const map: Record<string, string> = {};
     for (const matchId of completedIds) {
+      // 빈 골 → "0 : 0" (getMatchesData 와 의도적으로 다름 — 거긴 null)
       const matchGoals = goalsByMatch.get(matchId) ?? [];
-      if (internalIds.has(matchId)) {
-        const hasC = matchGoals.some((g) => g.side === "C");
-        if (hasC) {
-          // 3파전: 팀별 골 합계 (자책골 개념 미적용 — 넣은 팀에 합산)
-          const tally = (side: string) => matchGoals.filter((g) => g.side === side && !g.is_own_goal).length;
-          map[matchId] = `${tally("A")} : ${tally("B")} : ${tally("C")}`;
-        } else {
-          // 자체전 2팀: A팀 vs B팀 (자책골은 side=범한 팀이므로 상대 사이드 득점으로 집계)
-          const a = matchGoals.filter((g) => g.side === "A" && !g.is_own_goal).length
-            + matchGoals.filter((g) => g.side === "B" && g.is_own_goal).length;
-          const b = matchGoals.filter((g) => g.side === "B" && !g.is_own_goal).length
-            + matchGoals.filter((g) => g.side === "A" && g.is_own_goal).length;
-          map[matchId] = `${a} : ${b}`;
-        }
-      } else {
-        // 일반 경기: 우리팀 vs 상대팀
-        let our = 0, opp = 0;
-        for (const g of matchGoals) {
-          if (g.scorer_id === "OPPONENT" || g.is_own_goal) opp++;
-          else our++;
-        }
-        map[matchId] = `${our} : ${opp}`;
-      }
+      map[matchId] = computeMatchScore(matchGoals, internalIds.has(matchId));
     }
     scoreMap = map;
   }

@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { autoCompleteTeamMatches, shouldAutoComplete } from "@/lib/server/autoCompleteMatches";
+import { computeMatchScore } from "@/lib/server/matchScore";
 
 export type DbMatchRow = {
   id: string;
@@ -51,25 +52,9 @@ export async function getMatchesData(teamId: string): Promise<{ matches: DbMatch
 
   function computeScore(matchId: string): string | null {
     const mg = byMatch[matchId];
+    // 골 미기록 경기는 null (matches route 와 의도적으로 다름 — route 는 "0 : 0")
     if (!mg || mg.length === 0) return null;
-    if (internalIds.has(matchId)) {
-      // 자체전: side 기준 팀별 집계 (경기상세 스코어와 동일 규칙)
-      if (mg.some((g) => g.side === "C")) {
-        // 3파전: 팀별 골 합계 (자책골 제외)
-        const tally = (s: string) => mg.filter((g) => g.side === s && !g.is_own_goal).length;
-        return `${tally("A")} : ${tally("B")} : ${tally("C")}`;
-      }
-      // 2팀: 자책골은 상대 사이드 득점으로 집계
-      const a = mg.filter((g) => g.side === "A" && !g.is_own_goal).length + mg.filter((g) => g.side === "B" && g.is_own_goal).length;
-      const b = mg.filter((g) => g.side === "B" && !g.is_own_goal).length + mg.filter((g) => g.side === "A" && g.is_own_goal).length;
-      return `${a} : ${b}`;
-    }
-    // 일반: 우리 vs 상대
-    let our = 0, opp = 0;
-    for (const g of mg) {
-      if (g.scorer_id === "OPPONENT" || g.is_own_goal) opp++; else our++;
-    }
-    return `${our} : ${opp}`;
+    return computeMatchScore(mg, internalIds.has(matchId));
   }
 
   return {
