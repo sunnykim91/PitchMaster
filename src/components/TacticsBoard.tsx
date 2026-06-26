@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { RotateCcw, Coffee, Share2, Copy, BarChart3, ChevronDown } from "lucide-react";
+import { RotateCcw, Coffee, Share2, Copy, BarChart3, ChevronDown, Pencil, Check } from "lucide-react";
 import type {
   Player,
   Placement,
@@ -36,6 +36,11 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   const { showToast } = useToast();
   const isMobile = useIsMobile();
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  // 편집/보기 토글 — 운영진이라도 기본은 보기 모드. [편집]을 눌러야 드래그·배치 가능.
+  // (운영진 여러 명일 때 스크롤 중 실수로 전술판을 건드려 자동저장되는 사고 방지)
+  const [editing, setEditing] = useState(false);
+  // 권한 없음(readOnly prop) 또는 편집 모드가 아니면 → 보기 전용. 모든 편집 인터랙션의 단일 게이트.
+  const viewOnly = readOnly || !editing;
   const [quarterMatrixOpen, setQuarterMatrixOpen] = useState(false);
   const isFutsal = sportType === "FUTSAL";
   const futsalFieldCounts = useMemo(() => (isFutsal ? getFutsalFieldCounts() : []), [isFutsal]);
@@ -669,7 +674,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   const [slotMode, setSlotMode] = useState<SlotMode>("assign");
 
   function handleSelectSlot(slotId: string) {
-    if (readOnly) return;
+    if (viewOnly) return;
     setActiveSlotId(slotId);
     setSlotMode("assign");
     if (isMobile) setMobileSheetOpen(true);
@@ -778,14 +783,44 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     <Card className="p-6">
       <CardContent className="p-0">
         {/* 헤더 */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div>
             <p className="text-xs font-bold tracking-[0.1em] text-primary">전술</p>
             <h3 className="mt-1 font-heading text-xl font-bold uppercase text-foreground">전술판 편성</h3>
           </div>
-          {saving && <span className="text-xs text-muted-foreground animate-pulse">저장 중...</span>}
-          {shareMsg && <span className="text-xs text-primary animate-pulse">{shareMsg}</span>}
+          <div className="flex items-center gap-2">
+            {saving && <span className="text-xs text-muted-foreground animate-pulse">저장 중...</span>}
+            {shareMsg && <span className="text-xs text-primary animate-pulse">{shareMsg}</span>}
+            {/* 편집/완료 토글 — 운영진에게만 노출 */}
+            {!readOnly && (editing ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                className="shrink-0 gap-1.5"
+                onClick={() => { flushPendingSave(); setEditing(false); setActiveSlotId(null); }}
+              >
+                <Check className="h-3.5 w-3.5" />완료
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                size="sm"
+                className="shrink-0 gap-1.5"
+                onClick={() => setEditing(true)}
+              >
+                <Pencil className="h-3.5 w-3.5" />편집
+              </Button>
+            ))}
+          </div>
         </div>
+
+        {/* 보기 모드 안내 — 운영진이 편집 모드가 아닐 때만. 실수 편집 방지 취지 설명 */}
+        {!readOnly && !editing && (
+          <p className="mt-3 rounded-lg bg-[hsl(var(--secondary)_/_0.5)] px-3 py-2 text-xs text-muted-foreground">
+            보기 모드예요. 선수 배치를 바꾸려면 오른쪽 위 <span className="font-semibold text-foreground">편집</span>을 누르세요.
+          </p>
+        )}
 
         {/* 쿼터 선택 — 세그먼트 컨트롤 */}
         <div className="mt-4 flex items-center gap-2">
@@ -826,7 +861,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
 
         {/* 포메이션 + 유니폼 + 리셋 */}
         <div className="mt-3 flex items-center gap-2">
-          {!readOnly ? (
+          {!viewOnly ? (
             <Select value={formation.id} onValueChange={handleFormationChange}>
               <SelectTrigger className="h-11 flex-1 rounded-lg border-0 bg-secondary text-sm font-semibold">
                 <SelectValue />
@@ -841,7 +876,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             <div className="flex h-11 flex-1 items-center rounded-lg bg-secondary px-3 text-sm font-semibold">{formation.name}</div>
           )}
 
-          {isFutsal && !readOnly && (
+          {isFutsal && !viewOnly && (
             <Select value={String(futsalFieldCount)} onValueChange={(v) => handleFutsalFieldCountChange(Number(v))}>
               <SelectTrigger className="h-11 w-auto min-w-[80px] rounded-lg border-0 bg-secondary text-sm font-semibold"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -852,7 +887,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             </Select>
           )}
 
-          {!readOnly && (
+          {!viewOnly && (
             <Button type="button" variant="secondary" size="icon" className="h-11 w-11 shrink-0" onClick={clearBoard} title="이 쿼터 초기화">
               <RotateCcw className="h-4 w-4" />
             </Button>
@@ -861,7 +896,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
 
         {/* 액션 버튼 */}
         <div className="mt-2 flex gap-2">
-          {!readOnly && (
+          {!viewOnly && (
             <Button type="button" variant="outline" className="flex-1 text-xs" onClick={clearAllQuarters}>전체 초기화</Button>
           )}
           <Button type="button" variant="outline" className="flex-1 text-xs gap-1.5" onClick={handleShareFormation}>
@@ -872,7 +907,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
           </Button>
         </div>
 
-        <div className={cn("mt-5 grid gap-5", !readOnly && "lg:grid-cols-[1.2fr_0.8fr]")}>
+        <div className={cn("mt-5 grid gap-5", !viewOnly && "lg:grid-cols-[1.2fr_0.8fr]")}>
           {/* Soccer pitch + resting (capture area) */}
           <div ref={captureRef} className="space-y-3" style={{ backgroundColor: "hsl(var(--background))", padding: "0 0 8px 0" }}>
           {/* 쿼터 표시 (캡처 이미지에 포함) */}
@@ -1006,7 +1041,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                   key={slot.id}
                   type="button"
                   onPointerDown={(event) => {
-                    if (readOnly) return;
+                    if (viewOnly) return;
                     event.preventDefault();
                     event.currentTarget.setPointerCapture(event.pointerId);
                     dragRef.current = { slotId: slot.id };
@@ -1137,7 +1172,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             </div>
           )}
           {/* 역할 배정 — 모바일용 (captureRef 밖) */}
-          {!readOnly && isMobile && (
+          {!viewOnly && isMobile && (
             <div className="rounded-xl bg-[hsl(var(--secondary)_/_0.5)] px-4 py-3">
               <p className="mb-2 text-sm font-bold">역할 배정</p>
               <div className="space-y-3">
@@ -1174,7 +1209,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
           </div>{/* end captureRef */}
 
           {/* Roster panel — PC: 인라인, 모바일: 바텀시트 */}
-          {!readOnly && !isMobile && (
+          {!viewOnly && !isMobile && (
           <div className="space-y-4">
             <Card className="border-0 bg-secondary">
               <CardContent className="p-4">
@@ -1353,7 +1388,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
           )}
 
           {/* 모바일 바텀시트 */}
-          {!readOnly && isMobile && (
+          {!viewOnly && isMobile && (
             <Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
               <SheetContent side="bottom" className="max-h-[70vh] overflow-y-auto rounded-t-2xl">
                 <SheetTitle className="text-base font-bold">
