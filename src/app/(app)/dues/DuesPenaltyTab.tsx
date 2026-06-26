@@ -276,7 +276,7 @@ function DuesPenaltyTabInner({ role }: DuesPenaltyTabProps) {
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label className="text-[12.5px] text-muted-foreground">멤버</Label>
-                <NativeSelect name="memberId" required className="h-9 text-sm">
+                <NativeSelect name="memberId" required className="h-9 text-sm py-0">
                   <option value="">선택</option>
                   {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                 </NativeSelect>

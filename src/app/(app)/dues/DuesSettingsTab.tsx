@@ -628,7 +628,7 @@ function PenaltyRulesSection({ refetchSummary }: { refetchSummary: () => Promise
               </div>
               <div className="space-y-1">
                 <Label className="text-[12.5px] text-muted-foreground">트리거</Label>
-                <NativeSelect name="triggerType" className="h-9 text-sm">
+                <NativeSelect name="triggerType" className="h-9 text-sm py-0">
                   <option value="LATE">지각</option>
                   <option value="ABSENT">불참</option>
                   <option value="NO_VOTE">미투표</option>
@@ -862,7 +862,7 @@ function MemberExemptionSection({
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label className="text-[12.5px] text-muted-foreground">회원</Label>
-                <NativeSelect value={memberId} onChange={(e) => setMemberId(e.target.value)} className="h-9 text-sm">
+                <NativeSelect value={memberId} onChange={(e) => setMemberId(e.target.value)} className="h-9 text-sm py-0">
                   <option value="">선택</option>
                   {members.map((m) => <option key={m.memberId} value={m.memberId}>{m.name}</option>)}
                 </NativeSelect>
@@ -876,7 +876,7 @@ function MemberExemptionSection({
                     setExemptionType(v);
                     if (v === "PREPAID") setActualPaidAmount(monthlyAmount * periodMonths);
                   }}
-                  className="h-9 text-sm"
+                  className="h-9 text-sm py-0"
                 >
                   {EXEMPTION_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </NativeSelect>

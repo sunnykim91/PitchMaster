@@ -209,7 +209,7 @@ export const MatchRoleGuide = memo(function MatchRoleGuide(
           <NativeSelect
             value={selectedPlayerId}
             onChange={(e) => setSelectedPlayerId(e.target.value)}
-            className="h-9 flex-1 text-sm"
+            className="h-9 flex-1 text-sm py-0"
             aria-label="선수 선택"
           >
             <StaffSelectOptions
