@@ -796,7 +796,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               <Button
                 type="button"
                 size="sm"
-                variant="secondary"
+                variant="success"
                 className="shrink-0 gap-1.5"
                 onClick={() => { flushPendingSave(); setEditing(false); setActiveSlotId(null); }}
               >
