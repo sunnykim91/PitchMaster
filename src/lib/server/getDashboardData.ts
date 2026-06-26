@@ -2,7 +2,8 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { autoCompleteTeamMatches, getKstNow, getKstToday } from "@/lib/server/autoCompleteMatches";
 import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
 import { isTeamRecordMatch, type Role } from "@/lib/types";
-import { isStaffOrAbove } from "@/lib/permissions";
+import { isStaffOrAbove, isPresident } from "@/lib/permissions";
+import { computeMatchScore } from "@/lib/server/matchScore";
 import { countEligibleMatches, kstDateString } from "@/lib/attendanceEligibility";
 
 export type TeamRecord = {
@@ -385,22 +386,8 @@ export async function getDashboardData(
   let recentResult: DashboardData["recentResult"] = null;
   if (recentMatch) {
     const goalRows = (recentGoalsRes.data ?? []) as { scorer_id: string; is_own_goal: boolean; side: string | null }[];
-    // 자체전은 side 기준 팀별 집계 (경기상세·목록과 동일 규칙), 일반은 우리 vs 상대
-    let scoreStr: string;
-    if (recentMatch.match_type === "INTERNAL") {
-      if (goalRows.some((g) => g.side === "C")) {
-        const tally = (s: string) => goalRows.filter((g) => g.side === s && !g.is_own_goal).length;
-        scoreStr = `${tally("A")} : ${tally("B")} : ${tally("C")}`;
-      } else {
-        const a = goalRows.filter((g) => g.side === "A" && !g.is_own_goal).length + goalRows.filter((g) => g.side === "B" && g.is_own_goal).length;
-        const b = goalRows.filter((g) => g.side === "B" && !g.is_own_goal).length + goalRows.filter((g) => g.side === "A" && g.is_own_goal).length;
-        scoreStr = `${a} : ${b}`;
-      }
-    } else {
-      const ourGoals = goalRows.filter((g) => g.scorer_id !== "OPPONENT" && !g.is_own_goal).length;
-      const oppGoals = goalRows.filter((g) => g.scorer_id === "OPPONENT" || g.is_own_goal).length;
-      scoreStr = `${ourGoals} : ${oppGoals}`;
-    }
+    // 스코어 문자열은 공통 헬퍼 (자체전 side 집계 + 자책골 규칙 단일소스)
+    const scoreStr = computeMatchScore(goalRows, recentMatch.match_type === "INTERNAL");
     type MvpVoteRow = { voter_id: string; candidate_id: string; is_staff_decision: boolean | null; users: { name: string } | { name: string }[] | null };
     const voteRows = (recentMvpRes.data ?? []) as MvpVoteRow[];
     const attendedCount = (recentAttRes.data ?? []).length;
@@ -592,7 +579,7 @@ export async function getDashboardData(
     }
 
     // 7) 회원 5명 미만 — 회장만 (신규)
-    if (myRole === "PRESIDENT" && registeredMemberCount > 0 && registeredMemberCount < 5) {
+    if (isPresident(myRole as Role) && registeredMemberCount > 0 && registeredMemberCount < 5) {
       tasks.push({
         label: `회원 ${registeredMemberCount}명 — 더 초대하기`,
         href: "/settings?tab=team",

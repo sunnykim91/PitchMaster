@@ -11,6 +11,13 @@
  *    getMatchesData 는 골 없는 경기에 null(미기록) 을, matches route 는 "0 : 0"(완료) 을 낸다.
  *    그래서 이 헬퍼는 빈 배열이면 "0 : 0"(2팀)/"0 : 0 : 0"(3파전 불가) 을 그대로 내고,
  *    null 로 막고 싶은 호출처가 직접 빈 배열을 가드한다.
+ *
+ * ⚠️ 일반전 자책골 두 규칙 공존 (102차 전수조사 — 현행 유지 결정):
+ *    이 헬퍼·서버 전 경로 = "is_own_goal 이면 무조건 실점"(단순). 그러나 경기상세 3뷰
+ *    (MatchInfoTab·MatchDetailClient·MatchRecordTab)는 "scorer_id==='OPPONENT' + is_own_goal
+ *    → 우리 득점"(축구 정석)으로 정밀하게 본다. 차이는 OPPONENT+자책골 row 에서만 발생하는데
+ *    득점 폼이 OPPONENT 행에 is_own_goal 을 못 넣어 **UI로 생성 불가 → 현재 미발현**.
+ *    통일하려다 동작 코드에 회귀 낼 위험이 커 의도적으로 둘을 유지한다(합치려면 한 규칙으로 결정 후).
  */
 export interface ScoreGoalRow {
   scorer_id: string;

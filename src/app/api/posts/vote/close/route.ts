@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { isStaffOrAbove } from "@/lib/permissions";
+import type { Role } from "@/lib/types";
 
 /** 투표 즉시 마감 (운영진 이상) */
 export async function POST(request: NextRequest) {
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
     .eq("team_id", ctx.teamId)
     .eq("user_id", ctx.userId)
     .single();
-  if (!member || (member.role !== "PRESIDENT" && member.role !== "STAFF")) {
+  if (!member || !isStaffOrAbove(member.role as Role)) {
     return apiError("권한이 없습니다", 403);
   }
 

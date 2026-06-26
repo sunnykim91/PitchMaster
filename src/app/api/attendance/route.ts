@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isValidUuid } from "@/lib/validators/uuid";
+import { isStaffOrAbove } from "@/lib/permissions";
+import type { Role } from "@/lib/types";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -76,7 +78,7 @@ export async function POST(request: NextRequest) {
       .eq("team_id", ctx.teamId)
       .eq("user_id", ctx.userId)
       .single();
-    if (!callerMember || (callerMember.role !== "PRESIDENT" && callerMember.role !== "STAFF")) {
+    if (!callerMember || !isStaffOrAbove(callerMember.role as Role)) {
       return apiError("권한이 없습니다", 403);
     }
   } else {

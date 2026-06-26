@@ -6,7 +6,8 @@ import {
   apiSuccess,
 } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { PERMISSIONS, hasMinRole } from "@/lib/permissions";
+import { PERMISSIONS, hasMinRole, isPresident } from "@/lib/permissions";
+import type { Role } from "@/lib/types";
 import { invalidateAuthSync } from "@/lib/auth";
 
 export async function GET() {
@@ -359,7 +360,7 @@ export async function DELETE(request: NextRequest) {
     .eq("team_id", ctx.teamId)
     .single();
 
-  if (target?.role === "PRESIDENT") {
+  if (isPresident(target?.role as Role)) {
     return apiError(
       "회장은 강퇴할 수 없습니다. 회장이 직접 다른 회원에게 회장을 이임한 뒤 본인이 탈퇴하거나 강퇴해주세요."
     );
