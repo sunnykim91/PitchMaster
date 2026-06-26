@@ -35,7 +35,6 @@ PERMISSIONS = {
 
 ### 특수 기능
 - `analytics.ts` — GA4 이벤트 (landingView, demoStart, matchCreate 등 완비)
-- `formationAI.ts` — AI 자동 포지션 배치 로직
 - `formations.ts` — 포메이션 정의 (4-4-2, 4-3-3 등)
 - `kakaoShare.ts` — 카카오 공유 API 연동
 - `pushSubscription.ts` — Web Push 구독 관리 (VAPID)
