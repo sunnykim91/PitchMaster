@@ -185,6 +185,14 @@ function MatchInfoTabInner({
     return { ...getUniformBg(third.primary, third.secondary, third.pattern), clipPath: JERSEY_CLIP };
   }, [uniformsProp]);
 
+  // 스코어 히어로의 '우리팀' 저지 — 이 경기에서 선택한 유니폼(홈/원정/써드)을 반영.
+  // (예전엔 항상 homeJerseyStyle 고정이라 원정·써드로 바꿔도 메인 저지 색이 안 변하던 버그)
+  const teamJerseyStyle = useMemo(() => {
+    if (match.uniformType === "AWAY") return awayJerseyStyle;
+    if (match.uniformType === "THIRD" && thirdJerseyStyle) return thirdJerseyStyle;
+    return homeJerseyStyle;
+  }, [match.uniformType, homeJerseyStyle, awayJerseyStyle, thirdJerseyStyle]);
+
   /* ── 유니폼 변경 ── */
   async function handleUniformChange(type: "HOME" | "AWAY" | "THIRD") {
     if (match.uniformType === type) return;
@@ -269,7 +277,7 @@ function MatchInfoTabInner({
               <div className="flex items-center justify-center gap-6">
                 {/* 홈 */}
                 <div className="relative flex flex-1 flex-col items-center gap-3">
-                  <div className="h-14 w-14 rounded-sm shadow-lg" style={homeJerseyStyle} />
+                  <div className="h-14 w-14 rounded-sm shadow-lg" style={isInternal ? homeJerseyStyle : teamJerseyStyle} />
                   {match.status === "COMPLETED" && scoreData.result === "승" && (
                     <Badge className="absolute -right-1 -top-1 bg-[hsl(var(--success))] px-1.5 py-0.5 text-[12px] font-bold text-white">승</Badge>
                   )}
