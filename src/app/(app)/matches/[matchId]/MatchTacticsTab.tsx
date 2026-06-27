@@ -828,6 +828,7 @@ function MatchTacticsTabInner({
           defaultFormationId={defaultFormationId}
           readOnly={!canManage}
           side={isInternal ? activeSide : undefined}
+          uniformType={match.uniformType}
           teamSettings={teamSettings}
           initialSquads={generatedSquads.length > 0 ? generatedSquads.map((sq) => ({
             id: `gen-${sq.quarter_number}`,

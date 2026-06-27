@@ -21,6 +21,8 @@ export type TacticsBoardProps = {
   defaultFormationId?: string; // 팀 기본 포메이션
   readOnly?: boolean; // MEMBER: 조회만 가능
   side?: InternalSide; // 자체전 팀 구분 (A/B/C)
+  /** 이 경기에서 선택한 유니폼 (홈/원정/써드). 미지정 시 홈. 저지 배지·공유 이미지 색상에 반영 */
+  uniformType?: "HOME" | "AWAY" | "THIRD";
 };
 
 export type Placement = {

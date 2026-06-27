@@ -31,7 +31,7 @@ import { SAVE_DEBOUNCE_MS, clamp, isPositionMatched } from "./TacticsBoard.utils
 // 외부 사용자(MatchTacticsTab)가 TeamSettings를 default import에서 같이 받을 수 있게 re-export
 export type { TeamSettings, UniformSet } from "./TacticsBoard.types";
 
-export default function TacticsBoard({ matchId, roster, quarterCount, sportType = "SOCCER", playerCount, teamSettings: teamSettingsProp, initialSquads, defaultFormationId: teamDefaultFormationId, readOnly = false, side }: TacticsBoardProps) {
+export default function TacticsBoard({ matchId, roster, quarterCount, sportType = "SOCCER", playerCount, teamSettings: teamSettingsProp, initialSquads, defaultFormationId: teamDefaultFormationId, readOnly = false, side, uniformType }: TacticsBoardProps) {
   const confirm = useConfirm();
   const { showToast } = useToast();
   const isMobile = useIsMobile();
@@ -254,7 +254,9 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     });
   }, [debouncedSave]);
 
-  const [uniformMode, setUniformMode] = useState<"HOME" | "AWAY" | "THIRD">("HOME");
+  // 저지 색은 이 경기에서 선택한 유니폼(홈/원정/써드)을 따른다. 미지정 시 홈.
+  // (예전엔 "HOME" 고정 state라 원정·써드 경기에서도 전술판·공유 이미지가 항상 홈색이던 버그)
+  const uniformMode: "HOME" | "AWAY" | "THIRD" = uniformType ?? "HOME";
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
   const [shareMsg, setShareMsg] = useState<string | null>(null);
   const sharingRef = useRef(false);
