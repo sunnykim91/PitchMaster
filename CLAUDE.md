@@ -115,12 +115,15 @@ v{hash}
 - `--success`, `--warning`, `--info`, `--accent`
 - 참조 패턴: `text-[hsl(var(--warning))]` — Tailwind config에 미등록 상태
 
-### 카드 컴포넌트 종류 (5종 혼재)
-- `card-featured` (CSS 유틸리티, globals.css)
-- `card-stat` (CSS 유틸리티)
-- `card-list-item` (CSS 유틸리티)
-- `<Card>` Radix 컴포넌트
-- `<div className="rounded-xl border ...">` 직접 작성
+### 카드 컴포넌트 — 표준은 `<Card>` (2026-06-28 정리)
+**신규 카드는 Radix `<Card>`(`src/components/ui/card.tsx`)를 표준으로 사용.** 나머지는 국소 레거시 — 확산 금지.
+- ✅ `<Card>` Radix 컴포넌트 (**표준**, 41+ 파일) — base: `rounded-xl bg-card border-border/40 shadow-sm`
+- 🗑️ `card-featured` — 미사용 dead 코드라 제거됨 (globals.css에서 삭제 완료)
+- 🔒 `card-stat` (records 통계 그리드 1곳) — `<Card>`로 통일 보류. base 스타일 차이 + `item.bg` 반투명 틴트와 `background` 그라디언트의 cascade 상호작용 때문에 변환 시 픽셀이 바뀜. 국소 레거시로 유지
+- 🔒 `card-list-item` (MatchRecordTab 2곳) — 동일 사유(transition easing 차이)로 유지
+- ⚠️ raw `<div className="rounded-xl border bg-card ...">` (8곳) — bespoke shadow 섞여 일괄 전환 시 시각 변경. 신규 작성 지양, `<Card>` 우선
+
+> 핵심: `<Card>`/card-stat/card-list-item/raw div는 base 스타일이 서로 달라 "픽셀 안 깨지는 통일"이 구조적으로 불가. 표준 문서화 + dead 제거로 부채 해소하고, 작동 중 유틸은 보존.
 
 ---
 
@@ -155,7 +158,7 @@ UI/UX 부채 잔존 (CLAUDE.md 알려진 이슈 참조)
 
 - **stagger-children 딜레이**: 해결됨 — globals.css가 4번째(90ms)까지만 누적, 5번째부터 동시 표시 (과거 360ms 부채 정리 완료)
 - **생일 confetti**: 해결됨 — div 하드코딩 제거, `pm-dash-bday-banner`(🎂 이모지+아바타칩)로 교체됨 (코드에 confetti 흔적 0)
-- **스크린샷 경로**: `public/screenshot/`(단수)·`public/screenshots/`(복수) 두 폴더 공존. 복수=정본(manifest·Hero·Features·OCR가이드), 단수=AppScreenSlider 전용. AppScreenSlider 내부 경로 단수로 통일 완료(전수조사). 폴더 일원화는 미완(후순위)
+- **스크린샷 경로**: 해결됨 — `public/screenshots/`(복수) 단일 폴더로 일원화 완료(2026-06-28). 단수 `public/screenshot/`는 제거, AppScreenSlider·middleware matcher 모두 복수로 갱신. 모든 스크린샷 참조는 `/screenshots/`
 
 ## Supabase Realtime 구독 주의사항 (2026-04-29)
 

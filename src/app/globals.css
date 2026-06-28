@@ -395,23 +395,6 @@ select optgroup {
 }
 
 /* ── Athletic Premium — gradient utilities ── */
-.card-featured {
-  position: relative;
-  overflow: hidden;
-  padding: 1rem;
-  border-radius: 1rem;
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
-  box-shadow: 0 4px 24px -4px hsl(16 85% 58% / 0.08), 0 1px 3px 0 hsl(var(--foreground) / 0.06);
-}
-.card-featured::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, hsl(16 85% 58% / 0.15) 0%, transparent 50%);
-  pointer-events: none;
-}
-
 .card-stat {
   background: linear-gradient(160deg, hsl(var(--secondary)) 0%, hsl(var(--card)) 100%);
   border: 1px solid hsl(var(--border));
