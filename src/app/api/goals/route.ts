@@ -4,6 +4,7 @@ import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { invalidateTeamStats } from "@/lib/server/aiTeamStats";
+import { checkMutationRateLimit } from "@/lib/server/apiRateLimit";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // /player/[memberId] 는 30분 ISR. 골 기록 변경 시 영향받는 선수 카드 즉시 갱신.
@@ -76,6 +77,16 @@ export async function POST(request: NextRequest) {
   // 팀 설정 기반 권한 체크
   const permErr = await checkStatsRecordingPermission(db, ctx.teamId, ctx.teamRole);
   if (permErr) return permErr;
+
+  // 남용 방지: 한 사용자가 60초에 40개 초과 골 기록 차단 (정상 입력은 충분히 통과)
+  const rl = await checkMutationRateLimit(db, {
+    table: "match_goals",
+    actorColumn: "recorded_by",
+    actorId: ctx.userId,
+    windowSec: 60,
+    max: 40,
+  });
+  if (!rl.allowed) return apiError("요청이 너무 잦습니다. 잠시 후 다시 시도해주세요.", 429);
 
   // Verify match belongs to team
   const { data: matchCheck } = await db.from("matches").select("id").eq("id", body.matchId).eq("team_id", ctx.teamId).single();

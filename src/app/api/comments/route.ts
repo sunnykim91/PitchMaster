@@ -3,6 +3,7 @@ import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { validateFreeText } from "@/lib/validators/safeText";
+import { checkMutationRateLimit } from "@/lib/server/apiRateLimit";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -38,6 +39,16 @@ export async function POST(request: NextRequest) {
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  // 남용 방지: 한 사용자가 60초에 20개 초과 댓글 작성 차단
+  const rl = await checkMutationRateLimit(db, {
+    table: "post_comments",
+    actorColumn: "author_id",
+    actorId: ctx.userId,
+    windowSec: 60,
+    max: 20,
+  });
+  if (!rl.allowed) return apiError("요청이 너무 잦습니다. 잠시 후 다시 시도해주세요.", 429);
 
   // 크로스팀 삽입 차단 — 본인 팀 게시글에만 댓글 가능 (GET/DELETE와 동일 검증)
   const { data: postCheck } = await db.from("posts").select("id").eq("id", body.postId).eq("team_id", ctx.teamId).single();

@@ -9,6 +9,7 @@ import {
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
 import { validateFreeText } from "@/lib/validators/safeText";
+import { checkMutationRateLimit } from "@/lib/server/apiRateLimit";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -43,6 +44,18 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  // 남용 방지: 한 사용자가 60초에 30개 초과 회비 기록 차단
+  // (recorded_at은 납부일이라 과거로 backdate 시 회피 가능하나, 기본 now() 스팸은 차단)
+  const rl = await checkMutationRateLimit(db, {
+    table: "dues_records",
+    actorColumn: "recorded_by",
+    actorId: ctx.userId,
+    windowSec: 60,
+    max: 30,
+    timeColumn: "recorded_at",
+  });
+  if (!rl.allowed) return apiError("요청이 너무 잦습니다. 잠시 후 다시 시도해주세요.", 429);
 
   // 금액 검증: 양수만
   if (typeof body.amount !== "number" || !Number.isFinite(body.amount) || body.amount <= 0) {

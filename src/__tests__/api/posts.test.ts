@@ -6,6 +6,8 @@ import { memberSession, staffSession, presidentSession, noTeamSession } from "..
 
 vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/supabase/admin", () => ({ getSupabaseAdmin: vi.fn() }));
+// rate limit은 자체 전용 테스트(apiRateLimit.test.ts)가 있음 — 라우트 테스트에선 no-op으로 통과시켜 mock 큐 순서 보존
+vi.mock("@/lib/server/apiRateLimit", () => ({ checkMutationRateLimit: vi.fn().mockResolvedValue({ allowed: true }) }));
 
 import { auth } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";

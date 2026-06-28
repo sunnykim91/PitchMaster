@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { isPlatformAdmin } from "@/lib/admin";
 import { validateFreeText } from "@/lib/validators/safeText";
+import { checkMutationRateLimit } from "@/lib/server/apiRateLimit";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -131,6 +132,16 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  // 남용 방지: 한 사용자가 60초에 10개 초과 게시글 작성 차단
+  const rl = await checkMutationRateLimit(db, {
+    table: "posts",
+    actorColumn: "author_id",
+    actorId: ctx.userId,
+    windowSec: 60,
+    max: 10,
+  });
+  if (!rl.allowed) return apiError("요청이 너무 잦습니다. 잠시 후 다시 시도해주세요.", 429);
 
   const titleCheck = validateFreeText(body.title, { maxLength: 200, fieldLabel: "제목" });
   if (!titleCheck.ok) return apiError(titleCheck.reason);
