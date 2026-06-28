@@ -5,12 +5,12 @@ import Image from "next/image";
 import { Play, Pause } from "lucide-react";
 
 const screens = [
-  { title: "대시보드", src: "/screenshot/dashboard.png" },
-  { title: "참석 투표", src: "/screenshot/vote.png" },
-  { title: "내 기록 · 레이더 차트", src: "/screenshot/records1.png" },
-  { title: "스마트 라인업", src: "/screenshot/tactisboard.png" },
-  { title: "전체 기록", src: "/screenshot/records2.png" },
-  { title: "회비 관리", src: "/screenshot/dues.png" },
+  { title: "대시보드", src: "/screenshots/dashboard.png" },
+  { title: "참석 투표", src: "/screenshots/vote.png" },
+  { title: "내 기록 · 레이더 차트", src: "/screenshots/records1.png" },
+  { title: "스마트 라인업", src: "/screenshots/tactisboard.png" },
+  { title: "전체 기록", src: "/screenshots/records2.png" },
+  { title: "회비 관리", src: "/screenshots/dues.png" },
 ];
 
 export default function AppScreenSlider() {

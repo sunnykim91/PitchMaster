@@ -150,6 +150,6 @@ export function middleware(req: NextRequest) {
  *  maybeSetSignupSource 함수 안에서 path 가드로 처리. */
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|workbox-.*|icons/|screenshots/|screenshot/).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|workbox-.*|icons/|screenshots/).*)",
   ],
 };
