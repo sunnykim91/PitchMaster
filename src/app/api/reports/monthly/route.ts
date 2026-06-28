@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiContext, requireRole, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
+import { isTeamRecordMatch } from "@/lib/types";
 
 /**
  * 월별 결산 리포트 API
@@ -164,10 +165,14 @@ export async function GET(request: NextRequest) {
       scoreByMatch.set(g.match_id, s);
     }
 
+    // 자체전(INTERNAL)·이벤트는 W/D/L 집계에서 제외 — 상대골이 없어 무조건 '승'으로 잡히는 것 방지.
+    // (득실·활동량 집계는 발생한 모든 경기 포함 의도라 그대로 둠.)
+    const recordMatchIdSet = new Set(matchRows.filter((m) => isTeamRecordMatch(m.match_type)).map((m) => m.id));
     for (const mid of matchIds) {
       const s = scoreByMatch.get(mid) ?? { our: 0, opp: 0 };
       goalsFor += s.our;
       goalsAgainst += s.opp;
+      if (!recordMatchIdSet.has(mid)) continue;
       if (s.our > s.opp) wins++;
       else if (s.our === s.opp) draws++;
       else losses++;

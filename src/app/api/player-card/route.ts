@@ -178,7 +178,6 @@ export async function GET(request: NextRequest) {
 
   // 출석률·연속기록 분모는 가입(joined_at) 이후 경기만 — 가입 전 경기를 결석으로 세지 않음.
   const joinKst = kstDateString((memberData.joined_at as string | null) ?? null);
-  const eligibleMatches = (matches ?? []).filter((m) => isEligibleMatch(m.match_date as string, joinKst));
   const allMatchIds = (matches ?? []).map((m) => m.id);
   // 자체전: 선수가 A/B/C 한 팀 소속이라 "우리 vs 상대" 승/클린시트가 성립 안 함 → 승률·클린시트·실점 집계에서 제외 (골·어시·MVP·출전수엔 포함)
   const internalMatchIds = new Set((matches ?? []).filter((m) => m.match_type === "INTERNAL").map((m) => m.id));
@@ -243,6 +242,14 @@ export async function GET(request: NextRequest) {
     }
   }
   const matchCount = attendedMatchIds.size;
+
+  // 출석률·연속 분모 = 가입(joined_at) 이후 경기. 단 가입 전 출석 기록이 있으면(과거 데이터 이관 멤버)
+  // 가입일 게이트를 무시하고 시즌 전체를 분모로 — records 탭의 computeAttendanceRateWithHistory와 동일 규칙.
+  const attendedDates = (matches ?? []).filter((m) => attendedMatchIds.has(m.id)).map((m) => m.match_date as string);
+  const hasPreJoinAttendance = !!joinKst && attendedDates.some((d) => d < joinKst);
+  const eligibleMatches = (matches ?? []).filter((m) =>
+    isEligibleMatch(m.match_date as string, hasPreJoinAttendance ? null : joinKst),
+  );
 
   // 6. 골/어시/MVP 조회
   const [goalsRes, assistsRes, mvpRes, allGoalsRes, actualAttendRes] = await Promise.all([

@@ -87,15 +87,20 @@ export async function GET(request: NextRequest) {
 
   // matches 는 최신→과거 순 → statuses 도 같은 순서(왼쪽=최신)로 반환.
   const result = (members ?? []).map((m) => {
-    let joinKst: string | null = null;
-    if (m.joined_at) {
-      joinKst = getKstToday(new Date(m.joined_at).getTime());
-    }
+    const joinKst: string | null = m.joined_at ? getKstToday(new Date(m.joined_at).getTime()) : null;
+    // 가입 전 출석 기록이 있으면(과거 데이터 이관 멤버) 가입일 게이트 무시 —
+    // 그러지 않으면 윈도우 경기가 전부 "pre"로 빠져 eligible=0 → 베테랑이 "신규"로 오분류되고 분모 0이 됨.
+    const hasPreJoinAttendance = !!joinKst && matches.some((mm) => {
+      if ((mm.match_date as string) >= joinKst) return false;
+      const st = statusMap.get(`${mm.id}|${m.id}`);
+      return st === "PRESENT" || st === "LATE";
+    });
+    const effJoinKst = hasPreJoinAttendance ? null : joinKst;
     let attended = 0;
     let eligible = 0;
     const statuses = matches.map((mm) => {
       const md = mm.match_date as string;
-      if (joinKst && md < joinKst) return "pre"; // 합류 전 — 표본 아님
+      if (effJoinKst && md < effJoinKst) return "pre"; // 합류 전 — 표본 아님
       eligible++;
       const st = statusMap.get(`${mm.id}|${m.id}`);
       if (st === "PRESENT") { attended++; return "present"; }

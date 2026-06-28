@@ -741,10 +741,10 @@ export async function getDashboardSeasonStats(
   const completedMatchRows = (completedMatchesRes.data ?? [])
     .filter((m) => isTeamRecordMatch((m as { match_type?: string | null }).match_type));
   const completedMatchIds = completedMatchRows.map((m) => m.id);
-  // 내 출석률 분모는 가입(joined_at) 이후 경기만
-  const myEligibleMatches = countEligibleMatches(
-    completedMatchRows.map((m) => (m as { match_date: string }).match_date),
-    myMemberForStats?.joined_at,
+  // 출석률 분모 후보 — 시즌 전체 완료 경기일 + (matchId → 경기일) 맵
+  const allMyMatchDates = completedMatchRows.map((m) => (m as { match_date: string }).match_date);
+  const myMatchDateById = new Map(
+    completedMatchRows.map((m) => [m.id, (m as { match_date: string }).match_date] as const),
   );
 
   let teamRecord = EMPTY_RECORD;
@@ -792,6 +792,18 @@ export async function getDashboardSeasonStats(
     for (const r of (myAttByUserRes.data ?? [])) attMatchSet.add(r.match_id);
     for (const r of (myAttByMemberRes.data ?? [])) attMatchSet.add(r.match_id);
     const attendCount = attMatchSet.size;
+
+    // 출석률 분모 = 가입(joined_at) 이후 경기. 단 가입 전 출석 기록이 있으면(과거 데이터 이관 멤버)
+    // 가입일 게이트를 무시하고 시즌 전체를 분모로 — records 탭의 computeAttendanceRateWithHistory와 동일 규칙.
+    const myJoinKst = kstDateString(myMemberForStats?.joined_at);
+    const myAttendedDates = [...attMatchSet]
+      .map((id) => myMatchDateById.get(id))
+      .filter((d): d is string => !!d);
+    const myHasPreJoinAttendance = !!myJoinKst && myAttendedDates.some((d) => d < myJoinKst);
+    const myEligibleMatches = countEligibleMatches(
+      allMyMatchDates,
+      myHasPreJoinAttendance ? null : myMemberForStats?.joined_at,
+    );
 
     // 본인 골 — scorer_id 가 userId 또는 myTeamMemberId 일 수 있어 둘 다 매칭
     const myScorerIds = new Set<string>([userId]);

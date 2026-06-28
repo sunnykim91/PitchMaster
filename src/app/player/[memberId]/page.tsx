@@ -191,19 +191,27 @@ async function _getPlayerData(memberId: string, teamId?: string, enableAi: boole
     scoreMap.set(g.match_id, s);
   }
 
+  // 자체전(INTERNAL)은 승/클린시트 집계에서 제외 — 상대골이 없어 무조건 승·클린시트로 잡히는 것 방지 (선수카드 API와 동일).
+  const internalMatchIds = new Set((matches ?? []).filter((mm) => mm.match_type === "INTERNAL").map((mm) => mm.id));
   let cleanSheets = 0;
   let wins = 0;
+  let recordMatchCount = 0;
   for (const mid of attendedMatchIds) {
+    if (internalMatchIds.has(mid)) continue;
+    recordMatchCount++;
     const s = scoreMap.get(mid) ?? { our: 0, opp: 0 };
     if (s.opp === 0) cleanSheets++;
     if (s.our > s.opp) wins++;
   }
 
   const attended = attendedMatchIds.size;
-  const winRate = attended > 0 ? wins / attended : 0;
-  // 출석률 분모는 가입(joined_at) 이후 경기만 — 가입 전 경기를 결석으로 세지 않음.
+  const winRate = recordMatchCount > 0 ? wins / recordMatchCount : 0;
+  // 출석률·연속 분모 = 가입(joined_at) 이후 경기. 단 가입 전 출석 기록이 있으면(과거 데이터 이관 멤버)
+  // 가입일 게이트를 무시하고 시즌 전체를 분모로 — records 탭의 computeAttendanceRateWithHistory와 동일 규칙.
   const joinKst = kstDateString(m.joined_at);
-  const eligibleMatches = (matches ?? []).filter((mm) => isEligibleMatch(mm.match_date, joinKst));
+  const attendedDates = (matches ?? []).filter((mm) => attendedMatchIds.has(mm.id)).map((mm) => mm.match_date);
+  const hasPreJoinAttendance = !!joinKst && attendedDates.some((d) => d < joinKst);
+  const eligibleMatches = (matches ?? []).filter((mm) => isEligibleMatch(mm.match_date, hasPreJoinAttendance ? null : joinKst));
   const eligibleCount = eligibleMatches.length;
   const attendanceRate = eligibleCount > 0 ? attended / eligibleCount : 0;
 

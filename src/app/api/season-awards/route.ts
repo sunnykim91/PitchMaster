@@ -6,6 +6,7 @@ import {
   awardContext,
 } from "@/lib/playerCardUtils";
 import { countEligibleMatches } from "@/lib/attendanceEligibility";
+import { isTeamRecordMatch } from "@/lib/types";
 
 type MemberRow = {
   id: string;
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
   // 해당 시즌 COMPLETED + stats_included 경기 조회
   const { data: matches } = await db
     .from("matches")
-    .select("id, match_date, opponent_name")
+    .select("id, match_date, opponent_name, match_type")
     .eq("team_id", ctx.teamId)
     .eq("status", "COMPLETED")
     .neq("stats_included", false)
@@ -96,6 +97,11 @@ export async function GET(request: NextRequest) {
   const matchList = matches ?? [];
   const matchIds = matchList.map((m) => m.id);
   const totalMatches = matchIds.length;
+  // 팀 전적·철벽수비·승리요정·베스트매치는 자체전(INTERNAL)·이벤트(EVENT) 제외 — getRecordsData/대시보드와 동일 기준.
+  // (자체전은 상대골이 없어 무조건 '승'·'클린시트'로 잡힘. 골·어시·MVP·출석은 전 경기 포함 정책이라 matchIds 그대로.)
+  const recordMatchIds = matchList
+    .filter((m) => isTeamRecordMatch((m as { match_type?: string | null }).match_type))
+    .map((m) => m.id);
 
   if (totalMatches === 0) {
     return apiSuccess({
@@ -185,7 +191,7 @@ export async function GET(request: NextRequest) {
   let wins = 0,
     draws = 0,
     losses = 0;
-  for (const mid of matchIds) {
+  for (const mid of recordMatchIds) {
     const s = matchScores.get(mid) ?? { our: 0, opp: 0 };
     if (s.our > s.opp) wins++;
     else if (s.our === s.opp) draws++;
@@ -286,7 +292,9 @@ export async function GET(request: NextRequest) {
         m.userId ? (attendByUser.get(m.userId) ?? 0) : 0,
         attendByMember.get(m.memberId) ?? 0
       );
-      const eligible = countEligibleMatches(allMatchDates, m.joinedAt);
+      const eligibleRaw = countEligibleMatches(allMatchDates, m.joinedAt);
+      // 가입 전 출석 기록이 있으면(이관 멤버) 시즌 전체를 분모로 — attended가 가입 후 경기수보다 많으면 가입 전 출석이 있는 것.
+      const eligible = attended > eligibleRaw ? allMatchDates.length : eligibleRaw;
       if (eligible < minSeasonShare) continue;       // 중반 이후 가입자는 출석왕 비대상
       if (attended < Math.ceil(eligible * 0.5)) continue; // 본인 대상 경기 절반 미만 출전 제외
       const rate = eligible > 0 ? attended / eligible : 0;
@@ -367,7 +375,7 @@ export async function GET(request: NextRequest) {
 
   // 클린시트 경기 (상대팀 골 0)
   const cleanSheetMatches = new Set<string>();
-  for (const mid of matchIds) {
+  for (const mid of recordMatchIds) {
     const s = matchScores.get(mid) ?? { our: 0, opp: 0 };
     if (s.opp === 0) cleanSheetMatches.add(mid);
   }
@@ -417,7 +425,7 @@ export async function GET(request: NextRequest) {
     for (const m of memberLookups) {
       let played = 0;
       let memberWins = 0;
-      for (const mid of matchIds) {
+      for (const mid of recordMatchIds) {
         const attendees = matchAttendees.get(mid);
         if (attendees && m.ids.some((id) => attendees.has(id))) {
           played++;
@@ -447,7 +455,7 @@ export async function GET(request: NextRequest) {
   {
     let maxDiff = 0;
     let bestMid = "";
-    for (const mid of matchIds) {
+    for (const mid of recordMatchIds) {
       const s = matchScores.get(mid) ?? { our: 0, opp: 0 };
       const diff = s.our - s.opp;
       if (diff > maxDiff) {
