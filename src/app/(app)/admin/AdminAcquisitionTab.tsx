@@ -33,8 +33,10 @@ function sourceLabel(src: string | null): string {
     facebook: "페북", direct: "직접", threads: "스레드", youtube: "유튜브",
   };
   if (map[s]) return map[s];
+  // TWA(안드로이드 앱) 진입은 referrer가 android-app://app.pitchmaster → ref:app.pitchmaster 로 저장됨
+  if (s === "ref:app.pitchmaster") return "안드로이드앱";
   if (s.startsWith("utm:")) return s.slice(4);
-  if (s.startsWith("ref:")) return `추천(${s.slice(4)})`;
+  if (s.startsWith("ref:")) return `추천(${s.slice(4)})`; // 그 외 외부 사이트 referrer
   return s;
 }
 
@@ -157,8 +159,8 @@ export function AdminAcquisitionTab({ recentSignups, signupSourceCohorts, pendin
                     return (
                       <tr key={c.source} className="border-b border-border/50 last:border-0">
                         <td className="py-2.5 pr-4">
-                          <span className={cn("font-medium", isUntracked && "text-muted-foreground italic")}>
-                            {c.source}
+                          <span className={cn("font-medium", isUntracked && "text-muted-foreground italic")} title={c.source}>
+                            {sourceLabel(c.source)}
                           </span>
                         </td>
                         <td className="py-2.5 pr-4 text-right tabular-nums">{c.signups}</td>
