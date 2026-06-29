@@ -98,30 +98,30 @@ export default function EditMatchInfoForm({
             )}
           </div>
         )}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 [&>div]:min-w-0">
           <div>
             <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">날짜</p>
-            <input type="date" name="date" defaultValue={match.date} required className="relative h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+            <input type="date" name="date" defaultValue={match.date} required className="relative h-12 w-full min-w-0 rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
           </div>
           <div>
             <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">{isEvent ? "일정 제목" : isInternal ? "구분" : "상대팀"}</p>
             {isInternal ? (
               <div className="flex h-12 items-center rounded-xl bg-[hsl(var(--secondary)_/_0.4)] px-4 text-sm text-muted-foreground">자체전 (상대팀 없음)</div>
             ) : (
-              <input name="opponent" defaultValue={match.opponent ?? ""} placeholder={isEvent ? "예: 연말 회식" : "미정"} className="h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+              <input name="opponent" defaultValue={match.opponent ?? ""} placeholder={isEvent ? "예: 연말 회식" : "미정"} className="h-12 w-full min-w-0 rounded-xl border-0 bg-secondary px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
             )}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 [&>div]:min-w-0">
           <div>
             <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">시작</p>
-            <select name="time" defaultValue={formatTime(match.time)} className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+            <select name="time" defaultValue={formatTime(match.time)} className="h-12 w-full min-w-0 appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
               {Array.from({ length: 48 }, (_, i) => { const h = String(Math.floor(i / 2)).padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>; })}
             </select>
           </div>
           <div>
             <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">종료</p>
-            <select name="endTime" defaultValue={match.endTime ? formatTime(match.endTime) : ""} className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+            <select name="endTime" defaultValue={match.endTime ? formatTime(match.endTime) : ""} className="h-12 w-full min-w-0 appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
               <option value="">미설정</option>
               {Array.from({ length: 48 }, (_, i) => { const h = String(Math.floor(i / 2)).padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return <option key={i} value={`${h}:${m}`}>{h}:{m}</option>; })}
             </select>
@@ -129,7 +129,7 @@ export default function EditMatchInfoForm({
         </div>
         <div>
           <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">장소</p>
-          <input name="location" defaultValue={match.location} required className="h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+          <input name="location" defaultValue={match.location} required className="h-12 w-full min-w-0 rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
         </div>
         {/* 종목 선택 — 변경 시 인원 옵션 동적 변경 */}
         {match.matchType !== "EVENT" && (
@@ -157,10 +157,10 @@ export default function EditMatchInfoForm({
             </div>
           </div>
         )}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 [&>div]:min-w-0">
           <div>
             <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">참가 인원</p>
-            <select key={editingSportType} name="playerCount" defaultValue={String(match.playerCount ?? (editingIsFutsal ? 6 : 11))} className="h-12 w-full appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+            <select key={editingSportType} name="playerCount" defaultValue={String(match.playerCount ?? (editingIsFutsal ? 6 : 11))} className="h-12 w-full min-w-0 appearance-none rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
               {(editingIsFutsal ? [3, 4, 5, 6] : [8, 9, 10, 11]).map((n) => (
                 <option key={n} value={n}>{n}:{n} ({n}명)</option>
               ))}
@@ -169,7 +169,7 @@ export default function EditMatchInfoForm({
           <div>
             <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">투표 마감</p>
             {/* vote_deadline 은 UTC(timestamptz) → datetime-local(naive=KST) 표시용으로 +9h 보정. 저장 시 toKSTTimestamp 가 다시 +09:00 부여 → 왕복 안정 */}
-            <input type="datetime-local" name="voteDeadline" defaultValue={match.voteDeadline ? getKstNow(new Date(match.voteDeadline).getTime()).toISOString().slice(0, 16) : ""} className="relative h-12 w-full rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+            <input type="datetime-local" name="voteDeadline" defaultValue={match.voteDeadline ? getKstNow(new Date(match.voteDeadline).getTime()).toISOString().slice(0, 16) : ""} className="relative h-12 w-full min-w-0 rounded-xl border-0 bg-secondary px-4 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
           </div>
         </div>
         <div className="flex gap-3 pt-1">
