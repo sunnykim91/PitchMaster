@@ -169,7 +169,7 @@ export default function PrepaymentLinkModal({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 border-t border-border bg-background px-5 py-3 flex gap-2">
+        <div className="sticky bottom-0 border-t border-border bg-background px-5 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] flex gap-2">
           {currentLinkedId && (
             <Button
               type="button"

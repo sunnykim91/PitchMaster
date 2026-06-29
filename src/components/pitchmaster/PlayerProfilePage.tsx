@@ -376,7 +376,7 @@ function MatchTimelineItem({ match, isLast }: { match: RecentMatch; isLast: bool
 // Sticky Share Button
 function StickyShareButton({ onClick }: { onClick: () => void }) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[hsl(240,6%,6%)] to-transparent sm:hidden z-40">
+    <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-[hsl(240,6%,6%)] to-transparent sm:hidden z-40">
       <button
         onClick={onClick}
         className="w-full py-4 rounded-xl bg-[hsl(16,85%,58%)] text-white font-semibold text-base hover:bg-[hsl(16,85%,50%)] transition-colors"

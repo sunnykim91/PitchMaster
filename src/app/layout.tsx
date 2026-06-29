@@ -85,6 +85,8 @@ export const viewport: Viewport = {
   themeColor: "#e8613a",
   width: "device-width",
   initialScale: 1,
+  // iOS 노치/홈인디케이터 safe-area를 env()로 보고받기 위함 (globals.css의 body 상·하 패딩 활성화)
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

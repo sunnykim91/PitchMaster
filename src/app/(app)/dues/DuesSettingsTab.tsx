@@ -910,7 +910,7 @@ function MemberExemptionSection({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 [&>div]:min-w-0">
                   <div className="space-y-1">
                     <Label className="text-[12.5px] text-muted-foreground">월 회비</Label>
                     <Input
@@ -933,7 +933,7 @@ function MemberExemptionSection({
                       onChange={(e) => {
                         if (/^\d{4}-\d{2}$/.test(e.target.value)) setStartMonth(`${e.target.value}-01`);
                       }}
-                      className="h-9 text-sm"
+                      className="h-9 text-sm min-w-0"
                     />
                   </div>
                 </div>
@@ -1040,14 +1040,14 @@ function MemberExemptionSection({
                     className="h-9 text-sm"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 [&>div]:min-w-0">
                   <div className="space-y-1">
                     <Label className="text-[12.5px] text-muted-foreground">시작일</Label>
                     <Input
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="h-9 text-sm"
+                      className="h-9 text-sm min-w-0"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1056,7 +1056,7 @@ function MemberExemptionSection({
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="h-9 text-sm"
+                      className="h-9 text-sm min-w-0"
                     />
                   </div>
                 </div>

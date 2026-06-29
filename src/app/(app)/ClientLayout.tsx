@@ -840,7 +840,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           <div className="absolute inset-0 bg-[rgb(0_0_0_/_0.5)]" />
           <div
             className={cn(
-              "absolute bottom-0 left-0 right-0 rounded-t-2xl bg-card p-4 pb-8 shadow-2xl",
+              "absolute bottom-0 left-0 right-0 rounded-t-2xl bg-card p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] shadow-2xl",
               sheetClosing ? "animate-sheet-slide-down" : "animate-slide-up"
             )}
             role="navigation"

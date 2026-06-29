@@ -182,9 +182,13 @@ button, [role="button"], [onclick], a, summary { cursor: pointer; }
   overscroll-behavior-x: contain;
 }
 
-/* Safe area — 노치/홈바 대응 */
+/* Safe area — 노치/상태바/홈바 대응 (viewport-fit=cover + black-translucent 상태바 전제).
+   상단도 패딩을 줘야 콘텐츠가 상태바 밑으로 안 가려짐. 브라우저(비-standalone)에선 env()≈0이라 변화 없음. */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
-  body { padding-bottom: env(safe-area-inset-bottom); }
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 ::selection {
