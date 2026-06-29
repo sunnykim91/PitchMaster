@@ -169,6 +169,20 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   }
 }
 
+/* iOS/Android native 날짜·시간 피커는 고유 너비가 있어 width:100%·min-width:0만으론 안 줄고
+   좁은 2열 그리드에서 옆 칸(예: 상대팀)을 침범한다(iOS 특히). 모바일에선 appearance를 제거해
+   CSS 너비를 따르게 한다 — 탭하면 네이티브 피커는 그대로 열린다. 데스크톱은 달력 버튼 유지 위해 제외. */
+@media (max-width: 767px) {
+  input[type="date"],
+  input[type="time"],
+  input[type="month"],
+  input[type="datetime-local"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 0;
+  }
+}
+
 /* 클릭 가능 요소 기본 커서 */
 button, [role="button"], [onclick], a, summary { cursor: pointer; }
 
