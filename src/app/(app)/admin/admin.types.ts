@@ -28,6 +28,8 @@ export type RecentSignupUser = {
   createdAt: string;
   profileComplete: boolean;
   teamName: string | null;
+  /** users.signup_source (가입 출처, 2026-05-12~). 그 전 가입자·미추적은 null */
+  signupSource: string | null;
 };
 
 export type RecentSignupTeam = {

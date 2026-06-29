@@ -24,6 +24,20 @@ function timeAgo(dateStr: string): string {
   return `${months}개월 전`;
 }
 
+/** signup_source 원본값을 짧은 한글 라벨로. null/미추적은 "미추적". */
+function sourceLabel(src: string | null): string {
+  if (!src || !src.trim()) return "미추적";
+  const s = src.trim();
+  const map: Record<string, string> = {
+    kakao: "카카오", google: "구글", naver: "네이버", instagram: "인스타",
+    facebook: "페북", direct: "직접", threads: "스레드", youtube: "유튜브",
+  };
+  if (map[s]) return map[s];
+  if (s.startsWith("utm:")) return s.slice(4);
+  if (s.startsWith("ref:")) return `추천(${s.slice(4)})`;
+  return s;
+}
+
 type Props = {
   recentSignups: { users: RecentSignupUser[]; teams: RecentSignupTeam[] };
   signupSourceCohorts: SignupSourceCohort[];
@@ -61,7 +75,16 @@ export function AdminAcquisitionTab({ recentSignups, signupSourceCohorts, pendin
                         <Badge variant="outline" className="text-[12px] px-1 py-0 shrink-0">프로필 미완성</Badge>
                       )}
                     </span>
-                    <span className="text-xs text-muted-foreground shrink-0" suppressHydrationWarning>{timeAgo(u.createdAt)}</span>
+                    <span className="flex items-center gap-1.5 shrink-0">
+                      <Badge
+                        variant={u.signupSource ? "secondary" : "outline"}
+                        className={cn("max-w-[130px] truncate text-[12px] px-1.5 py-0", !u.signupSource && "text-muted-foreground/50 italic")}
+                        title={u.signupSource ?? "미추적"}
+                      >
+                        {sourceLabel(u.signupSource)}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground" suppressHydrationWarning>{timeAgo(u.createdAt)}</span>
+                    </span>
                   </li>
                 ))}
               </ul>

@@ -225,12 +225,13 @@ export async function GET() {
     .sort((a, b) => b.signups - a.signups);
 
   const recentSignups = {
-    users: recentUsersList.map((u: { id: string; name: string; created_at: string; is_profile_complete: boolean }) => ({
+    users: recentUsersList.map((u: { id: string; name: string; created_at: string; is_profile_complete: boolean; signup_source: string | null }) => ({
       id: u.id,
       name: u.name,
       createdAt: u.created_at,
       profileComplete: u.is_profile_complete,
       teamName: userTeamMap[u.id] ?? null,
+      signupSource: u.signup_source ?? null,
     })),
     teams: teams
       .filter((t) => t.created_at >= threeDaysAgo)
