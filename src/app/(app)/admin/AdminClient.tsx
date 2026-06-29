@@ -1,118 +1,28 @@
 "use client";
 
+import { useState } from "react";
 import { useApi } from "@/lib/useApi";
 import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Shield, Users, Activity, UserPlus } from "lucide-react";
+import { RefreshCw, Shield } from "lucide-react";
 import { AdminUsageCard } from "./AdminUsageCard";
+import { AdminOverviewTab } from "./AdminOverviewTab";
+import { AdminTeamsTab } from "./AdminTeamsTab";
+import { AdminAcquisitionTab } from "./AdminAcquisitionTab";
+import { emptyData, type AdminStats } from "./admin.types";
 
-// ── Types ──────────────────────────────────────────────
+// ── Tabs ───────────────────────────────────────────────
 
-type TeamDetail = {
-  id: string;
-  name: string;
-  sportType: string;
-  isSearchable: boolean;
-  createdAt: string;
-  memberCount: number;
-  matchCount: number;
-  lastMatch: string | null;
-  postCount: number;
-  pendingRequests: number;
-  status: "active" | "dormant" | "unused";
-};
+type AdminTab = "overview" | "teams" | "acquisition" | "ai";
 
-type PendingRequest = {
-  id: string;
-  teamId: string;
-  teamName: string;
-  name: string;
-  createdAt: string;
-};
-
-type RecentSignupUser = {
-  id: string;
-  name: string;
-  createdAt: string;
-  profileComplete: boolean;
-  teamName: string | null;
-};
-
-type RecentSignupTeam = {
-  id: string;
-  name: string;
-  sportType: string;
-  createdAt: string;
-  memberCount: number;
-};
-
-type SignupSourceCohort = {
-  source: string;
-  signups: number;
-  activeUsers: number;
-  activeRate: number;
-};
-
-type AdminStats = {
-  overview: {
-    totalTeams: number;
-    totalUsers: number;
-    profileComplete: number;
-    newUsersThisWeek: number;
-    totalMatches: number;
-    totalPosts: number;
-    activeTeams: number;
-    activeUsers: number;
-    pendingJoinRequests: number;
-  };
-  teams: TeamDetail[];
-  pendingRequests: PendingRequest[];
-  recentSignups: { users: RecentSignupUser[]; teams: RecentSignupTeam[] };
-  signupSourceCohorts: SignupSourceCohort[];
-};
-
-const emptyData: AdminStats = {
-  overview: {
-    totalTeams: 0,
-    totalUsers: 0,
-    profileComplete: 0,
-    newUsersThisWeek: 0,
-    totalMatches: 0,
-    totalPosts: 0,
-    activeTeams: 0,
-    activeUsers: 0,
-    pendingJoinRequests: 0,
-  },
-  teams: [],
-  pendingRequests: [],
-  recentSignups: { users: [], teams: [] },
-  signupSourceCohorts: [],
-};
-
-// ── Helpers ────────────────────────────────────────────
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const minutes = Math.floor(diff / 60_000);
-  if (minutes < 1) return "방금 전";
-  if (minutes < 60) return `${minutes}분 전`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}시간 전`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}일 전`;
-  const months = Math.floor(days / 30);
-  return `${months}개월 전`;
-}
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-const DEMO_TEAM_NAME = "FC DEMO";
+const TAB_ITEMS: { key: AdminTab; label: string }[] = [
+  { key: "overview", label: "개요" },
+  { key: "teams", label: "팀" },
+  { key: "acquisition", label: "유입·가입" },
+  { key: "ai", label: "AI" },
+];
 
 // ── Skeleton ───────────────────────────────────────────
 
@@ -163,6 +73,7 @@ export default function AdminClient() {
     "/api/admin/stats",
     emptyData
   );
+  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
 
   if (error) {
     return (
@@ -192,19 +103,6 @@ export default function AdminClient() {
   }
 
   const { overview, teams, pendingRequests, recentSignups, signupSourceCohorts } = data;
-  const cohortMaxSignups = Math.max(1, ...signupSourceCohorts.map((c) => c.signups));
-  const profileRate =
-    overview.totalUsers > 0
-      ? Math.round((overview.profileComplete / overview.totalUsers) * 100)
-      : 0;
-  const activeUserRate =
-    overview.totalUsers > 0
-      ? Math.round((overview.activeUsers / overview.totalUsers) * 100)
-      : 0;
-  const activeTeamRate =
-    overview.totalTeams > 0
-      ? Math.round((overview.activeTeams / overview.totalTeams) * 100)
-      : 0;
 
   return (
     <div className="space-y-4">
@@ -225,329 +123,39 @@ export default function AdminClient() {
         </Button>
       </div>
 
-      {/* ── Summary Cards Row 1 ── */}
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">전체 팀</p>
-            </div>
-            <p className="mt-1 text-2xl font-bold">{overview.totalTeams}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">전체 회원</p>
-            </div>
-            <p className="mt-1 text-2xl font-bold">{overview.totalUsers}</p>
-            <p className="text-xs text-muted-foreground">
-              활성 <span className="text-foreground font-medium">{overview.activeUsers}명</span> ({activeUserRate}%) · 프로필 {profileRate}%
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <UserPlus className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">이번 주 신규</p>
-            </div>
-            <p className="mt-1 text-2xl font-bold">
-              {overview.newUsersThisWeek}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">활성 팀 (14일)</p>
-            </div>
-            <p className="mt-1 text-2xl font-bold">{overview.activeTeams}</p>
-            <p className="text-xs text-muted-foreground">
-              전체의 {activeTeamRate}%
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ── Summary Cards Row 2 ── */}
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">총 경기</p>
-            <p className="mt-1 text-2xl font-bold">{overview.totalMatches}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">총 게시글</p>
-            <p className="mt-1 text-2xl font-bold">{overview.totalPosts}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">대기 가입 신청</p>
-            <p className="mt-1 text-2xl font-bold">
-              {overview.pendingJoinRequests > 0 ? (
-                <span className="text-[hsl(var(--warning))]">
-                  {overview.pendingJoinRequests}
-                </span>
-              ) : (
-                overview.pendingJoinRequests
+      {/* ── Tab Bar ── */}
+      <div className="sticky top-0 z-10 -mx-1 px-1 bg-[hsl(var(--background)_/_0.98)] border-b border-border">
+        <div role="tablist" aria-label="관리자 탭" className="flex">
+          {TAB_ITEMS.map((tab) => (
+            <button
+              key={tab.key}
+              role="tab"
+              aria-selected={activeTab === tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                "flex-1 py-3 text-sm font-medium transition-colors border-b-2",
+                activeTab === tab.key
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
               )}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">프로필 완료율</p>
-            <p className="mt-1 text-2xl font-bold">{profileRate}%</p>
-            <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[hsl(var(--secondary)_/_0.5)]">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-500"
-                style={{ width: `${profileRate}%` }}
-              />
-            </div>
-          </CardContent>
-        </Card>
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* ── 최근 3일 신규 가입 ── */}
-      <div className="grid gap-3 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <UserPlus className="h-4 w-4 text-primary" />
-              신규 회원 (3일)
-              <Badge variant="secondary" className="ml-auto">{recentSignups.users.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentSignups.users.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">최근 3일 내 신규 가입자가 없습니다.</p>
-            ) : (
-              <ul className="space-y-2">
-                {recentSignups.users.map((u) => (
-                  <li key={u.id} className="flex items-center justify-between gap-2 text-sm">
-                    <span className="flex items-center gap-1.5 min-w-0">
-                      <span className="font-medium truncate">{u.name}</span>
-                      <span className={cn("text-xs truncate", u.teamName ? "text-muted-foreground" : "text-muted-foreground/50 italic")}>
-                        {u.teamName ?? "팀 없음"}
-                      </span>
-                      {!u.profileComplete && (
-                        <Badge variant="outline" className="text-[12px] px-1 py-0 shrink-0">프로필 미완성</Badge>
-                      )}
-                    </span>
-                    <span className="text-xs text-muted-foreground shrink-0" suppressHydrationWarning>{timeAgo(u.createdAt)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Users className="h-4 w-4 text-primary" />
-              신규 팀 (3일)
-              <Badge variant="secondary" className="ml-auto">{recentSignups.teams.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentSignups.teams.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">최근 3일 내 생성된 팀이 없습니다.</p>
-            ) : (
-              <ul className="space-y-2">
-                {recentSignups.teams.map((t) => (
-                  <li key={t.id} className="flex items-center justify-between gap-2 text-sm">
-                    <span className="flex items-center gap-1.5 min-w-0">
-                      <span className="font-medium truncate">{t.name}</span>
-                      <Badge variant="outline" className="text-[12px] px-1 py-0 shrink-0">
-                        {t.sportType === "FUTSAL" ? "풋살" : "축구"}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground shrink-0">{t.memberCount}명</span>
-                    </span>
-                    <span className="text-xs text-muted-foreground shrink-0" suppressHydrationWarning>{timeAgo(t.createdAt)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ── 가입 출처별 코호트 (30일) ── */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Activity className="h-4 w-4 text-primary" />
-            가입 출처별 코호트 (30일)
-            <Badge variant="secondary" className="ml-auto">{signupSourceCohorts.length}개 채널</Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {signupSourceCohorts.length === 0 ? (
-            <p className="py-4 text-center text-sm text-muted-foreground">최근 30일 가입자가 없습니다.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[480px]">
-                <thead>
-                  <tr className="border-b border-border text-left text-muted-foreground">
-                    <th className="py-2 pr-4 font-medium">출처</th>
-                    <th className="py-2 pr-4 font-medium text-right">가입</th>
-                    <th className="py-2 pr-4 font-medium text-right">활성</th>
-                    <th className="py-2 pr-4 font-medium text-right">활성률</th>
-                    <th className="py-2 font-medium">분포</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {signupSourceCohorts.map((c) => {
-                    const widthPct = Math.round((c.signups / cohortMaxSignups) * 100);
-                    const rateColor =
-                      c.activeRate >= 50 ? "text-[hsl(var(--success))]"
-                      : c.activeRate >= 25 ? "text-[hsl(var(--warning))]"
-                      : "text-muted-foreground";
-                    const isUntracked = c.source === "(미추적)";
-                    return (
-                      <tr key={c.source} className="border-b border-border/50 last:border-0">
-                        <td className="py-2.5 pr-4">
-                          <span className={cn("font-medium", isUntracked && "text-muted-foreground italic")}>
-                            {c.source}
-                          </span>
-                        </td>
-                        <td className="py-2.5 pr-4 text-right tabular-nums">{c.signups}</td>
-                        <td className="py-2.5 pr-4 text-right tabular-nums">{c.activeUsers}</td>
-                        <td className={cn("py-2.5 pr-4 text-right tabular-nums font-medium", rateColor)}>
-                          {c.activeRate}%
-                        </td>
-                        <td className="py-2.5 min-w-[80px]">
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[hsl(var(--secondary)_/_0.5)]">
-                            <div
-                              className="h-full rounded-full bg-primary transition-all duration-500"
-                              style={{ width: `${widthPct}%` }}
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              <p className="mt-3 text-xs text-muted-foreground">
-                활성 = 14일 내 투표·골·게시글·회비·매치등록 등 흔적 있음. signup_source 추적 시작 2026-05-12.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ── Team Table ── */}
-      <Card>
-        <CardHeader>
-          <CardTitle>팀별 현황</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[640px]">
-              <thead>
-                <tr className="border-b border-border text-left text-muted-foreground">
-                  <th className="py-2 pr-4 font-medium">팀명</th>
-                  <th className="py-2 pr-4 font-medium">종목</th>
-                  <th className="py-2 pr-4 font-medium text-right">멤버</th>
-                  <th className="py-2 pr-4 font-medium text-right">경기</th>
-                  <th className="py-2 pr-4 font-medium">최근 경기</th>
-                  <th className="py-2 pr-4 font-medium text-right">게시글</th>
-                  <th className="py-2 font-medium text-center">상태</th>
-                </tr>
-              </thead>
-              <tbody>
-                {teams.map((team) => (
-                  <tr
-                    key={team.id}
-                    className="border-b border-border/50 last:border-0"
-                  >
-                    <td className="py-2.5 pr-4 font-medium">
-                      <span className="flex items-center gap-1.5">
-                        {team.name}
-                        {team.name === DEMO_TEAM_NAME && (
-                          <Badge
-                            variant="outline"
-                            className="text-xs px-1.5 py-0"
-                          >
-                            데모
-                          </Badge>
-                        )}
-                        {team.pendingRequests > 0 && (
-                          <Badge variant="warning" className="text-xs px-1.5 py-0">
-                            가입 {team.pendingRequests}
-                          </Badge>
-                        )}
-                      </span>
-                    </td>
-                    <td className="py-2.5 pr-4 text-muted-foreground">
-                      {team.sportType === "FUTSAL" ? "풋살" : "축구"}
-                    </td>
-                    <td className="py-2.5 pr-4 text-right tabular-nums">
-                      {team.memberCount}명
-                    </td>
-                    <td className="py-2.5 pr-4 text-right tabular-nums">
-                      {team.matchCount}
-                    </td>
-                    <td className="py-2.5 pr-4 text-muted-foreground tabular-nums">
-                      {team.lastMatch ? formatDate(team.lastMatch) : "-"}
-                    </td>
-                    <td className="py-2.5 pr-4 text-right tabular-nums">
-                      {team.postCount}
-                    </td>
-                    <td className="py-2.5 text-center">
-                      <Badge
-                        variant={team.status === "active" ? "success" : team.status === "dormant" ? "warning" : "secondary"}
-                        className={team.status === "unused" ? "text-destructive border-destructive/30" : ""}
-                      >
-                        {team.status === "active" ? "활성" : team.status === "dormant" ? "휴면" : "미사용"}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── Pending Join Requests ── */}
-      {pendingRequests.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              대기 중 가입 신청 ({pendingRequests.length}건)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-0">
-              {pendingRequests.map((req) => (
-                <div
-                  key={req.id}
-                  className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{req.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {req.teamName} · {timeAgo(req.createdAt)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      {/* ── Tab Panels ── (비활성 탭은 마운트하지 않음) */}
+      {activeTab === "overview" && <AdminOverviewTab overview={overview} />}
+      {activeTab === "teams" && <AdminTeamsTab teams={teams} />}
+      {activeTab === "acquisition" && (
+        <AdminAcquisitionTab
+          recentSignups={recentSignups}
+          signupSourceCohorts={signupSourceCohorts}
+          pendingRequests={pendingRequests}
+        />
       )}
-
-      {/* ── AI 사용량 모니터링 ── */}
-      <AdminUsageCard />
+      {activeTab === "ai" && <AdminUsageCard />}
     </div>
   );
 }
