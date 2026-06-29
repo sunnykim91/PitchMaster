@@ -9,6 +9,8 @@ import * as futsalSelfMatchLineup from "./posts/futsal-self-match-lineup";
 import * as soccerDuesManagement from "./posts/soccer-dues-management";
 import * as soccerTeamPenaltyRules from "./posts/soccer-team-penalty-rules";
 import * as soccerTeamAppNotifications from "./posts/soccer-team-app-notifications";
+import * as lineupPositionBuilder from "./posts/lineup-position-builder";
+import * as futsalQuarterTime from "./posts/futsal-quarter-time";
 import type { GuidePost } from "./types";
 
 const all: GuidePost[] = [
@@ -23,6 +25,8 @@ const all: GuidePost[] = [
   soccerDuesManagement,
   soccerTeamPenaltyRules,
   soccerTeamAppNotifications,
+  lineupPositionBuilder,
+  futsalQuarterTime,
 ];
 
 export const guides = Object.fromEntries(all.map((g) => [g.meta.slug, g])) as Record<
