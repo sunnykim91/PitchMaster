@@ -859,7 +859,7 @@ function MemberExemptionSection({
       {adding && (
         <Card className="border-primary/20 bg-card p-3">
           <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 [&>div]:min-w-0">
               <div className="space-y-1">
                 <Label className="text-[12.5px] text-muted-foreground">회원</Label>
                 <NativeSelect value={memberId} onChange={(e) => setMemberId(e.target.value)} className="h-9 text-sm py-0">

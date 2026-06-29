@@ -196,12 +196,15 @@ button, [role="button"], [onclick], a, summary { cursor: pointer; }
   overscroll-behavior-x: contain;
 }
 
-/* Safe area — 노치/상태바/홈바 대응 (viewport-fit=cover + black-translucent 상태바 전제).
-   상단도 패딩을 줘야 콘텐츠가 상태바 밑으로 안 가려짐. 브라우저(비-standalone)에선 env()≈0이라 변화 없음. */
+/* Safe area — 홈바(하단)는 브라우저·앱 모두 대응. */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
-  body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+  body { padding-bottom: env(safe-area-inset-bottom); }
+}
+/* 상단 상태바 패딩은 설치형 PWA(standalone)에서만 — 그때만 콘텐츠가 black-translucent 상태바 밑에 깔린다.
+   브라우저 모드에선 브라우저가 상단을 처리하므로, env(top)이 fixed 헤더와 어긋나는 것을 방지. */
+@media (display-mode: standalone) {
+  @supports (padding-top: env(safe-area-inset-top)) {
+    body { padding-top: env(safe-area-inset-top); }
   }
 }
 
