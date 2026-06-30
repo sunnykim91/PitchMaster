@@ -360,8 +360,11 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
   const showVoteStatus = isStaffOrAbove(role) && activeVotes.length > 0;
   // 시즌 통계 로딩 중엔(완료경기 있는 팀이면) 자리 확보용 스켈레톤. 로드 후엔 전적 있을 때만.
   const showRecord = seasonStatsReady ? recordTotal > 0 : !!recentResult;
-  // 1인 팀(< 10명) invite nudge — 회장+ + 초대 코드 보유
-  const showInviteNudge = !showWizard && isStaffOrAbove(role) && !!inviteCode && (data.registeredMemberCount ?? 0) < 10;
+  // 첫 경기 0개 — 활성화 1순위. 초대보다 먼저 "경기 만들기" 를 띄운다
+  // (#3 측정 결론: 빈 팀에 초대 nudge 는 효과 X. 경기 → 초대 순서)
+  const showFirstMatchNudge = !showWizard && isStaffOrAbove(role) && (data.totalMatches ?? 0) === 0;
+  // 1인 팀(< 10명) invite nudge — 회장+ + 초대 코드 보유 + 경기 1개+ 있을 때만 (부를 명분이 생긴 뒤 초대)
+  const showInviteNudge = !showWizard && isStaffOrAbove(role) && !!inviteCode && (data.totalMatches ?? 0) > 0 && (data.registeredMemberCount ?? 0) < 10;
 
   async function handleInviteShare() {
     if (!inviteCode) return;
@@ -862,7 +865,41 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
             )}
           </section>
 
-          {/* 1인 팀 invite nudge — 회장+ + 회원 < 10명 + 초대코드 */}
+          {/* 첫 경기 0개 — 활성화 1순위 nudge (초대보다 먼저 노출) */}
+          {showFirstMatchNudge && (
+            <div
+              className="pm-dash-nudge"
+              role="status"
+              style={{
+                background:
+                  "radial-gradient(ellipse 80% 60% at 100% 0%, hsl(var(--primary) / 0.12), transparent 60%), hsl(var(--primary) / 0.06)",
+                borderColor: "hsl(var(--primary) / 0.32)",
+              }}
+            >
+              <div className="pm-dash-nudge-head">
+                <span
+                  className="pm-dash-nudge-icon"
+                  aria-hidden
+                  style={{ background: "hsl(var(--primary) / 0.16)", color: "hsl(var(--primary))", borderColor: "hsl(var(--primary) / 0.28)" }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <rect x="2.5" y="3.5" width="13" height="12" rx="1.6" stroke="currentColor" strokeWidth="1.4" />
+                    <path d="M2.5 7h13M6 2.5V5M12 2.5V5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                    <path d="M9 9.5v3.5M7.25 11.25h3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  </svg>
+                </span>
+                <div className="pm-dash-nudge-body">
+                  <div className="pm-dash-nudge-title">첫 경기를 만들어 보세요</div>
+                  <div className="pm-dash-nudge-sub">경기를 올리면 투표·알림이 시작되고, 팀원을 부를 명분이 생겨요</div>
+                </div>
+              </div>
+              <Link href="/matches" className="pm-dash-nudge-btn" style={{ background: "hsl(var(--primary))" }}>
+                경기 만들기
+              </Link>
+            </div>
+          )}
+
+          {/* 1인 팀 invite nudge — 회장+ + 회원 < 10명 + 초대코드 + 경기 1개+ */}
           {showInviteNudge && (
             <div
               className="pm-dash-nudge"

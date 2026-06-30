@@ -567,14 +567,18 @@ export async function getDashboardData(
       });
     }
 
-    // 6) 예정 경기 없음 (신규)
+    // 6) 예정 경기 없음 — 한 경기도 없으면 활성화의 첫 관문이라 high 로 띄움
+    //    (#3 측정 결론: 빈 팀에 초대부터 밀면 효과 X. 첫 경기 → 초대 순서로 유도)
     if (!upcomingMatch) {
+      const noMatchEver = totalMatches === 0;
       tasks.push({
-        label: "다음 경기 일정 등록",
+        label: noMatchEver ? "첫 경기 만들기" : "다음 경기 일정 등록",
         href: "/matches",
-        urgency: "medium",
+        urgency: noMatchEver ? "high" : "medium",
         icon: "calendar",
-        description: "일정을 미리 만들면 투표·알림이 자동",
+        description: noMatchEver
+          ? "경기를 만들면 투표·알림이 시작되고, 팀원을 부를 명분이 생겨요"
+          : "일정을 미리 만들면 투표·알림이 자동",
       });
     }
 
@@ -636,18 +640,23 @@ export async function getDashboardData(
       done: true, // 이 SSR이 도달했다는 건 팀 이미 존재
     },
     {
-      key: "members_invited",
-      label: "회원 3명 이상 초대",
-      description: `현재 ${registeredMemberCount}명${registeredMemberCount >= 3 ? "" : " — 단톡방 초대 코드 공유"}`,
-      done: registeredMemberCount >= 3,
-      action: "kakaoShare",
-    },
-    {
       key: "first_match",
-      label: "첫 경기 일정 등록",
-      description: totalMatches > 0 ? `${totalMatches}개 등록됨` : "다음 경기를 만들면 자동 투표가 시작돼요",
+      label: "첫 경기 만들기",
+      description: totalMatches > 0 ? `${totalMatches}개 등록됨` : "경기를 만들면 자동 투표가 시작되고, 팀원을 부를 명분이 생겨요",
       done: totalMatches > 0,
       href: "/matches",
+    },
+    {
+      key: "members_invited",
+      label: "회원 3명 이상 초대",
+      description:
+        registeredMemberCount >= 3
+          ? `현재 ${registeredMemberCount}명`
+          : totalMatches > 0
+          ? `현재 ${registeredMemberCount}명 — 단톡방에 일정을 공유해 참석을 받아보세요`
+          : `현재 ${registeredMemberCount}명 — 먼저 경기를 만들고 초대하면 더 잘 모여요`,
+      done: registeredMemberCount >= 3,
+      action: "kakaoShare",
     },
     {
       key: "dues_setup",

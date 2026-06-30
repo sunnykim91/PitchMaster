@@ -152,7 +152,7 @@ function WelcomeCreated({
       <p className="pm-welcome-sub">
         <strong>{teamName}</strong>의 회장으로 등록됐어요.
         <br />
-        멤버를 초대해 함께 시작하세요.
+        첫 경기를 만들고 단톡방에 공유하면 팀원이 모여요.
       </p>
 
       <div className="pm-invite">
