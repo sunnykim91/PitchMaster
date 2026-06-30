@@ -602,7 +602,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   );
 
   return (
-    <div className="min-h-screen overflow-x-hidden">
+    <div className="min-h-screen overflow-x-clip">
       {/* 페이지 전환 로딩 바 */}
       {navigating && (
         <div className="fixed top-0 left-0 right-0 z-[100] h-0.5">
