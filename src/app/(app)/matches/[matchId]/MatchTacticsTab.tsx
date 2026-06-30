@@ -342,10 +342,20 @@ function MatchTacticsTabInner({
         const activeSides = sidesForCount(teamCount);
         const teamMap: Record<string, InternalSide> = {};
         for (const t of internalTeams ?? []) teamMap[t.playerId] = t.side;
+        // 참석자 id 집합 — 인원수·유령 판정용 (연동 회원은 user_id/member_id 양쪽 보존)
+        const attendingIds = new Set<string>();
+        for (const p of attendingPlayers) {
+          attendingIds.add(p.id);
+          if (p.userId) attendingIds.add(p.userId);
+          if (p.memberId) attendingIds.add(p.memberId);
+        }
         const counts = activeSides.reduce((acc, s) => { acc[s] = 0; return acc; }, {} as Record<InternalSide, number>);
-        for (const s of Object.values(teamMap)) if (s in counts) counts[s] += 1;
+        // 빠진 인원(삭제된 용병·불참 전환 회원)은 인원수에서 제외 — 유령 카운트 방지
+        for (const [pid, s] of Object.entries(teamMap)) if (attendingIds.has(pid) && s in counts) counts[s] += 1;
         const unassignedCount = attendingPlayers.filter((p) => !teamMap[p.id]).length;
         const hasTeams = Object.values(counts).some((c) => c > 0);
+        // 팀 편성에 남아있지만 더 이상 참석하지 않는 인원 수 (정리 버튼 노출 기준)
+        const ghostTeamCount = (internalTeams ?? []).filter((t) => !attendingIds.has(t.playerId)).length;
 
         async function assignSide(playerId: string, side: InternalSide | null) {
           const newMap: Record<string, InternalSide> = { ...teamMap };
@@ -396,6 +406,24 @@ function MatchTacticsTabInner({
           refetchInternalTeams?.();
         }
 
+        // 빠진 인원(삭제된 용병·불참 전환 회원)을 팀 편성·전술판 양쪽에서 한 번에 제거
+        async function handleCleanupAbsent() {
+          if (ghostTeamCount === 0) return;
+          const validIds = [...attendingIds];
+          setSavingTeams(true);
+          const { error } = await apiMutate("/api/matches/cleanup-roster", "POST", { matchId, validIds });
+          setSavingTeams(false);
+          if (error) { showToast("정리에 실패했어요. 다시 시도해주세요.", "error"); return; }
+          showToast("빠진 인원을 팀 편성·전술판에서 정리했어요");
+          refetchInternalTeams?.();
+          // 전술판도 최신 배치로 다시 그리기 (생성 캐시 비우고 remount)
+          setGeneratedSquads([]);
+          setTacticsKey((k) => k + 1);
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("match-squads-saved", { detail: { matchId, source: "roster-cleanup" } }));
+          }
+        }
+
         return (
           <>
             {/* 팀 편성 */}
@@ -409,6 +437,12 @@ function MatchTacticsTabInner({
                   <div className="flex flex-wrap justify-end gap-1.5">
                     {canManage && (
                       <>
+                        {ghostTeamCount > 0 && (
+                          <Button size="sm" variant="outline" onClick={handleCleanupAbsent} disabled={savingTeams}
+                            className="border-[hsl(var(--warning))]/40 text-[hsl(var(--warning))] hover:bg-[hsl(var(--warning)_/_0.1)]">
+                            {savingTeams ? "..." : `빠진 인원 ${ghostTeamCount}명 정리`}
+                          </Button>
+                        )}
                         {teamCount < MAX_INTERNAL_TEAMS ? (
                           <Button size="sm" variant="outline" onClick={() => setTeamCount(teamCount + 1)} disabled={savingTeams}>
                             + C팀
