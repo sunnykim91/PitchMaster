@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { Match, SimpleRosterPlayer, InternalTeamAssignment, Guest } from "./matchDetailTypes";
 import {
   INTERNAL_SIDES, MAX_INTERNAL_TEAMS, sidesForCount, sideConfig,
-  buildTeamsPayload, nextSide, type InternalSide,
+  buildTeamsPayload, distributeToBalance, nextSide, type InternalSide,
 } from "@/lib/internalSides";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -376,6 +376,26 @@ function MatchTacticsTabInner({
           refetchInternalTeams?.();
         }
 
+        // 기존 배정은 유지하고 미배정 인원(용병·추가 참석자)만 인원 적은 팀부터 균형 배정
+        async function handleFillUnassigned() {
+          const unassigned = attendingPlayers.filter((p) => !teamMap[p.id]);
+          if (unassigned.length === 0) return;
+          const orderedIds = [...unassigned].sort(() => Math.random() - 0.5).map((p) => p.id);
+          const newMap: Record<string, InternalSide> = {
+            ...teamMap,
+            ...distributeToBalance(orderedIds, counts, activeSides),
+          };
+          setSavingTeams(true);
+          const { error } = await apiMutate("/api/internal-teams", "POST", {
+            matchId, teams: buildTeamsPayload(newMap),
+          });
+          setSavingTeams(false);
+          if (error) { showToast("미배정 인원 배치에 실패했어요. 다시 시도해주세요.", "error"); return; }
+          showToast(`미배정 ${unassigned.length}명 배치 완료`);
+          setShowTeamSplit(true);
+          refetchInternalTeams?.();
+        }
+
         return (
           <>
             {/* 팀 편성 */}
@@ -386,7 +406,7 @@ function MatchTacticsTabInner({
                     <span className="flex items-center gap-1.5 font-bold text-sm"><Users className="h-4 w-4 text-primary" />팀 편성</span>
                     {unassignedCount > 0 && <span className="text-[hsl(var(--warning))] ml-2 font-medium">미배정 {unassignedCount}명</span>}
                   </div>
-                  <div className="flex gap-1.5">
+                  <div className="flex flex-wrap justify-end gap-1.5">
                     {canManage && (
                       <>
                         {teamCount < MAX_INTERNAL_TEAMS ? (
@@ -397,6 +417,11 @@ function MatchTacticsTabInner({
                           <Button size="sm" variant="outline" onClick={() => setTeamCount(2)} disabled={savingTeams || (counts.C ?? 0) > 0}
                             title={(counts.C ?? 0) > 0 ? "C팀을 비운 뒤 제거할 수 있어요" : undefined}>
                             − C팀
+                          </Button>
+                        )}
+                        {unassignedCount > 0 && hasTeams && (
+                          <Button size="sm" onClick={handleFillUnassigned} disabled={savingTeams}>
+                            {savingTeams ? "..." : `미배정 ${unassignedCount}명 배치`}
                           </Button>
                         )}
                         <Button size="sm" variant="outline" onClick={handleEvenSplit} disabled={savingTeams || attendingPlayers.length < 2}>

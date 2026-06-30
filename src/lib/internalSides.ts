@@ -96,6 +96,35 @@ export function nextSide(current: InternalSide, sides: InternalSide[]): Internal
   return sides[(i + 1) % sides.length];
 }
 
+/**
+ * 미배정 인원만 균형 배정 — 기존 배정은 건드리지 않는 증분 분배.
+ *
+ * 전원 재셔플하는 자동분배와 달리, 이미 팀이 나뉜 뒤 합류한 용병·추가 참석자를
+ * 현재 인원이 가장 적은 팀부터 채워 인원 균형을 맞춘다.
+ *
+ * @param orderedIds 배정할 미배정 인원 id (호출부에서 셔플해 넘기면 동률 시 랜덤 효과)
+ * @param currentCounts 팀별 현재 인원 수
+ * @param sides 활성 팀(2~3)
+ * @returns id → side **추가** 맵 (기존 배정은 포함 안 함)
+ */
+export function distributeToBalance(
+  orderedIds: string[],
+  currentCounts: Partial<Record<InternalSide, number>>,
+  sides: InternalSide[],
+): Record<string, InternalSide> {
+  const counts: Record<string, number> = {};
+  for (const s of sides) counts[s] = currentCounts[s] ?? 0;
+  const out: Record<string, InternalSide> = {};
+  for (const id of orderedIds) {
+    // 인원이 가장 적은 팀 — 동률이면 sides 순서(A→B→C) 우선
+    let target = sides[0];
+    for (const s of sides) if (counts[s] < counts[target]) target = s;
+    out[id] = target;
+    counts[target] += 1;
+  }
+  return out;
+}
+
 /** 팀별 가벼운 승/무/패 수기 카운트 (matches.internal_team_results JSONB) */
 export interface SideRecord { w: number; d: number; l: number; }
 export type InternalTeamResults = Partial<Record<InternalSide, SideRecord>>;
