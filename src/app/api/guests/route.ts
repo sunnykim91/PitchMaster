@@ -3,6 +3,7 @@ import { getApiContext, apiError, apiSuccess, requireRole } from "@/lib/api-help
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
 import { validateSafeName } from "@/lib/validators/safeText";
+import { removePlayerFromPositions, type SquadPosition } from "@/lib/server/squadCleanup";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -127,10 +128,10 @@ export async function DELETE(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
-  // 용병이 이 팀의 경기에 속하는지 검증
+  // 용병이 이 팀의 경기에 속하는지 검증 (match_id 도 가져와 정리 범위 한정)
   const { data: check } = await db
     .from("match_guests")
-    .select("id, matches!inner(team_id)")
+    .select("id, match_id, matches!inner(team_id)")
     .eq("id", id)
     .eq("matches.team_id", ctx.teamId)
     .single();
@@ -141,5 +142,32 @@ export async function DELETE(request: NextRequest) {
     .delete()
     .eq("id", id);
   if (error) return apiError(error.message);
+
+  // 자체전 팀 편성·전술판 배치에서도 함께 제거 (유령 인원수·"알 수 없음" 슬롯 방지).
+  // best-effort — 정리 실패가 용병 삭제 자체를 되돌리지 않도록 try/catch.
+  try {
+    await db
+      .from("match_internal_teams")
+      .delete()
+      .eq("match_id", check.match_id)
+      .eq("player_id", id);
+
+    const { data: squads } = await db
+      .from("match_squads")
+      .select("id, positions")
+      .eq("match_id", check.match_id);
+    for (const sq of squads ?? []) {
+      const { positions, removed } = removePlayerFromPositions(
+        (sq.positions ?? {}) as Record<string, SquadPosition>,
+        id,
+      );
+      if (removed > 0) {
+        await db.from("match_squads").update({ positions }).eq("id", sq.id);
+      }
+    }
+  } catch {
+    /* best-effort cleanup */
+  }
+
   return apiSuccess({ deleted: true });
 }

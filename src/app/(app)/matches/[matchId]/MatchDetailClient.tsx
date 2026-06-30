@@ -520,8 +520,14 @@ export default function MatchDetailClient({
   /* ── 용병 삭제 ── */
   const handleRemoveGuest = useCallback(async (guestId: string) => {
     await apiMutate(`/api/guests?id=${guestId}`, "DELETE");
-    await refetchGuests();
-  }, [refetchGuests]);
+    // 서버에서 팀 편성·전술판 배치도 함께 정리됨 → 관련 데이터 모두 갱신
+    await Promise.all([refetchGuests(), refetchInternalTeams()]);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("match-squads-saved", { detail: { matchId, source: "guest-removed" } }),
+      );
+    }
+  }, [refetchGuests, refetchInternalTeams, matchId]);
 
   /* ── Loading state: only block on primary match data ── */
   if (matchesLoading) {

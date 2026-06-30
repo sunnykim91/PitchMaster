@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { scrubAbsentFromPositions, type SquadPosition } from "@/lib/server/squadCleanup";
+import {
+  scrubAbsentFromPositions,
+  removePlayerFromPositions,
+  type SquadPosition,
+} from "@/lib/server/squadCleanup";
 
 const valid = new Set(["keep1", "keep2", "keep3"]);
 
@@ -76,5 +80,38 @@ describe("scrubAbsentFromPositions — 빠진 인원 전술판 정리", () => {
     expect(positions.s2).toBeNull();
     expect(positions.s3).toEqual({ playerId: "keep2", x: 3, y: 3, secondPlayerId: "keep3" });
     expect(positions.__referee).toEqual({ playerId: "gone", x: 0, y: 0 });
+  });
+});
+
+describe("removePlayerFromPositions — 특정 1명만 제거 (용병 삭제용)", () => {
+  it("지정한 선수만 비우고 나머지는 모두 유지한다", () => {
+    const pos: Record<string, SquadPosition> = {
+      s1: { playerId: "del", x: 1, y: 1 },
+      s2: { playerId: "other", x: 2, y: 2 },
+    };
+    const { positions, removed } = removePlayerFromPositions(pos, "del");
+    expect(removed).toBe(1);
+    expect(positions.s1).toBeNull();
+    expect(positions.s2).toEqual({ playerId: "other", x: 2, y: 2 });
+  });
+
+  it("지정 선수가 후반이면 secondPlayerId만 제거한다", () => {
+    const pos: Record<string, SquadPosition> = {
+      s1: { playerId: "keep", x: 1, y: 1, secondPlayerId: "del" },
+    };
+    const { positions, removed } = removePlayerFromPositions(pos, "del");
+    expect(removed).toBe(1);
+    expect(positions.s1).toEqual({ playerId: "keep", x: 1, y: 1 });
+  });
+
+  it("메타 슬롯·없는 선수는 건드리지 않는다", () => {
+    const pos: Record<string, SquadPosition> = {
+      __referee: { playerId: "del", x: 0, y: 0 },
+      s1: { playerId: "someone", x: 1, y: 1 },
+    };
+    const { positions, removed } = removePlayerFromPositions(pos, "del");
+    expect(removed).toBe(0);
+    expect(positions.__referee).toEqual({ playerId: "del", x: 0, y: 0 });
+    expect(positions.s1).toEqual({ playerId: "someone", x: 1, y: 1 });
   });
 });

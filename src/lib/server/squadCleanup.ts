@@ -15,9 +15,10 @@ export type SquadPosition =
   | { playerId: string; x: number; y: number; secondPlayerId?: string }
   | null;
 
-export function scrubAbsentFromPositions(
+/** 코어 — `keep(playerId)` 가 false 인 인원을 슬롯에서 제거. */
+function scrubPositions(
   positions: Record<string, SquadPosition>,
-  validIds: Set<string>,
+  keep: (playerId: string) => boolean,
 ): { positions: Record<string, SquadPosition>; removed: number } {
   let removed = 0;
   const out: Record<string, SquadPosition> = {};
@@ -29,9 +30,9 @@ export function scrubAbsentFromPositions(
       continue;
     }
 
-    const firstOk = validIds.has(pos.playerId);
+    const firstOk = keep(pos.playerId);
     const hasSecond = !!pos.secondPlayerId;
-    const secondOk = hasSecond ? validIds.has(pos.secondPlayerId as string) : true;
+    const secondOk = hasSecond ? keep(pos.secondPlayerId as string) : true;
 
     if (firstOk && secondOk) {
       out[slotId] = pos;
@@ -51,4 +52,20 @@ export function scrubAbsentFromPositions(
   }
 
   return { positions: out, removed };
+}
+
+/** 참석 명단(validIds)에 없는 인원을 전부 제거 — 정리 버튼/엔드포인트용. */
+export function scrubAbsentFromPositions(
+  positions: Record<string, SquadPosition>,
+  validIds: Set<string>,
+): { positions: Record<string, SquadPosition>; removed: number } {
+  return scrubPositions(positions, (id) => validIds.has(id));
+}
+
+/** 특정 인원 1명만 제거 — 용병 삭제 시 자동 정리용. */
+export function removePlayerFromPositions(
+  positions: Record<string, SquadPosition>,
+  playerId: string,
+): { positions: Record<string, SquadPosition>; removed: number } {
+  return scrubPositions(positions, (id) => id !== playerId);
 }

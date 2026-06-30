@@ -196,6 +196,11 @@ function MatchTacticsTabInner({
         if (detail?.source === "tactics-board") {
           setAiCoachContext(null);
         }
+        // 용병 삭제로 서버에서 배치가 정리됨 → 전술판 캐시 비우고 remount 해 유령 슬롯 제거
+        if (detail?.source === "guest-removed") {
+          setGeneratedSquads([]);
+          setTacticsKey((k) => k + 1);
+        }
       }
     };
     window.addEventListener("match-squads-saved", handler);
