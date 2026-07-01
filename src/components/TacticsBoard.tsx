@@ -132,7 +132,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     return defaultBoardState;
   });
   const [hydrated, setHydrated] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "unsaved" | "saving" | "saved" | "error">("idle");
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSaveRef = useRef<BoardState | null>(null);
 
@@ -171,7 +171,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   activeQuarterRef.current = activeQuarter;
 
   const saveToApi = useCallback(async (state: BoardState, quarterNum: number) => {
-    setSaving(true);
+    setSaveState("saving");
     // apiMutate 는 throw 안 함 — 반환 error 를 직접 확인해야 함.
     // 실패 시 로컬 낙관적 동기화/이벤트 발행을 막아 'DB엔 없는데 저장됨'으로 보이는 걸 방지.
     const { error } = await apiMutate("/api/squads", "POST", {
@@ -182,7 +182,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       side: side ?? null,
     });
     if (error) {
-      setSaving(false);
+      setSaveState("error");
       showToast("전술판 저장에 실패했어요. 잠시 후 다시 시도해주세요.", "error");
       return;
     }
@@ -208,13 +208,14 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
         new CustomEvent("match-squads-saved", { detail: { matchId, source: "tactics-board" } })
       );
     }
-    setSaving(false);
+    setSaveState("saved");
   }, [matchId, side, setSquadsApiData, showToast]);
 
   /** Pending save에 쿼터 번호도 함께 저장 */
   const pendingQuarterRef = useRef(activeQuarter);
 
   const debouncedSave = useCallback((state: BoardState) => {
+    setSaveState("unsaved");
     pendingSaveRef.current = state;
     pendingQuarterRef.current = activeQuarterRef.current;
     if (saveTimerRef.current) {
@@ -791,7 +792,17 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             <h3 className="mt-1 font-heading text-xl font-bold uppercase text-foreground">전술판 편성</h3>
           </div>
           <div className="flex items-center gap-2">
-            {saving && <span className="text-xs text-muted-foreground animate-pulse">저장 중...</span>}
+            {(saveState === "saving" || saveState === "unsaved") && (
+              <span className="text-xs text-muted-foreground animate-pulse">저장 중...</span>
+            )}
+            {saveState === "saved" && (
+              <span className="inline-flex items-center gap-1 text-xs text-[hsl(var(--success))]">
+                <Check className="h-3 w-3" />저장됨
+              </span>
+            )}
+            {saveState === "error" && (
+              <span className="text-xs text-[hsl(var(--destructive))]">저장 실패</span>
+            )}
             {shareMsg && <span className="text-xs text-primary animate-pulse">{shareMsg}</span>}
             {/* 편집/완료 토글 — 운영진에게만 노출 */}
             {!readOnly && (editing ? (
