@@ -762,7 +762,7 @@ const MemberRow = memo(function MemberRow({ m, onSelect }: { m: Member; onSelect
           m.name.slice(0, 1)
         )}
       </div>
-      <div>
+      <div className="min-w-0">
         <div className="pm-mrow-head">
           <span className="pm-mrow-name">{m.name}</span>
           {m.role !== "MEMBER" && (

@@ -216,13 +216,13 @@ function AwardCard({ awardKey, award, featured = false }: { awardKey: string; aw
           </h3>
 
           {/* Value */}
-          <div className="flex items-baseline gap-1">
+          <div className="flex items-baseline gap-1 min-w-0">
             <span className={cn(
-              "font-black text-white",
+              "font-black text-white shrink-0",
               featured ? "text-5xl sm:text-6xl drop-shadow-lg" : "text-3xl"
             )}>{displayValue}</span>
             {displayUnit && (
-              <span className={cn("text-white/60", featured ? "text-base sm:text-lg ml-1" : "text-sm")}>
+              <span className={cn("text-white/60 truncate", featured ? "text-base sm:text-lg ml-1" : "text-sm")}>
                 {displayUnit}
               </span>
             )}

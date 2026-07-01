@@ -138,8 +138,8 @@ function MatchVoteStaffPanelInner({
               <li key={member.id} className={cn("flex items-center justify-between rounded-xl p-3 transition-colors",
                 !currentVote ? "bg-[hsl(var(--destructive)_/_0.1)] border border-destructive/30" : "bg-[hsl(var(--secondary)_/_0.5)]"
               )}>
-                <span className={cn("text-sm font-medium", !currentVote && "text-destructive")}>{member.name}</span>
-                <div className="flex gap-1" role="radiogroup">
+                <span className={cn("text-sm font-medium truncate min-w-0", !currentVote && "text-destructive")}>{member.name}</span>
+                <div className="flex gap-1 shrink-0" role="radiogroup">
                   {([{ value: "ATTEND" as const, label: "참석" }, { value: "MAYBE" as const, label: "미정" }, { value: "ABSENT" as const, label: "불참" }]).map((opt) => {
                     const proxyKey = `${member.memberId}:${opt.value}`;
                     const isLoading = loadingProxy === proxyKey;

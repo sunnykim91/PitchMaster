@@ -1626,19 +1626,24 @@
 .pm-hue--neutral { --hue: var(--muted-foreground); }
 
 .pm-mrow-head {
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; gap: 6px; min-width: 0;
 }
 .pm-mrow-name {
   font-size: 14px;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: hsl(var(--foreground));
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .pm-rolebadge {
   font-family: var(--font-display);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0;
+  flex-shrink: 0;
   padding: 2px 6px;
   border-radius: 4px;
   background: hsl(var(--hue) / 0.14);
@@ -4835,6 +4840,7 @@ input[type="datetime-local"].pm-input {
   letter-spacing: -0.02em;
   color: hsl(var(--foreground));
   line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 .pm-mc-info-opp--mute { color: hsl(var(--muted-foreground)); font-weight: 500; }
 .pm-mc-info-time {

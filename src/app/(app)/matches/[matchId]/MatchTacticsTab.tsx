@@ -434,12 +434,12 @@ function MatchTacticsTabInner({
             {/* 팀 편성 */}
             <Card className={cn("rounded-xl", hasTeams ? "border-[hsl(var(--success))]/20" : "border-[hsl(var(--warning))]/20")}>
               <CardContent className="p-3">
-                <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex flex-col gap-2 mb-2 sm:flex-row sm:items-center sm:justify-between">
                   <div className="text-xs">
                     <span className="flex items-center gap-1.5 font-bold text-sm"><Users className="h-4 w-4 text-primary" />팀 편성</span>
                     {unassignedCount > 0 && <span className="text-[hsl(var(--warning))] ml-2 font-medium">미배정 {unassignedCount}명</span>}
                   </div>
-                  <div className="flex flex-wrap justify-end gap-1.5">
+                  <div className="flex flex-wrap gap-1.5 sm:justify-end">
                     {canManage && (
                       <>
                         {ghostTeamCount > 0 && (
