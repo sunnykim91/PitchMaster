@@ -72,7 +72,7 @@ export default function SiteHeader({
       />
 
       <motion.header
-        className="fixed top-0 left-0 right-0 z-50 h-14 lg:h-16 px-4 lg:px-8 flex items-center justify-between transition-shadow duration-200"
+        className="fixed top-0 left-0 right-0 z-50 h-[calc(3.5rem+env(safe-area-inset-top))] lg:h-[calc(4rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] px-4 lg:px-8 flex items-center justify-between transition-shadow duration-200"
         style={{
           background: bg,
           backdropFilter: filter,
