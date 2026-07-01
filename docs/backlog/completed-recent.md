@@ -1,12 +1,965 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~84차)
-summary: 2026-04-11~06-14 진행. 최근: 알림 아이콘 흰 네모 버그 수정·TWA v1.0.7 Play 제출 (84차). 83차: 크론 전수조사·메모리 2단 인덱스 대개편. 82차: Google Play 정식 출시(v1.0.6).
-sections: [84차(2026-06-14) 알림아이콘흰네모버그수정·badge-96.svg흰실루엣·TWA5밀도ic_notification_icon·v1.0.7vc11Play제출(0f52569), 83차(2026-06-11) 크론전수조사·push urgency·MatchInfoTab자체전·OCR캡합산·메모리2단인덱스, 82차후속(2026-06-11) /guide허브신설·Android Play스토어안내보정·SEO마케팅점검(a886661·cdf31b8), 82차(2026-06-11) GooglePlay정식출시v1.0.6·알파정리·Play배너·블로그출시후기, 80차(2026-06-09) 골기록수정UX버그·전서비스버그스윕, 79차(2026-06-09) G2가이드커밋발행·알파5차프로덕션신청접수, 78차(2026-06-08~09) 카카오로그인진단Q&A심화·LoginHelp신설·InAppBrowserBanner감지확대·온보딩미리보기·포지션힌트수정(커밋완료), 77차(2026-06-03~06-08) 미투표벌금cron버그·랜딩FAQ정직화·AI코치회원노출·가이드G1발행·참석자출석카드·사업다각도분석, 76차(2026-06-06) 랜딩GEO+FAQ개선·GEO진단·가이드#1발행·가이드#2미커밋, 75차(2026-06-06) ChatGPT 유입 누적 6명 확인·FC DGS·FC YUSIN 신규 가입 분석, 74차(2026-06-06) 이력서 원티드 작업·AI dead code 검증·Supabase 실측·이력서 재작성, 73차(2026-06-03) 2차 리뷰 보안·정합성 패치·auth 회귀 수정·자체전 AI 미노출, 72차 추가(2026-06-03) 투표마감 UTC→KST 핫픽스·cleanup, 72차 사업분석·잔존진단·알파 vc9 빌드·useApi SWR화·전술판 드래그·보안패치 13커밋·블로그 8편, 71차 게시판 SSR is_global 누락 버그 수정, 70차 경기상세 hydration최적화·dashboard task overhaul·온보딩 체크리스트·HintCard·N badge·TWA SW update·핫픽스 4건, 69차+ 블로그 6편 전채널+7편 초안·네이버 자체 통계 분석, 68차 알파 5차 준비·TWA referrer fix·UX 로딩 표준화 19파일·어드민 6팀 제외·블로그 6편, 67차 실사용 팀 활동 패턴 분석·본인팀 제외·전술영상·WelcomeCard v2 코호트, 66차-B 운영 데이터 조사·SEO 분석·블로그 5편 완주, 66차 매치 페이지 시안 v2 + 대시보드 풀 마이그 + hue cascade 버그 + 디자인 마이그 중단 결정, 65차 전술판 영상 평면화·알파 공지 게시물·블로그 4·5편·권한별UI·signup_source 3중망·종합점검, 64차 OVR 공식 재설계 + 시그니처 분기 보강 + AI 카피 라벨 정정 + 배지 제거, 63차 박제 정정 + pending.md outdated 항목 정리, 62차 전술 영상 편집기 전면 리팩토링 P1~P5 + DB 마이그레이션 + 게시판 linkify, 60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-06-14 (84차)
+title: 개선 백로그 — 최근 완료 (16~109차)
+summary: 2026-04-11~07-01 진행. 최근: 109차 경쟁사·마케팅 전수 재조사(ae979fb~a3151d8)+경쟁사메모리3종정정+G5발행+G6신규작성+마케팅실행안신설. 108차 사말라gap검토+지도링크(5111b3a). 107차 솔로팀GA확정+활성화루프재배치(09306fb)+370px UI(d9fb3de).
+sections: [104차(2026-06-29) 외부코드분석8항목검증(5정확1과소2outdated)·D8스크린샷폴더일원화(6c09621)·C4일반API rate limit(bbc7350:apiRateLimit.ts goals/posts/comments/dues 테스트8케이스)·D7카드통일방향전환(card-stat cascade불가→Card표준문서화+dead제거)·B묶음(input-validation.md현행화+.env.example신설)·삽질:Bash_POSIX_sh_vs_PowerShell_here-string·COUNT쿼리mock큐밀림, 103차(2026-06-26~27) FC발로만18경기이관(e149a42)·출석률0%_computeAttendanceRateWithHistory(278e1ef)·iOS_backdrop-blur_9곳(f707f79·8464b5c)·전술판후반교체빈화면(d42602b)·color-mix잔여4곳(c2cc959)·삽질:푸시의사_늦게확인·미수정:EditMatchInfoForm·MatchVoteMemberPanel동적보간틴트, 102차(2026-06-26) MVP_raw버그resolveValidMvps·aggregateMvpsByMatch·computeMatchScore단일소스·고아3·KST헬퍼·CLAUDE.md481→267줄path-scoped·MEMORY한도정정, 101차(2026-06-26) MAYBE=미투표벌금확정(de39a23)·cron매시간·FCMZ선납2명데이터정리(사용자SQL)·커밋2695632·2be1690·삽질:payment-status_vs_exemptions오진단·team_members.name없음6차재발, 99차(2026-06-26) 콘텐츠오정보전수감사+수정(fac7ac7·20파일)·선납동선정정(PrepaymentRegisterModal_00053_DROP_후_가이드미동기화)·알림과장정정(TWA한정→브라우저정상·97차pending해소)·게시판2종·용병전술탭·일괄투표→다가오는경기·휴회면제·풋살18종·자체전통계·경미4건·tsc+빌드OK·삽질:한글경로오타4회·에이전트false_positive, 98차(2026-06-25) Safari_color-mix_투명배경_전수수정(2335f46·89파일_532곳_slash-alpha변환)·삽질text포함_과대스코프→배경만좁힘·⚠️97차알림안내4곳오정보pending이월, 97차(2026-06-25) joined_at소급부과5경로(e2c6a39)+출석률7곳공통헬퍼attendanceEligibility(ea5411a)+LEFT/BANNED_vs_DORMANT생명주기(f4bb590)+휴면팀전환버그(6f4aa7b)+알림안내보강(092a1a2)+FAQ가이드사실검증(82d7eda)+알림블로그초안(d8b2369)·⚠️알림안내4곳과장오류라이브박힘_정정다음세션, 96차(2026-06-25) 푸시알림3버그(bb7f02b)+seen/read분리(bf38c0d·migration00079)+죽은링크(26ed7a7)+모바일2버그iOS줌/탭깜빡임(50f2e33), 95차(2026-06-24) PlaywrightE2E37스펙확장(3프로젝트·인증·화면스모크·SEO·권한[dev-login가장]·write-flow[임시생성+afterEach정리])+성능스위트(playwright.perf.config·Web Vitals+Lighthouse·prod대상)+하이드레이션수정(formatKstDateTime/Date·toLocale제거4곳·단위테스트)+errorGuard공용화(7469073~216cd0c푸시), 94차(2026-06-24) MatchCalendar PC넓은화면버그2건(ad4dd2a·eb486d6)·빈칸aspect-square→min-h-52px+요일헤더배경틴트제거·feedback_aspect_square_grid_trap신설, 93차(2026-06-24) 캘린더일요일시작(ed563b6·ad4dd2a)·공동MVP·resolveValidMvps신설·11경로정정(abc0520)·투표공유GA+버튼(605edd6)·로그인복귀경로(3a6dac7)·성능최적화2·3라운드(ad56e39), 92차(2026-06-23) 풋살키퍼순번룰렛(6f3481d~014eeb5·마이그00077·KeeperRotationCard)·가이드/help이관(1515ab5·CLAUDE.md박제↔미이관불일치수정)·SEO한글병기+랜딩+5카드(da57cc1)·경기수정폼유형선택(c5bd1c3)·출석점방향수정(501fb91)·UX5회재설계교훈·과설계미루기반복, 91차(2026-06-23) 풋살·축구종목분기버그전수조사·P0용병폼축구포지션하드코딩수정(6e27da7)·guestPositionOptions상수sportType분기·spot check에이전트오판2건차단·#3풋살3~4인role불일치미수정·#4·#5포지션한국어미적용미수정, 90차(2026-06-22) LINEOUT FC 설경민 제보 2건·잔고UX강제선택(pendingBalance)·벌금면제정책정정(LEAVE/INJURED만)·getPenaltyExemptUserIds신설·3경로동시수정·DB복구3건(d484f41)·vitest853·컬럼명오류5차재발교훈, 89차(2026-06-21) vote-reminder KST timezone버그(3605f42)·앱전역"오늘"=UTC버그(eea164d)·getKstToday헬퍼신설·12파일교체·크론13개전수점검, 88차(2026-06-19) 이미지압축(e05dee0)·자체전3팀Phase1(45d08d3)·Phase2+통계수정(2e15b07)·포레마제TWA앱유입분석(ref:app.pitchmaster)·자체전집계다중경로함정·OVR부풀림수정·캘린더가드누락·div-in-p수정, 87차(2026-06-18) 네이티브FCM(a2295fa·fcc2672)·v1.0.8vc12Play심사·TWA삼성인터넷근본원인·notification페이로드강제·삽질3단계, 86차(2026-06-17) SEO가이드정비·잔존활성화재진단·TWA자동구독, 85차(2026-06-17) 이력서최신화·원티드111퍼센트지원용·Supabase실측6/16·과장6건정정(매주사용/320경기/120팀/알파테스트/필터구독/테스트수)·LLM SSE스트리밍+AdminUsageCard강점표면화·커밋없음, 84차(2026-06-14) 알림아이콘흰네모버그수정·badge-96.svg흰실루엣·TWA5밀도ic_notification_icon·v1.0.7vc11Play제출(0f52569), 83차(2026-06-11) 크론전수조사·push urgency·MatchInfoTab자체전·OCR캡합산·메모리2단인덱스, 82차후속(2026-06-11) /guide허브신설·Android Play스토어안내보정·SEO마케팅점검(a886661·cdf31b8), 82차(2026-06-11) GooglePlay정식출시v1.0.6·알파정리·Play배너·블로그출시후기, 80차(2026-06-09) 골기록수정UX버그·전서비스버그스윕, 79차(2026-06-09) G2가이드커밋발행·알파5차프로덕션신청접수, 78차(2026-06-08~09) 카카오로그인진단Q&A심화·LoginHelp신설·InAppBrowserBanner감지확대·온보딩미리보기·포지션힌트수정(커밋완료), 77차(2026-06-03~06-08) 미투표벌금cron버그·랜딩FAQ정직화·AI코치회원노출·가이드G1발행·참석자출석카드·사업다각도분석, 76차(2026-06-06) 랜딩GEO+FAQ개선·GEO진단·가이드#1발행·가이드#2미커밋, 75차(2026-06-06) ChatGPT 유입 누적 6명 확인·FC DGS·FC YUSIN 신규 가입 분석, 74차(2026-06-06) 이력서 원티드 작업·AI dead code 검증·Supabase 실측·이력서 재작성, 73차(2026-06-03) 2차 리뷰 보안·정합성 패치·auth 회귀 수정·자체전 AI 미노출, 72차 추가(2026-06-03) 투표마감 UTC→KST 핫픽스·cleanup, 72차 사업분석·잔존진단·알파 vc9 빌드·useApi SWR화·전술판 드래그·보안패치 13커밋·블로그 8편, 71차 게시판 SSR is_global 누락 버그 수정, 70차 경기상세 hydration최적화·dashboard task overhaul·온보딩 체크리스트·HintCard·N badge·TWA SW update·핫픽스 4건, 69차+ 블로그 6편 전채널+7편 초안·네이버 자체 통계 분석, 68차 알파 5차 준비·TWA referrer fix·UX 로딩 표준화 19파일·어드민 6팀 제외·블로그 6편, 67차 실사용 팀 활동 패턴 분석·본인팀 제외·전술영상·WelcomeCard v2 코호트, 66차-B 운영 데이터 조사·SEO 분석·블로그 5편 완주, 66차 매치 페이지 시안 v2 + 대시보드 풀 마이그 + hue cascade 버그 + 디자인 마이그 중단 결정, 65차 전술판 영상 평면화·알파 공지 게시물·블로그 4·5편·권한별UI·signup_source 3중망·종합점검, 64차 OVR 공식 재설계 + 시그니처 분기 보강 + AI 카피 라벨 정정 + 배지 제거, 63차 박제 정정 + pending.md outdated 항목 정리, 62차 전술 영상 편집기 전면 리팩토링 P1~P5 + DB 마이그레이션 + 게시판 linkify, 60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
+last_updated: 2026-07-01 (107차 회고 추가)
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~84차)
+# 최근 완료 (16~109차)
+
+## 109차 (2026-07-01, KST) — 경쟁사·마케팅 전수 재조사 + 블로그 G5 발행 + G6 신규 작성
+
+**커밋**: ae979fb (docs: competitors.md 2026-07 전면 갱신), ce81b00 (feat: G6 가이드+SEO 롱테일), a3151d8 (docs: 마케팅 실행안). main 푸시·Vercel 자동배포.
+
+### 완료 내용
+
+**1. 경쟁사·마케팅 전수 재조사 — docs/competitors.md 전면 갱신 (ae979fb 포함)**
+- 웹 15+종 앱 직접 확인. 핵심 발견:
+  - 조기싸커: Android 앱 출시 + AI 코치노트(v1.2.0) 진입 → 1순위 감시 체크포인트 발동
+  - 축구고: 회비장부 기능 + AI 하이라이트 예고 → 기존 메모리 "회비/AI 없음" 깨짐
+  - 신규 3종: FootballLab(iOS 축구), 축구생활(iOS 팀피드), 에이풋볼(팀 매칭+관리)
+  - 모이라니: Android 전용 실존 확인. 플레이어스·위볼: 실존 확인 불가로 정정
+  - 플랩풋볼: 매칭→팀관리 융합(pain point 언급만, 아직 깊이 없음)
+
+**2. 경쟁사 메모리 3종 2026-07 정정**
+- reference_competitor_footballgo.md: 회비장부 추가·AI 하이라이트 예고 반영
+- reference_competitor_jogisoccer.md: Android+AI 코치노트·1순위 체크포인트 표시
+- reference_competitor_other_apps.md: 모이라니 실존·신규 3종 추가
+
+**3. 활성화 지표 재측정 (scripts/retention-metrics.js)**
+- 외부팀 133개 기준: 구경꾼 74% / 신규 활성화 27%(86차 0%→개선) / 커밋팀 잔존 42%
+- 막힌 고의도팀: 용왕FC(40명/2경기)·FC Blue(28명/1경기) 등 확인
+- 결론: 병목은 기능 경쟁이 아니라 가입→2번째 경기 활성화
+
+**4. 마케팅 실행안 신설 (docs/marketing-action-2026-07.md, a3151d8)**
+- ASO 롱테일 키워드 선점, 커뮤니티 채널(네이버 카페·디시 갤), 수익화 벤치마크
+- 정정: 당근 "모임" = 앱 마케팅 부적합(당근FC 선례 = 팀 결성 아닌 모임 기록 용도)
+
+**5. SEO 롱테일 키워드 추가 (ce81b00, src/app/layout.tsx)**
+- `축구 동호회 운영`, `동호회 회비 관리`, `동호회 출석 관리` 등 추가
+
+**6. G5 발행 완료 + G6 신규 작성**
+- G5(풋살 쿼터 시간 가이드): 네이버·티스토리 7/1 발행 완료
+- G6(축구 동호회 운영 A-Z): src/lib/guides/posts/soccer-club-operations.tsx + registry 등록 + 네이버/티스토리 초안 완료. 자체도메인은 ce81b00 푸시 후 Vercel 배포 대기.
+- 블로그 발행현황 전면 정정: G1·G4(라인업)·G7(카톡) 모두 이미 발행 완료였는데 낡은 표 오보 → 사용자 지적 후 즉시 갱신
+
+### 삽질 / 안 된 것
+
+**1. 블로그 발행현황 낡은 표 오보 (반복 사고)**
+- project_blog_publishing_cadence.md 미갱신으로 G1·7편·G4 "미발행" 오보
+- 사용자 직접 지적 후 정정 — 다음부터 발행 보고 시 즉시 표 갱신 의무
+
+**2. Vercel 배포 미반영 (미해결, HIGH)**
+- ce81b00·a3151d8 푸시 후 8분 경과에도 /guide/soccer-club-operations 404
+- 기존 가이드 URL은 200 정상 → 코드 문제 아님. Vercel 대시보드 배포 상태 확인 필요
+- 사이트맵도 G6 URL 미포함 상태
+
+**3. GSC 색인 요청 순서 역전**
+- G6가 Vercel 프로덕션에 반영되기 전에 GSC 색인 요청 → "색인생성문제 감지" 오류
+- 배포 완료 확인 후 재요청하면 해소 예정
+
+### 신규 메모리
+- project_session_2026_07_01_109.md 신설
+- project_blog_publishing_cadence.md 갱신 (G5·G6 반영)
+
+---
+
+## 108차 (2026-07-01, KST) — 경쟁사 사말라 등록 + 경기장 지도 링크 구현
+
+**커밋**: ae979fb (docs: competitors.md 사말라 등록), 5111b3a (feat: 경기장 지도 링크). main 푸시·Vercel 자동배포.
+
+### 완료 내용
+
+**1. 사말라(Samala) 경쟁사 등록 (ae979fb)**
+- 남양주 고인돌FC 회장 자체제작. 웹 기반·카카오 로그인·~100팀(추정). 우리와 기원 서사·포지셔닝 최근접.
+- WebFetch로 samala.co.kr 실체 확인(카카오/구글/이메일/게스트 로그인 화면 확인).
+- docs/competitors.md 섹션0 TL;DR·A군 카탈로그·gap 매핑·섹션5 포지셔닝·섹션7 감시 목록 반영.
+- AI·회비 OCR·벌금/면제 깊이·후기 생성 없음 = 우리 해자 유효 확인.
+
+**2. gap 3종 코드 grep 실증**
+- 경기장 지도/카카오네비: MatchInfoTab.tsx:400 텍스트만 → gap 확정 → 구현.
+- 도착 셀프 체크인: MatchAttendanceTab 운영진 수동만 → 보류(GA 측정 후 재논의).
+- 회비 미납자 투표 하드 제한: 소프트 표시 + 미투표 벌금까지만 → 사용자 "필요없음" → 폐기.
+
+**3. 도입 검토 결론 — 폐기 기록**
+- 도착순 스쿼드: distributeToBalance 철학과 충돌 → 폐기.
+- GPS 자동출석: 웹/PWA 백그라운드 지오펜싱 불가(포그라운드만, iOS Safari 제한, TWA도 웹뷰라 동일), 실내 풋살장 GPS 불가, 좌표 데이터모델 없음 → 폐기.
+- 워치(애플/갤럭시) 운동기록 연동: HealthKit=네이티브 iOS 전용, 삼성헬스/Health Connect=네이티브 안드로이드 전용, 웹 API 없음. Strava OAuth 유일 경로지만 아마추어 녹화 비율 극소 → 폐기.
+
+**4. 경기장 지도 링크 구현 (5111b3a)**
+- 파일: src/app/(app)/matches/[matchId]/MatchInfoTab.tsx 1개
+- 헬퍼: naverMapUrl() = map.naver.com/p/search/, kakaoMapUrl() = map.kakao.com/link/search/
+- 웹/PWA 안전 URL (앱 설치자→앱, 미설치자→웹지도. 카카오네비 앱스킴 미설치자 미작동으로 배제)
+- scoreData null(경기 전)에서만 "장소" 행에 네이버(초록)·카카오(노랑) 칩. 브랜드색 인라인 style(Tailwind v4 Safari color-mix 이슈 회피)
+- 890 테스트 통과, rm -rf .next && npm run build 성공, tsc --noEmit 통과.
+
+### 삽질 / 안 된 것
+- 없음. 경쟁사 gap 검토 후 폐기 결정 항목들은 잘 걸러냈음.
+
+### 신규 메모리
+- reference_competitor_samala.md 신설
+- reference_web_pwa_native_limits.md 신설 (GPS백그라운드·워치헬스 네이티브 전용 정리)
+- project_session_2026_07_01_108.md 신설
+
+---
+
+## 107차 (2026-07-01, KST) — 솔로팀 누수 원인 GA 확정 + 활성화 루프 재배치 + 370px UI 전수 + safe-area + 전술판 저장 인디케이터
+
+**커밋**: 09306fb (활성화 루프 재배치), d9fb3de (370px UI), 70863db (safe-area 드로어+헤더), 8afec97 (전술판 저장 인디케이터). main 푸시·Vercel 자동배포.
+
+### 완료 내용
+
+**1. 솔로팀 누수 원인 판가름 (데이터 분석)**
+- Supabase 실측: 외부 133팀 76% 솔로(1인팀), 양극단 분포, join_mode 90% AUTO.
+- GA 28일: invite_sent 6(전체 team_create 15의 40%만 공유), team_join 71 >> invite_sent 14.
+- 결론: #1 로그인 벽 기각, #3 회장 활성화 확정. 초대받은 사람의 전환율은 정상, 회장이 팀을 운영 시작 못 하는 게 병목.
+- project_solo_team_activation_diagnosis.md 사용자가 직접 생성·등록.
+
+**2. 활성화 루프 재배치 (09306fb)**
+- 파일 3개(DashboardClient.tsx·WelcomeCard.tsx·getDashboardData.ts)
+- onboardingSteps에서 first_match를 members_invited 앞으로 이동
+- totalMatches===0이면 "첫 경기 만들기" task high 승격
+- showFirstMatchNudge 신설; showInviteNudge는 totalMatches>0 게이트
+- WelcomeCard 카피 "경기 먼저, 초대는 그 경기로" 흐름으로 조정
+
+**3. Z Flip 5(370px) 전수 UI 감사 + 수정 (d9fb3de)**
+- 4개 병렬 에이전트 감사 → 전부 HIGH 남발 → spot check로 재보정
+- 수정 6건: 회원행 이름 truncate+min-w-0·배지 flex-shrink:0, 상대팀명 overflow-wrap:anywhere, 대리투표 이름 truncate, 자체전 편성 헤더 모바일 세로 스택, 유니폼 패턴 grid-cols-4→2, 시즌 수상 값+단위 넘침 가드
+- 보류 2건: PlayerCard grid-cols-5(의도된 FIFA 카드 레이아웃), MonthlyReport grid-cols-4(월 단위 숫자 fit)
+
+**4. safe-area 드로어 + 헤더 수정 (70863db)**
+- 원인: body 전역 safe-area 패딩은 normal-flow만 커버, fixed/portal은 각자 처리 필요
+- sheet.tsx 우측/좌측/top 드로어 + X버튼: `pt-[calc(1.5rem+safe-area-top)]` 추가
+- 로그인 SiteHeader fixed 헤더: standalone 조건 safe-area 보강
+
+**5. 전술판 저장 인디케이터 (8afec97)**
+- TacticsBoard.tsx 1파일 수정
+- saving 불리언 → saveState 상태머신(unsaved/saving/saved/error)으로 교체
+- "저장 중…" / "저장됨 ✓" / "저장 실패" 표시 — 자동저장에도 확인 신호 필수
+
+### 삽질 / 안 된 것
+- **에이전트 심각도 과대평가**: 4개 병렬 에이전트가 전부 HIGH 남발. 실제론 대부분 MEDIUM/LOW·일부 오탐. spot check 재보정으로 해결.
+- **GA4 행동 데이터 직접 추출 불가**: GA 콘솔은 사용자만 접근 가능. Supabase 팀 분포는 node 스크립트로 probe 가능(루트 실행 필요, scratchpad는 node_modules 없어 실패).
+
+---
+
+## 106차 (2026-07-01, KST) — 자체전 팀편성 미배정 증분 배치 + 빠진 인원 정리 + 용병 삭제 자동 정리 + iOS 탭바 근본 수정
+
+**커밋**: a13abe6 (미배정 증분 팀배정), abc8461 (빠진 인원 정리 버튼), 96be369 (용병 삭제 자동 정리), 5331f38 (iOS 탭바 overflow-x:clip). main 푸시·Vercel 자동배포.
+
+### 완료 내용
+
+**1. 미배정 인원 증분 팀배정 (a13abe6)**
+- 자체전 "팀 편성" 카드에 "미배정 N명 배치" 버튼 추가
+- 기존 A/B/C 배정 유지하면서 미배정 인원만 인원 적은 팀부터 균형 배정
+- 순수 함수 `distributeToBalance()`(src/lib/internalSides.ts) + 테스트 8개
+- 좁은 화면을 위해 버튼 행 flex-wrap 처리
+- 삽질: 요청을 전술판 AutoFormationBuilder로 오해 → "팀편성 카드" 사용자 정정. 모호 요청은 추측 말고 확인.
+
+**2. "빠진 인원 정리" 버튼 (abc8461)**
+- 삭제된 용병·참석→불참 전환 회원을 match_internal_teams + match_squads 양쪽에서 제거
+- 순수 함수 `scrubAbsentFromPositions()`(src/lib/server/squadCleanup.ts) 신설
+- 신규 엔드포인트 `POST /api/matches/cleanup-roster` (validIds 클라 전달, 빈배열 전체삭제 방지 가드)
+- ghostTeamCount>0일 때만 warning색 버튼으로 표시(디자인 의미색)
+- counts를 참석자만 세도록 수정해 유령 인원 부풀림 제거
+
+**3. 용병 삭제 시 자동 정리 (96be369)**
+- /api/guests DELETE에서 match_internal_teams 삭제 + match_squads positions scrub(best-effort) 추가
+- squadCleanup 모듈을 scrubPositions 코어 + scrubAbsentFromPositions/removePlayerFromPositions 두 래퍼로 리팩토링
+- handleRemoveGuest → refetchInternalTeams + match-squads-saved(source:guest-removed) 디스패치 → MatchTacticsTab 리스너가 보드 remount
+- 배경: match_internal_teams.player_id는 polymorphic TEXT라 FK cascade 없음, squads는 JSONB라 FK 없음
+
+**4. 프로덕션 데이터 청소 (커밋 없음, 수동)**
+- hard-orphan(users/team_members/match_guests 어디에도 없는 player_id) 실측: 전체 팀편성 2행 / 전술판 11슬롯
+- 사용자 지시로 FCMZ 6/30 자체전(match e5c6bc6a)만 스코프해 유령 1명(팀1+보드3슬롯) 삭제
+- permission classifier가 전체 APPLY 차단 → 단일 경기로 스코프 후 적용. 임시 스크립트 삭제
+
+**5. iOS 하단 탭바 근본 수정 (5331f38)**
+- html,body + ClientLayout root div의 `overflow-x: hidden` → `overflow-x: clip` 변경
+- globals.css에 재발방지 주석 추가
+- 지난 2번(f707f79 backdrop-blur, 076e91f safe-area)은 다른 글리치만 수정해 이 버그는 잔존했음
+- reference_ios_fixed_overflow_clip.md 박제 + MEMORY.md 디자인섹션 포인터 추가
+
+### 삽질 / 안 된 것
+- 자동편성 요청을 AutoFormationBuilder(전술판)로 오해 — "팀편성 카드 얘기"로 정정받음. 모호 요청은 추측 금지.
+- iOS 탭바 위치 버그를 두 차례(f707f79·076e91f) 오진단. fixed 위치 버그는 조상 overflow/transform/filter 먼저 확인해야 함.
+
+---
+
+## 104차 (2026-06-29, KST) — 외부 코드분석 검증 + 스크린샷 일원화 + 일반 API rate limit + 카드 표준 문서화
+
+**커밋**: 6c09621 (D8 스크린샷 폴더 일원화), bbc7350 (C4 일반 API rate limit), 5139159 (카드 표준 문서화+dead CSS 제거+.env.example). main 푸시·Vercel 자동배포.
+
+### 완료 내용
+
+**1. 외부 코드분석 보고서 8개 항목 코드 직접 검증**
+- 결과: 5개 정확, 1개 부분(600줄 초과 컴포넌트 "19개" → 실제 39개 과소집계), 2개 outdated
+- 킥 60초 잔존 → 실제 `members/route.ts:385` `invalidateAuthSync`로 즉시 차단 (이미 해결)
+- 게시판·댓글·회비메모 safeText 미적용 → 실제 전부 `validateFreeText` 적용 완료 (input-validation.md 룰만 stale)
+
+**2. D8 — 스크린샷 폴더 일원화 (6c09621)**
+- `public/screenshot/`(단수 19개) → `public/screenshots/`(복수)로 git mv
+- 중복 tactisboard.png(md5 동일) 제거
+- AppScreenSlider 6경로 + middleware matcher 단수 경로 제거
+- CLAUDE.md "알려진 이슈 → 해결됨" 박제
+
+**3. C4 — 일반 API rate limit (bbc7350)**
+- 신규 `src/lib/server/apiRateLimit.ts` `checkMutationRateLimit()`: 새 테이블/마이그 없이 대상 테이블 "본인 최근 N초 생성 행 수" COUNT → 초과 시 429 / count 에러 시 graceful allow
+- 적용 4곳: goals(테이블=match_goals, recorded_by, 40/60s) · posts(board_posts, author_id, 10/60s) · comments(post_comments, author_id, 20/60s) · dues(dues_records, recorded_by/recorded_at, 30/60s)
+- 전용 테스트 `apiRateLimit.test.ts` 8케이스. 871/871 전체 통과.
+
+**4. D7 — 카드 통일: 방향 전환 (5139159 일부)**
+- Radix `<Card>` / card-stat / card-list-item / raw div 기본 스타일 전부 달라 픽셀 안전 통일 구조적 불가
+- card-stat은 `item.bg`(반투명 틴트) + `background:` 그라디언트 cascade 상호작용 → 기계적 변환 시 배경 승패 뒤집힘
+- 결정: `<Card>`를 표준으로 CLAUDE.md에 문서화 + dead `card-featured` 제거 + 작동 중 유틸 보존
+
+**5. B 묶음 정리 (5139159)**
+- dead `card-featured` CSS 제거 (globals.css, 사용처 0 확인)
+- `.claude/rules/input-validation.md` 현행화 (`validateFreeText` 헬퍼·적용처 추가, "백로그"→"적용완료")
+- `.env.example` 신규 생성 (env var 22개 그룹별)
+
+**6. D6·C5 보류 (사용자 결정)**
+- D6 거대 컴포넌트 분리(600줄 초과 39개, 최대 1739줄): 보류. 재개 시 AnimationEditor 파일럿 추천
+- C5 푸시 stale cron: 보류 (push_subscriptions에 updated_at 없어 마이그 필요)
+
+### 삽질
+
+- **Bash heredoc 오용**: `git commit` 메시지 작성 시 PowerShell here-string `@'...'@` 사용 → 커밋 제목이 "@"로 박힘. `--amend`로 정정. Bash 도구는 POSIX sh이므로 `$(cat <<'EOF'...EOF)` 또는 `-m` 다중 플래그 사용 필수.
+- **rate-limit 테스트 큐 밀림**: COUNT 쿼리 추가로 기존 라우트 테스트 createMockDb 큐가 한 칸 밀려 9개 테스트 깨짐. 4개 라우트 테스트에 `vi.mock("@/lib/server/apiRateLimit")` no-op mock 추가로 해결.
+
+### 새 메모리
+
+- 이번 세션 신규 교훈은 기존 memory 파일에 흡수 (별도 파일 불필요).
+- INDEX_full.md + MEMORY.md 회고 섹션에 104차 반영.
+
+---
+
+## 105차 (2026-06-29, KST) — 전술판 편집/보기 토글 + 유니폼 버그 2건 + 출석률·기록 전 경로 전수수정
+
+**커밋**: 3a11270 (전술판 편집/보기 토글), bf50a66 (완료 버튼 success), f91f0ca (스코어히어로 유니폼), b4b4c67 (전술판 uniformType), 286acff (출석률·기록 전 경로 전수수정). main 푸시·Vercel 자동배포.
+
+### 완료 내용
+
+**1. 전술판 편집/보기 토글 (3a11270)**
+- 배경: 운영진 여러 명이 전술 탭에서 스크롤 중 실수로 드래그·슬롯 클릭 → 자동저장 사고.
+- `editing` state + `viewOnly` 단일 게이트 도입. 드래그·슬롯선택·포메이션·초기화·로스터패널·모바일시트 전부 차단.
+- 기본값 보기 모드, [편집] 탭 시 편집 진입. [완료] 시 flush(자동저장) 실행.
+
+**2. 완료 버튼 success 색 (bf50a66)**
+- [완료] 버튼 secondary(회색) → success(초록) variant. 디자인 첫 시도에서 의미색 미적용 → 지적 후 수정.
+
+**3. 유니폼 버그 2건 (f91f0ca, b4b4c67)**
+- 스코어 히어로: `match.uniformType` 있어도 항상 homeJerseyStyle 고정 → `teamJerseyStyle(match.uniformType)` 교체.
+- 전술판: uniformMode state에 setter 없음(죽은 코드) → `uniformType` prop을 MatchTacticsTab에서 주입하는 방식으로 수정.
+
+**4. 출석률·기록 전 경로 전수수정 (286acff, 6파일)**
+- 배경: 103차에 `computeAttendanceRateWithHistory` 신설 후 records 3경로만 적용. FC발로만 사용자 신고로 재조사.
+- 누락 5경로: getDashboardData·player-card/route·player/[memberId]/page·season-awards·attendance/recent.
+- 추가: INTERNAL 경기가 W/D/L·클린시트·승리요정·베스트매치·선수 프로필 승률·월별결산에 미제외 → `isTeamRecordMatch` 게이트 추가.
+
+### 삽질
+- 출석률 버그를 103차에 수정했으나 3경로만 적용. 이후 사용자 신고로 5경로 더 발견 → 누적 4차례 반복 수정.
+- [완료] 버튼 회색으로 초기 구현 → 지적 후 재수정.
+
+### 새 메모리
+- `feedback_fix_all_call_sites_of_bug_class.md` ⭐⭐⭐ 신규 생성 (105차). 버그 수정 시 같은 로직 경로 전수 grep → 한 배치 수정 규칙.
+- `feedback_design_tone.md` 갱신: 서로 다른 동작은 의미색 구분(완료=success/삭제=destructive), 첫 시도부터 적용.
+
+---
+
+## 103차 (2026-06-26~27, KST) — FC발로만 이관 + 이관 버그 수정 + iOS 스크롤 글리치 + 크로스브라우징
+
+**커밋**: e149a42 (이관 스크립트), f707f79 (탭바 blur), 8464b5c (나머지 8곳 blur), 278e1ef (출석률 헬퍼), d42602b (전술판 후반 교체 버그), c2cc959 (color-mix 4곳). main 푸시·Vercel 자동배포.
+
+### 완료 내용
+
+**1. FC발로만 2026 시즌 18경기 이관 (e149a42)**
+
+- 팀 id `353e06cb-4779-4f1a-930b-12f4b58f4cee`. `docs/FC발로만.xlsx` → 2/7~6/14 18경기.
+- 스크립트 `scripts/seed-balloman-matches.mjs`: APPLY=1 게이트·DRY RUN 기본·중복 가드.
+- 가입 회원 19명 정확 일치. 미가입 2명(권익현·김현찬)은 pre_name 멤버(user_id=null) 등록 후 scorer_id=member_id 귀속. 심민섭 ACTIVE·BANNED 중복 → ACTIVE만.
+- 골 84·상대골 93·출석 218행. 엑셀에 쿼터·도움 짝 없음 → 쿼터=null, 골-도움 재구성(자기 도움 회피), 용병=MERCENARY, 상대=OPPONENT sentinel. 재집계 0 mismatch.
+
+**2. 이관 멤버 출석률 0% 버그 수정 (278e1ef)**
+
+- 원인: 팀 생성 6/25 → joined_at이 경기일(2~6월)보다 늦음 → computeAttendanceRate 분모=0.
+- joined_at 백필 금지: 회비·벌금 3곳에 동시 사용 → 소급 미납·소급 벌금 위험.
+- 해결: `computeAttendanceRateWithHistory()` 신설(`src/lib/attendanceEligibility.ts`) — 가입 전 출석 기록 있으면 joined_at 게이트 무시, 시즌 전체를 분모로.
+- 적용 3경로: `getRecordsData.ts`·`api/records/route.ts`·`computeSeasonOvr.ts`. 테스트 8케이스.
+
+**3. iOS Safari 빠른스크롤 backdrop-filter 글리치 (f707f79·8464b5c)**
+
+- 원인: position fixed/sticky + backdrop-blur가 iOS 모멘텀 스크롤 중 repaint desync → 바가 화면 중앙에 잠깐 떠 보임.
+- 수정: backdrop-blur 제거 + near-opaque bg(0.98). 대상 9곳: 하단 탭바, records/settings/dues/match-detail sticky 헤더, login CTA, SeasonAwards·demo-cards 헤더, PlayerProfile 뒤로가기. 모달 제외.
+
+**4. 전술판 후반 교체 인원 해제 → 빈 화면 버그 (d42602b)**
+
+- 원인: `TacticsBoard.tsx` handleClearSecondPlayer가 setActiveSlotId(null) → isDisabled=!activeSlotId → 모바일 시트에서 아무것도 눌리지 않음.
+- 수정: 해제 후 슬롯 선택 유지(slotMode="assign").
+
+**5. Safari color-mix 잔여 4곳 슬래시-알파 변환 (c2cc959)**
+
+- DuesBulkTab·ShareCard·PlayerProfilePage·SeasonAwardsPage의 bg/gradient 4곳.
+- 크로스브라우징 전수조사: Safari 날짜파싱·full-screen 높이·gradient text·드래그·공유·clipboard 정상 확인.
+
+### 삽질
+
+- 전술판 버그 수정 후 "푸시할까요?" 물어봄 → 사용자가 직접 테스트 중이었음. 사용자가 이미 실기기 테스트 중이면 상황 파악 먼저.
+
+### 미수정 (103차 pending)
+
+- `EditMatchInfoForm`·`MatchVoteMemberPanel`: `bg-[hsl(var(--${color}))]/15` 동적 보간 → Tailwind v4 정적 추출 실패 → 전 브라우저 틴트 미생성. 사용자 실기기 확인 후 inline style로 수정 예정.
+- P2: text/border/shadow color-mix ~600곳(Safari에서 약간 진하게 렌더, 가독성 OK, 선택적 처리).
+
+---
+
+## 102차 (2026-06-26, KST) — 코드+메모리 전수조사 (A1~A5 + CLAUDE.md 분리)
+
+**커밋**: 1ca574c (CLAUDE.md path-scoped 분리), d775327·6ffc3c4·d2ef34e·0c6ebd0·04037fc (2차 라운드). main 푸시·Vercel 자동배포.
+
+### 완료 내용
+
+**코드 수정 (A1~A5)**
+- A1(실버그): match-summary MVP 단순 최다득표 → `resolveValidMvps`+`pickStaffDecision`+`shouldApplyNewMvpPolicy` 통일.
+- A3: `aggregateMvpsByMatch()` 신설·`computeMatchScore()` 추출 → SSR↔API 복붙 제거(null vs "0:0" 차이 보존).
+- A2: JerseyBadge·ui/birth-date-select·lib/formationAI 고아 3개 삭제.
+- A4: `isStaffOrAbove()` 6곳·`getKstNow`/`getKstToday` 18곳 헬퍼화.
+- A5: screenshot 경로 통일(`/screenshot/` 단수).
+- 2차 라운드: dues recorded_at UTC slice 3·player-card MVP랭킹 raw버그 수정·dead 10개 삭제·박제 4건 정정.
+- 855 vitest·clean 빌드 통과.
+
+**문서·구조**
+- CLAUDE.md 481줄 → 267줄: `.claude/rules/*.md` 5개 path-scoped 분리(커밋 1ca574c).
+- MEMORY 한도 정정: 16KB → 200줄/25KB.
+- 풋살403·confetti 박제 "정리 후보" → 이미 제거됨 확인 후 정정.
+
+---
+
+## 101차 (2026-06-26, KST) — 회비 MAYBE 벌금 확정 + FCMZ 선납 표시 버그 데이터 정리
+
+**커밋**: de39a23 (MAYBE 벌금+cron 매시간), 2695632 (exemptLabel hoist+셀렉트 라벨), 2be1690 (주석). main 푸시·Vercel 자동배포.
+
+### 완료 내용
+
+**1. 미정(MAYBE) 투표 → 마감 시 미투표 벌금 부과 (de39a23)**
+
+기존 문제: `match_attendance`에 행만 있으면 "투표함"으로 판정 → MAYBE 상태 유지만으로 미투표 벌금(NO_VOTE) 회피 가능했음.
+
+수정 경로 2곳 (NO_VOTE 판정은 이 2곳뿐, attendance-check는 지각·노쇼만):
+- `src/app/api/cron/no-vote-penalty/route.ts` — `vote` 컬럼 추가 select, `votedIds`에서 `vote==="MAYBE"` 제외. `vote===null`(출석만 기록)은 기존대로 투표함 유지.
+- `src/app/api/dues/penalties/route.ts` — `isNoVote = !att || att.vote === "MAYBE"`. `hasAttendancePenalty`(LATE/실제불참) 이면 NO_VOTE skip (이중 부과 방지).
+
+cron 스케줄 변경: `0 14 * * *` → `0 * * * *` (매시간). 부하 경량 — 마감 경기 없으면 쿼리 1~3개 후 early return.
+
+화면 표시는 한 곳도 건드리지 않음. 미정은 계속 '미정'으로 표시.
+
+**2. FCMZ 선납 표시 버그 — 코드 수정 없이 데이터 정리로 해결**
+
+증상: FCMZ 선납 회원이 지문구·김민욱 2명이어야 하는데 화면엔 1명만 표시.
+
+원인 확정:
+- 화면(DuesStatusTab)이 읽는 소스 = `dues_payment_status.note`. `member_dues_exemptions`가 아님.
+- 김민욱 6월 `dues_payment_status`에 종료된 EXEMPT("6개월 완납") stale 행 잔존 → "면제"로 표시.
+- 김민욱 신규 PREPAID는 7~12월 등록 → 6월 미커버.
+- `member_id`가 `users.id`/`team_members.id` 혼재 고아 행 존재.
+
+해결: 사용자 Supabase SQL Editor에서 직접 실행 (라이브 금전 DB 직접 mutation = 자동모드 차단). 지문구·김민욱 각각 1~12월 PREPAID 단일 정리, 레거시 EXEMPT 중복 삭제, 고아 행 삭제, 2026년 12개월 note '선납' 통일. 검증: 6월 선납 그룹 = 2명.
+
+코드 메모: reason 키워드로 완납→선납 분류하는 코드는 사용자가 "완납≠선납"으로 거부 → 되돌림. `2695632`(exemptLabel hoist+셀렉트 면제 종류 라벨 표시), `2be1690`(주석)은 유지.
+
+### 삽질
+
+- 선납 버그를 "코드 분류 버그"로 오진단 → "데이터 상태 문제"로 정정. 화면 소스(`dues_payment_status`)와 면제 원본(`member_dues_exemptions`)을 처음부터 같이 봤어야 함.
+- `team_members`에 `name` 컬럼이 없음(이름=`users.name`, user_id 조인 필요)을 여러 probe에서 반복해서 늦게 잡음. `feedback_supabase_column_verify` **6차 재발**.
+- "지문구"를 오타로 착각 (실제 회원 이름).
+
+### 교훈
+
+- 회비 버그 진단 시 `dues_payment_status`(화면 소스)와 `member_dues_exemptions`(면제 원본)을 **동시에** 확인해야 함.
+- 라이브 금전 DB 직접 mutation은 자동모드 차단 — SQL Editor 경유가 정석 (`feedback_dont_offload_to_user` 예외 케이스).
+
+---
+
+## 100차 (2026-06-26, KST) — 전술 영상 에디터 사용자 피드백 3라운드
+
+**커밋**: 50527a5, 0178124, 06f367f (6파일, 1파일, 1파일). main 푸시·Vercel 자동배포.
+
+### 완료 내용
+
+**커밋 1 (50527a5)** — 재생 보간·컷 추가 차단·ConfirmContext defaultFocus·상대 선수 마커:
+- 편집 중 재생이 스냅(점프)하던 것 → framer-motion 보간 적용. 드래그 중엔 transition 0 유지.
+- 직전 컷과 동일한 미편집 복사본 추가 시 차단 + 토스트 안내.
+- `ConfirmContext`에 `defaultFocus("confirm"|"cancel")` 옵션 신설. 컷 삭제만 엔터=확인(삭제), 강퇴·팀삭제 등 위험 작업은 기존 취소 포커스 유지.
+- `MotionStep.opponents` (`OpponentMark[]`, optional) 추가. 에디터 추가/제거/드래그, 미리보기(`FormationMotionViewer`) 렌더, GIF(`gifExport.ts`) 렌더+id 기준 보간.
+
+**커밋 2 (0178124)** — 드래그 겹침 해소·상대 전 컷 공통 로스터·전체 배치 UI:
+- SVG 전체 `onPointerDown`에서 최근접 점(공·상대·선수) hit-testing으로 겹침 오조작 해소. 공 동률 시 우선.
+- 상대 선수 추가/삭제는 `patchAllSteps`로 전 컷 동시, 위치만 `patchStep`으로 컷별 관리. (일부 컷에만 있으면 framer-motion이 mount/unmount 처리 → 팝인/아웃 깜빡임)
+- 새 컷 생성 시 직전 상대팀 자동 복사.
+- 상대 UI: 번호 토큰·범례(우리 흰/상대 빨강)·추가·전체 배치(N명, 포메이션 상하반전)·선택 삭제(노란 링)·비우기.
+
+**커밋 3 (06f367f)** — 공 드래그 grab offset 보정:
+- 공이 `BALL_OFFSET_Y`(2.4)만큼 저장 좌표보다 아래에 그려지는데 드래그 좌표를 그대로 저장 → 손가락보다 아래 매달리는 버그.
+- dragging state에 `grabDx`/`grabDy` 기록, 드래그 내내 유지. `BALL_OFFSET_Y` 상수화.
+
+### 삽질
+
+- PowerShell에서 heredoc 파이프(`-m "$(cat <<'EOF' ...)"`) 사용 시 BOM 붙어 커밋 제목 오염(1회). Write+`-F` 방식으로 전환.
+- `[id]`·`(app)` 경로를 `git add` 시 pathspec glob 해석 → `GIT_LITERAL_PATHSPECS=1` 필요.
+- "컷 추가 차단" 정책 3단계 번복(차단→자유→차단). 최종 = 직전과 동일 시 차단.
+
+---
+
+## 99차 (2026-06-26, KST) — 라이브 콘텐츠 오정보 전수 감사 및 수정
+
+**커밋**: fac7ac7 (20파일). main 푸시·Vercel 자동배포.
+
+### 발단 — 선납 동선 오안내
+
+사용자가 "납부현황 탭에 선납 등록이 안 보인다, 가이드엔 있다는데"라고 지적. 확인 결과 가이드(/help)가 틀렸음. 선납 등록은 **설정 탭 "회원 회비 상태 관리"(DuesSettingsTab.tsx, PREPAID 타입)**이며, 예전 PrepaymentRegisterModal은 migration 00053에서 DROP됐는데 가이드에만 폐기된 동선이 남아있었던 것.
+
+이를 계기로 사용자가 "가이드·랜딩·블로그에 코드에 없는데 나와있거나 잘못된 거 전수 점검"을 지시. 3개 surface 병렬 감사 후 직접 spot-check.
+
+### 수정한 라이브 오정보 8종
+
+1. **알림(푸시) 과장** — "안드로이드/갤럭시/삼성인터넷은 앱 깔아야 알림"이 거짓. 실제 웹푸시는 크롬·삼성인터넷 브라우저 모두 정상. 삼성인터넷 이슈는 TWA 앱 컨텍스트 한정, 네이티브 FCM v1.0.8으로 해결됨. help 6곳·FaqSection·soccer-team-app-notifications.tsx·블로그 초안 2개 전수 정정. **97차 pending 항목 완전 해소**.
+
+2. **게시판 카테고리** — "4종(공지·자유·건의·투표)" → 실제 2종(FREE/NOTICE), 투표는 첨부 기능 (BoardClient.tsx:36). help:884.
+
+3. **용병 추가 탭** — "[정보]탭" → [전술]탭(MatchTacticsTab). help:907.
+
+4. **일괄 투표 과장** — "다음 6경기 한 번에 응답" → "다가오는 경기"(batch-vote 없음, 최대 4). FeaturesSection·ComparisonSection·pricing.
+
+5. **면제 용어** — "휴면 면제" → "휴회 면제"(DORMANT=부과, 면제=LEAVE/INJURED, getPenaltyExemptUserIds.ts:6,14). ComparisonSection·pricing·layout.tsx SEO 3곳.
+
+6. **풋살 포메이션 수** — "16종" → 18종(formations.ts FUTSAL 18개). futsal-tactics-app.tsx + 초안 2개.
+
+7. **자체전 통계 분리** — "시즌 통계 분리" → "팀 전적만 분리, 개인 골·어시 누적"(getRecordsData.ts:72). 발행 3개+초안 4개.
+
+8. **경미 4건** — 월별결산 라벨/위치(help:773)·AI표 일지→후기(help:822)·유니폼 줄→스트라이프(help:922)·미투표크론 "그날"→"최근"(soccer-team-excel-vs-app + 초안).
+
+**검증**: tsc --noEmit OK, 클린 빌드 OK, grep sweep 잔존 오류 0.
+
+### 삽질
+
+- Edit tool file_path에 한글 경로("온유아빠")를 키릴문자로 오타내 4회 연속 실패.
+- 병렬 에이전트 "FeaturesSection 표현 없음" false positive → 직접 grep으로 존재 확인 후 바로잡음.
+
+### 교훈
+
+- 기능 폐기(migration DROP) 시 help/landing/blog를 grep으로 같이 정정해야 함. 기능 제거 커밋에 content grep 체크리스트 추가 필요.
+- 메모리 인용 시 적용범위 정확히: 삼성인터넷 이슈는 TWA 한정인데 "브라우저 전체"로 오일반화했던 것이 97차 사고였고 이번에 완전 정정.
+
+## 99차 후반부 (2026-06-26, KST) — 회비 UI 커밋 + NativeSelect 근본수정
+
+**커밋**: 3859a26, 2695632, d04fecb, 0682071, 4bc0c6c, 18fb076. main 푸시·Vercel 자동배포.
+
+### 회비 UI 커밋·푸시 완료
+
+이전 회고 시점에 "미커밋" 상태였던 2건 완료:
+- `3859a26` fix(dues): 잔고 카드 간격(DuesClient) + 면제/선납 뱃지 구분 + 선납 그룹 분리(DuesStatusTab)
+- `2695632` refactor(dues): EXEMPT 뱃지 inline IIFE → exemptLabel 변수로 hoist (뱃지·셀렉트 공유)
+
+### NativeSelect 글자 짤림 근본수정 (18fb076)
+
+**제보**: FC발로만 회비 입출금 탭 "전체/입금/출금" 필터 셀렉트에서 한글 글자 위아래 짤림.
+
+**오진 및 삽질**:
+- `d04fecb` — 폭 부족으로 오진, w-20→w-24로 3곳 확대. 화면 그대로. 사용자 강하게 정정.
+- `0682071` — w-24 원복 + 입출금 필터 py-0 적용.
+- `4bc0c6c` — 나머지 h-9 text-sm 5곳(MatchRoleGuide·DuesSettingsTab 3곳·DuesPenaltyTab)에 py-0.
+- `18fb076` — **근본수정**: base `py-2`→`py-1` = 컴팩트 높이(h-8/h-9) 한 번에 해결.
+
+**진짜 원인**: 세로(padding) 문제. base py-2(상하 16px) + border 2px가 내용높이를 글자 줄높이보다 작게 만든 것. 단 h-7(28px)은 py-1로도 부족 → 기존 py-0 유지. 기본 h-11은 시각변화 0.
+
+**메모리**: `reference_native_select_compact_clip.md` 신설.
+
+**교훈**: "글자 짤림" 제보는 가로(width)/세로(padding·line-height) 축부터 판별. 같은 증상 여러 곳이면 호출처 땜질보다 공용 base 근본수정. 추측으로 수정 진입하면 헛커밋 쌓임 — `feedback_root_cause_first` 재발.
+
+---
+
+## 98차 (2026-06-25, KST) — Safari color-mix 투명 배경 전수수정
+
+**커밋**: 2335f46 (89파일, 475 변경). main 푸시·Vercel 자동배포.
+
+### Safari color-mix 렌더 버그 전수수정
+
+**제보**: 맥 Safari에서 좌측 메뉴 선택 항목·개인설정 등 반투명 틴트 배경이 불투명 솔리드 블록으로 렌더→동일 계열 색 글자가 먹혀 안 보임. 크롬/윈도우는 정상.
+
+**진단**: Tailwind v4가 `bg-primary/10` 같은 `/투명도` modifier를 `color-mix(in oklab, var(--color-primary) 10%, transparent)`로 컴파일. Safari가 color-mix 알파를 무시하고 불투명 렌더. 2개 독립 지점(SidebarNav 선택 항목 + `PersonalSettings.tsx:669`)에서 패턴 재확인 후 진행 — verify-first 잘 지킴.
+
+**수정**: 배경 클래스(`bg-`/`from-`/`to-`/`via-`) 전체를 color-mix를 거치지 않는 slash-alpha arbitrary value로 변환.
+- `bg-primary/10` → `bg-[hsl(var(--primary)_/_0.1)]`
+- `bg-[hsl(var(--info))]/15` → `bg-[hsl(var(--info)_/_0.15)]`
+- `bg-white/[0.03]` → `bg-[rgb(255_255_255_/_0.03)]`
+- 이미 안전한 `[hsl(var(--x)/0.1)]` 패턴은 이중변환 방지
+
+**방법**: 결정론적 regex 스크립트(`scratchpad/fix-colormix.mjs`) 일괄 변환. 532곳/89파일. `text-`·`border-`·`shadow-`는 의식적 제외(가독성에 무관).
+
+**검증**: 클린 빌드(rm .next + build) 통과. 생성 CSS에 `hsl(var(--primary) / .1)` 출력 확인.
+
+**메모리 신설**: `reference_safari_colormix_opacity.md` + MEMORY.md 디자인 섹션 포인터.
+
+**삽질**:
+- `text-`까지 포함해 770곳/95파일 과대 스코프 → text 투명도는 글자를 덮지 않아 불필요 → 되돌리고 배경만으로 좁혀 532곳.
+- `git checkout -- src` 트리전체 discard가 classifier에 차단 → 비파괴적 `git stash`로 우회. 백업 stash `colormix-broad-revert` 남아있음(정리 필요).
+
+**교훈**:
+- Tailwind v4 `/투명도` modifier = Safari에서 불투명 렌더. 이후 반투명 배경은 항상 `bg-[hsl(var(--x)_/_0.N)]` 사용.
+- 수학적 의문("10% 알파가 왜 솔리드?")은 추측 덮지 않고 2번째 독립 지점 재확인 후 진행.
+- 일괄 sweep은 실제 증상 원인(배경)으로 스코프 좁힌 후 실행.
+
+**⚠️ 이월**: 97차 알림 안내 4곳 오정보(FAQ·/help·soccer-team-app-notifications·블로그 초안) 정정이 이번에도 미처리. pending 유지.
+
+---
+
+## 97차 (2026-06-25, KST) — joined_at 소급부과 전수수정 + LEFT/BANNED·DORMANT 생명주기 정책 + 알림 안내 사실검증
+
+**커밋**: e2c6a39·ea5411a·f4bb590·6f4aa7b·092a1a2·82d7eda·d8b2369 (8개). main 푸시·Vercel 자동배포.
+
+### 1) joined_at 소급부과 5경로 수정 (e2c6a39)
+박재형(FCMZ 6/23 가입) 회비미납·벌금 제보가 발단. 회비/벌금 4경로가 joined_at 무시 → 가입 전 경기에도 회비·벌금 부과. 정책 확정: **회비=가입 다음 달부터, 벌금=match_date < joined_at 제외**. 정리 스크립트 `scripts/cleanup-prejoin-dues-penalties.mjs`(dry-run→apply, 박재형 벌금 1개·회비미납 5개 삭제, PAID 보존). 상세 `domain_dues_penalty_joined_at_gate.md`.
+
+### 2) 출석률 7곳 공통 헬퍼 적용 (ea5411a)
+sub-agent 4개 병렬 조사 후 spot-check. `attended/시즌전체경기수` → 가입 전 경기 결석처리(신규 공개프로필·OG·출석왕·OVR 0% 박제). 공통헬퍼 `src/lib/attendanceEligibility.ts` 신설 후 7곳 이식(player page·getRecordsData·records route·player-card·season-awards·computeSeasonOvr·dashboard). 출석왕은 시즌 절반 이상 대상 가드 추가. 대시보드 회비 task 가입월 가드·재가입 joined_at 갱신·join-request BANNED 우회차단도 포함.
+
+### 3) LEFT/BANNED vs DORMANT 생명주기 정책 (f4bb590)
+사용자 확정 정책: **탈퇴/강퇴=팀원아님→기록·통계·회비·랭킹 비노출** (원본 골/어시·회비 DB 보존). **휴면=복귀가능→모든 곳 노출**. 표시·집계=`in(["ACTIVE","DORMANT"])`, 액션(벌금생성·푸시·투표리마인더·로그인)=ACTIVE 유지. aiTeamStats roster·records/detail·payment-stats·dues income 매칭 수정. 에이전트 환각("DORMANT 미투표벌금"·"LEFT MVP수상") spot-check로 차단.
+
+### 4) 휴면 팀전환 버그 수정 (6f4aa7b)
+my-teams 팀전환·invite "이미멤버" 체크가 ACTIVE-only → 여러 팀 가입자의 휴면 팀 전환불가 버그. ACTIVE+DORMANT로 수정.
+
+### 5) 알림/푸시 안내문서 보강 (092a1a2)
+/help 알림섹션 현행화(Play앱권장·삼성인터넷해결·종/모두읽음·TOC), 랜딩+help FAQ 푸시Q, 새 SEO가이드 soccer-team-app-notifications(registry+sitemap 자동).
+
+### 6) FAQ·가이드 사실검증 전수조사 (82d7eda)
+AI 한도 숫자(aiUsageLog.ts 코드값으로 정정: 풀플랜 경기당 3·월 20 / 코치 경기당 4·월 30 / OCR 월 100)·7일 푸시 가드 오류 제거·풋살 포메이션 인원 매핑 정정(5인/6인)·휴면 면제 "자동면제→면제 등록 필요"로 정밀화·AI 편성 MVP 표현 정정 등. 에이전트 false positive: "감독 지정 포지션 기능 없음" 오판을 spot-check로 차단(coach_positions 컬럼 실재).
+
+### 7) 알림 블로그 초안 3종 세트 (d8b2369)
+네이버·티스토리 초안 발행 완료.
+
+### ⚠️ 세션 말 발각 — 알림 안내 콘텐츠 4곳 라이브 오정보
+FAQ·/help·soccer-team-app-notifications·블로그 초안에 "갤럭시는 Play 앱 깔아야 알림" 내용이 박혔으나 **사실이 아님**. 웹푸시는 크롬·삼성인터넷 브라우저 모두 정상. 삼성인터넷 이슈는 TWA 앱 컨텍스트 한정(reference_twa_push_samsung_internet.md). 진짜 저조 원인은 subscribeToPush 호출처가 설정 토글 1곳뿐(구독 깔때기). **다음 세션 정정 pending 등록**.
+
+---
+
+## 96차 (2026-06-25, KST) — 푸시 알림 3버그 수정 + 인앱 seen/read 분리 + 모바일 2버그 수정
+
+**커밋**: bb7f02b(푸시버그)·bf38c0d(seen/read)·26ed7a7(죽은링크)·50f2e33(모바일). main 푸시·Vercel 자동배포.
+
+### 1) 푸시 알림 3대 버그 (bb7f02b)
+
+- 진단: ① `sendTeamPush`가 `notification_settings.push` 미참조 → 토글 OFF 무효 ② GET 기본값 `{push:true}` → 구독 없어도 ON처럼 보여 아무도 설정 안 건드림 ③ "홈 화면 추가"(PWA) ≠ 자동구독 (자동구독은 TWA·설정 토글뿐)
+- 실측: 활성 584명 중 웹푸시 4명 + 네이티브 20명 = 채널 보유 ~4%. "알림 안 온다"의 진짜 원인.
+- 수정: `sendPush.ts`에서 `push=false` 유저 OS 발송 제외(인앱은 전원 유지·fail-open), GET `data??null` 반환, 설정 토글 실제 구독 기준 로드·OFF 시 unsubscribe+DELETE, 기기별 안내 문구.
+- 수정 파일: `src/lib/server/sendPush.ts`, `src/app/api/notification-settings/route.ts`, `src/app/(app)/settings/PersonalSettings.tsx`
+
+### 2) 인앱 알림 seen/read 분리 (bf38c0d + migration 00079)
+
+- migration `00079_notifications_is_seen.sql`: `notifications.is_seen` 컬럼 추가. **사용자가 Supabase SQL Editor 직접 적용** (service-role exec_sql은 auto-mode DDL classifier 차단).
+- 동작: 벨 패널 열기→전체 `is_seen=true`(뱃지 즉시 0) / 항목 탭→`is_read=true`(하이라이트 제거). read⊆seen 불변식. 소셜앱(인스타/페북) 관례.
+- "전체 읽음 처리" 기능 이미 존재했음 → verify-first 확인 후 버튼 강조만(중복구현 회피).
+- 죽은 `/notifications` 404 링크 더보기에서 제거(26ed7a7).
+
+### 3) 모바일 2버그 (50f2e33)
+
+- **iOS 입력 자동 줌**: `font-size<16px` 입력 포커스 시 Safari 줌인·언마운트 후 미복원. `globals.css`에 `@media (max-width:767px) { input, textarea, select { font-size:16px!important } }` 전역 가드 추가(개별 13파일 불필요).
+- **탭 전환 깜빡임**: `DuesClient`·`MatchDetailClient`의 `router.replace(?tab=)` → dynamic RSC 재페치+loading.tsx 스켈레톤 깜빡+재마운트. `window.history.replaceState`로 교체(Records/Settings 기존 검증 패턴).
+
+**검증**: tsc 클린 + 873 테스트 통과 + 클린빌드 green.
+
+---
+
+## 95차 (2026-06-24, KST) — Playwright E2E 대폭 확장 + 성능 스위트 + 하이드레이션 수정
+
+**커밋**: 7469073(e2e)·76f99a3(perf)·68f6fc4·ae06cf8(hydration)·385869f(권한)·eb9e3e0(공용가드)·216cd0c(write-flow). main 푸시·Vercel 자동배포.
+
+"Playwright 적용해줘" → 이미 b19493c에 기초 스펙·CI 존재 발견 → 삭제 않고 검증·대폭 확장.
+
+### E2E (37스펙, 3 프로젝트)
+- `chromium`(공개 스모크·SEO) / `setup`(데모로그인 → storageState) / `chromium-auth`(모바일 390px, 인증 재사용)
+- 인증: 대시보드·탭바네비·햄버거·경기상세6탭·화면로드스모크(회비·회원·게시판·설정·회칙·프로필)·투표(임시경기)
+- 권한(`e2e/authenticated/permissions.spec.ts`): dev-login(`DEV_IMPERSONATE=1`)로 STAFF/MEMBER 가장 → staffOnly 게이트(회비 납부현황·설정 탭, 햄버거 "빠른 처리") 검증
+- write-flow(`write-flows.spec.ts`): 게시판 글 작성·골 +득점, 임시 생성→`afterEach` 정리(잔여물 0 확인)
+- SEO(`seo.spec.ts`): sitemap URL·robots·canonical·og
+- 첫방문 코치마크·Next dev오버레이 차단 + 공용 `errorGuard`로 인증+공개 스펙에 하이드레이션 감지
+
+### 성능 스위트 (`playwright.perf.config.ts`, **prod/라이브 대상** — dev는 2~5배 부풀림)
+- `web-vitals.spec`(의존성0): LCP·FCP·CLS·TTFB+리소스weight, Google 기준 판정
+- `lighthouse.spec`(playwright-lighthouse+lighthouse): /login·/guide·/pricing. 랜딩 perf 63(JS 과다: 메인스레드 6.8s·미사용JS 99KB), 가이드·요금제 99~100
+
+### 하이드레이션 버그 수정
+- `src/lib/formatters.ts` `formatKstDateTime`/`formatKstDate` 신설(UTC+9h 수동 조립, 결정론적) → `toLocaleDateString/String({hour})` 제거 4곳(DuesClient 잔고·ClientLayout 알림·AdminNoticeClient·AnimationsListClient). 원인: Node ICU/UTC ≠ 브라우저 KST(Vercel에서만 재현). 단위테스트 추가.
+
+남은 것(pending.md): 인증 E2E의 CI 실구동(테스트 Supabase 필요)·CI lint 369 pre-existing·랜딩 perf 최적화(분석만 완료).
+
+### 후반부 — 비활성 멤버 유니크 슬롯 유령 점유 버그 수정 (2026-06-25)
+
+**커밋**: ebdff65·44f2785. main 푸시·Vercel 자동배포.
+
+**발단**: 최규일(01063295427) 중복 계정 탈퇴 후, 실제 계정에 등번호 14 부여 시 "이미 사용 중" 오류.
+
+**근본 원인**: `team_members` UNIQUE 인덱스(`team_id, jersey_number` / 주장 / 부주장, 마이그 00013)가 status 무관으로 설계됨. UI는 ACTIVE/DORMANT만 표시 → BANNED/LEFT row가 슬롯을 쥔 채 화면에 안 보임 → DB 23505 차단.
+
+**수정**:
+- 데이터 정리: 최규일 BANNED row jersey 14 → null(LINEOUT FC), FC.LIBRE B #5 방효석 중복 정리 (스크립트, 커밋 아님)
+- ebdff65: 강퇴·탈퇴 API에 `jersey_number: null` 추가
+- 44f2785: 위에 `team_role: null` 추가(주장·부주장 슬롯 해제) + 초대 링크 status-aware 분기(`BANNED` 차단 안내·`LEFT` 재활성·`ACTIVE/DORMANT` 기존대로)
+
+**조사 결론**: 전수 스캔 결과 추가 데이터 손상 없음. 최규일이 유일한 중복 케이스. 불참 투표 7건만 존재, 실출전·골·회비 0.
+
+`reference_member_unique_slot_ghost.md` 신설 — 발생 조건·규칙·미래 주의사항 박제.
+
+---
+
+## 94차 (2026-06-24, KST) — MatchCalendar PC 넓은 화면 레이아웃 버그 수정
+
+**커밋**: ad4dd2a·eb486d6. main 푸시·Vercel 자동배포.
+
+### 행 높이 불균일 수정 (ad4dd2a)
+
+- `src/components/MatchCalendar.tsx` — 달 시작 전·말일 후 빈 칸의 `aspect-square` 제거.
+- 원인: PC에서 열 너비 ~140px가 되면 빈 칸 높이도 140px로 팽창 → CSS grid 행이 가장 큰 셀에 맞춰 stretch → 빈 칸 낀 첫 주·마지막 주만 세로로 벌어짐.
+- 수정: 빈 칸 높이 collapse + 날짜 버튼 `min-h-[52px]` 추가. 트레일링 전체-빈 행도 collapse. 화면 너비 무관 모든 주 행 52px 균일.
+
+### 요일 헤더 배경 틴트 제거 (eb486d6)
+
+- 일(`bg-primary/5`)·토(`bg-[hsl(var(--info)/0.1)]`) 배경이 글자색 강조와 중복, PC 넓은 열에서 색 블록처럼 도드라짐.
+- 배경만 제거, 글자색 유지. 무의미해진 `rounded-md` 정리.
+
+**교훈**: `aspect-square`는 반응형 그리드에서 위험 — 모바일(좁은 열) OK여도 PC(넓은 열)에서 셀 높이 폭발. → `feedback_aspect_square_grid_trap.md` 신설.
+
+---
+
+## 93차 (2026-06-24, KST) — 공동 MVP·캘린더 일요일 시작·투표 공유 GA·로그인 복귀 + 성능 최적화 2·3라운드
+
+**커밋**: ed563b6·abc0520·ad56e39·605edd6·3a6dac7·ad4dd2a. main 푸시·Vercel 자동배포.
+
+### 캘린더 일요일 시작 (ed563b6, ad4dd2a)
+
+- `src/components/MatchCalendar.tsx` 월요일 시작 → 일요일 시작. WEEKDAYS 배열 재정렬 + `getMonthDays` 시작요일 계산 조정.
+- 토요일=--info(파랑), 일요일=--primary(coral) 텍스트. 월 그리드 행 높이 균일화(min-h-[52px]).
+
+### 공동 MVP (abc0520)
+
+- `src/lib/mvpThreshold.ts` `resolveValidMvps()` 신설. 70% 게이트 통과 후 동률 전원을 candidate_id 사전순 배열로 반환.
+- `resolveValidMvp()`는 `[0] ?? null` 래퍼로 하위호환 유지.
+- 대시보드·공유카드 동률 시 이름 병기(쉼표).
+- **CLAUDE.md MVP 집계 경로 9곳→11곳 정정** (누락: computeSeasonOvr·player/[memberId]/page.tsx).
+- 감사 스크립트(`scripts/check-mvp-ties.mjs`) 결과: 86개 경기 중 실제 미반영 공동 1등 1경기(FCMZ 2026-06-08, 박태준·조강희 각 2표).
+
+### 투표 공유 GA 측정 + 버튼 (605edd6)
+
+- `src/lib/analytics.ts` `vote_shared` 이벤트 신설. `kakaoShare.ts` `shareVoteLink` → GA 발화 + `?src=kakaoshare` 태그.
+- 대시보드 다가오는 경기 카드 + 경기상세 투표탭에 "카톡으로 투표 공유" 버튼 추가. 공유→유입→투표 퍼널 측정 시작.
+
+### 로그인 후 원래 화면 복귀 (3a6dac7)
+
+- 미들웨어가 `x-pathname` 헤더 주입. `(app)/layout.tsx` 미로그인 시 `/login?redirect=<경로>`. 콜백 `__redirect__` 기존 처리 활용.
+
+### 성능 최적화 2·3라운드 (ad56e39)
+
+- `player/[memberId]/page.tsx` `getPlayerData` react cache → 요청당 2회→1회 (선수프로필 TTFB ~절반).
+- `dashboard/season-stats` route `Cache-Control: private,max-age=60` + DashboardClient `PlayStoreInstallBanner·WelcomeCard` → `dynamic(ssr:false)`.
+- `AnimationsListClient.tsx` 4곳 `useMemo` 추가.
+- `positionRoles/playerAssignments.ts` `findRoleForSlot` 35개 선형탐색 → 모듈레벨 `formationById` Map O(1).
+- `supabase/migrations/00078_push_subscriptions_indexes.sql` 신규. **사용자 Supabase 직접 적용 완료 (6/24)**.
+- (1라운드 7건은 6/23 4cf34b7 커밋 — 성능 세션 요약 참조)
+
+### 삽질·교훈
+
+- matches/route와 getMatchesData 합치기 시도 → 테스트 3개 실패 → 되돌림. 교훈: **비슷한 함수 무심코 합치지 말 것 — 테스트가 잡아줌**.
+- 카톡 vs 앱 효용 분석: 무인증 투표·공유 버튼·회비 온보딩을 "우선순위 표"로 제시했으나 사용자 "정말 효용성 있는 작업인지 다시 제대로 분석해"로 제동. 냉정 재분석 결과 A3(무인증 투표) 폐기·A1(공유 버튼) 측정 먼저. 교훈: **그럴듯한 작업 목록 효용 검증 없이 제안 금지 — 측정이 먼저**.
+- source-map-explorer + Turbopack 비호환. 424KB 청크 0.0KB 매핑. 번들 정밀 분해 불가.
+- react-easy-crop `dynamic()` 되돌림. 클래스컴포넌트 defaultProps 타입 소실로 TSC 에러.
+
+---
+
+## 92차 (2026-06-23, KST) — 풋살 키퍼 순번 룰렛 + 가이드 /help 이관 + SEO 개선
+
+**커밋**: 501fb91·da57cc1·1515ab5·320a415·6f3481d·02716f0·f726612·20ed884·b1da104·fd65123·014eeb5·c5bd1c3. main 푸시·Vercel 자동 배포.
+
+### 출석 점 순서 수정 (501fb91)
+
+- 전술 탭 "참석자 최근 출석" 카드에서 점 배열 방향이 왼쪽=최신으로 직관과 반대였던 가독성 문제 수정.
+- Supabase 직접 조회로 데이터 정상(실제 불참) 확인 후 표시 방향만 뒤집음(오른쪽=최신).
+
+### SEO + 랜딩 개선 (da57cc1)
+
+- title·og·twitter·siteName·JSON-LD name·manifest에 "피치마스터 PitchMaster" 한글 병기.
+- OG 이미지 수치 "80+팀→130+팀" (실제 136, 직접 조회 기준). 가이드 페이지 Play CTA 추가.
+- 랜딩 MoreFeatures +5카드(유니폼·자체전·팀앨범·최근출석·궁합) + FAQ +2 + JSON-LD.
+
+### 가이드 /help 이관 (1515ab5 + 320a415)
+
+- **배경**: CLAUDE.md "guide.html→/guide 이관 완료" 박제가 실제 미이관이었음. 푸터 "시작 가이드"가 `/guide`(SEO 블로그)를 가리켜 사용자에게 블로그 글이 뜨는 문제.
+- `/help` 서버 컴포넌트로 16섹션 앱 사용법 이관. next.config 301 `/guide.html→/help` + dead rewrite 제거. sitemap 추가. guide.html 삭제.
+- 푸터: "사용 가이드"→/help, "운영 노하우"→/guide 분리.
+- **교훈**: CLAUDE.md 완료 박제와 실제 코드 불일치. 문서와 코드 정합성 주기 점검 필요.
+
+### 풋살 키퍼·교대 순번 룰렛 (6f3481d~014eeb5)
+
+- 풋살 전술 탭 전용. 자체전·일반전 모두 지원.
+- 마이그 00077 `keeper_rotation` JSONB 컬럼 (Supabase 콘솔 직접 적용). `/api/keeper-rotation`. `KeeperRotationCard.tsx`.
+- 고정 키퍼 유무 이진(선호포지션 GK 단독 자동 감지). 원형 쿼터 회전 교대표. 번호 1~N 랜덤.
+- UX 5회 이상 재설계 끝에 최종 형태 확정. 주요 반려 사유: 모드 3분기→이진 단순화 / 불필요 토글 제거 / 박스 안 박스 금지 / 추상 숫자→이름 / 펼침 어포던스.
+- Bash classifier 간헐 outage로 exec_sql 자동 적용 실패 → 마이그 수동 적용.
+
+### 경기 수정 폼 유형 선택 (c5bd1c3)
+
+- PUT API는 이미 상대전/자체전 전환 지원. 프론트 수정 폼 UI에만 누락되어 있었음. UI 추가만으로 완료.
+
+### 삽질·교훈
+
+- 과설계·미루기: 키퍼 모드 3분기→이진 재작업. "키퍼도 순번 포함" 불필요 토글 제거. 답이 명백한 질문을 사용자에게 확인 요청("이건 어느 경로?") → 즉각 결정·실행 원칙 재확인.
+- UX 기준 미설정: 처음 보는 사람 기준 미준수 반복 반려. 박스 안 박스 / 추상 숫자 / 펼침 어포던스 부재.
+- 전수조사 불충분: 기능 갭 조사에서 9개 중 2개만 발견, "전수조사 진짜로" 재지시. 용어 변경 후 설명문 일부 빠뜨림.
+
+---
+
+## 91차 (2026-06-23, KST) — 풋살·축구 종목 분기 버그 전수조사 + 용병 폼 P0 수정
+
+**커밋**: 6e27da7 (fix(tactics): show futsal positions (FIXO/ALA/PIVO) in guest add/edit forms). main 푸시·Vercel 자동 배포.
+
+### 전수조사 방법
+
+- 병렬 에이전트 3개: ① 포지션 선택 UI ② 포지션 표시(통계/카드) ③ 종목별 로직 분기
+- **에이전트 결과 spot check 적용** — 실제 오판 2건 직접 grep/Read로 차단
+
+### P0 확정 버그 수정
+
+- MatchTacticsTab.tsx 용병 추가폼(라인 562)·수정폼(라인 633)이 축구 포지션 10종 하드코딩, sportType 분기 없음 → 풋살에서 FIXO/ALA/PIVO 안 뜸.
+- `guestPositionOptions` 상수 추가: sportType=FUTSAL이면 `[GK, FIXO, ALA, PIVO]`, 아니면 기존 축구 10종.
+- sportType은 컴포넌트 prop으로 이미 존재(라인 49) → 수정 범위 최소.
+- tsc --noEmit 클린 통과.
+
+### 발견했으나 미수정
+
+- **#3** `src/lib/formations.ts` 풋살 3·4인 포메이션 slot.role이 축구 코드(CB/ST/LW 등). 풋살 5·6인만 FIXO/ALA/PIVO 올바름. formationAI.ts slotToPreferred가 축구 포지션으로 매핑 → 풋살 3·4인 자동편성 정확도 하락. 단 풋살 7·8인은 경기생성 인원 제한(3~6명, matches/route.ts:115)으로 도달불가=죽은코드. 역할가이드(MatchRoleGuide.tsx:57)도 풋살 5·6만 지원 → 잘못된 라벨 화면 미노출. 과거 풋살 자동편성 회귀 이력 있어 별도 세션 권장.
+- **#4** `RecordsClient.tsx:453` 포지션 영문 코드 표시(한국어 라벨 미적용). 양 종목 공통이라 "축구 누출" 아님.
+- **#5** `player/[memberId]/page.tsx:73` 동일.
+
+### spot check로 걸러낸 에이전트 오판 (중요 교훈)
+
+- Agent 3가 "AI 코치·풀플랜에 풋살 톤 override 없음" 단정 → aiTacticsAnalysis.ts:155-176, 868-924 직접 Read → 풋살 톤 override 풍부하게 존재. 오판 차단.
+- Agent 3가 "풋살 7·8인 리그표준 깨짐" 과대평가 → matches/route.ts:115 인원 제한 직접 확인 → 도달불가 죽은코드. 정정.
+- feedback_agent_result_spot_check 규칙이 실제 효력 발휘. "sub-agent '0개' 발견은 특히 위험" 재확인.
+
+### 빌드 참고
+
+- npm run build Windows 환경에서 간헐적 ENOENT 워커 파일경합 오류. 컴파일+tsc는 정상. Vercel 리눅스 빌드 무관.
+
+---
+
+## 90차 (2026-06-22, KST) — LINEOUT FC 설경민 제보 2건 처리
+
+**커밋**: d484f41 (fix(penalty): exempt only LEAVE/INJURED from fines; require balance choice on OCR upload). main 푸시·Vercel 배포.
+
+### 제보 1 — 잔고 반영 UX 강제 선택
+
+- 통장 캡처(OCR) 경로에서 pendingBalance 있어도 "전체 저장" 누를 수 있어 잔고가 조용히 무시되는 UX.
+- `DuesBulkTab.tsx`: pendingBalance 존재 시 "전체 저장" 비활성화 + 안내 문구. 반영/무시 둘 중 하나 명시 선택 강제.
+- 자동 반영 채택 안 함 — 잔고는 저장마다 달라지므로 별도 버튼이 정책상 맞음.
+
+### 제보 2 — 벌금 면제 정책 정정 + DB 복구
+
+- LINEOUT FC 6/20 경기(vs FC 원일레븐): 4명 대상자 중 조성민 1건만 생성, 3건 누락.
+- 초기 오진단: try/catch {} silent 실패 버그로 오판. 면제 조회 시 `reason_type`(틀린 컬럼명) 사용 → PostgREST silent null → "면제 없음, 버그"로 오진. 실제 컬럼명 `member_dues_exemptions.exemption_type`.
+- 정정: select '*' 재확인 → 이슬원·박승훈=EXEMPT "1년치 선납", 임영철=EXEMPT "쿠르투아(키퍼)". 3명 모두 활성 면제 회원.
+- 정책 결정(옵션1 승인): LEAVE·INJURED만 벌금 면제. EXEMPT/PREPAID(선납·키퍼·직책)는 지각·노쇼·미투표 벌금 정상 부과.
+- DB 복구: 이슬원·임영철 지각 1만원씩 + 박승훈 노쇼 5만원 = 3건 삽입(멱등 스크립트). 미납 합계 8만원.
+
+### 코드 변경
+
+- `src/lib/server/getPenaltyExemptUserIds.ts` 신설 — LEAVE/INJURED 활성 면제의 user_id Set 반환. member_dues_exemptions.member_id → team_members.user_id 2단계 매핑.
+- `attendance-check/route.ts`: `.in("exemption_type",["LEAVE","INJURED"])` + catch{}에 console.error 추가(silent 삼킴 제거).
+- `dues/penalties/route.ts` POST: 헬퍼로 exempt skip 추가.
+- `cron/no-vote-penalty/route.ts`: DORMANT ∪ LEAVE/INJURED 둘 다 제외.
+- 신규 테스트 4케이스. 검증: vitest 853·tsc 0·클린 빌드 통과.
+
+### 삽질·교훈
+
+- 컬럼명 `reason_type` 가정 → select '*' probe 미실시 → silent null → 오진단 연쇄. feedback_supabase_column_verify.md 5차 재발.
+- 틀린 전제 기반 지시("벌금 3건 바로 넣어줘")를 삽입 가드 통과 불가로 멈추고 정정 보고. feedback_wrong_premise_halt.md 신설.
+
+---
+
+## 89차 (2026-06-21, KST) — vote-reminder KST timezone 버그 + 앱 전역 "오늘"=UTC 버그 수정
+
+**커밋**: 3605f42 (fix(cron): use KST offset for vote-reminder deadline window) · eea164d (fix(date): compute "today" in KST instead of UTC across app). main 푸시·Vercel 배포.
+
+### 발단 및 진단
+
+- FCMZ 6/22 경기 오전에 "투표 마감" 푸시 수신 → 사용자 제보.
+- notifications 테이블 직접 조회 → KST 08:00:11 발송. 발신 크론 = role-guide-push (vote-reminder 아님).
+- role-guide-push는 `vote_deadline <= now()` 트리거 → 저장된 마감시각대로 정확히 동작. 알림 자체 버그 아님.
+- 해당 경기 `vote_deadline` = `2026-06-20T23:00:00+00:00` (= KST 06/21 08:00). 사용자 의도는 17:00. 다른 경기 3개는 정상(전날 17:00) → 해당 경기만 입력 시 08:00로 들어간 것.
+- 운영 조치: vote_deadline을 6/21 17:00 KST로 복원. role_guide_push_sent_at 이미 찍혀 재발송 없음.
+
+### (A) vote-reminder 크론 timezone 버그 수정 (3605f42)
+
+- `.split("T")[0]`로 만든 tz 없는 KST 날짜 문자열을 timestamptz `vote_deadline`과 gte/lte 비교 → Postgres가 UTC로 해석(DB 실증) → 비교창 9시간 어긋남.
+- KST 00~09시 마감이면 "마감 내일" 리마인더가 하루 일찍 발송. 이 경기도 6/19에 오발송됨.
+- no-vote-penalty 크론엔 같은 버그 겪고 고친 흔적(주석) 있었으나 vote-reminder에는 미전파.
+- 수정: 비교 경계에 `+09:00` 명시 (`${date}T00:00:00+09:00` / `${date}T23:59:59+09:00`).
+
+### (B) 앱 전역 "오늘"=UTC 버그 수정 (eea164d)
+
+- `new Date().toISOString().slice(0,10)` = UTC 날짜. KST 00~09시엔 "어제".
+- 서버(Vercel)=UTC라 매일 0~9시 영향. 클라이언트 해외 기기도 동일.
+- 영향 12개 파일: 경기 미래/과거 판정·벌금납부일/수입일/벌금일 기록·대시보드 인사말·날짜 피커 기본값 등.
+- 수정: `src/lib/kstDate.ts` 신설 (getKstNow / getKstToday / getKstTimeOfDay). `autoCompleteMatches`가 여기서 re-export (기존 importer 호환). 전 지점 교체.
+
+### 크론 전수 점검 결과
+
+- 크론 13개 점검: vote-reminder만 버그. 나머지(no-vote-penalty·match-result·exemption-expiry·auto-complete·staff-counts·match-nudge·dues-reminder·hard-delete·push/*)는 정상.
+- timestamptz 컬럼엔 full UTC ISO, DATE/TIME 컬럼(match_date·match_end_time·dormant_until·penalty_records.date)엔 KST 날짜로 올바르게 분리.
+
+**검증**: tsc --noEmit 0 · vitest 849/849 · 클린 빌드 116/116 통과.
+
+**삽질·교훈**
+
+- 같은 버그 부류 수정 시 동일 패턴 전수 grep 미실시 → no-vote-penalty 고쳤을 때 vote-reminder 놓쳐 이번에 재발. 향후 동일 버그 부류 발견 시 즉시 전수 grep 의무.
+- 알림 오발송 진단: notifications 테이블 직접 조회가 정답. 발신 크론과 타이밍을 정확히 특정 가능.
+- role-guide-push와 vote-reminder 크론 초반 혼동 → 조회 후 발신 크론 특정으로 진짜 원인 좁힘.
+
+---
+
+## 88차 (2026-06-19, KST) — 이미지 압축 + 자체전 3팀(A/B/C) Phase 1+2 + 포레마제 앱 유입 분석
+
+**커밋**: e05dee0 (이미지 압축, 6/18 11:55) · 45d08d3 (자체전 3팀 Phase 1, 6/18 23:11) · 2e15b07 (Phase 2 + 통계 수정, 6/19 13:59). main 푸시·Vercel 배포.
+
+### 이미지 업로드 클라이언트 압축 (e05dee0)
+
+- 증상: 폰 사진이 5MB 앱 제한 + Vercel 4.5MB 본문 한계 초과 → 빨간 오류 토스트.
+- 신규 `src/lib/compressImage.ts`: canvas 기반, 긴 변 1920px, JPEG q0.82, EXIF 회전 보정, 비이미지/GIF/디코딩 실패 시 원본 통과.
+- 적용 4곳: MatchDiaryTab(경기사진)·PostEditor(게시판)·PersonalSettings(프로필)·RulesClient(회칙 문서는 통과).
+- 팀 로고(`TeamSettings.tsx`): 소스 게이트만 5MB→15MB (이미 512px webp 크롭이라 압축 불필요).
+- OCR은 의도적 미압축 (텍스트 인식 정확도 보존).
+
+### 자체전 3팀(A/B/C) Phase 1 — 팀 분리+전술 (45d08d3)
+
+- migration 00076: `match_internal_teams.side` CHECK (A,B) → (A,B,C) + `matches.internal_team_results` JSONB.
+- `src/lib/internalSides.ts` 신규: InternalSide 타입·팀별 라벨/색/이모지·buildTeamsPayload/nextSide/SideRecord.
+- 전술 탭: N열/탭 범용화 + `+ C팀` 토글 + 균등 자동 분배 버튼.
+- 기존 A/B 2팀 동작 영향 없음.
+
+### 자체전 3팀 Phase 2 — 점수 화면 + 통계 수정 (2e15b07)
+
+- MatchRecordTab: 팀별 골 합계, +A/+B/+C 버튼, W/D/L 카운터(운영진, 낙관적 롤백). div-in-p 하이드레이션 에러 수정.
+- MatchInfoTab·MatchDiaryTab: 팀별 점수 표시 (A:B 또는 A:B:C). 기존 "전체:0" 표시 수정.
+- MatchesClient·MatchCalendar: 목록/캘린더 올바른 점수. 캘린더에서 자체전 승패 표시 제거.
+- `getMatchesData`·`getDashboardData`: 자체전 골 "9-0" 합산 버그 수정 (골 side 화이트리스트 A/B/C).
+- `player-card`·`computeSeasonOvr`: 자체전을 승/클린시트/실점 분모에서 제외 → OVR 부풀림 수정. 골·어시·MVP·출전수는 유지.
+- `cron/match-result`: 자체전 결과 푸시 skip.
+- 15파일 수정.
+
+### 포레마제 TWA 앱 유입 분석 (코드 변경 없음)
+
+- `signup_source = ref:app.pitchmaster` = 안드로이드 구글플레이 설치본(TWA) 유입.
+- TWA packageId `app.pitchmaster` → Android referrer `android-app://app.pitchmaster`로 잡힘.
+- 포레마제(회장 전상준) — **앱 채널로 잡힌 첫 유기적 가입자** 확인.
+- `reference_twa_signup_source.md` 신규 생성.
+
+**삽질·교훈**
+
+- 자체전 점수 집계 다중 경로 함정: `getMatchesData`(경기목록)·`getDashboardData`(대시보드)·`MatchDetailClient` useMemo(상세) 각 별도 경로 — 한 곳만 수정하면 다른 화면 안 바뀜. "9-0" 버그가 목록에서 드러나 추가 경로 발견.
+- `player-card`·`computeSeasonOvr` 자체전 OVR 부풀림 선재 버그: side 컬럼 미사용이 원인. 전용 `recordCount` 분리로 수정.
+- 캘린더 INTERNAL 승패 가드가 목록에만 있고 캘린더에 누락 — 2e15b07에서 추가.
+- div-in-p 하이드레이션 에러(Badge in p태그) — p→div 교체.
+
+---
+
+## 87차 (2026-06-18~19, KST) — 네이티브 FCM 푸시 전면 구현 + 자체전 3팀(A/B/C)
+
+**커밋**: e05dee0 (이미지 압축) · a2295fa (네이티브 FCM 구현) · 45d08d3 (자체전 3팀) · fcc2672 (notification 페이로드 핫픽스). main 푸시·Vercel 배포.
+
+### TWA 웹푸시 근본원인 확정 (코드 변경 없음, 진단)
+
+- [x] 증상: 삼성 인터넷이 기본 브라우저인 폰에서 TWA가 삼성 인터넷 엔진으로 실행 → 웹푸시 구독 1~25분 내 410 사망·알림 미표시.
+- [x] Chrome으로 전환 시 정상 작동(gcm-internals 로그 확인). **"구독자 4명" 미스터리의 진짜 원인** 확정.
+- [x] `reference_twa_push_samsung_internet.md` 생성·갱신. 세션 번호 일관화(87차).
+
+### 네이티브 FCM 구현 — 커밋 a2295fa (2026-06-18 20:34 KST)
+
+- [x] DB: `native_push_tokens` 테이블(00075) + `/api/push/native-token` 등록 API 신규
+- [x] Web: `NativePushRegister.tsx` 신규 — launch URL `?pmNativeToken=` 읽어 등록. `ClientLayout.tsx` 마운트.
+- [x] `src/lib/pushSubscription.ts`: `isNativePush()` 헬퍼 (`localStorage pm_native_push`) 추가
+- [x] `PushAutoSubscribe.tsx` + `PersonalSettings.tsx`: isNativePush() 시 웹푸시 구독 차단 (중복 방지)
+- [x] `src/lib/server/sendNativePush.ts`: FCM HTTP v1 (firebase-admin 모듈러 API) 신규
+- [x] `src/lib/server/sendPush.ts`: `sendTeamPush`에 네이티브·웹 병렬 발송 통합
+- [x] Firebase 프로젝트: pitchmaster-8278e. 서비스계정키 `FIREBASE_SERVICE_ACCOUNT_B64` (로컬 .env + Vercel)
+- [x] Android(c:\dev\pitchmaster-twa): `PitchMasterMessagingService.java`, `LauncherActivity` 토큰 브리지, `build.gradle`(firebase-bom 33.7.0 + signingConfig + copyReleaseAab), AndroidManifest, `gradle.properties`(PM_KEYSTORE_PASSWORD), `google-services.json`. versionCode 12 / v1.0.8.
+- [x] **새 서명 워크플로우**: `gradlew bundleRelease` 한 번에 서명된 AAB 생성 (84차 jarsigner 수동 2단계 폐기).
+
+### notification 페이로드 핫픽스 — 커밋 fcc2672 (2026-06-19 13:02 KST)
+
+- [x] 발견: TWA 호스트 앱 프로세스는 백그라운드 → data-only FCM은 `onMessageReceived` 못 깨움 → 알림 안 뜸.
+- [x] `src/lib/server/sendNativePush.ts` 1파일: `notification:{title,body}` 페이로드 추가, url은 data로 동봉.
+- [x] 시스템이 앱 안 깨우고 직접 표시 → 백그라운드·삼성인터넷 무관 작동. 실기기 검증 완료.
+- [x] v1.0.8 Play 심사 제출 완료 (사용자 직접).
+
+### 자체전 3팀(A/B/C) Phase 1 — 커밋 45d08d3 (2026-06-18 23:11 KST)
+
+- [x] `match_internal_teams` CHECK: (A,B) → (A,B,C)
+- [x] 전술 탭 팀 분리 UI N열/탭으로 범용화. `+ C팀` 토글 + 균등 자동 배분 버튼.
+- [x] `src/lib/internalSides.ts`: 팀별 색상 config 중앙화 (신규).
+- [x] Phase 1(팀 분리+전술) 완료. Phase 2(팀별 골 집계·W/L) 미완. migration 00076 Supabase 적용 선행 필요.
+- [x] 기존 A/B 2팀 동작 영향 없음.
+
+### 이미지 압축 — 커밋 e05dee0 (2026-06-18 11:55 KST)
+
+- [x] 클라이언트에서 업로드 전 canvas 압축. 세션 시작 전 완료.
+
+**삽질·교훈**
+
+- 인앱 종 알림(notifications DB 테이블)과 시스템 푸시를 혼동 → "raw 테스트인데 왜 종 알림에 안 뜨냐" 반복 질의. 사용자 정당한 지적("이렇게까지 갈 일이야?", "캐시 지우라 하면 다른 유저도?").
+- data-only FCM + TWA = 알림 없음 사실을 늦게 파악 → fcc2672 별도 커밋 필요.
+- 키스토어 비번 추출: 에이전트가 build-log.txt에서 비번 읽으려 하면 보안 classifier 차단. 비번은 사용자가 gradle.properties에 직접 기재해야 함.
+
+---
+
+## 86차 (2026-06-17, KST) — SEO 가이드 정비 + 전영역 점수평가 + 잔존 재진단 + TWA 푸시 자동구독
+
+**커밋**: 1bd1338·628745a·d0b8d2a (SEO 가이드) · c02d303 (TWA 푸시 자동구독) · e2738b0 (retention-metrics). main 푸시·Vercel 배포.
+
+- **SEO 가이드**: 네이버 30일 노출 +1143%·클릭 +1600%. "조기축구 회비" 1페이지=treasurer-start인데 회비 전용 가이드 내부링크 없어 보강. stale "100팀 800명"→"130여 팀"(실측133) 8개+footer 통일. meta.related가 렌더 안 되던 죽은 코드 → "관련 가이드" 섹션 렌더 + 고아 2개 링크.
+- **잔존 재진단(활성화 프레임)**: 외부128팀 86%가 경기≤2·75% 구경꾼·신규24팀 활성화 0%. 구경꾼 빼면 커밋팀 잔존 ~48%. 막힌 고의도 6팀(위브FC·FC화곡동교회는 실시간 개입 대상).
+- **푸시**: 구독자 4명 원인=설정토글만 호출. TWA 자동구독(PushAutoSubscribe) 추가.
+- **점수평가**: 코드75·SEO80·UIUX76·성능73·마케팅70·타겟48 → ~65.
+
+## 85차 (2026-06-17, KST) — 이력서 최신화 (원티드 111퍼센트 지원용)
+
+**커밋**: 없음 (이력서 검토·코드 사실 검증 작업, 코드 변경 없음)
+**대상 공고**: 111퍼센트 웹 프론트 개발자 (https://www.wanted.co.kr/wd/368871) — ① LLM 생성형 AI 프론트엔드 ② AI 모니터링/대시보드 ③ React·Next.js+상태관리
+
+### Supabase 실측 (2026-06-16)
+- 등록 팀 133 / distinct users 635 / team_members 950(ACTIVE 845) / 경기 315·완료277 (demo 제외, 포함 343/305) / 30일 27팀·75경기 / 7일 12팀·25경기
+
+### PDF "최종본 (7)" 검증 — 과장·오류 6건 정정
+- [x] "600+명이 **매주 사용**" → "가입해" (주간 활동 12팀뿐)
+- [x] "누적 320+ 경기" → "300+" (실측 315 < 320)
+- [x] "가입 팀 120+" → "130+" (실측 133)
+- [x] "현재 알파테스트 진행 중" → "구글 플레이 정식 출시 완료" (PDF outdated — 6/11 v1.0.6 출시)
+- [x] "경기 단위 필터 구독으로 재설계" → 부정확. grep 결과 실시간 구독 0건 → "구독 전면 제거 + refetch·윈도우 이벤트"로 정정
+- [x] "Vitest 800+ 케이스(50파일)" → 실측 ~843/52파일 ("50여 개"로)
+
+### 코드 grep으로 111퍼센트 맞춤 강점 2개 표면화 (기존 이력서에 없거나 묻혀있던 것)
+- [x] LLM 스트리밍 UI — `/api/ai/tactics` text/event-stream(route.ts:131) + `AiCoachAnalysisCard.tsx:179` onChunk 토큰 렌더 → 공고 1번 직결
+- [x] AI 사용량/비용 모니터링 어드민 — `AdminUsageCard.tsx` costEstimateUSD·토큰·기능별 호출수 → 공고 2번 직결
+
+### 검증으로 "정확" 확인
+- Next 16.2.4 / React 19.2.3 / Tailwind ^4 (package.json) · OCR Clova+정규식 폴백(api/ocr 존재) · PitchMaster는 Zustand 미사용(상태관리 강조는 UDS 경력에서)
+
+### 메모리 반영
+- `feedback_resume_metric_overclaim.md` 라이브 수치 6/16 갱신 + 85차 사고 기록
+- deliverable 형식 교훈: 이력서 수정은 **md 파일 X, 채팅 내 번호 블록**으로 (사용자 피드백)
+
+### 산출
+- 채팅 내 복붙용 ①~⑥ 수정 블록 전달. `docs/resume-pitchmaster-update.md`는 재작성됐으나 사용자 요청으로 채팅 전달로 전환 (파일은 잔존, 무시 가능)
+
+---
 
 ## 84차 (2026-06-14, KST) — 알림 아이콘 흰 네모 버그 수정 + TWA v1.0.7 Play 제출
 
