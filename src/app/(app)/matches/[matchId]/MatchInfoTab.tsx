@@ -13,7 +13,7 @@ import { cn, formatDateKo, formatTime } from "@/lib/utils";
 import { sideConfig } from "@/lib/internalSides";
 import type { InternalSide } from "@/lib/internalSides";
 import { useConfirm } from "@/lib/ConfirmContext";
-import { X, Trash2, Pencil } from "lucide-react";
+import { X, Trash2, Pencil, MapPin } from "lucide-react";
 import { useToast } from "@/lib/ToastContext";
 import type {
   Match,
@@ -78,6 +78,14 @@ export interface MatchInfoTabProps {
     windSpeed: number;
     icon: string;
   } | null;
+}
+
+/* ── 경기장 길찾기 링크 헬퍼 (웹/PWA 안전: 앱 미설치 시 웹지도로 열림) ── */
+function naverMapUrl(location: string) {
+  return `https://map.naver.com/p/search/${encodeURIComponent(location)}`;
+}
+function kakaoMapUrl(location: string) {
+  return `https://map.kakao.com/link/search/${encodeURIComponent(location)}`;
 }
 
 /* ── 유니폼 스타일 헬퍼 ── */
@@ -397,7 +405,34 @@ function MatchInfoTabInner({
                 <>
                   <div className="flex items-center gap-2"><span className="w-14 shrink-0 text-muted-foreground">날짜</span><span className="font-medium">{formatDateKo(match.date)}</span></div>
                   {match.time && <div className="flex items-center gap-2"><span className="w-14 shrink-0 text-muted-foreground">시간</span><span className="font-medium">{formatTime(match.time)}{match.endTime && <span className="text-muted-foreground"> ~ {formatTime(match.endTime)}</span>}</span></div>}
-                  {match.location && <div className="flex items-center gap-2"><span className="w-14 shrink-0 text-muted-foreground">장소</span><span className="font-medium">{match.location}</span></div>}
+                  {match.location && (
+                    <div className="flex items-start gap-2">
+                      <span className="w-14 shrink-0 pt-0.5 text-muted-foreground">장소</span>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                        <span className="font-medium">{match.location}</span>
+                        <span className="flex items-center gap-1">
+                          <a
+                            href={naverMapUrl(match.location)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ backgroundColor: "rgba(3,199,90,0.12)", color: "#03A65A" }}
+                            className="inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-semibold active:opacity-70"
+                          >
+                            <MapPin className="h-3 w-3" />네이버
+                          </a>
+                          <a
+                            href={kakaoMapUrl(match.location)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ backgroundColor: "rgba(250,225,0,0.22)", color: "#8A6A00" }}
+                            className="inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-semibold active:opacity-70"
+                          >
+                            <MapPin className="h-3 w-3" />카카오
+                          </a>
+                        </span>
+                      </div>
+                    </div>
+                  )}
                   {match.opponent && <div className="flex items-center gap-2"><span className="w-14 shrink-0 text-muted-foreground">{match.matchType === "EVENT" ? "제목" : "상대팀"}</span><span className="font-medium">{match.opponent}</span></div>}
                   {match.matchType !== "EVENT" && match.sportType && (
                     <div className="flex items-center gap-2">
