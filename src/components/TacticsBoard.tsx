@@ -26,7 +26,7 @@ import type {
   SquadsApiResponse,
   TeamApiResponse,
 } from "./TacticsBoard.types";
-import { SAVE_DEBOUNCE_MS, clamp, isPositionMatched, sumPlayedQuarters, formatQuarterTotal } from "./TacticsBoard.utils";
+import { SAVE_DEBOUNCE_MS, clamp, isPositionMatched, sumPlayedQuarters, formatQuarterTotal, META_SLOT_LABELS } from "./TacticsBoard.utils";
 import { QuarterDotsLegend, PlayerListSortHeader, PlayerQuarterSummary, type RosterSort } from "./TacticsQuarterDots";
 
 // 외부 사용자(MatchTacticsTab)가 TeamSettings를 default import에서 같이 받을 수 있게 re-export
@@ -1325,7 +1325,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                           // 반쿼터(전/후 교체)는 0.5로 가중 합산 — .size로 세면 2.5쿼터가 3Q로 표시됨
                           const qCount = sumPlayedQuarters(playerQMap);
                           const assignedSlotLabel = assignedSlot
-                            ? formation.slots.find((slot) => slot.id === assignedSlot)?.label ?? "배치"
+                            ? formation.slots.find((slot) => slot.id === assignedSlot)?.label ?? META_SLOT_LABELS[assignedSlot] ?? "배치"
                             : null;
                           const matched = !isDisabled && activeSlotRole
                             ? isPositionMatched(player, activeSlotRole)
@@ -1475,7 +1475,10 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                           const playerQMap = playerQuarterMap.get(player.id);
                           const qCount = sumPlayedQuarters(playerQMap);
                           const assignedSlotLabel = isAssigned
-                            ? formation.slots.find((s) => s.id === assignedPlayers.get(player.id))?.label ?? "배치"
+                            ? (() => {
+                                const sid = assignedPlayers.get(player.id)!;
+                                return formation.slots.find((s) => s.id === sid)?.label ?? META_SLOT_LABELS[sid] ?? "배치";
+                              })()
                             : null;
                           const isCurrentSlotPlayer = activeSlotId ? placements[activeSlotId]?.playerId === player.id : false;
                           const isDisabled = !activeSlotId || isAssigned || (slotMode === "assign_second" && isCurrentSlotPlayer);

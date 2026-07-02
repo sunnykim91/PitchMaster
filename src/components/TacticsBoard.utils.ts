@@ -3,6 +3,14 @@ import type { Player } from "./TacticsBoard.types";
 
 export const SAVE_DEBOUNCE_MS = 300;
 
+/** 메타 슬롯(주심/부심/촬영) → 한글 역할 라벨. formation.slots엔 없어서 별도 매핑 (없으면 "배치" fallback) */
+export const META_SLOT_LABELS: Record<string, string> = {
+  __referee: "주심",
+  __linesman1: "부심1",
+  __linesman2: "부심2",
+  __camera: "촬영",
+};
+
 export const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 

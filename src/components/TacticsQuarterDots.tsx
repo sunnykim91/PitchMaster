@@ -5,9 +5,10 @@ import { formatQuarterTotal } from "./TacticsBoard.utils";
 type QuarterPlayType = "full" | "first" | "second";
 export type RosterSort = "name" | "quarter";
 
-// 채움=코랄(밝음), 쉼=회색(은은). 대비를 위해 빈 칸도 속을 채운다.
+// 채움=진한 코랄, 쉼=회색. 대비를 위해 빈 칸도 속을 채운다.
+// FILL은 브랜드 --primary(16 85% 58%)보다 진하게 — 작은 도트에서 또렷하게 보이도록 (요청 반영).
 // Safari color-mix 이슈 회피를 위해 inline style(hsl)만 사용.
-const FILL = "hsl(var(--primary))";
+const FILL = "hsl(16 95% 52%)";
 const REST = "hsl(var(--muted-foreground) / 0.32)";
 
 function dotStyle(type: QuarterPlayType | undefined): CSSProperties {
