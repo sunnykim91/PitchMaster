@@ -130,7 +130,9 @@ function MatchVoteTabInner({
 
   // 휴면 회원은 투표 목록에서 제외
   const dormantIds = new Set(Object.keys(exemptions));
-  const visibleRoster = baseRoster.filter((m) => !dormantIds.has(m.id));
+  const visibleRoster = baseRoster
+    .filter((m) => !dormantIds.has(m.id))
+    .sort((a, b) => a.name.localeCompare(b.name, "ko"));
 
   const attend = visibleRoster.filter((m) => memberVoteMap[m.memberId] === "ATTEND");
   const absent = visibleRoster.filter((m) => memberVoteMap[m.memberId] === "ABSENT");

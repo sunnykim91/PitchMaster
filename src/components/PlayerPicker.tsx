@@ -167,7 +167,9 @@ export function PlayerPicker({
       )}
 
       {groups.map((group) => {
-        const filtered = group.players.filter(filterPlayer);
+        const filtered = group.players
+          .filter(filterPlayer)
+          .sort((a, b) => a.name.localeCompare(b.name, "ko"));
         if (filtered.length === 0) return null;
         return (
           <div key={group.label} className="space-y-1.5">

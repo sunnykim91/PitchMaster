@@ -27,7 +27,7 @@ import type {
   TeamApiResponse,
 } from "./TacticsBoard.types";
 import { SAVE_DEBOUNCE_MS, clamp, isPositionMatched, sumPlayedQuarters, formatQuarterTotal } from "./TacticsBoard.utils";
-import { QuarterDots, QuarterDotsLegend } from "./TacticsQuarterDots";
+import { QuarterDotsLegend, PlayerListSortHeader, PlayerQuarterSummary, type RosterSort } from "./TacticsQuarterDots";
 
 // 외부 사용자(MatchTacticsTab)가 TeamSettings를 default import에서 같이 받을 수 있게 re-export
 export type { TeamSettings, UniformSet } from "./TacticsBoard.types";
@@ -43,6 +43,8 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   // 권한 없음(readOnly prop) 또는 편집 모드가 아니면 → 보기 전용. 모든 편집 인터랙션의 단일 게이트.
   const viewOnly = readOnly || !editing;
   const [quarterMatrixOpen, setQuarterMatrixOpen] = useState(false);
+  // 선수 목록 정렬: 이름(가나다) 기본 / 쿼터(적게 뛴 순)
+  const [rosterSort, setRosterSort] = useState<RosterSort>("name");
   const isFutsal = sportType === "FUTSAL";
   const futsalFieldCounts = useMemo(() => (isFutsal ? getFutsalFieldCounts() : []), [isFutsal]);
   const [futsalFieldCount, setFutsalFieldCount] = useState(isFutsal ? (playerCount ?? 5) : 0);
@@ -383,12 +385,24 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
         unmatched.push(player);
       }
     });
+    // 각 그룹(추천/일반/배치됨) 내부를 선택한 기준으로 정렬
+    // 쿼터순 = 적게 뛴 선수부터(동수는 가나다) → 교체 투입 판단이 쉬움
+    const byName = (a: Player, b: Player) => a.name.localeCompare(b.name, "ko");
+    const cmp = rosterSort === "quarter"
+      ? (a: Player, b: Player) =>
+          sumPlayedQuarters(playerQuarterMap.get(a.id)) - sumPlayedQuarters(playerQuarterMap.get(b.id)) || byName(a, b)
+      : byName;
+    matched.sort(cmp);
+    unmatched.sort(cmp);
+    assigned.sort(cmp);
     return [...matched, ...unmatched, ...assigned];
-  }, [assignedPlayers, roster, activeSlotId, formation.slots]);
+  }, [assignedPlayers, roster, activeSlotId, formation.slots, rosterSort, playerQuarterMap]);
 
-  // 현재 쿼터 쉬는 인원
+  // 현재 쿼터 쉬는 인원 (이름 가나다순)
   const restingPlayers = useMemo(() => {
-    return roster.filter((p) => !assignedPlayers.has(p.id));
+    return roster
+      .filter((p) => !assignedPlayers.has(p.id))
+      .sort((a, b) => a.name.localeCompare(b.name, "ko"));
   }, [roster, assignedPlayers]);
 
   const captureRef = useRef<HTMLDivElement | null>(null);
@@ -1298,6 +1312,9 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                         </p>
                       )}
                       {quarterCount > 0 && <QuarterDotsLegend className="mt-2" />}
+                      {quarterCount > 0 && (
+                        <PlayerListSortHeader className="mt-2" quarters={quarters} sort={rosterSort} onSort={setRosterSort} />
+                      )}
                       <div className="mt-3 grid gap-2">
                         {sortedRoster.map((player) => {
                           const assignedSlot = assignedPlayers.get(player.id);
@@ -1335,33 +1352,14 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                               )}
                             >
                               <span className="min-w-0 flex-1 truncate font-semibold">{player.name}</span>
-                              <span className={cn(
-                                "flex shrink-0 items-center gap-2 text-xs",
-                                matched ? "text-white/85" : "text-muted-foreground"
-                              )}>
-                                {/* 상태 칩: 추천 / 배치된 포지션 */}
-                                {matched ? (
-                                  <span className="rounded-full bg-[rgb(255_255_255_/_0.2)] px-1.5 py-0.5 text-[11px] font-bold text-white">
-                                    추천
-                                  </span>
-                                ) : assignedSlotLabel ? (
-                                  <span className="rounded-full bg-[hsl(var(--primary)_/_0.15)] px-1.5 py-0.5 text-[11px] font-bold text-primary">
-                                    {assignedSlotLabel}
-                                  </span>
-                                ) : null}
-                                {/* 쿼터 도트 (왼쪽부터 1쿼터) */}
-                                {quarterCount > 0 && (
-                                  <QuarterDots quarters={quarters} qTypeMap={playerQMap} activeQuarter={activeQuarter} />
-                                )}
-                                {/* 출전 쿼터 합계 */}
-                                <span className={cn(
-                                  "min-w-[3.25rem] text-right tabular-nums",
-                                  qCount > 0 && "font-semibold",
-                                  qCount > 0 && !matched && "text-foreground/80"
-                                )}>
-                                  {qCount > 0 ? `${formatQuarterTotal(qCount)}쿼터` : "미출전"}
-                                </span>
-                              </span>
+                              <PlayerQuarterSummary
+                                matched={matched}
+                                assignedSlotLabel={assignedSlotLabel}
+                                quarters={quarters}
+                                quarterCount={quarterCount}
+                                qTypeMap={playerQMap}
+                                qCount={qCount}
+                              />
                             </Button>
                           );
                         })}
@@ -1467,9 +1465,18 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                           </span>
                         </div>
                       )}
-                      <div className="mt-4 grid gap-2">
+                      {quarterCount > 0 && <QuarterDotsLegend className="mt-3" />}
+                      {quarterCount > 0 && (
+                        <PlayerListSortHeader className="mt-2" quarters={quarters} sort={rosterSort} onSort={setRosterSort} />
+                      )}
+                      <div className="mt-3 grid gap-2">
                         {sortedRoster.map((player) => {
                           const isAssigned = assignedPlayers.has(player.id);
+                          const playerQMap = playerQuarterMap.get(player.id);
+                          const qCount = sumPlayedQuarters(playerQMap);
+                          const assignedSlotLabel = isAssigned
+                            ? formation.slots.find((s) => s.id === assignedPlayers.get(player.id))?.label ?? "배치"
+                            : null;
                           const isCurrentSlotPlayer = activeSlotId ? placements[activeSlotId]?.playerId === player.id : false;
                           const isDisabled = !activeSlotId || isAssigned || (slotMode === "assign_second" && isCurrentSlotPlayer);
                           const matched = !isDisabled && activeSlotRole
@@ -1495,20 +1502,15 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                                 isDisabled && "text-muted-foreground"
                               )}
                             >
-                              <span className="truncate font-semibold">{player.name}</span>
-                              <span className={cn(
-                                "flex shrink-0 items-center gap-1.5 text-xs",
-                                matched ? "text-white/85" : "text-muted-foreground"
-                              )}>
-                                {matched && (
-                                  <span className="rounded-full bg-[rgb(255_255_255_/_0.2)] px-1.5 py-0.5 text-[12px] font-bold text-white">
-                                    추천
-                                  </span>
-                                )}
-                                {isAssigned && (
-                                  formation.slots.find((s) => s.id === assignedPlayers.get(player.id))?.label ?? "배치됨"
-                                )}
-                              </span>
+                              <span className="min-w-0 flex-1 truncate font-semibold">{player.name}</span>
+                              <PlayerQuarterSummary
+                                matched={matched}
+                                assignedSlotLabel={assignedSlotLabel}
+                                quarters={quarters}
+                                quarterCount={quarterCount}
+                                qTypeMap={playerQMap}
+                                qCount={qCount}
+                              />
                             </Button>
                           );
                         })}
