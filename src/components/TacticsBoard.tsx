@@ -26,7 +26,7 @@ import type {
   SquadsApiResponse,
   TeamApiResponse,
 } from "./TacticsBoard.types";
-import { SAVE_DEBOUNCE_MS, clamp, isPositionMatched } from "./TacticsBoard.utils";
+import { SAVE_DEBOUNCE_MS, clamp, isPositionMatched, sumPlayedQuarters, formatQuarterTotal } from "./TacticsBoard.utils";
 
 // 외부 사용자(MatchTacticsTab)가 TeamSettings를 default import에서 같이 받을 수 있게 re-export
 export type { TeamSettings, UniformSet } from "./TacticsBoard.types";
@@ -1303,7 +1303,8 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                           const isCurrentSlotPlayer = activeSlotId ? placements[activeSlotId]?.playerId === player.id : false;
                           const isDisabled = !activeSlotId || isAssigned || (slotMode === "assign_second" && isCurrentSlotPlayer);
                           const playerQMap = playerQuarterMap.get(player.id);
-                          const qCount = playerQMap ? playerQMap.size : 0;
+                          // 반쿼터(전/후 교체)는 0.5로 가중 합산 — .size로 세면 2.5쿼터가 3Q로 표시됨
+                          const qCount = sumPlayedQuarters(playerQMap);
                           const playedQNums = playerQMap ? [...playerQMap.keys()].sort((a, b) => a - b) : [];
                           const matched = !isDisabled && activeSlotRole
                             ? isPositionMatched(player, activeSlotRole)
@@ -1341,7 +1342,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                                 )}
                                 {qCount > 0 && !matched && (
                                   <span className="rounded-full bg-[hsl(var(--primary)_/_0.15)] px-1.5 py-0.5 text-[12px] font-bold text-primary">
-                                    {qCount}Q
+                                    {formatQuarterTotal(qCount)}Q
                                   </span>
                                 )}
                                 {assignedSlot
@@ -1682,9 +1683,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               {roster.map((player) => {
                 const qTypeMap = playerQuarterMap.get(player.id) ?? new Map<number, "full" | "first" | "second">();
                 // 합계: full=1쿼터, first/second=0.5쿼터
-                const totalQ = Array.from(qTypeMap.values()).reduce(
-                  (s, t) => s + (t === "full" ? 1 : 0.5), 0
-                );
+                const totalQ = sumPlayedQuarters(qTypeMap);
                 return (
                   <tr key={player.id} className="border-b border-border/10">
                     <td className="py-2 pr-3 text-sm font-medium whitespace-nowrap">{player.name}</td>
@@ -1720,7 +1719,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                     })}
                     <td className="pl-3 py-2 text-center">
                       <Badge variant="secondary" className="text-[12px] px-1.5 py-0">
-                        {totalQ % 1 === 0 ? totalQ : totalQ.toFixed(1)}/{quarters.length}
+                        {formatQuarterTotal(totalQ)}/{quarters.length}
                       </Badge>
                     </td>
                   </tr>

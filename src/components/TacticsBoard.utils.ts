@@ -6,6 +6,25 @@ export const SAVE_DEBOUNCE_MS = 300;
 export const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
+/**
+ * 선수의 출전 쿼터 가중 합산: full=1쿼터, first/second(반쿼터)=0.5쿼터.
+ * 쿼터 개수(map.size)로 세면 반쿼터가 1로 계산돼 2.5쿼터가 3쿼터로 표시되는 버그가 남.
+ */
+export function sumPlayedQuarters(
+  qTypeMap: Map<number, "full" | "first" | "second"> | undefined
+): number {
+  if (!qTypeMap) return 0;
+  return Array.from(qTypeMap.values()).reduce(
+    (sum, type) => sum + (type === "full" ? 1 : 0.5),
+    0
+  );
+}
+
+/** 쿼터 합계 표시: 정수는 그대로, 반쿼터가 있으면 소수 1자리 (예: 2.5) */
+export function formatQuarterTotal(total: number): string {
+  return total % 1 === 0 ? String(total) : total.toFixed(1);
+}
+
 /** DetailedPosition → 카테고리(GK/DF/MF/FW) */
 export function positionCategory(role: DetailedPosition): "GK" | "DF" | "MF" | "FW" {
   if (role === "GK") return "GK";
