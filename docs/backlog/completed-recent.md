@@ -1,12 +1,41 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~109차)
-summary: 2026-04-11~07-01 진행. 최근: 109차 경쟁사·마케팅 전수 재조사(ae979fb~a3151d8)+경쟁사메모리3종정정+G5발행+G6신규작성+마케팅실행안신설. 108차 사말라gap검토+지도링크(5111b3a). 107차 솔로팀GA확정+활성화루프재배치(09306fb)+370px UI(d9fb3de).
+title: 개선 백로그 — 최근 완료 (16~110차)
+summary: 2026-04-11~07-02 진행. 최근: 110차 전술판 쿼터표시 개선(5059a66~cee4d9e)+선수목록 전수정렬+공용컴포넌트화. 109차 경쟁사·마케팅 전수 재조사(ae979fb~a3151d8)+경쟁사메모리3종정정+G5발행+G6신규작성+마케팅실행안신설. 108차 사말라gap검토+지도링크(5111b3a).
 sections: [104차(2026-06-29) 외부코드분석8항목검증(5정확1과소2outdated)·D8스크린샷폴더일원화(6c09621)·C4일반API rate limit(bbc7350:apiRateLimit.ts goals/posts/comments/dues 테스트8케이스)·D7카드통일방향전환(card-stat cascade불가→Card표준문서화+dead제거)·B묶음(input-validation.md현행화+.env.example신설)·삽질:Bash_POSIX_sh_vs_PowerShell_here-string·COUNT쿼리mock큐밀림, 103차(2026-06-26~27) FC발로만18경기이관(e149a42)·출석률0%_computeAttendanceRateWithHistory(278e1ef)·iOS_backdrop-blur_9곳(f707f79·8464b5c)·전술판후반교체빈화면(d42602b)·color-mix잔여4곳(c2cc959)·삽질:푸시의사_늦게확인·미수정:EditMatchInfoForm·MatchVoteMemberPanel동적보간틴트, 102차(2026-06-26) MVP_raw버그resolveValidMvps·aggregateMvpsByMatch·computeMatchScore단일소스·고아3·KST헬퍼·CLAUDE.md481→267줄path-scoped·MEMORY한도정정, 101차(2026-06-26) MAYBE=미투표벌금확정(de39a23)·cron매시간·FCMZ선납2명데이터정리(사용자SQL)·커밋2695632·2be1690·삽질:payment-status_vs_exemptions오진단·team_members.name없음6차재발, 99차(2026-06-26) 콘텐츠오정보전수감사+수정(fac7ac7·20파일)·선납동선정정(PrepaymentRegisterModal_00053_DROP_후_가이드미동기화)·알림과장정정(TWA한정→브라우저정상·97차pending해소)·게시판2종·용병전술탭·일괄투표→다가오는경기·휴회면제·풋살18종·자체전통계·경미4건·tsc+빌드OK·삽질:한글경로오타4회·에이전트false_positive, 98차(2026-06-25) Safari_color-mix_투명배경_전수수정(2335f46·89파일_532곳_slash-alpha변환)·삽질text포함_과대스코프→배경만좁힘·⚠️97차알림안내4곳오정보pending이월, 97차(2026-06-25) joined_at소급부과5경로(e2c6a39)+출석률7곳공통헬퍼attendanceEligibility(ea5411a)+LEFT/BANNED_vs_DORMANT생명주기(f4bb590)+휴면팀전환버그(6f4aa7b)+알림안내보강(092a1a2)+FAQ가이드사실검증(82d7eda)+알림블로그초안(d8b2369)·⚠️알림안내4곳과장오류라이브박힘_정정다음세션, 96차(2026-06-25) 푸시알림3버그(bb7f02b)+seen/read분리(bf38c0d·migration00079)+죽은링크(26ed7a7)+모바일2버그iOS줌/탭깜빡임(50f2e33), 95차(2026-06-24) PlaywrightE2E37스펙확장(3프로젝트·인증·화면스모크·SEO·권한[dev-login가장]·write-flow[임시생성+afterEach정리])+성능스위트(playwright.perf.config·Web Vitals+Lighthouse·prod대상)+하이드레이션수정(formatKstDateTime/Date·toLocale제거4곳·단위테스트)+errorGuard공용화(7469073~216cd0c푸시), 94차(2026-06-24) MatchCalendar PC넓은화면버그2건(ad4dd2a·eb486d6)·빈칸aspect-square→min-h-52px+요일헤더배경틴트제거·feedback_aspect_square_grid_trap신설, 93차(2026-06-24) 캘린더일요일시작(ed563b6·ad4dd2a)·공동MVP·resolveValidMvps신설·11경로정정(abc0520)·투표공유GA+버튼(605edd6)·로그인복귀경로(3a6dac7)·성능최적화2·3라운드(ad56e39), 92차(2026-06-23) 풋살키퍼순번룰렛(6f3481d~014eeb5·마이그00077·KeeperRotationCard)·가이드/help이관(1515ab5·CLAUDE.md박제↔미이관불일치수정)·SEO한글병기+랜딩+5카드(da57cc1)·경기수정폼유형선택(c5bd1c3)·출석점방향수정(501fb91)·UX5회재설계교훈·과설계미루기반복, 91차(2026-06-23) 풋살·축구종목분기버그전수조사·P0용병폼축구포지션하드코딩수정(6e27da7)·guestPositionOptions상수sportType분기·spot check에이전트오판2건차단·#3풋살3~4인role불일치미수정·#4·#5포지션한국어미적용미수정, 90차(2026-06-22) LINEOUT FC 설경민 제보 2건·잔고UX강제선택(pendingBalance)·벌금면제정책정정(LEAVE/INJURED만)·getPenaltyExemptUserIds신설·3경로동시수정·DB복구3건(d484f41)·vitest853·컬럼명오류5차재발교훈, 89차(2026-06-21) vote-reminder KST timezone버그(3605f42)·앱전역"오늘"=UTC버그(eea164d)·getKstToday헬퍼신설·12파일교체·크론13개전수점검, 88차(2026-06-19) 이미지압축(e05dee0)·자체전3팀Phase1(45d08d3)·Phase2+통계수정(2e15b07)·포레마제TWA앱유입분석(ref:app.pitchmaster)·자체전집계다중경로함정·OVR부풀림수정·캘린더가드누락·div-in-p수정, 87차(2026-06-18) 네이티브FCM(a2295fa·fcc2672)·v1.0.8vc12Play심사·TWA삼성인터넷근본원인·notification페이로드강제·삽질3단계, 86차(2026-06-17) SEO가이드정비·잔존활성화재진단·TWA자동구독, 85차(2026-06-17) 이력서최신화·원티드111퍼센트지원용·Supabase실측6/16·과장6건정정(매주사용/320경기/120팀/알파테스트/필터구독/테스트수)·LLM SSE스트리밍+AdminUsageCard강점표면화·커밋없음, 84차(2026-06-14) 알림아이콘흰네모버그수정·badge-96.svg흰실루엣·TWA5밀도ic_notification_icon·v1.0.7vc11Play제출(0f52569), 83차(2026-06-11) 크론전수조사·push urgency·MatchInfoTab자체전·OCR캡합산·메모리2단인덱스, 82차후속(2026-06-11) /guide허브신설·Android Play스토어안내보정·SEO마케팅점검(a886661·cdf31b8), 82차(2026-06-11) GooglePlay정식출시v1.0.6·알파정리·Play배너·블로그출시후기, 80차(2026-06-09) 골기록수정UX버그·전서비스버그스윕, 79차(2026-06-09) G2가이드커밋발행·알파5차프로덕션신청접수, 78차(2026-06-08~09) 카카오로그인진단Q&A심화·LoginHelp신설·InAppBrowserBanner감지확대·온보딩미리보기·포지션힌트수정(커밋완료), 77차(2026-06-03~06-08) 미투표벌금cron버그·랜딩FAQ정직화·AI코치회원노출·가이드G1발행·참석자출석카드·사업다각도분석, 76차(2026-06-06) 랜딩GEO+FAQ개선·GEO진단·가이드#1발행·가이드#2미커밋, 75차(2026-06-06) ChatGPT 유입 누적 6명 확인·FC DGS·FC YUSIN 신규 가입 분석, 74차(2026-06-06) 이력서 원티드 작업·AI dead code 검증·Supabase 실측·이력서 재작성, 73차(2026-06-03) 2차 리뷰 보안·정합성 패치·auth 회귀 수정·자체전 AI 미노출, 72차 추가(2026-06-03) 투표마감 UTC→KST 핫픽스·cleanup, 72차 사업분석·잔존진단·알파 vc9 빌드·useApi SWR화·전술판 드래그·보안패치 13커밋·블로그 8편, 71차 게시판 SSR is_global 누락 버그 수정, 70차 경기상세 hydration최적화·dashboard task overhaul·온보딩 체크리스트·HintCard·N badge·TWA SW update·핫픽스 4건, 69차+ 블로그 6편 전채널+7편 초안·네이버 자체 통계 분석, 68차 알파 5차 준비·TWA referrer fix·UX 로딩 표준화 19파일·어드민 6팀 제외·블로그 6편, 67차 실사용 팀 활동 패턴 분석·본인팀 제외·전술영상·WelcomeCard v2 코호트, 66차-B 운영 데이터 조사·SEO 분석·블로그 5편 완주, 66차 매치 페이지 시안 v2 + 대시보드 풀 마이그 + hue cascade 버그 + 디자인 마이그 중단 결정, 65차 전술판 영상 평면화·알파 공지 게시물·블로그 4·5편·권한별UI·signup_source 3중망·종합점검, 64차 OVR 공식 재설계 + 시그니처 분기 보강 + AI 카피 라벨 정정 + 배지 제거, 63차 박제 정정 + pending.md outdated 항목 정리, 62차 전술 영상 편집기 전면 리팩토링 P1~P5 + DB 마이그레이션 + 게시판 linkify, 60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-07-01 (107차 회고 추가)
+last_updated: 2026-07-02 (110차 회고 추가)
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~109차)
+# 최근 완료 (16~110차)
+
+## 110차 (2026-07-02, KST) — 전술판 쿼터표시 개선 + 선수목록 전수정렬
+
+**커밋**: 5059a66 → 8209e5a → 47d269a → cee4d9e. 전부 main 푸시 완료.
+
+### 완료 내용
+
+**1. 반쿼터 뱃지 버그 수정 (5059a66)**
+- 원인: 선수 선택 패널 뱃지가 `playerQMap.size`(출전 쿼터 개수)로 계산 → 반쿼터(전/후 교대)도 1로 셈. 출전 매트릭스는 이미 full=1·half=0.5 가중합산 정확 → 두 곳 불일치.
+- `sumPlayedQuarters()`/`formatQuarterTotal()` 헬퍼를 `TacticsBoard.utils.ts`에 추출, 뱃지·매트릭스 양쪽에서 공용.
+
+**2. 쿼터 도트 UI 도입 (8209e5a)**
+- "3Q ... 1Q 2Q 4Q" 텍스트(합계+목록 혼재)를 쿼터 도트(●풀◐반쿼터○쉼, 왼쪽부터 1쿼터)+한글 합계("2.5쿼터")로 교체.
+- 신규 `TacticsQuarterDots.tsx`(QuarterDots + Legend). Safari color-mix 회피 위해 inline hsl().
+- AskUserQuestion 3안(도트/라벨명확화/2줄상세) → 사용자가 도트안 선택.
+
+**3. 가독성 재개선 + 전수 정렬 (47d269a)**
+- 가독성: 포지션 칩 고정폭 슬롯(도트 세로정렬)·쉼 도트 회색 채움·포지션 칩 중립 회색화·쿼터번호 헤더+범례.
+- 데스크톱 인라인 패널/모바일 바텀시트 2렌더경로 중 모바일에 도트가 아예 누락돼있던 것 발견 → `PlayerQuarterSummary`·`PlayerListSortHeader` 공용 컴포넌트로 통일.
+- Explore 에이전트로 앱 전체 선수목록 정렬 전수조사 → 미정렬(PlayerPicker·전술판 선수목록·쉬는선수·역할배정 select·투표현황) 발견 → 전부 `localeCompare(_, "ko")` 이름순 자동정렬 + 전술판 이름순/쿼터순(적게 뛴 순) 토글 추가.
+
+**4. 메타슬롯 라벨 + 도트 색 보정 (cee4d9e)**
+- assignedPlayers의 메타슬롯(주심/부심1/부심2/촬영)이 formation.slots에 라벨 없어 "배치" fallback 표시되던 버그 → `META_SLOT_LABELS` 추가.
+- 도트 채움색을 브랜드 --primary(16 85% 58%)에서 진한 `hsl(16 95% 52%)`로 (토큰 미변경, 도트 전용 로컬 색).
+
+### 삽질 / 교훈
+
+- 같은 값(쿼터 합계)을 뱃지·매트릭스 두 곳에서 따로 계산해 한쪽만 버그 — feedback_fix_all_call_sites_of_bug_class 사례 재확인.
+- 전술판은 데스크톱 인라인 패널/모바일 바텀시트 2개 렌더 경로. UI 변경 시 둘 다 확인해야 하며, 이번엔 모바일(주 사용층)에 신규 기능이 누락돼 있었음 → 공용 컴포넌트 추출로 앞으로 드리프트 차단.
 
 ## 109차 (2026-07-01, KST) — 경쟁사·마케팅 전수 재조사 + 블로그 G5 발행 + G6 신규 작성
 
