@@ -9,13 +9,13 @@ related: [completed-recent.md, reviews.md]
 
 ## 109차 신규 추가 (2026-07-01) — 경쟁사 재조사 + G6 배포 후속
 
-### Vercel 배포 미반영 확인 (HIGH, 즉시)
-- **배경**: 109차에 ce81b00(G6 가이드 신규 작성+SEO 키워드)·a3151d8(마케팅 실행안) 푸시 후 8분 경과에도 `/guide/soccer-club-operations` 404 반환. 기존 가이드 URL은 200 정상이라 코드 자체는 문제 없음.
-- **주의**: 사용자가 배포 전에 GSC 색인 요청하여 "색인생성문제 감지" 오류 발생 → 배포 완료 후 GSC 재요청하면 해소됨.
-- [ ] Vercel 대시보드에서 ce81b00·a3151d8 커밋의 배포 상태 확인 (성공/실패/진행중)
-- [ ] `/guide/soccer-club-operations` 프로덕션에서 200 반환 확인
-- [ ] 배포 완료 후 GSC에서 URL 검사 → 색인 요청 재시도
-- [ ] 사이트맵에 G6 URL 포함 여부 확인 (`/sitemap.xml`)
+### ✅ Vercel 배포 미반영 — 해결됨 (근본 원인=vercel-ignore.sh 버그)
+- **근본 원인 규명**: `scripts/vercel-ignore.sh`가 `HEAD^ HEAD`(직전 1커밋)만 비교. 코드 커밋(ce81b00) 위에 문서 커밋(a3151d8·4f277c9)이 쌓여 배치 푸시되니, Vercel이 맨 위(문서만) 커밋을 보고 **빌드를 계속 스킵**함. Redeploy도 그 문서 tip 커밋을 재평가해 또 스킵.
+- **즉시 해결**: 코드 파일(soccer-club-operations.tsx)을 건드린 커밋(b389e7b)을 tip으로 푸시 → ignore 통과 → 빌드·배포. `/guide/soccer-club-operations` 200 확인 + 사이트맵 포함 확인 완료.
+- **근본 수정 (2026-07-01, 승인 후)**: vercel-ignore.sh를 `$VERCEL_GIT_PREVIOUS_SHA..HEAD` 전체 범위 비교로 변경 + 셸로우클론 가드(base 없으면 빌드 진행). 앞으로 배치 푸시에서 코드 배포 누락 없음.
+- **교훈**: 코드+문서 커밋을 배치 푸시할 땐 코드 커밋을 tip에 두거나 분리 푸시. GSC 색인은 배포 완료(200 확인) 후 요청.
+- [x] 프로덕션 200 확인 · 사이트맵 포함 확인 · GSC 색인 재요청(사용자)
+- [ ] (모니터링) 다음 배치 푸시에서 vercel-ignore.sh 수정이 정상 동작하는지 1회 확인
 
 ### G6 네이버·티스토리 발행 (MEDIUM, 다른 날)
 - **배경**: 109차에 G5(풋살쿼터)를 7/1 네이버·티스토리 발행 완료. 같은 날 G6 발행은 빈도 과다(1일 2편 스팸 위험).
