@@ -27,6 +27,7 @@ import type {
   TeamApiResponse,
 } from "./TacticsBoard.types";
 import { SAVE_DEBOUNCE_MS, clamp, isPositionMatched, sumPlayedQuarters, formatQuarterTotal } from "./TacticsBoard.utils";
+import { QuarterDots, QuarterDotsLegend } from "./TacticsQuarterDots";
 
 // 외부 사용자(MatchTacticsTab)가 TeamSettings를 default import에서 같이 받을 수 있게 re-export
 export type { TeamSettings, UniformSet } from "./TacticsBoard.types";
@@ -1296,6 +1297,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                           이 포지션의 선호 포지션과 일치하는 선수가 초록색으로 표시됩니다
                         </p>
                       )}
+                      {quarterCount > 0 && <QuarterDotsLegend className="mt-2" />}
                       <div className="mt-3 grid gap-2">
                         {sortedRoster.map((player) => {
                           const assignedSlot = assignedPlayers.get(player.id);
@@ -1305,7 +1307,9 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                           const playerQMap = playerQuarterMap.get(player.id);
                           // 반쿼터(전/후 교체)는 0.5로 가중 합산 — .size로 세면 2.5쿼터가 3Q로 표시됨
                           const qCount = sumPlayedQuarters(playerQMap);
-                          const playedQNums = playerQMap ? [...playerQMap.keys()].sort((a, b) => a - b) : [];
+                          const assignedSlotLabel = assignedSlot
+                            ? formation.slots.find((slot) => slot.id === assignedSlot)?.label ?? "배치"
+                            : null;
                           const matched = !isDisabled && activeSlotRole
                             ? isPositionMatched(player, activeSlotRole)
                             : false;
@@ -1332,22 +1336,31 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                             >
                               <span className="min-w-0 flex-1 truncate font-semibold">{player.name}</span>
                               <span className={cn(
-                                "flex shrink-0 items-center gap-1.5 text-xs",
+                                "flex shrink-0 items-center gap-2 text-xs",
                                 matched ? "text-white/85" : "text-muted-foreground"
                               )}>
-                                {matched && (
-                                  <span className="rounded-full bg-[rgb(255_255_255_/_0.2)] px-1.5 py-0.5 text-[12px] font-bold text-white">
+                                {/* 상태 칩: 추천 / 배치된 포지션 */}
+                                {matched ? (
+                                  <span className="rounded-full bg-[rgb(255_255_255_/_0.2)] px-1.5 py-0.5 text-[11px] font-bold text-white">
                                     추천
                                   </span>
-                                )}
-                                {qCount > 0 && !matched && (
-                                  <span className="rounded-full bg-[hsl(var(--primary)_/_0.15)] px-1.5 py-0.5 text-[12px] font-bold text-primary">
-                                    {formatQuarterTotal(qCount)}Q
+                                ) : assignedSlotLabel ? (
+                                  <span className="rounded-full bg-[hsl(var(--primary)_/_0.15)] px-1.5 py-0.5 text-[11px] font-bold text-primary">
+                                    {assignedSlotLabel}
                                   </span>
+                                ) : null}
+                                {/* 쿼터 도트 (왼쪽부터 1쿼터) */}
+                                {quarterCount > 0 && (
+                                  <QuarterDots quarters={quarters} qTypeMap={playerQMap} activeQuarter={activeQuarter} />
                                 )}
-                                {assignedSlot
-                                  ? formation.slots.find((slot) => slot.id === assignedSlot)?.label ?? "배치됨"
-                                  : qCount > 0 ? playedQNums.map(q => `${q}Q`).join(" ") : "미출전"}
+                                {/* 출전 쿼터 합계 */}
+                                <span className={cn(
+                                  "min-w-[3.25rem] text-right tabular-nums",
+                                  qCount > 0 && "font-semibold",
+                                  qCount > 0 && !matched && "text-foreground/80"
+                                )}>
+                                  {qCount > 0 ? `${formatQuarterTotal(qCount)}쿼터` : "미출전"}
+                                </span>
                               </span>
                             </Button>
                           );
