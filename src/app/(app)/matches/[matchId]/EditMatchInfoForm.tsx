@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { apiMutate } from "@/lib/useApi";
+import { apiMutate, useApi } from "@/lib/useApi";
 import { getKstNow } from "@/lib/kstDate";
 import { Button } from "@/components/ui/button";
 import { cn, formatTime } from "@/lib/utils";
@@ -34,6 +34,15 @@ export default function EditMatchInfoForm({
     match.matchType === "INTERNAL" ? "INTERNAL" : "REGULAR"
   );
   const isInternal = !isEvent && editingMatchType === "INTERNAL";
+  const [opponent, setOpponent] = useState(match.opponent ?? "");
+
+  // 자주 상대한 팀 목록 (빈도순) — REGULAR 상대전 수정 시 chip 자동완성
+  const { data: opponentData } = useApi<{ opponents: string[] }>(
+    "/api/team-stats/opponents",
+    { opponents: [] },
+    { skip: isEvent },
+  );
+  const pastOpponents = opponentData.opponents;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -108,10 +117,31 @@ export default function EditMatchInfoForm({
             {isInternal ? (
               <div className="flex h-12 items-center rounded-xl bg-[hsl(var(--secondary)_/_0.4)] px-4 text-sm text-muted-foreground">자체전 (상대팀 없음)</div>
             ) : (
-              <input name="opponent" defaultValue={match.opponent ?? ""} placeholder={isEvent ? "예: 연말 회식" : "미정"} className="h-12 w-full min-w-0 rounded-xl border-0 bg-secondary px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+              <input name="opponent" value={opponent} onChange={(e) => setOpponent(e.target.value)} placeholder={isEvent ? "예: 연말 회식" : "미정"} className="h-12 w-full min-w-0 rounded-xl border-0 bg-secondary px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
             )}
           </div>
         </div>
+        {/* 자주 상대한 팀 chip — REGULAR 상대전 수정 시에만 */}
+        {!isEvent && !isInternal && pastOpponents.length > 0 && (
+          <div className="-mt-3 flex flex-wrap items-center gap-1.5">
+            <span className="mr-0.5 text-[11px] text-muted-foreground">자주:</span>
+            {pastOpponents.slice(0, 6).map((opp) => (
+              <button
+                key={opp}
+                type="button"
+                onClick={() => setOpponent(opp)}
+                className={cn(
+                  "rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
+                  opponent === opp
+                    ? "bg-[hsl(var(--primary)_/_0.15)] text-primary"
+                    : "bg-secondary text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {opp}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-4 [&>div]:min-w-0">
           <div>
             <p className="mb-1.5 text-[12.5px] font-medium text-muted-foreground">시작</p>

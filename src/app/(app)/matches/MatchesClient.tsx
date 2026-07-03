@@ -109,6 +109,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   const [matchEndTime, setMatchEndTime] = useState("11:00");
   const [showEndDate, setShowEndDate] = useState(false);
   const [location, setLocation] = useState("");
+  const [opponent, setOpponent] = useState("");
   const [voteDeadline, setVoteDeadline] = useState("");
 
   // matchDate 변경 시 투표 마감일 자동 계산 (경기 전날 17시)
@@ -160,6 +161,17 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .slice(0, 5)
       .map(([time]) => time);
+  }, [matchesData.matches]);
+
+  // 자주 상대한 팀 목록 (REGULAR 경기에서 추출, 빈도순 · 중복 제거)
+  const recentOpponents = useMemo(() => {
+    const names = (matchesData.matches ?? [])
+      .filter((m) => (m.match_type ?? "REGULAR") === "REGULAR")
+      .map((m) => m.opponent_name)
+      .filter((n): n is string => !!n && n.trim() !== "");
+    const counts = new Map<string, number>();
+    names.forEach((n) => counts.set(n, (counts.get(n) ?? 0) + 1));
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([n]) => n);
   }, [matchesData.matches]);
 
   const matches: Match[] = useMemo(
@@ -1086,9 +1098,26 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                   id="opponent"
                   name="opponent"
                   className="pm-input"
+                  value={opponent}
+                  onChange={(e) => setOpponent(e.target.value)}
                   required={matchType === "EVENT"}
                   placeholder={matchType === "EVENT" ? "예: 연말 회식, MT, 유니폼 주문" : "예: FC 강남"}
                 />
+                {matchType === "REGULAR" && recentOpponents.length > 0 && (
+                  <div className="pm-mform-chips" style={{ marginTop: 4 }}>
+                    <span className="pm-mform-hint" style={{ marginRight: 2 }}>자주:</span>
+                    {recentOpponents.slice(0, 5).map((opp) => (
+                      <button
+                        key={opp}
+                        type="button"
+                        onClick={() => setOpponent(opp)}
+                        className={cn("pm-chip-pill", opponent === opp && "is-on")}
+                      >
+                        {opp}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
