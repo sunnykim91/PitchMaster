@@ -552,7 +552,7 @@ export default function MatchDetailClient({
   }
 
   return (
-    <div className="grid gap-5 stagger-children min-w-0 overflow-x-hidden">
+    <div className="grid gap-5 stagger-children min-w-0 overflow-x-clip">
       {/* ── Back Navigation ── */}
       <div className="flex items-center gap-2 -mt-1 mb-1">
         <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" asChild>

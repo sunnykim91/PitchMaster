@@ -334,7 +334,7 @@ function MatchTacticsTabInner({
     : attendingPlayers;
 
   return (
-    <div className="flex flex-col gap-5 min-w-0 overflow-x-hidden">
+    <div className="flex flex-col gap-5 min-w-0 overflow-x-clip">
       <HintCard
         storageKey="hint:tactics:v1"
         title="전술판 사용법"
