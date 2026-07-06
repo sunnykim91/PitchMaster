@@ -124,7 +124,7 @@ export default function HelpPage() {
               ["#dues", "9. 회비 관리"],
               ["#prepay", "10. 회비 선납"],
               ["#monthly", "11. 월별 결산"],
-              ["#ai", "12. AI 기능 5종"],
+              ["#ai", "12. AI·자동화 기능"],
               ["#more", "13. 게시판 · 멤버 외"],
               ["#pwa", "14. 홈 화면 추가"],
               ["#faq", "15. FAQ"],
@@ -310,7 +310,7 @@ export default function HelpPage() {
           </p>
           <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed pl-1">
             <li><strong className="text-foreground">날짜·시간</strong> — 경기 날짜와 시작·종료 시간.</li>
-            <li><strong className="text-foreground">장소</strong> — 구장 이름. 팀원들이 위치 찾기 쉽게 구체적으로 적어주세요.</li>
+            <li><strong className="text-foreground">장소</strong> — 구장 이름. 팀원들이 위치 찾기 쉽게 구체적으로 적어주세요. 입력한 장소는 경기 정보 화면에서 <strong className="text-foreground">네이버·카카오 지도 길찾기</strong> 링크로 바로 연결됩니다.</li>
             <li><strong className="text-foreground">상대팀</strong> — 자체전이면 <strong className="text-foreground">[자체전 토글]</strong>을 켜고 상대팀 칸은 비워둡니다.</li>
             <li><strong className="text-foreground">경기 유형</strong> — 일반 경기 / 자체전 / 팀 일정 중 선택.</li>
             <li><strong className="text-foreground">투표 마감</strong> — 기본값은 경기 전날 저녁 5시.</li>
@@ -787,10 +787,10 @@ export default function HelpPage() {
 
         <section id="ai" className="scroll-mt-16 mb-8">
           <h2 className="text-xl sm:text-2xl font-bold border-b border-border/40 pb-3 mb-5">
-            <span className="text-primary font-black mr-2">12</span>AI 기능 5종
+            <span className="text-primary font-black mr-2">12</span>AI·자동화 기능
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-4">
-            운영진이 평소에 손으로 정리하던 일을 대신 해주는 한국어 AI 다섯 가지가 들어 있어요. Anthropic의 Claude 모델을 쓰고, 한국 풋살·축구 동호회 실제 데이터로 톤을 다듬었습니다.
+            운영진이 평소에 손으로 정리하던 일을 대신 해주는 자동화 기능 다섯 가지예요. 이 중 <strong className="text-foreground">AI 풀 플랜·AI 코치 분석·회비 OCR 세 가지가 Anthropic의 Claude 모델</strong>을 쓰고(한국 풋살·축구 동호회 데이터로 톤을 다듬었습니다), 자동 경기 후기·선수 시그니처는 팀 기록을 바탕으로 한 <strong className="text-foreground">규칙 기반 자동 생성</strong>이에요.
           </p>
 
           <h3 className="text-base font-semibold mb-3 mt-6">한눈에 보는 다섯 가지</h3>
@@ -819,13 +819,13 @@ export default function HelpPage() {
                 </tr>
                 <tr>
                   <td className="px-3 py-3 text-muted-foreground align-top">3</td>
-                  <td className="px-3 py-3 align-top"><strong className="text-foreground">자동 경기 후기</strong><br /><span className="text-muted-foreground text-xs">한 줄 자동 요약</span></td>
+                  <td className="px-3 py-3 align-top"><strong className="text-foreground">자동 경기 후기</strong><br /><span className="text-muted-foreground text-xs">한 줄 자동 요약 · 규칙 기반</span></td>
                   <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기 → [후기] 탭 (경기 끝나면 자동 생성)</td>
                   <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기당 1회 재생성</td>
                 </tr>
                 <tr>
                   <td className="px-3 py-3 text-muted-foreground align-top">4</td>
-                  <td className="px-3 py-3 align-top"><strong className="text-foreground">선수 시그니처</strong><br /><span className="text-muted-foreground text-xs">선수별 한 줄 별명</span></td>
+                  <td className="px-3 py-3 align-top"><strong className="text-foreground">선수 시그니처</strong><br /><span className="text-muted-foreground text-xs">선수별 한 줄 별명 · 규칙 기반</span></td>
                   <td className="px-3 py-3 text-muted-foreground align-top text-xs">회원 프로필 카드</td>
                   <td className="px-3 py-3 text-muted-foreground align-top text-xs">운영진이 재생성</td>
                 </tr>
@@ -856,7 +856,7 @@ export default function HelpPage() {
 
           <h4 className="text-sm font-semibold text-foreground mt-5 mb-2">4. 선수 시그니처</h4>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            회원의 시즌 누적 기록을 바탕으로 AI가 한 줄짜리 별명을 만들어줍니다 (예: &quot;우리 팀 황소&quot;, &quot;왼발의 마술사&quot;). 그 회원의 프로필 카드에 표시돼요.
+            회원의 시즌 누적 기록을 바탕으로 규칙 기반으로 한 줄짜리 별명을 만들어줍니다 (예: &quot;우리 팀 황소&quot;, &quot;왼발의 마술사&quot;). 그 회원의 프로필 카드에 표시돼요.
           </p>
 
           <h4 className="text-sm font-semibold text-foreground mt-5 mb-2">5. 회비 OCR</h4>

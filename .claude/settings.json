@@ -139,7 +139,10 @@
       "Bash(grep -nB1 -A4 \"MEDIUM\\\\|HIGH\" \"c:/Users/온유아빠/develop/PitchMaster/docs/backlog/pending.md\")",
       "Bash(node -e \"const r = require\\('lucide-react'\\); console.log\\('Cake:', typeof r.Cake, r.Cake?.displayName ?? ''\\);\")",
       "Bash(grep -v \"memory/$\")",
-      "Bash(git -C \"c:\\\\Users\\\\온유아빠\\\\develop\\\\PitchMaster\" log --oneline -25)"
+      "Bash(git -C \"c:\\\\Users\\\\온유아빠\\\\develop\\\\PitchMaster\" log --oneline -25)",
+      "WebFetch(domain:www.wanted.co.kr)",
+      "Bash(sed 's/.*=//')",
+      "Read(//c/Users/온유аппа/develop/PitchMaster/src/app/api/posts/**)"
     ],
     "additionalDirectories": [
       "C:\\Users\\온유아빠\\develop\\PitchMaster",

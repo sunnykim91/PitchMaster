@@ -189,3 +189,6 @@ scripts/run-migration-*.mjs
 
 # 성능 측정 산출물 (Lighthouse HTML 리포트)
 /lighthouse-report/
+
+# supabase CLI 로그 아티팩트
+supabase/migrations/build-log.txt

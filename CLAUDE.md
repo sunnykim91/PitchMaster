@@ -16,7 +16,7 @@
 풋살/축구 팀 관리 웹앱. 총무/회장이 카카오톡 단체방으로 하던 운영(출석, 회비, 일정, 기록)을 앱 하나로 대체하는 서비스.
 
 - **도메인**: pitch-master.app (Cloudflare DNS + Vercel 자동배포)
-- **실서비스 중**: 131+ 팀 / 627+ 가입 회원 (2026-06-09 직접 조회 기준, 일 단위로 변동)
+- **실서비스 중**: 145+ 팀 / 690+ 가입 회원 (2026-07-06 직접 조회 기준, 일 단위로 변동)
   - **외부 콘텐츠·블로그·광고 작성 시 반드시 Supabase 직접 조회로 최신 수치 확인** (참고: `reference_supabase_direct.md`, `reference_pitchmaster_stats.md`)
   - 이 README 수치는 outdated 가능성 높음 — 절대 그대로 인용 금지
 - **데모 계정**: kakao_id=`demo_kakao_id_pitchmaster`, 팀=FC DEMO, 역할=회장
@@ -30,7 +30,7 @@
 | Frontend | Next.js 16 (App Router), React 19, TailwindCSS 4 |
 | Backend | Supabase (PostgreSQL + RLS), Next.js API Routes |
 | 인증 | 카카오 OAuth 2.0 + HMAC-SHA256 서명 세션 쿠키 (30일) |
-| 테스트 | Vitest (820+ 케이스), Playwright E2E |
+| 테스트 | Vitest (900+ 케이스), Playwright E2E |
 | 언어 | TypeScript strict mode |
 | PWA | Service Worker + Web Push (VAPID) |
 | 테마 | 다크 기본, 라이트/시스템 순환 토글 |

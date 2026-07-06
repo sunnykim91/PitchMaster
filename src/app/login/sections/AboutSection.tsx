@@ -500,7 +500,7 @@ export default function AboutSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5, ease: EASE_OUT_EXPO }}
           >
-            다른 앱이 절대 따라할 수 없는 정통성 — 5년 동안 매주 직접 부딪힌 결과물입니다.
+            다른 앱이 쉽게 흉내 내기 어려운 정통성 — 5년 동안 매주 직접 부딪히며 만든 결과물입니다.
           </motion.p>
         </div>
 
@@ -638,7 +638,7 @@ export default function AboutSection() {
                     className="w-1.5 h-1.5 rounded-full"
                     style={{ background: "hsl(38 85% 58%)" }}
                   />
-                  주간 운영 시간
+                  주간 운영 시간 (예시)
                 </span>
 
                 <TimeKPI />
