@@ -1,12 +1,89 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~110차)
-summary: 2026-04-11~07-02 진행. 최근: 110차 전술판 쿼터표시 개선(5059a66~cee4d9e)+선수목록 전수정렬+공용컴포넌트화. 109차 경쟁사·마케팅 전수 재조사(ae979fb~a3151d8)+경쟁사메모리3종정정+G5발행+G6신규작성+마케팅실행안신설. 108차 사말라gap검토+지도링크(5111b3a).
+title: 개선 백로그 — 최근 완료 (16~112차)
+summary: 2026-04-11~07-06 진행. 최근: 112차 FC.LIBRE B 노진우 요청으로 수비 포인트 랭킹 신규(67e2801, 무실점쿼터×2+무실점경기×3, reviewer 이중계산 근본수정) + FCMZ 실데이터 검증 + 가이드·랜딩 기능 갭 보강(aa95e88) + 0:0 무승부 표시 버그 근본수정(6bcdd75, getMatchesData/matches route 정반대 default 통일). 111차 iOS 하단탭바 전술탭 재발 진단·수정(d37a3c9, match-detail/tactics 래퍼 2곳 clip 전환). 110차 전술판 쿼터표시 개선(5059a66~cee4d9e)+선수목록 전수정렬+공용컴포넌트화.
 sections: [104차(2026-06-29) 외부코드분석8항목검증(5정확1과소2outdated)·D8스크린샷폴더일원화(6c09621)·C4일반API rate limit(bbc7350:apiRateLimit.ts goals/posts/comments/dues 테스트8케이스)·D7카드통일방향전환(card-stat cascade불가→Card표준문서화+dead제거)·B묶음(input-validation.md현행화+.env.example신설)·삽질:Bash_POSIX_sh_vs_PowerShell_here-string·COUNT쿼리mock큐밀림, 103차(2026-06-26~27) FC발로만18경기이관(e149a42)·출석률0%_computeAttendanceRateWithHistory(278e1ef)·iOS_backdrop-blur_9곳(f707f79·8464b5c)·전술판후반교체빈화면(d42602b)·color-mix잔여4곳(c2cc959)·삽질:푸시의사_늦게확인·미수정:EditMatchInfoForm·MatchVoteMemberPanel동적보간틴트, 102차(2026-06-26) MVP_raw버그resolveValidMvps·aggregateMvpsByMatch·computeMatchScore단일소스·고아3·KST헬퍼·CLAUDE.md481→267줄path-scoped·MEMORY한도정정, 101차(2026-06-26) MAYBE=미투표벌금확정(de39a23)·cron매시간·FCMZ선납2명데이터정리(사용자SQL)·커밋2695632·2be1690·삽질:payment-status_vs_exemptions오진단·team_members.name없음6차재발, 99차(2026-06-26) 콘텐츠오정보전수감사+수정(fac7ac7·20파일)·선납동선정정(PrepaymentRegisterModal_00053_DROP_후_가이드미동기화)·알림과장정정(TWA한정→브라우저정상·97차pending해소)·게시판2종·용병전술탭·일괄투표→다가오는경기·휴회면제·풋살18종·자체전통계·경미4건·tsc+빌드OK·삽질:한글경로오타4회·에이전트false_positive, 98차(2026-06-25) Safari_color-mix_투명배경_전수수정(2335f46·89파일_532곳_slash-alpha변환)·삽질text포함_과대스코프→배경만좁힘·⚠️97차알림안내4곳오정보pending이월, 97차(2026-06-25) joined_at소급부과5경로(e2c6a39)+출석률7곳공통헬퍼attendanceEligibility(ea5411a)+LEFT/BANNED_vs_DORMANT생명주기(f4bb590)+휴면팀전환버그(6f4aa7b)+알림안내보강(092a1a2)+FAQ가이드사실검증(82d7eda)+알림블로그초안(d8b2369)·⚠️알림안내4곳과장오류라이브박힘_정정다음세션, 96차(2026-06-25) 푸시알림3버그(bb7f02b)+seen/read분리(bf38c0d·migration00079)+죽은링크(26ed7a7)+모바일2버그iOS줌/탭깜빡임(50f2e33), 95차(2026-06-24) PlaywrightE2E37스펙확장(3프로젝트·인증·화면스모크·SEO·권한[dev-login가장]·write-flow[임시생성+afterEach정리])+성능스위트(playwright.perf.config·Web Vitals+Lighthouse·prod대상)+하이드레이션수정(formatKstDateTime/Date·toLocale제거4곳·단위테스트)+errorGuard공용화(7469073~216cd0c푸시), 94차(2026-06-24) MatchCalendar PC넓은화면버그2건(ad4dd2a·eb486d6)·빈칸aspect-square→min-h-52px+요일헤더배경틴트제거·feedback_aspect_square_grid_trap신설, 93차(2026-06-24) 캘린더일요일시작(ed563b6·ad4dd2a)·공동MVP·resolveValidMvps신설·11경로정정(abc0520)·투표공유GA+버튼(605edd6)·로그인복귀경로(3a6dac7)·성능최적화2·3라운드(ad56e39), 92차(2026-06-23) 풋살키퍼순번룰렛(6f3481d~014eeb5·마이그00077·KeeperRotationCard)·가이드/help이관(1515ab5·CLAUDE.md박제↔미이관불일치수정)·SEO한글병기+랜딩+5카드(da57cc1)·경기수정폼유형선택(c5bd1c3)·출석점방향수정(501fb91)·UX5회재설계교훈·과설계미루기반복, 91차(2026-06-23) 풋살·축구종목분기버그전수조사·P0용병폼축구포지션하드코딩수정(6e27da7)·guestPositionOptions상수sportType분기·spot check에이전트오판2건차단·#3풋살3~4인role불일치미수정·#4·#5포지션한국어미적용미수정, 90차(2026-06-22) LINEOUT FC 설경민 제보 2건·잔고UX강제선택(pendingBalance)·벌금면제정책정정(LEAVE/INJURED만)·getPenaltyExemptUserIds신설·3경로동시수정·DB복구3건(d484f41)·vitest853·컬럼명오류5차재발교훈, 89차(2026-06-21) vote-reminder KST timezone버그(3605f42)·앱전역"오늘"=UTC버그(eea164d)·getKstToday헬퍼신설·12파일교체·크론13개전수점검, 88차(2026-06-19) 이미지압축(e05dee0)·자체전3팀Phase1(45d08d3)·Phase2+통계수정(2e15b07)·포레마제TWA앱유입분석(ref:app.pitchmaster)·자체전집계다중경로함정·OVR부풀림수정·캘린더가드누락·div-in-p수정, 87차(2026-06-18) 네이티브FCM(a2295fa·fcc2672)·v1.0.8vc12Play심사·TWA삼성인터넷근본원인·notification페이로드강제·삽질3단계, 86차(2026-06-17) SEO가이드정비·잔존활성화재진단·TWA자동구독, 85차(2026-06-17) 이력서최신화·원티드111퍼센트지원용·Supabase실측6/16·과장6건정정(매주사용/320경기/120팀/알파테스트/필터구독/테스트수)·LLM SSE스트리밍+AdminUsageCard강점표면화·커밋없음, 84차(2026-06-14) 알림아이콘흰네모버그수정·badge-96.svg흰실루엣·TWA5밀도ic_notification_icon·v1.0.7vc11Play제출(0f52569), 83차(2026-06-11) 크론전수조사·push urgency·MatchInfoTab자체전·OCR캡합산·메모리2단인덱스, 82차후속(2026-06-11) /guide허브신설·Android Play스토어안내보정·SEO마케팅점검(a886661·cdf31b8), 82차(2026-06-11) GooglePlay정식출시v1.0.6·알파정리·Play배너·블로그출시후기, 80차(2026-06-09) 골기록수정UX버그·전서비스버그스윕, 79차(2026-06-09) G2가이드커밋발행·알파5차프로덕션신청접수, 78차(2026-06-08~09) 카카오로그인진단Q&A심화·LoginHelp신설·InAppBrowserBanner감지확대·온보딩미리보기·포지션힌트수정(커밋완료), 77차(2026-06-03~06-08) 미투표벌금cron버그·랜딩FAQ정직화·AI코치회원노출·가이드G1발행·참석자출석카드·사업다각도분석, 76차(2026-06-06) 랜딩GEO+FAQ개선·GEO진단·가이드#1발행·가이드#2미커밋, 75차(2026-06-06) ChatGPT 유입 누적 6명 확인·FC DGS·FC YUSIN 신규 가입 분석, 74차(2026-06-06) 이력서 원티드 작업·AI dead code 검증·Supabase 실측·이력서 재작성, 73차(2026-06-03) 2차 리뷰 보안·정합성 패치·auth 회귀 수정·자체전 AI 미노출, 72차 추가(2026-06-03) 투표마감 UTC→KST 핫픽스·cleanup, 72차 사업분석·잔존진단·알파 vc9 빌드·useApi SWR화·전술판 드래그·보안패치 13커밋·블로그 8편, 71차 게시판 SSR is_global 누락 버그 수정, 70차 경기상세 hydration최적화·dashboard task overhaul·온보딩 체크리스트·HintCard·N badge·TWA SW update·핫픽스 4건, 69차+ 블로그 6편 전채널+7편 초안·네이버 자체 통계 분석, 68차 알파 5차 준비·TWA referrer fix·UX 로딩 표준화 19파일·어드민 6팀 제외·블로그 6편, 67차 실사용 팀 활동 패턴 분석·본인팀 제외·전술영상·WelcomeCard v2 코호트, 66차-B 운영 데이터 조사·SEO 분석·블로그 5편 완주, 66차 매치 페이지 시안 v2 + 대시보드 풀 마이그 + hue cascade 버그 + 디자인 마이그 중단 결정, 65차 전술판 영상 평면화·알파 공지 게시물·블로그 4·5편·권한별UI·signup_source 3중망·종합점검, 64차 OVR 공식 재설계 + 시그니처 분기 보강 + AI 카피 라벨 정정 + 배지 제거, 63차 박제 정정 + pending.md outdated 항목 정리, 62차 전술 영상 편집기 전면 리팩토링 P1~P5 + DB 마이그레이션 + 게시판 linkify, 60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-07-02 (110차 회고 추가)
+last_updated: 2026-07-06 (112차 회고 갱신 — FCMZ 검증·가이드/랜딩 보강·0:0 버그수정 후속 추가)
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~110차)
+# 최근 완료 (16~112차)
+
+## 112차 (2026-07-06, KST) — 수비 포인트 랭킹(Defender Points) 신규 구현
+
+**커밋**: 67e2801 `feat(records): add defender points ranking by tactics-board position`. main 푸시·클린 빌드·tsc 통과.
+
+### 배경
+
+사용자가 "운영진 평점"(`teams.player_rating_enabled`) 기능이 뭘 보여주는지 질문 → 경기 후기 탭 회원 평점 카드 + 기록 탭 시즌 평점 컬럼임을 코드로 확인해 설명(PitchScore 능력치와는 별개). 이어서 "골/어시는 공격수·미드, 골키퍼는 무실점 쿼터 순위 있는데 수비수 전용 순위가 없다"는 지적 → **FC.LIBRE B 운영진 노진우 님의 실사용 요청**("센터백·풀백·윙백으로 전술판에 입력되는 인원에게 포인트 부여")이 배경으로 밝혀짐.
+
+### 구현
+
+- 산식(사용자 확정): **수비 포인트 = 무실점 쿼터×2 + 무실점 경기×3** (가산 전용, 감점 없음). GK 무실점 쿼터(`getGoalkeeperStats.ts`)의 수비수 버전.
+- 신규 `src/lib/server/getDefenderStats.ts` — 순수 함수(`aggregateDefenderPoints`·`mergeDefenderStats`·`isDefenderSlot`·`computeDefenderPoints`).
+- `getRecordsData.ts` + `api/records/route.ts` + `RecordsClient.tsx`(팀 랭킹 탭 카드) 수정.
+- 신규 테스트 `__tests__/lib/getDefenderStats.test.ts` 21케이스. 무관한 문서·설정 제외하고 5파일만 stage해 커밋.
+- 전체 테스트 911개 통과, tsc·clean build 통과. reviewer 서브에이전트 교차 점검.
+
+### 교훈·삽질
+
+- **reviewer 이슈2 근본 수정**: `[user_id, member_id]` 두 키 합산 패턴이 "경기당 1회 유니크 보너스"(무실점 경기)에 그대로 적용되면 이중계산(+6) 유발. 골·어시 같은 카운트형은 두 키 합산이 정답이지만 유니크 보너스는 다른 규칙 필요 — `cleanMatchIds`(Set) union + 공유 헬퍼 `mergeDefenderStats()`로 해결.
+- **가중치로 데이터 품질 방어**: 실점 쿼터 필드가 33% 정도 미기입 확인됨. "무실점 경기" 보너스는 경기 스코어만 보므로 쿼터 미기입에 강건 → 강건한 쪽에 가중치(×3)를 실음.
+- **알려진 한계 = 현행 유지 결정**: 골 데이터가 아예 없는 미기입 경기는 무실점으로 오인돼 부풀 수 있음. 사용자가 코드 가드 대신 "현행 유지 + 안내문 대응"을 선택.
+- **실데이터 검증**: FC.LIBRE B 실팀 데이터로 순위 확인 — 노진우 1위(18점, 무실점 9쿼터). 무실점 경기 2번이 전술판 미입력이라 보너스 0 → "전술판 채워야 보너스" 안내 근거 확보.
+- **용어 정정**: "완봉"은 야구 용어(사용자 지적) → "무실점 경기"로 정정.
+
+### 이어갈 항목
+
+- Vercel 배포(67e2801) 프로덕션 반영 확인
+- 배포 후 실제 화면에서 가중치(2·3) 자연스러움 재검토
+- 사용자가 FCMZ 데이터로 추가 검증 예정
+
+상세 스펙은 memory `project_defender_points.md` 참조.
+
+### 112차 후속① — FCMZ 실데이터 검증
+
+수비 포인트 랭킹을 FCMZ(축구)·FCMZ 풋살에서 직접 조회해 검증. 축구 FCMZ는 김선휘 40점(무실점 20쿼터) 1위로 정상 노출·계산 정합성 확인. 풋살(FCMZ 풋살)은 포지션 체계가 FIXO/ALA/PIVO라 CB/FB/WB(대상 role)가 존재하지 않아 대상 선수 0명 → 카드 자체가 안 보임(버그 아니라 설계상 당연한 결과).
+
+### 112차 후속② — 가이드·랜딩 기능 갭 분석 + 보강
+
+**커밋**: aa95e88 `docs(help,landing): surface defender points and other missing features`.
+
+Explore 에이전트로 `/help`(앱 사용법)와 랜딩(`src/app/login/sections/`)에 실제 구현된 기능이 빠짐없이 소개되는지 전수 대조. 수비 포인트 랭킹·GK 무실점 쿼터 랭킹·경기장 지도 링크가 가이드·랜딩 둘 다 누락, 풋살 키퍼 룰렛·시즌 관리는 랜딩만 누락된 것을 발견. "운영진 평점"은 잠정 도입 정책상 노출 최소화가 목적이라 의도적 미노출(갭 아님)임을 구분해 확인. `help/page.tsx`에 "포지션별 기여 랭킹" 한 줄, `MoreFeaturesSection.tsx`에 카드 4개(포지션별 기여 랭킹·풋살 키퍼 룰렛·경기장 지도·시즌 관리) 추가.
+
+### 112차 후속③ — 0:0 무승부 표시 버그 근본 수정
+
+**커밋**: 6bcdd75 `fix(matches): show 0:0 for completed scoreless matches`.
+
+사용자 신고: 0:0으로 끝난 상대전이 경기 목록에서 "결과 미기록"으로 표시됨. 근본 원인은 `getMatchesData`(SSR)가 골 0건 완료 경기를 `null`(미기록)로, `api/matches/route`(API)는 같은 조건을 `"0:0"`으로 내는 **두 경로의 정반대 default** — 102차 때 "의도적 차이(보존)"로 문서화됐던 것이 실은 화면마다 다르게 보이는 잠복 버그였음. 완료된 상대전은 골 0건도 "0:0"(무승부)으로 SSR·API·`MatchesClient.tsx` 3경로 동시 통일, EVENT(행사)는 점수 영역 숨김. `matchScore.ts` 주석 + `reference_goal_score_aggregation_dual_rule.md` 메모리 정정.
+
+**트레이드오프**: "골 미기록"과 "진짜 0:0"은 데이터로 구분 불가(둘 다 골 0건). 활동 유무로 구분하는 제3안은 복잡도 대비 실익 낮아 기각, 사용자와 논의해 "완료=0:0, 골 등록 시 갱신" 정책으로 확정.
+
+**교훈**: 같은 로직의 다중 경로는 메인 분기뿐 아니라 빈 입력·엣지케이스 default까지 대조해야 잠복 불일치를 발견할 수 있음. 기능 갭 분석 시 "진짜 누락"과 "의도적 미노출"을 먼저 구분해야 함.
+
+## 111차 (2026-07-03, KST) — iOS 하단 탭바 전술 탭 재발 진단 + 수정
+
+**커밋**: d37a3c9 `fix(mobile): clip match-detail/tactics wrappers so iOS pins bottom tab bar`. main 푸시·클린 빌드 통과.
+
+### 신고 내용
+
+아이폰 유저가 경기 상세 **전술 탭**에서 스크롤 시 하단 고정 탭바가 화면 중간으로 떠오르는 현상 재신고. 스크린샷 + "지난번에 수정했던 현상인데 왜그러는거야"라는 모호한 발화만 제공.
+
+### 실제 원인 & 수정
+
+- 6/30 커밋 5331f38(106차)가 `html/body`(globals.css) + `ClientLayout.tsx` 루트 div만 `overflow-x: hidden→clip`으로 스윕했는데, **경기상세·전술 탭 콘텐츠 래퍼 2곳이 누락**됨: `MatchDetailClient.tsx`(grid 래퍼, 원래 0cafdbe 3/30 생성) · `MatchTacticsTab.tsx`(flex 래퍼, 원래 1bf2227 4/17 생성).
+- `overflow-x: hidden`은 `overflow-y`를 `auto`로 승격시켜 스크롤 컨테이너를 생성 → iOS Safari가 모멘텀 스크롤 중 `position:fixed` 탭바를 잘못 합성해 중간으로 띄움. 전술 탭은 두 래퍼가 겹쳐 유일하게 재발.
+- 두 래퍼 `overflow-x-hidden` → `overflow-x-clip` 전환. 코드베이스 전체 `overflow-x-hidden` **0개** 상태 달성.
+- **정직한 한계**: 두 래퍼는 nav의 조상이 아니라 형제(nav는 ClientLayout 루트 직계 자식) — 엄격한 containing-block 규칙상 형제 스크롤 컨테이너는 fixed에 영향 없어야 함. 이 수정이 확실한 원인이라 100% 장담 못 함. iOS 실기기 재현 불가, 사용자 재확인 대기.
+
+### 삽질 2건
+
+1. 스크린샷의 역할가이드 "배치 기록이 없어요" 카드에 앵커링해 엉뚱한 곳(MatchRoleGuide user_id/member_id 매칭 버그) 조사 → 사용자가 "하단 네비게이션이 스크롤시 가운데로 올라간다"고 재정정.
+2. 정정 후에도 "이 overflow-x-hidden은 3~4월 잔재"라고 추측 발언 → 사용자가 "일주일 안됐다"고 재정정, git log 확인 결과 실제로는 6/30(5331f38) 수정이 맞았음.
+
+### 이어갈 항목
+
+- **[최우선] 아이폰 실기기 재확인** — 여전히 뜨면 iOS 버전(16 미만이면 clip 미지원)·전술 탭만인지 전 탭인지 확인 필요.
+- **[별도 발견, 미착수] 역할 가이드 메타슬롯 미인식** — MatchRoleGuide가 주심/부심/촬영 메타슬롯 배정자에게 "배치 기록 없음" 오표시. 110차에 전술판 쪽만 라벨 수정(cee4d9e)하고 역할가이드는 안 고친 드리프트.
 
 ## 110차 (2026-07-02, KST) — 전술판 쿼터표시 개선 + 선수목록 전수정렬
 

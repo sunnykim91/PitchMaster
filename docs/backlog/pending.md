@@ -1,11 +1,39 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=131팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-07-02 (110차 회고 — 전술판 쿼터 매트릭스 발견성 개선 추가)
+last_updated: 2026-07-06 (112차 회고 갱신 — 배포반영 확인 항목에 aa95e88·6bcdd75 추가, FCMZ 검증 완료 체크)
 related: [completed-recent.md, reviews.md]
 ---
 
 # 미완료 백로그
+
+## 112차 신규 추가 (2026-07-06) — 수비 포인트 랭킹 + 후속 3건
+
+### Vercel 배포 프로덕션 반영 확인 (HIGH, 즉시)
+- **배경**: `feat(records): add defender points ranking by tactics-board position`(67e2801) + `docs(help,landing): surface defender points and other missing features`(aa95e88) + `fix(matches): show 0:0 for completed scoreless matches`(6bcdd75) 3커밋·main 푸시 완료. 배포 반영 확인 필요.
+- [ ] `/records` 팀 랭킹 탭에 "수비 포인트" 카드 프로덕션 노출 확인
+- [ ] `/help`·랜딩 `MoreFeaturesSection` 신규 카드(포지션별 기여 랭킹·키퍼 룰렛·경기장 지도·시즌 관리) 프로덕션 노출 확인
+- [ ] 완료된 상대전 0:0 경기가 경기 목록에서 "결과 미기록" 아닌 "0:0"으로 뜨는지 프로덕션 확인
+
+### 수비 포인트 가중치(×2·×3) 자연스러움 재검토 (MEDIUM, 실사용 후)
+- **배경**: 무실점 쿼터×2 + 무실점 경기×3 산식은 사용자 확정치이나, 실제 화면에서 순위 체감이 자연스러운지는 배포 후 재검토 필요.
+- [ ] 배포 후 FC.LIBRE B 등 실팀 화면에서 가중치 체감 재검토
+- [x] 사용자가 FCMZ 데이터로 추가 검증 완료 (112차 후속① — 축구 1위 확인, 풋살은 포지션체계상 대상외 확인) — 산식 변경 불필요로 판단
+
+### 수비 포인트 미기입 경기 인플레이션 (LOW, 현행 유지 확정)
+- **배경**: 골 데이터가 아예 없는 경기는 무실점으로 오인돼 수비 포인트가 부풀 수 있음. 사용자가 코드 가드 대신 "현행 유지 + 안내문 대응"으로 결정.
+- [ ] 필요 시 안내문(전술판 미입력 시 무실점 경기 보너스 미부여) 진우님께 전달 여부 확인
+
+## 111차 신규 추가 (2026-07-03) — iOS 하단 탭바 전술 탭 수정 후속
+
+### 아이폰 실기기 재확인 (HIGH, 즉시)
+- **배경**: `MatchDetailClient.tsx`·`MatchTacticsTab.tsx` 콘텐츠 래퍼 2곳을 `overflow-x-hidden`→`overflow-x-clip` 전환(d37a3c9)으로 수정했으나, 두 래퍼는 nav의 조상이 아니라 형제 구조라 이 수정이 100% 확실한 원인이라 장담 못 함. iOS 실기기 재현 불가한 개발 환경 한계.
+- [ ] 신고한 아이폰 유저에게 배포본에서 전술 탭 스크롤 재확인 요청
+- [ ] 여전히 뜨면: (a) iOS 버전 확인 — 16 미만이면 `overflow-x: clip` 미지원, 다른 접근 필요 (b) 전술 탭만인지 전 탭(홈/기록/회비)인지 확인 — 전자면 전술 콘텐츠 문제 남음, 후자면 nav 조상/전역(반투명 nav 배경 컴포지팅 or iOS 버전) 재탐색
+
+### 역할 가이드 메타슬롯(주심/부심/촬영) 미인식 (MEDIUM)
+- **배경**: `src/lib/positionRoles/playerAssignments.ts`의 `findRoleForSlot()`이 `__referee`·`__linesman1/2`·`__camera` 메타슬롯을 포메이션 템플릿에서 못 찾아 null 반환 → MatchRoleGuide가 해당 선수에게 "배치 기록이 없어요"를 잘못 표시. 6/27 경기 4쿼터 김영민 주심 배정 건에서 실증. 110차에 전술판 선수목록엔 `META_SLOT_LABELS` 라벨을 추가했지만(cee4d9e) 역할가이드엔 미적용된 드리프트.
+- [ ] "이번 경기 주심/부심/촬영이에요" 식 안내 문구 추가 검토 (findRoleForSlot에 메타슬롯 분기 추가)
 
 ## 110차 신규 추가 (2026-07-02) — 전술판 쿼터 표시 후속
 
@@ -31,11 +59,11 @@ related: [completed-recent.md, reviews.md]
 - [x] 프로덕션 200 확인 · 사이트맵 포함 확인 · GSC 색인 재요청(사용자)
 - [ ] (모니터링) 다음 배치 푸시에서 vercel-ignore.sh 수정이 정상 동작하는지 1회 확인
 
-### G6 네이버·티스토리 발행 (MEDIUM, 다른 날)
+### ✅ G6 네이버·티스토리 발행 → 완료 (2026-07-06, 사용자 발행 보고)
 - **배경**: 109차에 G5(풋살쿼터)를 7/1 네이버·티스토리 발행 완료. 같은 날 G6 발행은 빈도 과다(1일 2편 스팸 위험).
 - 초안 파일: `docs/blog-guide-soccer-club-operations-naver.md`, `docs/blog-guide-soccer-club-operations-tistory.md`
-- [ ] 7/2 이후 네이버 블로그 G6 발행
-- [ ] 7/2+1일 이후 티스토리 G6 발행
+- [x] 네이버 블로그 G6 발행 완료 (7/6)
+- [x] 티스토리 G6 발행 완료 (7/6) → **발행 대기 블로그 0개**
 
 ### 경쟁사 감시 체크포인트 — 월 1회 재추적 업데이트 (MEDIUM, 상시)
 - **배경**: 109차 전수 조사에서 조기싸커 Android+AI, 축구고 회비+AI가 빠르게 변한 것 확인. 기존 107차 항목에 추가 상세 반영.
