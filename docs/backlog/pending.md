@@ -1,11 +1,38 @@
 ---
 title: 개선 백로그 — 미완료 (HIGH/MEDIUM/LOW)
 summary: 우선순위별 미완료 항목 정리. HIGH=131팀 운영 직접 영향, MEDIUM=팀 50+ 시, LOW=팀 100+ 시
-last_updated: 2026-07-06 (112차 회고 갱신 — 배포반영 확인 항목에 aa95e88·6bcdd75 추가, FCMZ 검증 완료 체크)
+last_updated: 2026-07-06 (113차 회고 갱신 — 마케팅 전략·유튜브 아웃리치·문서 감사 후속 추가)
 related: [completed-recent.md, reviews.md]
 ---
 
 # 미완료 백로그
+
+## 113차 신규 추가 (2026-07-06) — 마케팅 전략 재프레이밍 + 유튜브 아웃리치 + 문서 감사 후속
+
+### Vercel 배포 프로덕션 반영 확인 (HIGH, 즉시)
+- **배경**: `chore: audit cleanup`(0499faa) + `docs: session marketing/GEO plans + backlog updates`(eaca945) 문서·카피 위주 커밋 2건 main 푸시 완료.
+- [ ] `/help` AI 기능 안내가 "3종(전술 코치·풀플랜·OCR)"로 정정 반영됐는지, 랜딩 `AboutSection`·`FaqSection` 완화 카피 반영 확인
+- [ ] G6 가이드(`/guide/soccer-club-operations`) 페르소나가 "회장"으로 바뀐 것 확인
+- [ ] CLAUDE.md·README 최신 수치(145팀/690명, 테스트 900+) 반영은 문서 전용이라 별도 확인 불필요
+
+### 6/30 활성화 업데이트 효과 재측정 (HIGH, 2026-07-14경)
+- **배경**: 107~109차 온보딩 활성화 재배치(09306fb)가 6/30 전후 배포. 113차 재측정(활성화25%·커밋잔존42%·구경꾼75%)은 대부분 그 이전 가입 코호트라 개선 효과 미반영.
+- [ ] 7/14경 `scripts/retention-metrics.js`로 "6/30 이후 가입 팀"만 코호트 격리해 재측정
+- [ ] GA4 전환율(team_create→match_create→invite_sent→team_join)도 함께 확인 (107차 항목과 연계)
+
+### 유튜브 아웃리치 실행 (MEDIUM, 사용자 직접)
+- **배경**: `docs/youtube-outreach-plan.md` 채널 후보·메일 초안 완료(113차). 무료협찬→성과형(CPA)→앵커1유료 순.
+- [ ] 각 후보 채널(동고FC·한마음FC 등) 유튜브 "정보" 탭에서 비즈니스 이메일·최근 업로드일 확인
+- [ ] A(무료 협찬) 메일 5~10곳 동시 발송
+- [ ] 조기싸커 인스타 실제 집행 여부 확인 → `docs/competitors.md`·`reference_competitor_jogisoccer.md` 갱신용 근거 확보
+
+### `.claude/rules/ai-features.md` 선수 시그니처 행 정정 (LOW)
+- **배경**: 113차 문서 감사 중 발견 — `ai-features.md:34`가 "선수 시그니처" 모델을 "Haiku 4.5"(LLM)로 잘못 표기. 실제는 `playerCardUtils.ts:77 generateSignature()`(주석 "룰 기반") — 룰 기반. 이번엔 시간 관계상 미수정.
+- [ ] `.claude/rules/ai-features.md:34` 행을 "룰 기반(패턴 조합)"으로 정정
+
+### D그룹 개인 파일 처리 결정 (LOW)
+- **배경**: `docs/resume-pitchmaster-update.md`·`docs/newscreen/`·`docs/tossplace-jd.md`·지원서 PDF·`scripts/setup-keeper-test.mjs`·`scripts/start-pitchmaster.sh`가 미커밋 상태로 방치 중. 개인/지원서 파일이라 113차 감사 커밋에서 의도적으로 제외.
+- [ ] `.gitignore` 추가 여부 또는 커밋 여부 사용자 결정
 
 ## 112차 신규 추가 (2026-07-06) — 수비 포인트 랭킹 + 후속 3건
 

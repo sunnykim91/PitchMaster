@@ -1,12 +1,50 @@
 ---
-title: 개선 백로그 — 최근 완료 (16~112차)
-summary: 2026-04-11~07-06 진행. 최근: 112차 FC.LIBRE B 노진우 요청으로 수비 포인트 랭킹 신규(67e2801, 무실점쿼터×2+무실점경기×3, reviewer 이중계산 근본수정) + FCMZ 실데이터 검증 + 가이드·랜딩 기능 갭 보강(aa95e88) + 0:0 무승부 표시 버그 근본수정(6bcdd75, getMatchesData/matches route 정반대 default 통일). 111차 iOS 하단탭바 전술탭 재발 진단·수정(d37a3c9, match-detail/tactics 래퍼 2곳 clip 전환). 110차 전술판 쿼터표시 개선(5059a66~cee4d9e)+선수목록 전수정렬+공용컴포넌트화.
+title: 개선 백로그 — 최근 완료 (16~113차)
+summary: 2026-04-11~07-06 진행. 최근: 113차 마케팅 전략 재프레이밍(유료 인스타 스케일보다 유기+활성화 우선, 재참여채널 부재 근거)+유입실측(활성화25%·커밋42%·구경꾼75%)+유튜브 아웃리치 리서치(docs/youtube-outreach-plan.md)+G6 발행확인+랜딩·가이드·문서 전수감사(README env표버그·수치갱신145팀/690명·AI5종→3종정정·dead code 제거, 0499faa·eaca945). 112차 FC.LIBRE B 노진우 요청으로 수비 포인트 랭킹 신규(67e2801, 무실점쿼터×2+무실점경기×3, reviewer 이중계산 근본수정) + FCMZ 실데이터 검증 + 가이드·랜딩 기능 갭 보강(aa95e88) + 0:0 무승부 표시 버그 근본수정(6bcdd75). 111차 iOS 하단탭바 전술탭 재발 진단·수정(d37a3c9).
 sections: [104차(2026-06-29) 외부코드분석8항목검증(5정확1과소2outdated)·D8스크린샷폴더일원화(6c09621)·C4일반API rate limit(bbc7350:apiRateLimit.ts goals/posts/comments/dues 테스트8케이스)·D7카드통일방향전환(card-stat cascade불가→Card표준문서화+dead제거)·B묶음(input-validation.md현행화+.env.example신설)·삽질:Bash_POSIX_sh_vs_PowerShell_here-string·COUNT쿼리mock큐밀림, 103차(2026-06-26~27) FC발로만18경기이관(e149a42)·출석률0%_computeAttendanceRateWithHistory(278e1ef)·iOS_backdrop-blur_9곳(f707f79·8464b5c)·전술판후반교체빈화면(d42602b)·color-mix잔여4곳(c2cc959)·삽질:푸시의사_늦게확인·미수정:EditMatchInfoForm·MatchVoteMemberPanel동적보간틴트, 102차(2026-06-26) MVP_raw버그resolveValidMvps·aggregateMvpsByMatch·computeMatchScore단일소스·고아3·KST헬퍼·CLAUDE.md481→267줄path-scoped·MEMORY한도정정, 101차(2026-06-26) MAYBE=미투표벌금확정(de39a23)·cron매시간·FCMZ선납2명데이터정리(사용자SQL)·커밋2695632·2be1690·삽질:payment-status_vs_exemptions오진단·team_members.name없음6차재발, 99차(2026-06-26) 콘텐츠오정보전수감사+수정(fac7ac7·20파일)·선납동선정정(PrepaymentRegisterModal_00053_DROP_후_가이드미동기화)·알림과장정정(TWA한정→브라우저정상·97차pending해소)·게시판2종·용병전술탭·일괄투표→다가오는경기·휴회면제·풋살18종·자체전통계·경미4건·tsc+빌드OK·삽질:한글경로오타4회·에이전트false_positive, 98차(2026-06-25) Safari_color-mix_투명배경_전수수정(2335f46·89파일_532곳_slash-alpha변환)·삽질text포함_과대스코프→배경만좁힘·⚠️97차알림안내4곳오정보pending이월, 97차(2026-06-25) joined_at소급부과5경로(e2c6a39)+출석률7곳공통헬퍼attendanceEligibility(ea5411a)+LEFT/BANNED_vs_DORMANT생명주기(f4bb590)+휴면팀전환버그(6f4aa7b)+알림안내보강(092a1a2)+FAQ가이드사실검증(82d7eda)+알림블로그초안(d8b2369)·⚠️알림안내4곳과장오류라이브박힘_정정다음세션, 96차(2026-06-25) 푸시알림3버그(bb7f02b)+seen/read분리(bf38c0d·migration00079)+죽은링크(26ed7a7)+모바일2버그iOS줌/탭깜빡임(50f2e33), 95차(2026-06-24) PlaywrightE2E37스펙확장(3프로젝트·인증·화면스모크·SEO·권한[dev-login가장]·write-flow[임시생성+afterEach정리])+성능스위트(playwright.perf.config·Web Vitals+Lighthouse·prod대상)+하이드레이션수정(formatKstDateTime/Date·toLocale제거4곳·단위테스트)+errorGuard공용화(7469073~216cd0c푸시), 94차(2026-06-24) MatchCalendar PC넓은화면버그2건(ad4dd2a·eb486d6)·빈칸aspect-square→min-h-52px+요일헤더배경틴트제거·feedback_aspect_square_grid_trap신설, 93차(2026-06-24) 캘린더일요일시작(ed563b6·ad4dd2a)·공동MVP·resolveValidMvps신설·11경로정정(abc0520)·투표공유GA+버튼(605edd6)·로그인복귀경로(3a6dac7)·성능최적화2·3라운드(ad56e39), 92차(2026-06-23) 풋살키퍼순번룰렛(6f3481d~014eeb5·마이그00077·KeeperRotationCard)·가이드/help이관(1515ab5·CLAUDE.md박제↔미이관불일치수정)·SEO한글병기+랜딩+5카드(da57cc1)·경기수정폼유형선택(c5bd1c3)·출석점방향수정(501fb91)·UX5회재설계교훈·과설계미루기반복, 91차(2026-06-23) 풋살·축구종목분기버그전수조사·P0용병폼축구포지션하드코딩수정(6e27da7)·guestPositionOptions상수sportType분기·spot check에이전트오판2건차단·#3풋살3~4인role불일치미수정·#4·#5포지션한국어미적용미수정, 90차(2026-06-22) LINEOUT FC 설경민 제보 2건·잔고UX강제선택(pendingBalance)·벌금면제정책정정(LEAVE/INJURED만)·getPenaltyExemptUserIds신설·3경로동시수정·DB복구3건(d484f41)·vitest853·컬럼명오류5차재발교훈, 89차(2026-06-21) vote-reminder KST timezone버그(3605f42)·앱전역"오늘"=UTC버그(eea164d)·getKstToday헬퍼신설·12파일교체·크론13개전수점검, 88차(2026-06-19) 이미지압축(e05dee0)·자체전3팀Phase1(45d08d3)·Phase2+통계수정(2e15b07)·포레마제TWA앱유입분석(ref:app.pitchmaster)·자체전집계다중경로함정·OVR부풀림수정·캘린더가드누락·div-in-p수정, 87차(2026-06-18) 네이티브FCM(a2295fa·fcc2672)·v1.0.8vc12Play심사·TWA삼성인터넷근본원인·notification페이로드강제·삽질3단계, 86차(2026-06-17) SEO가이드정비·잔존활성화재진단·TWA자동구독, 85차(2026-06-17) 이력서최신화·원티드111퍼센트지원용·Supabase실측6/16·과장6건정정(매주사용/320경기/120팀/알파테스트/필터구독/테스트수)·LLM SSE스트리밍+AdminUsageCard강점표면화·커밋없음, 84차(2026-06-14) 알림아이콘흰네모버그수정·badge-96.svg흰실루엣·TWA5밀도ic_notification_icon·v1.0.7vc11Play제출(0f52569), 83차(2026-06-11) 크론전수조사·push urgency·MatchInfoTab자체전·OCR캡합산·메모리2단인덱스, 82차후속(2026-06-11) /guide허브신설·Android Play스토어안내보정·SEO마케팅점검(a886661·cdf31b8), 82차(2026-06-11) GooglePlay정식출시v1.0.6·알파정리·Play배너·블로그출시후기, 80차(2026-06-09) 골기록수정UX버그·전서비스버그스윕, 79차(2026-06-09) G2가이드커밋발행·알파5차프로덕션신청접수, 78차(2026-06-08~09) 카카오로그인진단Q&A심화·LoginHelp신설·InAppBrowserBanner감지확대·온보딩미리보기·포지션힌트수정(커밋완료), 77차(2026-06-03~06-08) 미투표벌금cron버그·랜딩FAQ정직화·AI코치회원노출·가이드G1발행·참석자출석카드·사업다각도분석, 76차(2026-06-06) 랜딩GEO+FAQ개선·GEO진단·가이드#1발행·가이드#2미커밋, 75차(2026-06-06) ChatGPT 유입 누적 6명 확인·FC DGS·FC YUSIN 신규 가입 분석, 74차(2026-06-06) 이력서 원티드 작업·AI dead code 검증·Supabase 실측·이력서 재작성, 73차(2026-06-03) 2차 리뷰 보안·정합성 패치·auth 회귀 수정·자체전 AI 미노출, 72차 추가(2026-06-03) 투표마감 UTC→KST 핫픽스·cleanup, 72차 사업분석·잔존진단·알파 vc9 빌드·useApi SWR화·전술판 드래그·보안패치 13커밋·블로그 8편, 71차 게시판 SSR is_global 누락 버그 수정, 70차 경기상세 hydration최적화·dashboard task overhaul·온보딩 체크리스트·HintCard·N badge·TWA SW update·핫픽스 4건, 69차+ 블로그 6편 전채널+7편 초안·네이버 자체 통계 분석, 68차 알파 5차 준비·TWA referrer fix·UX 로딩 표준화 19파일·어드민 6팀 제외·블로그 6편, 67차 실사용 팀 활동 패턴 분석·본인팀 제외·전술영상·WelcomeCard v2 코호트, 66차-B 운영 데이터 조사·SEO 분석·블로그 5편 완주, 66차 매치 페이지 시안 v2 + 대시보드 풀 마이그 + hue cascade 버그 + 디자인 마이그 중단 결정, 65차 전술판 영상 평면화·알파 공지 게시물·블로그 4·5편·권한별UI·signup_source 3중망·종합점검, 64차 OVR 공식 재설계 + 시그니처 분기 보강 + AI 카피 라벨 정정 + 배지 제거, 63차 박제 정정 + pending.md outdated 항목 정리, 62차 전술 영상 편집기 전면 리팩토링 P1~P5 + DB 마이그레이션 + 게시판 linkify, 60차 가이드 통계 갱신·블로그 시리즈 + 알파 TWA fix + 전술 영상 sport_type 분기, 59차 경기 자동 종료 cron + 알파 테스터 연락처 + Supabase GRANT 대응, 58차 광고 5차 분석 + 온보딩 친절도 8건 개선 + 투표 현황 empty state fix, 57차 조기싸커 분석 + 운영공지·팀공지 + 페어 시너지 + IA 재정렬 + form-guard, 56차 후반 Supabase Disk IO + 동시성 fix + signup_source, 55차 전술판 영상 접근성·모바일 편집·GIF 공유 통합 + 진입 카드·카드 미리보기·합본 GIF·편집기 UX, 54차-2 Play Store 알파 테스터 시스템 신규 구축·v1.0.4 빈 release 발견·복사 모달 전환, 54차 광고 5차 게시·standalone HTML·OBS 재캡처·Gmail 전송 확인, 53차-2 50대 페르소나 UX Phase 2~4 본격 진행, 53차 랜딩 About·Comparison v0 리프레시+생일축하 노출, 52차 50대 페르소나 UX 감사·접근성 보강·MVP 후기탭 통합·골입력UX·랜딩 카피/SEO, 51차 가이드 워딩 정리+멀티PC 메모리 동기화, 50차 고도화 풀스윕·PitchScore전면제거·보안패치·성능개선, 49차 GA4 트래픽 채널 fix, 47차 후반 Play Console 신청서 + 광고 D 소재, 48차 휴면팀 캠페인·iOS 전략 상담·도달 채널 한계, 47차-2 랜딩 톤 보강+AboutSection+경기별 종목 분리+AI 캐시 완전 무효화, 47차 AI 캐시 무효화·FCMZ 데모·가이드 친절 톤 재작성·편집기 하드코딩 버그 수정, 46차 PitchScore Sunset·평가 UI 제거·조기싸커 분석·랜딩 Phase 1, 45차 PitchScore Phase 2C 완료·Feature Flag 전체 오픈·경기 후기 silent fail fix·알림 탭 라우팅, 44차 PitchScore Phase 2C·SSR 병렬화·UI 통일·favicon·SEO 진단, 43차 풋살 자동편성 외톨이 fix·vitest 21건·AI 풋살 동호회 톤·가상 전적 hallucination 차단, 42차 GA4 서버사이드·유니코드→SVG·PitchScore 종목 분리·블로그 발행·거짓 박제 사고 4건·MVP 정책(5/4 cutoff)·사고 4건, 41차 보안 풀스윕·RLS initPlan·선납 매칭·풋살 AI·역할 가이드 통일, 40차 회비 선납→면제 통합·PitchScore 카드 접힘·사이드바 라벨, 39차 광고 3차 결과 분석 + 4차 게시, 38차 입력 검증 사고 대응, 37차 조기싸커 분석 + 가이드 전면 개편, 36차 부심·회장보호·useApi fallback·sport_type 검증, 35차 SEO 안정화·푸시 사고·Realtime WAL·광고 분석, 34차 SEO 안정화·GA4·PWA 아이콘·마케팅, 33차 랜딩 v2 디자인·카피 정정, 32차 광고 ROI·SEO·OCR UX, 31차 라이트 모드 대비·OCR·역할 가이드·GA 수정, 30차 자동편성 버그 수정 + AI 코치 버튼 수정, 29차 투표 마감 UX + 서버 가드 + v1.0.2 기능, 28차 실사용자 CS 대응 + MVP 집계 통일, 27차 Supabase Advisor 해소 + TWA v1.0.1 빌드, 26차 역할 가이드 + 전술 탭 재정비, 25차 AI 시그니처 룰 전환 + 경기 후기 환각 수정, 24차 AI 코치 고도화, 23차 골 기록 UX, 21차 AI Phase 0+1+2+3, 20차 커리어 프로필 v0, 19차 출시 직전 QA, 18차 보안 스윕, 17차 v0 카드 이식, 16차 전술판 매칭·킬러 백엔드]
-last_updated: 2026-07-06 (112차 회고 갱신 — FCMZ 검증·가이드/랜딩 보강·0:0 버그수정 후속 추가)
+last_updated: 2026-07-06 (113차 회고 갱신 — 마케팅 전략 재프레이밍·유튜브 아웃리치·문서 전수감사 추가)
 related: [completed-archive.md, pending.md]
 ---
 
-# 최근 완료 (16~112차)
+# 최근 완료 (16~113차)
+
+## 113차 (2026-07-06, KST) — 마케팅 전략 재프레이밍 + 유튜브 아웃리치 + 문서 전수 감사
+
+**커밋**: 0499faa `chore: audit cleanup — refresh docs/README, fix env table, prune dead code & orphans`, eaca945 `docs: session marketing/GEO plans + backlog updates`. main 푸시·tsc 0·911테스트·클린빌드 통과.
+
+### 1. 마케팅 전략 재프레이밍
+
+사용자가 "인스타 마케팅으로 유입 풀 먼저 확보"를 주장 → 데이터로 재구성: 재참여 채널 부재(이메일 없음·푸시 구독 ~4명·이탈 회장 카톡 차단)로 휴면=영구손실("바닥 없는 양동이") → 유료 인스타 스케일보다 유기 채널(콘텐츠·유튜브·커뮤니티) + 활성화(가입→2번째 경기) 우선으로 결론. 경쟁사 구조 대조: 유료 인스타로 크는 건 매칭앱(플랩풋볼=VC자본+UGC), 동종 팀관리앱(축구고·조기싸커·동네축구)은 전부 오가닉·커뮤니티.
+
+**사용자 지적 수용 정정 2건**: ① 조기싸커 인스타 실제 집행 여부 — `docs/competitors.md` 메모가 stale일 수 있어 사용자 직접 관측 우선. ② "마케팅 하지마"로 뭉뚱그리지 않음 — 유료 인스타 스케일만 보류, 유튜버 아웃리치·콘텐츠 제작은 지금도 GO.
+
+### 2. 유입/활성화 실측 (라이브 DB)
+
+활성화 25%·커밋 팀 잔존 42%·구경꾼 75%. 가입 감속: 주간 신규 192→10명, 월간 신규 팀 35→17개. 유입 출처: direct 72%(구조적)·`ref:app.pitchmaster` 12%·naver 9%. 인스타 광고는 켜져 있을 때만 유입(지속성 0). 6/30 활성화 개선(107~109차) 효과는 코호트가 아직 배포 전이라 미측정 → 7/14경 재측정 필요.
+
+### 3. 유튜브 아웃리치 리서치 → `docs/youtube-outreach-plan.md`
+
+조기축구 "팀 운영" 니치는 마이크로 채널 위주(동네축구고수/동고FC ~10만, 조기축구촬영/한마음FC, 키킷, GOALE, 김진짜 서브14만). 무료협찬(A) + 성과형 CPA(B) + 앵커 1채널 유료(C) 3단 구조. 채널별 맞춤 아웃리치 메일 초안 3개 + 유튜브 해시태그 발굴 DIY 레시피 작성.
+
+### 4. GEO 블로그 — G6 발행 확인 + D4 폐기
+
+G6(축구 동호회 운영 A-Z) 네이버·티스토리 발행을 사용자 보고로 확인(7/6) → **발행 대기 블로그 0개**. D4(다음카페 시딩글)는 사용자 지시로 폐기.
+
+### 5. 랜딩·가이드·문서·dead 코드 전수 감사 (에이전트 4개 병렬, 발견만 먼저 보고 → 사용자 A·B·C 승인 후 수정)
+
+- **A(사실 오류)**: README env 변수표 `NEXTAUTH_SECRET`→`SESSION_SECRET` 정정 + 누락 8변수 추가, 테스트 수치(37파일/615→58파일/905) 갱신. CLAUDE.md 실사용 수치 131팀/627명→**145팀/690명**(2026-07-06), 테스트 820+→900+.
+- **B(과장/오정보)**: 랜딩 `AboutSection`·`FaqSection` 과장 완화, `/help` AI 기능 "5종"→실제 **LLM 3종**(풀플랜·코치·OCR)만으로 정정(후기·시그니처는 룰 기반, `playerCardUtils.ts:77` 코드 확인). G6 가이드 페르소나 총무→회장.
+- **C(dead code/orphan)**: `BeforeAfterSection.tsx`(650줄) 삭제, `aiMatchSummary.ts` LLM 함수 ~646줄 삭제(타입만 보존). `build-log.txt` 삭제+gitignore. orphan 스크린샷 15개·폐기 docs 16개 삭제.
+- 개인/지원서 파일은 `git add docs/` 대신 명시적 경로로만 스테이징해 커밋에서 제외.
+
+### 삽질·교훈
+
+1. **에이전트 오작동 spot-check**: 문서 감사 서브에이전트가 "completed"라며 반환한 내용이 실제 결과가 아니라 오케스트레이터 메타 문장이었음 → SendMessage로 재요청해 회수. `feedback_agent_result_spot_check.md`에 신규 변형 사례로 추가.
+2. **코드가 사실의 단일 소스**: `.claude/rules/ai-features.md:34`가 "선수 시그니처=Haiku 4.5"로 표기해 도메인 메모리(`domain_ai_release_state.md`)와 충돌 → `playerCardUtils.ts:77` 코드 확인으로 룰 기반임을 확정. 이 문서 자체는 이번엔 미수정(다음 세션 정정 후보).
+
+### 이어갈 항목
+
+pending.md "113차 신규 추가" 섹션 참조: 배포 확인(HIGH)·6/30 활성화 효과 재측정 7/14(HIGH)·유튜브 아웃리치 실행(MEDIUM)·ai-features.md 정정(LOW)·D그룹 개인 파일 결정(LOW).
 
 ## 112차 (2026-07-06, KST) — 수비 포인트 랭킹(Defender Points) 신규 구현
 
