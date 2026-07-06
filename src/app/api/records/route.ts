@@ -3,6 +3,7 @@ import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isTeamRecordMatch } from "@/lib/types";
 import { aggregateGkCleanSheets, buildGkAttendeesByMatch, isGkPreferred, type GkSquadRow, type GkGoalRow, type GkRosterMember } from "@/lib/server/getGoalkeeperStats";
+import { aggregateDefenderPoints, mergeDefenderStats, type DefenderSquadRow, type DefenderGoalRow } from "@/lib/server/getDefenderStats";
 import { computeAttendanceRateWithHistory } from "@/lib/attendanceEligibility";
 
 type MemberRow = {
@@ -247,6 +248,12 @@ export async function GET(request: NextRequest) {
     { fallback: { matchQuarterCounts, gkAttendeesByMatch } }
   );
 
+  // 수비 포인트(센터백·풀백·윙백) — 전술판 있는 상대전만. 폴백 없음. (노진우/FC.LIBRE B 요청)
+  const defMap = aggregateDefenderPoints(
+    ((gkSquadsRes.data ?? []) as DefenderSquadRow[]).filter((s) => regularSet.has(s.match_id)),
+    (concededGoalsRes.data ?? []) as DefenderGoalRow[]
+  );
+
   // 카운트 맵 빌드 — OPPONENT/UNKNOWN/MERCENARY 는 실 선수 ID 아닌 sentinel 이라 제외 (유령 키 방지)
   const GOAL_SENTINELS = new Set(["OPPONENT", "UNKNOWN", "MERCENARY"]);
   const goalMap = new Map<string, number>();
@@ -354,6 +361,10 @@ export async function GET(request: NextRequest) {
       { cleanSheets: 0, quarters: 0 }
     );
 
+    // 수비 포인트 — defMap 키도 playerId 혼재라 lookupIds 양쪽으로 합산 (경기 union으로 이중계산 방지)
+    const def = mergeDefenderStats(defMap, lookupIds);
+    const defenderPoints = def.points;
+
     return {
       memberId: userId ?? memberId,
       name,
@@ -371,6 +382,7 @@ export async function GET(request: NextRequest) {
       ...(avgRating !== undefined && { avgRating }),
       ...(ratingCount !== undefined && { ratingCount }),
       ...(gk.quarters > 0 && { gkCleanSheets: gk.cleanSheets, gkQuarters: gk.quarters }),
+      ...(defenderPoints > 0 && { defenderPoints, defenderCleanQuarters: def.cleanQuarters, defenderCleanMatches: def.cleanMatches }),
     };
   });
 

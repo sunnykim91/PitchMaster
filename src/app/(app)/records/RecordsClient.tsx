@@ -64,6 +64,10 @@ type RecordStat = {
   /** 키퍼 클린시트(무실점 쿼터) — 전술판에 GK로 배정된 쿼터가 있을 때만 채워짐 */
   gkCleanSheets?: number;
   gkQuarters?: number;
+  /** 수비 포인트(센터백·풀백·윙백) — 전술판에 수비로 선 쿼터가 있을 때만 채워짐 */
+  defenderPoints?: number;
+  defenderCleanQuarters?: number;
+  defenderCleanMatches?: number;
 };
 
 function mapSeason(raw: Record<string, unknown>): Season {
@@ -96,6 +100,9 @@ function mapRecord(raw: Record<string, unknown>): RecordStat {
     ratingCount: typeof raw.ratingCount === "number" ? Number(raw.ratingCount) : undefined,
     gkCleanSheets: typeof raw.gkCleanSheets === "number" ? Number(raw.gkCleanSheets) : undefined,
     gkQuarters: typeof raw.gkQuarters === "number" ? Number(raw.gkQuarters) : undefined,
+    defenderPoints: typeof raw.defenderPoints === "number" ? Number(raw.defenderPoints) : undefined,
+    defenderCleanQuarters: typeof raw.defenderCleanQuarters === "number" ? Number(raw.defenderCleanQuarters) : undefined,
+    defenderCleanMatches: typeof raw.defenderCleanMatches === "number" ? Number(raw.defenderCleanMatches) : undefined,
   };
 }
 
@@ -292,6 +299,15 @@ export default function RecordsClient({
       stats
         .filter((s) => (s.gkQuarters ?? 0) > 0)
         .sort((a, b) => (b.gkCleanSheets ?? 0) - (a.gkCleanSheets ?? 0))
+        .slice(0, 3),
+    [stats]
+  );
+  // 수비 포인트 랭킹 — 전술판에 수비(센터백·풀백·윙백)로 선 선수만 (포인트 > 0)
+  const topDefenders = useMemo(
+    () =>
+      stats
+        .filter((s) => (s.defenderPoints ?? 0) > 0)
+        .sort((a, b) => (b.defenderPoints ?? 0) - (a.defenderPoints ?? 0))
         .slice(0, 3),
     [stats]
   );
@@ -696,9 +712,16 @@ export default function RecordsClient({
               ...(topCleanSheets.length > 0 ? [{
                 title: "무실점 쿼터", list: topCleanSheets, getValue: (s: RecordStat) => s.gkCleanSheets ?? 0, color: "#a78bfa",
               }] : []),
+              // 수비 포인트(센터백·풀백·윙백) — 전술판에 수비로 선 선수가 있을 때만 노출
+              ...(topDefenders.length > 0 ? [{
+                title: "수비 포인트", desc: "무실점 쿼터 + 무실점 경기", list: topDefenders, getValue: (s: RecordStat) => s.defenderPoints ?? 0, color: "#14b8a6",
+              }] : []),
               ].map((group) => (
                 <Card key={group.title} className="bg-secondary border-0 p-4">
                   <p className="text-sm font-bold">{group.title}</p>
+                  {"desc" in group && group.desc ? (
+                    <p className="mt-0.5 text-[11px] font-normal text-muted-foreground">{group.desc}</p>
+                  ) : null}
                   <div className="mt-3 space-y-2">
                     {group.list.map((item, index) => (
                       <div

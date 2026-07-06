@@ -3,6 +3,7 @@ import { aggregateMvpsByMatch, type MvpVoteRow } from "@/lib/mvpThreshold";
 import { isTeamRecordMatch, type Role } from "@/lib/types";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { aggregateGkCleanSheets, buildGkAttendeesByMatch, isGkPreferred, type GkSquadRow, type GkGoalRow, type GkRosterMember } from "@/lib/server/getGoalkeeperStats";
+import { aggregateDefenderPoints, mergeDefenderStats, type DefenderSquadRow, type DefenderGoalRow } from "@/lib/server/getDefenderStats";
 import { computeAttendanceRateWithHistory } from "@/lib/attendanceEligibility";
 
 type SeasonRow = { id: string; is_active: boolean; start_date: string; end_date: string; [key: string]: unknown };
@@ -180,6 +181,12 @@ export async function getRecordsData(teamId: string) {
     { fallback: { matchQuarterCounts, gkAttendeesByMatch } }
   );
 
+  // 수비 포인트(센터백·풀백·윙백) — 전술판 있는 상대전만. 폴백 없음. (노진우/FC.LIBRE B 요청)
+  const defMap = aggregateDefenderPoints(
+    ((squadsRes.data ?? []) as DefenderSquadRow[]).filter((s) => regularSet.has(s.match_id)),
+    goalRows as DefenderGoalRow[]
+  );
+
   const goalMap = new Map<string, number>();
   for (const row of goalRows) {
     if (row.scorer_id && row.scorer_id !== "OPPONENT" && !row.is_own_goal) {
@@ -264,6 +271,10 @@ export async function getRecordsData(teamId: string) {
       { cleanSheets: 0, quarters: 0 }
     );
 
+    // 수비 포인트 — defMap 키도 playerId 혼재라 ids 양쪽으로 합산 (경기 union으로 이중계산 방지)
+    const def = mergeDefenderStats(defMap, ids);
+    const defenderPoints = def.points;
+
     return {
       memberId: userId ?? memberId,
       name: user?.name ?? m.pre_name ?? "",
@@ -281,6 +292,7 @@ export async function getRecordsData(teamId: string) {
       ...(avgRating !== undefined && { avgRating }),
       ...(ratingCount !== undefined && { ratingCount }),
       ...(gk.quarters > 0 && { gkCleanSheets: gk.cleanSheets, gkQuarters: gk.quarters }),
+      ...(defenderPoints > 0 && { defenderPoints, defenderCleanQuarters: def.cleanQuarters, defenderCleanMatches: def.cleanMatches }),
     };
   });
 
