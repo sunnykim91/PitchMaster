@@ -906,7 +906,7 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
                             {resultMark && <span className="pm-past-mark">{resultMark}</span>}
                           </div>
                         )
-                      ) : (
+                      ) : match.matchType === "EVENT" ? null : (
                         <div className="pm-past-score pm-past-score--empty">결과 미기록</div>
                       )}
                     </div>

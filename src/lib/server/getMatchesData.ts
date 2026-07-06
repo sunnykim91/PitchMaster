@@ -50,14 +50,15 @@ export async function getMatchesData(teamId: string): Promise<{ matches: DbMatch
     (byMatch[g.match_id] ??= []).push(g as { scorer_id: string; is_own_goal: boolean; side: string | null });
   }
 
-  function computeScore(matchId: string): string | null {
-    const mg = byMatch[matchId];
-    // 골 미기록 경기는 null (matches route 와 의도적으로 다름 — route 는 "0 : 0")
-    if (!mg || mg.length === 0) return null;
-    return computeMatchScore(mg, internalIds.has(matchId));
+  function computeScore(m: DbMatchRow): string | null {
+    if (m.status !== "COMPLETED") return null;
+    // 행사(EVENT)는 점수 개념이 없어 스코어 영역을 숨긴다
+    if (m.match_type === "EVENT") return null;
+    // 완료된 상대전은 골 0건이어도 "0 : 0"(무승부). 골이 등록되면 그대로 반영. matches route 와 동일.
+    return computeMatchScore(byMatch[m.id] ?? [], internalIds.has(m.id));
   }
 
   return {
-    matches: matches.map((m) => ({ ...m, score: computeScore(m.id) })),
+    matches: matches.map((m) => ({ ...m, score: computeScore(m) })),
   };
 }

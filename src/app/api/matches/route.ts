@@ -58,9 +58,11 @@ export async function GET() {
       if (!arr) { arr = []; goalsByMatch.set(g.match_id, arr); }
       arr.push(g);
     }
+    const eventIds = new Set(rows.filter((m) => m.match_type === "EVENT").map((m) => m.id));
     const map: Record<string, string> = {};
     for (const matchId of completedIds) {
-      // 빈 골 → "0 : 0" (getMatchesData 와 의도적으로 다름 — 거긴 null)
+      // 행사(EVENT)는 점수 없음 → scoreMap 미포함(null). 상대전은 골 0건도 "0 : 0"(무승부). getMatchesData 와 동일.
+      if (eventIds.has(matchId)) continue;
       const matchGoals = goalsByMatch.get(matchId) ?? [];
       map[matchId] = computeMatchScore(matchGoals, internalIds.has(matchId));
     }
