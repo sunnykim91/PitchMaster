@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { shareTeamInvite } from "@/lib/kakaoShare";
 
+/** 데이터 이관 문의 수신 이메일 (파일 첨부 가능). */
+const MIGRATE_EMAIL = "tjsgnl2002@gmail.com";
+
 export type WelcomeMatch = {
   id: string;
   when: string;
@@ -139,6 +142,20 @@ function WelcomeCreated({
   const totalCount = effectiveSteps.length;
   const progress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
+  // 기존 엑셀·타 앱 기록 이관 문의 (신규 회장 대상). 파일 첨부 가능한 이메일로 연결.
+  const migrateMailto = `mailto:${MIGRATE_EMAIL}?subject=${encodeURIComponent(
+    `[PitchMaster] ${teamName || "우리 팀"} 데이터 이관 문의`,
+  )}&body=${encodeURIComponent(
+    [
+      `안녕하세요! ${teamName || "우리 팀"} 팀의 기존 기록을 옮기고 싶어요.`,
+      "",
+      "• 자료 형태 (엑셀 / 다른 앱 / 사진 등):",
+      "• 옮기고 싶은 내용 (회원 명단 / 경기 기록 / 회비 등):",
+      "",
+      "※ 가지고 계신 파일을 이 메일에 첨부해 보내주시면 확인 후 옮겨드릴게요.",
+    ].join("\n"),
+  )}`;
+
   return (
     <div className="pm-welcome">
       <CloseBtn onClick={onDismiss} />
@@ -193,6 +210,20 @@ function WelcomeCreated({
           </button>
         </div>
       </div>
+
+      {/* 기존 데이터 이관 안내 — 엑셀·타 앱 기록을 옮겨오려는 신규 회장용 */}
+      <a className="pm-migrate" href={migrateMailto}>
+        <span className="pm-migrate-icon" aria-hidden>
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+            <rect x="2.5" y="4.5" width="15" height="11" rx="2" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M3 6l7 5 7-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+        <span className="pm-migrate-body">
+          <span className="pm-migrate-title">예전 기록, 그대로 옮겨드려요</span>
+          <span className="pm-migrate-sub">엑셀·다른 앱에 쌓아둔 회원·경기 기록이 있다면 이메일로 문의 →</span>
+        </span>
+      </a>
 
       {/* 5단계 체크리스트 (Phase 2 — 68차C) */}
       {effectiveSteps.length > 0 && (
