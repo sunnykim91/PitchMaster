@@ -724,6 +724,19 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
                     <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </Link>
+                <Link
+                  href="/help"
+                  style={{
+                    display: "inline-block",
+                    marginTop: 14,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "hsl(var(--muted-foreground))",
+                    textDecoration: "none",
+                  }}
+                >
+                  앱이 처음이세요? 사용법 가이드 보기 →
+                </Link>
               </div>
             </div>
           ) : !showWizard && isStaffOrAbove(role) ? (

@@ -217,8 +217,8 @@ export default function HelpPage() {
           <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground leading-relaxed pl-1">
             <li>주소창에 <strong className="text-foreground">pitch-master.app</strong>을 직접 치거나, 회장·총무가 단톡방에 던진 <strong className="text-foreground">초대 링크</strong>를 누르면 시작 화면이 떠요.</li>
             <li>화면에 보이는 <strong className="text-foreground">[무료로 시작하기]</strong> 버튼을 누르면 카카오 로그인 창으로 넘어갑니다.</li>
-            <li>로그인이 끝나면 <strong className="text-foreground">[기본 정보를 입력해주세요]</strong> 화면이 뜹니다. <strong className="text-foreground">이름</strong>만 채워도 다음 단계로 넘어갈 수 있고, 생년월일·주발·선호 포지션은 나중에 설정에서 채워도 됩니다.</li>
-            <li>마지막으로 <strong className="text-foreground">[팀 만들기]</strong> 또는 <strong className="text-foreground">[팀 검색해서 가입]</strong> 둘 중 하나를 고르면 가입 끝. 초대 링크로 들어왔다면 이 단계가 자동으로 건너뛰어지고 그 팀에 바로 합류돼요.</li>
+            <li>로그인이 끝나면 <strong className="text-foreground">이름·프로필을 입력하는 화면</strong>이 떠요. <strong className="text-foreground">이름</strong>만 채워도 다음 단계로 넘어갈 수 있고, 생년월일·주발·선호 포지션은 나중에 설정에서 채워도 됩니다.</li>
+            <li>마지막으로 <strong className="text-foreground">[새 팀 만들기]</strong> 또는 <strong className="text-foreground">[팀 검색해서 신청]</strong> 둘 중 하나를 고르면 가입 끝. 초대 링크로 들어왔다면 이 단계가 자동으로 건너뛰어지고 그 팀에 바로 합류돼요.</li>
           </ol>
 
           <Tip>
@@ -243,12 +243,12 @@ export default function HelpPage() {
           <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground leading-relaxed pl-1">
             <li><strong className="text-foreground">팀명</strong> — 단톡방에서 부르는 이름 그대로 쓰는 게 팀원들이 알아보기 좋아요 (예: FCMZ, FK Rebirth).</li>
             <li><strong className="text-foreground">스포츠 유형</strong> — <strong className="text-foreground">축구</strong>(11명) 또는 <strong className="text-foreground">풋살</strong>(보통 5~8명) 중 우리 팀이 평소에 뛰는 종목 선택. 종목에 따라 포메이션·역할 가이드가 달라지니 정확히 골라주세요.</li>
-            <li><strong className="text-foreground">[팀 생성하기]</strong> 버튼을 누르면 팀이 만들어지고, 본인은 자동으로 그 팀의 <strong className="text-foreground">회장</strong>이 됩니다.</li>
+            <li><strong className="text-foreground">[팀 만들고 시작하기]</strong> 버튼을 누르면 팀이 만들어지고, 본인은 자동으로 그 팀의 <strong className="text-foreground">회장</strong>이 됩니다.</li>
           </ol>
 
           <h3 className="text-base font-semibold mb-3 mt-6">회장·운영진: 팀원 초대하기</h3>
           <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-            팀이 만들어지면 대시보드(홈 화면) 위쪽에 <strong className="text-foreground">초대 코드 카드</strong>가 떠요. 그 카드의 <strong className="text-foreground">[카카오톡으로 초대]</strong> 버튼을 누르면 단톡방에 안내문이 자동으로 채워지고, 그대로 보내기만 하면 됩니다.
+            팀을 만들면 <strong className="text-foreground">햄버거 메뉴(좌측 상단 ☰) 아래쪽 &apos;초대 코드&apos; 영역</strong>에서 <strong className="text-foreground">[초대 링크 복사]</strong>로 팀원을 초대할 수 있어요. 경기를 한 번 등록하면 대시보드에도 <strong className="text-foreground">[팀원을 초대해 보세요]</strong> 카드가 뜨고, <strong className="text-foreground">[카카오 공유]</strong> 버튼으로 단톡방에 바로 던질 수 있습니다.
           </p>
 
           <div className="rounded-xl border border-border/60 bg-[hsl(var(--secondary)_/_0.2)] p-5 my-4">
@@ -257,7 +257,7 @@ export default function HelpPage() {
               우리 팀 참석투표·회비관리 앱이에요!<br />
               아래 링크 누르고 카카오 로그인하면 바로 가입돼요<br /><br />
               https://www.pitch-master.app/team?code=<strong className="text-foreground">[초대코드]</strong><br /><br />
-              ※ 초대 코드는 대시보드 위쪽 [초대 코드 카드]에서 확인할 수 있어요
+              ※ 초대 코드는 햄버거 메뉴(☰) 아래쪽 &apos;초대 코드&apos; 영역에서 확인할 수 있어요
             </div>
           </div>
 
@@ -273,7 +273,7 @@ export default function HelpPage() {
                 <span className="text-muted-foreground text-base">+</span>
               </summary>
               <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-[hsl(var(--background)_/_0.4)]">
-                가입 후 <strong className="text-foreground">[팀 검색해서 가입]</strong>을 누르고 팀 이름을 검색 → <strong className="text-foreground">[가입 신청]</strong> 버튼을 누르면 회장·운영진에게 신청이 가요. 승인되면 자동으로 합류됩니다.<br /><br />
+                가입 후 <strong className="text-foreground">[팀 검색해서 신청]</strong>을 누르고 팀 이름을 검색 → <strong className="text-foreground">[가입 신청]</strong> 버튼을 누르면 회장·운영진에게 신청이 가요. 승인되면 자동으로 합류됩니다.<br /><br />
                 ※ 단, 회장이 설정 → 팀 설정에서 <strong className="text-foreground">[팀 검색 허용]</strong>을 켜놨을 때만 검색에 떠요.
               </div>
             </details>
@@ -306,20 +306,20 @@ export default function HelpPage() {
             1. 경기 등록 <Badge variant="staff" />
           </h3>
           <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-            하단 탭바의 <strong className="text-foreground">[경기 일정]</strong> 메뉴 → 우측 상단 <strong className="text-foreground">[+]</strong> 버튼을 누르면 경기 등록 폼이 떠요.
+            하단 탭바의 <strong className="text-foreground">[일정]</strong> 메뉴 → 우측 상단 <strong className="text-foreground">[+ 일정 등록]</strong> 버튼을 누르면 경기 등록 폼이 떠요.
           </p>
           <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed pl-1">
             <li><strong className="text-foreground">날짜·시간</strong> — 경기 날짜와 시작·종료 시간.</li>
             <li><strong className="text-foreground">장소</strong> — 구장 이름. 팀원들이 위치 찾기 쉽게 구체적으로 적어주세요. 입력한 장소는 경기 정보 화면에서 <strong className="text-foreground">네이버·카카오 지도 길찾기</strong> 링크로 바로 연결됩니다.</li>
-            <li><strong className="text-foreground">상대팀</strong> — 자체전이면 <strong className="text-foreground">[자체전 토글]</strong>을 켜고 상대팀 칸은 비워둡니다.</li>
-            <li><strong className="text-foreground">경기 유형</strong> — 일반 경기 / 자체전 / 팀 일정 중 선택.</li>
+            <li><strong className="text-foreground">상대팀</strong> — 자체전이면 <strong className="text-foreground">경기 종류를 [자체]</strong>로 고르고 상대팀 칸은 비워둡니다.</li>
+            <li><strong className="text-foreground">경기 종류</strong> — 정규 / 자체 / 이벤트(MT·회식) 중 선택.</li>
             <li><strong className="text-foreground">투표 마감</strong> — 기본값은 경기 전날 저녁 5시.</li>
           </ul>
           <p className="text-sm text-muted-foreground leading-relaxed mt-3">
             <strong className="text-foreground">[등록하기]</strong> 버튼을 누르면 팀원 모두에게 <strong className="text-foreground">푸시 알림</strong>이 가고, 단톡방에 던질 수 있는 투표 링크도 같이 만들어집니다.
           </p>
           <Tip>
-            <strong className="text-foreground">&quot;팀 일정&quot;</strong>이 따로 있는 이유 — 풋살·축구 경기는 아니지만 회식·워크샵·시즌 회의처럼 &quot;올 사람 미리 알고 싶은 일정&quot;도 똑같이 투표받고 출석 체크할 수 있어요. 일반 경기 통계엔 안 들어가게 자동으로 분리됩니다.
+            <strong className="text-foreground">&quot;이벤트(팀 일정)&quot;</strong>가 따로 있는 이유 — 풋살·축구 경기는 아니지만 회식·워크샵·시즌 회의처럼 &quot;올 사람 미리 알고 싶은 일정&quot;도 똑같이 투표받고 출석 체크할 수 있어요. 정규 경기 통계엔 안 들어가게 자동으로 분리됩니다. (등록 폼에선 &quot;이벤트&quot;, 목록·상세 화면에선 &quot;팀 일정&quot;으로 보여요.)
           </Tip>
 
           <h3 className="text-base font-semibold mb-3 mt-6">
@@ -458,7 +458,7 @@ export default function HelpPage() {
             <li><strong className="text-foreground">GK</strong>는 1명이면 풀 출전, 여럿이면 쿼터별로 로테이션.</li>
             <li><strong className="text-foreground">용병</strong>은 정규 슬롯이 다 채워진 뒤 자동으로 빈 자리에 들어갑니다.</li>
           </ul>
-          <Tip><strong className="text-foreground">풋살 키퍼 순번 룰렛</strong> — 풋살 전술 탭에는 <strong className="text-foreground">[키퍼 순번 룰렛]</strong>이 있어요. 고정 키퍼가 없을 때 쿼터마다 누가 골문을 볼지 번호를 돌려 공정하게 정해줍니다(선호 포지션이 GK인 사람이 한 명이면 자동으로 고정 키퍼로 인식).</Tip>
+          <Tip><strong className="text-foreground">풋살 키퍼·교대 순번</strong> — 풋살 전술 탭에는 <strong className="text-foreground">[키퍼·교대 순번]</strong> 카드가 있어요. 고정 키퍼가 없을 때 <strong className="text-foreground">[번호 뽑기]</strong>를 누르면 쿼터마다 누가 골문을 볼지·누가 쉴지 번호로 공정하게 정해줍니다(선호 포지션이 GK인 사람이 한 명이면 자동으로 고정 키퍼로 인식).</Tip>
 
           <h3 className="text-base font-semibold mb-3 mt-6">주심·부심·촬영 자리도 같이 정해요</h3>
           <p className="text-sm text-muted-foreground leading-relaxed mb-2">
@@ -676,7 +676,7 @@ export default function HelpPage() {
               </summary>
               <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-[hsl(var(--background)_/_0.4)]">
                 <ul className="list-disc list-inside space-y-1.5 pl-1">
-                  <li>경기 등록할 때 <strong className="text-foreground">[자체전] 토글</strong>을 켜면 자체전으로 등록됩니다.</li>
+                  <li>경기 등록할 때 <strong className="text-foreground">경기 종류를 [자체]</strong>로 고르면 자체전으로 등록됩니다.</li>
                   <li>인원을 <strong className="text-foreground">2팀 또는 3팀(A·B·C)</strong>으로 나눌 수 있어요. 참석자를 랜덤으로 자동 배정하거나 손으로 직접 나눕니다.</li>
                   <li>스코어보드·골 기록·전술판이 팀별로 분리되고, 개인 골·어시 기록까지 남습니다.</li>
                   <li><strong className="text-foreground">[전적 반영 토글]</strong>을 끄면 시즌 통계에서 자체전이 빠집니다.</li>
@@ -720,10 +720,10 @@ export default function HelpPage() {
           </h3>
           <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed pl-1">
             <li><strong className="text-foreground">AI OCR</strong> — 통장 캡쳐를 올리면 이름·금액·날짜·시간·메모를 자동으로 표로 만들어줍니다.</li>
-            <li><strong className="text-foreground">엑셀 업로드</strong> — 은행 앱 거래내역 엑셀을 그대로 올려도 됩니다.</li>
+            <li><strong className="text-foreground">엑셀 업로드</strong> — 카카오뱅크 거래내역 엑셀을 그대로 올려도 됩니다.</li>
             <li><strong className="text-foreground">중복 자동 제거</strong> — 이미 등록된 거래는 자동으로 빼줍니다.</li>
           </ul>
-          <Tip>지원 은행: <strong className="text-foreground">카카오뱅크·토스뱅크·국민·신한·우리·하나·농협</strong>.</Tip>
+          <Tip>범용 AI 이미지 인식이라 <strong className="text-foreground">카카오뱅크·토스뱅크·국민·신한·우리·하나</strong> 등 대부분의 은행 앱 거래내역 캡쳐를 읽어요. (엑셀 업로드는 카카오뱅크 형식 기준.)</Tip>
 
           <h3 className="text-base font-semibold mb-3 mt-6">
             설정 탭 <Badge variant="staff" />
@@ -801,41 +801,49 @@ export default function HelpPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border/40 bg-[hsl(var(--secondary)_/_0.2)]">
-                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
-                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">기능</th>
-                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">어디서</th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">기능 · 어디서</th>
                   <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">한도</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
                 <tr>
-                  <td className="px-3 py-3 text-muted-foreground align-top">1</td>
-                  <td className="px-3 py-3 align-top"><strong className="text-foreground">AI 풀 플랜</strong><br /><span className="text-muted-foreground text-xs">편성 + 작전 브리핑</span></td>
-                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기 → [전술] 탭 → [AI 풀 플랜] 버튼</td>
-                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기당 3회 + 팀 월 20회</td>
+                  <td className="px-3 py-3 align-top">
+                    <strong className="text-foreground">AI 풀 플랜</strong>{" "}
+                    <span className="text-muted-foreground text-xs">편성 + 작전 브리핑</span>
+                    <br /><span className="text-muted-foreground text-xs">경기 → [전술] 탭 → [AI 풀 플랜]</span>
+                  </td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기당 3회<br />팀 월 20회</td>
                 </tr>
                 <tr>
-                  <td className="px-3 py-3 text-muted-foreground align-top">2</td>
-                  <td className="px-3 py-3 align-top"><strong className="text-foreground">AI 코치 분석</strong><br /><span className="text-muted-foreground text-xs">편성 후 분석만</span></td>
-                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기 → [전술] 탭 → 자동 편성 후 [AI 코치 분석]</td>
-                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기당 4회 + 팀 월 30회</td>
+                  <td className="px-3 py-3 align-top">
+                    <strong className="text-foreground">AI 코치 분석</strong>{" "}
+                    <span className="text-muted-foreground text-xs">편성 후 분석만</span>
+                    <br /><span className="text-muted-foreground text-xs">경기 → [전술] 탭 → 자동 편성 후 [AI 코치 분석]</span>
+                  </td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기당 4회<br />팀 월 30회</td>
                 </tr>
                 <tr>
-                  <td className="px-3 py-3 text-muted-foreground align-top">3</td>
-                  <td className="px-3 py-3 align-top"><strong className="text-foreground">자동 경기 후기</strong><br /><span className="text-muted-foreground text-xs">한 줄 자동 요약 · 규칙 기반</span></td>
-                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기 → [후기] 탭 (경기 끝나면 자동 생성)</td>
-                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기당 1회 재생성</td>
+                  <td className="px-3 py-3 align-top">
+                    <strong className="text-foreground">자동 경기 후기</strong>{" "}
+                    <span className="text-muted-foreground text-xs">한 줄 요약 · 규칙 기반</span>
+                    <br /><span className="text-muted-foreground text-xs">경기 → [후기] 탭 (끝나면 자동)</span>
+                  </td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기당 1회<br />재생성</td>
                 </tr>
                 <tr>
-                  <td className="px-3 py-3 text-muted-foreground align-top">4</td>
-                  <td className="px-3 py-3 align-top"><strong className="text-foreground">선수 시그니처</strong><br /><span className="text-muted-foreground text-xs">선수별 한 줄 별명 · 규칙 기반</span></td>
-                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">회원 프로필 카드</td>
-                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">운영진이 재생성</td>
+                  <td className="px-3 py-3 align-top">
+                    <strong className="text-foreground">선수 시그니처</strong>{" "}
+                    <span className="text-muted-foreground text-xs">한 줄 별명 · 규칙 기반</span>
+                    <br /><span className="text-muted-foreground text-xs">회원 프로필 카드</span>
+                  </td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">운영진이<br />재생성</td>
                 </tr>
                 <tr>
-                  <td className="px-3 py-3 text-muted-foreground align-top">5</td>
-                  <td className="px-3 py-3 align-top"><strong className="text-foreground">회비 OCR</strong><br /><span className="text-muted-foreground text-xs">통장 캡쳐 자동 인식</span></td>
-                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">회비 → [업로드] 탭</td>
+                  <td className="px-3 py-3 align-top">
+                    <strong className="text-foreground">회비 OCR</strong>{" "}
+                    <span className="text-muted-foreground text-xs">통장 캡쳐 자동 인식</span>
+                    <br /><span className="text-muted-foreground text-xs">회비 → [업로드] 탭</span>
+                  </td>
                   <td className="px-3 py-3 text-muted-foreground align-top text-xs">팀 월 100회</td>
                 </tr>
               </tbody>
@@ -864,7 +872,7 @@ export default function HelpPage() {
 
           <h4 className="text-sm font-semibold text-foreground mt-5 mb-2">5. 회비 OCR</h4>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            통장 캡쳐를 올리면 <strong className="text-foreground">이름·금액·날짜·시간·메모</strong>를 자동으로 표로 만들어줍니다. 지원 은행: 카카오뱅크·토스뱅크·국민·신한·우리·하나·농협.
+            통장 캡쳐를 올리면 <strong className="text-foreground">이름·금액·날짜·시간·메모</strong>를 자동으로 표로 만들어줍니다. 카카오뱅크·토스뱅크·국민·신한·우리·하나 등 대부분의 은행 앱 거래내역 캡쳐를 인식해요.
           </p>
           <Tip>실패한 호출이나 자동 규칙으로 대신 처리된 경우는 한도에서 차감되지 않아요.</Tip>
 
@@ -976,7 +984,7 @@ export default function HelpPage() {
           <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed pl-1">
             <li><strong className="text-foreground">역할 변경</strong> — 회원 ↔ 운영진 ↔ 회장 사이 권한 변경.</li>
             <li><strong className="text-foreground">등번호 지정</strong> — 한 팀에 같은 번호는 두 명 못 갖습니다.</li>
-            <li><strong className="text-foreground">주장·부주장</strong> — 온필드 주장(C 뱃지)·부주장(VC 뱃지) 지정. 전술판·회원 카드에 자동 표시.</li>
+            <li><strong className="text-foreground">주장·부주장</strong> — 온필드 주장(C 뱃지)·부주장(VC 뱃지) 지정. 회원 카드·기록 화면에 자동 표시.</li>
             <li><strong className="text-foreground">사전 등록</strong> — 아직 가입 안 한 회원의 이름·연락처를 미리 등록. 본인이 직접 가입하면 자동으로 연결됩니다.</li>
             <li><strong className="text-foreground">휴면 처리</strong> — 장기간 안 나오는 회원을 &quot;휴면&quot; 상태로. 통계·회비 대상에서 자동 제외.</li>
             <li><strong className="text-foreground">강퇴</strong> — 강퇴된 회원의 과거 기록은 그대로 보관됩니다.</li>
