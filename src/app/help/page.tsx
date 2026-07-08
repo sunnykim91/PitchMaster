@@ -643,8 +643,8 @@ export default function HelpPage() {
           <div className="rounded-xl border border-border/60 bg-[hsl(var(--secondary)_/_0.2)] p-5 my-4">
             <p className="text-sm font-semibold text-foreground mb-3">MVP가 공식으로 확정되는 두 가지 경로</p>
             <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-              <p>① <strong className="text-foreground">운영진(회장·총무) 1명 이상이 투표</strong>하면 그 즉시 확정.</p>
-              <p>② <strong className="text-foreground">일반 회원 투표가 실제 참석자의 70% 이상</strong> 모이면 최다 득표자 자동 확정.</p>
+              <p>① <strong className="text-foreground">운영진(회장·총무)이 지정</strong>하면 그 즉시 확정. 운영진 여러 명이 서로 다른 사람을 지정하면 <strong className="text-foreground">가장 최근에 지정한 1명</strong>이 MVP가 되고, 다시 지정하면 그 사람으로 바뀝니다.</p>
+              <p>② <strong className="text-foreground">일반 회원 투표가 실제 참석자의 70% 이상</strong> 모이면 최다 득표자 자동 확정 (동점이면 공동 MVP).</p>
               <p>70%가 안 모이면 운영진이 <strong className="text-foreground">[MVP 직접 지정]</strong>으로 즉시 확정시킬 수 있어요.</p>
             </div>
           </div>

@@ -255,7 +255,7 @@ export async function GET(request: NextRequest) {
   const [goalsRes, assistsRes, mvpRes, allGoalsRes, actualAttendRes] = await Promise.all([
     db.from("match_goals").select("scorer_id").in("match_id", allMatchIds).eq("is_own_goal", false),
     db.from("match_goals").select("assist_id").in("match_id", allMatchIds).not("assist_id", "is", null),
-    db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision").in("match_id", allMatchIds),
+    db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision, created_at").in("match_id", allMatchIds),
     db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", allMatchIds),
     db.from("match_attendance").select("match_id").in("match_id", allMatchIds).in("attendance_status", ["PRESENT", "LATE"]),
   ]);

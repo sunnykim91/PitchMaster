@@ -3,6 +3,7 @@ import {
   resolveValidMvps as resolveValidMvpsForAi,
   pickStaffDecision as pickStaffDecisionForAi,
   shouldApplyNewMvpPolicy as shouldApplyNewMvpPolicyForAi,
+  LATEST_STAFF_MVP_CUTOFF,
 } from "@/lib/mvpThreshold";
 import type { Placement } from "@/components/TacticsBoard.types";
 
@@ -206,7 +207,7 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
   // voter_id / is_staff_decision 포함: 70% threshold + 운영진 지정 확정 로직용
   const { data: mvpVotes } = await db
     .from("match_mvp_votes")
-    .select("match_id, voter_id, candidate_id, is_staff_decision")
+    .select("match_id, voter_id, candidate_id, is_staff_decision, created_at")
     .in("match_id", matchIds);
 
   // MVP 70% threshold용 실제 참석자 + 현재 STAFF+ voter 목록
@@ -418,7 +419,7 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
   //   1) 운영진 지정(is_staff_decision 또는 현재 STAFF+ voter) → 즉시 확정
   //   2) 그 외엔 참석자 70% 이상 투표 통과 + 최다득표자
   // (mvpThreshold 는 상단에서 정적 import — 매 호출 dynamic import 제거)
-  type MvpRow = { match_id: string; voter_id: string; candidate_id: string; is_staff_decision: boolean | null };
+  type MvpRow = { match_id: string; voter_id: string; candidate_id: string; is_staff_decision: boolean | null; created_at: string };
   const mvpAggByMatch = new Map<string, { votes: string[]; rows: MvpRow[] }>();
   for (const v of (mvpVotes ?? []) as MvpRow[]) {
     if (!v.candidate_id) continue;
@@ -435,9 +436,11 @@ async function computeTeamStats(teamId: string): Promise<TeamStats> {
 
   const memberMvpCount = new Map<string, number>();
   for (const [mid, agg] of mvpAggByMatch) {
-    const newPolicy = shouldApplyNewMvpPolicyForAi(matchDateById.get(mid), mvpVoteStaffOnly);
+    const mvpMatchDate = matchDateById.get(mid);
+    const newPolicy = shouldApplyNewMvpPolicyForAi(mvpMatchDate, mvpVoteStaffOnly);
     const staffDecision = pickStaffDecisionForAi(agg.rows, staffVoterIds, {
       applyBackfillHealing: !newPolicy,
+      preferLatest: !!mvpMatchDate && mvpMatchDate >= LATEST_STAFF_MVP_CUTOFF,
     });
     // 공동 1등이면 전원 +1 (공동 MVP)
     const winnerUserIds = resolveValidMvpsForAi(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);

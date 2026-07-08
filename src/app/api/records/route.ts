@@ -206,7 +206,7 @@ export async function GET(request: NextRequest) {
   const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes, staffMembersRes, gkSquadsRes, concededGoalsRes, teamSettingsForMvpRes] = await Promise.all([
     db.from("match_goals").select("scorer_id").in("match_id", matchIds).eq("is_own_goal", false),
     db.from("match_goals").select("assist_id").in("match_id", matchIds).not("assist_id", "is", null),
-    db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision").in("match_id", matchIds),
+    db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision, created_at").in("match_id", matchIds),
     db.from("match_attendance").select("match_id, user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
     db.from("match_attendance").select("match_id").in("match_id", matchIds).in("attendance_status", ["PRESENT", "LATE"]),
     // is_staff_decision 백필 누락 치유 — 현재 STAFF+ voter의 과거 투표를 동적으로 확정 취급

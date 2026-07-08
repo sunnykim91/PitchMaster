@@ -167,6 +167,56 @@ describe("pickStaffDecision", () => {
   });
 });
 
+describe("pickStaffDecision — preferLatest (최신 지정 = MVP, LATEST_STAFF_MVP_CUTOFF 이후 경기)", () => {
+  const S1 = "staff-1", S2 = "staff-2", S3 = "staff-3", S4 = "staff-4";
+  const staffVoters = new Set([S1, S2, S3, S4]);
+
+  it("staff 지정 중 created_at 최신 1건이 MVP (최다득표 무시)", () => {
+    const votes = [
+      { voter_id: S1, candidate_id: "cand-A", is_staff_decision: true, created_at: "2026-07-10T10:00:00Z" },
+      { voter_id: S2, candidate_id: "cand-B", is_staff_decision: true, created_at: "2026-07-10T12:00:00Z" }, // 최신
+      { voter_id: S3, candidate_id: "cand-C", is_staff_decision: true, created_at: "2026-07-10T11:00:00Z" },
+    ];
+    expect(pickStaffDecision(votes, staffVoters, { preferLatest: true })).toBe("cand-B");
+  });
+
+  it("운영진 4명이 서로 다른 후보 → 가장 마지막에 찍은 사람", () => {
+    const votes = [
+      { voter_id: S1, candidate_id: "cand-A", is_staff_decision: true, created_at: "2026-07-10T09:00:00Z" },
+      { voter_id: S2, candidate_id: "cand-B", is_staff_decision: true, created_at: "2026-07-10T09:30:00Z" },
+      { voter_id: S3, candidate_id: "cand-C", is_staff_decision: true, created_at: "2026-07-10T10:15:00Z" }, // 최신
+      { voter_id: S4, candidate_id: "cand-D", is_staff_decision: true, created_at: "2026-07-10T10:00:00Z" },
+    ];
+    expect(pickStaffDecision(votes, staffVoters, { preferLatest: true })).toBe("cand-C");
+  });
+
+  it("재투표로 created_at 갱신되면 그 사람으로 MVP 교체", () => {
+    const votes = [
+      { voter_id: S2, candidate_id: "cand-A", is_staff_decision: true, created_at: "2026-07-10T10:00:00Z" },
+      { voter_id: S1, candidate_id: "cand-B", is_staff_decision: true, created_at: "2026-07-10T10:05:00Z" }, // 교체(최신)
+    ];
+    expect(pickStaffDecision(votes, staffVoters, { preferLatest: true })).toBe("cand-B");
+  });
+
+  it("created_at 동시각이면 candidate_id 사전순 tiebreak (결정론적)", () => {
+    const votes = [
+      { voter_id: S1, candidate_id: "cand-Y", is_staff_decision: true, created_at: "2026-07-10T10:00:00Z" },
+      { voter_id: S2, candidate_id: "cand-X", is_staff_decision: true, created_at: "2026-07-10T10:00:00Z" },
+    ];
+    expect(pickStaffDecision(votes, staffVoters, { preferLatest: true })).toBe("cand-X");
+  });
+
+  it("preferLatest=false(과거 경기)면 최다득표 유지 — 최신 무시", () => {
+    const votes = [
+      { voter_id: S1, candidate_id: "cand-A", is_staff_decision: true, created_at: "2026-07-10T09:00:00Z" },
+      { voter_id: S2, candidate_id: "cand-A", is_staff_decision: true, created_at: "2026-07-10T09:30:00Z" },
+      { voter_id: S3, candidate_id: "cand-B", is_staff_decision: true, created_at: "2026-07-10T12:00:00Z" }, // 최신이지만
+    ];
+    expect(pickStaffDecision(votes, staffVoters, { preferLatest: false })).toBe("cand-A"); // 2표 우세
+    expect(pickStaffDecision(votes, staffVoters, { preferLatest: true })).toBe("cand-B");  // 최신
+  });
+});
+
 describe("shouldApplyNewMvpPolicy", () => {
   it("mvp_vote_staff_only=true 면 무조건 옛 정책 (false 반환)", () => {
     expect(shouldApplyNewMvpPolicy("2030-01-01", true)).toBe(false);

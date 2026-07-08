@@ -16,6 +16,14 @@ export const MVP_VOTE_THRESHOLD = 0.7;
  */
 export const STAFF_DECISION_POLICY_CUTOFF = "2026-05-04";
 
+/**
+ * 운영진 지정 MVP를 "최다 득표"가 아니라 "가장 최근 지정 1건"으로 판정하기 시작하는 경기 날짜.
+ * 이 날짜(포함) 이후 경기에서만 최신 지정이 MVP가 됨. 이전 경기는 과거 결과 보존을 위해
+ * 기존 최다득표 로직 유지. (운영진 전용 투표 ON일 때 실질 적용 — 운영진이 여러 명 서로 다른
+ * 후보를 찍어도 가장 마지막에 찍은 1건이 MVP, 다시 찍으면 교체.)
+ */
+export const LATEST_STAFF_MVP_CUTOFF = "2026-07-08";
+
 export interface PickStaffDecisionOptions {
   /**
    * 백필 치유 분기 활성 여부.
@@ -25,6 +33,11 @@ export interface PickStaffDecisionOptions {
    * 새 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04) 에서는 false.
    */
   applyBackfillHealing?: boolean;
+  /**
+   * true면 staff 지정 중 "가장 최근(created_at 최신)" 1건을 MVP로 선택.
+   * LATEST_STAFF_MVP_CUTOFF 이후 경기에서만 true (과거 경기는 최다득표 유지 → 결과 보존).
+   */
+  preferLatest?: boolean;
 }
 
 /**
@@ -47,22 +60,38 @@ export interface PickStaffDecisionOptions {
  * @returns 첫 번째로 발견된 "staff 지정" candidate_id, 없으면 null
  */
 export function pickStaffDecision(
-  votes: Array<{ voter_id: string; candidate_id: string; is_staff_decision: boolean | null }>,
+  votes: Array<{ voter_id: string; candidate_id: string; is_staff_decision?: boolean | null; created_at?: string | null }>,
   staffVoterIds: Set<string>,
   options: PickStaffDecisionOptions = {}
 ): string | null {
   const applyBackfillHealing = options.applyBackfillHealing ?? true;
-  // staff 지정으로 인정되는 후보들을 모아 '최다 득표' 후보를 선택.
+  const preferLatest = options.preferLatest ?? false;
+
+  // staff 지정으로 인정되는 표만 추림
+  const staffVotes = votes.filter(
+    (v) => v.candidate_id && (v.is_staff_decision || (applyBackfillHealing && staffVoterIds.has(v.voter_id)))
+  );
+  if (staffVotes.length === 0) return null;
+
+  if (preferLatest) {
+    // LATEST_STAFF_MVP_CUTOFF 이후 경기: "가장 최근 지정 1건"이 MVP.
+    // created_at 내림차순(최신 우선), 동시각은 candidate_id 사전순으로 결정론적 tiebreak.
+    // (created_at 은 ISO 8601 문자열이라 사전순 비교 = 시간순 비교)
+    return [...staffVotes].sort((a, b) => {
+      const ta = a.created_at ?? "";
+      const tb = b.created_at ?? "";
+      if (ta !== tb) return ta < tb ? 1 : -1; // 최신(큰 값) 먼저
+      return a.candidate_id.localeCompare(b.candidate_id);
+    })[0].candidate_id;
+  }
+
+  // 컷오프 이전 경기(과거 결과 보존): 최다 득표 → 동률 시 candidate_id 사전순 tiebreak.
   // (예전엔 첫 row 를 반환해, 운영진이 서로 다른 후보를 찍으면 DB row 순서에 따라
   //  결과가 달라지는 비결정론이 있었음 — 같은 경기를 두 번 집계하면 MVP가 바뀔 수 있었음)
   const staffCounts = new Map<string, number>();
-  for (const v of votes) {
-    if (!v.candidate_id) continue;
-    const isStaffPick = v.is_staff_decision || (applyBackfillHealing && staffVoterIds.has(v.voter_id));
-    if (isStaffPick) staffCounts.set(v.candidate_id, (staffCounts.get(v.candidate_id) ?? 0) + 1);
+  for (const v of staffVotes) {
+    staffCounts.set(v.candidate_id, (staffCounts.get(v.candidate_id) ?? 0) + 1);
   }
-  if (staffCounts.size === 0) return null;
-  // 최다 득표 → 동률 시 candidate_id 사전순으로 결정론적 tiebreak
   return [...staffCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0];
 }
 
@@ -150,6 +179,8 @@ export interface MvpVoteRow {
   voter_id: string;
   candidate_id: string;
   is_staff_decision: boolean | null;
+  /** 최신 지정 판정용(LATEST_STAFF_MVP_CUTOFF 이후 경기). 재투표 시 갱신됨. */
+  created_at: string;
 }
 
 /**
@@ -207,9 +238,12 @@ export function resolveMvpWinnersByMatch(
 
   const winnersByMatch = new Map<string, string[]>();
   for (const [mid, agg] of aggByMatch) {
-    const newPolicy = shouldApplyNewMvpPolicy(matchDateById.get(mid), mvpVoteStaffOnly);
+    const matchDate = matchDateById.get(mid);
+    const newPolicy = shouldApplyNewMvpPolicy(matchDate, mvpVoteStaffOnly);
     const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
       applyBackfillHealing: !newPolicy,
+      // 컷오프 이후 경기: 운영진 지정은 "최신 1건"이 MVP (과거 경기는 최다득표 유지)
+      preferLatest: !!matchDate && matchDate >= LATEST_STAFF_MVP_CUTOFF,
     });
     // 공동 1등이면 전원 (공동 MVP)
     const winners = resolveValidMvps(agg.votes, attendedPerMatch.get(mid) ?? 0, staffDecision);

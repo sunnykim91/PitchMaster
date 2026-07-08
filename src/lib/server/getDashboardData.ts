@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { autoCompleteTeamMatches, getKstNow, getKstToday } from "@/lib/server/autoCompleteMatches";
-import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
+import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy, LATEST_STAFF_MVP_CUTOFF } from "@/lib/mvpThreshold";
 import { isTeamRecordMatch, type Role } from "@/lib/types";
 import { isStaffOrAbove, isPresident } from "@/lib/permissions";
 import { computeMatchScore } from "@/lib/server/matchScore";
@@ -317,8 +317,8 @@ export async function getDashboardData(
       ? db.from("match_goals").select("scorer_id, is_own_goal, side").eq("match_id", recentMatch.id)
       : Promise.resolve({ data: [] as { scorer_id: string; is_own_goal: boolean; side: string | null }[] }),
     recentMatch
-      ? db.from("match_mvp_votes").select("voter_id, candidate_id, is_staff_decision, users:candidate_id(name)").eq("match_id", recentMatch.id)
-      : Promise.resolve({ data: [] as { voter_id: string; candidate_id: string; is_staff_decision: boolean | null; users: { name: string } | { name: string }[] | null }[] }),
+      ? db.from("match_mvp_votes").select("voter_id, candidate_id, is_staff_decision, created_at, users:candidate_id(name)").eq("match_id", recentMatch.id)
+      : Promise.resolve({ data: [] as { voter_id: string; candidate_id: string; is_staff_decision: boolean | null; created_at: string; users: { name: string } | { name: string }[] | null }[] }),
     recentMatch
       ? db.from("match_attendance").select("id").eq("match_id", recentMatch.id).in("attendance_status", ["PRESENT", "LATE"])
       : Promise.resolve({ data: [] as { id: string }[] }),
@@ -388,12 +388,13 @@ export async function getDashboardData(
     const goalRows = (recentGoalsRes.data ?? []) as { scorer_id: string; is_own_goal: boolean; side: string | null }[];
     // 스코어 문자열은 공통 헬퍼 (자체전 side 집계 + 자책골 규칙 단일소스)
     const scoreStr = computeMatchScore(goalRows, recentMatch.match_type === "INTERNAL");
-    type MvpVoteRow = { voter_id: string; candidate_id: string; is_staff_decision: boolean | null; users: { name: string } | { name: string }[] | null };
+    type MvpVoteRow = { voter_id: string; candidate_id: string; is_staff_decision: boolean | null; created_at: string; users: { name: string } | { name: string }[] | null };
     const voteRows = (recentMvpRes.data ?? []) as MvpVoteRow[];
     const attendedCount = (recentAttRes.data ?? []).length;
     const newPolicy = shouldApplyNewMvpPolicy(recentMatch.match_date, mvpVoteStaffOnly);
     const staffDecision = pickStaffDecision(voteRows, staffVoterIds, {
       applyBackfillHealing: !newPolicy,
+      preferLatest: !!recentMatch.match_date && recentMatch.match_date >= LATEST_STAFF_MVP_CUTOFF,
     });
     const winnerIds = resolveValidMvps(
       voteRows.map((v) => v.candidate_id).filter(Boolean),

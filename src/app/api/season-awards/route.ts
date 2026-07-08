@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
       .in("match_id", matchIds),
     db
       .from("match_mvp_votes")
-      .select("match_id, voter_id, candidate_id, is_staff_decision")
+      .select("match_id, voter_id, candidate_id, is_staff_decision, created_at")
       .in("match_id", matchIds),
     db
       .from("match_attendance")

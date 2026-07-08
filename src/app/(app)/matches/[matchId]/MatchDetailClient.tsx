@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import type { AttendingPlayer } from "@/components/AutoFormationBuilder";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
+import { pickStaffDecision, shouldApplyNewMvpPolicy, LATEST_STAFF_MVP_CUTOFF } from "@/lib/mvpThreshold";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import type { Role, DetailedPosition } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -511,6 +512,27 @@ export default function MatchDetailClient({
     return counts;
   }, [votes]);
 
+  // 운영진 지정 MVP (실시간 표시용) — 확정 정책과 동일하게 계산.
+  // 토글 ON일 때만 의미. 2026-07-08(LATEST_STAFF_MVP_CUTOFF) 이후 경기는 "최신 지정 1건", 이전은 최다득표.
+  const staffVoterIds = useMemo(
+    () =>
+      new Set(
+        membersData.members
+          .filter((m) => m.role === "STAFF" || m.role === "PRESIDENT")
+          .map((m) => m.users?.id)
+          .filter((id): id is string => !!id),
+      ),
+    [membersData.members],
+  );
+  const staffDesignatedMvpId = useMemo(() => {
+    if (!mvpVoteStaffOnly) return null;
+    const newPolicy = shouldApplyNewMvpPolicy(match.date, mvpVoteStaffOnly);
+    return pickStaffDecision(mvpData.votes, staffVoterIds, {
+      applyBackfillHealing: !newPolicy,
+      preferLatest: !!match.date && match.date >= LATEST_STAFF_MVP_CUTOFF,
+    });
+  }, [mvpVoteStaffOnly, match.date, mvpData.votes, staffVoterIds]);
+
   /* ── 참석투표 대리 관리 (운영진 이상) ── */
   const handleProxyVote = useCallback(async (memberId: string, vote: "ATTEND" | "ABSENT" | "MAYBE") => {
     await apiMutate("/api/attendance", "POST", { matchId, vote, memberId });
@@ -727,6 +749,7 @@ export default function MatchDetailClient({
             votes={votes}
             canVoteMvp={canVoteMvp}
             isStaffVoter={isStaffVoter}
+            staffDesignatedMvpId={staffDesignatedMvpId}
             attendeeCount={presentMembers.length}
             attendingMembers={attendingMembers}
             mvpCandidates={presentMembers}

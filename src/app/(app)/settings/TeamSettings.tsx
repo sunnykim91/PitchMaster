@@ -444,7 +444,7 @@ function TeamSettingsComponent({
                   <p className="text-sm font-semibold">MVP 투표는 운영진만</p>
                   <p className="text-xs text-muted-foreground">
                     {team.mvpVoteStaffOnly
-                      ? "운영진이 MVP를 직접 지정합니다. 평회원은 투표 결과를 볼 수만 있습니다."
+                      ? "운영진이 MVP를 직접 지정합니다. 여러 명이 지정하면 가장 최근에 지정한 사람이 MVP가 되고, 다시 지정하면 교체돼요. 평회원은 결과만 볼 수 있습니다."
                       : "참석한 모든 회원이 MVP 투표에 참여할 수 있습니다."}
                   </p>
                 </div>

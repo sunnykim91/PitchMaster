@@ -54,6 +54,8 @@ export type MvpVoteRow = {
   match_id: string;
   voter_id: string;
   candidate_id: string;
+  is_staff_decision?: boolean | null;
+  created_at?: string | null;
 };
 
 export type AttendanceRow = {

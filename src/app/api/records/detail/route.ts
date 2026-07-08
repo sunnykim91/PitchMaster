@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
     // 기록 페이지 MVP 숫자와 일관성 유지 — "확정 winner가 본인인 경기"만 반환.
     // (단순 득표 카운트는 투표받은 모두가 MVP로 찍히는 문제 + 숫자/상세 불일치를 낳음)
     const [mvpRes, attendanceRes, staffRes] = await Promise.all([
-      db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision").in("match_id", matchIds),
+      db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision, created_at").in("match_id", matchIds),
       db.from("match_attendance").select("match_id").in("match_id", matchIds).in("attendance_status", ["PRESENT", "LATE"]),
       db.from("team_members").select("user_id").eq("team_id", ctx.teamId).in("role", ["STAFF", "PRESIDENT"]).not("user_id", "is", null),
     ]);
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
     const staffVoterIds = new Set<string>(
       (staffRes.data ?? []).map((m) => m.user_id).filter((id): id is string => !!id)
     );
-    type MvpRow = { match_id: string; voter_id: string; candidate_id: string; is_staff_decision: boolean | null };
+    type MvpRow = { match_id: string; voter_id: string; candidate_id: string; is_staff_decision: boolean | null; created_at: string };
     const aggByMatch = new Map<string, { votes: string[]; rows: MvpRow[] }>();
     for (const v of (mvpRes.data ?? []) as MvpRow[]) {
       if (!v.candidate_id) continue;
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
       agg.rows.push(v);
       aggByMatch.set(v.match_id, agg);
     }
-    const { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
+    const { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy, LATEST_STAFF_MVP_CUTOFF } = await import("@/lib/mvpThreshold");
     // 새 MVP 정책 (mvp_vote_staff_only=OFF + match_date >= 2026-05-04)
     const { data: teamSettingsForMvp } = await db.from("teams").select("mvp_vote_staff_only").eq("id", ctx.teamId).maybeSingle();
     const mvpVoteStaffOnlyForMvp = (teamSettingsForMvp as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
@@ -154,6 +154,7 @@ export async function GET(request: NextRequest) {
       const newPolicy = shouldApplyNewMvpPolicy(matchDate, mvpVoteStaffOnlyForMvp);
       const staffDecision = pickStaffDecision(agg.rows, staffVoterIds, {
         applyBackfillHealing: !newPolicy,
+        preferLatest: !!matchDate && matchDate >= LATEST_STAFF_MVP_CUTOFF,
       });
       // 공동 1등이면 그 안에 본인이 있으면 이 경기를 본인 MVP 목록에 포함 (공동 MVP)
       const winners = resolveValidMvps(agg.votes, attendedPerMatch.get(matchId) ?? 0, staffDecision);

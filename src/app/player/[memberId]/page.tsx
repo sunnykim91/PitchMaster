@@ -144,7 +144,7 @@ async function _getPlayerData(memberId: string, teamId?: string, enableAi: boole
   const [allGoalsByScorerRes, allAssistsRes, allMvpRes, allGoalsRes] = await Promise.all([
     db.from("match_goals").select("match_id, scorer_id").in("match_id", matchIds).eq("is_own_goal", false),
     db.from("match_goals").select("match_id, assist_id").in("match_id", matchIds).not("assist_id", "is", null),
-    db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision").in("match_id", matchIds),
+    db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision, created_at").in("match_id", matchIds),
     db.from("match_goals").select("match_id, scorer_id, is_own_goal").in("match_id", matchIds),
   ]);
 

@@ -4,7 +4,7 @@ import { isStaffOrAbove } from "@/lib/permissions";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type { MatchSummaryInput } from "@/lib/server/aiMatchSummary";
 import { generateMatchSummaryFromTemplate } from "@/lib/server/matchSummaryTemplate";
-import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } from "@/lib/mvpThreshold";
+import { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy, LATEST_STAFF_MVP_CUTOFF } from "@/lib/mvpThreshold";
 
 /**
  * POST /api/ai/match-summary/[matchId]
@@ -73,7 +73,7 @@ export async function POST(
   const [goalsRes, mvpRes, attendanceRes, guestsRes, staffMembersRes, teamSettingsRes] = await Promise.all([
     db.from("match_goals").select("scorer_id, assist_id, quarter_number, is_own_goal").eq("match_id", matchId),
     // MVP는 공식 정책(70% 투표율 + 운영진 확정 + 공동 1등) 판정 — voter_id·is_staff_decision 필요
-    db.from("match_mvp_votes").select("voter_id, candidate_id, is_staff_decision").eq("match_id", matchId),
+    db.from("match_mvp_votes").select("voter_id, candidate_id, is_staff_decision, created_at").eq("match_id", matchId),
     db
       .from("match_attendance")
       .select("user_id, member_id, actually_attended, attendance_status")
@@ -170,7 +170,7 @@ export async function POST(
 
   // MVP(MOM)는 다른 집계 경로와 동일한 공식 정책으로 판정 — 단순 최다득표 금지.
   // (70% 투표율 게이트·운영진 확정·공동 1등 처리. 미달이면 mom=null → "MVP 미확정")
-  const mvpVotes = (mvpRes.data ?? []) as Array<{ voter_id: string; candidate_id: string; is_staff_decision: boolean | null }>;
+  const mvpVotes = (mvpRes.data ?? []) as Array<{ voter_id: string; candidate_id: string; is_staff_decision: boolean | null; created_at: string }>;
   const staffVoterIds = new Set<string>(
     (staffMembersRes.data ?? []).map((m) => m.user_id).filter((id): id is string => !!id)
   );
@@ -179,7 +179,10 @@ export async function POST(
   const staffDecision = pickStaffDecision(
     mvpVotes.filter((v) => v.candidate_id),
     staffVoterIds,
-    { applyBackfillHealing: !newMvpPolicy }
+    {
+      applyBackfillHealing: !newMvpPolicy,
+      preferLatest: !!match.match_date && match.match_date >= LATEST_STAFF_MVP_CUTOFF,
+    }
   );
   const mvpWinnerIds = resolveValidMvps(
     mvpVotes.map((v) => v.candidate_id).filter(Boolean),

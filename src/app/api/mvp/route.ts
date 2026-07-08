@@ -123,6 +123,9 @@ export async function POST(request: NextRequest) {
         voter_id: ctx.userId,
         candidate_id: candidateId,
         is_staff_decision: isStaffDecision,
+        // 재투표(교체) 시각을 최신으로 갱신 — 운영진 지정 "최신 1건 = MVP"(LATEST_STAFF_MVP_CUTOFF
+        // 이후 경기) 판정 기준. upsert onConflict 는 기본적으로 created_at 을 안 건드려서 명시.
+        created_at: new Date().toISOString(),
       },
       { onConflict: "match_id,voter_id" }
     )

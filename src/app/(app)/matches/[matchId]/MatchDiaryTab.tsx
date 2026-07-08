@@ -44,6 +44,8 @@ export interface MatchDiaryTabProps {
   canVoteMvp: boolean;
   /** 현재 사용자가 운영진 이상인지 */
   isStaffVoter: boolean;
+  /** 운영진 지정 확정 MVP id (토글 ON일 때만; "최신 지정" 정책 반영). null이면 미지정 */
+  staffDesignatedMvpId?: string | null;
   /** 참석자 수 — 실제 참석(PRESENT/LATE) 기준 */
   attendeeCount: number;
   /** MVP 후보 폴백용 — 참석 투표 멤버 */
@@ -78,6 +80,7 @@ function MatchDiaryTabInner({
   votes,
   canVoteMvp,
   isStaffVoter,
+  staffDesignatedMvpId,
   attendeeCount,
   attendingMembers,
   mvpCandidates,
@@ -539,9 +542,27 @@ function MatchDiaryTabInner({
               );
             })()}
 
-            {/* 현재 1위 */}
+            {/* 운영진 지정(최신 1건) 또는 실시간 1위 */}
             {(() => {
               const candidates = effectiveCandidates;
+              // 운영진 지정 모드: 확정 정책(최신 지정 1건)으로 계산된 사람을 그대로 표시 (득표수 아님)
+              const designated =
+                isStaffVoter && staffDesignatedMvpId
+                  ? candidates.find((p) => p.id === staffDesignatedMvpId)
+                  : null;
+              if (designated) {
+                return (
+                  <div className="mb-4 flex items-center gap-3 rounded-xl bg-[hsl(var(--warning)_/_0.1)] p-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--warning)_/_0.2)]">
+                      <Trophy className="h-5 w-5 text-[hsl(var(--warning))]" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-[hsl(var(--warning))]">운영진 지정</div>
+                      <div className="font-bold">{designated.name}</div>
+                    </div>
+                  </div>
+                );
+              }
               const topPlayer = candidates.reduce<{ id: string; name: string; count: number } | null>((top, p) => {
                 const count = voteCounts[p.id] ?? 0;
                 if (count > 0 && (!top || count > top.count)) return { id: p.id, name: p.name, count };

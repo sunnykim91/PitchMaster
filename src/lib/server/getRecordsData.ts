@@ -143,7 +143,7 @@ export async function getRecordsData(teamId: string) {
   const [goalsRes, assistsRes, mvpRes, attendanceRes, actualAttendRes, ratingsRes, squadsRes] = await Promise.all([
     db.from("match_goals").select("match_id, scorer_id, is_own_goal, quarter_number, side").in("match_id", matchIds),
     db.from("match_goals").select("assist_id").in("match_id", matchIds).not("assist_id", "is", null),
-    db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision").in("match_id", matchIds),
+    db.from("match_mvp_votes").select("match_id, voter_id, candidate_id, is_staff_decision, created_at").in("match_id", matchIds),
     db.from("match_attendance").select("match_id, user_id, member_id").in("match_id", matchIds).eq("vote", "ATTEND"),
     db.from("match_attendance").select("match_id").in("match_id", matchIds).in("attendance_status", ["PRESENT", "LATE"]),
     playerRatingEnabled

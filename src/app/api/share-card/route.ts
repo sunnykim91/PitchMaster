@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
     // threshold 미달이면 "확정 MVP 없음" → 공유 카드엔 "-" 표기.
     const { data: mvpVotes } = await db
       .from("match_mvp_votes")
-      .select("voter_id, candidate_id, is_staff_decision")
+      .select("voter_id, candidate_id, is_staff_decision, created_at")
       .eq("match_id", matchId);
 
     if (mvpVotes && mvpVotes.length > 0) {
@@ -79,15 +79,16 @@ export async function GET(request: NextRequest) {
         (staffResp.data ?? []).map((m) => m.user_id).filter((id): id is string => !!id)
       );
 
-      const { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy } = await import("@/lib/mvpThreshold");
+      const { resolveValidMvps, pickStaffDecision, shouldApplyNewMvpPolicy, LATEST_STAFF_MVP_CUTOFF } = await import("@/lib/mvpThreshold");
       // 새 MVP 정책 — match_date + mvp_vote_staff_only 토글
       const { data: teamSettingsForMvp } = await db.from("teams").select("mvp_vote_staff_only").eq("id", ctx.teamId).maybeSingle();
       const mvpVoteStaffOnlyForMvp = (teamSettingsForMvp as { mvp_vote_staff_only?: boolean } | null)?.mvp_vote_staff_only ?? false;
       const newPolicy = shouldApplyNewMvpPolicy(matchDate, mvpVoteStaffOnlyForMvp);
-      type MvpRow = { voter_id: string; candidate_id: string; is_staff_decision: boolean | null };
+      type MvpRow = { voter_id: string; candidate_id: string; is_staff_decision: boolean | null; created_at: string };
       const rows = (mvpVotes as MvpRow[]).filter((v) => !!v.candidate_id);
       const staffPick = pickStaffDecision(rows, staffVoterIds, {
         applyBackfillHealing: !newPolicy,
+        preferLatest: !!matchDate && matchDate >= LATEST_STAFF_MVP_CUTOFF,
       });
       const votes = rows.map((v) => v.candidate_id);
 
