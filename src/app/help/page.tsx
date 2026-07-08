@@ -333,6 +333,9 @@ export default function HelpPage() {
             <li>아래쪽의 <strong className="text-foreground">[경기 삭제]</strong> 버튼은 그 경기에 달린 모든 기록이 같이 사라지고 <strong className="text-foreground">되돌릴 수 없어요</strong>.</li>
             <li><strong className="text-foreground">[전적 반영 토글]</strong> — 켜면 이 경기 결과가 시즌 통계에 들어가고, 끄면 통계에서 빠져요.</li>
           </ul>
+          <Tip>
+            <strong className="text-foreground">경기는 저절로 끝나요 — &apos;경기 종료&apos; 버튼이 따로 없습니다.</strong> 경기 종료 시각이 지나면(종료 시각을 안 넣었으면 경기 날짜가 지나 자정이 넘으면) 몇 분 안에 자동으로 <strong className="text-foreground">&apos;끝남&apos;</strong> 상태로 바뀝니다. 끝나는 순간 MVP 투표·경기 후기·결과 알림이 줄줄이 이어지고요 — 어떤 것들이 자동으로 도는지는 <a href="#auto-ops" className="text-primary hover:underline">12번 &lsquo;자동 운영&rsquo;</a>에 정리해뒀어요.
+          </Tip>
 
           <h3 className="text-base font-semibold mb-3 mt-6">3. 누가 뭘 할 수 있는지 — 권한 체계</h3>
           <p className="text-sm text-muted-foreground leading-relaxed mb-3">
@@ -864,6 +867,83 @@ export default function HelpPage() {
             통장 캡쳐를 올리면 <strong className="text-foreground">이름·금액·날짜·시간·메모</strong>를 자동으로 표로 만들어줍니다. 지원 은행: 카카오뱅크·토스뱅크·국민·신한·우리·하나·농협.
           </p>
           <Tip>실패한 호출이나 자동 규칙으로 대신 처리된 경우는 한도에서 차감되지 않아요.</Tip>
+
+          <h3 id="auto-ops" className="scroll-mt-16 text-base font-semibold mb-3 mt-8">
+            손 안 대도 돌아가는 자동 운영
+          </h3>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+            아래 일들은 <strong className="text-foreground">앱이 정해진 때에 알아서</strong> 처리해요. 운영진이 따로 버튼을 누를 필요가 없고, 대부분 눈에 잘 안 띄어서 &quot;이거 누가 해준 거지?&quot; 싶은 것들입니다. 이 중 알림은 <a href="#pwa" className="text-primary hover:underline">홈 화면에 추가(14번)</a>해서 푸시를 켜둔 사람에게 폰 알림으로 가고, 안 켜뒀어도 앱 안 <strong className="text-foreground">종(🔔) 아이콘</strong>에는 쌓여요.
+          </p>
+          <div className="rounded-xl border border-border/60 overflow-hidden my-4">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/40 bg-[hsl(var(--secondary)_/_0.2)]">
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">자동으로 되는 일</th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">언제 · 누구에게</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40">
+                <tr>
+                  <td className="px-3 py-3 align-top"><strong className="text-foreground">경기가 &apos;끝남&apos;으로 전환</strong><br /><span className="text-muted-foreground text-xs">MVP·후기·결과 알림이 여기서 시작</span></td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">종료 시각이 지나면(시각 없으면 경기 날짜가 지나 자정이 넘으면) · 몇 분 안에</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-3 align-top"><strong className="text-foreground">MVP 투표 시작 알림</strong></td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기가 끝나는 즉시 · 그 경기 참석자에게</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-3 align-top"><strong className="text-foreground">경기 결과 알림</strong><br /><span className="text-muted-foreground text-xs">승·무·패 + 득점자</span></td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기 당일 저녁 · 팀 전체에게</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-3 align-top"><strong className="text-foreground">선수 카드 능력치(OVR)·등급 갱신</strong></td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기 기록이 쌓인 뒤 · 눈에 띄게 오른 선수에게 축하 알림</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-3 align-top"><strong className="text-foreground">내 역할 가이드 알림</strong></td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">투표가 마감되면 · 참석 투표한 사람에게</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-3 align-top"><strong className="text-foreground">투표 마감 리마인더</strong></td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">마감 전날 아침 · 아직 투표 안 한 사람에게</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-3 align-top"><strong className="text-foreground">미투표 벌금 자동 부과</strong></td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">투표 마감 뒤 · 미투표 벌금 규칙을 켠 팀만</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-3 align-top"><strong className="text-foreground">회비 미납 알림</strong></td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">매월 1일·15일 · 그 달 미납 회원에게</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-3 align-top"><strong className="text-foreground">회비 자동 면제 처리</strong></td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">선납·장기면제 등록 기간 내내 · 매월 &apos;납부 완료&apos;로 표시</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-3 align-top"><strong className="text-foreground">휴면 회원 자동 복귀</strong></td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">휴면 종료일이 지나면 · 다시 활동 회원으로</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-3 align-top"><strong className="text-foreground">경기일 날씨 예보</strong></td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">경기 5일 전부터 · 경기 정보 화면에 표시</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-3 align-top"><strong className="text-foreground">생일 축하 카드</strong></td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">생일 당일 · 대시보드 맨 위에 표시</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-3 align-top"><strong className="text-foreground">첫 경기·팀원 초대 안내</strong></td>
+                  <td className="px-3 py-3 text-muted-foreground align-top text-xs">팀을 만든 뒤 며칠간 팀원·경기가 없으면 · 회장에게</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <Tip>
+            <strong className="text-foreground">&apos;미정&apos;은 투표를 안 한 것으로 봐요.</strong> 참석·불참을 정하지 않고 미정으로만 두면, 미투표 벌금 규칙을 켜둔 팀에서는 벌금 대상이 됩니다. 마감 전에 <strong className="text-foreground">참석 또는 불참</strong>으로 꼭 정해주세요.
+          </Tip>
+          <Tip>
+            <strong className="text-foreground">계정을 탈퇴하면</strong> 14일 동안은 되돌릴 여유를 두고, 그 뒤에 회원 정보와 작성한 글·댓글 등 개인 데이터가 완전히 삭제됩니다.
+          </Tip>
         </section>
 
         {/* ══════════════ 더보기 ══════════════ */}
@@ -1092,6 +1172,18 @@ export default function HelpPage() {
               {
                 q: "AI 기능 사용 한도가 있나요?",
                 a: "기능별로 다릅니다. AI 풀 플랜은 경기당 3회 + 팀 월 20회, AI 코치 분석은 경기당 4회 + 팀 월 30회, 자동 경기 후기는 경기당 1회 재생성, 회비 OCR은 팀 월 100회. 실패한 호출이나 자동 규칙으로 대신 처리된 경우는 한도에서 차감되지 않아요.",
+              },
+              {
+                q: "경기가 언제 자동으로 끝나요? '경기 종료' 버튼이 안 보여요.",
+                a: "따로 누르는 버튼이 없어요. 경기 종료 시각이 지나면(등록할 때 종료 시각을 안 넣었으면 경기 날짜가 지나 자정이 넘으면) 몇 분 안에 자동으로 '끝남' 상태가 됩니다. 끝나는 순간 MVP 투표 시작·경기 후기·결과 알림이 자동으로 이어져요. 자세한 자동 동작은 12번 'AI·자동화 기능'의 자동 운영 표를 참고하세요.",
+              },
+              {
+                q: "참석/불참 안 정하고 '미정'으로 두면 벌금이 붙나요?",
+                a: "미투표 벌금 규칙을 켜둔 팀이라면 붙습니다. '미정'은 의사표시를 안 한 것으로 봐서 투표 안 한 사람과 똑같이 처리돼요. 마감 전에 참석 또는 불참으로 정해두면 벌금 대상에서 빠집니다. (미투표 벌금 규칙을 안 만든 팀은 애초에 해당 없음.)",
+              },
+              {
+                q: "계정을 탈퇴하면 내 데이터는 어떻게 되나요?",
+                a: "탈퇴 후 14일 동안은 되돌릴 수 있게 보관하고, 그 뒤에 회원 정보와 본인이 작성한 글·댓글 등 개인 데이터가 완전히 삭제됩니다.",
               },
               {
                 q: "무료인가요?",
