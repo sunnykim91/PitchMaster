@@ -69,30 +69,29 @@ export const PostCard = memo(function PostCard({
   const confirm = useConfirm();
   const canModifyPost = post.authorId === userId || isStaff;
 
-  // 공지(운영·팀)만 접기 대상. 한 번 접으면 재방문에도 유지 (글 id별 localStorage).
-  const isNotice = post.isGlobal || post.category === "NOTICE";
+  // 모든 게시글 접기 대상 (공지·일반 통일). 한 번 접으면 재방문에도 유지 (글 id별 localStorage).
   const [collapsed, setCollapsed] = useState(false);
   useEffect(() => {
-    if (!isNotice || typeof window === "undefined") return;
+    if (typeof window === "undefined") return;
     try {
-      if (localStorage.getItem(`notice_collapsed:${post.id}`) === "1") setCollapsed(true);
+      if (localStorage.getItem(`post_collapsed:${post.id}`) === "1") setCollapsed(true);
     } catch {
       /* localStorage 차단 환경 무시 */
     }
-  }, [isNotice, post.id]);
+  }, [post.id]);
   const toggleCollapse = () => {
     setCollapsed((prev) => {
       const next = !prev;
       try {
-        if (next) localStorage.setItem(`notice_collapsed:${post.id}`, "1");
-        else localStorage.removeItem(`notice_collapsed:${post.id}`);
+        if (next) localStorage.setItem(`post_collapsed:${post.id}`, "1");
+        else localStorage.removeItem(`post_collapsed:${post.id}`);
       } catch {
         /* 무시 */
       }
       return next;
     });
   };
-  const isCollapsed = isNotice && collapsed;
+  const isCollapsed = collapsed;
 
   return (
     <Card
@@ -143,21 +142,18 @@ export const PostCard = memo(function PostCard({
             </div>
           </div>
 
-          {/* Actions menu */}
-          {(isNotice || canModifyPost || isStaff) && (
-            <div className="flex items-center gap-1 shrink-0">
-              {isNotice && (
-                <button
-                  type="button"
-                  onClick={toggleCollapse}
-                  aria-expanded={!collapsed}
-                  title={collapsed ? "공지 펼치기" : "공지 접기"}
-                  className="flex items-center gap-1 px-2 py-2 rounded-md text-xs font-medium text-muted-foreground hover:bg-muted transition-colors active:scale-95"
-                >
-                  {collapsed ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
-                  {collapsed ? "펼치기" : "접기"}
-                </button>
-              )}
+          {/* Actions menu — 접기 토글은 모든 글에 노출 */}
+          <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={toggleCollapse}
+                aria-expanded={!collapsed}
+                title={collapsed ? "글 펼치기" : "글 접기"}
+                className="flex items-center gap-1 px-2 py-2 rounded-md text-xs font-medium text-muted-foreground hover:bg-muted transition-colors active:scale-95"
+              >
+                {collapsed ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+                {collapsed ? "펼치기" : "접기"}
+              </button>
               {!isCollapsed && isStaff && (
                 <button
                   type="button"
@@ -195,8 +191,7 @@ export const PostCard = memo(function PostCard({
                   </button>
                 </>
               )}
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Post body */}
