@@ -1697,6 +1697,26 @@
   color: hsl(var(--hue));
   border: 1px solid hsl(var(--hue) / 0.24);
 }
+.pm-mrow-jersey {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: hsl(var(--primary) / 0.16);
+  color: hsl(var(--primary));
+  border: 1px solid hsl(var(--primary) / 0.35);
+  font-feature-settings: "tnum" 1;
+}
+.pm-mrow-jersey-hash {
+  opacity: 0.55;
+  font-weight: 600;
+  margin-right: 0.5px;
+}
 .pm-mrow-meta {
   margin-top: 2px;
   display: flex;
@@ -1706,7 +1726,22 @@
   color: hsl(var(--muted-foreground));
   letter-spacing: -0.005em;
 }
-.pm-mrow-sep { opacity: 0.5; }
+/* 상태·포지션·전화번호를 항상 한 줄로. 넘치면 끝(전화번호)부터 … 로 축약 */
+.pm-mrow-metaline {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pm-mrow-pos { color: hsl(var(--foreground) / 0.82); font-weight: 500; }
+.pm-mrow-pos-more {
+  font-size: 0.82em;
+  font-weight: 600;
+  opacity: 0.55;
+  margin-left: 2px;
+}
+.pm-mrow-sep { margin: 0 3.5px; opacity: 0.45; }
 .pm-mrow-caret { color: hsl(var(--muted-foreground)); }
 
 .pm-statusdot {

@@ -745,6 +745,9 @@ const MemberRow = memo(function MemberRow({ m, onSelect }: { m: Member; onSelect
   const dot = displayStatusDot(m);
   const label = displayStatusLabel(m);
   const hue = ROLE_HUE[m.role];
+  // 포지션은 대표 2개만 노출, 나머지는 +N개로 축약 (좁은 행 넘침 방지)
+  const shownPositions = m.preferredPositions.slice(0, 2);
+  const extraPositions = m.preferredPositions.length - shownPositions.length;
   return (
     <button type="button" className="pm-mrow" onClick={() => onSelect(m.id)}>
       <div className={`pm-mrow-av pm-hue--${hue}`} aria-hidden>
@@ -765,6 +768,11 @@ const MemberRow = memo(function MemberRow({ m, onSelect }: { m: Member; onSelect
       <div className="min-w-0">
         <div className="pm-mrow-head">
           <span className="pm-mrow-name">{m.name}</span>
+          {m.jerseyNumber !== null && (
+            <span className="pm-mrow-jersey">
+              <span className="pm-mrow-jersey-hash">#</span>{m.jerseyNumber}
+            </span>
+          )}
           {m.role !== "MEMBER" && (
             <span className={`pm-rolebadge pm-hue--${hue}`}>{ROLE_LABEL[m.role]}</span>
           )}
@@ -780,13 +788,24 @@ const MemberRow = memo(function MemberRow({ m, onSelect }: { m: Member; onSelect
         </div>
         <div className="pm-mrow-meta">
           <span className={`pm-statusdot pm-statusdot--${dot}`} />
-          <span>{label}</span>
-          {m.phone && (
-            <>
-              <span className="pm-mrow-sep">·</span>
-              <span>{formatPhone(m.phone)}</span>
-            </>
-          )}
+          <span className="pm-mrow-metaline">
+            <span>{label}</span>
+            {shownPositions.length > 0 && (
+              <>
+                <span className="pm-mrow-sep">·</span>
+                <span className="pm-mrow-pos">
+                  {shownPositions.join(" · ")}
+                  {extraPositions > 0 && <span className="pm-mrow-pos-more">+{extraPositions}</span>}
+                </span>
+              </>
+            )}
+            {m.phone && (
+              <>
+                <span className="pm-mrow-sep">·</span>
+                <span>{formatPhone(m.phone)}</span>
+              </>
+            )}
+          </span>
         </div>
       </div>
       <svg width="14" height="14" viewBox="0 0 14 14" className="pm-mrow-caret" aria-hidden>
