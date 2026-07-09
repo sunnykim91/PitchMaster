@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import HelpToc from "./HelpToc";
 
 const TITLE = "PitchMaster 사용법 가이드 — 출석·회비·전술·AI 한 곳에서";
 const DESCRIPTION =
@@ -83,7 +84,7 @@ function SectionDivider({ label }: { label: string }) {
 export default function HelpPage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-3xl px-5 py-8 sm:py-12">
+      <div className="mx-auto max-w-3xl lg:max-w-6xl px-5 py-8 sm:py-12">
         {/* 백링크 */}
         <Link
           href="/login"
@@ -93,8 +94,13 @@ export default function HelpPage() {
           홈으로
         </Link>
 
+        {/* PC(≥lg): 좌측 sticky 목차 사이드바 + 본문 2단. 모바일은 단일 컬럼 + 상단 그리드 TOC */}
+        <div className="mt-6 lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-12 xl:gap-16">
+          <HelpToc className="hidden lg:block" />
+
+          <div className="min-w-0 lg:max-w-3xl">
         {/* 헤더 */}
-        <header className="mt-6 mb-8 border-b border-border/40 pb-8">
+        <header className="mb-8 border-b border-border/40 pb-8">
           <div className="text-xs font-semibold uppercase tracking-wider text-primary">
             GUIDE
           </div>
@@ -106,8 +112,8 @@ export default function HelpPage() {
           </p>
         </header>
 
-        {/* 앵커 TOC */}
-        <nav aria-label="목차" className="mb-10">
+        {/* 앵커 TOC — 모바일 전용 (PC는 좌측 사이드바 HelpToc 사용) */}
+        <nav aria-label="목차" className="mb-10 lg:hidden">
           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
             바로가기
           </p>
@@ -1268,6 +1274,8 @@ export default function HelpPage() {
             </div>
           </div>
         </footer>
+          </div>
+        </div>
       </div>
     </main>
   );
