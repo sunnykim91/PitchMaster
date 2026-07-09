@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import SidebarNav from "@/components/SidebarNav";
@@ -86,6 +87,9 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const [hasPrompt, setHasPrompt] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
+  // 하단 탭바·시트를 document.body 로 portal 하기 위한 마운트 게이트 (SSR hydration 안전).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // 오프라인 감지
   useEffect(() => {
@@ -782,6 +786,12 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
       {/* 첫 진입 코치 마크 (모바일 전용, 1회만, 더보기 메뉴에서 다시 보기 가능) */}
       <OnboardingCoachMark />
 
+      {/* 하단 탭바·더보기 시트·iOS 가이드 = fixed 오버레이. document.body 로 portal 해
+          조상 wrapper(overflow clip / animation containing block 등)에 fixed 자식이 갇혀
+          iOS Safari에서 탭바가 화면 중간으로 떠오르는 버그를 근본 차단. 앱 Modal 래퍼와 동일 이스케이프.
+          (memory: reference_ios_fixed_overflow_clip · feedback_modal_portal_containing_block) */}
+      {mounted && createPortal(
+        <>
       {/* Mobile Bottom Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-[hsl(var(--background)_/_0.98)] shadow-[0_-1px_3px_0_rgb(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)] lg:hidden">
         <div className="flex items-center justify-around">
@@ -943,6 +953,9 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
             </button>
           </div>
         </div>
+      )}
+        </>,
+        document.body,
       )}
     </div>
   );
