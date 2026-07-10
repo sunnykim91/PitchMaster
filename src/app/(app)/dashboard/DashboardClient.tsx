@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ChevronRight, Loader2, Vote, Trophy, User, Wallet, Upload, UserPlus, Calendar, ClipboardCheck, Settings, Users, AlertCircle, CheckCircle2, ChevronDown as ChevronDownIcon, Share2 } from "lucide-react";
-import { GA } from "@/lib/analytics";
+import { GA, trackEvent } from "@/lib/analytics";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
@@ -793,6 +793,94 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
               </div>
             </div>
           ) : null}
+
+          {/* I-0 · 지난 경기 결과 + MVP — 라이트 B(활성화 훅): 데이터는 이미 있으나 미노출이던 recentResult 를
+               성적 존 상단에 한 줄 글랜스로 노출. 개인 '해야 할 일'과 중복 없음(집단·서술형). */}
+          {recentResult && (() => {
+            const m = recentResult.score.match(/^(\d+)\s*:\s*(\d+)$/);
+            let outcome: { label: string; token: string } | null = null;
+            if (recentResult.opponent && m) {
+              const our = Number(m[1]);
+              const opp = Number(m[2]);
+              outcome =
+                our > opp
+                  ? { label: "승", token: "--win" }
+                  : our < opp
+                    ? { label: "패", token: "--loss" }
+                    : { label: "무", token: "--draw" };
+            }
+            return (
+              <Link
+                href={`/matches/${recentResult.id}`}
+                onClick={() => trackEvent("dashboard_lastmatch_click", { has_mvp: !!recentResult.mvp })}
+                aria-label={`지난 경기 ${recentResult.score}${outcome ? " " + outcome.label : ""}${recentResult.mvp ? `, MVP ${recentResult.mvp}` : ""}`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "10px 12px",
+                  borderRadius: 12,
+                  background: "hsl(var(--secondary) / 0.5)",
+                  border: "1px solid hsl(var(--border) / 0.5)",
+                  textDecoration: "none",
+                  color: "inherit",
+                }}
+              >
+                <span style={{ fontSize: 11, fontWeight: 600, color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap" }}>
+                  지난 경기
+                </span>
+                <span style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flex: 1 }}>
+                  <span
+                    style={{
+                      fontSize: 12.5,
+                      color: "hsl(var(--muted-foreground))",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {recentResult.opponent ? `vs ${recentResult.opponent}` : "자체전"}
+                  </span>
+                  <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)", whiteSpace: "nowrap" }}>
+                    {recentResult.score}
+                  </span>
+                  {outcome && (
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        padding: "1px 6px",
+                        borderRadius: 6,
+                        color: `hsl(var(${outcome.token}))`,
+                        background: `hsl(var(${outcome.token}) / 0.14)`,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {outcome.label}
+                    </span>
+                  )}
+                </span>
+                {recentResult.mvp && (
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "hsl(var(--foreground))",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      maxWidth: 130,
+                    }}
+                  >
+                    🏆 {recentResult.mvp}
+                  </span>
+                )}
+                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden style={{ flexShrink: 0, color: "hsl(var(--muted-foreground))" }}>
+                  <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Link>
+            );
+          })()}
 
           {/* I · 시즌 전적 (PC main col 균형용) */}
           {showRecord && (
