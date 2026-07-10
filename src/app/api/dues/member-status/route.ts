@@ -165,6 +165,26 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // 부상(INJURED) 등록 → 자동 휴면(DORMANT) 처리 → 기존 로직으로 투표 명단·벌금·알림에서 제외.
+  // 이미 휴면인 회원은 건드리지 않음(status='ACTIVE' 조건).
+  if (exemptionType === "INJURED") {
+    try {
+      await db
+        .from("team_members")
+        .update({
+          status: "DORMANT",
+          dormant_type: "INJURED",
+          dormant_until: endDate || null,
+          dormant_reason: reason || "부상",
+        })
+        .eq("id", memberId)
+        .eq("team_id", ctx.teamId)
+        .eq("status", "ACTIVE");
+    } catch (e) {
+      console.error("[member-status] injured auto-dormant failed:", e);
+    }
+  }
+
   return apiSuccess({ ...data, autoMatched: linkedDuesRecordId !== null }, 201);
 }
 
@@ -409,6 +429,21 @@ export async function PUT(request: NextRequest) {
       await clearFutureAutoAbsence(db, ctx.teamId, target.member_id);
     } catch (e) {
       console.error("[member-status] clear future auto-absence failed:", e);
+    }
+  }
+
+  // 부상 해제 → 자동 휴면 복귀. 우리가 건 INJURED 휴면만 해제(수동/다른 사유 휴면은 유지).
+  if (target?.exemption_type === "INJURED" && target.member_id) {
+    try {
+      await db
+        .from("team_members")
+        .update({ status: "ACTIVE", dormant_type: null, dormant_until: null, dormant_reason: null })
+        .eq("id", target.member_id)
+        .eq("team_id", ctx.teamId)
+        .eq("status", "DORMANT")
+        .eq("dormant_type", "INJURED");
+    } catch (e) {
+      console.error("[member-status] injured auto-active failed:", e);
     }
   }
 
