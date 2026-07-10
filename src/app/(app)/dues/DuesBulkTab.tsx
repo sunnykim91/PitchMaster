@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { apiMutate } from "@/lib/useApi";
+import { matchMemberByName } from "@/lib/dues/matchMemberByName";
 import { formatAmount } from "@/lib/formatters";
 import HintCard from "@/components/HintCard";
 
@@ -225,9 +226,10 @@ function DuesBulkTabInner({
       // description: 이름 + 메모 (메모가 있으면 합침)
       const description = memo ? `${name} ${memo}` : name;
 
-      const matchedMember = membersRef.current.find(
-        (m) => m.name && (description.includes(m.name) || m.name.includes(name))
-      );
+      const matchedMember =
+        matchMemberByName(description, membersRef.current) ??
+        // OCR이 이름 일부만 읽은 경우 보조 매칭 (설명에 멤버 전체 이름이 안 잡힐 때만)
+        (name ? membersRef.current.find((m) => m.name && m.name.includes(name)) ?? null : null);
 
       const partialReasons: PartialReason[] = [];
       if (currentDateSource === "inferred") partialReasons.push("date_inferred");
@@ -292,9 +294,9 @@ function DuesBulkTabInner({
       const memo = t.memo ?? "";
       const description = memo ? `${name} ${memo}`.trim() : name;
 
-      const matchedMember = membersRef.current.find(
-        (m) => m.name && (description.includes(m.name) || (name && m.name.includes(name)))
-      );
+      const matchedMember =
+        matchMemberByName(description, membersRef.current) ??
+        (name ? membersRef.current.find((m) => m.name && m.name.includes(name)) ?? null : null);
 
       rows.push({
         date: t.date || today,

@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { getKstNow } from "@/lib/kstDate";
+import { matchMemberByName } from "@/lib/dues/matchMemberByName";
 import { formatAmount, formatKstDateTime } from "@/lib/formatters";
 
 import { DuesRecordsTab } from "./DuesRecordsTab";
@@ -238,7 +239,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
   /** description에서 팀원 이름 자동 매칭 → user_id 반환 */
   const autoMatchMember = useCallback((description: string): string | undefined => {
     if (!description) return undefined;
-    const matched = members.find((m) => description.includes(m.name));
+    const matched = matchMemberByName(description, members);
     return matched?.id;
   }, [members]);
 

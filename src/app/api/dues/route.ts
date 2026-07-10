@@ -10,6 +10,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
 import { validateFreeText } from "@/lib/validators/safeText";
 import { checkMutationRateLimit } from "@/lib/server/apiRateLimit";
+import { matchMemberByName } from "@/lib/dues/matchMemberByName";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
@@ -142,10 +143,11 @@ export async function POST(request: NextRequest) {
           .in("status", ["ACTIVE", "DORMANT"]) // 휴면 회원이 낸 입금도 이름 매칭 (LEFT/BANNED만 제외)
           .not("user_id", "is", null);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const match = (members ?? []).find((m: any) => {
-          const name = Array.isArray(m.users) ? m.users[0]?.name : m.users?.name;
-          return name && body.description.includes(name);
-        });
+        const named = (members ?? []).map((m: any) => ({
+          user_id: m.user_id as string,
+          name: (Array.isArray(m.users) ? m.users[0]?.name : m.users?.name) as string | null,
+        }));
+        const match = matchMemberByName(body.description, named);
         if (match) memberId = match.user_id;
       }
 
