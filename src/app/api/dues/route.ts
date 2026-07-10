@@ -119,6 +119,17 @@ export async function POST(request: NextRequest) {
   // 벌금 자동 납부 매칭: 같은 멤버 + 같은 금액 + 벌금 발생일 이후 입금
   if (body.type === "INCOME") {
     try {
+      // 회비 설정 금액과 같은 입금은 '회비 납부'로 보고 벌금 자동매칭에서 제외 —
+      // 회비와 우연히 같은 금액의 미납 벌금이 있으면 회비 입금이 벌금 납부로 잘못 소진되던 문제.
+      const { data: feeSettings } = await db
+        .from("dues_settings")
+        .select("monthly_amount")
+        .eq("team_id", ctx.teamId);
+      const isMembershipFeeAmount = (feeSettings ?? []).some(
+        (s: { monthly_amount: number | null }) => s.monthly_amount === body.amount,
+      );
+
+      if (!isMembershipFeeAmount) {
       const incomeDate = data.recorded_at ? getKstNow(new Date(data.recorded_at).getTime()).toISOString().slice(0, 10) : getKstToday();
       let memberId = data.user_id;
 
@@ -165,6 +176,7 @@ export async function POST(request: NextRequest) {
           .maybeSingle();
         if (claimed) break;
       }
+      } // end if (!isMembershipFeeAmount)
     } catch {
       // 벌금 매칭 실패해도 입금 내역 등록은 성공
     }
@@ -230,6 +242,14 @@ export async function DELETE(request: NextRequest) {
 
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
+
+  // 이 입금으로 자동 납부처리됐던 벌금을 '미납'으로 원복 — 삭제 후에도 벌금이 PAID로 남던 문제.
+  // FK가 ON DELETE SET NULL 이라 반드시 삭제 '전에' 링크를 보고 원복해야 함.
+  await db
+    .from("penalty_records")
+    .update({ status: "UNPAID", is_paid: false, dues_record_id: null })
+    .eq("dues_record_id", id)
+    .eq("team_id", ctx.teamId);
 
   const { error } = await db
     .from("dues_records")
