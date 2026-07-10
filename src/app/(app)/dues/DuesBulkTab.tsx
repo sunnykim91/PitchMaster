@@ -1026,11 +1026,13 @@ function DuesBulkTabInner({
                 return;
               }
               // 기존 회비 내역과 중복 체크
+              // 키에 description 포함 — 같은 날 같은 금액을 낸 '다른 사람' 입금이
+              // 중복으로 잘못 걸러져 유실되던 문제 방지 (같은 엑셀 재업로드는 description까지 같아 여전히 dedup).
               const existingKeys = new Set(
-                summaryRecords.map((r) => `${r.recorded_at ? getKstNow(new Date(r.recorded_at).getTime()).toISOString().slice(0, 10) : ""}_${r.amount}_${r.type}`)
+                summaryRecords.map((r) => `${r.recorded_at ? getKstNow(new Date(r.recorded_at).getTime()).toISOString().slice(0, 10) : ""}_${r.amount}_${r.type}_${r.description ?? ""}`)
               );
-              const filtered = json.records.filter((r: { date: string; amount: number; type: string }) => {
-                const key = `${r.date}_${r.amount}_${r.type}`;
+              const filtered = json.records.filter((r: { date: string; amount: number; type: string; description?: string }) => {
+                const key = `${r.date}_${r.amount}_${r.type}_${r.description ?? ""}`;
                 return !existingKeys.has(key);
               });
               const dupCount = json.totalCount - filtered.length;

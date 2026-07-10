@@ -722,7 +722,8 @@ function MonthlySettlement({ records }: { records: SettlementRecord[] }) {
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
-  const monthRecords = records.filter((r) => r.recordedAt.startsWith(currentMonth));
+  // KST 월경계로 판정 (UTC ISO prefix 비교는 KST 월초 9시간을 이전 달로 오분류)
+  const monthRecords = records.filter((r) => kstYearMonth(r.recordedAt) === currentMonth);
   const income = monthRecords.filter((r) => r.type === "INCOME").reduce((s, r) => s + r.amount, 0);
   const expense = monthRecords.filter((r) => r.type === "EXPENSE").reduce((s, r) => s + r.amount, 0);
 

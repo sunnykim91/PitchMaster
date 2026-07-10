@@ -79,11 +79,13 @@ export async function GET(request: NextRequest) {
 
     const { data: voted } = await db
       .from("match_attendance")
-      .select("user_id")
+      .select("user_id, vote")
       .eq("match_id", match.id)
       .not("user_id", "is", null);
 
-    const votedIds = new Set((voted ?? []).map((v) => v.user_id));
+    // 미정(MAYBE)은 '투표함'으로 보지 않음 — no-vote 벌금 정책(MAYBE=미투표)과 일치시켜
+    // 미정자에게도 마감 전 리마인드가 가도록 (안 그러면 경고 없이 벌금만 붙음).
+    const votedIds = new Set((voted ?? []).filter((v) => v.vote !== "MAYBE").map((v) => v.user_id));
     const unvotedIds = allIds.filter((uid) => !votedIds.has(uid));
 
     if (unvotedIds.length === 0) continue;

@@ -42,14 +42,14 @@ export async function POST(request: NextRequest) {
   const exemptions = await getActiveExemptions(ctx.teamId);
   const allUserIds = allUserIdsRaw.filter((uid) => !exemptions.has(uid));
 
-  // 이미 투표한 유저 제외
+  // 이미 투표한 유저 제외 — 단, 미정(MAYBE)은 '투표함'으로 보지 않음(no-vote 벌금 정책과 일치).
   const { data: voted } = await db
     .from("match_attendance")
-    .select("user_id")
+    .select("user_id, vote")
     .eq("match_id", matchId)
     .not("user_id", "is", null);
 
-  const votedIds = new Set((voted ?? []).map((v) => v.user_id));
+  const votedIds = new Set((voted ?? []).filter((v) => v.vote !== "MAYBE").map((v) => v.user_id));
   const unvotedIds = allUserIds.filter((uid) => !votedIds.has(uid));
 
   if (unvotedIds.length === 0) {

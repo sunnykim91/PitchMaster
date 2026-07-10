@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
   // 마감이 이미 지난(<= now) + 최근 7일 이내인 경기
   const { data: deadlineMatches } = await db
     .from("matches")
-    .select("id, team_id, match_date, opponent_name")
+    .select("id, team_id, match_date, opponent_name, match_type")
     .in("team_id", teamIds)
     .in("status", PENALTY_MATCH_STATUSES)
     .gte("vote_deadline", sevenDaysAgoIso)
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
   // 마감 없이 경기일이 지난(최근 7일) 경기
   const { data: noDeadlineMatches } = await db
     .from("matches")
-    .select("id, team_id, match_date, opponent_name")
+    .select("id, team_id, match_date, opponent_name, match_type")
     .in("team_id", teamIds)
     .in("status", PENALTY_MATCH_STATUSES)
     .is("vote_deadline", null)
@@ -75,6 +75,8 @@ export async function GET(request: NextRequest) {
   const matches = [...(deadlineMatches ?? []), ...(noDeadlineMatches ?? [])].filter((m) => {
     if (seenIds.has(m.id)) return false;
     seenIds.add(m.id);
+    // EVENT(회식·MT 등 사교 일정)는 미투표 벌금 대상에서 제외
+    if ((m as { match_type?: string }).match_type === "EVENT") return false;
     return true;
   });
 
