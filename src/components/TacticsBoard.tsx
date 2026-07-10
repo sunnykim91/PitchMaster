@@ -27,7 +27,7 @@ import type {
   TeamApiResponse,
 } from "./TacticsBoard.types";
 import { SAVE_DEBOUNCE_MS, clamp, isPositionMatched, sumPlayedQuarters, formatQuarterTotal, META_SLOT_LABELS } from "./TacticsBoard.utils";
-import { QuarterDotsLegend, PlayerListSortHeader, PlayerQuarterSummary, type RosterSort, type QuarterDir } from "./TacticsQuarterDots";
+import { QuarterDotsLegend, PlayerListSortHeader, PlayerQuarterSummary, type RosterSort } from "./TacticsQuarterDots";
 
 // 외부 사용자(MatchTacticsTab)가 TeamSettings를 default import에서 같이 받을 수 있게 re-export
 export type { TeamSettings, UniformSet } from "./TacticsBoard.types";
@@ -43,16 +43,8 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   // 권한 없음(readOnly prop) 또는 편집 모드가 아니면 → 보기 전용. 모든 편집 인터랙션의 단일 게이트.
   const viewOnly = readOnly || !editing;
   const [quarterMatrixOpen, setQuarterMatrixOpen] = useState(false);
-  // 선수 목록 정렬: 쿼터(많이 뛴 순) 기본 / 이름(가나다). 쿼터순 재클릭 시 방향 토글(많이↔적게).
-  const [rosterSort, setRosterSort] = useState<RosterSort>("quarter");
-  const [quarterDir, setQuarterDir] = useState<QuarterDir>("desc");
-  const handleRosterSort = (key: RosterSort) => {
-    if (key === "quarter" && rosterSort === "quarter") {
-      setQuarterDir((d) => (d === "desc" ? "asc" : "desc"));
-    } else {
-      setRosterSort(key);
-    }
-  };
+  // 선수 목록 정렬: 이름(가나다) 기본 / 쿼터(적게 뛴 순)
+  const [rosterSort, setRosterSort] = useState<RosterSort>("name");
   const isFutsal = sportType === "FUTSAL";
   const futsalFieldCounts = useMemo(() => (isFutsal ? getFutsalFieldCounts() : []), [isFutsal]);
   const [futsalFieldCount, setFutsalFieldCount] = useState(isFutsal ? (playerCount ?? 5) : 0);
@@ -394,19 +386,17 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       }
     });
     // 각 그룹(추천/일반/배치됨) 내부를 선택한 기준으로 정렬
-    // 쿼터순 = desc(많이 뛴 순, 기본) / asc(적게 뛴 순). 동수는 가나다.
+    // 쿼터순 = 적게 뛴 선수부터(동수는 가나다) → 교체 투입 판단이 쉬움
     const byName = (a: Player, b: Player) => a.name.localeCompare(b.name, "ko");
     const cmp = rosterSort === "quarter"
-      ? (a: Player, b: Player) => {
-          const diff = sumPlayedQuarters(playerQuarterMap.get(a.id)) - sumPlayedQuarters(playerQuarterMap.get(b.id));
-          return (quarterDir === "desc" ? -diff : diff) || byName(a, b);
-        }
+      ? (a: Player, b: Player) =>
+          sumPlayedQuarters(playerQuarterMap.get(a.id)) - sumPlayedQuarters(playerQuarterMap.get(b.id)) || byName(a, b)
       : byName;
     matched.sort(cmp);
     unmatched.sort(cmp);
     assigned.sort(cmp);
     return [...matched, ...unmatched, ...assigned];
-  }, [assignedPlayers, roster, activeSlotId, formation.slots, rosterSort, quarterDir, playerQuarterMap]);
+  }, [assignedPlayers, roster, activeSlotId, formation.slots, rosterSort, playerQuarterMap]);
 
   // 현재 쿼터 쉬는 인원 (이름 가나다순)
   const restingPlayers = useMemo(() => {
@@ -1323,7 +1313,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                       )}
                       {quarterCount > 0 && <QuarterDotsLegend className="mt-2" />}
                       {quarterCount > 0 && (
-                        <PlayerListSortHeader className="mt-2" quarters={quarters} sort={rosterSort} quarterDir={quarterDir} onSort={handleRosterSort} />
+                        <PlayerListSortHeader className="mt-2" quarters={quarters} sort={rosterSort} onSort={setRosterSort} />
                       )}
                       <div className="mt-3 grid gap-2">
                         {sortedRoster.map((player) => {
@@ -1477,7 +1467,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                       )}
                       {quarterCount > 0 && <QuarterDotsLegend className="mt-3" />}
                       {quarterCount > 0 && (
-                        <PlayerListSortHeader className="mt-2" quarters={quarters} sort={rosterSort} quarterDir={quarterDir} onSort={handleRosterSort} />
+                        <PlayerListSortHeader className="mt-2" quarters={quarters} sort={rosterSort} onSort={setRosterSort} />
                       )}
                       <div className="mt-3 grid gap-2">
                         {sortedRoster.map((player) => {

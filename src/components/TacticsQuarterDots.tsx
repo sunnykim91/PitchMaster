@@ -1,12 +1,9 @@
 import type { CSSProperties } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatQuarterTotal } from "./TacticsBoard.utils";
 
 type QuarterPlayType = "full" | "first" | "second";
 export type RosterSort = "name" | "quarter";
-/** 쿼터순 정렬 방향: desc=많이 뛴 순(기본), asc=적게 뛴 순 */
-export type QuarterDir = "desc" | "asc";
 
 // 채움=진한 코랄, 쉼=회색. 대비를 위해 빈 칸도 속을 채운다.
 // FILL은 브랜드 --primary(16 85% 58%)보다 진하게 — 작은 도트에서 또렷하게 보이도록 (요청 반영).
@@ -71,13 +68,11 @@ export function QuarterDotsLegend({ className }: { className?: string }) {
 export function PlayerListSortHeader({
   quarters,
   sort,
-  quarterDir,
   onSort,
   className,
 }: {
   quarters: number[];
   sort: RosterSort;
-  quarterDir: QuarterDir;
   onSort: (s: RosterSort) => void;
   className?: string;
 }) {
@@ -85,38 +80,19 @@ export function PlayerListSortHeader({
     <div className={cn("flex w-full items-center justify-between gap-2 rounded-xl border border-transparent px-4", className)}>
       <div className="min-w-0 flex-1">
         <div className="inline-flex items-center gap-0.5 rounded-lg bg-secondary p-0.5 text-[11px]">
-          {(["name", "quarter"] as const).map((key) => {
-            const active = sort === key;
-            const isQuarter = key === "quarter";
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => onSort(key)}
-                aria-label={
-                  isQuarter
-                    ? active
-                      ? quarterDir === "desc"
-                        ? "쿼터순 (많이 뛴 순) — 눌러서 적게 뛴 순"
-                        : "쿼터순 (적게 뛴 순) — 눌러서 많이 뛴 순"
-                      : "쿼터순 정렬"
-                    : "이름순 정렬"
-                }
-                className={cn(
-                  "inline-flex items-center gap-0.5 rounded-md px-2 py-1 font-semibold transition-colors",
-                  active ? "bg-primary text-white" : "text-muted-foreground"
-                )}
-              >
-                {isQuarter ? "쿼터순" : "이름순"}
-                {isQuarter && active &&
-                  (quarterDir === "desc" ? (
-                    <ChevronDown className="h-3 w-3" aria-hidden />
-                  ) : (
-                    <ChevronUp className="h-3 w-3" aria-hidden />
-                  ))}
-              </button>
-            );
-          })}
+          {(["name", "quarter"] as const).map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onSort(key)}
+              className={cn(
+                "rounded-md px-2 py-1 font-semibold transition-colors",
+                sort === key ? "bg-primary text-white" : "text-muted-foreground"
+              )}
+            >
+              {key === "name" ? "이름순" : "쿼터순"}
+            </button>
+          ))}
         </div>
       </div>
       <span className="flex shrink-0 items-center gap-2.5">
