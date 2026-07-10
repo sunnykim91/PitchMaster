@@ -774,7 +774,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                     <Link href="/matches">경기 일정 등록</Link>
                   </Button>
                   <Button variant="success" size="sm" asChild>
-                    <Link href="/dues">회비 기록 입력</Link>
+                    <Link href="/dues?tab=records">회비 기록 입력</Link>
                   </Button>
                 </div>
               </CardContent>
