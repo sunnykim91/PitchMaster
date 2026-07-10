@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { getUniformStyle, getJerseyStyle } from "@/lib/uniformUtils";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { RotateCcw, Coffee, Share2, Copy, BarChart3, ChevronDown, Pencil, Check } from "lucide-react";
+import { RotateCcw, Coffee, Share2, Copy, BarChart3, ChevronDown, ChevronUp, Pencil, Check } from "lucide-react";
 import type {
   Player,
   Placement,
@@ -43,6 +43,8 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   // 권한 없음(readOnly prop) 또는 편집 모드가 아니면 → 보기 전용. 모든 편집 인터랙션의 단일 게이트.
   const viewOnly = readOnly || !editing;
   const [quarterMatrixOpen, setQuarterMatrixOpen] = useState(false);
+  // 쿼터별 출전 매트릭스 정렬 방향: true=많이 뛴 순(기본) / false=적게 뛴 순. '합계' 헤더 클릭으로 토글.
+  const [matrixDesc, setMatrixDesc] = useState(true);
   // 선수 목록 정렬: 이름(가나다) 기본 / 쿼터(적게 뛴 순)
   const [rosterSort, setRosterSort] = useState<RosterSort>("name");
   const isFutsal = sportType === "FUTSAL";
@@ -1694,19 +1696,29 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                 {quarters.map((q) => (
                   <th key={q} className="px-2 py-2 text-center text-xs font-medium text-muted-foreground">Q{q}</th>
                 ))}
-                <th className="pl-3 py-2 text-center text-xs font-medium text-muted-foreground">합계</th>
+                <th className="pl-3 py-2 text-center text-xs font-medium text-muted-foreground">
+                  <button
+                    type="button"
+                    onClick={() => setMatrixDesc((d) => !d)}
+                    aria-label={matrixDesc ? "합계 많이 뛴 순 — 눌러서 적게 뛴 순" : "합계 적게 뛴 순 — 눌러서 많이 뛴 순"}
+                    className="mx-auto inline-flex items-center gap-0.5 rounded px-1 py-0.5 hover:text-foreground transition-colors"
+                  >
+                    합계
+                    {matrixDesc ? <ChevronDown className="h-3 w-3" aria-hidden /> : <ChevronUp className="h-3 w-3" aria-hidden />}
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody>
               {[...roster]
-                .sort(
-                  (a, b) =>
-                    sumPlayedQuarters(playerQuarterMap.get(b.id)) - sumPlayedQuarters(playerQuarterMap.get(a.id)) ||
-                    a.name.localeCompare(b.name, "ko")
-                )
+                .sort((a, b) => {
+                  const diff =
+                    sumPlayedQuarters(playerQuarterMap.get(a.id)) - sumPlayedQuarters(playerQuarterMap.get(b.id));
+                  return (matrixDesc ? -diff : diff) || a.name.localeCompare(b.name, "ko");
+                })
                 .map((player) => {
                 const qTypeMap = playerQuarterMap.get(player.id) ?? new Map<number, "full" | "first" | "second">();
-                // 합계: full=1쿼터, first/second=0.5쿼터 — 매트릭스는 합계 많은 순 고정 정렬(동수는 가나다)
+                // 합계: full=1쿼터, first/second=0.5쿼터. 정렬은 '합계' 헤더 클릭으로 많이↔적게 토글(동수는 가나다)
                 const totalQ = sumPlayedQuarters(qTypeMap);
                 return (
                   <tr key={player.id} className="border-b border-border/10">
