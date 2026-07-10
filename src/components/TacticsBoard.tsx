@@ -1698,9 +1698,15 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               </tr>
             </thead>
             <tbody>
-              {roster.map((player) => {
+              {[...roster]
+                .sort(
+                  (a, b) =>
+                    sumPlayedQuarters(playerQuarterMap.get(b.id)) - sumPlayedQuarters(playerQuarterMap.get(a.id)) ||
+                    a.name.localeCompare(b.name, "ko")
+                )
+                .map((player) => {
                 const qTypeMap = playerQuarterMap.get(player.id) ?? new Map<number, "full" | "first" | "second">();
-                // 합계: full=1쿼터, first/second=0.5쿼터
+                // 합계: full=1쿼터, first/second=0.5쿼터 — 매트릭스는 합계 많은 순 고정 정렬(동수는 가나다)
                 const totalQ = sumPlayedQuarters(qTypeMap);
                 return (
                   <tr key={player.id} className="border-b border-border/10">
