@@ -48,10 +48,11 @@ function buildSystemPrompt(): string {
 - **time**: "HH:MM" 형식. 없으면 null.
 - **counterparty**: 입금자/출금자 이름. "홍길동", "FCMZ 김철수" 등. 이름 없으면 null.
 - **amount**: 정수 (원 단위, 쉼표·원 표시 없이). 항상 양수.
-- **type**: "입금" 또는 "출금" (문자열). 판단 기준:
-  - "+", 입금, 이체입금 → "입금"
-  - "-", 출금, 이체출금, 수수료 → "출금"
-  - 잔액 변화 방향으로 판단 가능하면 그걸로.
+- **type**: "입금" 또는 "출금" (문자열). 판단 기준 (우선순위 순):
+  - **① 잔액(balance) 증감이 가장 확실** — 바로 아래(더 과거) 거래보다 잔액이 **크면 "입금"**, 작으면 "출금". 색·부호가 애매해도 잔액이 있으면 이걸로 결정.
+  - ② "+", 입금, 이체입금 → "입금" / "-", 출금, 이체출금, 수수료 → "출금".
+  - ③ **카카오뱅크·토스는 색으로 구분** — 입금액은 보통 **파란색**, 출금액은 검정/빨강. 파란 금액은 입금.
+  - ⚠️ 방향이 불확실해도 함부로 "출금"으로 단정하지 말 것. 회비·유니폼비·구장비 **입금이 대부분**임. 애매하면 잔액/색을 다시 확인.
 - **balance**: 거래 후 잔액 (정수). 안 보이면 null.
 - **memo**: 추가 메모/태그. 없으면 null.
 
@@ -173,6 +174,31 @@ export function validateTransactions(transactions: ParsedTransaction[]): string[
   }
 
   return warnings;
+}
+
+/**
+ * 잔액(balance) 증감으로 입금/출금 방향을 결정론적으로 교정.
+ *
+ * Vision이 색/부호를 놓쳐 방향을 틀리는 경우(특히 카카오뱅크의 파란색 입금액을
+ * "출금"으로 오독하는 사례, FC발로만 총무 피드백 2026-07)를 방어한다.
+ *
+ * 은행 앱 거래내역은 위=최신 → 아래=과거 순서이고, balance 는 "그 거래 직후 잔액"이다.
+ * 따라서 어떤 거래(cur)의 서명 금액 = cur.balance − (바로 아래=더 과거 거래의 balance).
+ *   - 양수면 잔액이 늘어난 것 → "입금", 음수면 "출금".
+ * 오검출 방지를 위해 **잔액 차이가 그 거래 금액과 정확히 일치할 때만** 교정한다.
+ * (가장 오래된 1건은 더 과거 잔액이 없어 교정 불가 — LLM 판단 유지.)
+ */
+export function correctTypesFromBalance(transactions: ParsedTransaction[]): ParsedTransaction[] {
+  const out = transactions.map((t) => ({ ...t }));
+  for (let i = 0; i < out.length - 1; i++) {
+    const cur = out[i];
+    const older = out[i + 1];
+    if (cur.balance == null || older.balance == null || cur.amount == null) continue;
+    const signed = cur.balance - older.balance;
+    if (Math.abs(signed) !== cur.amount) continue; // 잔액-금액 불일치 → 신뢰 불가, 스킵
+    cur.type = signed > 0 ? "입금" : "출금";
+  }
+  return out;
 }
 
 const client = process.env.ANTHROPIC_API_KEY
@@ -351,9 +377,12 @@ export async function parseReceiptWithVision(
       return { transactions: [], source: "error", error: "invalid JSON" };
     }
 
-    const transactions = arr
+    const parsed = arr
       .map(normalizeTransaction)
       .filter((t): t is ParsedTransaction => t !== null);
+
+    // 잔액 증감으로 입출금 방향 결정론적 교정 (카카오뱅크 파란 입금액 오독 등 방어)
+    const transactions = correctTypesFromBalance(parsed);
 
     const warnings = validateTransactions(transactions);
 

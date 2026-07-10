@@ -3,6 +3,7 @@ import {
   extractJsonArray,
   normalizeTransaction,
   validateTransactions,
+  correctTypesFromBalance,
   type ParsedTransaction,
 } from "@/lib/server/aiOcrParse";
 
@@ -135,5 +136,70 @@ describe("aiOcrParse — validateTransactions", () => {
       tx({ amount: 50000, balance: 999999, type: "입금" }), // 1건만 틀림
     ]);
     expect(result.some((w) => w.includes("잔액 불일치"))).toBe(false);
+  });
+});
+
+describe("aiOcrParse — correctTypesFromBalance (입출금 방향 잔액 기반 교정)", () => {
+  function tx(overrides: Partial<ParsedTransaction>): ParsedTransaction {
+    return {
+      date: null, time: null, counterparty: null,
+      amount: 14000, type: "입금", balance: null, memo: null,
+      ...overrides,
+    };
+  }
+
+  it("카카오뱅크 유니폼비 입금이 전부 '출금'으로 오독돼도 잔액 증감으로 입금 복구 (FC발로만 실데이터)", () => {
+    // 위=최신, 아래=과거. 잔액이 위로 갈수록 +14,000씩 증가 = 전부 입금.
+    // Vision이 색을 놓쳐 전부 "출금"으로 내보낸 상황을 가정.
+    const rows = [
+      tx({ counterparty: "노우현", balance: 2_517_049, type: "출금" }),
+      tx({ counterparty: "강선교", balance: 2_503_049, type: "출금" }),
+      tx({ counterparty: "최현성", balance: 2_489_049, type: "출금" }),
+      tx({ counterparty: "장영재", balance: 2_475_049, type: "출금" }),
+      tx({ counterparty: "심민섭", balance: 2_461_049, type: "출금" }),
+      tx({ counterparty: "최인녕", balance: 2_447_049, type: "출금" }),
+      tx({ counterparty: "박형준", balance: 2_433_049, type: "출금" }),
+      tx({ counterparty: "이윤용", balance: 2_419_049, type: "출금" }),
+      tx({ counterparty: "정지효", balance: 2_405_049, type: "출금" }), // 최고(最古) — 교정 불가
+    ];
+    const out = correctTypesFromBalance(rows);
+    // 최고 1건 제외 전부 입금으로 교정
+    expect(out.slice(0, 8).every((t) => t.type === "입금")).toBe(true);
+    // 마지막(더 과거 잔액 없음)은 LLM 값 유지
+    expect(out[8].type).toBe("출금");
+  });
+
+  it("진짜 출금(잔액 감소)은 출금으로 확정", () => {
+    const rows = [
+      tx({ amount: 92_950, balance: 1_000_000, type: "입금" }), // 잘못 입금으로 옴
+      tx({ amount: 14_000, balance: 1_092_950, type: "입금" }),
+    ];
+    const out = correctTypesFromBalance(rows);
+    // 1,000,000 - 1,092,950 = -92,950 = -amount → 출금으로 교정
+    expect(out[0].type).toBe("출금");
+  });
+
+  it("잔액이 없으면 교정하지 않음 (LLM 값 유지)", () => {
+    const rows = [tx({ balance: null, type: "출금" }), tx({ balance: null, type: "출금" })];
+    const out = correctTypesFromBalance(rows);
+    expect(out.every((t) => t.type === "출금")).toBe(true);
+  });
+
+  it("잔액 차이가 금액과 안 맞으면 교정하지 않음 (오검출 방지)", () => {
+    const rows = [
+      tx({ amount: 14_000, balance: 500_000, type: "출금" }),
+      tx({ amount: 14_000, balance: 300_000, type: "출금" }), // 차이 200,000 ≠ 14,000
+    ];
+    const out = correctTypesFromBalance(rows);
+    expect(out[0].type).toBe("출금"); // 그대로
+  });
+
+  it("원본 배열을 변형하지 않음 (순수 함수)", () => {
+    const rows = [
+      tx({ balance: 2_517_049, type: "출금" }),
+      tx({ balance: 2_503_049, type: "출금" }),
+    ];
+    correctTypesFromBalance(rows);
+    expect(rows[0].type).toBe("출금"); // 원본 불변
   });
 });
