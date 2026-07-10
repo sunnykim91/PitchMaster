@@ -3,6 +3,7 @@ import { getApiContext, apiError, apiSuccess, requireRole } from "@/lib/api-help
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
 import { findPrepaymentMatch, listPrepaymentCandidates } from "@/lib/server/findPrepaymentMatch";
+import { applyLeaveAbsenceForMember, clearFutureAutoAbsence } from "@/lib/server/leaveAutoAbsent";
 
 /**
  * GET: 활성 면제/휴회/부상 목록 조회
@@ -154,6 +155,16 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) return apiError(error.message);
+
+  // 휴회(LEAVE) 등록 → 기간 내 기존 경기에 자동 불참 backfill (실패해도 등록은 성공)
+  if (exemptionType === "LEAVE") {
+    try {
+      await applyLeaveAbsenceForMember(db, ctx.teamId, memberId, startDate, endDate || null);
+    } catch (e) {
+      console.error("[member-status] leave auto-absence backfill failed:", e);
+    }
+  }
+
   return apiSuccess({ ...data, autoMatched: linkedDuesRecordId !== null }, 201);
 }
 
@@ -372,6 +383,14 @@ export async function PUT(request: NextRequest) {
   const db = getSupabaseAdmin();
   if (!db) return apiError("Database not available", 503);
 
+  // 해제 대상 조회 — 휴회(LEAVE) 해제 시 미래 경기의 자동 불참 회수용
+  const { data: target } = await db
+    .from("member_dues_exemptions")
+    .select("member_id, exemption_type")
+    .eq("id", id)
+    .eq("team_id", ctx.teamId)
+    .single();
+
   const { error } = await db
     .from("member_dues_exemptions")
     .update({
@@ -383,5 +402,15 @@ export async function PUT(request: NextRequest) {
     .eq("team_id", ctx.teamId);
 
   if (error) return apiError(error.message);
+
+  // 휴회 해제 → 아직 안 지난 경기의 자동 불참만 회수 (과거·본인 투표는 유지)
+  if (target?.exemption_type === "LEAVE" && target.member_id) {
+    try {
+      await clearFutureAutoAbsence(db, ctx.teamId, target.member_id);
+    } catch (e) {
+      console.error("[member-status] clear future auto-absence failed:", e);
+    }
+  }
+
   return apiSuccess({ ended: true });
 }

@@ -3,6 +3,7 @@ import { getApiContext, requireRole, apiError, apiSuccess } from "@/lib/api-help
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
 import { sendTeamPush } from "@/lib/server/sendPush";
+import { applyLeaveAbsenceForMatch } from "@/lib/server/leaveAutoAbsent";
 import { autoCompleteTeamMatches, shouldAutoComplete } from "@/lib/server/autoCompleteMatches";
 import { invalidateTeamStats } from "@/lib/server/aiTeamStats";
 import { validateFreeText } from "@/lib/validators/safeText";
@@ -196,6 +197,13 @@ export async function POST(request: NextRequest) {
     body: pushBody,
     url: `/matches/${data.id}?tab=info`,
   }).catch(() => {});
+
+  // 휴회(LEAVE) 중인 회원은 이 경기에 자동 불참 처리 (기간 중 새로 생기는 경기)
+  try {
+    await applyLeaveAbsenceForMatch(db, ctx.teamId!, data.id, data.match_date);
+  } catch (e) {
+    console.error("[matches] leave auto-absence failed:", e);
+  }
 
   return apiSuccess(data, 201);
 }

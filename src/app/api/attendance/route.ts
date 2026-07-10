@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
       member_id: memberId,
       vote,
       voted_at: new Date().toISOString(),
+      auto_absent: false, // 직접 투표 시 휴회 자동 불참 표시 해제 (본인 의사 우선)
     };
 
     let { data, error } = existing
@@ -162,6 +163,7 @@ export async function POST(request: NextRequest) {
     member_id: resolvedMemberId,
     vote,
     voted_at: new Date().toISOString(),
+    auto_absent: false, // 직접 투표 시 휴회 자동 불참 표시 해제 (본인 의사 우선)
   };
 
   let { data, error } = existing
