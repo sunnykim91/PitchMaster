@@ -771,10 +771,10 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" asChild>
-                    <Link href="/matches">경기 일정 등록</Link>
+                    <Link href="/matches?create=true">경기 일정 등록</Link>
                   </Button>
                   <Button variant="success" size="sm" asChild>
-                    <Link href="/dues?tab=records">회비 기록 입력</Link>
+                    <Link href="/dues?tab=records&add=1">회비 기록 입력</Link>
                   </Button>
                 </div>
               </CardContent>

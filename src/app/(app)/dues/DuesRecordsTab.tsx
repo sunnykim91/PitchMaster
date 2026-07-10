@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { GA } from "@/lib/analytics";
 import { getKstToday } from "@/lib/kstDate";
 import { EmptyState } from "@/components/EmptyState";
@@ -80,6 +81,18 @@ function DuesRecordsTabInner({
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  // 빠른 작업 '회비 기록 입력'(/dues?tab=records&add=1) 진입 시 수기 입력 폼 자동 오픈.
+  // 탭은 항상 마운트되므로 useEffect로 감지. 소비 후 add 파라미터 제거(재클릭 시 재트리거).
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get("add") !== "1") return;
+    setIsFormOpen(true);
+    setFormErrors({});
+    const url = new URL(window.location.href);
+    url.searchParams.delete("add");
+    window.history.replaceState(null, "", url.toString());
+  }, [searchParams]);
 
   const filteredRecords = useMemo(() => {
     let list = filter === "ALL" ? monthRecords : monthRecords.filter((item) => item.type === filter);

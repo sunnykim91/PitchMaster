@@ -87,6 +87,15 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
     };
   }, [viewMenuOpen]);
   const [isOpen, setIsOpen] = useState(searchParams.get("create") === "true");
+  // 빠른 작업 '경기 일정 등록'(/matches?create=true) 진입 시 생성 모달 오픈.
+  // 이미 /matches에 있어 리마운트 안 되는 경우까지 커버 + 소비 후 create param 제거(재클릭 시 재트리거).
+  useEffect(() => {
+    if (searchParams.get("create") !== "true") return;
+    setIsOpen(true);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("create");
+    window.history.replaceState(null, "", url.toString());
+  }, [searchParams]);
   // 경기 등록 직후 1인 팀 초대 CTA 모달
   const [inviteCtaMatchId, setInviteCtaMatchId] = useState<string | null>(null);
   const [inviteCopied, setInviteCopied] = useState(false);
