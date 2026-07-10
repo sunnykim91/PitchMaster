@@ -87,9 +87,17 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   const [hasPrompt, setHasPrompt] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
-  // 하단 탭바·시트를 document.body 로 portal 하기 위한 마운트 게이트 (SSR hydration 안전).
+  // 오버레이(더보기 시트·iOS 가이드)를 document.body 로 portal 하기 위한 마운트 게이트 (SSR hydration 안전).
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+
+  // 모바일 앱셸 잠금: (app) 영역 마운트 동안만 body를 뷰포트에 고정(globals.css `body.pm-app-shell`).
+  // 하단 탭바를 fixed 오버레이가 아니라 flex 하단 형제로 두어 iOS 스크롤 시 탭바 떠오름 버그를 차단.
+  // 언마운트(로그인/랜딩 등 (app) 밖으로 이동) 시 해제 → 그쪽은 기존 body 스크롤 유지.
+  useEffect(() => {
+    document.body.classList.add("pm-app-shell");
+    return () => document.body.classList.remove("pm-app-shell");
+  }, []);
 
   // 오프라인 감지
   useEffect(() => {
@@ -606,19 +614,23 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
   );
 
   return (
-    <div className="min-h-screen overflow-x-clip">
+    <div className="flex h-full flex-col overflow-hidden lg:block lg:h-auto lg:overflow-visible">
       {/* 페이지 전환 로딩 바 */}
       {navigating && (
         <div className="fixed top-0 left-0 right-0 z-[100] h-0.5">
           <div className="h-full bg-primary animate-[loading-bar_1.5s_ease-in-out_infinite]" />
         </div>
       )}
-      {/* 카카오 인앱 브라우저 안내 — 푸시 알림 미수신 등 제약 안내 */}
-      <InAppBrowserBanner />
       {/* TWA 앱: 설치 시 OS 알림 허용한 사용자를 추가 팝업 없이 푸시 구독 등록 */}
       <PushAutoSubscribe />
       {/* 네이티브 FCM 앱: launch URL 로 받은 FCM 토큰을 서버 등록 (웹푸시 대체) */}
       <NativePushRegister />
+      {/* 스크롤 영역 — 모바일 앱셸의 유일한 스크롤 컨테이너(내부만 스크롤). flex-1 로 남은 높이를
+          채우고 하단 탭바(형제)가 스크롤 경계가 됨. 데스크톱(≥lg)은 overflow-y-visible 로 되돌려
+          body 스크롤 + sticky 사이드바 유지. min-h-0 은 flex 자식 내부 스크롤 활성화에 필수. */}
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-clip lg:flex-none lg:overflow-y-visible">
+      {/* 카카오 인앱 브라우저 안내 — 푸시 알림 미수신 등 제약 안내 (스크롤 영역 상단 sticky) */}
+      <InAppBrowserBanner />
       <div className="mx-auto grid max-w-7xl gap-4 px-3 py-4 sm:px-4 lg:grid-cols-[260px_1fr]">
         {/* Offline Banner */}
         {isOffline && (
@@ -739,7 +751,7 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
         </aside>
 
         {/* Main Content */}
-        <main className="min-w-0 space-y-4 pb-16 lg:pb-0">
+        <main className="min-w-0 space-y-4">
           {session.user.isDemo && (
             <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/20 bg-[hsl(var(--primary)_/_0.05)] px-4 py-2.5">
               <p className="text-xs font-medium text-primary">
@@ -780,20 +792,18 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
           </footer>
         </main>
       </div>
+      </div>
 
       <PWAInstallPrompt />
 
       {/* 첫 진입 코치 마크 (모바일 전용, 1회만, 더보기 메뉴에서 다시 보기 가능) */}
       <OnboardingCoachMark />
 
-      {/* 하단 탭바·더보기 시트·iOS 가이드 = fixed 오버레이. document.body 로 portal 해
-          조상 wrapper(overflow clip / animation containing block 등)에 fixed 자식이 갇혀
-          iOS Safari에서 탭바가 화면 중간으로 떠오르는 버그를 근본 차단. 앱 Modal 래퍼와 동일 이스케이프.
-          (memory: reference_ios_fixed_overflow_clip · feedback_modal_portal_containing_block) */}
-      {mounted && createPortal(
-        <>
-      {/* Mobile Bottom Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-[hsl(var(--background)_/_0.98)] shadow-[0_-1px_3px_0_rgb(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)] lg:hidden">
+      {/* Mobile Bottom Tab Bar — 앱셸 하단 요소(‼️ position:fixed 아님).
+          flex 컬럼의 마지막 형제라 스크롤 영역 바로 아래에 놓여 "스크롤이 탭바 위에서 멈춤".
+          iOS Safari 모멘텀 스크롤 중 fixed 탭바가 화면 중간으로 떠오르던 버그의 근본 해소.
+          (memory: reference_ios_fixed_overflow_clip) */}
+      <nav className="shrink-0 border-t border-border bg-[hsl(var(--background)_/_0.98)] shadow-[0_-1px_3px_0_rgb(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)] lg:hidden">
         <div className="flex items-center justify-around">
           {[
             { href: "/dashboard", label: "홈", icon: Home, coachId: "tab-home" },
@@ -844,6 +854,10 @@ function ClientLayoutInner({ session, children }: ClientLayoutProps) {
         </div>
       </nav>
 
+      {/* 더보기 시트 · iOS 가이드 = fixed 오버레이 → document.body portal 로 조상 갇힘 방지.
+          (앱 Modal 래퍼와 동일 이스케이프 · feedback_modal_portal_containing_block) */}
+      {mounted && createPortal(
+        <>
       {/* More Bottom Sheet */}
       {moreSheetOpen && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="더보기 메뉴" onClick={closeSheet}>
