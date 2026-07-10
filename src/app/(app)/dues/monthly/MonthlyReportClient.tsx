@@ -218,7 +218,7 @@ export default function MonthlyReportClient({ teamName }: { teamName: string }) 
               {/* 카테고리 리스트 */}
               {data.finance.categories.length > 0 && (
                 <div className="mt-3 space-y-1.5">
-                  {data.finance.categories.slice(0, 6).map((c) => (
+                  {data.finance.categories.slice(0, 8).map((c) => (
                     <div key={`${c.type}:${c.label}`} className="flex items-center justify-between text-xs">
                       <span className="flex items-center gap-1.5">
                         <span

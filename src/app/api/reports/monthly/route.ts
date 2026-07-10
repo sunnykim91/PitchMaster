@@ -3,6 +3,7 @@ import { getApiContext, requireRole, apiError, apiSuccess } from "@/lib/api-help
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
 import { isTeamRecordMatch } from "@/lib/types";
+import { classifyCategory } from "@/lib/dues/classifyCategory";
 
 /**
  * 월별 결산 리포트 API
@@ -45,26 +46,6 @@ function parseMonth(raw: string | null): { ym: string; start: string; endExclusi
   // DATE 컬럼 비교용 (match_date)
   const dateEnd = `${nextY}-${String(nextM).padStart(2, "0")}-01`;
   return { ym, start, endExclusive, dateEnd };
-}
-
-/** description 에서 대분류 추출 — OCR 자동 분류 태그(선납/휴면/지출/용병비) 우선 */
-function classifyCategory(type: string, description: string | null): string {
-  if (type === "EXPENSE") {
-    if (!description) return "기타 지출";
-    if (description.includes("용병")) return "용병비";
-    if (description.includes("구장") || description.includes("운동장")) return "구장비";
-    if (description.includes("유니폼") || description.includes("운동복")) return "유니폼";
-    if (description.includes("회식") || description.includes("뒤풀이")) return "회식비";
-    if (description.includes("장비") || description.includes("공") || description.includes("축구공")) return "장비";
-    if (description.includes("심판")) return "심판비";
-    return "기타 지출";
-  }
-  // INCOME
-  if (!description) return "회비 수입";
-  if (description.includes("선납")) return "선납";
-  if (description.includes("벌금")) return "벌금 수입";
-  if (description.includes("이자")) return "이자";
-  return "회비 수입";
 }
 
 export async function GET(request: NextRequest) {
