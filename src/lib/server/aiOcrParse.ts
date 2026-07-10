@@ -182,23 +182,63 @@ export function validateTransactions(transactions: ParsedTransaction[]): string[
  * Vision이 색/부호를 놓쳐 방향을 틀리는 경우(특히 카카오뱅크의 파란색 입금액을
  * "출금"으로 오독하는 사례, FC발로만 총무 피드백 2026-07)를 방어한다.
  *
- * 은행 앱 거래내역은 위=최신 → 아래=과거 순서이고, balance 는 "그 거래 직후 잔액"이다.
- * 따라서 어떤 거래(cur)의 서명 금액 = cur.balance − (바로 아래=더 과거 거래의 balance).
- *   - 양수면 잔액이 늘어난 것 → "입금", 음수면 "출금".
- * 오검출 방지를 위해 **잔액 차이가 그 거래 금액과 정확히 일치할 때만** 교정한다.
- * (가장 오래된 1건은 더 과거 잔액이 없어 교정 불가 — LLM 판단 유지.)
+ * balance 는 "그 거래 직후 잔액"이므로, 인접한 두 거래 중 **더 최신 거래의 서명 금액**
+ * = (더 최신 거래 잔액 − 더 과거 거래 잔액). 양수면 "입금", 음수면 "출금".
+ *
+ * ⚠️ 어느 쪽이 더 최신인지(정렬 방향)를 먼저 판정해야 한다. 은행 앱은 대개 최신이 위지만,
+ * 종이통장 사본·일부 캡처는 과거→최신(오름차순)이라, 방향을 가정하면 정상 입금을
+ * 반대로 뒤집는다(회비는 같은 금액 다건이 흔해 오검출 가드도 안 걸림). 그래서:
+ *   1) date+time 단조성으로 방향 판정 (1순위)
+ *   2) 금액이 서로 다른 인접쌍의 잔액차로 투표 (2순위)
+ *   3) 둘 다 모호하면 **교정하지 않는다** (정상 데이터 파괴 방지 — LLM 판단 유지)
+ * 그리고 잔액 차이가 그 거래 금액과 **정확히 일치할 때만** 교정한다.
  */
 export function correctTypesFromBalance(transactions: ParsedTransaction[]): ParsedTransaction[] {
   const out = transactions.map((t) => ({ ...t }));
+  if (out.length < 2) return out;
+
+  const order = detectChronoOrder(out);
+  if (order === "unknown") return out; // 방향 모호 → 교정 스킵
+  const newestFirst = order === "newest-first";
+
   for (let i = 0; i < out.length - 1; i++) {
-    const cur = out[i];
-    const older = out[i + 1];
-    if (cur.balance == null || older.balance == null || cur.amount == null) continue;
-    const signed = cur.balance - older.balance;
-    if (Math.abs(signed) !== cur.amount) continue; // 잔액-금액 불일치 → 신뢰 불가, 스킵
-    cur.type = signed > 0 ? "입금" : "출금";
+    const newer = newestFirst ? out[i] : out[i + 1]; // 더 최신 거래
+    const older = newestFirst ? out[i + 1] : out[i];
+    if (newer.balance == null || older.balance == null || newer.amount == null) continue;
+    const signed = newer.balance - older.balance;
+    if (Math.abs(signed) !== newer.amount) continue; // 잔액-금액 불일치 → 스킵
+    newer.type = signed > 0 ? "입금" : "출금";
   }
   return out;
+}
+
+/** 거래 목록이 최신→과거(newest-first)인지 과거→최신(oldest-first)인지 판정 */
+export function detectChronoOrder(txs: ParsedTransaction[]): "newest-first" | "oldest-first" | "unknown" {
+  // 1순위: 날짜(+시각) 단조성. 대부분 은행앱은 최신이 위(내림차순).
+  const keys = txs.map((t) => (t.date ? `${t.date} ${t.time ?? ""}` : null));
+  let inc = 0, dec = 0;
+  for (let i = 0; i < keys.length - 1; i++) {
+    const x = keys[i], y = keys[i + 1];
+    if (!x || !y || x === y) continue;
+    if (x > y) dec++;
+    else inc++;
+  }
+  if (dec > 0 && inc === 0) return "newest-first";
+  if (inc > 0 && dec === 0) return "oldest-first";
+
+  // 2순위: 금액이 서로 다른 인접쌍의 잔액차로 투표
+  let nf = 0, of = 0;
+  for (let i = 0; i < txs.length - 1; i++) {
+    const a = txs[i], b = txs[i + 1];
+    if (a.balance == null || b.balance == null || a.amount == null || b.amount == null) continue;
+    if (a.amount === b.amount) continue; // 같은 금액은 방향 판별 불가
+    const d = Math.abs(a.balance - b.balance);
+    if (d === a.amount) nf++;
+    else if (d === b.amount) of++;
+  }
+  if (nf > of) return "newest-first";
+  if (of > nf) return "oldest-first";
+  return "unknown";
 }
 
 const client = process.env.ANTHROPIC_API_KEY
