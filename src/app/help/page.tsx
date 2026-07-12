@@ -671,9 +671,29 @@ export default function HelpPage() {
             <li>하단 탭바의 <strong className="text-foreground">[기록]</strong> 메뉴에서 시즌 단위 누적 통계를 볼 수 있어요.</li>
             <li>선수별 <strong className="text-foreground">레이더 차트</strong>로 강점·약점 한눈에.</li>
             <li><strong className="text-foreground">시즌 랭킹</strong> — 득점왕·어시스트왕·MVP왕·출석왕.</li>
-            <li><strong className="text-foreground">종합 랭킹</strong> — 골·도움·MVP·수비·출석을 합친 <strong className="text-foreground">시즌 종합 공헌점수</strong> 순위. 공격수만 상위권에 오르지 않게 수비 기여를 크게 반영해요.</li>
+            <li><strong className="text-foreground">종합 랭킹</strong> — 골·도움·MVP·수비·출석을 고루 반영한 <strong className="text-foreground">밸런스 점수</strong> 순위. 골·어시가 잘 기록되는 조기축구에서도 수비수·키퍼가 소외되지 않게 설계했어요. (점수 계산법은 아래 펼침 참고)</li>
             <li><strong className="text-foreground">수비 포인트</strong> — 키퍼와 수비수(센터백·풀백·윙백)를 한 랭킹으로. 무실점 쿼터당 <strong className="text-foreground">키퍼 2점·수비 1점</strong>. (전술판을 채운 경기 기준)</li>
           </ul>
+
+          <div className="mt-4">
+            <details className="rounded-xl border border-border/60 overflow-hidden">
+              <summary className="flex items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground cursor-pointer bg-[hsl(var(--secondary)_/_0.2)] hover:bg-[hsl(var(--secondary)_/_0.4)] transition-colors list-none">
+                종합 랭킹 점수는 어떻게 매겨지나요? (밸런스 점수)
+                <span className="text-muted-foreground text-base">+</span>
+              </summary>
+              <div className="px-4 py-4 text-sm text-muted-foreground leading-relaxed border-t border-border/40 bg-[hsl(var(--background)_/_0.4)]">
+                <p className="mb-2.5">골·도움·MVP·수비·출석은 단위가 서로 달라요(골은 개수, 수비는 무실점 쿼터, 출석은 경기 수). 그냥 더하면 숫자가 큰 항목이 무조건 이깁니다. 그래서 각 부문에서 <strong className="text-foreground">&quot;우리 팀 1등&quot;에 얼마나 가까운지를 점수로 환산</strong>해 합쳐요.</p>
+                <ul className="list-disc list-inside space-y-1.5 pl-1">
+                  <li>부문마다 <strong className="text-foreground">팀 1등이면 20점, 절반이면 10점</strong> (내 기록 ÷ 팀 1등 기록 × 20).</li>
+                  <li>골·도움·MVP·수비·출석 <strong className="text-foreground">5개 부문 점수를 합산</strong>한 게 종합 점수예요.</li>
+                  <li>한 부문만 잘해선 최대 20점 → <strong className="text-foreground">여러 부문을 골고루 잘해야 종합 상위</strong>. 골만 넣는 공격수도, 무실점만 지키는 키퍼도 혼자 독주하지 못하고, 두루 기여한 선수가 1위에 올라요.</li>
+                  <li>수비 기록이 적은 팀이라도 그 팀 안 수비 1등은 20점을 받으니, <strong className="text-foreground">수비수·키퍼가 순위에서 소외되지 않아요.</strong></li>
+                  <li>공정성을 위해 <strong className="text-foreground">일정 경기 수 이상 출전한 선수</strong>만 대상입니다(소수 경기 요행 방지).</li>
+                </ul>
+                <p className="mt-2.5 text-xs">※ 우리 팀 안에서의 상대 순위예요. 점수는 팀원들 기록을 기준으로 하므로, 다른 팀과 직접 비교하는 용도는 아닙니다.</p>
+              </div>
+            </details>
+          </div>
 
           <div className="mt-4">
             <details className="rounded-xl border border-border/60 overflow-hidden">
