@@ -14,10 +14,15 @@ type ReferralRow = {
   activated_at: string | null;
   rewarded_at: string | null;
   reward_note: string | null;
+  referred_team_id: string | null;
   referrer: { name: string | null; phone: string | null } | null;
   referred: { name: string | null } | null;
   team: { name: string | null } | null;
+  stats: { completedMatches: number; linkedMembers: number; totalMembers: number };
 };
+
+/** 활성화 게이트: 완료경기≥1 && 카카오 연동멤버≥3 */
+const MIN_LINKED = 3;
 
 const STATUS_LABEL: Record<ReferralRow["status"], { label: string; cls: string }> = {
   PENDING: { label: "진행중", cls: "text-muted-foreground" },
@@ -93,7 +98,9 @@ export function AdminReferralsTab() {
           <p className="text-xs text-muted-foreground">지급할 추천이 없습니다.</p>
         ) : (
           <div className="space-y-2">
-            {pendingReward.map((r) => (
+            {pendingReward.map((r) => {
+              const s = r.stats ?? { completedMatches: 0, linkedMembers: 0, totalMembers: 0 };
+              return (
               <Card key={r.id} className="border-[hsl(var(--warning)_/_0.3)]">
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between gap-2">
@@ -103,6 +110,20 @@ export function AdminReferralsTab() {
                       </div>
                       <div className="text-[12px] text-muted-foreground">
                         연락처 {r.referrer?.phone ?? "없음"} · 활성 {fmt(r.activated_at)}
+                      </div>
+                      {/* 검수 신호 — 진짜 팀인지 판단 (연동멤버=실제 가입자, 완료경기=활동) */}
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+                        <span className="rounded-md bg-secondary px-1.5 py-0.5 font-medium text-foreground">
+                          연동 {s.linkedMembers}명
+                        </span>
+                        <span className="text-muted-foreground">전체 {s.totalMembers}명</span>
+                        <span className="text-muted-foreground">·</span>
+                        <span className="text-muted-foreground">완료경기 {s.completedMatches}</span>
+                        {s.linkedMembers >= MIN_LINKED && s.completedMatches >= 1 ? (
+                          <span className="text-[hsl(var(--success))]">✓ 기준 충족</span>
+                        ) : (
+                          <span className="text-[hsl(var(--warning))]">⚠ 확인 필요</span>
+                        )}
                       </div>
                     </div>
                     <div className="flex shrink-0 gap-1.5">
@@ -116,7 +137,8 @@ export function AdminReferralsTab() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -130,10 +152,14 @@ export function AdminReferralsTab() {
           <div className="space-y-1.5">
             {others.map((r) => {
               const st = STATUS_LABEL[r.status];
+              const s = r.stats ?? { completedMatches: 0, linkedMembers: 0, totalMembers: 0 };
               return (
                 <div key={r.id} className="flex items-center justify-between gap-2 rounded-lg border border-border/50 px-3 py-2 text-xs">
                   <span className="min-w-0 truncate">
                     {r.referrer?.name ?? "?"} → {r.team?.name ?? r.referred?.name ?? "가입만"}
+                    {r.referred_team_id && (
+                      <span className="text-muted-foreground"> · 연동{s.linkedMembers}/경기{s.completedMatches}</span>
+                    )}
                   </span>
                   <span className={cn("shrink-0 font-semibold", st.cls)}>{st.label}</span>
                 </div>
