@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { GA } from "@/lib/analytics";
 import { getKstToday } from "@/lib/kstDate";
 import { EmptyState } from "@/components/EmptyState";
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Receipt, Pencil, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Receipt, Pencil, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +18,7 @@ import { apiMutate } from "@/lib/useApi";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { formatAmount } from "@/lib/formatters";
+import { downloadCsv } from "@/lib/csv";
 import type { Role } from "@/lib/types";
 
 /* ── 타입 정의 ── */
@@ -225,6 +226,17 @@ function DuesRecordsTabInner({
 
   const [y, m] = monthFilter.split("-").map(Number);
 
+  // 회비 입출금 CSV 내보내기 (운영진 전용) — 현재 보고 있는 달·필터 기준
+  function handleExportDues() {
+    const headers = ["날짜", "구분", "금액", "회원", "내용"];
+    const rows = filteredRecords.map((r) => {
+      const d = new Date(r.recordedAt);
+      const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      return [date, r.type === "INCOME" ? "입금" : "출금", r.amount, r.memberName ?? "", r.description];
+    });
+    downloadCsv(`회비내역_${monthFilter}.csv`, headers, rows);
+  }
+
   return (
     <div role="tabpanel" id="tabpanel-records" aria-labelledby="tab-records" className="space-y-4">
       {/* ── 헤더: 월 네비게이션 (중앙) + 필터 ── */}
@@ -290,6 +302,16 @@ function DuesRecordsTabInner({
               )}
             >
               {selectMode ? "완료" : "편집"}
+            </button>
+          )}
+          {isStaffOrAbove(role) && filteredRecords.length > 0 && !selectMode && (
+            <button
+              type="button"
+              aria-label="내보내기"
+              onClick={handleExportDues}
+              className="flex shrink-0 items-center justify-center rounded-md border border-white/[0.06] bg-secondary px-2 py-1 text-muted-foreground transition-colors hover:text-foreground active:scale-[0.97]"
+            >
+              <Download className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
