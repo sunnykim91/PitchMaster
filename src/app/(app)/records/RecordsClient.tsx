@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { BarChart3, ArrowUpDown, ArrowDown, Download, Share2, Trophy, Sparkles } from "lucide-react";
+import { BarChart3, ArrowUpDown, ArrowDown, Download, Share2, Trophy, Sparkles, Info } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { isStaffOrAbove } from "@/lib/permissions";
@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { downloadCsv } from "@/lib/csv";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/EmptyState";
 import dynamic from "next/dynamic";
@@ -61,13 +62,10 @@ type RecordStat = {
   /** 토글 ON 팀에만 채워짐. OFF면 undefined */
   avgRating?: number;
   ratingCount?: number;
-  /** 키퍼 클린시트(무실점 쿼터) — 전술판에 GK로 배정된 쿼터가 있을 때만 채워짐 */
-  gkCleanSheets?: number;
-  gkQuarters?: number;
-  /** 수비 포인트(센터백·풀백·윙백) — 전술판에 수비로 선 쿼터가 있을 때만 채워짐 */
-  defenderPoints?: number;
-  defenderCleanQuarters?: number;
-  defenderCleanMatches?: number;
+  /** 통합 수비 포인트 = 키퍼 무실점쿼터×2 + 필드수비 무실점쿼터×1. 무실점 쿼터가 있을 때만 채워짐 */
+  defensePoints?: number;
+  defenseGkQuarters?: number;
+  defenseFieldQuarters?: number;
 };
 
 function mapSeason(raw: Record<string, unknown>): Season {
@@ -80,6 +78,42 @@ function mapSeason(raw: Record<string, unknown>): Season {
     isActive: Boolean(raw.is_active),
     createdAt: String(raw.created_at ?? ""),
   };
+}
+
+/**
+ * ① 종합 랭킹 — 밸런스 점수(정규화). 서경카페 피드백 2026-07-12, 실팀 11개 심층분석으로 확정.
+ *
+ * 각 부문(골·도움·MVP·수비·출석)에서 "팀 1등 대비 얼마나 가까운지"를 20점 만점으로 환산해 합산(만점 100).
+ * 선형 배점(골×N)은 조기축구 특성상 골·어시만 잘 기록돼 수비수·키퍼가 구조적으로 소외되고(대부분 팀
+ * 6~8위), 수비 가중치를 올리면 촘촘한 팀에선 키퍼가 한 스탯으로 독주(편중 66%)하는 딜레마가 있었다.
+ * 정규화는 (a) 수비 기록이 부실한 팀에서도 수비 대표를 상위 노출, (b) 한 스탯 독주 방지(편중 32%),
+ * (c) 여러 부문 골고루 잘한 다재다능한 선수를 1위로 → 데이터상 유일하게 포지션 공정.
+ */
+type BalanceMax = { g: number; a: number; mvp: number; def: number; att: number };
+function computeBalanceScore(s: RecordStat, max: BalanceMax): number {
+  return Math.round(
+    20 * (s.goals / max.g) +
+      20 * (s.assists / max.a) +
+      20 * (s.mvp / max.mvp) +
+      20 * ((s.defensePoints ?? 0) / max.def) +
+      20 * (s.matches / max.att)
+  );
+}
+
+/** 랭킹 카드의 "점수 기준" 펼침 — 어떤 기준으로 순위가 매겨졌는지 사용자에게 설명 */
+function ScoreCriteria({ children }: { children: ReactNode }) {
+  return (
+    <details className="group mt-2">
+      <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground">
+        <Info className="h-3 w-3" />
+        점수 기준
+        <span className="text-[9px] transition-transform group-open:rotate-180">▾</span>
+      </summary>
+      <div className="mt-1.5 rounded-lg bg-background p-2.5 text-[11px] leading-relaxed text-muted-foreground">
+        {children}
+      </div>
+    </details>
+  );
 }
 
 function mapRecord(raw: Record<string, unknown>): RecordStat {
@@ -98,11 +132,9 @@ function mapRecord(raw: Record<string, unknown>): RecordStat {
     teamRole: (raw.teamRole as string) ?? null,
     avgRating: typeof raw.avgRating === "number" ? Number(raw.avgRating) : undefined,
     ratingCount: typeof raw.ratingCount === "number" ? Number(raw.ratingCount) : undefined,
-    gkCleanSheets: typeof raw.gkCleanSheets === "number" ? Number(raw.gkCleanSheets) : undefined,
-    gkQuarters: typeof raw.gkQuarters === "number" ? Number(raw.gkQuarters) : undefined,
-    defenderPoints: typeof raw.defenderPoints === "number" ? Number(raw.defenderPoints) : undefined,
-    defenderCleanQuarters: typeof raw.defenderCleanQuarters === "number" ? Number(raw.defenderCleanQuarters) : undefined,
-    defenderCleanMatches: typeof raw.defenderCleanMatches === "number" ? Number(raw.defenderCleanMatches) : undefined,
+    defensePoints: typeof raw.defensePoints === "number" ? Number(raw.defensePoints) : undefined,
+    defenseGkQuarters: typeof raw.defenseGkQuarters === "number" ? Number(raw.defenseGkQuarters) : undefined,
+    defenseFieldQuarters: typeof raw.defenseFieldQuarters === "number" ? Number(raw.defenseFieldQuarters) : undefined,
   };
 }
 
@@ -293,24 +325,34 @@ export default function RecordsClient({
   const topGoals = useMemo(() => [...stats].sort((a, b) => b.goals - a.goals).slice(0, 3), [stats]);
   const topAssists = useMemo(() => [...stats].sort((a, b) => b.assists - a.assists).slice(0, 3), [stats]);
   const topMvp = useMemo(() => [...stats].sort((a, b) => b.mvp - a.mvp).slice(0, 3), [stats]);
-  // 키퍼 클린시트(무실점 쿼터) 랭킹 — 전술판에 GK로 선 쿼터가 있는 선수만
-  const topCleanSheets = useMemo(
+  // 통합 수비 포인트 랭킹 — 키퍼(무실점쿼터×2)·필드수비(무실점쿼터×1)를 한 랭킹으로 (포인트 > 0)
+  const topDefense = useMemo(
     () =>
       stats
-        .filter((s) => (s.gkQuarters ?? 0) > 0)
-        .sort((a, b) => (b.gkCleanSheets ?? 0) - (a.gkCleanSheets ?? 0))
+        .filter((s) => (s.defensePoints ?? 0) > 0)
+        .sort((a, b) => (b.defensePoints ?? 0) - (a.defensePoints ?? 0))
         .slice(0, 3),
     [stats]
   );
-  // 수비 포인트 랭킹 — 전술판에 수비(센터백·풀백·윙백)로 선 선수만 (포인트 > 0)
-  const topDefenders = useMemo(
-    () =>
-      stats
-        .filter((s) => (s.defenderPoints ?? 0) > 0)
-        .sort((a, b) => (b.defenderPoints ?? 0) - (a.defenderPoints ?? 0))
-        .slice(0, 3),
-    [stats]
-  );
+  // ① 종합 랭킹 — 밸런스 점수(정규화) top 5. 부문별 팀 1등 대비 환산 (서경카페 피드백 2026-07-12)
+  // 최소 출전 가드: 소수 경기 요행으로 부문 1등을 차지하는 왜곡 방지 (시즌의 20%, 최소 3경기)
+  const overallMinGames = Math.max(3, Math.ceil((totalSeasonMatches ?? 0) * 0.2));
+  const topOverall = useMemo(() => {
+    const qualified = stats.filter((s) => s.matches >= overallMinGames);
+    const pool = qualified.length >= 3 ? qualified : stats; // 소규모 팀 보호
+    const max: BalanceMax = {
+      g: Math.max(1, ...pool.map((s) => s.goals)),
+      a: Math.max(1, ...pool.map((s) => s.assists)),
+      mvp: Math.max(1, ...pool.map((s) => s.mvp)),
+      def: Math.max(1, ...pool.map((s) => s.defensePoints ?? 0)),
+      att: Math.max(1, ...pool.map((s) => s.matches)),
+    };
+    return pool
+      .map((s) => ({ ...s, overall: computeBalanceScore(s, max) }))
+      .filter((s) => s.overall > 0)
+      .sort((a, b) => b.overall - a.overall)
+      .slice(0, 5);
+  }, [stats, overallMinGames]);
 
   const [sortKey, setSortKey] = useState<"points" | "goals" | "assists" | "mvp" | "attendanceRate" | "avgRating">("points");
   const allStats = useMemo(() => {
@@ -330,6 +372,27 @@ export default function RecordsClient({
   function handleSeasonChange(value: string) {
     setSeasonId(value);
     setInitialRecordsUsed(true);
+  }
+
+  // 선수 시즌 기록 CSV 내보내기 (운영진 전용) — 현재 보고 있는 시즌 기준
+  function handleExportRecords() {
+    const headers = ["이름", "등번호", "경기수", "골", "어시스트", "공격P", "MVP", "출석률(%)", "평점"];
+    const rows = stats.map((s) => {
+      const rating = (s as { avgRating?: number }).avgRating;
+      return [
+        s.memberName,
+        s.jerseyNumber ?? "",
+        s.matches,
+        s.goals,
+        s.assists,
+        s.goals + s.assists,
+        s.mvp,
+        Math.round(s.attendanceRate * 100),
+        rating != null ? rating : "",
+      ];
+    });
+    const label = isAllTime ? "전체통합" : ((season as { name?: string } | undefined)?.name ?? "시즌");
+    downloadCsv(`선수기록_${label}.csv`, headers, rows);
   }
 
   // useApi already refetches when URL changes (seasonId in URL),
@@ -404,8 +467,21 @@ export default function RecordsClient({
         </div>
       </div>
 
-      {/* ── Season Selector (탭 바 아래 독립 줄) ── */}
-      <div className="flex justify-end -mt-1 -mb-2">
+      {/* ── Season Selector (탭 바 아래 독립 줄) + 내보내기(운영진) ── */}
+      <div className="flex items-center justify-between -mt-1 -mb-2">
+        {isStaff && stats.length > 0 ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleExportRecords}
+            className="h-8 gap-1.5 px-2 text-xs text-muted-foreground"
+          >
+            <Download className="h-3.5 w-3.5" />
+            내보내기
+          </Button>
+        ) : (
+          <span />
+        )}
         <Select value={seasonId} onValueChange={handleSeasonChange}>
           <SelectTrigger className="h-8 w-auto min-w-[90px] text-xs">
             <SelectValue />
@@ -478,7 +554,7 @@ export default function RecordsClient({
         <CardContent>
           {(() => {
             const showRating = myStats.avgRating !== undefined;
-            const showGkCleanSheet = (myStats.gkQuarters ?? 0) > 0;
+            const showDefense = (myStats.defensePoints ?? 0) > 0;
             const points = myStats.goals + myStats.assists;
             const attendancePercent = Math.round(myStats.attendanceRate * 100);
 
@@ -526,14 +602,17 @@ export default function RecordsClient({
                     ? `출석률 ${attendancePercent}%`
                     : undefined,
               },
-              ...(showGkCleanSheet
+              ...(showDefense
                 ? [{
-                    label: "무실점 쿼터",
-                    value: myStats.gkCleanSheets ?? 0,
-                    color: "text-violet-400",
-                    bg: "bg-violet-500/10",
+                    label: "수비 포인트",
+                    value: myStats.defensePoints ?? 0,
+                    color: "text-teal-400",
+                    bg: "bg-teal-500/10",
                     rank: null as number | null,
-                    sub: `키퍼로 ${myStats.gkQuarters}쿼터 출전`,
+                    sub: [
+                      (myStats.defenseGkQuarters ?? 0) > 0 ? `키퍼 무실점 ${myStats.defenseGkQuarters}쿼터` : null,
+                      (myStats.defenseFieldQuarters ?? 0) > 0 ? `수비 무실점 ${myStats.defenseFieldQuarters}쿼터` : null,
+                    ].filter(Boolean).join(" · ") || undefined,
                   } as Item]
                 : []),
               ...(showRating
@@ -546,7 +625,7 @@ export default function RecordsClient({
                   } as Item]
                 : []),
             ];
-            const extraCols = (showRating ? 1 : 0) + (showGkCleanSheet ? 1 : 0);
+            const extraCols = (showRating ? 1 : 0) + (showDefense ? 1 : 0);
             const gridCols =
               extraCols === 2 ? "grid-cols-2 md:grid-cols-6"
               : extraCols === 1 ? "grid-cols-2 md:grid-cols-5"
@@ -571,7 +650,7 @@ export default function RecordsClient({
               myStats.mvp === 0 &&
               myStats.matches === 0 &&
               !showRating &&
-              !showGkCleanSheet;
+              !showDefense;
 
             return (
               <>
@@ -664,6 +743,78 @@ export default function RecordsClient({
         );
       })()}
 
+      {/* ── 종합 랭킹 — 골·도움·MVP·수비·출석 합산 공헌점수 (서경카페 피드백 2026-07-12) ── */}
+      {!loadingRecords && topOverall.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">종합 랭킹</CardTitle>
+            <p className="mt-0.5 text-xs text-muted-foreground">골·도움·MVP·수비·출석을 고루 반영한 밸런스 점수</p>
+            <ScoreCriteria>
+              각 부문에서 <span className="font-medium text-foreground/80">팀 1등에 얼마나 가까운지</span>를 점수로 환산해 합쳤어요.
+              <span className="mt-1.5 block font-medium text-foreground/80">
+                골 · 도움 · MVP · 수비 · 출석 — 부문마다 팀 1등이면 20점, 절반이면 10점
+              </span>
+              <span className="mt-1 block">한 부문만 잘해선 1위가 어렵고, 여러 부문을 골고루 잘해야 종합 상위예요. 그래서 골·어시가 잘 기록되는 조기축구에서도 수비수·키퍼가 소외되지 않아요. ({overallMinGames}경기 이상 출전 대상)</span>
+            </ScoreCriteria>
+          </CardHeader>
+          <CardContent>
+            {(() => {
+              const maxScore = topOverall[0]?.overall || 1;
+              return (
+                <div className="space-y-1.5">
+                  {topOverall.map((item, index) => {
+                    const isFirst = index === 0;
+                    const pct = Math.max(8, Math.round((item.overall / maxScore) * 100));
+                    const breakdown = [
+                      item.goals > 0 ? `${item.goals}골` : null,
+                      item.assists > 0 ? `${item.assists}도움` : null,
+                      item.mvp > 0 ? `MVP ${item.mvp}` : null,
+                      (item.defensePoints ?? 0) > 0 ? `수비 ${item.defensePoints}` : null,
+                      `${item.matches}출전`,
+                    ].filter(Boolean).join(" · ");
+                    return (
+                      <div key={item.memberId} className={cn("relative overflow-hidden rounded-lg", isFirst ? "py-2.5" : "py-2")}>
+                        {/* 점수 비례 리더보드 막대 (배경 채움) */}
+                        <div
+                          className="absolute inset-y-0 left-0 rounded-lg"
+                          style={{ width: `${pct}%`, background: isFirst ? "hsl(var(--warning) / 0.16)" : "hsl(var(--secondary))" }}
+                          aria-hidden
+                        />
+                        <div className="relative flex items-center justify-between gap-2 px-2.5">
+                          <span className="flex min-w-0 items-center gap-2.5">
+                            <span className={cn(
+                              "inline-flex shrink-0 items-center justify-center rounded-md font-bold",
+                              isFirst
+                                ? "h-7 w-7 bg-[hsl(var(--warning)_/_0.28)] text-[hsl(var(--warning))]"
+                                : "h-6 w-6 bg-background text-xs text-muted-foreground"
+                            )}>
+                              {isFirst ? <Trophy className="h-3.5 w-3.5" /> : index + 1}
+                            </span>
+                            <span className="min-w-0">
+                              <span className={cn("block truncate", isFirst ? "text-[15px] font-bold text-foreground" : "text-sm text-foreground/90")}>
+                                {item.memberName ?? "-"}
+                              </span>
+                              <span className="block truncate text-[11px] text-muted-foreground">{breakdown}</span>
+                            </span>
+                          </span>
+                          <span className="shrink-0 whitespace-nowrap text-right">
+                            <span className={cn(
+                              "font-bold font-[family-name:var(--font-display)]",
+                              isFirst ? "text-xl text-[hsl(var(--warning))]" : "text-lg text-foreground"
+                            )}>{item.overall}</span>
+                            <span className="ml-0.5 text-xs text-muted-foreground">점</span>
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+      )}
+
       {/* ── Row 2: 팀 랭킹 (PC: 3열 가로 배치) ── */}
       <Card>
         <CardHeader>
@@ -708,19 +859,22 @@ export default function RecordsClient({
               }, {
                 title: "MVP왕", list: topMvp, getValue: (s: RecordStat) => s.mvp, color: "#f59e0b",
               },
-              // 키퍼 클린시트 — 전술판에 GK로 선 선수가 있을 때만 노출
-              ...(topCleanSheets.length > 0 ? [{
-                title: "무실점 쿼터", list: topCleanSheets, getValue: (s: RecordStat) => s.gkCleanSheets ?? 0, color: "#a78bfa",
-              }] : []),
-              // 수비 포인트(센터백·풀백·윙백) — 전술판에 수비로 선 선수가 있을 때만 노출
-              ...(topDefenders.length > 0 ? [{
-                title: "수비 포인트", desc: "무실점 쿼터 + 무실점 경기", list: topDefenders, getValue: (s: RecordStat) => s.defenderPoints ?? 0, color: "#14b8a6",
+              // 통합 수비 포인트 — 키퍼·필드수비를 한 랭킹으로 (전술판에 수비/GK로 선 선수가 있을 때만 노출)
+              ...(topDefense.length > 0 ? [{
+                title: "수비 포인트", desc: "무실점 쿼터 · 키퍼2 · 수비1", list: topDefense, getValue: (s: RecordStat) => s.defensePoints ?? 0, color: "#14b8a6",
               }] : []),
               ].map((group) => (
                 <Card key={group.title} className="bg-secondary border-0 p-4">
                   <p className="text-sm font-bold">{group.title}</p>
                   {"desc" in group && group.desc ? (
                     <p className="mt-0.5 text-[11px] font-normal text-muted-foreground">{group.desc}</p>
+                  ) : null}
+                  {group.title === "수비 포인트" ? (
+                    <ScoreCriteria>
+                      실점 없이(0실점) 지킨 쿼터마다 점수를 줘요.
+                      <span className="mt-1.5 block font-medium text-foreground/80">키퍼 2점 · 필드 수비수(센터백·풀백·윙백) 1점</span>
+                      <span className="mt-1 block">전술판에 수비로 선 쿼터가 기준이에요.</span>
+                    </ScoreCriteria>
                   ) : null}
                   <div className="mt-3 space-y-2">
                     {group.list.map((item, index) => (

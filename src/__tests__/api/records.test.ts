@@ -178,13 +178,14 @@ describe("GET /api/records", () => {
     const json = await res.json();
 
     const keeper = json.records.find((r: { name: string }) => r.name === "이준혁");
-    expect(keeper.gkCleanSheets).toBe(1);
-    expect(keeper.gkQuarters).toBe(2);
+    // 통합 수비포인트: 키퍼 무실점 1쿼터 → defenseGkQuarters 1, 포인트 1×2 = 2
+    expect(keeper.defenseGkQuarters).toBe(1);
+    expect(keeper.defensePoints).toBe(2);
 
-    // 필드 선수(김민준)는 GK 배정이 없어 gkQuarters 필드 자체가 없음
+    // 필드 선수(김민준)는 수비/GK 배정이 없어 수비 포인트 필드 자체가 없음
     const striker = json.records.find((r: { name: string }) => r.name === "김민준");
-    expect(striker.gkQuarters).toBeUndefined();
-    expect(striker.gkCleanSheets).toBeUndefined();
+    expect(striker.defensePoints).toBeUndefined();
+    expect(striker.defenseGkQuarters).toBeUndefined();
   });
 
   it("200: 키퍼 클린시트 폴백 — 전술판 없는 팀, GK선호 참석자에 경기→쿼터 환산", async () => {
@@ -214,13 +215,13 @@ describe("GET /api/records", () => {
     const json = await res.json();
 
     const keeper = json.records.find((r: { name: string }) => r.name === "이준혁");
-    // 무실점 4쿼터 경기 → 4쿼터 환산
-    expect(keeper.gkCleanSheets).toBe(4);
-    expect(keeper.gkQuarters).toBe(4);
+    // 무실점 4쿼터 경기 → 4쿼터 환산, 포인트 4×2 = 8
+    expect(keeper.defenseGkQuarters).toBe(4);
+    expect(keeper.defensePoints).toBe(8);
 
     // 비-GK(김민준)는 폴백 대상 아님
     const striker = json.records.find((r: { name: string }) => r.name === "김민준");
-    expect(striker.gkQuarters).toBeUndefined();
+    expect(striker.defensePoints).toBeUndefined();
   });
 
   it("200: 키퍼 클린시트 폴백 — 자체전(INTERNAL)은 제외(무실점 오판 방지)", async () => {
@@ -246,9 +247,9 @@ describe("GET /api/records", () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     const keeper = json.records.find((r: { name: string }) => r.name === "이준혁");
-    // INTERNAL 경기는 폴백 대상 아님 → gkQuarters 필드 없음
-    expect(keeper.gkQuarters).toBeUndefined();
-    expect(keeper.gkCleanSheets).toBeUndefined();
+    // INTERNAL 경기는 폴백 대상 아님 → 수비 포인트 필드 없음
+    expect(keeper.defensePoints).toBeUndefined();
+    expect(keeper.defenseGkQuarters).toBeUndefined();
   });
 
   it("200: seasonId 파라미터로 특정 시즌 필터", async () => {

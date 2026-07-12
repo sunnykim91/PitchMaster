@@ -671,7 +671,8 @@ export default function HelpPage() {
             <li>하단 탭바의 <strong className="text-foreground">[기록]</strong> 메뉴에서 시즌 단위 누적 통계를 볼 수 있어요.</li>
             <li>선수별 <strong className="text-foreground">레이더 차트</strong>로 강점·약점 한눈에.</li>
             <li><strong className="text-foreground">시즌 랭킹</strong> — 득점왕·어시스트왕·MVP왕·출석왕.</li>
-            <li><strong className="text-foreground">포지션별 기여 랭킹</strong> — GK <strong className="text-foreground">무실점 쿼터</strong>, <strong className="text-foreground">수비 포인트</strong>(센터백·풀백·윙백)까지. 공격수만 순위에 오르지 않게 키퍼·수비수도 조명해요. (전술판을 채운 경기 기준)</li>
+            <li><strong className="text-foreground">종합 랭킹</strong> — 골·도움·MVP·수비·출석을 합친 <strong className="text-foreground">시즌 종합 공헌점수</strong> 순위. 공격수만 상위권에 오르지 않게 수비 기여를 크게 반영해요.</li>
+            <li><strong className="text-foreground">수비 포인트</strong> — 키퍼와 수비수(센터백·풀백·윙백)를 한 랭킹으로. 무실점 쿼터당 <strong className="text-foreground">키퍼 2점·수비 1점</strong>. (전술판을 채운 경기 기준)</li>
           </ul>
 
           <div className="mt-4">

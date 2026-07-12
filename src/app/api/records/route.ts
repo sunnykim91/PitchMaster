@@ -351,19 +351,11 @@ export async function GET(request: NextRequest) {
     const ratingCount =
       playerRatingEnabledForRecords && ratingAgg ? ratingAgg.count : undefined;
 
-    // 키퍼 클린시트 — gkMap 키는 users.id 라 lookupIds(userId 포함)로 합산
-    const gk = lookupIds.reduce(
-      (acc, id) => {
-        const v = gkMap.get(id);
-        if (v) { acc.cleanSheets += v.cleanSheets; acc.quarters += v.quarters; }
-        return acc;
-      },
-      { cleanSheets: 0, quarters: 0 }
-    );
-
-    // 수비 포인트 — defMap 키도 playerId 혼재라 lookupIds 양쪽으로 합산 (경기 union으로 이중계산 방지)
-    const def = mergeDefenderStats(defMap, lookupIds);
-    const defenderPoints = def.points;
+    // 통합 수비 포인트 — 키퍼 무실점쿼터×2 + 필드수비 무실점쿼터×1 (서경카페 피드백 2026-07-12)
+    // gkMap 키는 users.id, defMap 키는 playerId 혼재 — 둘 다 lookupIds 양쪽으로 합산
+    const defenseGkQuarters = lookupIds.reduce((sum, id) => sum + (gkMap.get(id)?.cleanSheets ?? 0), 0);
+    const defenseFieldQuarters = mergeDefenderStats(defMap, lookupIds).cleanQuarters;
+    const defensePoints = defenseGkQuarters * 2 + defenseFieldQuarters;
 
     return {
       memberId: userId ?? memberId,
@@ -381,8 +373,7 @@ export async function GET(request: NextRequest) {
       teamRole: m.team_role ?? null,
       ...(avgRating !== undefined && { avgRating }),
       ...(ratingCount !== undefined && { ratingCount }),
-      ...(gk.quarters > 0 && { gkCleanSheets: gk.cleanSheets, gkQuarters: gk.quarters }),
-      ...(defenderPoints > 0 && { defenderPoints, defenderCleanQuarters: def.cleanQuarters, defenderCleanMatches: def.cleanMatches }),
+      ...(defensePoints > 0 && { defensePoints, defenseGkQuarters, defenseFieldQuarters }),
     };
   });
 

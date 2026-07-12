@@ -25,6 +25,19 @@ export default function ServiceWorkerRegister() {
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
 
+    // 개발 환경에선 SW 를 등록하지 않는다. dev 는 청크 해시가 자주 바뀌는데 캐시된 옛 SW 가
+    // stale 번들을 서빙하면 하이드레이션 불일치·레이아웃 깨짐이 생긴다(2026-07-12 로컬 사고).
+    // 과거 dev 세션·prod 방문 잔재로 이미 등록된 SW·캐시가 있으면 능동 해제해 자가 치유한다.
+    if (process.env.NODE_ENV !== "production") {
+      navigator.serviceWorker.getRegistrations?.()
+        .then((regs) => regs.forEach((r) => r.unregister()))
+        .catch(() => {});
+      if ("caches" in window) {
+        caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
+      }
+      return;
+    }
+
     let registration: ServiceWorkerRegistration | null = null;
     let cancelled = false;
 

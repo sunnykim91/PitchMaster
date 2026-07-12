@@ -60,7 +60,7 @@ const FEATURES: Array<{
   { Icon: Images,       label: "팀 앨범",              desc: "경기 사진을 게시판 앨범에 모아 팀원과 공유",      tone: "accent" },
   { Icon: CalendarCheck, label: "최근 출석 한눈에",     desc: "스쿼드 짤 때 누가 요즘 잘 나오는지 참석 흐름 표시", tone: "warning" },
   { Icon: Handshake,    label: "선수 궁합 분석",       desc: "같이 뛴 선수 페어별 승률·시너지 자동 집계",        tone: "info" },
-  { Icon: ShieldCheck,  label: "포지션별 기여 랭킹",    desc: "키퍼 무실점 쿼터·수비 포인트까지 — 공격수만 조명받지 않게", tone: "info" },
+  { Icon: ShieldCheck,  label: "종합·수비 포인트 랭킹",  desc: "골·도움·MVP·수비·출석 합산 종합 순위 + 키퍼·수비 통합 포인트", tone: "info" },
   { Icon: Dices,        label: "풋살 키퍼 룰렛",       desc: "고정 키퍼 없을 때 쿼터별 골문 순번을 공정하게 배정",   tone: "accent" },
   { Icon: MapPin,       label: "경기장 지도·길찾기",    desc: "경기 장소를 네이버·카카오맵으로 바로 열기",          tone: "primary" },
   { Icon: CalendarRange, label: "시즌 관리",            desc: "시즌별 기간·통계 분리, 시즌 어워드 자동 집계",       tone: "warning" },
