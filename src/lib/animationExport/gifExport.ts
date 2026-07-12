@@ -160,7 +160,7 @@ async function runExport(
   });
 }
 
-function interpolateStep(a: MotionStep, b: MotionStep, t: number): MotionStep {
+export function interpolateStep(a: MotionStep, b: MotionStep, t: number): MotionStep {
   const slotMap = new Map<string, PhasePosition>();
   for (const p of b.positions) slotMap.set(p.slot, p);
 
@@ -199,7 +199,40 @@ function interpolateStep(a: MotionStep, b: MotionStep, t: number): MotionStep {
     ball,
     positions,
     opponents,
+    // 화살표는 보간하지 않고 컷 기준으로 전환(캡션과 동일 시점).
+    arrows: t < 0.5 ? a.arrows : b.arrows,
   };
+}
+
+const ARROW_COLORS: Record<string, string> = { run: "#facc15", pass: "#22d3ee", press: "#f87171" };
+
+function drawArrows(ctx: CanvasRenderingContext2D, arrows: MotionStep["arrows"], scale: number) {
+  if (!arrows || arrows.length === 0) return;
+  ctx.save(); // 후속 렌더(선수·공·라인)에 strokeStyle/lineCap/lineDash 등 상태 누수 방지
+  for (const a of arrows) {
+    const x1 = a.x1 * scale, y1 = a.y1 * scale, x2 = a.x2 * scale, y2 = a.y2 * scale;
+    const color = ARROW_COLORS[a.kind] ?? ARROW_COLORS.run;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 1.1 * scale;
+    ctx.lineCap = "round";
+    ctx.setLineDash(a.kind === "pass" ? [2 * scale, 1.4 * scale] : []);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // 화살촉
+    const ang = Math.atan2(y2 - y1, x2 - x1);
+    const head = 3.4 * scale;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - head * Math.cos(ang - Math.PI / 6), y2 - head * Math.sin(ang - Math.PI / 6));
+    ctx.lineTo(x2 - head * Math.cos(ang + Math.PI / 6), y2 - head * Math.sin(ang + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 function drawFrame(
@@ -237,6 +270,9 @@ function drawFrame(
   ctx.strokeRect(36 * scale, 2 * scale, 28 * scale, 5 * scale);
   ctx.strokeRect(22 * scale, 82 * scale, 56 * scale, 16 * scale);
   ctx.strokeRect(36 * scale, 93 * scale, 28 * scale, 5 * scale);
+
+  // 전술 화살표 — 선수 아래 레이어
+  drawArrows(ctx, step.arrows, scale);
 
   for (const pos of step.positions) {
     const x = pos.x * scale;

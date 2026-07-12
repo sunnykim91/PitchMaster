@@ -17,7 +17,7 @@
  *  - 드래그 시 boardRef.current.getBoundingClientRect() 로 변환 (TacticsBoard 패턴)
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { formationTemplates } from "@/lib/formations";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -66,6 +66,7 @@ import { useToast } from "@/lib/ToastContext";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { cn } from "@/lib/utils";
 import FormationMotionViewer, { type PlaybackRate, PLAYBACK_RATES } from "@/components/FormationMotionViewer";
+import { MotionArrows, MOTION_ARROW_STYLE, MOTION_ARROW_KINDS } from "@/components/MotionArrows";
 import type { AnimationCategory } from "@/lib/formationMotions/dbTypes";
 import { ANIMATION_CATEGORIES, ANIMATION_CATEGORY_LABEL, toLegacyMotionShape } from "@/lib/formationMotions/dbTypes";
 import {
@@ -83,7 +84,7 @@ import type {
   TeamTacticalAnimation,
   TacticalAnimationData,
 } from "@/lib/formationMotions/dbTypes";
-import type { MotionPhase, MotionStep, PhasePosition, OpponentMark } from "@/lib/formationMotions/types";
+import type { MotionPhase, MotionStep, PhasePosition, OpponentMark, MotionArrow, MotionArrowKind } from "@/lib/formationMotions/types";
 
 interface Props {
   initial: TeamTacticalAnimation;
@@ -604,10 +605,35 @@ export default function AnimationEditorClient({ initial }: Props) {
   // grabDx/grabDy = 누른 지점과 대상 저장좌표의 차이 — 드래그 내내 유지해 "잡은 그 지점"이 손가락을 따라오게.
   const [dragging, setDragging] = useState<{ kind: "slot" | "ball" | "opponent"; slotId?: string; opponentId?: string; grabDx: number; grabDy: number } | null>(null);
 
+  // ── 화살표 그리기 (컷별 arrows) ──
+  const arrowsUid = useId().replace(/:/g, "");
+  const [drawMode, setDrawMode] = useState(false);
+  const [arrowKind, setArrowKind] = useState<MotionArrowKind>("run");
+  const [drawing, setDrawing] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const drawingRef = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  function undoArrow() {
+    patchStep((s) => ({ ...s, arrows: (s.arrows ?? []).slice(0, -1) }));
+  }
+  function clearArrows() {
+    patchStep((s) => ({ ...s, arrows: [] }));
+  }
+
   /** SVG 어디를 눌러도 가장 가까운 드래그 대상(공·상대·선수)을 grab 반경 안에서 집어 든다.
    *  → 점들이 겹쳐도 손가락에 가장 가까운 점이 잡혀 오조작 방지. 공은 작아 동률 시 우선. */
   function handleBoardPointerDown(e: React.PointerEvent) {
     if (!step) return;
+    // 그리기 모드: 선수 잡기 대신 화살표 시작
+    if (drawMode) {
+      if (drawingRef.current) return; // 이미 그리는 중이면 둘째 손가락 무시(멀티터치 시 첫 화살표 유실 방지)
+      const p = clientToSvg(e.clientX, e.clientY);
+      if (!p) return;
+      e.preventDefault();
+      try { boardRef.current?.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+      const start = { x1: p.x, y1: p.y, x2: p.x, y2: p.y };
+      drawingRef.current = start;
+      setDrawing(start);
+      return;
+    }
     const pt = clientToSvg(e.clientX, e.clientY);
     if (!pt) return;
     const GRAB_RADIUS = 7;
@@ -665,6 +691,14 @@ export default function AnimationEditorClient({ initial }: Props) {
   }
 
   function handlePointerMove(e: React.PointerEvent) {
+    if (drawingRef.current) {
+      const p = clientToSvg(e.clientX, e.clientY);
+      if (!p) return;
+      const next = { ...drawingRef.current, x2: p.x, y2: p.y };
+      drawingRef.current = next;
+      setDrawing(next);
+      return;
+    }
     if (!dragging) return;
     const pt = clientToSvg(e.clientX, e.clientY);
     if (!pt) return;
@@ -693,6 +727,17 @@ export default function AnimationEditorClient({ initial }: Props) {
   }
 
   function handlePointerUp(e: React.PointerEvent) {
+    if (drawingRef.current) {
+      const d = drawingRef.current;
+      drawingRef.current = null;
+      setDrawing(null);
+      try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* 무시 */ }
+      if (Math.hypot(d.x2 - d.x1, d.y2 - d.y1) >= 3) {
+        const arrow: MotionArrow = { x1: d.x1, y1: d.y1, x2: d.x2, y2: d.y2, kind: arrowKind };
+        patchStep((s) => ({ ...s, arrows: [...(s.arrows ?? []), arrow] }));
+      }
+      return;
+    }
     if (!dragging) return;
     try {
       e.currentTarget.releasePointerCapture(e.pointerId);
@@ -700,6 +745,17 @@ export default function AnimationEditorClient({ initial }: Props) {
       /* capture 안 잡혀있으면 무시 */
     }
     setDragging(null);
+  }
+
+  // 시스템 취소(제스처·멀티터치 등)로 포인터가 끊기면 그리던 화살표는 폐기(커밋 X), 드래그는 종료.
+  function handlePointerCancel(e: React.PointerEvent) {
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* 무시 */ }
+    if (drawingRef.current) {
+      drawingRef.current = null;
+      setDrawing(null);
+      return;
+    }
+    if (dragging) setDragging(null);
   }
 
   // ── 저장 ──
@@ -1193,10 +1249,56 @@ export default function AnimationEditorClient({ initial }: Props) {
         </div>
       </div>
 
-      {/* 드래그 안내 — 첫 방문자 발견 가능성 ↑ */}
-      <p className="mb-1.5 text-[11px] text-muted-foreground/80">
-        💡 선수 점·공을 <span className="font-semibold text-foreground">드래그</span>해 위치를 옮기세요.
-      </p>
+      {/* 화살표 그리기 툴바 + 드래그 안내 */}
+      <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => setDrawMode((v) => !v)}
+          className={cn(
+            "inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors",
+            drawMode ? "bg-primary text-primary-foreground" : "border border-white/10 bg-secondary text-foreground"
+          )}
+        >
+          {drawMode ? "✓ 그리기 끝" : "✏️ 화살표 그리기"}
+        </button>
+        {drawMode ? (
+          <>
+            {MOTION_ARROW_KINDS.map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setArrowKind(k)}
+                className={cn(
+                  "rounded-lg border px-2 py-1.5 text-xs font-semibold transition-all",
+                  arrowKind === k ? "border-current" : "border-transparent opacity-55"
+                )}
+                style={{ color: MOTION_ARROW_STYLE[k].color }}
+              >
+                {MOTION_ARROW_STYLE[k].label}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={undoArrow}
+              disabled={!step?.arrows?.length}
+              className="rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground disabled:opacity-30"
+            >
+              실행취소
+            </button>
+            <button
+              type="button"
+              onClick={clearArrows}
+              disabled={!step?.arrows?.length}
+              className="rounded-lg px-2 py-1.5 text-xs font-medium text-[hsl(var(--destructive))] disabled:opacity-30"
+            >
+              지우기
+            </button>
+            <span className="ml-auto text-[11px] text-muted-foreground">피치를 드래그해 그리세요</span>
+          </>
+        ) : (
+          <span className="text-[11px] text-muted-foreground/80">💡 선수·공은 드래그해 위치 이동</span>
+        )}
+      </div>
 
       {/* 편집 SVG 피치 — viewport 높이 초과 시 폭이 같이 줄도록 max-height·max-width 동시 제한, 정사각 유지. */}
       <div
@@ -1217,8 +1319,8 @@ export default function AnimationEditorClient({ initial }: Props) {
           onPointerDown={handleBoardPointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-          style={{ cursor: dragging ? "grabbing" : "grab" }}
+          onPointerCancel={handlePointerCancel}
+          style={{ cursor: drawMode ? "crosshair" : dragging ? "grabbing" : "grab" }}
         >
           {/* 피치 배경 */}
           <rect x="0" y="0" width="100" height="100" fill="hsl(140 25% 18%)" />
@@ -1231,6 +1333,22 @@ export default function AnimationEditorClient({ initial }: Props) {
             <rect x="22" y="2" width="56" height="16" />
             <rect x="36" y="2" width="28" height="5" />
           </g>
+
+          {/* 전술 화살표 (컷별) + 그리는 중 미리보기 */}
+          <MotionArrows arrows={step?.arrows} idPrefix={arrowsUid} />
+          {drawing && (
+            <line
+              x1={drawing.x1}
+              y1={drawing.y1}
+              x2={drawing.x2}
+              y2={drawing.y2}
+              stroke={MOTION_ARROW_STYLE[arrowKind].color}
+              strokeWidth={1.1}
+              strokeLinecap="round"
+              strokeDasharray={MOTION_ARROW_STYLE[arrowKind].dash}
+              opacity={0.75}
+            />
+          )}
 
           {/* 선수 점 — 재생 중엔 spring 보간. 드래그는 SVG 전체 hit-testing(handleBoardPointerDown)이 처리.
               pointerEvents none 으로 두어 점끼리 겹쳐도 가장 가까운 점이 잡히게 함. */}
@@ -1245,9 +1363,9 @@ export default function AnimationEditorClient({ initial }: Props) {
               <circle cx={0} cy={0} r={3.6} fill="hsl(0 0% 92%)" stroke="hsl(140 25% 18%)" strokeWidth="0.5" />
               <text
                 x={0}
-                y={0.6}
+                y={0}
+                dy="0.35em"
                 textAnchor="middle"
-                dominantBaseline="middle"
                 fontSize="2.4"
                 fontWeight="700"
                 fill="hsl(140 30% 18%)"

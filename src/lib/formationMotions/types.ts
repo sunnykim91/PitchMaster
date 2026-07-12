@@ -26,6 +26,19 @@ export interface OpponentMark {
   y: number;
 }
 
+/** 전술 화살표 종류 — 이동(실선)·패스(점선)·압박(실선, 붉은색) */
+export type MotionArrowKind = "run" | "pass" | "press";
+
+/** 전술 화살표 주석 — 감독이 뛰는 길·패스·압박 방향을 그려 컷마다 보여줌.
+ * 좌표는 positions 와 동일 (0~100 비율). 하위호환 — 기존 영상엔 없음. */
+export interface MotionArrow {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  kind: MotionArrowKind;
+}
+
 export interface MotionStep {
   /** 단계 캡션 — 사용자가 읽으며 흐름 파악할 한 줄 설명 */
   caption: string;
@@ -35,6 +48,8 @@ export interface MotionStep {
   positions: PhasePosition[];
   /** 상대팀 선수 마크 (선택). undefined/빈 배열 = 미표시. 하위호환 — 기존 영상엔 없음. */
   opponents?: OpponentMark[];
+  /** 전술 화살표 (선택). undefined/빈 배열 = 미표시. 하위호환 — 기존 영상엔 없음. */
+  arrows?: MotionArrow[];
   /** 이 step 머무르는 시간 (ms). 미지정 시 컴포넌트 default 사용 */
   duration?: number;
 }

@@ -16,9 +16,10 @@
  */
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Pause, Play, Shield, Swords, Calendar, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MotionArrows } from "@/components/MotionArrows";
 import type { FormationMotion, MotionPhase } from "@/lib/formationMotions";
 import type { AnimationCategory } from "@/lib/formationMotions/dbTypes";
 import { ANIMATION_CATEGORY_LABEL } from "@/lib/formationMotions/dbTypes";
@@ -105,6 +106,7 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
   const [phaseIdx, setPhaseIdx] = useState(0);
   const [stepIdx, setStepIdx] = useState(0);
   const [rate, setRate] = useState<PlaybackRate>(initialRate ?? 1);
+  const arrowsId = useId().replace(/:/g, ""); // marker id 충돌 방지 (한 페이지 다중 뷰어)
 
   // P3 평면 영상은 attack 또는 defense 한 쪽만 채워져 있음 → 비어있지 않은 쪽 자동 선택,
   // 두 쪽 다 데이터 있을 때(레거시)만 mode 토글 노출.
@@ -303,6 +305,9 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
             <rect x="36" y="2" width="28" height="5" />
           </g>
 
+          {/* 전술 화살표 — 선수 아래 레이어 (감독의 이동/패스/압박 지시) */}
+          <MotionArrows arrows={step.arrows} idPrefix={arrowsId} />
+
           {/* 선수 점 — slot id 별로 spring 모션 적용 (역동적인 튕김) */}
           {Array.from(positionMap.values()).map((pos) => {
             const isMe = highlightSlot === pos.slot;
@@ -336,9 +341,9 @@ export default function FormationMotionViewer({ motion: data, highlightSlot, hig
                 />
                 <text
                   x={0}
-                  y={0.6}
+                  y={0}
+                  dy="0.35em"
                   textAnchor="middle"
-                  dominantBaseline="middle"
                   fontSize="2.4"
                   fontWeight="700"
                   fill={isMe ? "white" : "hsl(140 30% 18%)"}
