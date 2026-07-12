@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { findOrCreateKakaoUser, setSession } from "@/lib/auth";
 import { sendServerGAEvent } from "@/lib/server/sendGAEvent";
+import { createReferral, isValidRefValue } from "@/lib/server/referrals";
 
 const SIGNUP_SOURCE_COOKIE = "pm_signup_source";
+const REF_COOKIE = "pm_ref";
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
@@ -44,6 +46,9 @@ export async function GET(request: NextRequest) {
     const cookieStore = await cookies();
     const signupSourceCookie = cookieStore.get(SIGNUP_SOURCE_COOKIE)?.value;
     const signupSource = signupSourceCookie ? decodeURIComponent(signupSourceCookie).slice(0, 100) : null;
+    // 추천 리워드 — ?ref=<추천인 user_id> 쿠키 (SignupSourceTracker 가 first-touch 저장)
+    const refCookie = cookieStore.get(REF_COOKIE)?.value;
+    const referrerId = refCookie ? decodeURIComponent(refCookie) : null;
 
     let session;
     let isNewUser = false;
@@ -71,6 +76,15 @@ export async function GET(request: NextRequest) {
         cookieStore.set(SIGNUP_SOURCE_COOKIE, "", { path: "/", maxAge: 0 });
       } catch {
         // 삭제 실패해도 다음에 first-touch 정책으로 덮어쓰이지 않음 — 무시
+      }
+    }
+
+    // 추천 귀속 — 신규 가입자 + ref 유효 시 referral(PENDING) 생성. 실패해도 가입은 통과.
+    if (isNewUser && isValidRefValue(referrerId)) {
+      const newUserId = (session as { user?: { id?: string } })?.user?.id;
+      if (newUserId) await createReferral(referrerId, newUserId);
+      if (refCookie) {
+        try { cookieStore.set(REF_COOKIE, "", { path: "/", maxAge: 0 }); } catch { /* 무시 */ }
       }
     }
 

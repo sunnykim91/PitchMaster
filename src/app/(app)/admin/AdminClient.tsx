@@ -11,16 +11,18 @@ import { AdminUsageCard } from "./AdminUsageCard";
 import { AdminOverviewTab } from "./AdminOverviewTab";
 import { AdminTeamsTab } from "./AdminTeamsTab";
 import { AdminAcquisitionTab } from "./AdminAcquisitionTab";
+import { AdminReferralsTab } from "./AdminReferralsTab";
 import { emptyData, type AdminStats } from "./admin.types";
 
 // ── Tabs ───────────────────────────────────────────────
 
-type AdminTab = "overview" | "teams" | "acquisition" | "ai";
+type AdminTab = "overview" | "teams" | "acquisition" | "referrals" | "ai";
 
 const TAB_ITEMS: { key: AdminTab; label: string }[] = [
   { key: "overview", label: "개요" },
   { key: "teams", label: "팀" },
   { key: "acquisition", label: "유입·가입" },
+  { key: "referrals", label: "추천" },
   { key: "ai", label: "AI" },
 ];
 
@@ -155,6 +157,7 @@ export default function AdminClient() {
           pendingRequests={pendingRequests}
         />
       )}
+      {activeTab === "referrals" && <AdminReferralsTab />}
       {activeTab === "ai" && <AdminUsageCard />}
     </div>
   );

@@ -6,6 +6,7 @@ import { auth, updateSession } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { validateSafeName, validateFreeText } from "@/lib/validators/safeText";
 import { checkTeamCreationRateLimit, logTeamCreation } from "@/lib/server/teamCreationRateLimit";
+import { linkReferralTeam } from "@/lib/server/referrals";
 
 export async function createTeam(formData: FormData) {
   const session = await auth();
@@ -84,6 +85,9 @@ export async function createTeam(formData: FormData) {
     end_date: `${year}-12-31`,
     is_active: true,
   });
+
+  // 추천 리워드 — 이 사용자가 초대받아 가입했다면 referral 에 이 팀 연결 (첫 완료경기 시 cron 이 활성화)
+  await linkReferralTeam(session.user.id, team.id);
 
   await updateSession({
     teamId: team.id,

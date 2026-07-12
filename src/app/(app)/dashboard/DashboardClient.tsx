@@ -382,6 +382,30 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
     }
   }
 
+  // 추천 리워드 — 상대팀 회장 초대 링크(?ref=본인id) 공유
+  async function handleReferralShare() {
+    const link = `${window.location.origin}/login?ref=${userId}`;
+    const text = "⚽ 같이 뛰는 상대팀 회장님, 피치마스터로 초대해요! 초대한 팀이 첫 경기까지 하면 저에게 커피 기프티콘이 와요 ☕";
+    trackEvent("referral_share");
+    // 모바일(터치)만 native share — url 필드에 링크 명시. 데스크톱 Web Share 는 text 속 URL 을
+    // 잘못 잘라 ?ref= 가 유실되므로, 데스크톱은 native share 를 건너뛰고 클립보드로 정확히 복사한다.
+    const isTouch = typeof navigator !== "undefined" && navigator.maxTouchPoints > 0 && typeof navigator.share === "function";
+    if (isTouch) {
+      try {
+        await navigator.share({ title: "피치마스터 초대", text, url: link });
+        return;
+      } catch {
+        /* 공유 취소 등 무시 → 클립보드로 폴백 */
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(link);
+      showToast("초대 링크를 복사했어요. 카톡으로 붙여넣어 보내세요.");
+    } catch {
+      showToast(`초대 링크: ${link}`);
+    }
+  }
+
   return (
     <div className="pm-page pm-page--dashboard">
       <main className="pm-main pm-main--dashboard">
@@ -486,6 +510,38 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
                 </span>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* 추천 리워드 — 상대팀 회장 초대 (기프티콘). 공지 바로 아래 상단 노출(발견성) */}
+        {!showWizard && (
+          <div
+            className="pm-dash-full"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              width: "100%",
+              padding: "13px 15px",
+              borderRadius: 14,
+              background:
+                "radial-gradient(ellipse 90% 130% at 0% 0%, hsl(var(--primary) / 0.16), transparent 62%), hsl(var(--secondary) / 0.5)",
+              border: "1px solid hsl(var(--primary) / 0.28)",
+            }}
+          >
+            <span style={{ fontSize: 24, lineHeight: 1 }} aria-hidden>🎁</span>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: "hsl(var(--foreground))" }}>
+                상대팀 회장 초대하고 커피 받기
+              </div>
+              <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", marginTop: 1 }}>
+                초대한 팀이 첫 경기를 하면 커피 기프티콘을 드려요
+              </div>
+            </div>
+            <Button type="button" size="sm" onClick={handleReferralShare} className="shrink-0 gap-1">
+              <Share2 className="h-3.5 w-3.5" />
+              초대
+            </Button>
           </div>
         )}
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { autoCompleteAllMatches } from "@/lib/server/autoCompleteMatches";
+import { activatePendingReferrals } from "@/lib/server/referrals";
 
 /**
  * 모든 팀 일괄 자동 완료 크론 (5분 간격).
@@ -25,5 +26,7 @@ export async function GET(request: NextRequest) {
   if (!db) return NextResponse.json({ error: "DB unavailable" }, { status: 500 });
 
   const result = await autoCompleteAllMatches(db);
-  return NextResponse.json(result);
+  // 추천 리워드 활성화 — 초대팀이 첫 COMPLETED 경기 + 카카오 연동멤버 ≥3 이면 ACTIVATED (별도 cron 없이 여기 얹음)
+  const referralsActivated = await activatePendingReferrals();
+  return NextResponse.json({ ...result, referralsActivated });
 }

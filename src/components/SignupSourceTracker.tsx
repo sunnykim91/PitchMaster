@@ -18,7 +18,9 @@ import { useEffect } from "react";
  *   - 이미 쿠키 있으면 덮어쓰지 않음 (first-touch 유지)
  */
 const COOKIE_NAME = "pm_signup_source";
+const REF_COOKIE = "pm_ref"; // 추천 리워드 — 추천인 user_id (?ref=)
 const COOKIE_TTL_DAYS = 30;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function simplifyHost(hostname: string): string | null {
   const h = hostname.toLowerCase();
@@ -93,9 +95,24 @@ export function captureSignupSourceIfMissing() {
   document.cookie = `${COOKIE_NAME}=${value}; path=/; max-age=${maxAge}; samesite=lax${secure}`;
 }
 
+/**
+ * 추천 링크 캡처 — ?ref=<추천인 user_id> 를 쿠키(pm_ref)에 first-touch 저장.
+ * 카카오 콜백에서 신규가입 시 읽어 referrals 귀속. UUID 형태만 허용(오염 방지).
+ */
+export function captureRefIfMissing() {
+  if (typeof window === "undefined") return;
+  if (hasCookie(REF_COOKIE)) return;
+  const ref = new URL(window.location.href).searchParams.get("ref");
+  if (!ref || !UUID_RE.test(ref)) return;
+  const maxAge = COOKIE_TTL_DAYS * 24 * 60 * 60;
+  const secure = window.location.protocol === "https:" ? "; secure" : "";
+  document.cookie = `${REF_COOKIE}=${encodeURIComponent(ref)}; path=/; max-age=${maxAge}; samesite=lax${secure}`;
+}
+
 export function SignupSourceTracker() {
   useEffect(() => {
     captureSignupSourceIfMissing();
+    captureRefIfMissing();
   }, []);
 
   return null;
