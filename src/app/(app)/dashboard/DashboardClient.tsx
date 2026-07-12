@@ -385,7 +385,8 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
   // 추천 리워드 — 상대팀 회장 초대 링크(?ref=본인id) 공유
   async function handleReferralShare() {
     const link = `${window.location.origin}/login?ref=${userId}`;
-    const text = "⚽ 같이 뛰는 상대팀 회장님, 피치마스터로 초대해요! 초대한 팀이 첫 경기까지 하면 저에게 커피 기프티콘이 와요 ☕";
+    // 공유 문구엔 리워드 언급 X (받는 사람이 혜택 요구하는 상황 방지) — 초대만
+    const text = "⚽ 조기축구 6년차 회장이 만든 찐 조기축구 팀 관리 앱에 초대해요~~";
     trackEvent("referral_share");
     // 모바일(터치)만 native share — url 필드에 링크 명시. 데스크톱 Web Share 는 text 속 URL 을
     // 잘못 잘라 ?ref= 가 유실되므로, 데스크톱은 native share 를 건너뛰고 클립보드로 정확히 복사한다.
