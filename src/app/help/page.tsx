@@ -567,7 +567,12 @@ export default function HelpPage() {
             각 컷 위쪽에 <strong className="text-foreground">[공 표시]</strong> 토글이 있어요. <strong className="text-foreground">&quot;기본 진형&quot;</strong>처럼 공이 움직이기 전 정지 형태에서는 OFF로 끄면 공 없이 선수 위치만 보여줍니다.
           </p>
 
-          <h4 className="text-sm font-semibold text-foreground mt-5 mb-2">⑥ 저장 — 자주 누르세요</h4>
+          <h4 className="text-sm font-semibold text-foreground mt-5 mb-2">⑥ 화살표 — 이동·패스·압박 그리기</h4>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            컷 위쪽의 <strong className="text-foreground">[✏️ 화살표 그리기]</strong>를 켜고 피치를 드래그하면 화살표를 그릴 수 있어요. <strong className="text-foreground">이동</strong>(노란 실선)·<strong className="text-foreground">패스</strong>(청록 점선)·<strong className="text-foreground">압박</strong>(빨강) 세 종류를 골라 뛰는 길·패스 방향·압박 위치를 그려두면, 선수 점만으로는 안 보이던 <strong className="text-foreground">움직임 의도</strong>가 한눈에 들어옵니다. 화살표는 <strong className="text-foreground">컷마다 따로</strong> 저장되고, <strong className="text-foreground">[실행취소]</strong>·<strong className="text-foreground">[지우기]</strong>로 정리할 수 있어요. 다 그렸으면 <strong className="text-foreground">[✓ 그리기 끝]</strong>을 눌러 선수 드래그로 돌아갑니다.
+          </p>
+
+          <h4 className="text-sm font-semibold text-foreground mt-5 mb-2">⑦ 저장 — 자주 누르세요</h4>
           <p className="text-sm text-muted-foreground leading-relaxed">
             편집기 위쪽의 <strong className="text-foreground">[저장]</strong> 버튼을 누를 때마다 그 시점까지의 작업이 보관됩니다. <strong className="text-foreground">장면 하나 끝낼 때마다 한 번씩 저장하는 습관</strong>을 들이면 안전해요.
           </p>
@@ -673,6 +678,7 @@ export default function HelpPage() {
             <li><strong className="text-foreground">시즌 랭킹</strong> — 득점왕·어시스트왕·MVP왕·출석왕.</li>
             <li><strong className="text-foreground">종합 랭킹</strong> — 골·도움·MVP·수비·출석을 고루 반영한 <strong className="text-foreground">밸런스 점수</strong> 순위. 골·어시가 잘 기록되는 조기축구에서도 수비수·키퍼가 소외되지 않게 설계했어요. (점수 계산법은 아래 펼침 참고)</li>
             <li><strong className="text-foreground">수비 포인트</strong> — 키퍼와 수비수(센터백·풀백·윙백)를 한 랭킹으로. 무실점 쿼터당 <strong className="text-foreground">키퍼 2점·수비 1점</strong>. (전술판을 채운 경기 기준)</li>
+            <li><strong className="text-foreground">CSV 내보내기</strong> — 기록 화면 위쪽의 <strong className="text-foreground">[내보내기]</strong> 버튼(운영진 전용)으로 지금 보는 시즌의 선수별 기록을 엑셀에서 열 수 있는 <strong className="text-foreground">CSV 파일</strong>로 저장할 수 있어요.</li>
           </ul>
 
           <div className="mt-4">
@@ -731,6 +737,7 @@ export default function HelpPage() {
             <li>한 달 단위로 입금·출금이 모두 정리됩니다. 누구나 볼 수 있어요.</li>
             <li>운영진은 <strong className="text-foreground">[수기 입력]</strong>으로 통장 외 거래를 직접 추가할 수 있어요.</li>
             <li>입금 내역에 회원 이름이 들어 있으면 자동으로 납부 기록과 연결됩니다.</li>
+            <li>운영진은 <strong className="text-foreground">[내보내기]</strong> 버튼으로 지금 보는 달의 입출금 내역을 <strong className="text-foreground">CSV 파일</strong>(엑셀에서 열림)로 저장할 수 있어요.</li>
           </ul>
 
           <h3 className="text-base font-semibold mb-3 mt-6">

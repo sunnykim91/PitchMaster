@@ -577,8 +577,8 @@ function SmartLineup() {
               className="text-muted-foreground text-[15px] lg:text-[16.5px] leading-[1.6] text-pretty m-0 mb-6"
             >
               AI가 우리 팀 기록·상대팀 이력·참석자를 분석해 포메이션 추천 + 자동 배치.
-              드래그로 재조정도 한 번이면 충분. 운영진은 <b className="font-semibold text-foreground">전술 영상(전술 애니메이션)</b>으로
-              빌드업·수비 흐름까지 직접 그려 회원에게 공유할 수 있어요.
+              드래그로 재조정도 한 번이면 충분. 운영진은 <b className="font-semibold text-foreground">전술 영상(전술 애니메이션)</b>에
+              이동·패스·압박 화살표까지 그려 빌드업·수비 흐름을 회원에게 공유할 수 있어요.
               <span className="sr-only"> 축구 전술판, 풋살 전술판, 전술판 앱, 전술 보드 앱, 풋살 전술 영상, 축구 전술 영상.</span>
             </motion.p>
 
@@ -1155,7 +1155,7 @@ function FCMZBuildupDemo({ inView }: { inView: boolean }) {
           <ul className="flex flex-col gap-2.5 list-none p-0 m-0">
             {[
               { num: "1", text: "포메이션 선택 (4-3-3 · 4-2-3-1 · 풋살 1-2-1 등)" },
-              { num: "2", text: "선수 점·공 드래그로 시퀀스 만들기" },
+              { num: "2", text: "선수 점·공 드래그 + 이동·패스·압박 화살표로 시퀀스 만들기" },
               { num: "3", text: "카카오톡으로 공유 → 회원이 미리 학습" },
             ].map((it) => (
               <li
