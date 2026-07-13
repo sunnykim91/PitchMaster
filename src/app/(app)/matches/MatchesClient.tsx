@@ -92,8 +92,14 @@ export default function MatchesClient({ userId, userRole, initialMatches, sportT
   useEffect(() => {
     if (searchParams.get("create") !== "true") return;
     setIsOpen(true);
+    // 대시보드 "다음 경기 잡기" 넛지에서 넘어온 프리필 날짜(YYYY-MM-DD) 반영 — 과거 날짜는 무시.
+    const dateParam = searchParams.get("date");
+    if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam) && dateParam >= getKstToday()) {
+      setMatchDate(dateParam);
+    }
     const url = new URL(window.location.href);
     url.searchParams.delete("create");
+    url.searchParams.delete("date");
     window.history.replaceState(null, "", url.toString());
   }, [searchParams]);
   // 경기 등록 직후 1인 팀 초대 CTA 모달

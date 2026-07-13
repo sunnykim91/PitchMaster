@@ -145,6 +145,20 @@ function CardSkeleton() {
   );
 }
 
+// 지난 경기 요일 기준 "다음 주 같은 요일" 날짜 — 1→2 경기 유도 프리필용.
+// recentDate 없으면 오늘+7일. 반환 date 는 오늘 이후 첫 해당 요일(YYYY-MM-DD, KST).
+function suggestNextMatchDate(recentDateStr: string | null, todayStr: string): { date: string; dayName: string } {
+  const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
+  const toUtc = (s: string) => new Date(s + "T00:00:00Z");
+  const today = toUtc(todayStr);
+  const target = recentDateStr ? toUtc(recentDateStr) : new Date(today.getTime() + 7 * 86400000);
+  // 오늘 이후 첫 (base 요일)로 이동 — 지난 경기가 아무리 오래됐어도 미래 날짜 보장
+  while (target.getTime() <= today.getTime()) {
+    target.setUTCDate(target.getUTCDate() + 7);
+  }
+  return { date: target.toISOString().slice(0, 10), dayName: dayNames[target.getUTCDay()] };
+}
+
 // 카운트다운 라벨 헬퍼 — 오늘 / 내일 / D-N / D+N
 function relativeDayLabel(dateStr: string): string {
   const target = new Date(dateStr + "T00:00:00");
@@ -296,6 +310,12 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
   // 디자인 검토용 preview
   const isPreviewWelcomeCreated =
     searchParams.get("previewWelcome") === "created" && userId === DESIGN_PREVIEW_USER_ID;
+  // TEMP: 김선휘 전용 — ?previewNextMatch=1 로 상태(예정경기 유무) 무관하게 "다음 경기 유도" 카드 강제 노출. 확인용.
+  const previewNextMatch =
+    searchParams.get("previewNextMatch") === "1" && userId === DESIGN_PREVIEW_USER_ID;
+  // 활성화 집중 상태 — 예정 경기 없는 회장+(첫 경기 hero 또는 "다음 경기 잡기" 카드가 뜨는 상태).
+  // 이때는 레퍼럴(상대팀 초대) 대신 자기 다음 경기 잡기에 집중시킨다 (코랄 카드 겹침도 해소).
+  const inActivationFocus = previewNextMatch || (isStaffOrAbove(role) && !upcomingMatch);
 
   // Onboarding wizard: 빈 새 팀 + 운영진(STAFF+) + 닫지 않은 상태에서만 노출
   const showWizard =
@@ -345,6 +365,8 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
   const todayDayShort = dayShortNames[todayDate.getUTCDay()];
   const greetMeta = `${formatDateKo(todayStr)}${teamName ? ` · ${teamName}` : ""}${recordTotal > 0 ? ` · 시즌 ${recordTotal}경기째` : ""}`;
   const upcomingRelLabel = upcomingMatch ? relativeDayLabel(upcomingMatch.match_date) : "";
+  // 1→2 경기 유도 — 지난 경기 요일로 "다음 주 같은 요일" 프리필 날짜 계산 (클라 계산, 서버 변경 X)
+  const nextMatchSuggest = suggestNextMatchDate(recentResult?.date ?? null, todayStr);
 
   // 공지 — 운영공지 + 팀공지 모두 노출 (최대 3개)
   const notices: Array<{ id: string; label: string; title: string }> = [];
@@ -514,8 +536,9 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
           </div>
         )}
 
-        {/* 추천 리워드 — 상대팀 회장 초대 (기프티콘). 공지 바로 아래 상단 노출(발견성) */}
-        {!showWizard && (
+        {/* 추천 리워드 — 상대팀 회장 초대 (기프티콘). 공지 바로 아래 상단 노출(발견성).
+            단, 예정 경기 없는 활성화 위기 상태에선 숨김 — 다음 경기 잡기에 집중(코랄 카드 겹침 해소). */}
+        {!showWizard && !inActivationFocus && (
           <div
             className="pm-dash-full"
             style={{
@@ -548,7 +571,7 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
 
         {/* Main rail · D 또는 C empty hero */}
         <div className="pm-dash-col pm-dash-col--main">
-          {!showWizard && upcomingMatch ? (
+          {!previewNextMatch && !showWizard && upcomingMatch ? (
             <section className="pm-section">
               <div className="pm-section-h">
                 <span>다가오는 경기</span>
@@ -742,7 +765,7 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
                 );
               })()}
             </section>
-          ) : !showWizard && isStaffOrAbove(role) && (data.totalMatches ?? 0) === 0 ? (
+          ) : !previewNextMatch && !showWizard && isStaffOrAbove(role) && (data.totalMatches ?? 0) === 0 ? (
             /* C · 첫 경기 hero — 한 번도 경기 등록 안 한 팀의 회장+ */
             <div className="pm-paste-hero pm-dash-emptyhero">
               <div className="pm-amb" aria-hidden />
@@ -796,8 +819,9 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
                 </Link>
               </div>
             </div>
-          ) : !showWizard && isStaffOrAbove(role) ? (
-            /* 다음 경기 일정 등록 안내 — 회장+ + 과거 경기 있음 + 다가오는 경기 없음 */
+          ) : previewNextMatch || (!showWizard && isStaffOrAbove(role)) ? (
+            /* 다음 경기 유도 — 회장+ + 과거 경기 있음 + 다가오는 경기 없음.
+               1→2 활성화 넛지: 습관 프레이밍 + "다음 주 같은 요일" 날짜 프리필 딥링크 (마찰 제거). */
             <div
               className="pm-empty pm-empty--soft"
               style={{
@@ -812,15 +836,18 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
                 background: "hsl(var(--primary) / 0.06)",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                 <span style={{ fontSize: 22 }} aria-hidden>📅</span>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "hsl(var(--foreground))" }}>예정된 경기가 없어요</div>
-                  <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", marginTop: 2 }}>다음 경기를 등록해 보세요</div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "hsl(var(--foreground))" }}>다음 경기를 잡아볼까요?</div>
+                  <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", marginTop: 2 }}>
+                    다음 주 {nextMatchSuggest.dayName}요일로 미리 채워서 열어드려요
+                  </div>
                 </div>
               </div>
               <Link
-                href="/matches"
+                href={`/matches?create=true&date=${nextMatchSuggest.date}`}
+                onClick={() => GA.nextMatchNudge()}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -835,9 +862,10 @@ export default function DashboardClient({ userId, userRole, userName, initialDat
                   textDecoration: "none",
                   whiteSpace: "nowrap",
                   boxShadow: "0 4px 12px hsl(var(--primary) / 0.32)",
+                  flexShrink: 0,
                 }}
               >
-                일정 등록
+                경기 만들기
               </Link>
             </div>
           ) : !showWizard ? (
