@@ -337,23 +337,36 @@ export default function RecordsClient({
   // ① 종합 랭킹 — 밸런스 점수(정규화). 부문별 팀 1등 대비 환산 (서경카페 피드백 2026-07-12)
   // 최소 출전 가드: 소수 경기 요행으로 부문 1등을 차지하는 왜곡 방지 (시즌의 20%, 최소 3경기)
   const overallMinGames = Math.max(3, Math.ceil((totalSeasonMatches ?? 0) * 0.2));
-  // 전체 정렬 목록(1등~꼴등) — 카드엔 top 5만, 제목 탭 시 전체 시트에서 재사용
-  const overallRanking = useMemo(() => {
+  // 정규화 기준(팀 1등)은 규정 경기 이상 pool로 고정 — 카드 top5와 전체 시트가 같은 점수를 쓰도록 공유
+  const overallMax = useMemo<BalanceMax>(() => {
     const qualified = stats.filter((s) => s.matches >= overallMinGames);
     const pool = qualified.length >= 3 ? qualified : stats; // 소규모 팀 보호
-    const max: BalanceMax = {
+    return {
       g: Math.max(1, ...pool.map((s) => s.goals)),
       a: Math.max(1, ...pool.map((s) => s.assists)),
       mvp: Math.max(1, ...pool.map((s) => s.mvp)),
       def: Math.max(1, ...pool.map((s) => s.defensePoints ?? 0)),
       att: Math.max(1, ...pool.map((s) => s.matches)),
     };
-    return pool
-      .map((s) => ({ ...s, overall: computeBalanceScore(s, max) }))
-      .filter((s) => s.overall > 0)
-      .sort((a, b) => b.overall - a.overall);
   }, [stats, overallMinGames]);
-  const topOverall = useMemo(() => overallRanking.slice(0, 5), [overallRanking]);
+  // 카드 top 5 — 규정 경기 이상만 (소표본 요행 왜곡 방지)
+  const topOverall = useMemo(() => {
+    const qualified = stats.filter((s) => s.matches >= overallMinGames);
+    const pool = qualified.length >= 3 ? qualified : stats;
+    return pool
+      .map((s) => ({ ...s, overall: computeBalanceScore(s, overallMax) }))
+      .filter((s) => s.overall > 0)
+      .sort((a, b) => b.overall - a.overall)
+      .slice(0, 5);
+  }, [stats, overallMinGames, overallMax]);
+  // 제목 탭 시 전체 시트 — 전 회원 1등~꼴등 (점수 기준은 카드와 동일)
+  const overallRankingFull = useMemo(
+    () =>
+      stats
+        .map((s) => ({ ...s, overall: computeBalanceScore(s, overallMax) }))
+        .sort((a, b) => b.overall - a.overall),
+    [stats, overallMax]
+  );
 
   // 랭킹 카드 제목 탭 → 부문별 1등~꼴등 전체 시트 (서경카페 노진우 피드백 2026-07-14)
   const [rankingSheet, setRankingSheet] = useState<
@@ -365,7 +378,7 @@ export default function RecordsClient({
       return {
         title: "종합 랭킹",
         unit: "점",
-        rows: overallRanking.map((s) => ({
+        rows: overallRankingFull.map((s) => ({
           memberId: s.memberId,
           memberName: s.memberName,
           jerseyNumber: s.jerseyNumber,
@@ -388,7 +401,6 @@ export default function RecordsClient({
     }[rankingSheet];
     const rows = stats
       .map((s) => ({ s, value: cfg.get(s) }))
-      .filter((x) => x.value > 0)
       .sort((a, b) => b.value - a.value)
       .map(({ s, value }) => ({
         memberId: s.memberId,
@@ -404,7 +416,7 @@ export default function RecordsClient({
             : `${s.matches}경기`,
       }));
     return { title: cfg.title, unit: cfg.unit, rows };
-  }, [rankingSheet, stats, overallRanking]);
+  }, [rankingSheet, stats, overallRankingFull]);
 
   const [sortKey, setSortKey] = useState<"points" | "goals" | "assists" | "mvp" | "attendanceRate" | "avgRating">("points");
   const allStats = useMemo(() => {
@@ -1277,27 +1289,33 @@ export default function RecordsClient({
                 return (
                   <div className="space-y-1.5">
                     {rankingSheetData.rows.map((row, index) => {
-                      const isFirst = index === 0;
-                      const pct = Math.max(8, Math.round((row.value / maxVal) * 100));
+                      const isTop = index === 0 && row.value > 0;
+                      const isZero = row.value <= 0;
+                      const pct = row.value > 0 ? Math.max(8, Math.round((row.value / maxVal) * 100)) : 0;
                       return (
-                        <div key={row.memberId} className={cn("relative overflow-hidden rounded-lg", isFirst ? "py-2.5" : "py-2")}>
-                          <div
-                            className="absolute inset-y-0 left-0 rounded-lg"
-                            style={{ width: `${pct}%`, background: isFirst ? "hsl(var(--warning) / 0.16)" : "hsl(var(--secondary))" }}
-                            aria-hidden
-                          />
+                        <div key={row.memberId} className={cn("relative overflow-hidden rounded-lg", isTop ? "py-2.5" : "py-2")}>
+                          {pct > 0 && (
+                            <div
+                              className="absolute inset-y-0 left-0 rounded-lg"
+                              style={{ width: `${pct}%`, background: isTop ? "hsl(var(--warning) / 0.16)" : "hsl(var(--secondary))" }}
+                              aria-hidden
+                            />
+                          )}
                           <div className="relative flex items-center justify-between gap-2 px-2.5">
                             <span className="flex min-w-0 items-center gap-2.5">
                               <span className={cn(
                                 "inline-flex shrink-0 items-center justify-center rounded-md font-bold",
-                                isFirst
+                                isTop
                                   ? "h-7 w-7 bg-[hsl(var(--warning)_/_0.28)] text-[hsl(var(--warning))]"
                                   : "h-6 w-6 bg-background text-xs text-muted-foreground"
                               )}>
-                                {isFirst ? <Trophy className="h-3.5 w-3.5" /> : index + 1}
+                                {isTop ? <Trophy className="h-3.5 w-3.5" /> : index + 1}
                               </span>
                               <span className="min-w-0">
-                                <span className={cn("flex items-center gap-1", isFirst ? "text-[15px] font-bold text-foreground" : "text-sm text-foreground/90")}>
+                                <span className={cn(
+                                  "flex items-center gap-1",
+                                  isTop ? "text-[15px] font-bold text-foreground" : isZero ? "text-sm text-muted-foreground" : "text-sm text-foreground/90"
+                                )}>
                                   {row.jerseyNumber !== null && <span className="shrink-0 text-xs font-bold text-primary">#{row.jerseyNumber}</span>}
                                   <span className="truncate">{row.memberName || "-"}</span>
                                 </span>
@@ -1307,7 +1325,7 @@ export default function RecordsClient({
                             <span className="shrink-0 whitespace-nowrap text-right">
                               <span className={cn(
                                 "font-bold font-[family-name:var(--font-display)]",
-                                isFirst ? "text-xl text-[hsl(var(--warning))]" : "text-lg text-foreground"
+                                isTop ? "text-xl text-[hsl(var(--warning))]" : isZero ? "text-lg text-muted-foreground" : "text-lg text-foreground"
                               )}>{row.value}</span>
                               <span className="ml-0.5 text-xs text-muted-foreground">{rankingSheetData.unit}</span>
                             </span>
