@@ -46,6 +46,6 @@ export const GA = {
   hintShown: (storageKey: string) => trackEvent("hint_shown", { hint_key: storageKey }),
   /** HintCard 닫기. 닫기 빈도 = 안내 효과 측정 신호 (즉시 닫기율↑ = 안내 무용) */
   hintDismissed: (storageKey: string) => trackEvent("hint_dismissed", { hint_key: storageKey }),
-  /** 다음 경기 유도 카드 클릭 (1→2 활성화 넛지 — 대시보드 "다음 경기 잡기" 프리필 CTA). */
-  nextMatchNudge: () => trackEvent("next_match_nudge_click"),
+  /** 다음 경기 유도 카드 클릭 (1→2 활성화 넛지). source: "dashboard"(기본)·"match_detail"(경기 완료 직후). */
+  nextMatchNudge: (source?: string) => trackEvent("next_match_nudge_click", source ? { source } : undefined),
 };

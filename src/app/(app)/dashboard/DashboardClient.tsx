@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ChevronRight, Loader2, Vote, Trophy, User, Wallet, Upload, UserPlus, Calendar, ClipboardCheck, Settings, Users, AlertCircle, CheckCircle2, ChevronDown as ChevronDownIcon, Share2 } from "lucide-react";
 import { GA, trackEvent } from "@/lib/analytics";
+import { suggestNextMatchDate } from "@/lib/matchSchedule";
 import { useApi, apiMutate } from "@/lib/useApi";
 import { isStaffOrAbove } from "@/lib/permissions";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
@@ -143,20 +144,6 @@ function CardSkeleton() {
       </main>
     </div>
   );
-}
-
-// 지난 경기 요일 기준 "다음 주 같은 요일" 날짜 — 1→2 경기 유도 프리필용.
-// recentDate 없으면 오늘+7일. 반환 date 는 오늘 이후 첫 해당 요일(YYYY-MM-DD, KST).
-function suggestNextMatchDate(recentDateStr: string | null, todayStr: string): { date: string; dayName: string } {
-  const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
-  const toUtc = (s: string) => new Date(s + "T00:00:00Z");
-  const today = toUtc(todayStr);
-  const target = recentDateStr ? toUtc(recentDateStr) : new Date(today.getTime() + 7 * 86400000);
-  // 오늘 이후 첫 (base 요일)로 이동 — 지난 경기가 아무리 오래됐어도 미래 날짜 보장
-  while (target.getTime() <= today.getTime()) {
-    target.setUTCDate(target.getUTCDate() + 7);
-  }
-  return { date: target.toISOString().slice(0, 10), dayName: dayNames[target.getUTCDay()] };
 }
 
 // 카운트다운 라벨 헬퍼 — 오늘 / 내일 / D-N / D+N

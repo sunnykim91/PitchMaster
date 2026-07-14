@@ -15,6 +15,9 @@ import type { InternalSide } from "@/lib/internalSides";
 import { useConfirm } from "@/lib/ConfirmContext";
 import { X, Trash2, Pencil, MapPin } from "lucide-react";
 import { useToast } from "@/lib/ToastContext";
+import Link from "next/link";
+import { GA } from "@/lib/analytics";
+import { suggestNextMatchDate } from "@/lib/matchSchedule";
 import type {
   Match,
   Guest,
@@ -143,6 +146,16 @@ function MatchInfoTabInner({
   const isInternal = match.matchType === "INTERNAL";
   // 3파전: 2팀 히어로(A:B) 대신 팀별 골 합계 카드로 대체
   const internal3 = isInternal && ((internalTeams ?? []).some((t) => t.side === "C") || (goalsProp ?? []).some((g) => g.side === "C"));
+
+  // 활성화 넛지 — 최근(≈14일 내) 완료한 실경기에서 회장에게 "다음 경기 잡기" 유도 (1→2 활성화, 완료 직후 인텐트).
+  // 대시보드 넛지(재방문 의존)를 보완: 결과 확인 순간에 다음 주 같은 요일로 프리필. 옛 경기 나그 방지 위해 14일 게이트.
+  const nextMatchNudge = useMemo(() => {
+    if (!canManage || match.status !== "COMPLETED" || match.matchType === "EVENT" || !match.date) return null;
+    const toUtc = (s: string) => new Date(s + "T00:00:00Z").getTime();
+    const daysSince = Math.round((toUtc(todayIso) - toUtc(match.date)) / 86400000);
+    if (daysSince < 0 || daysSince > 14) return null;
+    return suggestNextMatchDate(match.date, todayIso);
+  }, [canManage, match.status, match.matchType, match.date, todayIso]);
 
   /* ── 날씨 데이터 (서버에서 prefetch된 initialWeather 사용, 없으면 클라에서 fetch) ── */
   const [weather, setWeather] = useState<{
@@ -363,6 +376,29 @@ function MatchInfoTabInner({
       )}
 
       {/* ═══ 2. 경기 정보 ═══ */}
+      {/* 활성화 넛지 — 완료 직후 "다음 경기 잡기" (회장·최근 14일·실경기) */}
+      {nextMatchNudge && (
+        <Card className="rounded-xl border-[hsl(var(--primary)_/_0.25)] bg-[hsl(var(--primary)_/_0.06)]">
+          <CardContent className="flex items-center justify-between gap-3 p-4">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="shrink-0 text-xl" aria-hidden>📅</span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">경기 잘 마치셨어요! 다음 경기 잡을까요?</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">다음 주 {nextMatchNudge.dayName}요일로 미리 채워서 열어드려요</p>
+              </div>
+            </div>
+            <Button asChild size="sm" className="shrink-0">
+              <Link
+                href={`/matches?create=true&date=${nextMatchNudge.date}`}
+                onClick={() => GA.nextMatchNudge("match_detail")}
+              >
+                경기 만들기
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="rounded-xl border-border/30">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <CardTitle className="text-base font-bold">{match.matchType === "EVENT" ? "팀 일정" : "경기 정보"}</CardTitle>
