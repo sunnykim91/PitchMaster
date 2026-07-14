@@ -113,8 +113,11 @@ export async function POST(req: NextRequest) {
       let dateParsed = "";
       let timeParsed = "";
       if (dateCell instanceof Date) {
-        dateParsed = dateCell.toISOString().split("T")[0];
-        timeParsed = dateCell.toTimeString().slice(0, 5); // "HH:mm"
+        // 날짜와 시각을 같은 기저(엑셀 셀의 wall-clock)에서 뽑는다.
+        // 과거엔 날짜=toISOString(UTC)·시각=toTimeString(로컬)이라 서로 어긋났다.
+        const iso = dateCell.toISOString();
+        dateParsed = iso.slice(0, 10); // "YYYY-MM-DD"
+        timeParsed = iso.slice(11, 16); // "HH:mm"
       } else {
         const dateRaw = String(dateCell ?? "").trim();
         if (!dateRaw) continue;

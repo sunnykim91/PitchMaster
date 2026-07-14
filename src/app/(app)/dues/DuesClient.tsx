@@ -16,7 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { getKstNow } from "@/lib/kstDate";
-import { matchMemberByName } from "@/lib/dues/matchMemberByName";
+import { matchMemberByName, attributeDuesIncome } from "@/lib/dues/matchMemberByName";
 import { formatAmount, formatKstDateTime } from "@/lib/formatters";
 
 import { DuesRecordsTab } from "./DuesRecordsTab";
@@ -304,7 +304,8 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
     for (const r of monthRecords) {
       if (r.type !== "INCOME") continue;
       if (!isDuesPayment(r.amount)) continue;
-      const matched = members.find((m) => r.memberName === m.name || r.description?.includes(m.name));
+      // 레코드당 정확히 한 회원에 귀속 — '이준'이 '이준호 회비'를 가로채던 substring 버그 방지.
+      const matched = attributeDuesIncome(r, members);
       if (matched) {
         const existing = matches.find((m) => m.memberId === matched.memberId);
         if (existing) existing.amount += r.amount;
@@ -339,6 +340,19 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
   const duesStatus = useMemo(() => {
     if (!members.length) return [];
 
+    // 입금 레코드를 회원당 한 명에게 먼저 귀속(레코드당 1회) 후, 회원별로 합산한다.
+    // 과거엔 회원마다 description.includes(m.name) 로 필터해 한 입금이 '이준'·'이준호'
+    // 양쪽에 이중 계상됐다.
+    const incomeByMemberId = new Map<string, typeof monthRecords>();
+    for (const r of monthRecords) {
+      if (r.type !== "INCOME") continue;
+      const owner = attributeDuesIncome(r, members);
+      if (!owner) continue;
+      const arr = incomeByMemberId.get(owner.memberId) ?? [];
+      arr.push(r);
+      incomeByMemberId.set(owner.memberId, arr);
+    }
+
     const list = members.flatMap((m) => {
       const dbStatus = paymentStatusMap.get(m.memberId);
 
@@ -360,9 +374,7 @@ export default function DuesClient({ userId: _userId, userRole, initialData, ena
       const joinMonth = kstYearMonth(m.joinedAt);
       if (joinMonth && monthFilter <= joinMonth) return [];
 
-      const paid = monthRecords.filter(
-        (r) => r.type === "INCOME" && (r.memberName === m.name || r.description?.includes(m.name))
-      );
+      const paid = incomeByMemberId.get(m.memberId) ?? [];
       const duesPaid = paid.filter((r) => isDuesPayment(r.amount));
       const paidAmount = duesPaid.reduce((sum, r) => sum + r.amount, 0);
       return [{

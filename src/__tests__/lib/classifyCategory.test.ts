@@ -23,6 +23,14 @@ describe("classifyCategory", () => {
     it("매칭 안 되는 지출(물값) → 기타 지출", () => {
       expect(classifyCategory("EXPENSE", "7/4(토) 물값 / 전용우")).toBe("기타 지출");
     });
+    it("축구공 구매 → 장비", () => {
+      expect(classifyCategory("EXPENSE", "축구공 2개 구매")).toBe("장비");
+    });
+    it("'공' 단독 오분류 방지 — 공과금은 장비가 아닌 기타 지출", () => {
+      expect(classifyCategory("EXPENSE", "구장 공과금 정산")).toBe("구장비"); // 구장이 먼저
+      expect(classifyCategory("EXPENSE", "공과금 납부")).toBe("기타 지출");
+      expect(classifyCategory("EXPENSE", "공지사항 인쇄")).toBe("기타 지출");
+    });
   });
 
   describe("INCOME — 목적성 수납/환불은 회비 수입에서 분리 (핵심 회귀 방지)", () => {
@@ -54,6 +62,11 @@ describe("classifyCategory", () => {
     });
     it("설명 없는 수입 → 회비 수입", () => {
       expect(classifyCategory("INCOME", null)).toBe("회비 수입");
+    });
+    it("용병비·심판비·장비 각출 수입은 회비 수입에서 분리 (지출과 대칭, 월회비 뻥튀기 방지)", () => {
+      expect(classifyCategory("INCOME", "용병비 수금 3만원")).toBe("용병비 수입");
+      expect(classifyCategory("INCOME", "심판비 각출")).toBe("심판비 수입");
+      expect(classifyCategory("INCOME", "축구공 구매 갹출")).toBe("장비 수입");
     });
   });
 });

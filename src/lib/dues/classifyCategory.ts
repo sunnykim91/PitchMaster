@@ -24,7 +24,8 @@ export function classifyCategory(type: string, description: string | null): stri
     if (d.includes("구장") || d.includes("운동장")) return "구장비";
     if (d.includes("유니폼") || d.includes("운동복")) return "유니폼";
     if (d.includes("회식") || d.includes("뒤풀이")) return "회식비";
-    if (d.includes("장비") || d.includes("공") || d.includes("축구공")) return "장비";
+    // "공" 단독 매칭은 공과금·공지 등을 장비로 오분류시켜 제거 — 축구공만 인정.
+    if (d.includes("장비") || d.includes("축구공")) return "장비";
     if (d.includes("심판")) return "심판비";
     return "기타 지출";
   }
@@ -35,6 +36,10 @@ export function classifyCategory(type: string, description: string | null): stri
   if (d.includes("벌금") || d.includes("불참") || d.includes("지각") || d.includes("결석")) return "벌금 수입";
   if (d.includes("유니폼") || d.includes("운동복")) return "유니폼 수입";
   if (d.includes("구장") || d.includes("운동장")) return "구장비 수입";
+  // 지출 분류와 대칭 — 용병비·심판비·장비 각출 수입도 "회비 수입"에서 분리 (월회비 뻥튀기 방지).
+  if (d.includes("용병")) return "용병비 수입";
+  if (d.includes("심판")) return "심판비 수입";
+  if (d.includes("장비") || d.includes("축구공")) return "장비 수입";
   if (d.includes("환불") || d.includes("보증금")) return "환불";
   if (d.includes("이자")) return "이자";
   if (d.includes("회식") || d.includes("뒤풀이")) return "회식 수입";

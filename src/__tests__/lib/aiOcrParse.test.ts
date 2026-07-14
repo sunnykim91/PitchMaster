@@ -137,6 +137,18 @@ describe("aiOcrParse — validateTransactions", () => {
     ]);
     expect(result.some((w) => w.includes("잔액 불일치"))).toBe(false);
   });
+
+  it("최신순(newest-first)·금액 혼재라도 정상이면 허위 경고 없음 (정렬방향 가정 회귀 방지)", () => {
+    // 은행앱 기본 최신→과거 순서. 인접 잔액차 = 더 최신(prev) 거래 금액과 일치 → 전부 정상.
+    // 과거엔 curr.amount 와만 비교해 3건 모두 허위 '잔액 불일치'로 잡혔다.
+    const result = validateTransactions([
+      tx({ amount: 50000, balance: 300000, type: "입금" }),
+      tx({ amount: 30000, balance: 250000, type: "입금" }),
+      tx({ amount: 20000, balance: 220000, type: "입금" }),
+      tx({ amount: 40000, balance: 200000, type: "입금" }),
+    ]);
+    expect(result.some((w) => w.includes("잔액 불일치"))).toBe(false);
+  });
 });
 
 describe("aiOcrParse — correctTypesFromBalance (입출금 방향 잔액 기반 교정)", () => {

@@ -153,19 +153,17 @@ export function validateTransactions(transactions: ParsedTransaction[]): string[
     warnings.push(`0원 이하 금액 ${invalidAmount.length}건 — 파싱 오류 가능`);
   }
 
-  // 3) 잔액 일관성 체크 (연속된 두 거래에서 이전 잔액 ± amount ≈ 현재 잔액)
+  // 3) 잔액 일관성 체크 — 인접 두 거래의 잔액차는 "더 최신 거래의 금액"과 같다.
+  //    정렬 방향(최신순/과거순)을 모르므로 curr·prev 어느 쪽 금액과도 안 맞을 때만 불일치로 센다.
+  //    (과거엔 항상 curr.amount 와만 비교해, 금액이 섞인 정상 '최신순' 명세서를 허위로 오판정했다.)
   const withBalance = transactions.filter((t) => t.balance !== null && t.amount !== null);
   let inconsistentCount = 0;
   for (let i = 1; i < withBalance.length; i++) {
     const prev = withBalance[i - 1];
     const curr = withBalance[i];
-    if (prev.balance === null || curr.balance === null || curr.amount === null) continue;
-    const sign = curr.type === "출금" ? -1 : curr.type === "입금" ? 1 : 0;
-    if (sign === 0) continue;
-    const expected = prev.balance + sign * curr.amount;
-    // 은행앱은 위→아래 최신→과거 or 과거→최신 둘 다 가능. 양방향 허용
-    const expectedReverse = prev.balance - sign * curr.amount;
-    if (Math.abs(curr.balance - expected) > 100 && Math.abs(curr.balance - expectedReverse) > 100) {
+    if (prev.balance === null || curr.balance === null || curr.amount === null || prev.amount === null) continue;
+    const delta = Math.abs(curr.balance - prev.balance);
+    if (Math.abs(delta - curr.amount) > 100 && Math.abs(delta - prev.amount) > 100) {
       inconsistentCount++;
     }
   }

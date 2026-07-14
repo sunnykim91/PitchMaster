@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
   // 경기 정보
   const { data: match } = await db
     .from("matches")
-    .select("id, match_date, opponent_name, team_id")
+    .select("id, match_date, opponent_name, team_id, match_type")
     .eq("id", matchId)
     .eq("team_id", ctx.teamId)
     .single();
@@ -277,11 +277,13 @@ export async function POST(request: NextRequest) {
     // 미투표 체크 — 마감까지 '미정(MAYBE)'이면 의사표시를 안 한 것으로 보고 미투표로 간주 (정책 2026-06-25).
     // (참석/불참 같은 확정 의사표시만 '투표함'으로 인정. 표시는 그대로 '미정'이고 벌금만 부과.)
     // 단 지각·불참 같은 출석 기반 벌금이 잡히는 행이면 그쪽이 우선 — 한 경기에 미투표+불참 이중 부과 방지.
+    // EVENT(회식·MT 등 사교 일정)는 미투표 벌금 대상에서 제외 — no-vote-penalty 크론과 동일 정책.
+    const isEventMatch = (match as { match_type?: string }).match_type === "EVENT";
     const noVoteRule = ruleMap.get("NO_VOTE");
     const isNoVote = !att || att.vote === "MAYBE";
     const hasAttendancePenalty =
       att?.attendance_status === "LATE" || att?.actually_attended === false;
-    if (noVoteRule && isNoVote && !hasAttendancePenalty) {
+    if (noVoteRule && isNoVote && !hasAttendancePenalty && !isEventMatch) {
       const key = `${userId}:${noVoteRule.id}`;
       if (!existingSet.has(key)) {
         newPenalties.push({

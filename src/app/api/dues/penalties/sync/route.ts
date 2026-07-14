@@ -3,6 +3,7 @@ import { getKstNow } from "@/lib/kstDate";
 import { getApiContext, apiError, apiSuccess, requireRole } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PERMISSIONS } from "@/lib/permissions";
+import { matchMemberByName } from "@/lib/dues/matchMemberByName";
 
 /** 벌금 납부 자동 확인: 입금 내역과 미납 벌금 1:1 매칭 (같은 멤버 + 같은 금액 + 발생일 이후) */
 export async function POST() {
@@ -27,11 +28,18 @@ export async function POST() {
     return apiSuccess({ matched: 0, message: "미납 벌금이 없습니다" });
   }
 
-  // 멤버 이름 조회 (description 기반 fallback용)
-  const memberIds = [...new Set(unpaidPenalties.map((p) => p.member_id))];
-  const { data: users } = await db.from("users").select("id, name").in("id", memberIds);
-  const userNameMap = new Map<string, string>();
-  for (const u of users ?? []) userNameMap.set(u.id, u.name);
+  // description 최장매칭용 전체 팀원 명단.
+  // (벌금 있는 멤버만 담으면 '이준호'가 빠져 '이준'이 '이준호 벌금'을 가로챌 수 있어 전체가 필요.)
+  const { data: allTeamMembers } = await db
+    .from("team_members")
+    .select("user_id, users(name)")
+    .eq("team_id", ctx.teamId)
+    .not("user_id", "is", null)
+    .returns<{ user_id: string; users: { name: string | null } | null }[]>();
+  const nameList: { user_id: string; name: string }[] = [];
+  for (const m of allTeamMembers ?? []) {
+    if (m.user_id && m.users?.name) nameList.push({ user_id: m.user_id, name: m.users.name });
+  }
 
   // 2. 팀 전체 입금 내역 조회 (user_id가 null인 건도 포함 — description 매칭 위해)
   const { data: incomeRecords } = await db
@@ -60,17 +68,19 @@ export async function POST() {
 
   for (const penalty of unpaidPenalties) {
     const penaltyDate = penalty.date;
-    const memberName = userNameMap.get(penalty.member_id) ?? "";
 
     // 매칭 조건: 같은 금액 + 벌금 발생일 이후 + 미사용
-    // 우선순위 1: user_id 일치
-    // 우선순위 2: description에 멤버 이름 포함 (user_id가 null인 경우)
+    // 우선순위 1: user_id 일치 (연동 입금)
+    // 우선순위 2: user_id 가 없는 입금만, description 최장매칭 결과가 이 벌금의 멤버일 때
+    //   (단순 includes 는 '이준'이 '이준호 벌금'을 가로챘음)
     const matchingIncome = availableIncome.find(
       (r) =>
         r.amount === penalty.amount &&
         !usedIncomeIds.has(r.id) &&
         (r.recorded_at ? getKstNow(new Date(r.recorded_at).getTime()).toISOString().slice(0, 10) : "") >= penaltyDate &&
-        (r.user_id === penalty.member_id || (memberName && r.description?.includes(memberName)))
+        (r.user_id === penalty.member_id ||
+          (r.user_id == null &&
+            matchMemberByName(r.description, nameList)?.user_id === penalty.member_id))
     );
 
     if (!matchingIncome) continue;
