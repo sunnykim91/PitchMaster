@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { BarChart3, ArrowUpDown, ArrowDown, Download, Share2, Trophy, Sparkles, Info } from "lucide-react";
+import { BarChart3, ArrowUpDown, ArrowDown, Download, Share2, Trophy, Sparkles, Info, ChevronRight } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { useViewAsRole } from "@/lib/ViewAsRoleContext";
 import { isStaffOrAbove } from "@/lib/permissions";
@@ -334,10 +334,11 @@ export default function RecordsClient({
         .slice(0, 3),
     [stats]
   );
-  // ① 종합 랭킹 — 밸런스 점수(정규화) top 5. 부문별 팀 1등 대비 환산 (서경카페 피드백 2026-07-12)
+  // ① 종합 랭킹 — 밸런스 점수(정규화). 부문별 팀 1등 대비 환산 (서경카페 피드백 2026-07-12)
   // 최소 출전 가드: 소수 경기 요행으로 부문 1등을 차지하는 왜곡 방지 (시즌의 20%, 최소 3경기)
   const overallMinGames = Math.max(3, Math.ceil((totalSeasonMatches ?? 0) * 0.2));
-  const topOverall = useMemo(() => {
+  // 전체 정렬 목록(1등~꼴등) — 카드엔 top 5만, 제목 탭 시 전체 시트에서 재사용
+  const overallRanking = useMemo(() => {
     const qualified = stats.filter((s) => s.matches >= overallMinGames);
     const pool = qualified.length >= 3 ? qualified : stats; // 소규모 팀 보호
     const max: BalanceMax = {
@@ -350,9 +351,60 @@ export default function RecordsClient({
     return pool
       .map((s) => ({ ...s, overall: computeBalanceScore(s, max) }))
       .filter((s) => s.overall > 0)
-      .sort((a, b) => b.overall - a.overall)
-      .slice(0, 5);
+      .sort((a, b) => b.overall - a.overall);
   }, [stats, overallMinGames]);
+  const topOverall = useMemo(() => overallRanking.slice(0, 5), [overallRanking]);
+
+  // 랭킹 카드 제목 탭 → 부문별 1등~꼴등 전체 시트 (서경카페 노진우 피드백 2026-07-14)
+  const [rankingSheet, setRankingSheet] = useState<
+    null | "overall" | "goals" | "assists" | "mvp" | "defense"
+  >(null);
+  const rankingSheetData = useMemo(() => {
+    if (!rankingSheet) return null;
+    if (rankingSheet === "overall") {
+      return {
+        title: "종합 랭킹",
+        unit: "점",
+        rows: overallRanking.map((s) => ({
+          memberId: s.memberId,
+          memberName: s.memberName,
+          jerseyNumber: s.jerseyNumber,
+          value: s.overall,
+          subtitle: [
+            s.goals > 0 ? `${s.goals}골` : null,
+            s.assists > 0 ? `${s.assists}도움` : null,
+            s.mvp > 0 ? `MVP ${s.mvp}` : null,
+            (s.defensePoints ?? 0) > 0 ? `수비 ${s.defensePoints}` : null,
+            `${s.matches}출전`,
+          ].filter(Boolean).join(" · "),
+        })),
+      };
+    }
+    const cfg = {
+      goals: { title: "득점왕", unit: "골", get: (s: RecordStat) => s.goals },
+      assists: { title: "어시스트왕", unit: "도움", get: (s: RecordStat) => s.assists },
+      mvp: { title: "MVP왕", unit: "회", get: (s: RecordStat) => s.mvp },
+      defense: { title: "수비 포인트", unit: "점", get: (s: RecordStat) => s.defensePoints ?? 0 },
+    }[rankingSheet];
+    const rows = stats
+      .map((s) => ({ s, value: cfg.get(s) }))
+      .filter((x) => x.value > 0)
+      .sort((a, b) => b.value - a.value)
+      .map(({ s, value }) => ({
+        memberId: s.memberId,
+        memberName: s.memberName,
+        jerseyNumber: s.jerseyNumber,
+        value,
+        subtitle:
+          rankingSheet === "defense"
+            ? [
+                (s.defenseGkQuarters ?? 0) > 0 ? `키퍼 무실점 ${s.defenseGkQuarters}쿼터` : null,
+                (s.defenseFieldQuarters ?? 0) > 0 ? `수비 무실점 ${s.defenseFieldQuarters}쿼터` : null,
+              ].filter(Boolean).join(" · ")
+            : `${s.matches}경기`,
+      }));
+    return { title: cfg.title, unit: cfg.unit, rows };
+  }, [rankingSheet, stats, overallRanking]);
 
   const [sortKey, setSortKey] = useState<"points" | "goals" | "assists" | "mvp" | "attendanceRate" | "avgRating">("points");
   const allStats = useMemo(() => {
@@ -747,7 +799,15 @@ export default function RecordsClient({
       {!loadingRecords && topOverall.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase">종합 랭킹</CardTitle>
+            <button
+              type="button"
+              onClick={() => setRankingSheet("overall")}
+              className="group -mx-1 flex items-center gap-1.5 rounded-md px-1 text-left"
+              aria-label="종합 랭킹 전체 순위 보기"
+            >
+              <CardTitle className="mt-1 font-heading text-lg sm:text-2xl font-bold uppercase transition-colors group-hover:text-primary">종합 랭킹</CardTitle>
+              <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+            </button>
             <p className="mt-0.5 text-xs text-muted-foreground">골·도움·MVP·수비·출석을 고루 반영한 밸런스 점수</p>
             <ScoreCriteria>
               각 부문에서 <span className="font-medium text-foreground/80">팀 1등에 얼마나 가까운지</span>를 점수로 환산해 합쳤어요.
@@ -853,19 +913,27 @@ export default function RecordsClient({
           ) : (
             <div className="grid gap-3 md:grid-cols-3">
               {[{
-                title: "득점왕", list: topGoals, getValue: (s: RecordStat) => s.goals, color: "#22c55e",
+                title: "득점왕", sheetKey: "goals" as const, list: topGoals, getValue: (s: RecordStat) => s.goals, color: "#22c55e",
               }, {
-                title: "어시스트왕", list: topAssists, getValue: (s: RecordStat) => s.assists, color: "#38bdf8",
+                title: "어시스트왕", sheetKey: "assists" as const, list: topAssists, getValue: (s: RecordStat) => s.assists, color: "#38bdf8",
               }, {
-                title: "MVP왕", list: topMvp, getValue: (s: RecordStat) => s.mvp, color: "#f59e0b",
+                title: "MVP왕", sheetKey: "mvp" as const, list: topMvp, getValue: (s: RecordStat) => s.mvp, color: "#f59e0b",
               },
               // 통합 수비 포인트 — 키퍼·필드수비를 한 랭킹으로 (전술판에 수비/GK로 선 선수가 있을 때만 노출)
               ...(topDefense.length > 0 ? [{
-                title: "수비 포인트", desc: "무실점 쿼터 · 키퍼2 · 수비1", list: topDefense, getValue: (s: RecordStat) => s.defensePoints ?? 0, color: "#14b8a6",
+                title: "수비 포인트", sheetKey: "defense" as const, desc: "무실점 쿼터 · 키퍼2 · 수비1", list: topDefense, getValue: (s: RecordStat) => s.defensePoints ?? 0, color: "#14b8a6",
               }] : []),
               ].map((group) => (
                 <Card key={group.title} className="bg-secondary border-0 p-4">
-                  <p className="text-sm font-bold">{group.title}</p>
+                  <button
+                    type="button"
+                    onClick={() => setRankingSheet(group.sheetKey)}
+                    className="group flex w-full items-center gap-1 text-left"
+                    aria-label={`${group.title} 전체 순위 보기`}
+                  >
+                    <span className="text-sm font-bold transition-colors group-hover:text-primary">{group.title}</span>
+                    <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+                  </button>
                   {"desc" in group && group.desc ? (
                     <p className="mt-0.5 text-[11px] font-normal text-muted-foreground">{group.desc}</p>
                   ) : null}
@@ -1185,6 +1253,73 @@ export default function RecordsClient({
                   );
                 })}
               </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* ── 부문별 전체 랭킹 Sheet (랭킹 카드 제목 탭) ── */}
+      <Sheet open={rankingSheet !== null} onOpenChange={(o) => { if (!o) setRankingSheet(null); }} key="ranking-sheet">
+        <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto rounded-t-2xl px-0">
+          <SheetHeader className="text-left px-5 pb-3 border-b border-border/30">
+            <SheetTitle className="flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-[hsl(var(--warning))]" />
+              {rankingSheetData?.title ?? "랭킹"} 전체 순위
+              {rankingSheetData && rankingSheetData.rows.length > 0 && (
+                <Badge variant="secondary" className="text-xs">{rankingSheetData.rows.length}명</Badge>
+              )}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="px-4 py-3">
+            {rankingSheetData && rankingSheetData.rows.length > 0 ? (
+              (() => {
+                const maxVal = rankingSheetData.rows[0]?.value || 1;
+                return (
+                  <div className="space-y-1.5">
+                    {rankingSheetData.rows.map((row, index) => {
+                      const isFirst = index === 0;
+                      const pct = Math.max(8, Math.round((row.value / maxVal) * 100));
+                      return (
+                        <div key={row.memberId} className={cn("relative overflow-hidden rounded-lg", isFirst ? "py-2.5" : "py-2")}>
+                          <div
+                            className="absolute inset-y-0 left-0 rounded-lg"
+                            style={{ width: `${pct}%`, background: isFirst ? "hsl(var(--warning) / 0.16)" : "hsl(var(--secondary))" }}
+                            aria-hidden
+                          />
+                          <div className="relative flex items-center justify-between gap-2 px-2.5">
+                            <span className="flex min-w-0 items-center gap-2.5">
+                              <span className={cn(
+                                "inline-flex shrink-0 items-center justify-center rounded-md font-bold",
+                                isFirst
+                                  ? "h-7 w-7 bg-[hsl(var(--warning)_/_0.28)] text-[hsl(var(--warning))]"
+                                  : "h-6 w-6 bg-background text-xs text-muted-foreground"
+                              )}>
+                                {isFirst ? <Trophy className="h-3.5 w-3.5" /> : index + 1}
+                              </span>
+                              <span className="min-w-0">
+                                <span className={cn("flex items-center gap-1", isFirst ? "text-[15px] font-bold text-foreground" : "text-sm text-foreground/90")}>
+                                  {row.jerseyNumber !== null && <span className="shrink-0 text-xs font-bold text-primary">#{row.jerseyNumber}</span>}
+                                  <span className="truncate">{row.memberName || "-"}</span>
+                                </span>
+                                {row.subtitle ? <span className="block truncate text-[11px] text-muted-foreground">{row.subtitle}</span> : null}
+                              </span>
+                            </span>
+                            <span className="shrink-0 whitespace-nowrap text-right">
+                              <span className={cn(
+                                "font-bold font-[family-name:var(--font-display)]",
+                                isFirst ? "text-xl text-[hsl(var(--warning))]" : "text-lg text-foreground"
+                              )}>{row.value}</span>
+                              <span className="ml-0.5 text-xs text-muted-foreground">{rankingSheetData.unit}</span>
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()
+            ) : (
+              <p className="py-8 text-center text-sm text-muted-foreground">아직 기록이 없어요.</p>
             )}
           </div>
         </SheetContent>
