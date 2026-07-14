@@ -353,13 +353,11 @@ function DuesBulkTabInner({
     try {
       // ── ① AI OCR 우선 (Claude Haiku Vision)
       // 그리드 레이아웃(카카오뱅크 등) 시각적 이해. 시간/날짜 누락 거의 없음.
-      console.log("[OCR] uploading (AI primary):", fileInfo);
       const aiResult = await runAiOcr(file);
 
       if (aiResult && aiResult.rows.length > 0) {
         const newRows = aiResult.rows.filter((row) => !isDupAgainstRecords(row));
         const duplicateCount = aiResult.rows.length - newRows.length;
-        console.log("[OCR] AI:", aiResult.rows.length, "rows,", duplicateCount, "dup");
 
         setOcrLoading(false);
         if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
@@ -382,7 +380,6 @@ function DuesBulkTabInner({
       }
 
       // ── ② AI 실패/0건 → Clova OCR + 정규식 폴백
-      console.log("[OCR] AI failed or 0 rows, fallback to Clova");
       setOcrStatus("기본 OCR로 재시도 중...");
 
       const formData = new FormData();

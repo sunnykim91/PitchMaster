@@ -49,11 +49,6 @@ export function requireRole(
   return null;
 }
 
-/** Check if Supabase is available */
-export function isDbAvailable(): boolean {
-  return !!getSupabaseAdmin();
-}
-
 /** Block demo users from specific actions */
 export function demoGuard(ctx: ApiContext): NextResponse | null {
   if (ctx.isDemo) {

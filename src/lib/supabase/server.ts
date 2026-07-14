@@ -17,10 +17,3 @@ export function getSupabaseServer(): SupabaseClient | null {
   }
   return _client;
 }
-
-/** Shorthand: throws if Supabase is not configured */
-export function requireSupabase(): SupabaseClient {
-  const client = getSupabaseServer();
-  if (!client) throw new Error("Supabase is not configured");
-  return client;
-}

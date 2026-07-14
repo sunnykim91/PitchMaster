@@ -32,24 +32,3 @@ export function getJerseyStyle(primary: string, secondary: string, pattern: stri
     borderRadius: "8px",
   };
 }
-
-/** 색상 hex를 한국어 이름으로 근사 변환 */
-export function colorToKorean(hex: string): string {
-  const map: Record<string, string> = {
-    "#000000": "검정",
-    "#ffffff": "흰색",
-    "#ff0000": "빨강",
-    "#0000ff": "파랑",
-    "#2563eb": "파랑",
-    "#f97316": "주황",
-    "#22c55e": "초록",
-    "#eab308": "노랑",
-    "#ef4444": "빨강",
-    "#8b5cf6": "보라",
-    "#ec4899": "핑크",
-    "#14b8a6": "청록",
-  };
-  const lower = hex.toLowerCase();
-  if (map[lower]) return map[lower];
-  return hex;
-}

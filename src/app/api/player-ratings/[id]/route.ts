@@ -1,17 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { hasMinRole } from "@/lib/permissions";
-
-function safeRevalidatePlayer(id: string | null | undefined) {
-  if (!id) return;
-  try {
-    revalidatePath(`/player/${id}`);
-  } catch (err) {
-    console.warn("[revalidatePath] skip:", err instanceof Error ? err.message : err);
-  }
-}
+import { safeRevalidatePlayer } from "@/lib/server/revalidatePlayer";
 
 /**
  * PUT/DELETE는 STAFF+ 누구나 모든 row 정정·삭제 가능 (오기재·악의 코멘트 대응).

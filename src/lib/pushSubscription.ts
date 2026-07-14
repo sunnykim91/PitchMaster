@@ -70,11 +70,6 @@ export function isPushSupported(): boolean {
   return typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;
 }
 
-/** Check if user has already granted notification permission */
-export function isPushPermissionGranted(): boolean {
-  return typeof Notification !== "undefined" && Notification.permission === "granted";
-}
-
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");

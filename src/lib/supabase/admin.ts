@@ -17,10 +17,3 @@ export function getSupabaseAdmin(): SupabaseClient | null {
   }
   return _admin;
 }
-
-/** Shorthand: throws if Supabase admin is not configured */
-export function requireSupabaseAdmin(): SupabaseClient {
-  const client = getSupabaseAdmin();
-  if (!client) throw new Error("Supabase admin is not configured");
-  return client;
-}

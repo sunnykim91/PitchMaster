@@ -1,18 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { hasMinRole } from "@/lib/permissions";
-
-// ISR /player/[memberId] 즉시 갱신용
-function safeRevalidatePlayer(id: string | null | undefined) {
-  if (!id) return;
-  try {
-    revalidatePath(`/player/${id}`);
-  } catch (err) {
-    console.warn("[revalidatePath] skip:", err instanceof Error ? err.message : err);
-  }
-}
+import { safeRevalidatePlayer } from "@/lib/server/revalidatePlayer";
 
 type PlayerRatingRow = {
   id: string;

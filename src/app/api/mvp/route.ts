@@ -1,19 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
 import { getApiContext, apiError, apiSuccess } from "@/lib/api-helpers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { hasMinRole } from "@/lib/permissions";
 import { invalidateTeamStats } from "@/lib/server/aiTeamStats";
-
-// ISR /player/[memberId] 즉시 갱신용 — vitest 등 next context 없는 환경 대응 try/catch.
-function safeRevalidatePlayer(id: string | null | undefined) {
-  if (!id) return;
-  try {
-    revalidatePath(`/player/${id}`);
-  } catch (err) {
-    console.warn("[revalidatePath] skip:", err instanceof Error ? err.message : err);
-  }
-}
+import { safeRevalidatePlayer } from "@/lib/server/revalidatePlayer";
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
