@@ -178,6 +178,9 @@ export async function getDashboardData(
       .select("id, match_date, opponent_name, status, match_type")
       .eq("team_id", teamId)
       .eq("status", "COMPLETED")
+      // "최근 경기 결과" 카드는 실제 경기만 — EVENT(행사)는 스코어 개념이 없어 제외.
+      // (match_type=null 인 REGULAR 를 살리려 neq 대신 or 사용 — neq 는 null 행도 걸러냄)
+      .or("match_type.is.null,match_type.neq.EVENT")
       .order("match_date", { ascending: false })
       .limit(1)
       .maybeSingle(),

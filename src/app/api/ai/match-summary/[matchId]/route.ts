@@ -160,13 +160,11 @@ export async function POST(
     .map((g) => resolveName(g.assist_id))
     .filter((n): n is string => !!n);
 
-  // 참석: attendance_status PRESENT/LATE 우선, 없으면 actually_attended=true 폴백
-  const attendanceCount = (attendanceRes.data ?? []).filter((a) => {
-    const s = a.attendance_status;
-    if (s === "PRESENT" || s === "LATE") return true;
-    if (s === "ABSENT") return false;
-    return a.actually_attended === true;
-  }).length;
+  // 참석자 = attendance_status PRESENT|LATE 만 (다른 11개 집계 경로와 동일한 70% 분모).
+  // 과거엔 actually_attended 폴백을 섞어 분모가 커져, 같은 경기가 기록엔 MVP 확정·후기엔 미확정으로 갈렸다.
+  const attendanceCount = (attendanceRes.data ?? []).filter(
+    (a) => a.attendance_status === "PRESENT" || a.attendance_status === "LATE"
+  ).length;
 
   // MVP(MOM)는 다른 집계 경로와 동일한 공식 정책으로 판정 — 단순 최다득표 금지.
   // (70% 투표율 게이트·운영진 확정·공동 1등 처리. 미달이면 mom=null → "MVP 미확정")

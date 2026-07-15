@@ -601,7 +601,9 @@ function MatchRecordTabInner({
                       <PlayerPicker
                         key={`scorer-${editingGoalId ?? "new"}-${selectedSide ?? "any"}`}
                         name="scorerId"
-                        defaultValue={editingGoal?.scorerId ?? ""}
+                        // 빠른 "+득점"으로 만든 골은 득점자가 UNKNOWN placeholder — 미선택으로 취급해
+                        // 피커를 처음부터 펼쳐, 수정 열자마자 "변경" 없이 바로 선수 선택.
+                        defaultValue={editingGoal?.scorerId && editingGoal.scorerId !== "UNKNOWN" ? editingGoal.scorerId : ""}
                         groups={scorerGroups}
                         emptyLabel="선택"
                       />

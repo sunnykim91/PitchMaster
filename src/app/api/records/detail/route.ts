@@ -87,6 +87,14 @@ export async function GET(request: NextRequest) {
     scoreMap.set(g.match_id, s);
   }
 
+  // 자체전(INTERNAL)은 개인 관점 승/무/패가 없어 스코어/배지를 붙이지 않는다.
+  // (여기 scoreMap 은 side 를 무시한 손수 4-case라 INTERNAL 에선 어차피 부정확했다 — 상대전만 표시.)
+  const scoreFor = (m: { id: string; match_type: string | null }): string | undefined => {
+    if (m.match_type === "INTERNAL") return undefined;
+    const sc = scoreMap.get(m.id);
+    return sc ? `${sc.our}:${sc.their}` : undefined;
+  };
+
   type DetailRow = { matchId: string; matchDate: string; opponentName: string; count: number; score?: string };
   const details: DetailRow[] = [];
 
@@ -104,7 +112,7 @@ export async function GET(request: NextRequest) {
     }
     for (const [matchId, count] of countMap) {
       const m = matchMap.get(matchId);
-      if (m) { const sc = scoreMap.get(matchId); details.push({ matchId, matchDate: m.match_date, opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""), count, score: sc ? `${sc.our}:${sc.their}` : undefined }); }
+      if (m) { details.push({ matchId, matchDate: m.match_date, opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""), count, score: scoreFor(m) }); }
     }
   } else if (type === "assists") {
     const { data: assists } = await db
@@ -119,7 +127,7 @@ export async function GET(request: NextRequest) {
     }
     for (const [matchId, count] of countMap) {
       const m = matchMap.get(matchId);
-      if (m) { const sc = scoreMap.get(matchId); details.push({ matchId, matchDate: m.match_date, opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""), count, score: sc ? `${sc.our}:${sc.their}` : undefined }); }
+      if (m) { details.push({ matchId, matchDate: m.match_date, opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""), count, score: scoreFor(m) }); }
     }
   } else if (type === "mvp") {
     // 기록 페이지 MVP 숫자와 일관성 유지 — "확정 winner가 본인인 경기"만 반환.
@@ -161,13 +169,12 @@ export async function GET(request: NextRequest) {
       if (!winners.some((w) => lookupIds.includes(w))) continue;
       const m = matchMap.get(matchId);
       if (m) {
-        const sc = scoreMap.get(matchId);
         details.push({
           matchId,
           matchDate: m.match_date,
           opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""),
           count: 1,
-          score: sc ? `${sc.our}:${sc.their}` : undefined,
+          score: scoreFor(m),
         });
       }
     }
@@ -186,7 +193,7 @@ export async function GET(request: NextRequest) {
     }
     for (const matchId of attendedSet) {
       const m = matchMap.get(matchId);
-      if (m) { const sc = scoreMap.get(matchId); details.push({ matchId, matchDate: m.match_date, opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""), count: 1, score: sc ? `${sc.our}:${sc.their}` : undefined }); }
+      if (m) { details.push({ matchId, matchDate: m.match_date, opponentName: m.opponent_name ?? (m.match_type === "INTERNAL" ? "자체전" : ""), count: 1, score: scoreFor(m) }); }
     }
   } else {
     return apiError("type must be goals, assists, mvp, or attendance");
