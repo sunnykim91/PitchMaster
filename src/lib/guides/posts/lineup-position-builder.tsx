@@ -2,7 +2,7 @@ import type { GuideMeta } from "../types";
 
 export const meta: GuideMeta = {
   slug: "lineup-position-builder",
-  title: "축구·풋살 라인업, 출석자만 고르면 포지션까지 자동으로 짜는 법",
+  title: "축구·풋살 라인업 짜기 — 출석자만 고르면 포지션까지 자동인 무료 앱",
   description:
     "경기 전날마다 라인업 짜느라 시간 쓰는 분들 보세요. 누가 오는지, 누구를 어디 세울지, 쿼터마다 누가 쉴지를 손으로 짜면 매번 막힙니다. 출석자만 고르면 포메이션·포지션·쿼터 교대까지 자동으로 짜주는 무료 앱 쓰는 법을 적었어요. 축구 11인제, 풋살 5·6인제 다 됩니다.",
   keywords: [
