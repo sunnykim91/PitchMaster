@@ -75,8 +75,7 @@ export async function GET(request: NextRequest) {
   const matches = [...(deadlineMatches ?? []), ...(noDeadlineMatches ?? [])].filter((m) => {
     if (seenIds.has(m.id)) return false;
     seenIds.add(m.id);
-    // EVENT(회식·MT 등 사교 일정)는 미투표 벌금 대상에서 제외
-    if ((m as { match_type?: string }).match_type === "EVENT") return false;
+    // 미투표 벌금은 경기 종류(EVENT 포함) 무관하게 부과 — 투표 리마인더도 EVENT에 발송되므로 정합.
     return true;
   });
 
