@@ -1,5 +1,6 @@
 import type { DetailedPosition } from "@/lib/types";
 import type { Player } from "./TacticsBoard.types";
+import { roleToSubPosition } from "./AutoFormationBuilder.utils";
 
 export const SAVE_DEBOUNCE_MS = 300;
 
@@ -33,20 +34,19 @@ export function formatQuarterTotal(total: number): string {
   return total % 1 === 0 ? String(total) : total.toFixed(1);
 }
 
-/** DetailedPosition → 카테고리(GK/DF/MF/FW) */
-export function positionCategory(role: DetailedPosition): "GK" | "DF" | "MF" | "FW" {
-  if (role === "GK") return "GK";
-  if (["RB", "RCB", "CB", "LCB", "LB", "RWB", "LWB"].includes(role)) return "DF";
-  if (["RDM", "LDM", "CDM", "RCM", "CM", "LCM", "CAM", "RAM", "LAM", "RM", "LM", "MF"].includes(role)) return "MF";
-  return "FW"; // RW, LW, CF, ST, RS, LS, FW
-}
-
-/** 선수의 선호 포지션 중 하나라도 슬롯 포지션과 같은 카테고리면 true */
+/**
+ * "적합" 판정 — 선수의 포지션이 슬롯 포지션과 **정확히 일치**하는지.
+ * 슬롯 role(RCB/LCB/LM 등)과 선수 포지션 모두 roleToSubPosition으로 13개 선호 포지션 단위
+ * (CB/LW 등)로 정규화해 비교한다. 따라서 좌우·변형 슬롯(RCB↔LCB)은 같은 CB로 보되,
+ * 카테고리만 같고 포지션이 다른 경우(CB 선수의 LB 슬롯 등)는 적합으로 보지 않는다.
+ * roster의 preferredPositions는 "감독지정 우선(없으면 본인 선호)"으로 이미 구성돼 있어,
+ * 감독지정이 있으면 감독지정과, 없으면 선호와 정확히 일치할 때만 true.
+ */
 export function isPositionMatched(player: Player | null | undefined, slotRole: DetailedPosition): boolean {
   if (!player) return false;
   const prefs = player.preferredPositions && player.preferredPositions.length > 0
     ? player.preferredPositions
     : [player.role];
-  const slotCat = positionCategory(slotRole);
-  return prefs.some((p) => positionCategory(p) === slotCat);
+  const slotSub = roleToSubPosition(slotRole);
+  return prefs.some((p) => roleToSubPosition(p) === slotSub);
 }

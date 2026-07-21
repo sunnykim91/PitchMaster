@@ -1097,7 +1097,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                             ? "bg-[hsl(var(--success)_/_0.9)] ring-2 ring-[hsl(var(--success))] shadow-[0_0_10px_hsl(var(--success)/0.5)]"
                             : "bg-[rgb(0_0_0_/_0.7)]"
                         )}
-                        title={(firstMatched || secondMatched) ? "선호 포지션과 일치" : undefined}
+                        title={(firstMatched || secondMatched) ? "지정·선호 포지션과 정확히 일치" : undefined}
                       >
                         <span className="flex items-center gap-0.5 whitespace-nowrap text-[12px] font-bold text-white sm:text-xs">
                           <span className="rounded bg-sky-500/40 px-0.5">전</span>
@@ -1118,7 +1118,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                             ? "bg-[hsl(var(--success))] text-white ring-2 ring-[hsl(var(--success))] shadow-[0_0_10px_hsl(var(--success)/0.6)]"
                             : "bg-[rgb(0_0_0_/_0.7)] text-white"
                         )}
-                        title={singleMatched ? "선호 포지션과 일치" : undefined}
+                        title={singleMatched ? "지정·선호 포지션과 정확히 일치" : undefined}
                       >
                         {singleMatched && (
                           <span className="hidden sm:inline-block shrink-0 rounded bg-[rgb(255_255_255_/_0.25)] px-1 text-[9px] font-bold text-white">적합</span>
@@ -1347,7 +1347,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                               variant={variant}
                               disabled={isDisabled}
                               onClick={() => activeSlotId && !isDisabled && handleAssignPlayer(activeSlotId, player.id)}
-                              title={matched ? "선호 포지션과 일치" : undefined}
+                              title={matched ? "지정·선호 포지션과 정확히 일치" : undefined}
                               className={cn(
                                 "flex w-full min-w-0 items-center justify-between gap-2 overflow-hidden rounded-xl px-4 py-3 text-left text-sm h-auto",
                                 isAssigned && "text-muted-foreground"
@@ -1501,7 +1501,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                               variant={variant}
                               disabled={isDisabled}
                               onClick={() => activeSlotId && !isDisabled && handleAssignPlayer(activeSlotId, player.id)}
-                              title={matched ? "선호 포지션과 일치" : undefined}
+                              title={matched ? "지정·선호 포지션과 정확히 일치" : undefined}
                               className={cn(
                                 "flex w-full items-center justify-between gap-2 rounded-xl px-4 py-3 text-left text-sm h-auto",
                                 isDisabled && "text-muted-foreground"

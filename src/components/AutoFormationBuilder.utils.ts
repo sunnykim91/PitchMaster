@@ -1,4 +1,4 @@
-import type { PreferredPosition, Position } from "@/lib/types";
+import type { PreferredPosition, Position, DetailedPosition } from "@/lib/types";
 import { PREF_TO_POSITION } from "@/lib/types";
 import type { FormationSlot } from "@/lib/formations";
 
@@ -50,26 +50,36 @@ export function fuzzyMatchPlayer<T extends { id: string; name: string }>(
 
 /* ── Position helpers ── */
 
+/**
+ * 세분화 슬롯 role(DetailedPosition) → 13개 선호 포지션(PreferredPosition) 정규화.
+ * RCB/LCB→CB, LM/LAM→LW, RM/RAM→RW 등 좌우·변형 슬롯을 선수 프로필 포지션 단위로 맞춘다.
+ * 선수의 선호·감독지정 포지션은 이 13개 단위로만 저장되므로, 전술판 "적합"(정확 일치)
+ * 판정과 자동편성 1차 매칭이 공유하는 공통 기준.
+ */
+export function roleToSubPosition(role: DetailedPosition): PreferredPosition {
+  if (role === "GK") return "GK";
+  if (["CB", "LCB", "RCB"].includes(role)) return "CB";
+  if (["LB", "LWB"].includes(role)) return "LB";
+  if (["RB", "RWB"].includes(role)) return "RB";
+  if (["CDM", "LDM", "RDM"].includes(role)) return "CDM";
+  if (["CM", "LCM", "RCM"].includes(role)) return "CM";
+  if (role === "LM") return "LW";
+  if (role === "RM") return "RW";
+  if (role === "CAM") return "CAM";
+  if (role === "LAM") return "LW";
+  if (role === "RAM") return "RW";
+  if (role === "LW") return "LW";
+  if (role === "RW") return "RW";
+  // 풋살 slot — DetailedPosition 풋살 코드 매핑 (41차 풋살 활성화 후속)
+  if (role === "FIXO") return "FIXO";
+  if (role === "ALA") return "ALA";
+  if (role === "PIVO") return "PIVO";
+  return "ST"; // ST, CF, LS, RS
+}
+
 /** 포메이션 슬롯 → 세분화 포지션 매핑 */
 export function getSlotSubPosition(slot: FormationSlot): PreferredPosition {
-  if (slot.role === "GK") return "GK";
-  if (["CB", "LCB", "RCB"].includes(slot.role)) return "CB";
-  if (["LB", "LWB"].includes(slot.role)) return "LB";
-  if (["RB", "RWB"].includes(slot.role)) return "RB";
-  if (["CDM", "LDM", "RDM"].includes(slot.role)) return "CDM";
-  if (["CM", "LCM", "RCM"].includes(slot.role)) return "CM";
-  if (slot.role === "LM") return "LW";
-  if (slot.role === "RM") return "RW";
-  if (slot.role === "CAM") return "CAM";
-  if (slot.role === "LAM") return "LW";
-  if (slot.role === "RAM") return "RW";
-  if (slot.role === "LW") return "LW";
-  if (slot.role === "RW") return "RW";
-  // 풋살 slot — DetailedPosition 풋살 코드 매핑 (41차 풋살 활성화 후속)
-  if (slot.role === "FIXO") return "FIXO";
-  if (slot.role === "ALA") return "ALA";
-  if (slot.role === "PIVO") return "PIVO";
-  return "ST"; // ST, CF, LS, RS
+  return roleToSubPosition(slot.role);
 }
 
 /** 포메이션 슬롯 → 상위 4분류 */
