@@ -1728,6 +1728,13 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                   lineNames.length > 0 && `부심: ${lineNames.join(", ")}`,
                   camName && `촬영: ${camName}`,
                 ].filter(Boolean) as string[];
+                // 세트피스 키커 (쿼터별 row.set_pieces) — 전체 공유 이미지에도 표시
+                const qSetPieces = (row?.set_pieces as SetPieces) ?? {};
+                const kickerParts = SET_PIECE_ROLES.map((r) => {
+                  const pid = qSetPieces[r.key];
+                  const name = pid ? roster.find((x) => x.id === pid)?.name : null;
+                  return name ? `${r.label}: ${name}` : null;
+                }).filter(Boolean) as string[];
                 return (
                   <div style={{ padding: "6px 10px", fontSize: 10 }}>
                     {qResting.length > 0 && (
@@ -1736,6 +1743,11 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                     {roleParts.length > 0 && (
                       <div style={{ color: "hsl(var(--muted-foreground))", marginTop: 2 }}>
                         {roleParts.join(" · ")}
+                      </div>
+                    )}
+                    {kickerParts.length > 0 && (
+                      <div style={{ color: "hsl(var(--primary))", marginTop: 2 }}>
+                        {kickerParts.join(" · ")}
                       </div>
                     )}
                   </div>
