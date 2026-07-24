@@ -25,8 +25,12 @@ import type {
   SquadRow,
   SquadsApiResponse,
   TeamApiResponse,
+  SetPieces,
+  SetPieceRole,
 } from "./TacticsBoard.types";
-import { SAVE_DEBOUNCE_MS, clamp, isPositionMatched, sumPlayedQuarters, formatQuarterTotal, META_SLOT_LABELS } from "./TacticsBoard.utils";
+import { SET_PIECE_ROLES } from "./TacticsBoard.types";
+import { SAVE_DEBOUNCE_MS, clamp, isPositionMatched, sumPlayedQuarters, formatQuarterTotal, META_SLOT_LABELS, getQuarterPlayerIds } from "./TacticsBoard.utils";
+import SetPieceKickerCard from "./SetPieceKickerCard";
 import { QuarterDotsLegend, PlayerListSortHeader, PlayerQuarterSummary, type RosterSort } from "./TacticsQuarterDots";
 
 // 외부 사용자(MatchTacticsTab)가 TeamSettings를 default import에서 같이 받을 수 있게 re-export
@@ -136,10 +140,16 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     }
     return defaultBoardState;
   });
+  // 쿼터별 세트피스 키커 — boardState 와 병렬 관리(별도 set_pieces 컬럼). Q1 데이터로 즉시 초기화.
+  const [setPieces, setSetPieces] = useState<SetPieces>(() => {
+    const row = squadsData.squads.find((s) => s.quarter_number === (quarters[0] ?? 1));
+    return (row?.set_pieces as SetPieces) ?? {};
+  });
   const [hydrated, setHydrated] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "unsaved" | "saving" | "saved" | "error">("idle");
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSaveRef = useRef<BoardState | null>(null);
+  const pendingSetPiecesRef = useRef<SetPieces>({});
 
   // Hydrate board state from API data whenever squadsData or activeQuarter changes
   useEffect(() => {
@@ -162,11 +172,13 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       if (row.positions?.["__linesman2"]) normalizedPlacements["__linesman2"] = row.positions["__linesman2"] as Placement;
       if (row.positions?.["__camera"]) normalizedPlacements["__camera"] = row.positions["__camera"] as Placement;
       setBoardState({ formationId: formation.id, placements: normalizedPlacements });
+      setSetPieces((row.set_pieces as SetPieces) ?? {});
     } else {
       setBoardState({
         formationId: defaultFormation.id,
         placements: Object.fromEntries(defaultFormation.slots.map((slot) => [slot.id, null])),
       });
+      setSetPieces({});
     }
     setHydrated(true);
   }, [squadsData, squadsLoading, activeQuarter, defaultFormation]);
@@ -174,8 +186,13 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   // ── Save to API (쿼터 번호를 명시적으로 전달) ──
   const activeQuarterRef = useRef(activeQuarter);
   activeQuarterRef.current = activeQuarter;
+  // 세트피스·현재 보드 최신값을 저장 시점에 읽기 위한 refs (set-piece 변경 저장 시 boardState 필요)
+  const setPiecesRef = useRef<SetPieces>(setPieces);
+  setPiecesRef.current = setPieces;
+  const boardStateRef = useRef<BoardState>(boardState);
+  boardStateRef.current = boardState;
 
-  const saveToApi = useCallback(async (state: BoardState, quarterNum: number) => {
+  const saveToApi = useCallback(async (state: BoardState, quarterNum: number, sp: SetPieces) => {
     setSaveState("saving");
     // apiMutate 는 throw 안 함 — 반환 error 를 직접 확인해야 함.
     // 실패 시 로컬 낙관적 동기화/이벤트 발행을 막아 'DB엔 없는데 저장됨'으로 보이는 걸 방지.
@@ -184,6 +201,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       quarterNumber: quarterNum,
       formation: state.formationId,
       positions: state.placements,
+      setPieces: sp,
       side: side ?? null,
     });
     if (error) {
@@ -203,6 +221,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
             quarter_number: quarterNum,
             formation: state.formationId,
             positions: state.placements,
+            set_pieces: sp,
           },
         ],
       };
@@ -219,16 +238,17 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   /** Pending save에 쿼터 번호도 함께 저장 */
   const pendingQuarterRef = useRef(activeQuarter);
 
-  const debouncedSave = useCallback((state: BoardState) => {
+  const debouncedSave = useCallback((state: BoardState, sp: SetPieces) => {
     setSaveState("unsaved");
     pendingSaveRef.current = state;
+    pendingSetPiecesRef.current = sp;
     pendingQuarterRef.current = activeQuarterRef.current;
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
     }
     saveTimerRef.current = setTimeout(() => {
       if (pendingSaveRef.current) {
-        saveToApi(pendingSaveRef.current, pendingQuarterRef.current);
+        saveToApi(pendingSaveRef.current, pendingQuarterRef.current, pendingSetPiecesRef.current);
         pendingSaveRef.current = null;
       }
     }, SAVE_DEBOUNCE_MS);
@@ -241,7 +261,7 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       saveTimerRef.current = null;
     }
     if (pendingSaveRef.current) {
-      saveToApi(pendingSaveRef.current, pendingQuarterRef.current);
+      saveToApi(pendingSaveRef.current, pendingQuarterRef.current, pendingSetPiecesRef.current);
       pendingSaveRef.current = null;
     }
   }, [saveToApi]);
@@ -255,7 +275,18 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
   const updateBoardState = useCallback((updater: BoardState | ((prev: BoardState) => BoardState)) => {
     setBoardState((prev) => {
       const next = typeof updater === "function" ? updater(prev) : updater;
-      debouncedSave(next);
+      debouncedSave(next, setPiecesRef.current);
+      return next;
+    });
+  }, [debouncedSave]);
+
+  /** 세트피스 키커 지정/해제 — boardState 는 그대로, set_pieces 만 갱신 후 동일 저장 경로 태움 */
+  const updateSetPieces = useCallback((role: SetPieceRole, playerId: string) => {
+    setSetPieces((prev) => {
+      const next: SetPieces = { ...prev };
+      if (playerId) next[role] = playerId;
+      else delete next[role];
+      debouncedSave(boardStateRef.current, next);
       return next;
     });
   }, [debouncedSave]);
@@ -406,6 +437,14 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       .filter((p) => !assignedPlayers.has(p.id))
       .sort((a, b) => a.name.localeCompare(b.name, "ko"));
   }, [roster, assignedPlayers]);
+
+  // 이 쿼터에 실제 배치된 선수 (세트피스 키커 후보), 이름 가나다순
+  const quarterPlayers = useMemo(() => {
+    const ids = getQuarterPlayerIds(placements);
+    return roster
+      .filter((p) => ids.has(p.id))
+      .sort((a, b) => a.name.localeCompare(b.name, "ko"));
+  }, [placements, roster]);
 
   const captureRef = useRef<HTMLDivElement | null>(null);
   const quarterMatrixRef = useRef<HTMLDivElement | null>(null);
@@ -761,8 +800,8 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
       placements: { ...boardState.placements, [slotId]: null },
     };
     setBoardState(newState);
-    // debounce 건너뛰고 즉시 저장
-    saveToApi(newState, activeQuarterRef.current);
+    // debounce 건너뛰고 즉시 저장 (세트피스는 유지)
+    saveToApi(newState, activeQuarterRef.current, setPiecesRef.current);
     setActiveSlotId(null);
   }
 
@@ -775,7 +814,9 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     });
     const newState: BoardState = { formationId: formation.id, placements: reset };
     setBoardState(newState);
-    saveToApi(newState, activeQuarterRef.current);
+    // 쿼터 초기화 시 이 쿼터 세트피스도 함께 비움 (배치된 선수가 사라지므로)
+    setSetPieces({});
+    saveToApi(newState, activeQuarterRef.current, {});
     setActiveSlotId(null);
   }
 
@@ -788,9 +829,10 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
     });
     const emptyState: BoardState = { formationId: formation.id, placements: reset };
     for (let q = 1; q <= quarterCount; q++) {
-      await saveToApi(emptyState, q);
+      await saveToApi(emptyState, q, {});
     }
     setBoardState(emptyState);
+    setSetPieces({});
     setActiveSlotId(null);
   }
 
@@ -1201,6 +1243,25 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
               </div>
             </div>
           )}
+          {/* 세트피스 키커 표시 (캡처 영역 내 — 공유 이미지·MEMBER 조회용) */}
+          {SET_PIECE_ROLES.some((r) => setPieces[r.key]) && (
+            <div className="rounded-xl bg-[hsl(var(--secondary)_/_0.5)] px-4 py-3">
+              <p className="mb-2 text-sm font-bold text-foreground">세트피스 키커</p>
+              <div className="flex flex-wrap gap-x-3 gap-y-2">
+                {SET_PIECE_ROLES.map((r) => {
+                  const pid = setPieces[r.key];
+                  const p = pid ? roster.find((x) => x.id === pid) : null;
+                  if (!p) return null;
+                  return (
+                    <div key={r.key} className="flex items-center gap-1.5">
+                      <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-bold", r.badgeClass)}>{r.short}</span>
+                      <span className="text-xs font-medium text-foreground">{p.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           {/* 역할 배정 — 모바일용 (captureRef 밖) */}
           {!viewOnly && isMobile && (
             <div className="rounded-xl bg-[hsl(var(--secondary)_/_0.5)] px-4 py-3">
@@ -1237,6 +1298,16 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
           )}
 
           </div>{/* end captureRef */}
+
+          {/* 세트피스 키커 편집 — 모바일 (captureRef 밖: 공유 이미지 미포함) */}
+          {!viewOnly && isMobile && (
+            <SetPieceKickerCard
+              setPieces={setPieces}
+              quarterPlayers={quarterPlayers}
+              roster={roster}
+              onAssign={updateSetPieces}
+            />
+          )}
 
           {/* Roster panel — PC: 인라인, 모바일: 바텀시트 */}
           {!viewOnly && !isMobile && (
@@ -1407,6 +1478,14 @@ export default function TacticsBoard({ matchId, roster, quarterCount, sportType 
                 </div>
               </CardContent>
             </Card>
+
+            {/* 세트피스 키커 편집 — PC */}
+            <SetPieceKickerCard
+              setPieces={setPieces}
+              quarterPlayers={quarterPlayers}
+              roster={roster}
+              onAssign={updateSetPieces}
+            />
 
             <p className="text-xs text-muted-foreground">
               포지션을 클릭해 선수를 배치하고, 배치된 선수는 드래그해서 위치를 조정하세요.

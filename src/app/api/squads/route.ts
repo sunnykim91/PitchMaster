@@ -73,6 +73,8 @@ export async function POST(request: NextRequest) {
     quarter_number: body.quarterNumber,
     formation: body.formation,
     positions: body.positions,
+    // 쿼터별 세트피스 키커 { fk, ck_left, ck_right, pk } — 미전달(undefined) 시 null 로 초기화
+    set_pieces: body.setPieces ?? null,
     side,
   };
 

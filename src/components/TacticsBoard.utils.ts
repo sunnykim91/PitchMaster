@@ -1,5 +1,5 @@
 import type { DetailedPosition } from "@/lib/types";
-import type { Player } from "./TacticsBoard.types";
+import type { Player, Placement } from "./TacticsBoard.types";
 import { roleToSubPosition } from "./AutoFormationBuilder.utils";
 
 export const SAVE_DEBOUNCE_MS = 300;
@@ -49,4 +49,21 @@ export function isPositionMatched(player: Player | null | undefined, slotRole: D
     : [player.role];
   const slotSub = roleToSubPosition(slotRole);
   return prefs.some((p) => roleToSubPosition(p) === slotSub);
+}
+
+/**
+ * 이 쿼터에 실제 배치된 선수 id 집합.
+ * 메타 슬롯(__referee 등)은 제외하고, 반쿼터 후반 선수(secondPlayerId)도 포함.
+ * 세트피스 키커 후보는 "이 쿼터에 뛰는 선수"로 제한하는 데 사용.
+ */
+export function getQuarterPlayerIds(
+  placements: Record<string, Placement | null>
+): Set<string> {
+  const ids = new Set<string>();
+  for (const [slotId, pl] of Object.entries(placements)) {
+    if (!pl || slotId.startsWith("__")) continue;
+    if (pl.playerId) ids.add(pl.playerId);
+    if (pl.secondPlayerId) ids.add(pl.secondPlayerId);
+  }
+  return ids;
 }

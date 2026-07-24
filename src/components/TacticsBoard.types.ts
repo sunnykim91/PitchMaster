@@ -32,6 +32,22 @@ export type Placement = {
   secondPlayerId?: string; // 0.5Q 후반 선수
 };
 
+/**
+ * 쿼터별 세트피스 키커 역할 정의 (프리킥·좌/우 코너킥·페널티킥).
+ * short = 필드 칩 배지 라벨, badgeClass = 배지 색(반투명 금지 — Safari color-mix 이슈 회피용 solid).
+ */
+export const SET_PIECE_ROLES = [
+  { key: "fk", label: "프리킥", short: "FK", badgeClass: "bg-amber-500 text-white" },
+  { key: "ck_left", label: "좌측 코너", short: "CK-L", badgeClass: "bg-sky-500 text-white" },
+  { key: "ck_right", label: "우측 코너", short: "CK-R", badgeClass: "bg-indigo-500 text-white" },
+  { key: "pk", label: "페널티킥", short: "PK", badgeClass: "bg-rose-500 text-white" },
+] as const;
+
+export type SetPieceRole = (typeof SET_PIECE_ROLES)[number]["key"];
+
+/** role → playerId (배치와 동일 체계). 지정 안 된 역할은 키 부재. */
+export type SetPieces = Partial<Record<SetPieceRole, string>>;
+
 export type BoardState = {
   formationId: string;
   placements: Record<string, Placement | null>;
@@ -52,6 +68,7 @@ export type SquadRow = {
   quarter_number: number;
   formation: string;
   positions: Record<string, Placement | null>;
+  set_pieces?: SetPieces | null;
 };
 
 export type SquadsApiResponse = {
